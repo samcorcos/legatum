@@ -6,7 +6,8 @@ import type { SocketFactory, SocketLike } from './remote';
 
 /** Far above anything the host sends; stops runaway buffering from a broken peer. */
 const MAX_PIECES = 1024;
-const MAX_CHARS = 64 * 1024 * 1024;
+/** A real late-game view is a few MiB and the host's own queue stops at 8 MiB per delivery. */
+const MAX_CHARS = 16 * 1024 * 1024;
 
 interface Run {
   id: number;

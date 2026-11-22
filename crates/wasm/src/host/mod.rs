@@ -24,7 +24,7 @@ use legatum_core::{
 };
 use protocol::{ClientMessage, ServerMessage};
 use serde::Serialize;
-use staging::{Room, RoomError};
+use staging::{Room, RoomError, clean_name};
 use std::{collections::BTreeMap, sync::Arc};
 
 pub(crate) type ConnectionId = u64;
@@ -69,7 +69,15 @@ struct Seat {
     token: Option<String>,
     ready: bool,
     orders: Vec<Order>,
+    /// The connection and planning turn of this seat's last full join (welcome + view). A repeat
+    /// join from the same connection in the same turn is answered with nothing.
+    joined_at: Option<(ConnectionId, u32)>,
 }
+
+/// Most orders one seat may stage per turn. A real turn stages a few hundred at most.
+const MAX_STAGED_ORDERS: usize = 2000;
+/// Most validation errors sent back in one reply.
+const MAX_VALIDATION_ERRORS: usize = 100;
 
 struct Game {
     session: Session,
@@ -97,6 +105,7 @@ impl Game {
                 token: None,
                 ready: false,
                 orders: Vec::new(),
+                joined_at: None,
             })
             .collect();
         Ok(Self {
@@ -553,6 +562,17 @@ impl Host {
                 );
                 return Ok(());
             }
+            let cleaned = clean_name(&name);
+            let turn = game.session.state.turn;
+            // A repeat join on the connection that already holds this seat this turn changes
+            // nothing, so it is not worth a full view and a save.
+            if s.connection == Some(connection)
+                && s.joined
+                && s.joined_at == Some((connection, turn))
+                && (cleaned.is_empty() || cleaned == s.name)
+            {
+                return Ok(());
+            }
             if let Some(old) = s.connection
                 && old != connection
                 && let Some(sender) = self.connections.remove(&old)
@@ -562,17 +582,24 @@ impl Host {
                     "Your seat was claimed by another connection.",
                 );
             }
-            if !name.trim().is_empty() {
-                s.name = name.trim().chars().take(80).collect();
+            let mut renamed = false;
+            if !cleaned.is_empty() {
+                renamed = s.name != cleaned;
+                s.name = cleaned.clone();
                 if !game.session.state.finished
                     && let Some(history) = &mut game.session.history
                 {
                     // Display names are metadata; changing them must not change replay hashes.
-                    history.metadata.seats[s.player.0 as usize].name = name;
+                    let stored = &mut history.metadata.seats[s.player.0 as usize].name;
+                    if *stored != cleaned {
+                        *stored = cleaned;
+                        renamed = true;
+                    }
                 }
             }
             s.connection = Some(connection);
             s.joined = true;
+            s.joined_at = Some((connection, turn));
             s.ready = false;
             let welcome = ServerMessage::Welcome {
                 seat,
@@ -583,8 +610,10 @@ impl Host {
             let view = ServerMessage::View {
                 view: Box::new(game.view(player)),
             };
-            // The joined name is part of the saved history.
-            self.save = Some(game.session.save_json());
+            // The joined name is part of the saved history; save only when it changed.
+            if renamed {
+                self.save = Some(game.session.save_json());
+            }
             self.send_batch(connection, &[welcome, view]);
             // A game takeover may also displace a staging watcher/occupant.
             if let Some(room) = &mut self.room {
@@ -611,7 +640,16 @@ impl Host {
                 if game.session.state.finished {
                     return Err("The game is finished".into());
                 }
-                let errors = validate_orders(&game.session.state, seat.player, &orders);
+                if orders.len() > MAX_STAGED_ORDERS {
+                    let errors = vec![legatum_core::OrderError {
+                        index: MAX_STAGED_ORDERS,
+                        message: format!("Too many orders (at most {MAX_STAGED_ORDERS})"),
+                    }];
+                    self.send(connection, &ServerMessage::Validation { errors });
+                    return Ok(());
+                }
+                let mut errors = validate_orders(&game.session.state, seat.player, &orders);
+                errors.truncate(MAX_VALIDATION_ERRORS);
                 let old_diplomacy: Vec<_> = seat
                     .orders
                     .iter()
@@ -1403,6 +1441,133 @@ mod tests {
         host.disconnect(1);
         let (sender, _receiver) = outbox::channel();
         assert!(host.connect(sender, true).is_ok());
+    }
+
+    fn two_seat_host() -> Host {
+        let mut host = Host::new(None, 5).unwrap();
+        host.new_game(GameSetup::standard(7, [Faction::India, Faction::Byzantium]))
+            .unwrap();
+        host
+    }
+
+    fn join_as(host: &mut Host, id: ConnectionId, seat: usize, name: &str) {
+        let token = host.game.as_mut().unwrap().seats[seat]
+            .token
+            .get_or_insert_with(|| credentials::token().unwrap())
+            .clone();
+        host.message(
+            id,
+            ClientMessage::Join {
+                seat,
+                name: name.into(),
+                token,
+            },
+        )
+        .unwrap();
+    }
+
+    #[test]
+    fn a_repeat_join_on_the_same_connection_is_answered_with_nothing_but_a_new_connection_still_joins()
+     {
+        let mut host = two_seat_host();
+        let (a, receiver) = peer(&mut host);
+        join_as(&mut host, a, 0, "Ada");
+        assert!(drain(&receiver).iter().any(|m| m["type"] == "view"));
+        assert!(host.take_save().is_some());
+        for _ in 0..3 {
+            join_as(&mut host, a, 0, "Ada");
+        }
+        let again = drain(&receiver);
+        assert!(
+            again
+                .iter()
+                .all(|m| m["type"] != "view" && m["type"] != "welcome")
+        );
+        assert!(host.take_save().is_none(), "a repeat join must not save");
+        // A reconnect on a new connection works as before.
+        let (b, receiver_b) = peer(&mut host);
+        join_as(&mut host, b, 0, "Ada");
+        let joined = drain(&receiver_b);
+        assert!(joined.iter().any(|m| m["type"] == "welcome"));
+        assert!(joined.iter().any(|m| m["type"] == "view"));
+        assert!(
+            host.take_save().is_none(),
+            "an unchanged name needs no save"
+        );
+        // A new name on the same connection is still applied.
+        join_as(&mut host, b, 0, "Grace");
+        assert_eq!(host.game.as_ref().unwrap().seats[0].name, "Grace");
+        assert!(host.take_save().is_some());
+    }
+
+    #[test]
+    fn guest_names_are_cleaned_the_same_in_the_seat_history_and_staging() {
+        assert_eq!(
+            clean_name("  Ada \u{202E}Lovelace\u{200B}\n\t Byron "),
+            "Ada Lovelace Byron"
+        );
+        assert_eq!(clean_name("\u{FEFF}\u{AD}\u{2066}\u{61C}"), "");
+        assert_eq!(clean_name(&"é".repeat(500)).chars().count(), 80);
+        let mut host = two_seat_host();
+        let (a, _a) = peer(&mut host);
+        let dirty = format!("\u{202E}  Eve\u{200B}   Hacker  {}", "x".repeat(70_000));
+        join_as(&mut host, a, 0, &dirty);
+        let game = host.game.as_ref().unwrap();
+        let history = game.session.history.as_ref().unwrap();
+        assert_eq!(game.seats[0].name, history.metadata.seats[0].name);
+        assert_eq!(game.seats[0].name.chars().count(), 80);
+        assert!(game.seats[0].name.starts_with("Eve Hacker xxx"));
+        // A name that cleans to nothing keeps the seat's name.
+        join_as(&mut host, a, 0, "\u{200B}\u{202E}");
+        assert_eq!(
+            host.game.as_ref().unwrap().seats[0].name.chars().count(),
+            80
+        );
+        // Staging uses the same cleaning and its own empty-name fallback.
+        let mut room = Room::new("names".into(), room_config());
+        assert!(
+            room.take(7, false, 1, "\u{200B}  Zed\u{202E} ", None)
+                .is_ok()
+        );
+        assert_eq!(room.state(false).occupants[1].as_ref().unwrap().name, "Zed");
+        room.update(7, Some("\u{200B}".into()), None);
+        assert_eq!(
+            room.state(false).occupants[1].as_ref().unwrap().name,
+            "Player"
+        );
+    }
+
+    #[test]
+    fn staged_orders_are_capped_per_turn_and_validation_errors_are_capped() {
+        let mut host = two_seat_host();
+        let (a, receiver) = peer(&mut host);
+        join_as(&mut host, a, 0, "Ada");
+        drain(&receiver);
+        let game_id = host.game.as_ref().unwrap().id.clone();
+        let turn = host.game.as_ref().unwrap().session.state.turn;
+        let bogus = |n: usize| {
+            let orders: Vec<Value> = (0..n)
+                .map(|_| serde_json::json!({"type": "DisbandUnit", "unit": 4_000_000}))
+                .collect();
+            serde_json::from_value::<ClientMessage>(serde_json::json!({
+                "type": "orders", "game_id": game_id, "turn": turn, "orders": orders
+            }))
+            .unwrap()
+        };
+        host.message(a, bogus(MAX_STAGED_ORDERS + 1)).unwrap();
+        let reply = drain(&receiver);
+        let validation = reply.iter().find(|m| m["type"] == "validation").unwrap();
+        assert_eq!(validation["errors"].as_array().unwrap().len(), 1);
+        assert!(host.game.as_ref().unwrap().seats[0].orders.is_empty());
+        // Within the limit the orders are kept as before, with the error list capped.
+        host.message(a, bogus(500)).unwrap();
+        let reply = drain(&receiver);
+        let validation = reply.iter().find(|m| m["type"] == "validation").unwrap();
+        assert_eq!(
+            validation["errors"].as_array().unwrap().len(),
+            MAX_VALIDATION_ERRORS
+        );
+        assert_eq!(host.game.as_ref().unwrap().seats[0].orders.len(), 500);
     }
 
     #[test]
