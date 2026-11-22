@@ -1,4 +1,4 @@
-// Road art review: the Courier Hall's roads on a generated map (src/test/roadsFixture.ts), at normal
+// Road art review: the Yam Relay Station's roads on a generated map (src/test/roadsFixture.ts), at normal
 // and zoomed-out zoom. ROADS_SHOTS=<dir> picks where the shots go. Shots only.
 import { test as base, expect, type Page } from '@playwright/test';
 import { createServer } from 'vite';

@@ -1366,7 +1366,7 @@ fn complete_item(
 ) -> bool {
     let c = &state.cities[&id];
     let owner = c.owner;
-    let war_shrine = c.buildings.contains(&BuildingKind::Agoge);
+    let agoge = c.buildings.contains(&BuildingKind::Agoge);
     match item {
         ProductionItem::Unit { unit } => {
             if unit == UnitKind::Settler && c.population < SETTLER_MIN_POP {
@@ -1402,7 +1402,7 @@ fn complete_item(
             }
             if data::unit_stats(unit).military
                 && state.player(owner).faction == Faction::Sparta
-                && war_shrine
+                && agoge
             {
                 let xp = crate::rules::promotion::threshold(2).unwrap();
                 let u = state.units.get_mut(&uid).expect("just spawned");

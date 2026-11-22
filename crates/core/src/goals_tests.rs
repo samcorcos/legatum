@@ -309,7 +309,7 @@ fn each_byzantines_heir_scores_for_its_own_empire() {
     assert!(goal_vp(&s, P0).is_empty());
 }
 
-// ---------- the Courier Hall ----------
+// ---------- the Yam Relay Station ----------
 
 fn hall() -> ProductionItem {
     ProductionItem::Building {
@@ -333,7 +333,7 @@ fn transfer_hall_city(state: &mut GameState, city: CityId, owner: PlayerId) {
     }
 }
 
-/// Build P0's Hall in `city` the way production completes it.
+/// Build P0's Station in `city` the way production completes it.
 fn raise_hall(state: &mut GameState, city: CityId) {
     let item = hall_at(state, city);
     state.cities.get_mut(&city).unwrap().producing = Some(item);
@@ -379,11 +379,11 @@ fn one_hall_per_mongols_empire_rebuilt_only_if_it_no_longer_exists() {
         BuildingKind::YamRelayStation
     ));
     assert!(!economy::can_produce(&s, &s.cities[&b], hall_at(&s, b)));
-    // A rival captures the Hall's city: it stays standing there, so retake it.
+    // A rival captures the Station's city: it stays standing there, so retake it.
     transfer_hall_city(&mut s, a, P1);
     let why = economy::production_blocker(&s, &s.cities[&b], hall_at(&s, b), true).unwrap();
     assert!(why.contains("retake"), "{why}");
-    // Razed (a Celts capture removes the city): the Hall is gone and Mongols may rebuild.
+    // Razed (a Celts capture removes the city): the Station is gone and Mongols may rebuild.
     s.cities.remove(&a);
     for tile in &mut s.map.tiles {
         if tile.city == Some(a) {
@@ -474,7 +474,7 @@ fn the_hall_opens_its_holders_land_to_every_unit_at_peace() {
     }
     for kind in UnitKind::ALL {
         let military = data::unit_stats(kind).military;
-        // Before the Hall, every unit is closed out of foreign land.
+        // Before the Station, every unit is closed out of foreign land.
         assert!(
             !s.passage_allowed(P1, kind, Some(P0)),
             "{kind:?} {military}"
@@ -485,7 +485,7 @@ fn the_hall_opens_its_holders_land_to_every_unit_at_peace() {
         assert!(s.passage_allowed(P1, kind, Some(P0)), "{kind:?}");
         assert!(!s.passage_allowed(P0, kind, Some(P1)), "{kind:?}");
     }
-    // The view agrees with the factory, and lists the Hall publicly.
+    // The view agrees with the factory, and lists the Station publicly.
     let v = crate::view::player_view(&s, P1);
     assert_eq!(v.courier_halls.len(), 1);
     assert_eq!(

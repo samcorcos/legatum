@@ -42,6 +42,28 @@ pub(crate) fn burden(
         .map_or(0, |p| p.decadence_percent * genes.decadence_weight / 100)
 }
 
+/// Whether taking a city of `owner` would count for Humble the mighty now: the core's own test
+/// (`objectives::humbles`) on the public team VP, summed from every member as `scoring::team_vp`
+/// does, for each team with a living member (as the turn-start `CaptureVpSnapshot` takes it).
+pub(crate) fn humbles(view: &PlayerView, owner: legatum_core::PlayerId) -> bool {
+    let Some(victim) = view.players.iter().find(|p| p.id == owner).map(|p| p.team) else {
+        return false;
+    };
+    let mut vp: std::collections::BTreeMap<legatum_core::TeamId, (u32, bool)> =
+        std::collections::BTreeMap::new();
+    for p in view.players.iter() {
+        let e = vp.entry(p.team).or_default();
+        e.0 += p.vp;
+        e.1 |= p.alive;
+    }
+    let vp = vp
+        .into_iter()
+        .filter(|(_, (_, alive))| *alive)
+        .map(|(t, (n, _))| (t, n))
+        .collect();
+    legatum_core::objectives::humbles(&vp, victim, view.team)
+}
+
 /// Whether an opted-in decadence rule cuts a rival's yields enough to meet the strain threshold.
 pub(crate) fn strained(
     view: &PlayerView,
@@ -115,17 +137,12 @@ impl Planner<'_> {
         let at_war = self.ctx.hostile_at.iter().any(|h| *h) && !self.ctx.enemy_cities.is_empty();
         let armed = self.ctx.own_units.iter().filter(|u| u.military).count() >= 3;
         let hard = self.difficulty == legatum_core::AiDifficulty::Hard;
-        let rival_vp = |f: &dyn Fn(u32) -> bool| {
-            self.ctx
-                .enemy_cities
-                .iter()
-                .any(|c| v.players.iter().any(|p| p.id == c.owner && f(p.vp)))
-        };
-        let my_vp = v.players.iter().find(|p| p.id == v.me).map_or(0, |p| p.vp);
         match o.objective {
-            Objective::HumbleTheMighty => {
-                (hard && at_war && armed && rival_vp(&|vp| vp > my_vp)).then_some(120)
-            }
+            Objective::HumbleTheMighty => (hard
+                && at_war
+                && armed
+                && self.ctx.enemy_cities.iter().any(|c| humbles(v, c.owner)))
+            .then_some(120),
             Objective::Breach => (hard
                 && at_war
                 && armed
@@ -285,22 +302,14 @@ impl Planner<'_> {
                 Some((rem * 24 + cities - 1) / cities + 8)
             }
             Objective::HumbleTheMighty | Objective::Breach => {
-                let my_vp = v.players.iter().find(|p| p.id == v.me).map_or(0, |p| p.vp);
                 let target = self
                     .ctx
                     .enemy_cities
                     .iter()
-                    .filter(|city| {
-                        let owner_vp = v
-                            .players
-                            .iter()
-                            .find(|p| p.id == city.owner)
-                            .map_or(0, |p| p.vp);
-                        match o.objective {
-                            Objective::HumbleTheMighty => owner_vp > my_vp && !city.is_capital,
-                            Objective::Breach => city.walls && !city.is_capital,
-                            _ => true,
-                        }
+                    .filter(|city| match o.objective {
+                        Objective::HumbleTheMighty => humbles(v, city.owner) && !city.is_capital,
+                        Objective::Breach => city.walls && !city.is_capital,
+                        _ => true,
                     })
                     .filter_map(|city| {
                         let march = self
@@ -576,12 +585,7 @@ impl Planner<'_> {
         if live.is_empty() {
             return 0;
         }
-        let owner_vp = v
-            .players
-            .iter()
-            .find(|p| p.id == city.owner)
-            .map_or(0, |p| p.vp);
-        let my_vp = v.players.iter().find(|p| p.id == v.me).map_or(0, |p| p.vp);
+        let humbled = humbles(v, city.owner);
         // Gene `capture_completes_count`: the captured city is one more city and brings its
         // owner's tiles around it (the ring is a floor: the city's whole border comes with it).
         let counts = self.decisions.capture_completes_count > 0 && !self.sacks_city(city);
@@ -594,9 +598,7 @@ impl Planner<'_> {
         let worth = |o: &LiveObjective| match o.objective {
             Objective::Cities { .. } => counts && o.remaining() == 1,
             Objective::Territory { .. } => counts && land >= 1 && o.remaining() as i32 <= land,
-            Objective::HumbleTheMighty => {
-                o.remaining() == 1 && owner_vp > my_vp && !city.is_capital
-            }
+            Objective::HumbleTheMighty => o.remaining() == 1 && humbled && !city.is_capital,
             Objective::Breach => o.remaining() == 1 && city.walls && !city.is_capital,
             _ => false,
         };
@@ -690,6 +692,54 @@ mod tests {
             ready: None,
         }];
         v
+    }
+
+    /// Rules 53: a leading seat values the top rival's plain city for Humble the mighty, through
+    /// the core's own test, and never a lower rival's; a trailing seat still needs a team ahead.
+    #[test]
+    fn humble_the_mighty_targets_the_top_rival_when_leading() {
+        let third = legatum_core::PlayerId(3);
+        let mut v = count_view(Objective::HumbleTheMighty, 0, 1);
+        let mut extra = ViewBuilder::new(24, 16)
+            .city(1, ME, off(4, 8), 6)
+            .city(2, ENEMY, off(14, 8), 5)
+            .city(3, ENEMY, off(18, 8), 3)
+            .city(4, third, off(10, 12), 3)
+            .city(5, third, off(12, 14), 3)
+            .build();
+        extra.eras = v.eras.clone();
+        extra.objective_progress = v.objective_progress.clone();
+        v = extra;
+        let set_vp = |v: &mut PlayerView, me: u32, enemy: u32, low: u32| {
+            for p in v.players.iter_mut() {
+                p.vp = match p.id {
+                    id if id == ME => me,
+                    id if id == ENEMY => enemy,
+                    id if id == third => low,
+                    _ => 0,
+                };
+            }
+        };
+        let value = |v: &PlayerView, city: usize| {
+            let faction = v.faction_of(ME);
+            let p = Planner::new(v, crate::Knobs::for_faction(faction), faction, 7);
+            p.objective_capture_value(&v.cities[city])
+        };
+        let (enemy_plain, low_plain) = (2, 4);
+        assert!(!v.cities[enemy_plain].is_capital && !v.cities[low_plain].is_capital);
+        set_vp(&mut v, 5, 3, 1);
+        assert!(humbles(&v, ENEMY) && !humbles(&v, third));
+        assert_eq!(
+            value(&v, enemy_plain),
+            1,
+            "the leader takes from the top rival"
+        );
+        assert_eq!(value(&v, low_plain), 0, "not from a lower rival");
+        set_vp(&mut v, 3, 3, 1);
+        assert_eq!(value(&v, enemy_plain), 1, "tied for the lead");
+        set_vp(&mut v, 2, 3, 1);
+        assert_eq!(value(&v, enemy_plain), 1, "a rival ahead");
+        assert_eq!(value(&v, low_plain), 0, "a rival behind never counts");
     }
 
     fn capture_value(v: &PlayerView, gene: i32) -> i32 {

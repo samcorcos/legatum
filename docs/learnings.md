@@ -32,6 +32,7 @@ To find the full entry for a line, search its month file for the words in the li
 - A tech with nothing for a faction starts known (rules 49); `factions.rs::no_faction_ever_researches_a_tech_that_gives_it_nothing` pins the skip list. Prefer giving the tech something real. [2026-11]
 - `start-settlers=N` means N extra Settlers. [2026-10]
 - Rules 50 (2026-11-22): World Ages is the only era scoring, a rival's original capital is 1 VP only while held (the Celtic sack keeps its point), Alliance upkeep is waived at War with a near-winner. Grep player text and the Guide for the retired "era objectives" wording when touching scoring. [2026-11]
+- A World Age card judged against the standings (ahead of, behind) needs an answer for the leader and for ties: Humble the mighty was dead for the sole leader and froze a 2,000-game sim at turn 300 (no turn limit by default). Rules 53 counts the top rival when you lead (`objectives::humbles`, shared with the AI). [2026-11]
 - Before building a "new" idea, search the archive and the code: the designer's training-mode idea had been built a month earlier (`crates/ai/src/search/tactics.rs`). [2026-11]
 
 ## AI

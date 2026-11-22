@@ -10,6 +10,15 @@ determinism tests. The runner pin tests read that file and name the command when
 a digest differs. Keep `pins.json` outside this directory: replay import and the
 WASM checker treat every JSON file here as a tape.
 
+## Rules 53: Humble the mighty counts the top rival when you lead (2026-11-22)
+
+`LEGATUM_REPIN_THREADS=2 tools/sim/repin.sh` on `claude/review-rules-51` merged with `origin/master`
+at 61f7dab (rules 52, identifiers renamed) kept all three mixed-AI tapes, every fixed-order replay
+hash and all three 80-turn mixed digests. Only the 160-turn scripted-Hard city-fire digest moved
+(`6650519879623500650` to `2055543751409732395`): the leader now counts captures from its top
+rival for Humble the mighty, and Hard values those captures. No scenario state hash changed. The
+pin tests and all 12 determinism tests passed.
+
 ## Final rules-50 tree: master merged again, Gold gifts, wonder prices, Star Fort (2026-11-22)
 
 After merging `origin/master` again (Egypt's Settler values) and adding the Gold gift order, the

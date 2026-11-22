@@ -82,7 +82,7 @@ fn cities_founded_later_join_and_roads_outlive_the_hall() {
     let (s, events) = turn(&s);
     assert!(s.map.is_road(s.cities[&late].pos));
     assert!(!events.iter().any(|e| matches!(e, Event::RoadsLaid { .. })));
-    // Destroy the Hall: every road stays, and later cities are not joined.
+    // Destroy the Station: every road stays, and later cities are not joined.
     let mut gone = s.clone();
     gone.cities.get_mut(&hall).unwrap().buildings.clear();
     let tiles = gone.map.tiles.clone();
@@ -190,7 +190,7 @@ fn roadworks_link_every_city_within_eight_hexes_of_any_empire_and_only_those() {
     assert!(s.map.is_road(s.cities[&near].pos));
     assert!(s.map.is_road(s.cities[&edge].pos));
     assert!(!s.map.is_road(s.cities[&far].pos), "out of range");
-    // The Hall's one-time announcement is not made for a player's roads.
+    // The Station's one-time announcement is not made for a player's roads.
     assert!(s.map.road_hub.is_none());
     // A city founded later within range joins the next turn; a far one never does.
     let mut s = s;
@@ -230,7 +230,7 @@ fn roadworks_yield_one_gold_flat_whatever_the_connections() {
 #[test]
 fn hall_roads_and_roadworks_share_one_road_network() {
     let (mut s, hall, others) = mongols_world();
-    // A Roadworks city far from the Hall's roads joins its own neighbours first; the Hall then
+    // A Roadworks city far from the Station's roads joins its own neighbours first; the Station then
     // joins everything, the Roadworks cluster included.
     give_roadworks(&mut s, others[1]);
     let (mut s, _) = turn(&s);
@@ -242,7 +242,7 @@ fn hall_roads_and_roadworks_share_one_road_network() {
     for c in s.cities.values() {
         assert!(
             net[s.map.index(c.pos).unwrap()] >= 0,
-            "{:?} is on the Hall's network",
+            "{:?} is on the Station's network",
             c.id
         );
     }

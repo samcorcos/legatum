@@ -15,7 +15,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
 
   test('training: chip while planning, progress card after End Turn, report line after', async ({ page }) => {
     test.setTimeout(180_000);
-    // Three enemy Soldiers at your city, and their empire is a Training AI: it studies the siege.
+    // Three enemy Spearmen at your city, and their empire is a Training AI: it studies the siege.
     const setup = siegeFixture({ fresh: true });
     const rival = setup.fixture.setup.players[1] as { difficulty?: string; search?: boolean };
     rival.difficulty = 'Hard';

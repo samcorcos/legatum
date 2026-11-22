@@ -49,7 +49,7 @@ function alarmState() {
   Object.assign(relation(1, 2), { state: 'War', effective_turn: ALARM_TURN, version: 1, war_id: 2, declarers: [1] });
   s.diplomacy!.betrayals = [BETRAYAL];
   s.diplomacy!.next_treaty_id = 3; s.diplomacy!.next_war_id = 3;
-  // The Sparta garrison Brasslock with more on the road; our Soldier and Scout watch from Waystation.
+  // The Sparta garrison Brasslock with more on the road; our Spearman and Scout watch from Waystation.
   spawnUnit(s, 2, 'Pikeman', fromOffset(13, 8), false);
   for (const [c, r] of [[12, 9], [13, 7]]) spawnUnit(s, 2, 'Pikeman', fromOffset(c, r), false);
   spawnUnit(s, 0, 'Spearman', fromOffset(11, 8), false);

@@ -12,7 +12,7 @@ import { techCardUnlocks, techUnlockSummary } from './ui/techCardUnlocks';
 import { eraName } from './ui/eraResearch';
 import { cardName, cardNameAndAsk } from './ageCards';
 import { CITY_HEAL, CITY_HP, cityCanFire } from './combat';
-import { BUILDING_NAME, unitIconName, FACTION_ADJECTIVE, FACTION_GOAL, factionGoalVp, RULES, TECH_NAME, CAPTURE_RESISTANCE_TURNS, eraScaled, factionGoalRule, UNIT_NAME, itemName, pluralUnit } from './data';
+import { ageName, BUILDING_NAME, unitIconName, FACTION_ADJECTIVE, FACTION_GOAL, factionGoalVp, RULES, TECH_NAME, CAPTURE_RESISTANCE_TURNS, eraScaled, factionGoalRule, UNIT_NAME, itemName, pluralUnit } from './data';
 import { closeObjectives } from './eraObjectives';
 import { bearing, empireNameOf, empireOfPlayer, empireTitle, PEOPLE_NAME, placeName } from './empires';
 import { CAMP_CLEAR_GOLD, isBarbarian } from './barbarians';
@@ -324,7 +324,7 @@ function combinedAssaults(events: Event[]): Map<string, Battle[]> {
 }
 const assaultKey = (d: Battle['defender']) => (d.kind === 'City' ? `City:${d.city}` : `Unit:${d.unit}`);
 
-/** "your 3 Oathbearers", "Switzerland' 2 Soldiers and Trooper": who joined a combined assault. */
+/** "your 3 Spartan Hoplites", "Switzerland' 2 Spearmen and Pikeman": who joined a combined assault. */
 function assaultForce(ctx: ReportContext, fights: Battle[]): string {
   const counts = new Map<string, number>();
   for (const b of fights) {
@@ -403,7 +403,7 @@ export function upkeepText(upkeep?: UpkeepPreview | null): string {
   return `Upkeep: −${upkeep.rate} Gold/turn`;
 }
 
-/** A city's automatic shot (cities fire back): "Levy Reach fired on Switzerland' Soldier at …: −14 HP". */
+/** A city's automatic shot (cities fire back): "Levy Reach fired on Switzerland' Spearman at …: −14 HP". */
 function cityShotLine(e: Battle, city: number, ctx: ReportContext, mine: Mine): ReportLine {
   const name = ctx.cityName(city);
   const shooter = e.attacker_owner === ctx.me ? name : `${possessiveOf(who(ctx, e.attacker_owner))} city ${name}`;
@@ -433,7 +433,7 @@ function cityShotLine(e: Battle, city: number, ctx: ReportContext, mine: Mine): 
 
 /**
  * One battle as a report line that answers "who hit what, where, from where, and what it cost":
- * "Hollow Crown's Archer bombarded your Ranger at Beacon from 2 tiles NE: −35 HP (65 left)".
+ * "Hollow Crown's Archer bombarded your Archer at Beacon from 2 tiles NE: −35 HP (65 left)".
  * Melee lines also carry what happens next (G18, G21): an attack whose defender survived ends the
  * attacker's order ("Needs orders"), and a unit hit while pulling back either got away or was stopped.
  */
@@ -578,8 +578,8 @@ function heirGoalLine(e: GoalEvent, ctx: ReportContext): ReportLine {
 }
 
 /**
- * Mongols's held goal: the Courier Hall. A capture is one line from the new holder's gain, with the
- * old holder's loss folded in (see `formatEvents`); a Hall built has no loss beside it; a loss with
+ * Mongols's held goal: the Yam Relay Station. A capture is one line from the new holder's gain, with the
+ * old holder's loss folded in (see `formatEvents`); a Station built has no loss beside it; a loss with
  * no new holder is its city sacked (or taken by barbarians). The city's name comes from the capture
  * or completion event when the viewer saw one.
  */
@@ -1241,7 +1241,7 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
       // World Ages: the engine's one announcement of an Age. It names no player, so every report filter shows it. It stands in for the first empire's `EraEntered` line (`formatEvents`).
       const era = ctx.eraName?.(e.era) ?? eraName(e.era - 1);
       const mineFirst = e.first === ctx.me;
-      return line('victory', `The ${era} Age began: ${mineFirst ? 'You' : who(ctx, e.first)} entered the ${era} era first. Its card is open to every empire.`, {
+      return line('victory', `The ${ageName(era)} began: ${mineFirst ? 'You' : who(ctx, e.first)} entered the ${era} era first. Its card is open to every empire.`, {
         players: [], weight: 2, tone: toneFor(e.first), openLedger: true,
         // Every player can see the Age's score check again (the opener its own era-up first).
         reopenEra: { era: e.era, first: mineFirst, age: e.first },
@@ -1250,7 +1250,7 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
     case 'EraObjectiveScored': {
       const name = ctx.eraName?.(e.era);
       const card = ctx.ageCard?.(e.era, e.slot);
-      return line('victory', `${who(ctx, e.player)} scored ${name ? `the ${name} Age` : `Age ${e.era}`} with ${card ? cardName(e.objective) : e.objective}: +1 VP`, {
+      return line('victory', `${who(ctx, e.player)} scored ${name ? `the ${ageName(name)}` : `Age ${e.era}`} with ${card ? cardName(e.objective) : e.objective}: +1 VP`, {
         players: [e.player], weight: 2, tone: toneFor(e.player),
       });
     }
@@ -1540,7 +1540,7 @@ const plainBlocker = (reason: string) => reason
 /**
  * Core reports a city's production changes it didn't choose as OrderFailed: "Hymnal can no longer
  * produce Settler: Settler needs population 2 (currently 1); its 38 Production stays banked", and
- * "Hymnal skipped queued Trooper: Needs 10 Iron …; kept in queue". These read as city news, not a
+ * "Hymnal skipped queued Pikeman: Needs 10 Iron …; kept in queue". These read as city news, not a
  * failed order, and say what happens to the progress and what to do next.
  */
 function cityProductionFailure(reason: string): { city: string; text: string } | null {
@@ -1560,7 +1560,7 @@ function cityProductionFailure(reason: string): { city: string; text: string } |
 }
 
 /**
- * "Waypost Seven was attacked: 200 → 120 HP by 3 Soldiers": one line per own city that took
+ * "Waypost Seven was attacked: 200 → 120 HP by 3 Spearmen": one line per own city that took
  * damage, first in the report (user, 2026-10-08: "I shouldn't be surprised to see that one of my
  * cities is about to get taken over"). The battle lines below it keep the strike-by-strike math.
  */
@@ -1681,9 +1681,9 @@ export function releasedGarrisonLines(before: PlayerView | null, after: PlayerVi
  */
 export function objectiveCloseLines(before: PlayerView | null, after: PlayerView): ReportLine[] {
   return closeObjectives(before, after).map(({ era, line: o }) => line('victory',
-    `Close to the ${era.name} Age’s VP: ${cardNameAndAsk(o.text)} (${o.current} of ${o.target}, ${o.remaining} to go)`, {
+    `Close to the ${ageName(era.name)}’s VP: ${cardNameAndAsk(o.text)} (${o.current} of ${o.target}, ${o.remaining} to go)`, {
       players: [after.me], weight: 2, tone: 'good',
-      details: [`Meet the ${era.name} Age’s card to score its 1 VP, kept for good.`],
+      details: [`Meet the ${ageName(era.name)}’s card to score its 1 VP, kept for good.`],
     }));
 }
 

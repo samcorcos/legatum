@@ -12,7 +12,7 @@ import { openLateRace } from '../lateRaceSave';
 import { SIZES, aim, frameHall, loadFixture, openHall, selectThing, shot, stageHallReport, type GameWindow } from './helpers';
 
 /**
- * The capture moments' map: the hall fixture with its third city (C, not the Hall's city, whose capture the
+ * The capture moments' map: the hall fixture with its third city (C, not the Station's city, whose capture the
  * Hall's own moment tells) already in the captor's hands and the Pyramids on a tile beside it, built by `builder`.
  * The card then names that city, and the Pyramids label on the map sits beside it.
  */

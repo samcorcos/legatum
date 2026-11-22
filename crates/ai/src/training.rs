@@ -3269,13 +3269,13 @@ mod tests {
         let b = find_battles(&s, PlayerId(0), 3).remove(0);
         let a = Arena::cut(&s, &b);
         let view = legatum_core::player_view(&a.state, PlayerId(0));
-        let ranger = b
+        let archer = b
             .units
             .iter()
             .copied()
             .find(|id| s.units[id].kind == UnitKind::Archer)
             .unwrap();
-        let opts = unit_options(&a.state, &view, ranger, a.to_arena(b.at).unwrap());
+        let opts = unit_options(&a.state, &view, archer, a.to_arena(b.at).unwrap());
         assert!(opts.iter().any(|o| matches!(o, Order::SkipUnit { .. })));
         assert!(opts.iter().any(|o| matches!(o, Order::RangedAttack { .. })));
         assert!(
@@ -3419,7 +3419,7 @@ mod tests {
         let (mut s, city) = siege();
         let at = s.cities[&city].pos;
         // The two Spearmen two tiles from the city.
-        let soldiers: Vec<UnitId> = s
+        let spearmen: Vec<UnitId> = s
             .units_of(PlayerId(0))
             .filter(|u| u.kind == UnitKind::Spearman)
             .map(|u| u.id)
@@ -3430,7 +3430,7 @@ mod tests {
             .into_iter()
             .filter(|h| !taken.contains(h))
             .collect();
-        for (id, h) in soldiers.iter().zip(free) {
+        for (id, h) in spearmen.iter().zip(free) {
             s.units.get_mut(id).unwrap().pos = h;
         }
         let view = legatum_core::player_view(&s, PlayerId(0));
@@ -3465,17 +3465,17 @@ mod tests {
         // At 0 HP (here with its garrison gone) the melee storms.
         s.cities.get_mut(&city).unwrap().hp = 0;
         s.units.retain(|_, u| u.owner == PlayerId(0));
-        let soldier = soldiers[0];
+        let spearman = spearmen[0];
         let next = at
             .neighbors()
             .into_iter()
             .find(|h| !s.units.values().any(|u| u.pos == *h))
             .unwrap();
-        s.units.get_mut(&soldier).unwrap().pos = next;
+        s.units.get_mut(&spearman).unwrap().pos = next;
         let view = legatum_core::player_view(&s, PlayerId(0));
         let o = stance_orders(&view, Stance::Siege, hard, at, 4, Some(city));
         assert!(o.contains(&Order::MoveUnit {
-            unit: soldier,
+            unit: spearman,
             to: at
         }));
     }
@@ -3610,7 +3610,7 @@ mod tests {
         let (mut s, city) = siege();
         s.cities.get_mut(&city).unwrap().hp = hp;
         let at = s.cities[&city].pos;
-        let soldier = s
+        let spearman = s
             .units_of(PlayerId(0))
             .find(|u| u.kind == UnitKind::Spearman)
             .unwrap()
@@ -3620,7 +3620,7 @@ mod tests {
             .into_iter()
             .find(|h| !s.units.values().any(|u| u.pos == *h))
             .unwrap();
-        s.units.get_mut(&soldier).unwrap().pos = next;
+        s.units.get_mut(&spearman).unwrap().pos = next;
         let base = s.alloc_city_id();
         let mut home = s.cities[&city].clone();
         home.id = base;
@@ -3650,12 +3650,12 @@ mod tests {
             hp: data::UNIT_HP,
             xp: 0,
         });
-        (s, city, soldier, plane)
+        (s, city, spearman, plane)
     }
 
     #[test]
     fn the_breach_bombs_the_city_to_zero_and_the_cheapest_melee_walks_in_the_same_turn() {
-        let (s, city, soldier, plane) = battered_with_bomber(10);
+        let (s, city, spearman, plane) = battered_with_bomber(10);
         let at = s.cities[&city].pos;
         let view = legatum_core::player_view(&s, PlayerId(0));
         let hard: Vec<Order> = s
@@ -3665,7 +3665,7 @@ mod tests {
         let b = breach_orders(&view, &hard, city).expect("the shots zero a 10 HP city");
         assert!(b.contains(&Order::AirStrike { plane, target: at }));
         assert!(b.contains(&Order::MoveUnit {
-            unit: soldier,
+            unit: spearman,
             to: at
         }));
         // A full-HP city the Archer alone can't zero: no breach.
@@ -3681,7 +3681,7 @@ mod tests {
     #[test]
     fn plain_hard_with_the_breach_gene_bombs_and_walks_in() {
         use crate::Brain;
-        let (s, city, soldier, plane) = battered_with_bomber(60);
+        let (s, city, spearman, plane) = battered_with_bomber(60);
         let at = s.cities[&city].pos;
         let view = legatum_core::player_view(&s, PlayerId(0));
         let faction = s.player(PlayerId(0)).faction;
@@ -3701,7 +3701,7 @@ mod tests {
         );
         assert!(
             orders.contains(&Order::MoveUnit {
-                unit: soldier,
+                unit: spearman,
                 to: at
             }),
             "{orders:?}"
@@ -3717,7 +3717,7 @@ mod tests {
 
     #[test]
     fn the_full_game_check_always_weighs_the_breach_and_plays_it_when_it_takes_the_city() {
-        let (s, city, soldier, plane) = battered_with_bomber(10);
+        let (s, city, spearman, plane) = battered_with_bomber(10);
         let hard: Vec<Order> = s
             .units_of(PlayerId(0))
             .map(|u| Order::SkipUnit { unit: u.id })
@@ -3741,7 +3741,7 @@ mod tests {
         if played.breach {
             assert!(o.contains(&Order::AirStrike { plane, target: at }));
             assert!(o.contains(&Order::MoveUnit {
-                unit: soldier,
+                unit: spearman,
                 to: at
             }));
         }

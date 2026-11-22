@@ -375,13 +375,13 @@ fn swiss_interest_off_pays_no_interest() {
 fn swiss_cheap_buys_off_prices_purchases_like_everyone_else() {
     let mut s = state_of(Faction::Switzerland, None);
     let c = found(&mut s, P0, at(5, 5));
-    let soldier = ProductionItem::Unit {
+    let spearman = ProductionItem::Unit {
         unit: UnitKind::Spearman,
     };
-    let cheap = economy::buy_cost_for(&s, &s.cities[&c], soldier).unwrap();
+    let cheap = economy::buy_cost_for(&s, &s.cities[&c], spearman).unwrap();
     assert_eq!(economy::buy_percent(&s, P0), data::SWISS_BUY_PERCENT);
     s.setup.rule_experiments = off(FactionRule::SwissCheapBuys);
-    let dear = economy::buy_cost_for(&s, &s.cities[&c], soldier).unwrap();
+    let dear = economy::buy_cost_for(&s, &s.cities[&c], spearman).unwrap();
     assert_eq!(economy::buy_percent(&s, P0), data::BUY_COST_PERCENT);
     assert!(dear > cheap);
 }
@@ -754,7 +754,7 @@ fn sparta_premium_off_charges_ordinary_prices_for_civilian_builds() {
 }
 
 #[test]
-fn athens_lyceum_off_is_an_ordinary_laboratory() {
+fn athens_lyceum_off_is_an_ordinary_library() {
     let rules = off(FactionRule::AthensLyceum);
     let control = data::building_stats_for(Faction::Athens, BuildingKind::Library);
     let ablated = rules.building_stats_for(Faction::Athens, BuildingKind::Library);

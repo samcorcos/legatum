@@ -6,7 +6,7 @@ use legatum_core::rules::movement::PEACE_BLOCK_PREFIX;
 use legatum_core::{Event, GameState, Hex, Order, PlayerId, TeamId, UnitId, resolve_turn};
 use legatum_wasm::tape::Tape;
 
-const SOLDIER: UnitId = UnitId(3);
+const SPEARMAN: UnitId = UnitId(3);
 const SCOUT: UnitId = UnitId(14);
 
 /// The recorded game at the start of turn 6, and that turn's recorded orders.
@@ -18,7 +18,7 @@ fn turn_six() -> (GameState, std::collections::BTreeMap<PlayerId, Vec<Order>>) {
     ))
     .unwrap();
     assert_eq!(state.turn, 6);
-    assert_eq!(state.units[&SOLDIER].pos, Hex { q: 0, r: 14 });
+    assert_eq!(state.units[&SPEARMAN].pos, Hex { q: 0, r: 14 });
     assert_eq!(state.units[&SCOUT].pos, Hex { q: 1, r: 13 });
     assert!(
         !state.at_war(PlayerId(0), PlayerId(4)),
@@ -31,18 +31,18 @@ fn turn_six() -> (GameState, std::collections::BTreeMap<PlayerId, Vec<Order>>) {
 fn the_recorded_order_is_reported_as_blocked_by_a_team_at_peace() {
     let (state, orders) = turn_six();
     assert!(orders[&PlayerId(0)].contains(&Order::MoveUnit {
-        unit: SOLDIER,
+        unit: SPEARMAN,
         to: Hex { q: 1, r: 13 }
     }));
     let (next, events) = resolve_turn(&state, &orders);
     let reason = format!("{PEACE_BLOCK_PREFIX}AI 5's Scout");
     assert!(
         events.iter().any(|e| matches!(e,
-            Event::MoveBlocked { unit, reason: r, .. } if *unit == SOLDIER && *r == reason)),
+            Event::MoveBlocked { unit, reason: r, .. } if *unit == SPEARMAN && *r == reason)),
         "the report names who is there: {events:?}"
     );
     assert!(!events.iter().any(|e| matches!(e, Event::Battle { .. })));
-    assert_eq!(next.units[&SOLDIER].attack_target, None);
+    assert_eq!(next.units[&SPEARMAN].attack_target, None);
 }
 
 #[test]
@@ -60,7 +60,7 @@ fn declaring_war_with_the_attack_never_bounces_silently() {
     assert!(
         !events
             .iter()
-            .any(|e| matches!(e, Event::MoveBlocked { unit, .. } if *unit == SOLDIER)),
+            .any(|e| matches!(e, Event::MoveBlocked { unit, .. } if *unit == SPEARMAN)),
         "{events:?}"
     );
     // G20: plain Peace, so War starts this turn and the Spearman attacks the Scout now.
@@ -70,11 +70,11 @@ fn declaring_war_with_the_attack_never_bounces_silently() {
             .any(|e| matches!(e, Event::WarDeclared { relation } if relation.effective_turn == 6))
     );
     assert!(!events.iter().any(|e| matches!(e,
-        Event::AttackPursuit { unit, outcome: PursuitOutcome::AwaitingWar, .. } if *unit == SOLDIER)));
+        Event::AttackPursuit { unit, outcome: PursuitOutcome::AwaitingWar, .. } if *unit == SPEARMAN)));
     assert!(
         events.iter().any(|e| matches!(e,
             Event::Battle { attacker, defender: legatum_core::events::Defender::Unit { unit, .. }, .. }
-                if *attacker == SOLDIER && *unit == SCOUT)),
-        "the Soldier attacked the Scout on turn 6: {events:?}"
+                if *attacker == SPEARMAN && *unit == SCOUT)),
+        "the Spearman attacked the Scout on turn 6: {events:?}"
     );
 }

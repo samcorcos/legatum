@@ -16,9 +16,9 @@ import { endPlanning } from './turnActions';
 
 type GameWindow = Window & { legatum: typeof useGame; legatumMap: { toScreen(hex: Hex): { x: number; y: number } } };
 const save = () => gunzipSync(readFileSync(fileURLToPath(new URL('./saves/p892-alliance-loop-t20.current.legatum.gz', import.meta.url)))).toString('utf8');
-// The Soldier beside Neuchâtel, which strikes the city's tile this turn.
-const SOLDIER = 3;
-const SWISS_SOLDIER: Hex = { q: 29, r: 22 };
+// The Spearman beside Neuchâtel, which strikes the city's tile this turn.
+const SPEARMAN = 3;
+const SWISS_SPEARMAN: Hex = { q: 29, r: 22 };
 const SWITZERLAND = 6;
 
 async function open(page: Page) {
@@ -69,18 +69,18 @@ test('declining Switzerland’s Alliance, then declaring War and attacking, neve
   expect(await orders(page)).toEqual([{ type: 'RespondToProposal', proposal: 2, accept: false }]);
   await expect(cta).not.toContainText('Respond to offer');
 
-  // 2. Order a Soldier onto a Swiss Soldier at Peace: Declare War and attack.
+  // 2. Order a Spearman onto a Swiss Spearman at Peace: Declare War and attack.
   await page.evaluate((id) => {
     const s = (window as unknown as GameWindow).legatum.getState(), v = s.views![s.seat];
     s.set({ diplomacyOpen: false, techOpen: false });
     s.select({ kind: 'unit', id }); s.jumpTo(v.units.find((u) => u.id === id)!.pos);
-  }, SOLDIER);
-  const target = await mapPoint(page, SWISS_SOLDIER);
+  }, SPEARMAN);
+  const target = await mapPoint(page, SWISS_SPEARMAN);
   await page.mouse.click(target.x, target.y, { button: 'right' });
   await page.getByRole('dialog', { name: /^Declare War on / }).getByRole('button', { name: 'Declare War and attack' }).click();
   const plan = [
     { type: 'DeclareWar', against: SWITZERLAND, breach: false },
-    { type: 'MoveUnit', unit: SOLDIER, to: SWISS_SOLDIER },
+    { type: 'MoveUnit', unit: SPEARMAN, to: SWISS_SPEARMAN },
   ];
   await expect.poll(() => orders(page)).toEqual(plan);
 
@@ -108,7 +108,7 @@ test('declining Switzerland’s Alliance, then declaring War and attacking, neve
       withdrawn: events.some((e) => e.type === 'ProposalInvalidated' && e.proposal.id === 2 && e.reason === 'War was declared'),
       offers: v.diplomacy.proposals.filter((p) => p.to === v.team).length,
     };
-  }, SOLDIER);
+  }, SPEARMAN);
   expect(after).toEqual({ battle: true, failed: [], withdrawn: true, offers: 0 });
   await expect(cta).not.toContainText('Respond to offer');
 });

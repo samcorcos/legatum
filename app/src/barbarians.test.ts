@@ -11,7 +11,7 @@ import { playerColor, FACTION_PALETTE } from './theme';
 
 const unit = (id: number, owner: number, q: number, r: number, military = true) =>
   ({ id, owner, pos: { q, r }, military, kind: military ? 'Spearman' : 'Settler' }) as unknown as UnitView;
-// Two empires at Peace, a barbarian Soldier and a remembered camp.
+// Two empires at Peace, a barbarian Spearman and a remembered camp.
 const view = {
   me: 0,
   team: 0,

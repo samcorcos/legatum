@@ -358,7 +358,7 @@ impl Planner<'_> {
     }
 
     /// VP the owner of `city` loses when we sack it, from public information only: the held
-    /// faction goal the city props up (the Swiss hoard, Germany's Forges, the Heir, the Hall).
+    /// faction goal the city props up (the Swiss hoard, Germany's Forges, the Heir, the Station).
     /// Era objectives already scored are permanent, and the
     /// progress a sack sets back on an unscored one is private to its owner, so neither counts.
     pub(crate) fn sack_vp_denied(&self, city: &legatum_core::view::CityView) -> i32 {

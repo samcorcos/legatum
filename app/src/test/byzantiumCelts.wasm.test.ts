@@ -86,19 +86,19 @@ describe.skipIf(!available)('Byzantium and Celts core behavior', () => {
     const { fixtureClient, core } = pair(s);
     const a = fixtureClient.endTurn({}), b = core.endTurn({});
     (expect(a.events).toMatchSnapshot(), void (b.events));
-    // A Mongol Soldier does not rest-heal during Peace.
+    // A Mongol Spearman does not rest-heal during Peace.
     expect(fixtureClient.view(1).units.find((u) => u.id === intruder.id)?.hp).toBe(50);
     expect(core.view(1).units.find((u) => u.id === intruder.id)?.hp).toBe(50);
 
     const fight = fixture('Celts', 'Mongols');
     city(fight, 0, 4, 4); city(fight, 1, 16, 16);
     for (const relation of fight.diplomacy?.relations ?? []) relation.state = 'War';
-    const ranger = spawnUnit(fight, 0, 'Archer', fromOffset(10, 10), false);
+    const archer = spawnUnit(fight, 0, 'Archer', fromOffset(10, 10), false);
     const target = spawnUnit(fight, 1, 'Spearman', fromOffset(11, 10), false);
     const clients = pair(fight);
     for (const client of [clients.fixtureClient, clients.core])
-      expect(client.view(1).units.some((u) => u.id === ranger.id)).toBe(true);
-    const shot: Record<number, Order[]> = { 0: [{ type: 'RangedAttack', unit: ranger.id, target: target.pos }] };
+      expect(client.view(1).units.some((u) => u.id === archer.id)).toBe(true);
+    const shot: Record<number, Order[]> = { 0: [{ type: 'RangedAttack', unit: archer.id, target: target.pos }] };
     const mockAttack = clients.fixtureClient.endTurn(shot); clients.core.endTurn(shot);
     expect(mockAttack.events.filter((e) => e.type === 'Battle')).toMatchSnapshot();
   });
@@ -108,9 +108,9 @@ describe.skipIf(!available)('Byzantium and Celts core behavior', () => {
     city(s, 0, 4, 4);
     const captured = city(s, 1, 10, 10); captured.hp = 0;
     for (const relation of s.diplomacy?.relations ?? []) relation.state = 'War';
-    const soldier = spawnUnit(s, 0, 'Spearman', fromOffset(9, 10), false);
+    const spearman = spawnUnit(s, 0, 'Spearman', fromOffset(9, 10), false);
     const { fixtureClient, core } = pair(s);
-    const order: Order = { type: 'MoveUnit', unit: soldier.id, to: captured.pos };
+    const order: Order = { type: 'MoveUnit', unit: spearman.id, to: captured.pos };
     (expect(fixtureClient.validate(0, [order])).toMatchSnapshot(), void (core.validate(0, [order])));
     const a = fixtureClient.endTurn({ 0: [order] }), b = core.endTurn({ 0: [order] });
     (expect(a.events.filter((e) => e.type === 'CityRazed')).toMatchSnapshot(), void (b.events.filter((e) => e.type === 'CityRazed')));
@@ -128,9 +128,9 @@ describe.skipIf(!available)('Byzantium and Celts core behavior', () => {
       if (home) city(s, 0, 4, 4);
       const captured = city(s, 1, 10, 10); captured.hp = 0;
       for (const relation of s.diplomacy?.relations ?? []) relation.state = 'War';
-      const soldier = spawnUnit(s, 0, 'Spearman', fromOffset(9, 10), false);
+      const spearman = spawnUnit(s, 0, 'Spearman', fromOffset(9, 10), false);
       const { fixtureClient, core } = pair(s);
-      const orders: Record<number, Order[]> = { 0: [{ type: 'MoveUnit', unit: soldier.id, to: captured.pos }] };
+      const orders: Record<number, Order[]> = { 0: [{ type: 'MoveUnit', unit: spearman.id, to: captured.pos }] };
       const a = fixtureClient.endTurn(orders), b = core.endTurn(orders);
       const only = (events: { type: string }[]) => events.filter((e) => SACK.includes(e.type));
       (expect(only(a.events)).toMatchSnapshot(), void (only(b.events)));

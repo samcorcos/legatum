@@ -329,18 +329,18 @@ fn forecasts_gate_upgrades_and_match_research_and_building_yields() {
         .buildings
         .insert(BuildingKind::Library);
     let unlocks = research::tech_unlocks(&s, P);
-    let college = unlocks
+    let university = unlocks
         .iter()
         .find(|u| u.item == building(BuildingKind::University))
         .unwrap();
     assert!(
-        college.cities[0]
+        university.cities[0]
             .blocker
             .as_ref()
             .unwrap()
             .contains("population 5")
     );
-    assert_eq!(college.cost_breakdown.total, college.cost);
+    assert_eq!(university.cost_breakdown.total, university.cost);
     s.cities.get_mut(&id).unwrap().population = 5;
     let before = economy::city_yields(&s, &s.cities[&id]).total;
     let effect = research::income_change(&s, P, TechId::PrintingPress);
@@ -348,14 +348,14 @@ fn forecasts_gate_upgrades_and_match_research_and_building_yields() {
     let after = economy::city_yields(&s, &s.cities[&id]).total;
     assert_eq!(effect[0].yields, after - before);
     s.player_mut(P).techs.insert(TechId::Education);
-    let college = research::tech_unlocks(&s, P)
+    let university = research::tech_unlocks(&s, P)
         .into_iter()
         .find(|u| u.item == building(BuildingKind::University))
         .unwrap();
-    assert_eq!(college.cities[0].blocker, None);
+    assert_eq!(university.cities[0].blocker, None);
     economy::install_building(s.cities.get_mut(&id).unwrap(), BuildingKind::University);
     assert_eq!(
-        college.cities[0].yields_after,
+        university.cities[0].yields_after,
         economy::city_yields_for(&s, &s.cities[&id], None)
     );
 }
@@ -404,7 +404,7 @@ fn siege_forecast_and_resolution_hit_the_city_while_it_shields_its_garrison() {
 }
 
 #[test]
-fn marksmen_keep_celts_stats_and_paid_upgrades_do_not_move_or_fire() {
+fn crossbowmen_keep_celts_stats_and_paid_upgrades_do_not_move_or_fire() {
     let mut s = fixture(&[0, 1]);
     s.player_mut(P).faction = Faction::Celts;
     city(&mut s, 0, hex(3, 3), 3);

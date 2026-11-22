@@ -53,17 +53,17 @@ describe('unit hovercard', () => {
   });
 
   it('a faction piece keeps its own name and history', () => {
-    const [soldier] = hovers([unit('Feudalism', 'Pikeman', { name: 'Tagmatic Soldier' })], 'Feudalism', 'Byzantium');
-    if (soldier.h.type !== 'unit') throw new Error('not a unit');
-    expect(soldier.h.name).toBe('Tagmatic Soldier');
-    expect(soldier.h.flavour).toMatch(/tagmata/);
+    const [spearman] = hovers([unit('Feudalism', 'Pikeman', { name: 'Tagmatic Soldier' })], 'Feudalism', 'Byzantium');
+    if (spearman.h.type !== 'unit') throw new Error('not a unit');
+    expect(spearman.h.name).toBe('Tagmatic Soldier');
+    expect(spearman.h.flavour).toMatch(/tagmata/);
   });
 
   it('a faction piece says how it differs from the standard unit it replaces; an ordinary unit does not', () => {
-    const [soldier] = hovers([unit('Feudalism', 'Pikeman', { name: 'Tagmatic Soldier' })], 'Feudalism', 'Byzantium');
-    if (soldier.h.type !== 'unit') throw new Error('not a unit');
-    expect(soldier.h.piece?.against).toBe('Pikeman');
-    expect(soldier.h.piece?.diffs.map((d) => [d.id, d.now, d.was])).toEqual([['cost', 162, 152], ['strength', 36, 32]]);
+    const [spearman] = hovers([unit('Feudalism', 'Pikeman', { name: 'Tagmatic Soldier' })], 'Feudalism', 'Byzantium');
+    if (spearman.h.type !== 'unit') throw new Error('not a unit');
+    expect(spearman.h.piece?.against).toBe('Pikeman');
+    expect(spearman.h.piece?.diffs.map((d) => [d.id, d.now, d.was])).toEqual([['cost', 162, 152], ['strength', 36, 32]]);
     const [pikeman] = hovers([unit('Feudalism', 'Pikeman')], 'Feudalism', 'India');
     if (pikeman.h.type !== 'unit') throw new Error('not a unit');
     expect(pikeman.h.piece).toBeNull();

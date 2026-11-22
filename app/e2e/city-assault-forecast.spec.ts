@@ -64,7 +64,7 @@ for (const [kind, c] of [['unwalled', fx.open], ['walled', fx.walled]] as const)
       const alone = (await page.getByTestId('forecast-assault-garrison').innerText()).match(/→\s*(\d+)/)![1];
       await expect(block).toContainText('The whole fight at');
       await page.screenshot({ path: path.join(shots, `assault-${kind}-alone-${width}.png`) });
-      // Queue the second Soldier on the same city: the card pools both, and more of the excess reaches the garrison.
+      // Queue the second Spearman on the same city: the card pools both, and more of the excess reaches the garrison.
       await page.evaluate(({ unit, to }) => {
         (window as unknown as GameWindow).legatum.getState().editOrders((o) => [...o, { type: 'MoveUnit', unit, to }]);
       }, { unit: c.second, to: c.pos });

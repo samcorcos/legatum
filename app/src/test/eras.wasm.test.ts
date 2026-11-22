@@ -127,7 +127,7 @@ describe.skipIf(!available)('eras: core behavior', () => {
     const s = fixture();
     const c = city(s, 0, 5, 5, 5, ['Library', 'Walls', 'Castle', 'StarFort', 'ResearchLab'], true);
     city(s, 1, 22, 22, 3, [], true);
-    const soldier = spawnUnit(s, 0, 'Spearman', c.pos, false);
+    const spearman = spawnUnit(s, 0, 'Spearman', c.pos, false);
     s.road = new Array(s.terrain.length).fill(0); s.road[idxOf(s, c.pos)] = 64; s.roaded = true;
     s.players[0].techs = ['Irrigation', 'CodeOfLaws', 'PrintingPress', 'Railways', 'FusionPower', 'StealthTechnology', 'RecursiveAi'];
     const { fixtureClient, core } = pair(s);
@@ -135,7 +135,7 @@ describe.skipIf(!available)('eras: core behavior', () => {
     (expect(era(a.events)).toMatchSnapshot(), void (era(b.events)));
     const sources = (client: FixtureClient | WasmClient) => client.view(0).cities.find((x) => x.id === c.id)!.detail!.yields.sources;
     (expect(sources(fixtureClient)).toMatchSnapshot(), void (sources(core)));
-    (expect(fixtureClient.view(0).units.find((u) => u.id === soldier.id)!.moves_left).toMatchSnapshot(), void (core.view(0).units.find((u) => u.id === soldier.id)!.moves_left));
+    (expect(fixtureClient.view(0).units.find((u) => u.id === spearman.id)!.moves_left).toMatchSnapshot(), void (core.view(0).units.find((u) => u.id === spearman.id)!.moves_left));
     const cv = (client: FixtureClient | WasmClient) => { const v = client.view(0).cities.find((x) => x.id === c.id)!; return [v.strength, v.citadel, v.star_fort, v.walls]; };
     (expect(cv(fixtureClient)).toMatchSnapshot(), void (cv(core)));
     expect(core.view(0).cities.find((x) => x.id === c.id)!.star_fort).toBe(true);

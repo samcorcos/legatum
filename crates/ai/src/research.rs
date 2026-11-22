@@ -523,7 +523,7 @@ impl Planner<'_> {
                     40 + k.expansion + k.economy / 4 + k.science / 4 + self.decisions.law_tech_bonus
                 }
                 TechId::Philosophy => {
-                    // The Great Library (Relay Uplink) is worth 2 VP.
+                    // The Great Library is worth 2 VP.
                     20 + k.science / 2
                         + self.ctx.own_cities.len() as i32 * 12
                         + if great_work { 40 + k.science / 2 } else { 0 }

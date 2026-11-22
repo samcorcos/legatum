@@ -1,5 +1,5 @@
 // Mercenary Companies for the screen tour and the UI review: a Byzantine capital beside two met sellers (Sparta, India) that know
-// the early technologies, two hired Companies next to the capital (one with a week left, one on its last turn) beside an ordinary Soldier, and a
+// the early technologies, two hired Companies next to the capital (one with a week left, one on its last turn) beside an ordinary Spearman, and a
 // rival Byzantium with a Company of its own in sight. The state is the demo engine's; the tour loads it into the real engine
 // (`coreFixture`), which then offers the shop, prices it and refuses rows in its own words.
 // Injected fixture only; not imported by the app. No browser or store imports: Playwright specs load it in Node.

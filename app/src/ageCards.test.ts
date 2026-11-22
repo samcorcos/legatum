@@ -4,7 +4,7 @@ import { cardHint, cardMeter, cardName, cardNameAndAsk } from './ageCards';
 describe('World Age cards', () => {
   it('names a card shortly', () => {
     expect(cardName('Veterans: earn 4 promotions in battle (a promotion is a level a unit gains from combat experience after this Age began)')).toBe('Veterans');
-    expect(cardName('Humble the mighty: capture a city from an empire ahead of you on VP')).toBe('Humble the mighty');
+    expect(cardName('Humble the mighty: capture a city from an empire ahead of you on VP or, if you lead, from the rival with the most VP')).toBe('Humble the mighty');
     expect(cardName('Dominion: gain 3 cities')).toBe('Dominion');
   });
 

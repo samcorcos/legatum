@@ -1112,7 +1112,7 @@ pub(crate) struct Planner<'a> {
     /// `diplomatic_campaign` per rival team this pass (it builds a prospective planner).
     pub(crate) diplomatic_campaigns:
         std::cell::RefCell<std::collections::BTreeMap<legatum_core::TeamId, Option<Hex>>>,
-    /// This turn's Courier Hall decision (`goal_hall.rs`).
+    /// This turn's Yam Relay Station decision (`goal_hall.rs`).
     pub(crate) hall_plan: std::cell::OnceCell<crate::goal_hall::HallPlan>,
     /// Technologies the pending faction goal's buildings need (`goal_techs`).
     pub goal_techs: std::cell::OnceCell<std::collections::BTreeSet<legatum_core::TechId>>,

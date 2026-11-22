@@ -1,5 +1,5 @@
-// Playtest 8.4, turn 30 (user): five Soldiers ordered into a fallen city, one garrison soldier
-// left at 1 HP. One Soldier takes the city; the other four must be ready for orders afterwards.
+// Playtest 8.4, turn 30 (user): five Spearmen ordered into a fallen city, one garrison soldier
+// left at 1 HP. One Spearman takes the city; the other four must be ready for orders afterwards.
 import { fromOffset, neighbors } from '../hex';
 import { createState, makeStandardSetup, spawnUnit } from './fixtureEngine';
 import { idxOf, refreshVision } from './fixtureEngine';

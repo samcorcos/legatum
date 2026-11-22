@@ -3,8 +3,8 @@ use super::*;
 use legatum_core::diplomacy::TreatyKind;
 
 /// Spearmen that take a lightly held city, and the Archers a walled one needs outside it.
-const ASSAULT_SOLDIERS: usize = 3;
-const WALL_SIEGE_RANGERS: usize = 2;
+const ASSAULT_SPEARMEN: usize = 3;
+const WALL_SIEGE_ARCHERS: usize = 2;
 
 impl Plan<'_> {
     /// Healthy Spearmen within a march of the city: the ones that take it.
@@ -64,7 +64,7 @@ impl Plan<'_> {
             .collect();
         // Every defender in reach is another Spearman needed: a garrison behind a broken wall
         // still has to be killed.
-        let need = (ASSAULT_SOLDIERS + defenders.len().saturating_sub(1)).min(6);
+        let need = (ASSAULT_SPEARMEN + defenders.len().saturating_sub(1)).min(6);
         if self.assault_force(city.pos) < need {
             return false;
         }
@@ -78,7 +78,7 @@ impl Plan<'_> {
                 .iter()
                 .filter(|u| u.ranged > 0 && u.hp >= 60 && u.pos.distance(city.pos) <= 4)
                 .count()
-                < WALL_SIEGE_RANGERS
+                < WALL_SIEGE_ARCHERS
         {
             return false;
         }

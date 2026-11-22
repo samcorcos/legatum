@@ -409,11 +409,11 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     test.setTimeout(90_000);
     const setup = turnReportFixture();
     await loadFixture(page, coreFixture(setup.fixture), 2);
-    await page.evaluate(({ ranger, enemy }) => {
+    await page.evaluate(({ archer, enemy }) => {
       const s = (window as unknown as GameWindow).legatum.getState(), view = s.views![s.seat];
       const target = view.units.find((u) => u.id === enemy)!.pos;
-      s.editOrders((o) => [...o, { type: 'RangedAttack', unit: ranger, target }]);
-    }, { ranger: setup.ranger, enemy: setup.enemy });
+      s.editOrders((o) => [...o, { type: 'RangedAttack', unit: archer, target }]);
+    }, { archer: setup.archer, enemy: setup.enemy });
     await endPlanning(page);
     await expect(page.getByTestId('turn-number')).toHaveText('3');
     await openReport(page);

@@ -90,7 +90,7 @@ export function unitRangedStrength(kind: UnitKind, hp: number, faction: Faction 
 
 /**
  * Core `combat::city_can_fire`: only a walled city fires, as in Civ 6 (any Walls tier; the
- * Switzerland' Customs Bastion is their Walls), and only while it has HP left.
+ * Switzerland' Alpine Redoubt is their Walls), and only while it has HP left.
  */
 export function cityCanFire(walls: boolean, hp: number): boolean {
   return projection({ op: 'cityCanFire', walls, hp });

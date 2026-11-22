@@ -5,7 +5,7 @@ import { test, expect } from './fixtures';
 import { endPlanning } from './turnActions';
 import { warPromptCoreSave } from '../src/test/warPromptFixture';
 
-// Playtest 6: a Ranger ordered to fire on a city of an empire at Peace showed an order icon on the
+// Playtest 6: an Archer ordered to fire on a city of an empire at Peace showed an order icon on the
 // map, then "Fix unit order: no enemy unit or city to attack there". Civ-style, attacking a team at
 // Peace now asks "Declare War on …?" first: Return declares and keeps the attack (the surprise war
 // opens before ranged fire), Esc drops it. Clicking a foreign city opens its card with Declare War,
@@ -13,7 +13,7 @@ import { warPromptCoreSave } from '../src/test/warPromptFixture';
 // inside the card at the user's window sizes.
 type GameWindow = Window & { legatum: typeof useGame; legatumMap: { toScreen(hex: Hex): { x: number; y: number } } };
 const shots = process.env.ATTACK_SHOTS;
-const CITY = { q: 19, r: 8 }; // Switzerland' capital Harmonia, fromOffset(23, 8); the Ranger stands 2 tiles west.
+const CITY = { q: 19, r: 8 }; // Switzerland' capital Harmonia, fromOffset(23, 8); the Archer stands 2 tiles west.
 
 async function start(page: Page) {
   await page.addInitScript((game) => {
@@ -70,7 +70,7 @@ async function aimAtCity(page: Page) {
 
 test('ranged attack on a city at Peace asks to declare War; Esc drops it, Return declares and fires this turn', async ({ page }) => {
   await page.setViewportSize({ width: 1000, height: 600 });
-  const ranger = await start(page);
+  const archer = await start(page);
   await aimAtCity(page);
   const dialog = page.getByRole('dialog', { name: 'Declare War on Switzerland?' });
   await expect(dialog).toBeVisible();
@@ -92,7 +92,7 @@ test('ranged attack on a city at Peace asks to declare War; Esc drops it, Return
   await expect(dialog).toHaveCount(0);
   await expect.poll(() => orders(page)).toEqual([
     { type: 'DeclareWar', against: 1, breach: false },
-    { type: 'RangedAttack', unit: ranger, target: CITY },
+    { type: 'RangedAttack', unit: archer, target: CITY },
   ]);
   expect(await errors(page)).toEqual([]);
   await expect(page.locator('.decision-notice')).toContainText('War declared on Switzerland; the attack goes in this turn');
@@ -103,7 +103,7 @@ test('ranged attack on a city at Peace asks to declare War; Esc drops it, Return
     const s = (window as unknown as GameWindow).legatum.getState();
     return s.report?.events[s.seat] ?? [];
   });
-  expect(events.some((e) => e.type === 'Battle' && e.attacker === ranger && e.defender.kind === 'City')).toBe(true);
+  expect(events.some((e) => e.type === 'Battle' && e.attacker === archer && e.defender.kind === 'City')).toBe(true);
 });
 
 test('an empty tile is refused with a reason and nothing is queued', async ({ page }) => {
@@ -118,13 +118,13 @@ test('an empty tile is refused with a reason and nothing is queued', async ({ pa
 for (const size of [{ width: 1000, height: 600 }, { width: 1440, height: 900 }]) {
   test(`Fix order card wraps inside the dock at ${size.width}x${size.height}; fixing it asks about War, Esc removes the order`, async ({ page }) => {
     await page.setViewportSize(size);
-    const ranger = await start(page);
+    const archer = await start(page);
     // A stale order (e.g. queued before a treaty, or from an older build) that can't resolve.
-    await page.evaluate(({ ranger, city }) => {
+    await page.evaluate(({ archer, city }) => {
       const s = (window as unknown as GameWindow).legatum.getState();
-      s.editOrders((o) => [...o, { type: 'RangedAttack', unit: ranger, target: city }]);
-      s.select({ kind: 'unit', id: ranger });
-    }, { ranger, city: CITY });
+      s.editOrders((o) => [...o, { type: 'RangedAttack', unit: archer, target: city }]);
+      s.select({ kind: 'unit', id: archer });
+    }, { archer, city: CITY });
     const cta = page.locator('.seatbar .cta');
     await expect(cta.locator('.cta-label')).toHaveText('Fix order');
     await expect(cta).toContainText(/Archer #\d+: you are not at War with its owner; declare War first to attack there\./);
@@ -157,8 +157,8 @@ for (const size of [{ width: 1000, height: 600 }, { width: 1440, height: 900 }])
 
 test('clicking a foreign city opens its card: Declare War asks first, Attack with the selected Ranger', async ({ page }) => {
   await page.setViewportSize({ width: 1000, height: 600 });
-  const ranger = await start(page);
-  // With the Ranger selected, a left-click on the city opens the city's card (not an order).
+  const archer = await start(page);
+  // With the Archer selected, a left-click on the city opens the city's card (not an order).
   const city = await mapPoint(page, CITY);
   await page.mouse.click(city.x, city.y);
   const card = page.getByTestId('foreign-city-actions');
@@ -179,14 +179,14 @@ test('clicking a foreign city opens its card: Declare War asks first, Attack wit
   if (shots) { await settle(page); await page.screenshot({ path: `${shots}/prompt-city-1000x600.png` }); }
   await page.keyboard.press('Escape');
   expect(await orders(page)).toEqual([]);
-  // Attack with the Ranger: confirm with Return.
+  // Attack with the Archer: confirm with Return.
   await attack.click();
   await expect(dialog).toBeVisible();
   await expect(dialog.locator('.btn.primary')).toHaveAccessibleName('Declare War and attack');
   await page.keyboard.press('Enter');
   await expect.poll(() => orders(page)).toEqual([
     { type: 'DeclareWar', against: 1, breach: false },
-    { type: 'RangedAttack', unit: ranger, target: CITY },
+    { type: 'RangedAttack', unit: archer, target: CITY },
   ]);
   // Reopened, the card now says War is declared and attacks without asking.
   await page.evaluate(() => {

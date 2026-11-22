@@ -1,5 +1,5 @@
 //! Opt-in Mongols playtest 8.5 proxy: a brief mobile raid, rapid settlement,
-//! early Walls, and a protected Courier Hall for the VP race.
+//! early Walls, and a protected Yam Relay Station for the VP race.
 //! Forked from frozen v7. All decisions and memory derive exclusively from PlayerView;
 //! no engine state, observer feedback, seed inspection or random choices.
 
@@ -28,7 +28,7 @@ pub const PROXY_V8_MONGOLS_VERSION: u32 = 8;
 const GOAL_BASE: usize = 1;
 const GOAL_PER_CITY: usize = 0;
 const GOAL_MAX: usize = 4;
-/// Archers kept per Soldier-goal divisor, and their ceiling; more while the target has Walls.
+/// Archers kept per Spearman-goal divisor, and their ceiling; more while the target has Walls.
 const RANGED_DIV: usize = 2;
 const RANGED_MAX: usize = 2;
 const WALL_RANGED: usize = 2;

@@ -55,7 +55,7 @@ for (const size of SIZES) {
         v.eras[0].objectives = [
           { slot: 0, family: 'Fight', text: 'Veterans: earn 4 promotions in battle (a promotion is a level a unit gains from combat experience after this Age began)', target: 4, objective: { kind: 'Veterans', n: 4 } },
           { slot: 1, family: 'Fight', text: 'Breach: capture a walled city', target: 1, objective: { kind: 'Breach' } },
-          { slot: 2, family: 'Fight', text: 'Humble the mighty: capture a city from an empire ahead of you on VP', target: 1, objective: { kind: 'HumbleTheMighty' } },
+          { slot: 2, family: 'Fight', text: 'Humble the mighty: capture a city from an empire ahead of you on VP or, if you lead, from the rival with the most VP', target: 1, objective: { kind: 'HumbleTheMighty' } },
         ];
         v.objective_progress = [
           { era: 2, slot: 0, current: 2, target: 4, entered: true, era_scored: false, ready: false },

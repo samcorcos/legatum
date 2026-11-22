@@ -16,8 +16,8 @@ export function cityShieldFixture() {
   garrison.fortify = 6;
   const walledGarrison = spawnUnit(f, walled.owner, 'Spearman', walled.pos, false);
   walledGarrison.fortify = 6;
-  // Your Ranger two tiles away can shoot the city; your Soldiers beside the cities attack in melee.
-  const ranger = spawnUnit(f, 0, 'Archer', fromOffset(11, 7), false);
+  // Your Archer two tiles away can shoot the city; your Spearmen beside the cities attack in melee.
+  const archer = spawnUnit(f, 0, 'Archer', fromOffset(11, 7), false);
   refreshVision(f);
-  return { ...setup, garrison: garrison.id, walledGarrison: walledGarrison.id, ranger: ranger.id };
+  return { ...setup, garrison: garrison.id, walledGarrison: walledGarrison.id, archer: archer.id };
 }

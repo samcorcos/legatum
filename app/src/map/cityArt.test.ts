@@ -37,7 +37,7 @@ describe('city art', () => {
     expect(cityStem(Number.NaN, 'town')).toBe('ancient-town');
   });
 
-  it('wall overlays: each era owns its art, with a star fort for the Customs Bastion', () => {
+  it('wall overlays: each era owns its art, with a star fort for the Alpine Redoubt', () => {
     expect(wallStem(2, false)).toBe('medieval-walls');
     for (const era of [5, 6, 7, 8]) expect(wallStem(era, false)).toBe(`${CITY_ERAS[era]}-walls`);
     expect(wallStem(0, true)).toBe('renaissance-walls');

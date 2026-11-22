@@ -820,7 +820,7 @@ mod tests {
         let arrivals: Vec<_> = army.iter().map(|&u| (u, CITY)).collect();
         for u in &army {
             let f = forecast_attack_mode(&view, u.id, CITY, AttackMode::Melee).unwrap();
-            assert_eq!(f.loss_chance, 100, "the garrison kills either Soldier");
+            assert_eq!(f.loss_chance, 100, "the garrison kills either Spearman");
         }
         assert!(p.city_assault_succeeds(&arrivals, CITY));
         let mut reversed = arrivals.clone();

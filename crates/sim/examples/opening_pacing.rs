@@ -91,7 +91,7 @@ fn play(seed: u64, rules: RuleExperiments, d: AiDifficulty) -> Game {
         .iter()
         .map(|p| s.state.cities_of(p.id).count() as u32)
         .collect();
-    let soldier = ProductionItem::Unit {
+    let spearman = ProductionItem::Unit {
         unit: UnitKind::Spearman,
     };
     let settler = ProductionItem::Unit {
@@ -111,7 +111,7 @@ fn play(seed: u64, rules: RuleExperiments, d: AiDifficulty) -> Game {
                 let prod = city_yields(&s.state, c).total.production;
                 emp.capital_production_at[k] = Some(prod);
                 if turn == 2 {
-                    let cost = production_cost(&s.state, p, soldier);
+                    let cost = production_cost(&s.state, p, spearman);
                     emp.soldier_turns_at_2 = Some((cost + prod - 1) / prod.max(1));
                     emp.settler_cost_at_2 = Some(production_cost(&s.state, p, settler));
                 }
@@ -149,7 +149,7 @@ fn play(seed: u64, rules: RuleExperiments, d: AiDifficulty) -> Game {
                         };
                         emp.first_builds.push(format!("{turn}:{name}"));
                     }
-                    if *item == soldier && emp.first_soldier.is_none() {
+                    if *item == spearman && emp.first_soldier.is_none() {
                         emp.first_soldier = Some(turn);
                     }
                     if *item == settler && emp.first_settler.is_none() {

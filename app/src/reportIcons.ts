@@ -42,7 +42,7 @@ export function eventIcon(e: Event, faction?: (player: number) => Faction | unde
     case 'FactionGoalLost': return e.faction === 'Byzantium' ? 'unit-heirtothethrone' : e.faction === 'Mongols' ? 'building-yamrelaystation' : 'ui-trend-down';
     case 'SwarmUnleashed': return SWARM_GOAL.icon;
     case 'SakokuClosed': case 'SakokuReopened': return 'ui-sakoku';
-    case 'SignalBroadcast': return 'building-listeninghouse';
+    case 'SignalBroadcast': return 'building-lyceum';
     case 'RoadsLaid': return 'building-yamrelaystation';
     case 'VeteranRetired': return 'building-agoge';
     case 'WildCalled': return 'ui-camp';

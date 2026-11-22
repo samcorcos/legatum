@@ -1252,7 +1252,7 @@ mod tests {
         let mut s = game(&[0, 1]);
         let idle = unit(&mut s, 0, UnitKind::Spearman, hex(3, 4));
         let skip = unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
-        let sleep_soldier = unit(&mut s, 0, UnitKind::Spearman, hex(5, 4));
+        let sleep_spearman = unit(&mut s, 0, UnitKind::Spearman, hex(5, 4));
         let sleep = unit(&mut s, 0, UnitKind::Settler, hex(6, 4));
         let (s, _) = resolve_units(
             &s,
@@ -1261,7 +1261,7 @@ mod tests {
                 vec![
                     Order::SkipUnit { unit: skip },
                     Order::SleepUnit {
-                        unit: sleep_soldier,
+                        unit: sleep_spearman,
                         until_healed: false,
                     },
                     Order::SleepUnit {
@@ -1276,10 +1276,10 @@ mod tests {
             assert_eq!(s.units[&id].standing_order, None);
             assert_eq!(s.units[&id].fortify, FORTIFY_MAX);
         }
-        for id in [sleep_soldier, sleep] {
+        for id in [sleep_spearman, sleep] {
             assert_eq!(s.units[&id].standing_order, Some(StandingOrder::Sleep));
         }
-        assert_eq!(s.units[&sleep_soldier].fortify, FORTIFY_MAX);
+        assert_eq!(s.units[&sleep_spearman].fortify, FORTIFY_MAX);
         // Skip ends the sleep and keeps the resting defense; the unit asks for orders again.
         let (s, _) = resolve_units(
             &s,
@@ -1287,7 +1287,7 @@ mod tests {
                 0,
                 vec![
                     Order::SkipUnit {
-                        unit: sleep_soldier,
+                        unit: sleep_spearman,
                     },
                     Order::MoveUnit {
                         unit: sleep,
@@ -1296,9 +1296,9 @@ mod tests {
                 ],
             ),
         );
-        assert_eq!(s.units[&sleep_soldier].standing_order, None);
-        assert_eq!(s.units[&sleep_soldier].fortify, FORTIFY_MAX);
-        assert!(!s.units[&sleep_soldier].needs_orders);
+        assert_eq!(s.units[&sleep_spearman].standing_order, None);
+        assert_eq!(s.units[&sleep_spearman].fortify, FORTIFY_MAX);
+        assert!(!s.units[&sleep_spearman].needs_orders);
         assert_eq!(s.units[&sleep].standing_order, None, "any order wakes");
     }
 
@@ -1643,9 +1643,9 @@ mod tests {
     fn sparta_regiments_and_scouts_rest_heal_at_the_normal_rate() {
         let mut s = game(&[0, 1]);
         s.player_mut(PlayerId(0)).faction = Faction::Sparta;
-        let soldier = unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
+        let spearman = unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
         let scout = unit(&mut s, 0, UnitKind::Scout, hex(4, 5));
-        for id in [soldier, scout] {
+        for id in [spearman, scout] {
             s.units.get_mut(&id).unwrap().hp = 75;
         }
         let (s, events) = resolve_units(
@@ -1654,7 +1654,7 @@ mod tests {
                 0,
                 vec![
                     Order::SleepUnit {
-                        unit: soldier,
+                        unit: spearman,
                         until_healed: false,
                     },
                     Order::SleepUnit {
@@ -1665,9 +1665,9 @@ mod tests {
             ),
         );
         // Both stand in the field and recover at the normal rate.
-        assert_eq!(s.units[&soldier].hp, 75 + data::HEAL_FIELD);
+        assert_eq!(s.units[&spearman].hp, 75 + data::HEAL_FIELD);
         assert_eq!(s.units[&scout].hp, 75 + data::HEAL_FIELD);
-        for id in [soldier, scout] {
+        for id in [spearman, scout] {
             assert_eq!(s.units[&id].standing_order, Some(StandingOrder::Sleep));
         }
         assert!(
@@ -2010,12 +2010,12 @@ mod tests {
             assert_eq!(data::can_auto_explore(kind), accepts, "{kind:?}");
         }
         let mut s = game(&[0, 1]);
-        let soldier = unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
+        let spearman = unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
         crate::visibility::update_explored(&mut s);
         let to = hex(5, 4);
-        let (s, _) = resolve_units(&s, &orders(0, vec![auto(soldier, vec![to])]));
-        assert_eq!(s.units[&soldier].automation, Some(Automation::Explore));
-        assert_eq!(s.units[&soldier].pos, to);
+        let (s, _) = resolve_units(&s, &orders(0, vec![auto(spearman, vec![to])]));
+        assert_eq!(s.units[&spearman].automation, Some(Automation::Explore));
+        assert_eq!(s.units[&spearman].pos, to);
     }
 
     #[test]

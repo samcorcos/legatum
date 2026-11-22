@@ -1078,7 +1078,7 @@ pub struct VictoryHold {
     pub turns_needed: u32,
 }
 
-/// A standing Courier Hall: Mongols empire `of`'s, in `city`, held by `holder` (its owner).
+/// A standing Yam Relay Station: Mongols empire `of`'s, in `city`, held by `holder` (its owner).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CourierHallView {
     pub of: PlayerId,
@@ -1088,7 +1088,7 @@ pub struct CourierHallView {
     pub tile: Option<Hex>,
 }
 
-/// The Imperial Diwan's original India empire, current city and holder; public like the Yam Hall.
+/// The Imperial Diwan's original India empire, current city and holder; public like the Yam Relay Station.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ImperialDiwanView {
     pub of: PlayerId,
@@ -1158,7 +1158,7 @@ pub struct PlayerView {
     /// The viewer's one-time actions and pending free technologies (`rules::actions`).
     #[serde(default)]
     pub actions: crate::rules::actions::ActionsView,
-    /// Every standing Courier Hall (public): who holds it and in which city. Its holder's land is
+    /// Every standing Yam Relay Station (public): who holds it and in which city. Its holder's land is
     /// open to every empire at Peace (`passage_allowed`).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub courier_halls: Vec<CourierHallView>,
@@ -1282,7 +1282,7 @@ impl PlayerView {
 
     /// Mirrors `GameState::passage_allowed`: own team, War, an Alliance, land the mover's
     /// land of a
-    /// Courier Hall's holder (open to every empire).
+    /// Yam Relay Station's holder (open to every empire).
     pub fn passage_allowed(
         &self,
         player: PlayerId,
@@ -1776,7 +1776,7 @@ pub enum ViewDetail {
     ///   and tech unlocks (totals, worked tiles and focus are kept);
     /// - `UnlockCity`'s growth forecasts (`turns_to_six_after`, `turns_to_eight_after`,
     ///   `turns_to_eight_at_gate`), and its `yields_after` (`CityYields::empty`) and
-    ///   `food_surplus_after` (0) except for the Machine Shop and Factory, whose Production
+    ///   `food_surplus_after` (0) except for the Forge and Factory, whose Production
     ///   gain the AI prices;
     /// - `TechOption::income_change` and `TechEffects::growth`;
     /// - build options' `buy_quote` and `upkeep` previews, and `CityDetail::population_unlocks`;
@@ -3239,7 +3239,7 @@ pub(crate) mod tests {
 
     #[test]
     fn production_option_turns_include_only_unassigned_or_own_banked_production() {
-        let soldier = ProductionItem::Unit {
+        let spearman = ProductionItem::Unit {
             unit: UnitKind::Spearman,
         };
         let granary = ProductionItem::Building {
@@ -3254,11 +3254,11 @@ pub(crate) mod tests {
             if producing.is_some() {
                 // The Monument owns its 30; give the Spearman its own banked 30 instead.
                 c.production_stored = 0;
-                c.bank(soldier, 30);
+                c.bank(spearman, 30);
             }
             let v = player_view(&s, P0);
             let detail = city(&v, id).unwrap().detail.as_ref().unwrap();
-            let option = detail.options.iter().find(|o| o.item == soldier).unwrap();
+            let option = detail.options.iter().find(|o| o.item == spearman).unwrap();
             // Spearman 80, 30 stored, 5 a turn.
             assert_eq!(option.turns, 10);
             assert_eq!(option.production_stored, 30);
@@ -3271,7 +3271,7 @@ pub(crate) mod tests {
                 P0,
                 &[crate::Order::SetProduction {
                     city: id,
-                    item: soldier,
+                    item: spearman,
                 }],
                 &mut Vec::new(),
             );
@@ -3335,7 +3335,7 @@ pub(crate) mod tests {
 
     #[test]
     fn production_option_quotes_match_switch_validation_and_actual_spending() {
-        let soldier = ProductionItem::Unit {
+        let spearman = ProductionItem::Unit {
             unit: UnitKind::Spearman,
         };
         let granary = ProductionItem::Building {
@@ -3358,7 +3358,7 @@ pub(crate) mod tests {
                         .unwrap()
                         .options
                         .iter()
-                        .find(|o| o.item == soldier)
+                        .find(|o| o.item == spearman)
                         .unwrap();
                     // Unassigned Production joins the Spearman; a Monument's stays its own.
                     assert_eq!(
@@ -3382,11 +3382,11 @@ pub(crate) mod tests {
                     let orders = [
                         crate::Order::SetProduction {
                             city: id,
-                            item: soldier,
+                            item: spearman,
                         },
                         crate::Order::BuyItem {
                             city: id,
-                            item: soldier,
+                            item: spearman,
                         },
                     ];
                     s.player_mut(P0).gold = quote;
@@ -3405,7 +3405,7 @@ pub(crate) mod tests {
                     assert!(events.contains(&crate::Event::ItemBought {
                         city: id,
                         owner: P0,
-                        item: soldier,
+                        item: spearman,
                         gold: quote
                     }));
                 }
@@ -3417,7 +3417,7 @@ pub(crate) mod tests {
     fn separate_purchases_do_not_change_production_forecasts() {
         let mut s = test_state(24, 16);
         let id = add_city(&mut s, P0, at(5, 5), 1);
-        let soldier = ProductionItem::Unit {
+        let spearman = ProductionItem::Unit {
             unit: UnitKind::Spearman,
         };
         let granary = ProductionItem::Building {
@@ -3431,18 +3431,18 @@ pub(crate) mod tests {
             &[
                 crate::Order::SetProduction {
                     city: id,
-                    item: soldier,
+                    item: spearman,
                 },
                 crate::Order::BuyItem {
                     city: id,
-                    item: soldier,
+                    item: spearman,
                 },
             ],
             &mut Vec::new(),
         );
         let v = player_view(&s, P0);
         let detail = city(&v, id).unwrap().detail.as_ref().unwrap();
-        let bought = detail.options.iter().find(|o| o.item == soldier).unwrap();
+        let bought = detail.options.iter().find(|o| o.item == spearman).unwrap();
         assert!(
             bought
                 .buy_blocker
@@ -3470,7 +3470,7 @@ pub(crate) mod tests {
             detail
                 .options
                 .iter()
-                .find(|o| o.item == soldier)
+                .find(|o| o.item == spearman)
                 .unwrap()
                 .turns,
             14
@@ -3628,7 +3628,7 @@ pub(crate) mod tests {
         let granary = ProductionItem::Building {
             building: BuildingKind::Granary,
         };
-        let soldier = ProductionItem::Unit {
+        let spearman = ProductionItem::Unit {
             unit: UnitKind::Spearman,
         };
         let market = ProductionItem::Building {
@@ -3636,9 +3636,9 @@ pub(crate) mod tests {
         };
         assert_eq!(turns_for(granary), Some((50, 6)), "counts stored progress");
         assert_eq!(
-            turns_for(soldier),
+            turns_for(spearman),
             Some((80, 12)),
-            "the Granary's progress stays banked with it; a Soldier starts from its own"
+            "the Granary's progress stays banked with it; a Spearman starts from its own"
         );
         assert_eq!(turns_for(market), None, "needs Exchange");
         assert!(

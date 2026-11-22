@@ -62,7 +62,7 @@ pub(crate) fn found(state: &mut GameState, owner: PlayerId, pos: Hex) -> CityId 
     found_city(state, u, &mut Vec::new()).expect("legal city site")
 }
 
-fn soldier() -> ProductionItem {
+fn spearman() -> ProductionItem {
     ProductionItem::Unit {
         unit: UnitKind::Spearman,
     }
@@ -117,7 +117,7 @@ fn stopping_city_automation_keeps_current_build_and_drops_its_future_pick() {
     let orders = [
         Order::SetProductionQueue {
             city: id,
-            queue: vec![soldier(), scout],
+            queue: vec![spearman(), scout],
         },
         Order::SetCityAutomation {
             city: id,
@@ -140,7 +140,7 @@ fn stopping_city_automation_keeps_current_build_and_drops_its_future_pick() {
         }],
         &mut Vec::new(),
     );
-    assert_eq!(city(&changed, id).producing, Some(soldier()));
+    assert_eq!(city(&changed, id).producing, Some(spearman()));
     assert!(
         city(&changed, id).production_queue.is_empty(),
         "a new focus replaces the old automatic tail"
@@ -155,7 +155,7 @@ fn stopping_city_automation_keeps_current_build_and_drops_its_future_pick() {
         }],
         &mut Vec::new(),
     );
-    assert_eq!(city(&state, id).producing, Some(soldier()));
+    assert_eq!(city(&state, id).producing, Some(spearman()));
     assert!(city(&state, id).production_queue.is_empty());
     assert_eq!(city(&state, id).build_automation, None);
     assert_eq!(city(&state, id).last_auto_pick, None);
@@ -170,7 +170,7 @@ fn stopping_city_automation_keeps_current_build_and_drops_its_future_pick() {
             },
             Order::SetProductionQueue {
                 city: id,
-                queue: vec![soldier(), scout],
+                queue: vec![spearman(), scout],
             },
         ],
         &mut Vec::new(),
@@ -248,7 +248,7 @@ fn walls_line_cannot_be_bought_but_finishes_with_production() {
         P0,
         &[Order::SetProduction {
             city: id,
-            item: soldier(),
+            item: spearman(),
         }],
         &mut events,
     );
@@ -341,7 +341,7 @@ fn india_may_found_three_hexes_from_another_city_but_other_factions_may_not() {
 }
 
 #[test]
-fn sparta_war_shrine_promotes_trained_military() {
+fn sparta_agoge_promotes_trained_military() {
     let mut s = test_game(&[(Faction::Sparta, 0), (Faction::India, 1)]);
     let c = found(&mut s, P0, at(5, 5));
     s.player_mut(P0).techs.insert(TechId::Chivalry);
@@ -357,7 +357,7 @@ fn sparta_war_shrine_promotes_trained_military() {
         building(BuildingKind::Agoge),
         &mut events
     ));
-    assert!(complete_item(&mut s, c, soldier(), &mut events));
+    assert!(complete_item(&mut s, c, spearman(), &mut events));
     let trained = s
         .units_of(P0)
         .find(|u| u.kind == UnitKind::Spearman)
@@ -459,7 +459,7 @@ fn captured_city_raze_pays_loot_releases_land_and_preserves_celtic_sack() {
             &[
                 Order::SetProduction {
                     city: target,
-                    item: soldier(),
+                    item: spearman(),
                 },
                 order.clone()
             ]
@@ -571,7 +571,7 @@ fn replacement_after_original_capital_is_destroyed_is_not_original() {
 fn set_production_switch_banks_progress_and_checks_tech() {
     let mut s = two_players();
     let c = found(&mut s, P0, at(5, 5));
-    city_mut(&mut s, c).producing = Some(soldier());
+    city_mut(&mut s, c).producing = Some(spearman());
     city_mut(&mut s, c).production_stored = 12;
 
     let mut ev = Vec::new();
@@ -590,7 +590,7 @@ fn set_production_switch_banks_progress_and_checks_tech() {
     assert_eq!(city(&s, c).producing, Some(scout));
     // The Spearman's progress stays banked with it; the Scout starts from its own (none).
     assert_eq!(city(&s, c).production_stored, 0);
-    assert_eq!(city(&s, c).banked(soldier()), 12);
+    assert_eq!(city(&s, c).banked(spearman()), 12);
 
     // A Library needs Writing: refused (and an order for it leaves the Scout building).
     let market = Order::SetProduction {
@@ -648,7 +648,7 @@ fn buy_any_item_preserves_construction_and_spends_full_price_once() {
     city_mut(&mut s, c).production_stored = 10;
     let buy = Order::BuyItem {
         city: c,
-        item: soldier(),
+        item: spearman(),
     };
     let mut events = Vec::new();
     apply_city_orders(&mut s, P0, &[buy.clone(), buy.clone()], &mut events);
@@ -683,7 +683,7 @@ fn buying_buildings_installs_now_and_keeps_other_builds_and_progress() {
     let c = found(&mut s, P0, at(5, 5));
     s.player_mut(P0).gold = 1000;
     let monument = building(BuildingKind::Granary);
-    city_mut(&mut s, c).producing = Some(soldier());
+    city_mut(&mut s, c).producing = Some(spearman());
     city_mut(&mut s, c).production_stored = 100;
     apply_city_orders(
         &mut s,
@@ -695,7 +695,7 @@ fn buying_buildings_installs_now_and_keeps_other_builds_and_progress() {
         &mut Vec::new(),
     );
     assert!(city(&s, c).buildings.contains(&BuildingKind::Granary));
-    assert_eq!(city(&s, c).producing, Some(soldier()));
+    assert_eq!(city(&s, c).producing, Some(spearman()));
     assert_eq!(city(&s, c).production_stored, 100);
     assert_eq!(
         s.player(P0).gold,
@@ -737,7 +737,7 @@ fn buy_requires_gold_population_and_spawn_room_before_movement() {
             P0,
             &Order::BuyItem {
                 city: c,
-                item: soldier()
+                item: spearman()
             }
         )
         .unwrap_err()
@@ -750,7 +750,7 @@ fn buy_requires_gold_population_and_spawn_room_before_movement() {
             P0,
             &Order::BuyItem {
                 city: c,
-                item: soldier()
+                item: spearman()
             }
         )
         .is_ok(),
@@ -792,7 +792,7 @@ fn queues_advance_with_overflow_and_roundtrip_and_old_saves_default_empty() {
     let mut s = two_players();
     let c = found(&mut s, P0, at(5, 5));
     let monument = building(BuildingKind::Granary);
-    let queue = vec![monument, soldier(), soldier()];
+    let queue = vec![monument, spearman(), spearman()];
     let order = Order::SetProductionQueue { city: c, queue };
     assert!(validate_city_order(&s, P0, &order).is_ok());
     apply_city_orders(&mut s, P0, &[order], &mut Vec::new());
@@ -800,8 +800,8 @@ fn queues_advance_with_overflow_and_roundtrip_and_old_saves_default_empty() {
     city_mut(&mut s, c).production_stored = cost + 50;
     let mut events = Vec::new();
     produce(&mut s, c, 3, &mut events);
-    assert_eq!(city(&s, c).producing, Some(soldier()));
-    assert_eq!(city(&s, c).production_queue, vec![soldier()]);
+    assert_eq!(city(&s, c).producing, Some(spearman()));
+    assert_eq!(city(&s, c).production_queue, vec![spearman()]);
     assert_eq!(city(&s, c).production_stored, 53);
     assert_eq!(
         events
@@ -821,7 +821,7 @@ fn queues_advance_with_overflow_and_roundtrip_and_old_saves_default_empty() {
     assert_eq!(old.last_purchase_turn, None);
     city_mut(&mut s, c).production_stored += 40;
     produce(&mut s, c, 3, &mut events);
-    assert_eq!(city(&s, c).producing, Some(soldier()));
+    assert_eq!(city(&s, c).producing, Some(spearman()));
     assert!(city(&s, c).production_queue.is_empty());
     assert_eq!(city(&s, c).production_stored, 16);
 }
@@ -835,28 +835,28 @@ fn queue_validation_reorder_remove_duplicates_unlocks_and_ownership() {
         city: c,
         queue: items,
     };
-    assert!(validate_city_order(&s, P1, &queue(vec![soldier()])).is_err());
+    assert!(validate_city_order(&s, P1, &queue(vec![spearman()])).is_err());
     assert!(validate_city_order(&s, P0, &queue(vec![monument, monument])).is_err());
-    assert!(validate_city_order(&s, P0, &queue(vec![soldier(); 51])).is_err());
+    assert!(validate_city_order(&s, P0, &queue(vec![spearman(); 51])).is_err());
     city_mut(&mut s, c).production_stored = 12;
     apply_city_orders(
         &mut s,
         P0,
         &[
-            queue(vec![soldier(), monument]),
-            queue(vec![monument, soldier()]),
+            queue(vec![spearman(), monument]),
+            queue(vec![monument, spearman()]),
         ],
         &mut Vec::new(),
     );
     assert_eq!(city(&s, c).producing, Some(monument));
-    assert_eq!(city(&s, c).production_queue, vec![soldier()]);
+    assert_eq!(city(&s, c).production_queue, vec![spearman()]);
     // Unassigned Production joined the first item started; the switch banked it there.
     assert_eq!(city(&s, c).production_stored, 0);
-    assert_eq!(city(&s, c).banked(soldier()), 12);
+    assert_eq!(city(&s, c).banked(spearman()), 12);
     apply_city_orders(&mut s, P0, &[queue(vec![])], &mut Vec::new());
     assert_eq!(city(&s, c).producing, None);
     assert_eq!(city(&s, c).production_stored, 0);
-    assert_eq!(city(&s, c).banked(soldier()), 12);
+    assert_eq!(city(&s, c).banked(spearman()), 12);
 }
 
 #[test]
@@ -898,7 +898,7 @@ fn accepted_purchase_items_and_prices_match_resolution_across_order_permutations
     let mut rejected_orders = 0;
     for faction in [Faction::Athens, Faction::Switzerland, Faction::Byzantium] {
         for item in [
-            soldier(),
+            spearman(),
             settler(),
             building(BuildingKind::Workshop),
             building(BuildingKind::Granary),
@@ -919,7 +919,7 @@ fn accepted_purchase_items_and_prices_match_resolution_across_order_permutations
                 Order::BuyItem { city: a, item },
                 Order::SetProduction {
                     city: a,
-                    item: soldier(),
+                    item: spearman(),
                 },
                 Order::SetProduction { city: b, item },
                 Order::BuyItem { city: b, item },
@@ -1206,8 +1206,8 @@ fn found_city_rules() {
     assert!(found_city(&mut s, ok, &mut ev).is_ok());
 
     // Not a settler.
-    let soldier = spawn_unit(&mut s, P0, UnitKind::Spearman, at(5, 15));
-    assert!(found_city(&mut s, soldier, &mut ev).is_err());
+    let spearman = spawn_unit(&mut s, P0, UnitKind::Spearman, at(5, 15));
+    assert!(found_city(&mut s, spearman, &mut ev).is_err());
 
     // Not land.
     s.map.get_mut(at(15, 15)).unwrap().terrain = Terrain::Coast;
@@ -1355,7 +1355,7 @@ fn production_floor_preserves_workshops_rich_tiles_and_india_penalty() {
 fn production_completes_unit_with_overflow() {
     let mut s = two_players();
     let c = found(&mut s, P0, at(5, 5));
-    city_mut(&mut s, c).producing = Some(soldier());
+    city_mut(&mut s, c).producing = Some(spearman());
     city_mut(&mut s, c).production_stored = 79;
     city_turn(&mut s);
     assert_eq!(s.units_of(P0).count(), 1);
@@ -1384,7 +1384,7 @@ fn spawn_placement_respects_stacking_and_waits_when_blocked() {
     // skipping water.
     spawn_unit(&mut s, P0, UnitKind::Spearman, pos);
     s.map.get_mut(adj[0]).unwrap().terrain = Terrain::Ocean;
-    city_mut(&mut s, c).producing = Some(soldier());
+    city_mut(&mut s, c).producing = Some(spearman());
     city_mut(&mut s, c).production_stored = 80;
     city_turn(&mut s);
     assert_eq!(s.units_at(adj[1]).count(), 1);
@@ -1396,7 +1396,7 @@ fn spawn_placement_respects_stacking_and_waits_when_blocked() {
         spawn_unit(&mut s, P0, UnitKind::Spearman, *h);
     }
     let before = s.units.len();
-    city_mut(&mut s, c).producing = Some(soldier());
+    city_mut(&mut s, c).producing = Some(spearman());
     city_mut(&mut s, c).production_stored = 80;
     let ev = city_turn(&mut s);
     assert_eq!(s.units.len(), before, "waits for a free tile");
@@ -1426,7 +1426,7 @@ fn settler_needs_pop_two_and_raises_the_next_cost() {
         Order::SetProduction { city: c, item },
         Order::SetProductionQueue {
             city: c,
-            queue: vec![soldier(), item],
+            queue: vec![spearman(), item],
         },
         Order::BuyItem { city: c, item },
     ] {
@@ -1477,7 +1477,7 @@ fn resistance_blocks_all_output_for_three_turns() {
     let mut s = two_players();
     let c = found(&mut s, P0, at(5, 5));
     city_mut(&mut s, c).resistance = CAPTURE_RESISTANCE_TURNS;
-    city_mut(&mut s, c).producing = Some(soldier());
+    city_mut(&mut s, c).producing = Some(spearman());
     for _ in 0..CAPTURE_RESISTANCE_TURNS {
         city_turn(&mut s);
         let city = city(&s, c);
@@ -1511,7 +1511,7 @@ fn newly_completed_military_pays_upkeep_using_the_city_yield_snapshot() {
         let c = found(&mut s, P0, at(5, 5));
         spawn_unit(&mut s, P0, UnitKind::Archer, at(4, 5));
         spawn_unit(&mut s, P0, UnitKind::Spearman, at(6, 5));
-        city_mut(&mut s, c).producing = Some(soldier());
+        city_mut(&mut s, c).producing = Some(spearman());
         city_mut(&mut s, c).production_stored = 79;
         s.player_mut(P0).gold = 10;
         // Growth changes citizen science and Swiss gold, but this turn uses the old yields.
@@ -1928,7 +1928,7 @@ fn each_growth_claims_the_best_adjacent_tile_by_focus() {
     // ...but not when the city wants Food (a Settler at population 1).
     city_mut(&mut s, c).producing = Some(settler());
     assert_eq!(next_claim(&s, city(&s, c)), Some(ring2[0]));
-    city_mut(&mut s, c).producing = Some(soldier());
+    city_mut(&mut s, c).producing = Some(spearman());
     assert_eq!(next_claim(&s, city(&s, c)), Some(forest));
 
     let mut ev = Vec::new();
@@ -1951,7 +1951,7 @@ fn growth_fills_each_ring_before_the_next_and_picks_quality_within_a_ring() {
     // A Forest in ring 3 (best by the Balanced focus) must still wait for all of ring 2.
     let forest = pos.ring(3)[4];
     s.map.get_mut(forest).unwrap().terrain = Terrain::Forest;
-    city_mut(&mut s, c).producing = Some(soldier());
+    city_mut(&mut s, c).producing = Some(spearman());
     // Ring 2 has 12 tiles: 12 growths claim exactly those.
     city_mut(&mut s, c).population = 13;
     process_borders(&mut s, &mut Vec::new());
@@ -1982,7 +1982,7 @@ fn growth_ranks_a_ring_beyond_the_work_radius_by_quality_too() {
     }
     let forest = pos.ring(4)[7];
     s.map.get_mut(forest).unwrap().terrain = Terrain::Forest;
-    city_mut(&mut s, c).producing = Some(soldier());
+    city_mut(&mut s, c).producing = Some(spearman());
     assert_eq!(next_claim(&s, city(&s, c)), Some(forest));
     // A Food-hungry city prefers the grassland of the same ring.
     city_mut(&mut s, c).producing = Some(settler());
@@ -2182,7 +2182,7 @@ fn city_phases_are_deterministic() {
         let a = found(&mut s, P0, at(4, 4));
         let b = found(&mut s, P1, at(12, 12));
         city_mut(&mut s, a).producing = Some(settler());
-        city_mut(&mut s, b).producing = Some(soldier());
+        city_mut(&mut s, b).producing = Some(spearman());
         s.player_mut(P0).researching = Some(TechId::BronzeWorking);
         s
     };
@@ -2344,7 +2344,7 @@ fn old_save_without_queue_keeps_current_research_then_finishes_normally() {
 fn blocked_queue_head_is_retained_while_later_work_proceeds() {
     let mut s = two_players();
     let id = found(&mut s, P0, at(5, 5));
-    let blocked = soldier();
+    let blocked = spearman();
     for h in at(5, 5).within(1) {
         spawn_unit(&mut s, P0, UnitKind::Spearman, h);
     }
@@ -2412,7 +2412,7 @@ fn blocked_only_queue_banks_production_and_reports_once_across_save_load() {
     // to be queued at all.
     let mut s = two_players();
     let id = found(&mut s, P0, at(5, 5));
-    let item = soldier();
+    let item = spearman();
     for h in at(5, 5).within(1) {
         spawn_unit(&mut s, P0, UnitKind::Spearman, h);
     }
@@ -2487,9 +2487,9 @@ fn waiting_queue_banks_only_up_to_the_first_queued_item_cost() {
     for h in at(5, 5).within(1) {
         spawn_unit(&mut s, P0, UnitKind::Spearman, h);
     }
-    let cost = economy::city_production_cost(&s, city(&s, id), soldier());
+    let cost = economy::city_production_cost(&s, city(&s, id), spearman());
     let c = city_mut(&mut s, id);
-    c.production_queue = vec![soldier()];
+    c.production_queue = vec![spearman()];
     c.production_stored = cost - 3;
     for _ in 0..3 {
         let mut events = Vec::new();
@@ -2644,10 +2644,10 @@ fn invalid_queue_item_reports_its_specific_building_requirement() {
     s.player_mut(P0).techs.extend(TechId::ALL);
     let c = city_mut(&mut s, id);
     c.population = 8;
-    c.production_queue = vec![building(BuildingKind::Factory), soldier()];
+    c.production_queue = vec![building(BuildingKind::Factory), spearman()];
     let mut events = Vec::new();
     produce(&mut s, id, 3, &mut events);
-    assert_eq!(city(&s, id).producing, Some(soldier()));
+    assert_eq!(city(&s, id).producing, Some(spearman()));
     assert!(events.iter().any(
         |e| matches!(e, Event::OrderFailed { reason, .. } if reason.ends_with("Requires Forge"))
     ));
@@ -2858,7 +2858,7 @@ fn default_opening_pace_adds_capital_output_and_costs_stay_at_the_listed_price()
     for turn in [0, 25, 100, 400] {
         s.turn = turn;
         assert_eq!(
-            economy::production_cost(&s, P0, soldier()),
+            economy::production_cost(&s, P0, spearman()),
             80,
             "turn {turn}"
         );
@@ -2934,7 +2934,7 @@ fn buying_a_tile_claims_it_for_gold_and_uses_the_purchase_slot() {
             buy.clone(),
             Order::BuyItem {
                 city: c,
-                item: soldier(),
+                item: spearman(),
             },
         ],
         &mut ev,
@@ -3071,7 +3071,7 @@ fn a_tile_and_an_item_share_the_city_purchase_slot_both_ways() {
     let tile = pos.ring(2)[0];
     let item = Order::BuyItem {
         city: c,
-        item: soldier(),
+        item: spearman(),
     };
     // Item first, then tile: the tile is refused.
     let mut ev = Vec::new();
@@ -3119,7 +3119,7 @@ fn an_occupied_or_resisting_city_buys_no_tile() {
     // The same words the item purchase gives.
     assert_eq!(
         Some(reason),
-        economy::buy_blocker(&s, city(&s, c), soldier())
+        economy::buy_blocker(&s, city(&s, c), spearman())
     );
     city_mut(&mut s, c).occupied_from = None;
     city_mut(&mut s, c).resistance = 2;
@@ -3254,7 +3254,7 @@ fn no_purchase_under_threat_stops_military_buys_near_an_enemy_and_is_off_by_defa
     let mut s = two_players();
     let id = found(&mut s, P0, at(5, 5));
     s.player_mut(P0).gold = 10_000;
-    let soldier = ProductionItem::Unit {
+    let spearman = ProductionItem::Unit {
         unit: UnitKind::Spearman,
     };
     let settler_free = ProductionItem::Building {
@@ -3269,13 +3269,13 @@ fn no_purchase_under_threat_stops_military_buys_near_an_enemy_and_is_off_by_defa
         .unwrap();
     let enemy = spawn_unit(&mut s, P1, UnitKind::Spearman, near);
     // Off by default: nothing changes.
-    assert_eq!(economy::buy_block(&s, city(&s, id), soldier), None);
+    assert_eq!(economy::buy_block(&s, city(&s, id), spearman), None);
     s.setup
         .rule_experiments
         .apply("no-purchase-under-threat")
         .unwrap();
     assert_eq!(
-        economy::buy_block(&s, city(&s, id), soldier),
+        economy::buy_block(&s, city(&s, id), spearman),
         Some(economy::BuyBlock::UnderThreat)
     );
     let reason = validate_city_order(
@@ -3283,7 +3283,7 @@ fn no_purchase_under_threat_stops_military_buys_near_an_enemy_and_is_off_by_defa
         P0,
         &Order::BuyItem {
             city: id,
-            item: soldier,
+            item: spearman,
         },
     )
     .unwrap_err();
@@ -3301,12 +3301,12 @@ fn no_purchase_under_threat_stops_military_buys_near_an_enemy_and_is_off_by_defa
         .find(|h| h.distance(s.cities[&id].pos) == 3)
         .unwrap();
     s.units.get_mut(&enemy).unwrap().pos = far;
-    assert_eq!(economy::buy_block(&s, city(&s, id), soldier), None);
+    assert_eq!(economy::buy_block(&s, city(&s, id), spearman), None);
     s.units.get_mut(&enemy).unwrap().pos = near;
     for r in &mut s.diplomacy.as_mut().unwrap().relations {
         r.state = crate::diplomacy::RelationState::Peace;
     }
-    assert_eq!(economy::buy_block(&s, city(&s, id), soldier), None);
+    assert_eq!(economy::buy_block(&s, city(&s, id), spearman), None);
 }
 
 #[test]

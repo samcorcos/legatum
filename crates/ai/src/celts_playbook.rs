@@ -184,7 +184,7 @@ mod tests {
     }
 
     #[test]
-    fn a_rival_soldier_in_sight_ends_the_shelter_but_a_barbarian_does_not() {
+    fn a_rival_spearman_in_sight_ends_the_shelter_but_a_barbarian_does_not() {
         let rival = ViewBuilder { view: celts() }
             .unit(50, ENEMY, UnitKind::Spearman, off(3, 16))
             .build();

@@ -119,9 +119,9 @@ fn cannon_in_a_nearly_breached_city_values_adjacent_cavalry() {
     v.cities[0].hp = 51;
     let p = planner(&v, 100);
     let cavalry = p.ctx.enemy_units[0];
-    let soldier = p.ctx.enemy_units[2];
+    let spearman = p.ctx.enemy_units[2];
     assert!(
-        p.enemy_threat(cavalry, cavalry.hp) > p.enemy_threat(soldier, soldier.hp),
+        p.enemy_threat(cavalry, cavalry.hp) > p.enemy_threat(spearman, spearman.hp),
         "adjacent city attackers should be worth more than distant infantry"
     );
 }

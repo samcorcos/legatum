@@ -94,10 +94,10 @@ fn ranger_reproduction_detects_all_three_reported_failures_deterministically() {
 fn responses_reset_attack_streak_even_when_the_movement_is_blocked() {
     let mut s = fixture();
     let guard = spawn_unit(&mut s, PlayerId(0), UnitKind::Spearman, h(4, 4));
-    let ranger = spawn_unit(&mut s, PlayerId(1), UnitKind::Archer, h(6, 4));
+    let archer = spawn_unit(&mut s, PlayerId(1), UnitKind::Archer, h(6, 4));
     spawn_unit(&mut s, PlayerId(0), UnitKind::Spearman, h(3, 4));
     let shot = Order::RangedAttack {
-        unit: ranger,
+        unit: archer,
         target: h(4, 4),
     };
     let turns = vec![
@@ -230,11 +230,11 @@ fn movement_oscillation_requires_a_b_a_b() {
 fn gold_hoarding_requires_attacks_and_affordable_defense_and_no_spending() {
     let mut s = fixture();
     spawn_unit(&mut s, PlayerId(0), UnitKind::Spearman, h(4, 4));
-    let ranger = spawn_unit(&mut s, PlayerId(1), UnitKind::Archer, h(6, 4));
+    let archer = spawn_unit(&mut s, PlayerId(1), UnitKind::Archer, h(6, 4));
     let shot = OrderMap::from([(
         PlayerId(1),
         vec![Order::RangedAttack {
-            unit: ranger,
+            unit: archer,
             target: h(4, 4),
         }],
     )]);
@@ -428,14 +428,14 @@ fn a_garrison_holding_under_bombardment_is_flagged_only_when_it_had_a_better_opt
     let run = |garrison_kind: UnitKind| {
         let mut s = fixture();
         let guard = spawn_unit(&mut s, PlayerId(0), garrison_kind, h(4, 4));
-        let ranger = spawn_unit(&mut s, PlayerId(1), UnitKind::Archer, h(6, 4));
+        let archer = spawn_unit(&mut s, PlayerId(1), UnitKind::Archer, h(6, 4));
         for n in h(6, 4).neighbors() {
             s.map.get_mut(n).unwrap().terrain = Terrain::Mountains;
         }
         // Water keeps the attack lane open without giving the garrison a land route.
         s.map.get_mut(h(5, 4)).unwrap().terrain = Terrain::Ocean;
         let shot = Order::RangedAttack {
-            unit: ranger,
+            unit: archer,
             target: h(4, 4),
         };
         let turns = (0..3)

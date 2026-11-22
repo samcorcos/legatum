@@ -20,7 +20,7 @@ fn found(s: &mut GameState, col: i32, row: i32) -> CityId {
     rules::cities::found_city(s, settler, &mut vec![]).unwrap()
 }
 
-fn soldier() -> ProductionItem {
+fn spearman() -> ProductionItem {
     ProductionItem::Unit {
         unit: UnitKind::Spearman,
     }
@@ -35,11 +35,11 @@ fn the_cap_is_one_armed_unit_per_city_plus_one_and_scouts_do_not_count() {
     spawn_unit(&mut s, P, UnitKind::Spearman, Hex::from_offset(5, 4));
     assert_eq!(economy::levy(&s, P), Some((1, 2)), "the Scout is free");
     assert_eq!(
-        economy::production_blocker(&s, &s.cities[&home], soldier(), true),
+        economy::production_blocker(&s, &s.cities[&home], spearman(), true),
         None
     );
     spawn_unit(&mut s, P, UnitKind::Archer, Hex::from_offset(3, 4));
-    let blocker = economy::production_blocker(&s, &s.cities[&home], soldier(), true);
+    let blocker = economy::production_blocker(&s, &s.cities[&home], spearman(), true);
     assert_eq!(blocker.as_deref(), Some("Levies full: 2 of 2"));
     // Civilians and Scouts are never blocked.
     for unit in [UnitKind::Scout, UnitKind::Settler] {
@@ -51,7 +51,7 @@ fn the_cap_is_one_armed_unit_per_city_plus_one_and_scouts_do_not_count() {
     found(&mut s, 12, 8);
     assert_eq!(economy::levy(&s, P), Some((2, 3)));
     assert_eq!(
-        economy::production_blocker(&s, &s.cities[&home], soldier(), true),
+        economy::production_blocker(&s, &s.cities[&home], spearman(), true),
         None
     );
 }
@@ -69,7 +69,7 @@ fn losing_a_city_never_disbands_units_it_only_blocks_new_ones() {
     assert_eq!(economy::levy(&s, P), Some((3, 2)));
     let (next, _) = resolve_turn(&s, &Default::default());
     assert_eq!(economy::levy_count(&next, P), 3, "no unit is disbanded");
-    assert!(economy::production_blocker(&next, &next.cities[&home], soldier(), false).is_some());
+    assert!(economy::production_blocker(&next, &next.cities[&home], spearman(), false).is_some());
 }
 
 #[test]
@@ -83,12 +83,12 @@ fn a_full_levy_blocks_buying_and_finishing_but_other_factions_are_uncapped() {
         P,
         &[Order::BuyItem {
             city: home,
-            item: soldier(),
+            item: spearman(),
         }],
     );
     assert_eq!(errors.len(), 1, "{errors:?}");
     assert_eq!(
-        economy::production_blocker(&s, &s.cities[&home], soldier(), true).as_deref(),
+        economy::production_blocker(&s, &s.cities[&home], spearman(), true).as_deref(),
         Some("Levies full: 2 of 2")
     );
     let view = player_view(&s, P);
@@ -102,7 +102,7 @@ fn a_full_levy_blocks_buying_and_finishing_but_other_factions_are_uncapped() {
     }
     assert_eq!(economy::levy(&t, P), None);
     assert_eq!(
-        economy::production_blocker(&t, &t.cities[&home], soldier(), true),
+        economy::production_blocker(&t, &t.cities[&home], spearman(), true),
         None
     );
 }
@@ -128,7 +128,7 @@ fn aircraft_count_toward_thin_levies_and_cannot_be_built_at_the_cap() {
         "the Fighter uses a levy slot but no free upkeep slot"
     );
     assert_eq!(
-        economy::production_blocker(&s, &s.cities[&home], soldier(), true).as_deref(),
+        economy::production_blocker(&s, &s.cities[&home], spearman(), true).as_deref(),
         Some("Levies full: 2 of 2")
     );
 }

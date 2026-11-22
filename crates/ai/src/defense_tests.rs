@@ -140,7 +140,7 @@ fn routine_defense_and_fallback_garrison_reject_the_same_bad_assignment() {
 }
 
 #[test]
-fn garrison_selects_a_suitable_defender_over_a_closer_ranger() {
+fn garrison_selects_a_suitable_defender_over_a_closer_archer() {
     let mut view = ViewBuilder {
         view: view(UnitKind::Archer, SUPPORT),
     }
@@ -333,7 +333,7 @@ fn enemy_iteration_order_cannot_hide_lethal_ranged_then_melee_damage() {
     let defender = view.units[0].clone();
     let scout =
         combat::unit_attack_strength_for(view.faction_of(ENEMY), UnitKind::Scout, 100, 0).total;
-    let ranger =
+    let archer =
         combat::unit_ranged_strength_for(view.faction_of(ENEMY), UnitKind::Archer, 100, 0).total;
     let damage_after = |attacks: [i32; 2]| {
         attacks.into_iter().fold(0, |damage, attack| {
@@ -351,8 +351,8 @@ fn enemy_iteration_order_cannot_hide_lethal_ranged_then_melee_damage() {
     };
     // Ranged fire happens before movement. Following unit IDs instead misses the
     // lethal order by one HP because the engine rounds both damage and wounds.
-    assert_eq!(damage_after([scout, ranger]), 59);
-    assert_eq!(damage_after([ranger, scout]), 60);
+    assert_eq!(damage_after([scout, archer]), 59);
+    assert_eq!(damage_after([archer, scout]), 60);
     field_retreats_but_garrison_holds(&view, &defender);
     view.units.reverse();
     field_retreats_but_garrison_holds(&view, &defender);
@@ -721,7 +721,7 @@ fn rome_routes_a_veteran_founder_as_a_soldier_not_a_settler() {
         .unwrap()
         .level = 1;
     let p = rome_planner(&view);
-    let soldier = p.choose_site(
+    let spearman = p.choose_site(
         &view
             .units
             .iter()
@@ -739,7 +739,7 @@ fn rome_routes_a_veteran_founder_as_a_soldier_not_a_settler() {
             .unwrap()
             .clone(),
     );
-    assert!(soldier.is_some(), "a soldier walks past the riders' reach");
+    assert!(spearman.is_some(), "a soldier walks past the riders' reach");
     assert!(
         settler.is_none(),
         "a Settler's route avoids it: {settler:?}"

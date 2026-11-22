@@ -67,8 +67,8 @@ describe.skipIf(!available)('terrain LOS core behavior', () => {
   it.each(cases)('%s', (_label, to, source, barriers, clear) => {
     const s = fixture(to, source, barriers);
     const { fixtureClient, core } = pair(s);
-    const ranger = s.units.find((u) => u.kind === 'Archer')!;
-    const order: Order = { type: 'RangedAttack', unit: ranger.id, target: to };
+    const archer = s.units.find((u) => u.kind === 'Archer')!;
+    const order: Order = { type: 'RangedAttack', unit: archer.id, target: to };
     const mo = fixtureClient.validate(0, [order]), co = core.validate(0, [order]);
     (expect(mo.map((e) => e.message.includes('line of sight'))).toMatchSnapshot(), void (co.map((e) => e.message.includes('line of sight'))));
     expect(mo.length === 0).toBe(clear);

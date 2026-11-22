@@ -465,7 +465,7 @@ impl Planner<'_> {
                         && self.support_path_this_turn(u, city.pos).is_some()
                 });
                 if !melee_reaches
-                    && let Some(ranger) = self
+                    && let Some(archer) = self
                         .ctx
                         .own_units
                         .iter()
@@ -475,9 +475,9 @@ impl Planner<'_> {
                         .min_by_key(|u| (u.pos.distance(city.pos), u.id))
                 {
                     self.replace_supported_order(
-                        ranger.id,
+                        archer.id,
                         Order::MoveUnit {
-                            unit: ranger.id,
+                            unit: archer.id,
                             to: city.pos,
                         },
                     );
@@ -2394,7 +2394,7 @@ mod tests {
         );
         assert!(
             walks,
-            "the Soldier must walk to the Settler: {:?}",
+            "the Spearman must walk to the Settler: {:?}",
             p.orders
         );
     }

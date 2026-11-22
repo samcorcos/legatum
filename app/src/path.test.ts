@@ -140,7 +140,7 @@ describe('F8 pending movement reservations', () => {
     return { middle, a, b, goals, view };
   }
 
-  it('follows the first Ranger through its intermediate hex, even on a confirmed path', () => {
+  it('follows the first Archer through its intermediate hex, even on a confirmed path', () => {
     const { middle, a, b, goals, view } = scenario();
     const first = previewPath(view, a.pos, goals[0], [], a.id)!;
     expect(first[0]).toEqual(middle);

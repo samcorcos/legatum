@@ -334,7 +334,7 @@ fn exposed_staging_does_not_count_troops_that_cannot_arrive_this_turn() {
     assert!(!p.stage_assault(&army, &t));
     assert!(
         p.orders.is_empty(),
-        "the faster Soldier must not advance alone"
+        "the faster Spearman must not advance alone"
     );
 }
 
@@ -725,7 +725,7 @@ fn rush_rotates_an_archer_before_two_city_volleys_can_kill_it() {
         .walled(9)
         .unit(1, ME, UnitKind::Archer, Hex::new(12, 8))
         .build();
-    // A worn Customs Bastion (pop 1, 60 HP) shoots with the old unwalled pop-5 strength of 20.
+    // A worn Alpine Redoubt (pop 1, 60 HP) shoots with the old unwalled pop-5 strength of 20.
     view.cities[1].hp = 60;
     let first = forecast_attack_mode(&view, UnitId(1), TARGET, AttackMode::Ranged)
         .unwrap()

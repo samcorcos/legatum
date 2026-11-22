@@ -112,7 +112,7 @@ describe.skipIf(!available)('thin levies: core behavior', () => {
     const s = world();
     for (const relation of s.diplomacy!.relations) relation.state = 'Peace';
     s.units = s.units.filter((u) => u.owner !== 0);
-    // A second city, three Soldiers: 3 of 3. Then the second city is gone: 3 of 2.
+    // A second city, three Spearmen: 3 of 3. Then the second city is gone: 3 of 2.
     s.cities.push({ id: 9, owner: 0, founder: 0, name: 'Second', pos: fromOffset(3, 12), population: 2, food: 0, prod: 0, producing: null, bought: null, buildings: [], hp: 200, grownTiles: [], tilesClaimed: 0, isCapital: false, foundedTurn: 1, resistance: 0 });
     s.nextCityId = 9;
     for (let i = 0; i < 3; i++) spawnUnit(s, 0, 'Spearman', fromOffset(4 + i, 6), false);

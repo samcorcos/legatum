@@ -79,8 +79,8 @@ export function sakokuState(turns: number | null = null, enemyInLand = false): M
 }
 
 /**
- * A Celtic human at war with a closed India (an AI) whose vow is held: a Celtic Soldier already stands inside Indian land,
- * so the held VP is gone (`parked`), or a rival Soldier waits outside (`!parked`) and the VP is held.
+ * A Celtic human at war with a closed India (an AI) whose vow is held: a Celtic Spearman already stands inside Indian land,
+ * so the held VP is gone (`parked`), or a rival Spearman waits outside (`!parked`) and the VP is held.
  */
 function sakokuRivalState(parked = true): MState {
   const s = base('710107', 'Celts', [{ faction: 'India', name: 'AI 2' }]);
@@ -134,19 +134,19 @@ export function freeTechsState(): MState {
 }
 
 /**
- * The Sparta with a War Shrine in Ironhold, a plain Stonewatch, and veterans: two level-3 and a
+ * The Sparta with an Agoge in Ironhold, a plain Stonewatch, and veterans: two level-3 and a
  * level-6 in the shrine city, a level-5 waiting in Stonewatch, and a green soldier. Honour the Fallen
  * is 0 of 3 (`retired` sets how many are done already).
  */
 export function retireState(retired = 0): MState {
   const s = base('710104', 'Sparta', [{ faction: 'Celts', name: 'AI 2' }]);
-  const shrine = city(s, 0, 8, 7, 'Ironhold', 6, true);
-  shrine.buildings = ['Agoge'];
+  const agoge = city(s, 0, 8, 7, 'Ironhold', 6, true);
+  agoge.buildings = ['Agoge'];
   const plain = city(s, 0, 17, 11, 'Stonewatch', 4);
   city(s, 1, 25, 5, 'Greenwatch', 4, true);
   const xp = (level: number) => thresholdsFor('Sparta')[level - 1];
   const stand = (kind: 'Spearman' | 'Pikeman', at: MCity, level: number, hp = 100) => { const u = spawnUnit(s, 0, kind, at.pos, false); u.xp = level ? xp(level) : 0; u.hp = hp; return u; };
-  stand('Spearman', shrine, 4); stand('Spearman', shrine, 6, 70); stand('Pikeman', shrine, 4, 85);
+  stand('Spearman', agoge, 4); stand('Spearman', agoge, 6, 70); stand('Pikeman', agoge, 4, 85);
   stand('Spearman', plain, 5); stand('Spearman', plain, 1);
   s.players[0].veteransRetired = retired;
   if (retired >= 3) s.players[0].factionGoalDone = true;

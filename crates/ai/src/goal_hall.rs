@@ -1,12 +1,12 @@
-//! Mongols's goal, "The Open Road": the Courier Hall (2 VP to whoever owns its city). While it
-//! stands every empire has Peace passage through its holder's land, so the Hall is a cost the
+//! Mongols's goal, "The Open Road": the Yam Relay Station (2 VP to whoever owns its city). While it
+//! stands every empire has Peace passage through its holder's land, so the Station is a cost the
 //! Mongols chooses to pay: its price and the exposure of its open land against 2 VP, which also
 //! change hands with the city. The decisions here, all from the fogged view:
 //! - **build**: when expansion is done, the land can be defended and the 2 VP decide something
 //!   (the same rite test as the broadcast), in the safest city;
-//! - **defend**: whoever holds a Hall city (the Mongols or a captor) garrisons, walls and
+//! - **defend**: whoever holds a Station city (the Mongols or a captor) garrisons, walls and
 //!   defends it first;
-//! - **capture**: rivals price the Hall city by the 2 VP swing; the Mongols prices retaking it
+//! - **capture**: rivals price the Station city by the 2 VP swing; the Mongols prices retaking it
 //!   higher (`hall_in_city_value`, folded into `hoard_denial_value`, and `held_goal_denial`).
 //!
 //! The same public facts (`PlayerView::courier_halls`, `vp_sources`) serve every empire.
@@ -16,35 +16,35 @@ use crate::scripted::Planner;
 use legatum_core::view::{CityView, CourierHallView};
 use legatum_core::{BuildingKind, Faction, ProductionItem, UnitKind, goals};
 
-/// Cities the Mongols has before the Hall is worth its exposure (its opening is expansion).
+/// Cities the Mongols has before the Station is worth its exposure (its opening is expansion).
 const HALL_MIN_CITIES: usize = 3;
 /// Share of the game (percent of its expected length) after which expansion is over even where
 /// land is left; before it, a Mongols with room keeps settling.
 const HALL_PHASE_PERCENT: u32 = 45;
-/// Share of the game after which the Hall's 2 VP are banked whatever the race looks like: its
+/// Share of the game after which the Station's 2 VP are banked whatever the race looks like: its
 /// exposure then lasts few turns.
 const HALL_LATE_PERCENT: u32 = 60;
-/// VP the team is expected to earn while the Hall is under construction: the Hall pays when it
+/// VP the team is expected to earn while the Station is under construction: the Station pays when it
 /// would reach the target within this lead.
 const HALL_LEAD_VP: u32 = 2;
-/// Production value of the Hall, per goal VP, in the city chosen to hold it.
+/// Production value of the Station, per goal VP, in the city chosen to hold it.
 const HALL_VALUE_PER_VP: i32 = 1500;
-/// The Hall's value per goal VP when those points take the team to its target (`hall_decides_the_game`):
+/// The Station's value per goal VP when those points take the team to its target (`hall_decides_the_game`):
 /// the game itself. A build of 45 turns is discounted against a garrison unit that takes five, so
-/// at the ordinary 1,500 per VP the Hall city built units for 400 turns and never the Hall
+/// at the ordinary 1,500 per VP the Station city built units for 400 turns and never the Station
 /// (seed 22229, 2026-10-23).
 const HALL_DECISIVE_VALUE_PER_VP: i32 = 4000;
-/// A held Hall city is worth this much per VP when capturing it (the swing is double: the
+/// A held Station city is worth this much per VP when capturing it (the swing is double: the
 /// holder loses the points as the captor gains them).
 const HALL_SWING_VALUE_PER_VP: i32 = 100;
-/// The Mongols retaking its own Hall: its passage and its points both come back.
+/// The Mongols retaking its own Station: its passage and its points both come back.
 const HALL_RETAKE_VALUE_PER_VP: i32 = 250;
-/// Military units at or beside a Hall city that count as a garrison for its open land.
+/// Military units at or beside a Station city that count as a garrison for its open land.
 const HALL_GARRISON: usize = 2;
-/// A threatened Hall city is defended against this percent of the visible attack.
+/// A threatened Station city is defended against this percent of the visible attack.
 pub(crate) const HALL_DEFENSE_MARGIN_PERCENT: i32 = 150;
 
-/// One turn's Hall decision (`Planner::hall_plan`).
+/// One turn's Station decision (`Planner::hall_plan`).
 pub(crate) struct HallPlan {
     site: Option<legatum_core::CityId>,
     wanted: bool,
@@ -72,7 +72,7 @@ impl Planner<'_> {
             .map(|o| o.item)
     }
 
-    /// Our own Courier Hall, wherever it stands and whoever holds it.
+    /// Our own Yam Relay Station, wherever it stands and whoever holds it.
     fn own_hall(&self) -> Option<&CourierHallView> {
         self.view()
             .courier_halls
@@ -80,7 +80,7 @@ impl Planner<'_> {
             .find(|h| h.of == self.ctx.me)
     }
 
-    /// The Hall city we hold (our own Hall, or one we captured).
+    /// The Station city we hold (our own Station, or one we captured).
     pub(crate) fn holds_hall_city(&self, c: &CityView) -> bool {
         self.view()
             .courier_halls
@@ -107,7 +107,7 @@ impl Planner<'_> {
                 .any(|u| u.military && u.kind != UnitKind::Scout && u.pos == c.pos)
     }
 
-    /// Expansion is the core loop: the Hall waits until the planned expansion is done (the land
+    /// Expansion is the core loop: the Station waits until the planned expansion is done (the land
     /// is full, or nearly half the game is gone).
     fn hall_expansion_done(&self) -> bool {
         self.ctx.own_cities.len() >= HALL_MIN_CITIES
@@ -116,7 +116,7 @@ impl Planner<'_> {
                 || !self.expansion_room())
     }
 
-    /// Turns to build the Hall in `c`: its quote when startable, else its price over the city's
+    /// Turns to build the Station in `c`: its quote when startable, else its price over the city's
     /// Production.
     fn hall_build_turns(&self, c: &CityView) -> i32 {
         let d = c.detail.as_ref().expect("own city");
@@ -131,7 +131,7 @@ impl Planner<'_> {
         (cost + d.yields.total.production.max(1) - 1) / d.yields.total.production.max(1)
     }
 
-    /// The 2 VP decide something: with the lead the Hall earns while it is built, they take the
+    /// The 2 VP decide something: with the lead the Station earns while it is built, they take the
     /// team to the target with time to hold it, or the game is late enough to bank them.
     fn hall_pays(&self, build: i32) -> bool {
         let v = self.view();
@@ -147,11 +147,11 @@ impl Planner<'_> {
                 <= i64::from(last_turn(v, open_end))
     }
 
-    /// The Hall's 2 VP take the team to its target. Then no check of the open land's exposure
+    /// The Station's 2 VP take the team to its target. Then no check of the open land's exposure
     /// holds the build back: with the points the team wins, without them it sits one rite short
-    /// (2026-10-23: a 9-VP Mongols with 18 cities never started its Hall in 900 turns, because
+    /// (2026-10-23: a 9-VP Mongols with 18 cities never started its Station in 900 turns, because
     /// "any city of ours under fire" is true all game at war with six empires, and the garrison
-    /// the check asked for is built by the Hall city's own priority once the Hall is wanted).
+    /// the check asked for is built by the Station city's own priority once the Station is wanted).
     fn hall_decides_the_game(&self) -> bool {
         standing(self.view()).is_some_and(|(vp, target)| {
             vp < target && vp + goals::spec(Faction::Mongols).vp >= target
@@ -190,7 +190,7 @@ impl Planner<'_> {
                 .any(|(i, c)| self.ctx.threat[i] > self.local_defense(c))
     }
 
-    /// How safe `c` is to hold the Hall: far from rival cities, walled, garrisoned and not a
+    /// How safe `c` is to hold the Station: far from rival cities, walled, garrisoned and not a
     /// frontier. Higher is safer.
     fn hall_site_score(&self, i: usize, c: &CityView) -> i32 {
         let v = self.view();
@@ -211,7 +211,7 @@ impl Planner<'_> {
             - self.ctx.threat[i].min(100) / 10
     }
 
-    /// The city that should hold the Hall: the safest one that can start it.
+    /// The city that should hold the Station: the safest one that can start it.
     fn choose_hall_site(&self) -> Option<&CityView> {
         self.ctx
             .own_cities
@@ -226,7 +226,7 @@ impl Planner<'_> {
             .map(|(_, c)| *c)
     }
 
-    /// The Hall's site and whether it is wanted and ready this turn (one evaluation per turn).
+    /// The Station's site and whether it is wanted and ready this turn (one evaluation per turn).
     fn hall_plan(&self) -> &HallPlan {
         self.hall_plan.get_or_init(|| {
             let none = HallPlan {
@@ -241,7 +241,7 @@ impl Planner<'_> {
             {
                 return none;
             }
-            // A Hall already under construction stays the plan while it can still finish: the
+            // A Station already under construction stays the plan while it can still finish: the
             // race tightening or loosening mid-build never strands its Production.
             let building = self.ctx.own_cities.iter().copied().find(|c| {
                 c.detail.as_ref().is_some_and(|d| {
@@ -270,24 +270,24 @@ impl Planner<'_> {
         })
     }
 
-    /// The city chosen to hold the Hall.
+    /// The city chosen to hold the Station.
     pub(crate) fn hall_site(&self) -> Option<&CityView> {
         let id = self.hall_plan().site?;
         self.ctx.own_cities.iter().copied().find(|c| c.id == id)
     }
 
-    /// The Mongols should hold a Hall soon: it has none, expansion is done and its 2 VP pay.
-    /// A Hall standing anywhere, even in a rival's captured city, rules out a second one.
+    /// The Mongols should hold a Station soon: it has none, expansion is done and its 2 VP pay.
+    /// A Station standing anywhere, even in a rival's captured city, rules out a second one.
     pub(crate) fn hall_wanted(&self) -> bool {
         self.hall_plan().wanted
     }
 
-    /// The Hall is started now: wanted, its city garrisoned and nothing outmatches us.
+    /// The Station is started now: wanted, its city garrisoned and nothing outmatches us.
     pub(crate) fn hall_ready(&self) -> bool {
         self.hall_plan().ready
     }
 
-    /// Production value of the Hall in `c`: nothing unless it is the chosen city and the Hall is
+    /// Production value of the Station in `c`: nothing unless it is the chosen city and the Station is
     /// ready; then the whole of the goal.
     pub(crate) fn hall_value(&self, c: &CityView, turns: i32) -> i32 {
         if turns < 0 || !self.hall_ready() || self.hall_plan().site != Some(c.id) {
@@ -301,9 +301,9 @@ impl Planner<'_> {
         goals::spec(Faction::Mongols).vp as i32 * per_vp
     }
 
-    /// The Hall's 2 VP win the game and `city` is the one that should build it: it drops what it is
-    /// producing for the Hall. Cities repeat a unit they are building, so without this a busy
-    /// Hall city never became idle and the goal pass never reached it (seed 22229, 2026-10-23: a
+    /// The Station's 2 VP win the game and `city` is the one that should build it: it drops what it is
+    /// producing for the Station. Cities repeat a unit they are building, so without this a busy
+    /// Station city never became idle and the goal pass never reached it (seed 22229, 2026-10-23: a
     /// 9-VP Mongols built Drones in all 14 cities for 250 turns).
     pub(crate) fn hall_takes_over(&self, city: legatum_core::CityId, item: ProductionItem) -> bool {
         self.decisions.hall_decisive > 0
@@ -313,7 +313,7 @@ impl Planner<'_> {
             && self.hall_decides_the_game()
     }
 
-    /// The Hall for the goal pass, which may buy it with Gold (the pass pays reserve, upkeep and
+    /// The Station for the goal pass, which may buy it with Gold (the pass pays reserve, upkeep and
     /// the garrison quota first).
     pub(crate) fn hall_steps(&self, steps: &mut Vec<(legatum_core::CityId, ProductionItem)>) {
         if !self.hall_ready() {
@@ -327,17 +327,17 @@ impl Planner<'_> {
         }
     }
 
-    /// `c` holds the Hall, or is the city that will: the first place to garrison and wall.
+    /// `c` holds the Station, or is the city that will: the first place to garrison and wall.
     pub(crate) fn hall_guard_city(&self, c: &CityView) -> bool {
         self.holds_hall_city(c) || (self.hall_wanted() && self.hall_plan().site == Some(c.id))
     }
 
-    /// A Hall city without its garrison: units are the first thing it builds.
+    /// A Station city without its garrison: units are the first thing it builds.
     pub(crate) fn hall_unguarded(&self, c: &CityView) -> bool {
         self.hall_guard_city(c) && !self.hall_garrisoned(c)
     }
 
-    /// Percent of a visible attack the defenders of `c` must cover: a Hall city is defended with
+    /// Percent of a visible attack the defenders of `c` must cover: a Station city is defended with
     /// a wider margin than any other.
     pub(crate) fn hall_defense_percent(&self, c: &CityView) -> i32 {
         if self.holds_hall_city(c) {
@@ -347,11 +347,11 @@ impl Planner<'_> {
         }
     }
 
-    // ---------- rivals: capturing the Hall city ----------
+    // ---------- rivals: capturing the Station city ----------
 
-    /// Value of capturing `city` if a Courier Hall stands in it and its holder is not on our team:
-    /// the captor scores its 2 VP and the holder loses them. The Mongols whose Hall it is values
-    /// retaking it higher. A Celts capture razes the city and the Hall with it, so it only denies.
+    /// Value of capturing `city` if a Yam Relay Station stands in it and its holder is not on our team:
+    /// the captor scores its 2 VP and the holder loses them. The Mongols whose Station it is values
+    /// retaking it higher. A Celts capture razes the city and the Station with it, so it only denies.
     pub(crate) fn hall_in_city_value(&self, city: &CityView) -> i32 {
         let v = self.view();
         let Some(hall) = v.courier_halls.iter().find(|h| h.city == city.id) else {
@@ -370,7 +370,7 @@ impl Planner<'_> {
         }
     }
 
-    /// Denial value of a holder scoring `of`'s goal when `of` is a Mongols: the Hall's swing,
+    /// Denial value of a holder scoring `of`'s goal when `of` is a Mongols: the Station's swing,
     /// more when it is ours to retake. Zero for any other faction.
     pub(crate) fn hall_goal_denial(&self, of: legatum_core::PlayerId) -> i32 {
         let v = self.view();

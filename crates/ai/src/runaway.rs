@@ -1106,10 +1106,10 @@ mod tests {
             .build();
         v.diplomacy.legacy = false;
         standings(&mut v, [(0, 2), (2, 6), (3, 1)]);
-        let soldier = unit_army_value(&v.units.iter().find(|u| u.id.0 == 10).unwrap().clone());
+        let spearman = unit_army_value(&v.units.iter().find(|u| u.id.0 == 10).unwrap().clone());
         armies(
             &mut v,
-            [(ME, 3 * soldier), (ENEMY, 4 * soldier), (THIRD, soldier)],
+            [(ME, 3 * spearman), (ENEMY, 4 * spearman), (THIRD, spearman)],
         );
         let me = v.team;
         let leader = v.team_of(ENEMY);
@@ -1514,10 +1514,14 @@ mod tests {
     fn a_coalition_war_strikes_at_once_with_the_army_at_home() {
         let mut v = runaway_view(true);
         // Wary enough (a VP lead and an army four times ours) for the all-in line.
-        let soldier = unit_army_value(&v.units.iter().find(|u| u.id.0 == 10).unwrap().clone());
+        let spearman = unit_army_value(&v.units.iter().find(|u| u.id.0 == 10).unwrap().clone());
         armies(
             &mut v,
-            [(ME, 3 * soldier), (ENEMY, 12 * soldier), (THIRD, soldier)],
+            [
+                (ME, 3 * spearman),
+                (ENEMY, 12 * spearman),
+                (THIRD, spearman),
+            ],
         );
         for u in v.units.iter_mut().filter(|u| u.owner == ENEMY) {
             u.pos = off(13 + (u.id.0 as i32 % 2), 6 + (u.id.0 as i32 / 12));

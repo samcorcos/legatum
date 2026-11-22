@@ -48,7 +48,7 @@ describe.skipIf(!available)('the air wing of a city, on the Rust engine', () => 
   }
   const button = (text: RegExp, within: ParentNode = container) => [...within.querySelectorAll<HTMLButtonElement>('button')].find((b) => text.test(b.textContent ?? ''))!;
   const card = (plane: number) => container.querySelector<HTMLElement>(`[data-plane="${plane}"]`)!;
-  /** Nobody to strike: the fixture's enemy Soldiers and cities are removed from the view. */
+  /** Nobody to strike: the fixture's enemy Spearmen and cities are removed from the view. */
   const quiet = (view: { units: { owner: number }[]; cities: { owner: number }[] }) => { (view as { units: unknown[] }).units = view.units.filter((u) => u.owner === 0); (view as { cities: unknown[] }).cities = view.cities.filter((c) => c.owner === 0); };
 
   it('shows one selected aircraft in the side card and nothing for a city without it', () => {

@@ -57,7 +57,7 @@ export function cityStem(era: number, tier: CityTier, exists: Has = has): string
   return null;
 }
 
-/** The wall overlay stem for an era: the era's own, else the nearest finished one (World War, Modern and Future share the last). A star fort is the Customs Bastion. */
+/** The wall overlay stem for an era: the era's own, else the nearest finished one (World War, Modern and Future share the last). A star fort is the Alpine Redoubt. */
 export function wallStem(era: number, bastion: boolean, exists: Has = has): string | null {
   const e = clampEra(era);
   const ok = (name: string) => exists(`${name}-walls`, 128) || exists(`${name}-walls`, 512);

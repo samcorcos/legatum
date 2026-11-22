@@ -2429,7 +2429,7 @@ mod tests {
     }
 
     #[test]
-    fn mongols_route_around_a_foreign_soldier() {
+    fn mongols_route_around_a_foreign_spearman() {
         let mut s = game(&[0, 1]);
         s.players[0].faction = Faction::Mongols;
         let courier = unit(&mut s, 0, UnitKind::Spearman, hex(3, 4));

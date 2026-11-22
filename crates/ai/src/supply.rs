@@ -291,9 +291,9 @@ mod tests {
             power(&supplied) - resources::unsupplied_penalty(base)
         );
         // A unit that needs nothing is never docked.
-        let soldier = v.units.iter_mut().find(|u| u.id.0 == 2).unwrap();
-        let before = power(soldier);
-        soldier.unsupplied = None;
-        assert_eq!(power(soldier), before);
+        let spearman = v.units.iter_mut().find(|u| u.id.0 == 2).unwrap();
+        let before = power(spearman);
+        spearman.unsupplied = None;
+        assert_eq!(power(spearman), before);
     }
 }

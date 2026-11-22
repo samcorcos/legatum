@@ -1,6 +1,6 @@
 use super::*;
 use crate::experiments::RuleExperiments;
-use crate::rules::cities::tests::{P0, P1, at, found, test_game, two_players};
+use crate::rules::cities::tests::{P0, P1, P2, at, found, test_game, two_players};
 use crate::rules::test_support::know_eras_before;
 use crate::{Event, TechId, economy};
 
@@ -368,6 +368,108 @@ fn humble_the_mighty_and_breach_skip_capitals_and_wonder_cities() {
     take(&mut s, plain);
     let f = s.player(P0).fight;
     assert_eq!((f.humbled, f.walled), (2, 1));
+}
+
+fn standings(vp: &[(u8, u32)]) -> BTreeMap<TeamId, u32> {
+    vp.iter().map(|(t, v)| (TeamId(*t), *v)).collect()
+}
+
+/// Rules 53 (owner, 2026-11-22): the sole VP leader scores Humble the mighty from the rival with
+/// the most VP, and from nobody else.
+#[test]
+fn a_sole_leader_humbles_only_the_top_rival() {
+    let vp = standings(&[(0, 5), (1, 3), (2, 2)]);
+    let t = TeamId;
+    assert!(
+        humbles(&vp, t(1), t(0)),
+        "the runner-up counts for the leader"
+    );
+    assert!(
+        !humbles(&vp, t(2), t(0)),
+        "a rival below the runner-up does not"
+    );
+    let tied = standings(&[(0, 6), (1, 4), (2, 4)]);
+    assert!(
+        humbles(&tied, t(1), t(0)) && humbles(&tied, t(2), t(0)),
+        "tied runners-up both count"
+    );
+}
+
+#[test]
+fn teams_tied_for_the_lead_humble_each_other() {
+    let vp = standings(&[(0, 5), (1, 5), (2, 2)]);
+    let t = TeamId;
+    assert!(humbles(&vp, t(1), t(0)));
+    assert!(humbles(&vp, t(0), t(1)));
+    assert!(
+        !humbles(&vp, t(2), t(0)),
+        "a trailing team is not the top rival"
+    );
+    assert!(!humbles(&vp, t(0), t(0)), "never your own team");
+}
+
+#[test]
+fn a_trailing_team_still_needs_a_victim_strictly_ahead() {
+    let vp = standings(&[(0, 5), (1, 3), (2, 3), (3, 1)]);
+    let t = TeamId;
+    assert!(
+        humbles(&vp, t(0), t(1)),
+        "the leader is ahead of the runner-up"
+    );
+    assert!(
+        !humbles(&vp, t(2), t(1)),
+        "a tie below the leader is not ahead"
+    );
+    assert!(!humbles(&vp, t(3), t(1)), "a team behind never counts");
+    assert!(humbles(&vp, t(1), t(3)) && humbles(&vp, t(0), t(3)));
+    assert!(
+        !humbles(&vp, t(9), t(0)),
+        "a team that was not alive at the turn start"
+    );
+}
+
+/// Through the turn's capture accounting: the leader scores from the top rival's plain city only;
+/// a capital or wonder city of the top rival still never counts.
+#[test]
+fn a_leader_humbles_the_top_rivals_plain_city_but_never_its_capital_or_wonder_city() {
+    let mut s = test_game(&[
+        (Faction::Athens, 0),
+        (Faction::Athens, 1),
+        (Faction::Athens, 2),
+    ]);
+    let capital = found(&mut s, P1, at(10, 10));
+    let wonder = found(&mut s, P1, at(15, 10));
+    let plain = found(&mut s, P1, at(10, 15));
+    found(&mut s, P2, at(3, 3));
+    let low = found(&mut s, P2, at(15, 15));
+    s.cities
+        .get_mut(&wonder)
+        .unwrap()
+        .buildings
+        .insert(BuildingKind::Pyramids);
+    give_era_points(&mut s, P0, 4);
+    give_era_points(&mut s, P1, 3);
+    give_era_points(&mut s, P2, 1);
+    let vp = CaptureVpSnapshot::new(&s);
+    let mut events = Vec::new();
+    for city in [capital, wonder, low] {
+        crate::rules::battle::capture_city(&mut s, city, P0, &mut events);
+    }
+    record_fights(&mut s, &events, &vp);
+    assert_eq!(
+        s.player(P0).fight.humbled,
+        0,
+        "capital, wonder city and a rival below the top rival never count"
+    );
+    let vp = CaptureVpSnapshot::new(&s);
+    let mut events = Vec::new();
+    crate::rules::battle::capture_city(&mut s, plain, P0, &mut events);
+    record_fights(&mut s, &events, &vp);
+    assert_eq!(
+        s.player(P0).fight.humbled,
+        1,
+        "the top rival's plain city counts"
+    );
 }
 
 #[test]

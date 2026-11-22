@@ -92,20 +92,20 @@ fn wounded_city_falls_after_a_volley_with_city_fire_enabled() {
         .unwrap()
         .buildings
         .insert(BuildingKind::Walls);
-    let soldier = s
+    let spearman = s
         .units
         .values()
         .find(|u| u.owner == ME && u.kind == UnitKind::Spearman)
         .unwrap()
         .id;
-    s.units.get_mut(&soldier).unwrap().pos = at(11, 8);
-    let ranger = s
+    s.units.get_mut(&spearman).unwrap().pos = at(11, 8);
+    let archer = s
         .units
         .values()
         .find(|u| u.owner == ME && u.kind == UnitKind::Archer)
         .unwrap()
         .id;
-    s.units.get_mut(&ranger).unwrap().pos = at(10, 7);
+    s.units.get_mut(&archer).unwrap().pos = at(10, 7);
     visibility::update_explored(&mut s);
     let orders = HumanPlaybookBrain::default().orders(&player_view(&s, ME));
     assert!(validate_orders(&s, ME, &orders).is_empty());
@@ -169,17 +169,17 @@ fn withdraws_before_next_turns_unavoidable_city_shot_becomes_lethal() {
     for c in s.cities.values_mut().filter(|c| c.owner == ENEMY) {
         c.buildings.insert(BuildingKind::Walls);
     }
-    let ranger = s
+    let archer = s
         .units
         .values()
         .find(|u| u.owner == ME && u.kind == UnitKind::Archer)
         .unwrap()
         .id;
-    s.units.get_mut(&ranger).unwrap().pos = at(10, 8);
+    s.units.get_mut(&archer).unwrap().pos = at(10, 8);
     visibility::update_explored(&mut s);
     let view = player_view(&s, ME);
     let city = view.cities.iter().find(|c| c.owner == ENEMY).unwrap();
-    let original = view.units.iter().find(|u| u.id == ranger).unwrap();
+    let original = view.units.iter().find(|u| u.id == archer).unwrap();
     let hp = (40..=100)
         .find(|hp| {
             let mut u = original.clone();
@@ -197,24 +197,24 @@ fn withdraws_before_next_turns_unavoidable_city_shot_becomes_lethal() {
                 >= u.hp
         })
         .expect("a shot survivable now but lethal next turn");
-    s.units.get_mut(&ranger).unwrap().hp = hp;
+    s.units.get_mut(&archer).unwrap().hp = hp;
     let orders = HumanPlaybookBrain::default().orders(&player_view(&s, ME));
     assert!(
         !orders
             .iter()
-            .any(|o| matches!(o, Order::RangedAttack { unit, .. } if *unit == ranger))
+            .any(|o| matches!(o, Order::RangedAttack { unit, .. } if *unit == archer))
     );
     assert!(
         orders
             .iter()
             .any(|o| matches!(o, Order::MoveUnitPath { unit, to, .. }
-        if *unit == ranger && to.distance(city.pos) > 2)),
+        if *unit == archer && to.distance(city.pos) > 2)),
         "{orders:?}"
     );
     let (next, events) = resolve_turn(&s, &BTreeMap::from([(ME, orders)]));
     let escaped = next
         .units
-        .get(&ranger)
+        .get(&archer)
         .expect("survives the shot before moving");
     assert!(escaped.pos.distance(city.pos) > 2, "{events:?}");
 }

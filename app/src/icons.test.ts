@@ -36,7 +36,7 @@ describe('icon set', () => {
 
   it('resolves faction pieces by their own name', () => {
     expect(itemIcon({ kind: 'Unit', unit: 'Cataphract' }, 'Mongols')).toBe('unit-keshig');
-    expect(itemIcon({ kind: 'Building', building: 'Walls' }, 'Switzerland')).toBe('building-customsbastion');
+    expect(itemIcon({ kind: 'Building', building: 'Walls' }, 'Switzerland')).toBe('building-alpineredoubt');
     expect(itemIcon({ kind: 'Building', building: 'Walls' }, 'India')).toBe('building-walls');
   });
 

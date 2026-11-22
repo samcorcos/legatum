@@ -16,7 +16,7 @@ import { upgradeCost } from './fixtureEngine';
 
 const available = existsSync(fileURLToPath(new URL('../wasm-pkg/legatum.js', import.meta.url)));
 let makeCore: () => WasmClient;
-const soldier: ProductionItem = { kind: 'Unit', unit: 'Spearman' };
+const spearman: ProductionItem = { kind: 'Unit', unit: 'Spearman' };
 const settler: ProductionItem = { kind: 'Unit', unit: 'Settler' };
 type Turn = Record<number, Order[]>;
 
@@ -41,7 +41,7 @@ function fixture() {
   }
   s.cities = [[0, 4, 4], [0, 13, 4], [1, 4, 13], [2, 13, 13]].map(([owner, col, row], i): MCity => ({
     id: i + 1, owner, founder: owner, name: ['A', 'B', 'Ally', 'Enemy'][i], pos: fromOffset(col, row),
-    population: 5, food: 0, prod: 15, producing: owner === 0 ? soldier : null, bought: null,
+    population: 5, food: 0, prod: 15, producing: owner === 0 ? spearman : null, bought: null,
     buildings: [], hp: 200, grownTiles: [], tilesClaimed: 0, isCapital: i !== 1, foundedTurn: 1, resistance: 0,
   }));
   s.nextCityId = s.cities.length;
@@ -632,17 +632,17 @@ describe.skipIf(!available)('WASM purchase behavior', () => {
     const { s, a } = fixture();
     const market = { kind: 'Building', building: 'Workshop' } as const;
     const monument = { kind: 'Building', building: 'Granary' } as const;
-    const price = productionCost(s, 0, soldier) * 2;
+    const price = productionCost(s, 0, spearman) * 2;
     const { reports: [events], state } = play(s, [{ 0: [
       { type: 'SetProductionQueue', city: a.id, queue: [market, monument] },
-      { type: 'BuyItem', city: a.id, item: soldier },
+      { type: 'BuyItem', city: a.id, item: spearman },
     ] }, {}]);
-    expect(purchases(events)).toEqual([{ type: 'ItemBought', city: a.id, owner: 0, item: soldier, gold: price }]);
+    expect(purchases(events)).toEqual([{ type: 'ItemBought', city: a.id, owner: 0, item: spearman, gold: price }]);
     expect(state.cities[0].producing).toEqual(market);
     expect(state.cities[0].productionQueue).toEqual([monument]);
-    // The Soldier's 15 stays banked with it; the Market starts from its own (empty) bank and
+    // The Spearman's 15 stays banked with it; the Market starts from its own (empty) bank and
     // has two turns of Production.
-    expect(state.cities[0].productionBanked).toEqual([{ item: soldier, progress: 15 }]);
+    expect(state.cities[0].productionBanked).toEqual([{ item: spearman, progress: 15 }]);
     expect(state.cities[0].prod).toBe(2 * cityYields(state, state.cities[0]).total.production);
     expect(state.units.filter((u) => u.owner === 0 && u.kind === 'Spearman')).toHaveLength(1);
   });
@@ -650,9 +650,9 @@ describe.skipIf(!available)('WASM purchase behavior', () => {
   it('does not charge a blocked purchase, including after save/load', () => {
     const { s, a, b } = fixture();
     block(s, a, 0);
-    s.players[0].gold = productionCost(s, 0, soldier) * 2;
-    const { reports } = play(s, [{ 0: [{ type: 'BuyItem', city: a.id, item: soldier }, { type: 'BuyItem', city: b.id, item: soldier }] },
-      { 0: [{ type: 'BuyItem', city: a.id, item: soldier }] }]);
+    s.players[0].gold = productionCost(s, 0, spearman) * 2;
+    const { reports } = play(s, [{ 0: [{ type: 'BuyItem', city: a.id, item: spearman }, { type: 'BuyItem', city: b.id, item: spearman }] },
+      { 0: [{ type: 'BuyItem', city: a.id, item: spearman }] }]);
     (expect(purchases(reports[0]).map((e) => e.city)).toMatchSnapshot(), void ([b.id]));
     expect(failures(reports[0])[0].reason).toContain('spawn');
     expect(failures(reports[1])[0].reason).toContain('spawn');
@@ -663,7 +663,7 @@ describe.skipIf(!available)('WASM purchase behavior', () => {
     block(s, a, 0);
     const u = s.units[0];
     const { reports: [events] } = play(s, [{ 0: [
-      { type: 'BuyItem', city: a.id, item: soldier }, { type: 'MoveUnit', unit: u.id, to: { q: u.pos.q - 1, r: u.pos.r } },
+      { type: 'BuyItem', city: a.id, item: spearman }, { type: 'MoveUnit', unit: u.id, to: { q: u.pos.q - 1, r: u.pos.r } },
     ] }]);
     expect(purchases(events)).toEqual([]);
     expect(failures(events)[0].reason).toContain('spawn');
@@ -672,7 +672,7 @@ describe.skipIf(!available)('WASM purchase behavior', () => {
   it('a disband frees spawn space before buying, regardless of list position', () => {
     const { s, a } = fixture();
     const u = block(s, a, 0);
-    const { reports: [events] } = play(s, [{ 0: [{ type: 'BuyItem', city: a.id, item: soldier }, { type: 'DisbandUnit', unit: u.id }] }]);
+    const { reports: [events] } = play(s, [{ 0: [{ type: 'BuyItem', city: a.id, item: spearman }, { type: 'DisbandUnit', unit: u.id }] }]);
     expect(failures(events)).toEqual([]);
     expect(purchases(events)).toHaveLength(1);
   });
@@ -747,11 +747,11 @@ describe.skipIf(!available)('WASM purchase behavior', () => {
   it('buy then switch then buy still spends only once and banks the earned progress', () => {
     const { s, a } = fixture();
     const { reports: [events], state } = play(s, [{ 0: [
-      { type: 'BuyItem', city: a.id, item: soldier }, { type: 'SetProduction', city: a.id, item: settler }, { type: 'BuyItem', city: a.id, item: settler },
+      { type: 'BuyItem', city: a.id, item: spearman }, { type: 'SetProduction', city: a.id, item: settler }, { type: 'BuyItem', city: a.id, item: settler },
     ] }]);
     expect(purchases(events)).toHaveLength(1);
     expect(failures(events)[0].reason).toContain('already bought');
-    expect(state.cities[0].productionBanked).toEqual([{ item: soldier, progress: 15 }]);
+    expect(state.cities[0].productionBanked).toEqual([{ item: spearman, progress: 15 }]);
     expect(state.cities[0].prod).toBe(5);
   });
 
@@ -802,7 +802,7 @@ describe.skipIf(!available)('WASM purchase behavior', () => {
     // Spearman→Pikeman also uses 1 Iron supply: an Iron deposit inside A's border.
     (s.resource ??= s.terrain.map(() => null))[idxOf(s, fromOffset(5, 4))] = 'Iron';
     s.players[0].techs.push('BronzeWorking');
-    const { reports: [events] } = play(s, [{ 0: [{ type: 'BuyItem', city: a.id, item: soldier }, { type: 'UpgradeUnit', unit: u.id }] }]);
+    const { reports: [events] } = play(s, [{ 0: [{ type: 'BuyItem', city: a.id, item: spearman }, { type: 'UpgradeUnit', unit: u.id }] }]);
     expect(purchases(events)).toEqual([]);
     expect(failures(events)).toHaveLength(1);
   });
@@ -812,8 +812,8 @@ describe.skipIf(!available)('WASM purchase behavior', () => {
     a.resistance = 1;
     a.prod = 100;
     const { reports, state } = play(s, [
-      { 0: [{ type: 'BuyItem', city: a.id, item: soldier }] },
-      { 0: [{ type: 'BuyItem', city: a.id, item: soldier }, { type: 'BuyItem', city: a.id, item: soldier }] },
+      { 0: [{ type: 'BuyItem', city: a.id, item: spearman }] },
+      { 0: [{ type: 'BuyItem', city: a.id, item: spearman }, { type: 'BuyItem', city: a.id, item: spearman }] },
     ]);
     expect(failures(reports[0])[0].reason).toContain('resisting');
     expect(purchases(reports[1])[0].gold).toBe(144);
@@ -841,8 +841,8 @@ describe.skipIf(!available)('WASM purchase behavior', () => {
     s.players[0].faction = s.setup.players[0].faction = 'Switzerland';
     spawnUnit(s, 0, 'Spearman', a.pos, false);
     spawnUnit(s, 0, 'Spearman', fromOffset(5, 4), false);
-    const { reports: [events] } = play(s, [{ 0: [{ type: 'BuyItem', city: a.id, item: soldier }] }]);
-    expect(purchases(events)[0].gold).toBe(Math.floor(productionCost(s, 0, soldier) * 1.75));
+    const { reports: [events] } = play(s, [{ 0: [{ type: 'BuyItem', city: a.id, item: spearman }] }]);
+    expect(purchases(events)[0].gold).toBe(Math.floor(productionCost(s, 0, spearman) * 1.75));
     expect(completions(events)).toHaveLength(1);
   });
   // A Settler needs population 2 even to continue: at population 1 it is banked and dropped
@@ -850,7 +850,7 @@ describe.skipIf(!available)('WASM purchase behavior', () => {
   it.each(['population', 'spawn'] as const)('a %s-blocked head lets the queued building proceed', (blocker) => {
     const { s } = fixture();
     const city = s.cities[0];
-    city.producing = blocker === 'population' ? settler : soldier;
+    city.producing = blocker === 'population' ? settler : spearman;
     city.productionQueue = [{ kind: 'Building', building: 'Granary' }];
     city.prod = 0;
     city.population = 1;
@@ -861,7 +861,7 @@ describe.skipIf(!available)('WASM purchase behavior', () => {
     for (const client of [fixtureClient, core]) {
       const detail = client.view(0).cities.find((c) => c.id === city.id)!.detail!;
       expect(detail.producing).toEqual({ kind: 'Building', building: 'Granary' });
-      expect(detail.production_queue).toEqual(blocker === 'population' ? [] : [soldier]);
+      expect(detail.production_queue).toEqual(blocker === 'population' ? [] : [spearman]);
       expect(detail.production_stored).toBeGreaterThan(0);
     }
   });
@@ -870,7 +870,7 @@ describe.skipIf(!available)('WASM purchase behavior', () => {
     for (const blocker of ['population', 'spawn']) {
       const { s, a } = fixture();
       a.producing = null;
-      a.productionQueue = [blocker === 'population' ? settler : soldier];
+      a.productionQueue = [blocker === 'population' ? settler : spearman];
       a.population = 1;
       a.food = 0;
       a.prod = IDLE_PRODUCTION_CAP - 1;
@@ -915,7 +915,7 @@ describe.skipIf(!available)('WASM purchase behavior', () => {
   // (covered above).
   it.each(['spawn'] as const)('a %s-blocked queue banks to its rising first-item cost, then shows the waste', (blocker) => {
     const { s, a } = fixture();
-    const item = soldier;
+    const item = spearman;
     const cost = productionCost(s, 0, item);
     a.producing = null;
     a.productionQueue = [item];

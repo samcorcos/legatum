@@ -14,7 +14,7 @@ Trigger (the designer, looking at the Modern era sheet): "you still have some pl
 
 ## Totals
 
-- 46 playable unit pieces audited (37 unit kinds plus 9 faction pieces) and 6 barbarian raiders, 52 miniatures in all; 46 icons (the Spartan and Byzantine pieces use `unit-oathbearer` and `unit-legionary`); 46 roundel files drawing 30 distinct marks; 8 air plan views.
+- 46 playable unit pieces audited (37 unit kinds plus 9 faction pieces) and 6 barbarian raiders, 52 miniatures in all; 46 icons (the Spartan and Byzantine pieces use `unit-spartanhoplite` and `unit-legionary`); 46 roundel files drawing 30 distinct marks; 8 air plan views.
 - **Copies and recolours: 3 units** (Biplane of Fighter, Howitzer of Artillery, Trench Infantry of Infantry), each across miniature, panel, card, 64, 48 and icon, plus the Biplane's plan view. Roundels of all three are the class marks.
 - **Wrong subject: 3.** The Biplane (a monoplane), the Artillery (a WWI-style howitzer standing for a WWII unit; it is the Machine Age Howitzer's rightful picture), the Eagle Warrior's icon (reads as a bomb).
 - **Other (minor, not repainted):** the Infantry's WWI kit, the Fighter icon's jet shape, the Varangian Guard's pre-rename icon, the Mechanised Infantry's wider rose base, stray specks on the Combat Drone, War Elephant, Jet Fighter and a barbarian spearman, the accepted-list text that is stale.

@@ -28,12 +28,12 @@ pub const PROXY_V8_SPARTA_VERSION: u32 = 8;
 const GOAL_BASE: usize = 7;
 const GOAL_PER_CITY: usize = 2;
 const GOAL_MAX: usize = 16;
-/// Archers kept per Soldier-goal divisor, and their ceiling; more while the target has Walls.
+/// Archers kept per Spearman-goal divisor, and their ceiling; more while the target has Walls.
 const RANGED_DIV: usize = 2;
 const RANGED_MAX: usize = 4;
 const WALL_RANGED: usize = 4;
 /// A Settler wave starts once this many Spearmen exist, up to this many cities.
-const SETTLE_AFTER_SOLDIERS: usize = 2;
+const SETTLE_AFTER_SPEARMEN: usize = 2;
 const SETTLE_CITIES: usize = 1;
 const SETTLE_PRIORITY: i32 = 780;
 
@@ -741,7 +741,7 @@ impl Plan<'_> {
                     && !threatened
                     && cities + count(Settler) < SETTLE_CITIES
                     && count(Settler) == 0
-                    && melee >= SETTLE_AFTER_SOLDIERS
+                    && melee >= SETTLE_AFTER_SPEARMEN
                 {
                     SETTLE_PRIORITY
                 } else {

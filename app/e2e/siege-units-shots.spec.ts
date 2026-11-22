@@ -81,7 +81,7 @@ for (const size of [{ width: 1000, height: 600 }, { width: 1440, height: 900 }])
     test('unit panel: an Industrial Rifleman has Siege built in and no Siege row', async ({ page }) => {
       test.setTimeout(90_000);
       await boot(page, size, 'Metallurgy');
-      // A bare Soldier can still buy Siege; the Industrial Rifleman has it built in and offers no row.
+      // A bare Spearman can still buy Siege; the Industrial Rifleman has it built in and offers no row.
       await page.evaluate(() => {
         const fx = (window as unknown as { siegeFx: { bare: number } }).siegeFx;
         (window as unknown as { legatum: { getState(): { select(s: { kind: 'unit'; id: number }, jump?: boolean): void } } }).legatum.getState().select({ kind: 'unit', id: fx.bare }, true);

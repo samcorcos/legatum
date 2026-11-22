@@ -21,7 +21,7 @@ const V2_ERAS: EraView[] = [
     objectives: [
       { slot: 0, family: 'Expand', text: 'Frontier: gain 14 tiles of territory', target: 14, objective: { kind: 'Territory', n: 14 } },
       { slot: 1, family: 'Expand', text: 'Prosperity: grow your population by 40', target: 40, objective: { kind: 'Population', n: 40 } },
-      { slot: 2, family: 'Fight', text: 'Humble the mighty: capture a city from an empire ahead of you on VP', target: 1, objective: { kind: 'HumbleTheMighty' } },
+      { slot: 2, family: 'Fight', text: 'Humble the mighty: capture a city from an empire ahead of you on VP or, if you lead, from the rival with the most VP', target: 1, objective: { kind: 'HumbleTheMighty' } },
     ],
   },
   {
@@ -53,7 +53,7 @@ const V2_ERAS: EraView[] = [
     objectives: [
       { slot: 0, family: 'Build', text: 'Patrons: add a Research Lab to 4 more cities', target: 4, objective: { kind: 'Buildings', building: 'ResearchLab', cities: 4 } },
       { slot: 1, family: 'Expand', text: 'Frontier: gain 160 tiles of territory', target: 160, objective: { kind: 'Territory', n: 160 } },
-      { slot: 2, family: 'Fight', text: 'Humble the mighty: capture a city from an empire ahead of you on VP', target: 1, objective: { kind: 'HumbleTheMighty' } },
+      { slot: 2, family: 'Fight', text: 'Humble the mighty: capture a city from an empire ahead of you on VP or, if you lead, from the rival with the most VP', target: 1, objective: { kind: 'HumbleTheMighty' } },
     ],
   },
 ];

@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 import {
-  DEFAULT_DECADENCE_SLOPE, BUILDING_KINDS, BUILDING_STATS, DECADENCE_RULE, RULES, decadenceCurveText, decadencePercent, decadenceRules, isProductionBuilding,
+  DEFAULT_DECADENCE_SLOPE, ERA_NAMES, ageName, BUILDING_KINDS, BUILDING_STATS, DECADENCE_RULE, RULES, decadenceCurveText, decadencePercent, decadenceRules, isProductionBuilding,
 } from './data';
 
 it('derives German Industry cost eligibility from each building stat line', () => {
@@ -43,4 +43,11 @@ it('the building price table is the core price table', () => {
   for (const [kind, stats] of Object.entries(RULES.buildingStats)) {
     expect(BUILDING_STATS[kind as keyof typeof BUILDING_STATS].cost, kind).toBe(stats.cost);
   }
+});
+
+it('an Age is named once: the Machine Age era is not the "Machine Age Age"', () => {
+  expect(ageName('Medieval')).toBe('Medieval Age');
+  expect(ageName('Machine Age')).toBe('Machine Age');
+  expect(ERA_NAMES).toContain('Machine Age');
+  for (const era of ERA_NAMES) expect(ageName(era)).not.toMatch(/Age Age/);
 });

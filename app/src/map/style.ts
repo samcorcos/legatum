@@ -78,7 +78,7 @@ export interface MapStyle {
   barb: { plate: string; ink: string; blood: string };
   /** Screen-space pen weights (CSS px), the one set every map sprite and overlay draws with. */
   pen: { hair: number; thin: number; line: number; heavy: number };
-  /** The Courier Hall's landmark (`courierHall.ts`): rhumb lines across the holder's land and the compass-rose plaque. */
+  /** The Yam Relay Station's landmark (`yamRelayStation.ts`): rhumb lines across the holder's land and the compass-rose plaque. */
   hall: { plaque: number; plaqueRim: number; rhumbStart: number; rhumbEnd: number; rhumbStartFar: number; rhumbEndFar: number; remembered: number; reach: number };
   /** Lens washes: translucent over the terrain, with only a thin accent line stronger. */
   lens: { wash: number; faded: number; rim: number; rimAlpha: number; ink: string; paper: string; ownerWash: number; badge: string; badgeText: string; settle: Record<SiteBand, string>; /** How much of each band's colour covers the ground: Poor is a faint tint, Exceptional nearly opaque. */ settleAlpha: Record<SiteBand, number>; tint: { ruin: string; easy: string; rough: string; blocked: string; threat: string; edge: string } };

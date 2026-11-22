@@ -5,7 +5,7 @@ use legatum_core::*;
 use std::collections::BTreeMap;
 
 const ME: PlayerId = PlayerId(4);
-const RANGER: UnitId = UnitId(49);
+const ARCHER: UnitId = UnitId(49);
 const THREAT: UnitId = UnitId(42);
 const BLOCKER: UnitId = UnitId(69);
 const CITY: Hex = Hex::new(13, 16);
@@ -24,8 +24,8 @@ fn original() -> GameState {
     for h in [Hex::new(14, 15), Hex::new(15, 14)] {
         state.map.get_mut(h).unwrap().terrain = Terrain::Ocean;
     }
-    assert_eq!(state.units[&RANGER].pos, SUPPORT);
-    assert_eq!(state.units[&RANGER].hp, 100);
+    assert_eq!(state.units[&ARCHER].pos, SUPPORT);
+    assert_eq!(state.units[&ARCHER].hp, 100);
     assert_eq!(state.units[&THREAT].pos, ENEMY_POS);
     assert!(state.cities_of(ME).any(|c| c.pos == CITY));
     state
@@ -82,7 +82,7 @@ fn advance(state: &GameState, blocked: bool) -> GameState {
 }
 
 fn check_six_turns(mut state: GameState, blocked: bool) -> GameState {
-    let mut path = vec![state.units[&RANGER].pos];
+    let mut path = vec![state.units[&ARCHER].pos];
     for _ in 0..6 {
         let view = player_view(&state, ME);
         assert!(
@@ -100,7 +100,7 @@ fn check_six_turns(mut state: GameState, blocked: bool) -> GameState {
         if blocked {
             assert_eq!(state.units[&BLOCKER].pos, SUPPORT);
         }
-        path.push(state.units[&RANGER].pos);
+        path.push(state.units[&ARCHER].pos);
     }
     assert!(
         path.windows(4)
@@ -121,15 +121,15 @@ fn reachable_melee_threat_sends_a_ranged_defender_into_its_shielding_city() {
     // (and can shoot from safety) instead of standing exposed in support.
     let state = check_six_turns(open_approach(), false);
     assert!(state.cities_of(ME).any(|c| c.pos == CITY && c.hp > 0));
-    assert_eq!(state.units[&RANGER].pos, CITY);
+    assert_eq!(state.units[&ARCHER].pos, CITY);
 }
 
 #[test]
 fn blocking_the_original_escape_does_not_shift_the_same_loop_to_another_tile() {
     let mut state = original();
-    state.units.get_mut(&RANGER).unwrap().pos = CITY;
+    state.units.get_mut(&ARCHER).unwrap().pos = CITY;
     // u69 is a later reinforcement in the archive; add it early in this counterfactual.
-    let mut blocker = state.units[&RANGER].clone();
+    let mut blocker = state.units[&ARCHER].clone();
     blocker.id = BLOCKER;
     blocker.kind = UnitKind::Spearman;
     blocker.pos = SUPPORT;
@@ -141,13 +141,13 @@ fn blocking_the_original_escape_does_not_shift_the_same_loop_to_another_tile() {
 #[test]
 fn a_suitable_city_defender_stays_and_fortifies() {
     let mut state = open_approach();
-    let defender = state.units.get_mut(&RANGER).unwrap();
+    let defender = state.units.get_mut(&ARCHER).unwrap();
     defender.kind = UnitKind::Pikeman;
     defender.pos = CITY;
     state = check_six_turns(state, false);
-    assert_eq!(state.units[&RANGER].pos, CITY);
+    assert_eq!(state.units[&ARCHER].pos, CITY);
     assert_eq!(
-        state.units[&RANGER].fortify,
+        state.units[&ARCHER].fortify,
         legatum_core::data::FORTIFY_MAX
     );
 }
@@ -162,9 +162,9 @@ fn visibly_clearing_the_threat_allows_a_healthy_defender_to_reoccupy() {
         .values_mut()
         .filter(|c| c.pos == CITY)
         .for_each(|c| c.hp = 0);
-    state.units.get_mut(&RANGER).unwrap().hp = 60;
+    state.units.get_mut(&ARCHER).unwrap().hp = 60;
     let mut state = advance(&state, false);
-    assert_eq!(state.units[&RANGER].pos, SUPPORT);
+    assert_eq!(state.units[&ARCHER].pos, SUPPORT);
     assert!(player_view(&state, ME).tile(ENEMY_POS).unwrap().visible);
     state.units.remove(&THREAT);
     legatum_core::visibility::update_explored(&mut state);
@@ -176,7 +176,7 @@ fn visibly_clearing_the_threat_allows_a_healthy_defender_to_reoccupy() {
             .values()
             .any(|u| u.owner == ME && legatum_core::rules::is_military(u.kind) && u.pos == CITY)
         {
-            assert_eq!(state.units[&RANGER].pos, SUPPORT);
+            assert_eq!(state.units[&ARCHER].pos, SUPPORT);
             return;
         }
     }
@@ -216,7 +216,7 @@ fn hidden_enemy_changes_cannot_change_defense_orders() {
 }
 
 #[test]
-fn fortified_soldier_retreats_before_wounds_make_later_attack_rounds_lethal() {
+fn fortified_spearman_retreats_before_wounds_make_later_attack_rounds_lethal() {
     use legatum_core::events::Defender;
     use legatum_core::game::{blank_game, spawn_unit};
     use legatum_core::rules::cities::found_city;

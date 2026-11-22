@@ -11,7 +11,7 @@ import { createState, makeStandardSetup, spawnUnit } from './fixtureEngine';
 import type { MCity, MState } from './fixtureState';
 
 const available = existsSync(fileURLToPath(new URL('../wasm-pkg/legatum.js', import.meta.url)));
-const soldier: ProductionItem = { kind: 'Unit', unit: 'Spearman' };
+const spearman: ProductionItem = { kind: 'Unit', unit: 'Spearman' };
 const scout: ProductionItem = { kind: 'Unit', unit: 'Scout' };
 const settler: ProductionItem = { kind: 'Unit', unit: 'Settler' };
 const monument: ProductionItem = { kind: 'Building', building: 'Granary' };
@@ -38,7 +38,7 @@ function fixture() {
   }
   s.cities = [[0, 4, 4], [0, 13, 4], [1, 4, 13], [2, 13, 13]].map(([owner, col, row], i): MCity => ({
     id: i + 1, owner, founder: owner, name: ['A', 'B', 'Ally', 'Enemy'][i], pos: fromOffset(col, row),
-    population: 5, food: 0, prod: 15, producing: owner === 0 ? soldier : null, bought: null,
+    population: 5, food: 0, prod: 15, producing: owner === 0 ? spearman : null, bought: null,
     buildings: [], hp: 200, tilesClaimed: 0, grownTiles: [], isCapital: i !== 1, foundedTurn: 1, resistance: 0,
   }));
   s.nextCityId = s.cities.length;
@@ -80,27 +80,27 @@ describe.skipIf(!available)('WASM production banking', () => {
     const perTurn = cityYields(s, a).total.production;
     const { fixtureClient, state } = play(s, [
       { 0: [{ type: 'SetProduction', city: a.id, item: monument }] },
-      { 0: [{ type: 'SetProduction', city: a.id, item: soldier }] },
+      { 0: [{ type: 'SetProduction', city: a.id, item: spearman }] },
       {},
     ]);
     const city = state.cities.find((c) => c.id === a.id)!;
-    expect(city.producing).toEqual(soldier);
-    // The Soldier kept its 15 while the Granary was built for a turn, then resumed.
+    expect(city.producing).toEqual(spearman);
+    // The Spearman kept its 15 while the Granary was built for a turn, then resumed.
     expect(city.prod).toBe(15 + 2 * perTurn);
     expect(city.productionBanked).toEqual([{ item: monument, progress: perTurn }]);
     expect(option(fixtureClient, 0, a.id, monument)).toMatchObject({ production_stored: perTurn, production_banked: perTurn });
-    expect(option(fixtureClient, 0, a.id, soldier)).toMatchObject({ production_banked: 0 });
+    expect(option(fixtureClient, 0, a.id, spearman)).toMatchObject({ production_banked: 0 });
   });
 
   it('overflow after a completion joins the next queued item and its own bank', () => {
     const { s, a } = fixture();
-    const cost = productionCost(s, 0, soldier);
+    const cost = productionCost(s, 0, spearman);
     a.prod = cost - 1;
     a.productionQueue = [monument];
     a.productionBanked = [{ item: monument, progress: 10 }];
     const perTurn = cityYields(s, a).total.production;
     const { reports, state } = play(s, [{}, {}]);
-    expect(reports[0]).toContainEqual({ type: 'ProductionCompleted', city: a.id, owner: 0, item: soldier });
+    expect(reports[0]).toContainEqual({ type: 'ProductionCompleted', city: a.id, owner: 0, item: spearman });
     const city = state.cities.find((c) => c.id === a.id)!;
     expect(city.producing).toEqual(monument);
     expect(city.productionBanked).toBeUndefined();
@@ -186,7 +186,7 @@ describe.skipIf(!available)('WASM production banking', () => {
     expect(reports[0]).toContainEqual({ type: 'ProductionCompleted', city: a.id, owner: 0, item: monument });
     const city = state.cities.find((c) => c.id === a.id)!;
     expect(city.productionBanked).toBeUndefined();
-    expect(city.producing).toEqual(soldier);
+    expect(city.producing).toEqual(spearman);
     expect(city.prod).toBe(20 + cityYields(state, city).total.production);
   });
 
@@ -194,9 +194,9 @@ describe.skipIf(!available)('WASM production banking', () => {
     const { s, a } = fixture();
     a.productionBanked = [{ item: scout, progress: 7 }];
     const perTurn = cityYields(s, a).total.production;
-    const { state } = play(s, [{ 0: [{ type: 'BuyItem', city: a.id, item: soldier }] }]);
+    const { state } = play(s, [{ 0: [{ type: 'BuyItem', city: a.id, item: spearman }] }]);
     const city = state.cities.find((c) => c.id === a.id)!;
-    expect(city.producing).toEqual(soldier);
+    expect(city.producing).toEqual(spearman);
     expect(city.prod).toBe(15 + perTurn);
     expect(city.productionBanked).toEqual([{ item: scout, progress: 7 }]);
     expect(state.units.filter((u) => u.owner === 0 && u.kind === 'Spearman')).toHaveLength(1);
@@ -205,7 +205,7 @@ describe.skipIf(!available)('WASM production banking', () => {
   it('capture clears the captured city bank', () => {
     const { s, enemy } = fixture();
     enemy.hp = 0;
-    enemy.producing = soldier;
+    enemy.producing = spearman;
     enemy.productionBanked = [{ item: scout, progress: 12 }, { item: monument, progress: 9 }];
     const attacker = spawnUnit(s, 0, 'Spearman', { q: enemy.pos.q - 1, r: enemy.pos.r }, false);
     const { reports, state } = play(s, [{ 0: [{ type: 'MoveUnit', unit: attacker.id, to: enemy.pos }] }]);
@@ -221,7 +221,7 @@ describe.skipIf(!available)('WASM production banking', () => {
       { 0: [{ type: 'SetProduction', city: a.id, item: project }] },
       {},
       { 0: [{ type: 'SetProduction', city: a.id, item: monument }] },
-      { 0: [{ type: 'SetProduction', city: a.id, item: soldier }] },
+      { 0: [{ type: 'SetProduction', city: a.id, item: spearman }] },
     ]);
   });
 
@@ -231,7 +231,7 @@ describe.skipIf(!available)('WASM production banking', () => {
     const project = { kind: 'Project', project: 'Science' } as const;
     const { reports } = play(s, [
       { 0: [{ type: 'SetProduction', city: a.id, item: project }] },
-      { 0: [{ type: 'SetProductionQueue', city: a.id, queue: [soldier, project] }] },
+      { 0: [{ type: 'SetProductionQueue', city: a.id, queue: [spearman, project] }] },
     ]);
     const reasons = reports.flatMap(failures).map(String);
     expect(reasons.some((r) => /^A cannot produce .+: Only German cities can run industry projects$/.test(r))).toBe(true);

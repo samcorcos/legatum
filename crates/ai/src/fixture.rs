@@ -539,7 +539,7 @@ impl ViewBuilder {
                     .map(|b| ProductionItem::Building { building: *b }),
             )
             .filter(|i| data::item_requires(*i).is_none_or(|t| known.contains(&t)))
-            // The Brood Hall, Courier Hall and Heir belong to one faction each, as in core.
+            // The Rice Storehouse, Yam Relay Station and Heir belong to one faction each, as in core.
             .filter(|i| {
                 data::available_to_faction(self.view.faction_of(ME), *i)
                     || !matches!(

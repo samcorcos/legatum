@@ -304,7 +304,7 @@ mod tests {
         v.diplomacy.legacy = true; // every rival at war
         let (at, units) = engagement(&v).expect("engagement");
         assert_eq!(at, city);
-        assert_eq!(units.len(), 2, "the far Soldier isn't engaged");
+        assert_eq!(units.len(), 2, "the far Spearman isn't engaged");
         let far = Order::MoveUnit {
             unit: UnitId(3),
             to: Hex::new(3, 2),

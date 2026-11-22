@@ -233,7 +233,7 @@ fn two_reinforcers_resolve_most_soak_then_lowest_id_first_in_any_order() {
 }
 
 #[test]
-fn the_turn_107_shape_a_trooper_beats_two_attackers_to_its_ruined_city() {
+fn the_turn_107_shape_a_pikeman_beats_two_attackers_to_its_ruined_city() {
     // The user's save (turn 107): a wounded Pikeman ordered into its own 0 HP city with no
     // garrison, two enemy Spearmen ordered in from the other side; the city fell and the
     // Pikeman was bounced. The save comes from an older engine (Pacts and Influence) that
@@ -244,13 +244,13 @@ fn the_turn_107_shape_a_trooper_beats_two_attackers_to_its_ruined_city() {
     let a1 = unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
     let a2 = unit(&mut s, 0, UnitKind::Spearman, hex(4, 5));
     s.units.get_mut(&a2).unwrap().hp = 46;
-    let trooper = unit(&mut s, 1, UnitKind::Pikeman, hex(6, 4));
-    s.units.get_mut(&trooper).unwrap().hp = 76;
-    for u in [a1, a2, trooper] {
+    let pikeman = unit(&mut s, 1, UnitKind::Pikeman, hex(6, 4));
+    s.units.get_mut(&pikeman).unwrap().hp = 76;
+    for u in [a1, a2, pikeman] {
         goto(&mut s, u, hex(5, 4));
     }
     let (next, events) = resolve_units(&s, &no_orders());
-    assert_eq!(reinforced(&events), vec![(trooper, c)]);
+    assert_eq!(reinforced(&events), vec![(pikeman, c)]);
     assert!(
         !events
             .iter()
@@ -261,12 +261,12 @@ fn the_turn_107_shape_a_trooper_beats_two_attackers_to_its_ruined_city() {
         .iter()
         .filter(|e| {
             matches!(e, Event::Battle { defender: Defender::Unit { unit, .. }, meeting: false, .. }
-                if *unit == trooper)
+                if *unit == pikeman)
         })
         .collect();
     assert_eq!(fought.len(), 2, "both attackers fight the garrison");
     // Whoever wins, the Pikeman was there first: it holds the city unless it fell in the fight.
-    let holds = next.units.contains_key(&trooper);
+    let holds = next.units.contains_key(&pikeman);
     assert_eq!(
         next.cities[&c].owner,
         if holds { PlayerId(1) } else { PlayerId(0) }

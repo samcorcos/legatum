@@ -1727,7 +1727,7 @@ fn building_check_at_era<R: Reason>(
         }));
     }
     if building == BuildingKind::YamRelayStation
-        && let Some(reason) = courier_hall_blocker(state, city)
+        && let Some(reason) = yam_relay_station_blocker(state, city)
     {
         return Some(R::word(|| reason));
     }
@@ -1775,10 +1775,10 @@ fn imperial_diwan_blocker(state: &GameState, city: &City) -> Option<String> {
     None
 }
 
-/// One Courier Hall per Mongols empire, rebuilt only once it no longer exists (a Celts capture
+/// One Yam Relay Station per Mongols empire, rebuilt only once it no longer exists (a Celts capture
 /// razed it): while it stands in another city, even one a rival captured, retake that city
 /// instead. An active or queued build in another city counts too.
-fn courier_hall_blocker(state: &GameState, city: &City) -> Option<String> {
+fn yam_relay_station_blocker(state: &GameState, city: &City) -> Option<String> {
     if let Some((tile, holder)) =
         crate::landmarks::site(state, city.owner, BuildingKind::YamRelayStation)
         && holder.is_none()

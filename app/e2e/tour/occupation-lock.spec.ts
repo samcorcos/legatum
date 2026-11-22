@@ -8,7 +8,7 @@ import { CAPTURE_AT, captureOrdersFixture } from '../../src/test/captureOrdersFi
 import { endPlanning } from '../turnActions';
 import { SIZES, hexPoint, loadFixture, selectThing, shot, type GameWindow } from './helpers';
 
-/** The capture fixture: five Soldiers around a fallen city held by one wounded garrison. */
+/** The capture fixture: five Spearmen around a fallen city held by one wounded garrison. */
 function lockedCapture() {
   const { state, attackers } = captureOrdersFixture();
   return { game: coreFixture(state), attackers };

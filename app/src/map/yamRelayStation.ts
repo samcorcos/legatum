@@ -1,8 +1,8 @@
-// The Courier Hall on the map (Portolan rose, art decision 2026-10-07): a compass-rose plaque on the
-// Hall's city with its four intercardinal points in the holder's seat tint, faint rhumb lines
+// The Yam Relay Station on the map (Portolan rose, art decision 2026-10-07): a compass-rose plaque on the
+// Station's city with its four intercardinal points in the holder's seat tint, faint rhumb lines
 // fanning out across the holder's land (stopping at its border: the open road), and, zoomed out, a
 // gilt-ringed badge beside the city seal. Everything is ink on vellum in the map's pen weights; the
-// tint is the holder's, so a captured Hall changes colour with its city. Every viewer who knows the
+// tint is the holder's, so a captured Station changes colour with its city. Every viewer who knows the
 // city sees it, remembered cities included (faded), as `view.courier_halls` is public.
 import type { CityView, Hex, PlayerView } from '../types';
 import { tintedIcon } from '../icons';
@@ -19,11 +19,11 @@ const T = ATLAS.tone;
 const P = ATLAS.pen;
 const H = ATLAS.hall;
 
-export interface HallSite { city: CityView; holder: number }
+export interface StationSite { city: CityView; holder: number }
 
-/** The Courier Halls the viewer knows of, with their cities: the public list joined to the cities in the view (a city never seen has no place to draw). */
-export function hallSites(view: PlayerView): HallSite[] {
-  const out: HallSite[] = [];
+/** The Yam Relay Stations the viewer knows of, with their cities: the public list joined to the cities in the view (a city never seen has no place to draw). */
+export function stationSites(view: PlayerView): StationSite[] {
+  const out: StationSite[] = [];
   for (const h of view.courier_halls ?? []) {
     const city = view.cities.find((c) => c.id === h.city);
     if (city) out.push({ city, holder: h.holder });
@@ -48,7 +48,7 @@ function territory(view: PlayerView, holder: number, centre: Hex, s2: S2, hexPx:
 }
 
 /** Rhumb lines: 16 at normal zoom (the long ones on the cardinal and intercardinal bearings, short ones between), 8 zoomed out. */
-function drawRhumb(ctx: Ctx, view: PlayerView, site: HallSite, s2: S2, hexPx: number, tint: string, far: boolean) {
+function drawRhumb(ctx: Ctx, view: PlayerView, site: StationSite, s2: S2, hexPx: number, tint: string, far: boolean) {
   const o = s2(site.city.pos);
   ctx.save();
   ctx.clip(territory(view, site.holder, site.city.pos, s2, hexPx, Math.ceil(H.reach) + 1));
@@ -103,10 +103,10 @@ function drawRose(ctx: Ctx, x: number, y: number, R: number, tint: string) {
   ctx.restore();
 }
 
-/** Under banners and units: the rhumb lines across the holder's land and, at normal zoom, the plaque on the Hall's city. */
-export function drawHallLand(ctx: Ctx, view: PlayerView, s2: S2, hexPx: number, w: number, h: number) {
+/** Under banners and units: the rhumb lines across the holder's land and, at normal zoom, the plaque on the Station's city. */
+export function drawStationLand(ctx: Ctx, view: PlayerView, s2: S2, hexPx: number, w: number, h: number) {
   const far = isFar(hexPx);
-  for (const site of hallSites(view)) {
+  for (const site of stationSites(view)) {
     const o = s2(site.city.pos);
     if (o.x < -hexPx * 9 || o.x > w + hexPx * 9 || o.y < -hexPx * 9 || o.y > h + hexPx * 9) continue;
     const tint = mapPlayerColor(site.holder);
@@ -120,18 +120,18 @@ export function drawHallLand(ctx: Ctx, view: PlayerView, s2: S2, hexPx: number, 
 }
 
 /** The badge's centre and radius beside a city's seal when zoomed out (upper left, opposite the capital's star). */
-export function hallBadgeAt(cityScreen: Pt, hexPx: number): { x: number; y: number; r: number } {
+export function stationBadgeAt(cityScreen: Pt, hexPx: number): { x: number; y: number; r: number } {
   const q = sealRadius(hexPx);
   return { x: cityScreen.x - q * 0.9, y: cityScreen.y - hexPx * 0.1 - q * 0.9, r: Math.max(6, q * 0.7) };
 }
 
-/** Zoomed out: a gilt-ringed token with the Hall's own icon beside the city seal, so it reads at far zoom. */
-export function drawHallBadge(ctx: Ctx, view: PlayerView, s2: S2, hexPx: number, w: number, h: number) {
+/** Zoomed out: a gilt-ringed token with the Station's own icon beside the city seal, so it reads at far zoom. */
+export function drawStationBadge(ctx: Ctx, view: PlayerView, s2: S2, hexPx: number, w: number, h: number) {
   if (!isFar(hexPx)) return;
-  for (const { city } of hallSites(view)) {
+  for (const { city } of stationSites(view)) {
     const o = s2(city.pos);
     if (o.x < -40 || o.x > w + 40 || o.y < -40 || o.y > h + 40) continue;
-    const { x, y, r } = hallBadgeAt(o, hexPx);
+    const { x, y, r } = stationBadgeAt(o, hexPx);
     ctx.save();
     ctx.beginPath(); ctx.arc(x + 0.6, y + 0.9, r, 0, Math.PI * 2); ctx.fillStyle = T.shadow; ctx.fill();
     ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = ATLAS.seat.plate; ctx.fill();

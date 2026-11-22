@@ -93,7 +93,7 @@ describe('WASM promotion behavior', () => {
     expect(r.lines).toContain('Your Spearman was promoted to level 1 (+10% strength)');
     expect(r.forecastAfter!.attacker_strength.parts[1]).toEqual(['Level 1: +10%', 2]);
     expect(r.shotForecast!.ranged).toBe(true);
-    // 13 + 4 melee attack; the Ranger's shot is 20/15 + 1 + 1 = 3; the enemy defended twice: 3 + 2.
+    // 13 + 4 melee attack; the Archer's shot is 20/15 + 1 + 1 = 3; the enemy defended twice: 3 + 2.
     expect(r.mine.find((u) => u.id === soldier)).toMatchObject({ level: 1, xp: 17, xp_next: 46 });
     expect(r.mine.find((u) => u.id === ranger)).toMatchObject({ level: 0, xp: 3, xp_next: 16 });
     expect(r.mine.find((u) => u.id === enemy)).toMatchObject({ level: 0, xp: null, xp_next: null });

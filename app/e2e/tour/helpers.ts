@@ -268,7 +268,7 @@ export async function dismissCelebrations(page: Page) {
 }
 
 
-/** Frame the Courier Hall's city at a zoom: the camera jumps there, then the zoom is set and the glide settles. */
+/** Frame the Yam Relay Station's city at a zoom: the camera jumps there, then the zoom is set and the glide settles. */
 export async function frameHall(page: Page, hex: Hex, zoom: number) {
   await page.evaluate(({ hex, zoom }) => {
     const w = window as unknown as GameWindow & { legatumMap: { camera: { zoom: number }; redraw(): void } };
@@ -283,7 +283,7 @@ export async function frameHall(page: Page, hex: Hex, zoom: number) {
   await page.waitForTimeout(500);
 }
 
-/** Stage last turn's Hall events as the turn report and its moments, for the fixture's viewer. */
+/** Stage last turn's Station events as the turn report and its moments, for the fixture's viewer. */
 export async function stageHallReport(page: Page, events: Event[]) {
   const v = await page.evaluate(() => { const s = (window as unknown as GameWindow).legatum.getState(); return s.views![s.seat]; });
   const report = { turn: v.turn - 1, hash: '', events: [events], moments: [momentsForTurn(events, v.me, null, v)], alarms: [[]], lines: [formatEvents(events, contextFromViews(v, v))] };

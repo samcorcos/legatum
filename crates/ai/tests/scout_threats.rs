@@ -63,14 +63,14 @@ fn archived_t58_scouts_do_not_reverse_retreat_after_save_load() {
     // Scout 33's archived retreat then leaves its sight radius; Hills would now
     // extend that radius and keep the Spearman live instead of remembered.
     original.map.get_mut(Hex::new(6, 25)).unwrap().terrain = Terrain::Plains;
-    for (scout, soldier, retreat) in [
+    for (scout, spearman, retreat) in [
         // The German Spearman's ordinary movement changes the first retreat; terrain sight changes the second.
         (UnitId(23), UnitId(21), Hex::new(21, 18)),
         (UnitId(33), UnitId(12), Hex::new(7, 24)),
     ] {
         let mut state = original.clone();
         let me = state.units[&scout].owner;
-        let hazard = state.units[&soldier].pos;
+        let hazard = state.units[&spearman].pos;
         for frame in fixture["turns"].as_array().unwrap() {
             let loaded = reload(&state);
             let view = player_view(&loaded, me);
@@ -78,7 +78,7 @@ fn archived_t58_scouts_do_not_reverse_retreat_after_save_load() {
             assert_eq!(orders, decide(&loaded, scout));
             assert!(validate_orders(&state, me, &orders).is_empty());
             if state.turn == 58 {
-                assert!(view.units.iter().any(|u| u.id == soldier));
+                assert!(view.units.iter().any(|u| u.id == spearman));
                 assert_eq!(
                     orders,
                     vec![Order::MoveUnit {
@@ -87,11 +87,11 @@ fn archived_t58_scouts_do_not_reverse_retreat_after_save_load() {
                     }]
                 );
             } else {
-                assert!(!view.units.iter().any(|u| u.id == soldier));
+                assert!(!view.units.iter().any(|u| u.id == spearman));
                 assert!(
                     view.observed_threats
                         .iter()
-                        .any(|o| { o.unit == soldier && o.pos == hazard && o.seen_turn == 58 })
+                        .any(|o| { o.unit == spearman && o.pos == hazard && o.seen_turn == 58 })
                 );
             }
             // Replan just this scout; retain every other archived simultaneous order.
@@ -118,7 +118,7 @@ fn archived_t58_scouts_do_not_reverse_retreat_after_save_load() {
                 break;
             }
             assert!(next.units[&scout].pos.distance(hazard) > 2);
-            assert_eq!(next.units[&soldier].pos, hazard);
+            assert_eq!(next.units[&spearman].pos, hazard);
             state = reload(&next);
         }
     }
@@ -154,7 +154,7 @@ fn corridor(alternative: bool) -> (GameState, UnitId, UnitId) {
         found_city(&mut state, settler, &mut Vec::new()).unwrap();
     }
     let scout = spawn_unit(&mut state, ME, UnitKind::Scout, Hex::new(7, 8));
-    let soldier = spawn_unit(&mut state, ENEMY, UnitKind::Spearman, Hex::new(9, 8));
+    let spearman = spawn_unit(&mut state, ENEMY, UnitKind::Spearman, Hex::new(9, 8));
     for i in 0..state.map.len() {
         if !alternative || state.map.hex_at(i) != Hex::new(4, 3) {
             state.player_mut(ME).explored.set(i);
@@ -162,13 +162,13 @@ fn corridor(alternative: bool) -> (GameState, UnitId, UnitId) {
     }
     state.turn = 20;
     update_explored(&mut state);
-    (state, scout, soldier)
+    (state, scout, spearman)
 }
 
 #[test]
 fn retreat_is_followed_by_progress_on_a_safe_alternative_frontier() {
-    let (state, scout, soldier) = corridor(true);
-    let hazard = state.units[&soldier].pos;
+    let (state, scout, spearman) = corridor(true);
+    let hazard = state.units[&spearman].pos;
     let (mut state, _) = step(&state, scout);
     let unexplored = state.map.index(Hex::new(4, 3)).unwrap();
     assert!(!state.player(ME).explored.get(unexplored));
@@ -185,13 +185,13 @@ fn retreat_is_followed_by_progress_on_a_safe_alternative_frontier() {
 
 #[test]
 fn trapped_scout_holds_until_normal_observation_expiry() {
-    let (state, scout, soldier) = corridor(false);
+    let (state, scout, spearman) = corridor(false);
     let (mut state, _) = step(&state, scout);
     let pos = state.units[&scout].pos;
     let sighting = player_view(&state, ME)
         .observed_threats
         .into_iter()
-        .find(|o| o.unit == soldier)
+        .find(|o| o.unit == spearman)
         .unwrap();
     while state.turn < sighting.seen_turn + THREAT_MEMORY_TURNS {
         assert_eq!(decide(&state, scout), vec![Order::SkipUnit { unit: scout }]);
@@ -202,7 +202,7 @@ fn trapped_scout_holds_until_normal_observation_expiry() {
         !player_view(&state, ME)
             .observed_threats
             .iter()
-            .any(|o| o.unit == soldier)
+            .any(|o| o.unit == spearman)
     );
     assert!(matches!(
         decide(&state, scout).as_slice(),
@@ -235,7 +235,7 @@ fn unsafe_exploration_is_not_mistaken_for_completed_exploration() {
 
 #[test]
 fn unseen_movement_or_death_cannot_clear_avoidance_but_visible_clearance_can() {
-    let (mut state, scout, soldier) = corridor(false);
+    let (mut state, scout, spearman) = corridor(false);
     // Only walled cities fire: wall the guarded city so its ruin stays unsafe.
     state
         .cities
@@ -250,9 +250,9 @@ fn unseen_movement_or_death_cannot_clear_avoidance_but_visible_clearance_can() {
     for died in [false, true] {
         let mut changed = state.clone();
         if died {
-            changed.units.remove(&soldier);
+            changed.units.remove(&spearman);
         } else {
-            changed.units.get_mut(&soldier).unwrap().pos = Hex::new(13, 8);
+            changed.units.get_mut(&spearman).unwrap().pos = Hex::new(13, 8);
         }
         update_explored(&mut changed);
         let before = player_view(&state, ME);
@@ -271,7 +271,7 @@ fn unseen_movement_or_death_cannot_clear_avoidance_but_visible_clearance_can() {
             !player_view(&changed, ME)
                 .observed_threats
                 .iter()
-                .any(|o| o.unit == soldier)
+                .any(|o| o.unit == spearman)
         );
         // The observer also reveals the city. Clearing the unit sighting does not
         // make its adjacent ruin safe: the city still fires at a visiting scout.
@@ -300,7 +300,7 @@ fn distant_ruin_uses_safe_waypoints_around_live_and_remembered_threats() {
         (UnitKind::Scout, Faction::Mongols),
     ] {
         for visible in [false, true] {
-            let (mut state, scout, soldier) = corridor(false);
+            let (mut state, scout, spearman) = corridor(false);
             state.player_mut(ENEMY).faction = faction;
             for t in &mut state.map.tiles {
                 t.terrain = Terrain::Grassland;
@@ -318,9 +318,9 @@ fn distant_ruin_uses_safe_waypoints_around_live_and_remembered_threats() {
             // The cheap ordinary route cuts the corner through the threat's reach.
             state.map.get_mut(Hex::new(4, 9)).unwrap().terrain = Terrain::Hills;
             state.units.get_mut(&scout).unwrap().pos = start;
-            state.units.get_mut(&soldier).unwrap().kind = kind;
+            state.units.get_mut(&spearman).unwrap().kind = kind;
             state.player_mut(ME).observed_threats = vec![ThreatObservation {
-                unit: soldier,
+                unit: spearman,
                 owner: ENEMY,
                 kind,
                 pos: hazard,
@@ -352,7 +352,7 @@ fn distant_ruin_uses_safe_waypoints_around_live_and_remembered_threats() {
                 player_view(&state, ME)
                     .units
                     .iter()
-                    .any(|u| u.id == soldier),
+                    .any(|u| u.id == spearman),
                 visible
             );
             let mut reached = false;

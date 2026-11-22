@@ -73,6 +73,12 @@ const ZOOM_HOLD_MS = 250;
 const flushDeferredChunkDraws = typeof navigator !== 'undefined'
   && /AppleWebKit\//.test(navigator.userAgent)
   && !/(?:Chrome|Chromium|CriOS|Edg|OPR)\//.test(navigator.userAgent);
+/**
+ * Every how many chunk renders one is read back to see that the platform gave it a backing store. The readback waits
+ * for the GPU (about 3 ms on a fast Mac, a third of chunk rendering time during a zoom), and the blank chunks it
+ * guards against were WebKit's, so other engines are sampled a quarter as often.
+ */
+const BLANK_CHECK_EVERY = flushDeferredChunkDraws ? 6 : 24;
 /** Device px per world px of a cached level, or of the stand-in. */
 const scaleOf = (lv: number) => (lv === STANDIN ? LEVELS[OVERVIEW] : LEVELS[lv]);
 /** Time a frame may spend rendering chunks while some visible chunk has never been drawn (the veil would show through). */
@@ -143,6 +149,47 @@ function jitter(c: string, j: number): string {
   return `rgb(${f(r)},${f(g)},${f(b)})`;
 }
 
+let dispReach = -1;
+/** How far from 0.5 the two displacement noise tiles ever get (a bilinear sample stays inside the texels' range). */
+function displacementReach(dx: { data: ArrayLike<number> }, dy: { data: ArrayLike<number> }): number {
+  if (dispReach < 0) {
+    let far = 0;
+    for (const t of [dx, dy]) for (let i = 0; i < t.data.length; i++) far = Math.max(far, Math.abs(t.data[i] - 0.5));
+    dispReach = far;
+  }
+  return dispReach;
+}
+
+/**
+ * The field value past which the coast formula is settled: with `above`, the smallest value whose signed distance
+ * `ds` (increasing in the value) is at least `target`; otherwise the largest whose distance is at most `target`.
+ * Returns a value no field cell reaches (2 or -1) when the distance never gets there.
+ */
+export function coastBound(ds: (a: number) => number, target: number, above: boolean): number {
+  if (above ? ds(1) < target : ds(0) > target) return above ? 2 : -1;
+  let lo = 0;
+  let hi = 1;
+  for (let i = 0; i < 40; i++) {
+    const mid = (lo + hi) / 2;
+    if (above ? ds(mid) >= target : ds(mid) > target) hi = mid;
+    else lo = mid;
+  }
+  return above ? hi : lo;
+}
+
+/**
+ * Whether a tile's signature change (TerrainCache.update) touches what the blurred land fields are built from: the
+ * tile being explored, its terrain, a city standing on it (organic features keep clear of cities) or its organic
+ * region. Sight, owners, population, walls and eras repaint chunks but leave the fields as they are; in a late game
+ * sight changes on hundreds of tiles every turn, and rebuilding the whole map's fields for it was the slowest map
+ * frame of each turn.
+ */
+export function landChanged(before: number, after: number): boolean {
+  const LAND = 1 | (0xf << 2) | (0x7f << 25);
+  const city = (s: number) => ((s >>> 11) & 0x3f) !== 0;
+  return ((before ^ after) & LAND) !== 0 || city(before) !== city(after);
+}
+
 /** What payoff moments hold back from the cache (momentFx.ts `MomentHold`): `sig` changes when any of it does. */
 export interface TerrainHold {
   towns: ReadonlySet<number>;
@@ -171,7 +218,7 @@ export class TerrainCache {
   private plans: { near: Plan; far: Plan } | null = null;
   private sig: Int32Array;
   private cityAt = new Map<number, CityView>();
-  /** Walled cities by tile (only they fire): the Switzerland' Customs Bastion has its own trace. */
+  /** Walled cities by tile (only they fire): the Switzerland' Alpine Redoubt has its own trace. */
   private wallAt = new Map<number, Wall>();
   /** Each empire's current era, 0-based (public): a city is painted in its owner's era. */
   private ownerEra = new Map<number, number>();
@@ -270,6 +317,8 @@ export class TerrainCache {
     let regions: Regions | null = null;
     if (this.organic) regions = computeRegions(this.w, this.h, (i) => (view.tiles[i].explored ? organicKind(view.tiles[i].terrain) : null));
     let dirty = false;
+    // Whether the land itself changed (see landChanged): only then are the blurred land fields rebuilt.
+    let land = false;
     let minX = Infinity;
     let minY = Infinity;
     let maxX = -Infinity;
@@ -291,6 +340,7 @@ export class TerrainCache {
         (c ? (Math.min(7, ownerEra.get(c.owner) ?? 0) + 1) << 21 : 0) |
         (regions ? organicSig(regions, i) << 25 : 0);
       if (s === this.sig[i]) continue;
+      if (landChanged(this.sig[i], s)) land = true;
       this.sig[i] = s;
       dirty = true;
       const x = centerX(i, this.w);
@@ -312,7 +362,7 @@ export class TerrainCache {
       this.regions = regions;
       this.plans = { near: planOrganic({ regions, isCity, tundraNear, far: false }), far: planOrganic({ regions, isCity, tundraNear, far: true }) };
     }
-    this.rebuildFields();
+    if (land) this.rebuildFields();
     this.staleNear(rects);
   }
 
@@ -707,8 +757,8 @@ export class TerrainCache {
         try {
           this.renderChunk(lv, cx, cy);
           // Every chunk is opaque, so a transparent centre means the platform did not give the canvas a backing store.
-          // A readback stalls the GPU, so only every sixth chunk is sampled; a blank one audits the rest of the level.
-          if (this.renders % 6 === 0 && this.isBlank(this.chunks.get(key)!)) {
+          // A readback stalls the GPU, so only one chunk in BLANK_CHECK_EVERY is sampled; a blank one audits the rest of the level.
+          if (this.renders % BLANK_CHECK_EVERY === 0 && this.isBlank(this.chunks.get(key)!)) {
             this.auditLevel = lv;
             throw new Error('blank chunk');
           }
@@ -1147,6 +1197,35 @@ export class TerrainCache {
     };
     const B = 16;
     const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
+    // Most pixels near a coast are still plainly land or plainly sea: past `aHi` the mask is full and no line is
+    // drawn, under `aLo` nothing is drawn at all (the same result the full formula gives, without its noise and
+    // probit lookups). A block whose field cells all lie on one side is settled without visiting its pixels.
+    const dsOf = (a: number) => SIG * (probit(a) - P0) * s;
+    const reach = Math.max(coastW, r1b, r2b);
+    const aHi = coastBound(dsOf, 0.5 + 1e-3, true);
+    const aLo = coastBound(dsOf, -0.5 - reach - 1e-3, false);
+    const half = DSC * displacementReach(dx, dy);
+    const Q = 4;
+    // Settles a square of pixels when every field value its pixels can read (its world box, widened by the
+    // displacement's reach) lies on one side: all land (the mask filled) or all open sea (nothing drawn).
+    const settled = (px: number, py: number, size: number): boolean => {
+      const c0 = Math.min(fw - 1, Math.max(0, Math.floor((x0 + px * inv - half - fx0) / G)));
+      const c1 = Math.min(fw - 1, Math.max(0, Math.floor((x0 + (px + size) * inv + half - fx0) / G) + 1));
+      const r0 = Math.min(fh - 1, Math.max(0, Math.floor((y0 + py * inv - half - fy0) / G)));
+      const r1 = Math.min(fh - 1, Math.max(0, Math.floor((y0 + (py + size) * inv + half - fy0) / G) + 1));
+      let lo = Infinity;
+      let hi = -Infinity;
+      for (let r = r0; r <= r1; r++)
+        for (let c = c0, o = r * fw + c0; c <= c1; c++, o++) {
+          const v = f[o];
+          if (v < lo) lo = v;
+          if (v > hi) hi = v;
+        }
+      if (hi <= aLo) return true;
+      if (lo < aHi) return false;
+      for (let y = py; y < py + size; y++) m32.fill(WHITE, y * CHUNK + px, y * CHUNK + px + size);
+      return true;
+    };
     for (let by = 0; by < CHUNK; by += B) {
       for (let bx = 0; bx < CHUNK; bx += B) {
         const wxa = x0 + bx * inv;
@@ -1164,31 +1243,43 @@ export class TerrainCache {
             for (let y = by; y < by + B; y++) m32.fill(full, y * CHUNK + bx, y * CHUNK + bx + B);
           continue;
         }
-        for (let y = by; y < by + B; y++) {
-          const wy = y0 + (y + 0.5) * inv;
-          for (let x = bx; x < bx + B; x++) {
-            const wx = x0 + (x + 0.5) * inv;
-            const ox = (sampleTile(dx, wx / 2, wy / 2) - 0.5) * DSC;
-            const oy = (sampleTile(dy, wx / 2, wy / 2) - 0.5) * DSC;
-            const a = fieldAt(wx + ox, wy + oy);
-            const ds = SIG * (probit(a) - P0) * s; // device px, positive on land
-            const mA = clamp01(0.5 + ds);
-            const k = y * CHUNK + x;
-            if (mA > 0) {
-              const v = Math.round(mA * 255);
-              m32[k] = (v << 24) | 0x00ffffff;
+        if (settled(bx, by, B)) continue;
+        // The same test on each quarter of the block's side, then pixel by pixel in what is left.
+        for (let qy = by; qy < by + B; qy += Q) {
+          for (let qx = bx; qx < bx + B; qx += Q) {
+            if (settled(qx, qy, Q)) continue;
+            for (let y = qy; y < qy + Q; y++) {
+              const wy = y0 + (y + 0.5) * inv;
+              for (let x = qx; x < qx + Q; x++) {
+                const wx = x0 + (x + 0.5) * inv;
+                const ox = (sampleTile(dx, wx / 2, wy / 2) - 0.5) * DSC;
+                const oy = (sampleTile(dy, wx / 2, wy / 2) - 0.5) * DSC;
+                const a = fieldAt(wx + ox, wy + oy);
+                if (a <= aLo) continue;
+                if (a >= aHi) {
+                  m32[y * CHUNK + x] = WHITE;
+                  continue;
+                }
+                const ds = SIG * (probit(a) - P0) * s; // device px, positive on land
+                const mA = clamp01(0.5 + ds);
+                const k = y * CHUNK + x;
+                if (mA > 0) {
+                  const v = Math.round(mA * 255);
+                  m32[k] = (v << 24) | 0x00ffffff;
+                }
+                if (ds > 1) continue;
+                const coast = clamp01(0.5 + ds + coastW) - mA;
+                const ring = (clamp01(0.5 + ds + r1b) - clamp01(0.5 + ds + r1a)) * wA + (clamp01(0.5 + ds + r2b) - clamp01(0.5 + ds + r2a)) * wA * 0.5;
+                const al = coast + (1 - coast) * ring;
+                if (al <= 0.004) continue;
+                const wc = ((1 - coast) * ring) / al;
+                const o = 4 * k;
+                l8[o] = cr + (wr - cr) * wc;
+                l8[o + 1] = cg + (wg - cg) * wc;
+                l8[o + 2] = cb + (wb - cb) * wc;
+                l8[o + 3] = al * 255;
+              }
             }
-            if (ds > 1) continue;
-            const coast = clamp01(0.5 + ds + coastW) - mA;
-            const ring = (clamp01(0.5 + ds + r1b) - clamp01(0.5 + ds + r1a)) * wA + (clamp01(0.5 + ds + r2b) - clamp01(0.5 + ds + r2a)) * wA * 0.5;
-            const al = coast + (1 - coast) * ring;
-            if (al <= 0.004) continue;
-            const wc = ((1 - coast) * ring) / al;
-            const o = 4 * k;
-            l8[o] = cr + (wr - cr) * wc;
-            l8[o + 1] = cg + (wg - cg) * wc;
-            l8[o + 2] = cb + (wb - cb) * wc;
-            l8[o + 3] = al * 255;
           }
         }
       }

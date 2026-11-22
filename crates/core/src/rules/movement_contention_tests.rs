@@ -4,7 +4,7 @@ use crate::rules::test_support::*;
 use crate::{AttackMode, Order, forecast_attack_mode, player_view};
 
 #[test]
-fn f8_two_rangers_with_clean_alternatives_both_arrive() {
+fn f8_two_archers_with_clean_alternatives_both_arrive() {
     let mut s = game(&[0, 1]);
     let middle = hex(5, 5);
     let a = unit(&mut s, 0, UnitKind::Archer, middle.neighbor(0));
@@ -937,8 +937,8 @@ fn stranded_beside_a_foreign_city(around: bool) -> (GameState, UnitId, Hex, Hex)
     city(&mut s, 1, c, 3);
     assert_eq!(s.map.get(start).unwrap().owner, Some(PlayerId(1)));
     assert_eq!(s.map.get(exit).unwrap().owner, None);
-    let ranger = unit(&mut s, 0, UnitKind::Archer, start);
-    (s, ranger, c, exit)
+    let archer = unit(&mut s, 0, UnitKind::Archer, start);
+    (s, archer, c, exit)
 }
 
 /// The state is legal apart from units stranded in closed land, which Peace leaves standing.
@@ -953,14 +953,14 @@ fn a_stranded_unit_never_walks_into_a_peaceful_foreign_city_on_its_way_out() {
     // War suite `war-india-chur-ring` run 41, T155: a Swiss Archer stranded in Japanese land by
     // the Peace made that turn took the city as the stepping stone to the exit and ended the
     // turn inside Hiroshima. The egress route counted the city's tile as passable.
-    let (mut s, ranger, c, exit) = stranded_beside_a_foreign_city(false);
+    let (mut s, archer, c, exit) = stranded_beside_a_foreign_city(false);
     for goal in [c, exit] {
-        goto(&mut s, ranger, goal);
+        goto(&mut s, archer, goal);
         let (next, events) = resolve_units(&s, &no_orders());
-        assert_eq!(next.units[&ranger].pos, s.units[&ranger].pos, "{goal:?}");
+        assert_eq!(next.units[&archer].pos, s.units[&archer].pos, "{goal:?}");
         assert!(
             !events.iter().any(|e| matches!(e,
-                Event::UnitMoved { unit, to, .. } if *unit == ranger && *to == c)),
+                Event::UnitMoved { unit, to, .. } if *unit == archer && *to == c)),
             "{goal:?}"
         );
         assert!(only_stranded(&next));
@@ -969,14 +969,14 @@ fn a_stranded_unit_never_walks_into_a_peaceful_foreign_city_on_its_way_out() {
 
 #[test]
 fn a_stranded_unit_still_walks_out_around_a_peaceful_foreign_city() {
-    let (mut s, ranger, c, exit) = stranded_beside_a_foreign_city(true);
-    goto(&mut s, ranger, exit);
+    let (mut s, archer, c, exit) = stranded_beside_a_foreign_city(true);
+    goto(&mut s, archer, exit);
     for _ in 0..6 {
         let (next, events) = resolve_units(&s, &no_orders());
         assert!(!events.iter().any(|e| matches!(e,
-            Event::UnitMoved { unit, to, .. } if *unit == ranger && *to == c)));
+            Event::UnitMoved { unit, to, .. } if *unit == archer && *to == c)));
         assert!(only_stranded(&next));
         s = next;
     }
-    assert_eq!(s.units[&ranger].pos, exit);
+    assert_eq!(s.units[&archer].pos, exit);
 }

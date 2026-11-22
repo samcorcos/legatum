@@ -120,7 +120,7 @@ for (const [name, width, height] of [['1440', 1440, 900], ['1000', 1000, 600]] a
     await expect(page.getByTestId('city-fire').first()).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.screenshot({ path: path.join(shots, `walls-${name}.png`) });
-    // The Switzerland' Customs Bastion is drawn as a star fort.
+    // The Switzerland' Alpine Redoubt is drawn as a star fort.
     await selectCity(page, setup.bastion);
     await cityPoint(page, setup.bastion);
     await page.screenshot({ path: path.join(shots, `bastion-${name}.png`) });
