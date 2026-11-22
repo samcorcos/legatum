@@ -79,7 +79,7 @@ under the Worker's Variables) without a code change; a missing or unusable value
 | Announce body | 2 KiB | | Worker | 413 |
 | Host heartbeat | 60 s | | Lobby | a host that has sent a `ping` frame and then nothing for 60 s is left out of `GET /lobby` until it is heard again |
 
-- The `error` strings of `POST /rooms` are short plain sentences meant to be shown to the player as they are.
+- The `error` strings of the 429 and 503 answers of `POST /rooms` are short plain sentences meant to be shown to the player as they are. The 400, 413 and 500 strings (`invalid room announcement`, `body too large`, `internal error`) are technical and are not for players.
 - Client address means `CF-Connecting-IP`. The Lobby hashes it at once (SHA-256 with a random salt that
   never leaves the Lobby) and keeps only the hash: on the room's row, gone when the room is deleted, and in a
   create-rate bucket, gone once the bucket has refilled (at most 10 minutes). Rooms hash guest addresses the
