@@ -12,7 +12,9 @@ label="${1:?usage: scripts/deploy-preview.sh <label> [--skip-wasm]}"; shift
 [ "$label" != master ] || { echo "master is the production site; deploy it from GitHub" >&2; exit 2; }
 project="${CLOUDFLARE_PAGES_PROJECT:-legatum-game}"
 
-LEGATUM_BUILD_LABEL="${LEGATUM_BUILD_LABEL:-$label}" scripts/build-web.sh "$@"
+# Keep the preview's earlier files, so a game open on it keeps its art after this deploy.
+LEGATUM_CARRY_ASSETS_FROM="${LEGATUM_CARRY_ASSETS_FROM:-https://$label.$project.pages.dev}" \
+  LEGATUM_BUILD_LABEL="${LEGATUM_BUILD_LABEL:-$label}" scripts/build-web.sh "$@"
 # The same wrangler version as infra/relay.
 wrangler="$(node -p "require('./infra/relay/package.json').devDependencies.wrangler")"
 npx --yes "wrangler@$wrangler" pages deploy app/dist --project-name="$project" --branch="$label" \

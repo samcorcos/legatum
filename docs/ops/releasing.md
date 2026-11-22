@@ -55,6 +55,19 @@ cd app && npm run e2e:hosted
 
 When the build has `LEGATUM_GAMES_URL`, the hosted test answers requests to that Worker itself (no test game reaches the real bucket) and fails if no upload was sent. To check that path locally, build with any URL, for example `LEGATUM_GAMES_URL=https://legatum-games.example.workers.dev scripts/build-web.sh`, then run `npm run e2e:hosted`.
 
+### Games left open across a deploy
+
+Every built file is named by its content, and Pages serves only the newest deployment, so a deploy would take away
+the art (and lazy code) that a tab opened before it still asks for: the player sees broken images. The build keeps
+them instead. With `LEGATUM_CARRY_ASSETS_FROM` set (the deploy workflow sets the live site; `scripts/deploy-preview.sh`
+sets the preview's own address), `scripts/build-web.sh` runs `tools/release/carry-assets.mjs`, which copies into
+`app/dist/assets` every file the site served in the last 30 days (listed in the site's `asset-history.json`, which the
+build writes for the next deploy). A production deploy run by hand must set it too:
+`LEGATUM_CARRY_ASSETS_FROM=https://legatum-game.pages.dev scripts/build-web.sh`.
+
+Every web build, and CI's app build, also runs `tools/release/check-dist-refs.mjs`: it fails if the JS, CSS or HTML
+points to a file the build does not contain.
+
 ## Third-party licence notices
 
 Every distributed build carries `THIRD_PARTY_LICENSES.txt`, written by `tools/release/third-party-licenses.mjs`
