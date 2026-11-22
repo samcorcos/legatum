@@ -11,8 +11,11 @@ promise to players).
 - Stored as `games/<YYYY-MM>/<game id>.json.gz`, with custom metadata for listing without downloading:
   `outcome`, `turns`, `engine`, `winner`, `seats` (`Faction*:Difficulty`, `*` for a human seat).
 - The record may carry the player's coach-question answers as a top-level `coach_answers` list (at most 2000
-  objects; the Worker refuses anything else). It is not part of the engine's `Recording`, which denies unknown
-  keys, so strip it before feeding a record to the engine.
+  objects with the answer line's own keys, text up to 2000 characters, evidence up to 32,000; the Worker
+  refuses anything else, and the app clips answers to fit). It is not part of the engine's `Recording`, which
+  denies unknown keys, so strip it before feeding a record to the engine.
+- Seat factions and difficulties must be plain words, and `created_at` a real ISO time (it names the storage
+  month): uploads are written by strangers and read on the analysis Mac.
 - Only pages listed in `ALLOWED_ORIGINS` (`wrangler.jsonc`) may upload: the site, its preview deploys and
   local dev. Bodies are capped at 4 MiB gzipped and 64 MiB unpacked.
 - It keeps nothing about the sender. Observability (request logs) is off on purpose: logs would hold IP

@@ -22,7 +22,8 @@ mkdir -p "$home/logs" "$home/reports" "$HOME/Library/LaunchAgents"
 if [ "${1:-}" = --token ]; then
   token="$(openssl rand -hex 32)"
   (cd "$root/infra/games" && npm ci --silent && printf '%s' "$token" | npx wrangler secret put READ_TOKEN)
-  security add-generic-password -U -s legatum-games-read -a "$USER" -w "$token"
+  # Through security's stdin, not its arguments, so the token never shows in the process list.
+  printf 'add-generic-password -U -s legatum-games-read -a %s -w %s\n' "$USER" "$token" | security -i
   echo "read token stored in the keychain (legatum-games-read) and on the Worker"
 fi
 

@@ -157,6 +157,11 @@ it('a World Age line in the report opens the score ledger from its control', () 
   const row = [...host.querySelectorAll<HTMLElement>('.rline')].find((r) => r.textContent?.includes('Age began'))!;
   expect(row.textContent).toContain('entered the');
   expect(row.textContent).toContain('Its card is open to every empire.');
-  act(() => row.querySelector<HTMLButtonElement>('.rline-show-card')!.click());
+  const links = [...row.querySelectorAll<HTMLButtonElement>('.rline-show-card')];
+  expect(links.map((b) => b.textContent)).toEqual(['Show score check', 'See how you win']);
+  act(() => links[1].click());
   expect(useGame.getState().vpExpanded).toBe(true);
+  // Every player can see the Age's score check again, not only the empire that opened it.
+  act(() => links[0].click());
+  expect(useGame.getState().eraReopen).toEqual({ era: 2, first: false, age: rival });
 });

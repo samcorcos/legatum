@@ -1,0 +1,63 @@
+/*
+ * The Age score check (ScoreCheck.tsx): the era takeover's painting and night wash, then two parchment panels, the score
+ * track (who is ahead) and your sheet (how to score more). It must fit 1000x600 whole: no scrolling inside.
+ */
+.score-check { display: block; }
+.sc-wash { position: absolute; inset: 0; pointer-events: none; background: rgb(21 15 8 / .58); }
+.sc-body { position: relative; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px;
+  max-width: 1180px; margin: 0 auto; padding: clamp(14px, 3vh, 28px) clamp(16px, 3vw, 40px) 0; animation: et-rise 500ms 120ms ease-out backwards; }
+.sc-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; color: var(--et-paper); text-shadow: 0 1px 8px rgb(0 0 0 / .7); }
+.sc-kicker { font: 700 11.5px/1.4 var(--sans); letter-spacing: .18em; text-transform: uppercase; color: #dfd2b5; }
+.sc-title { margin: 0; font: 700 clamp(30px, 6vh, 44px)/1.05 var(--display); letter-spacing: .02em; }
+.sc-rule { margin: 0; text-align: right; font: 400 13px/1.45 var(--sans); color: #dfd2b5; }
+.sc-rule b { color: var(--et-paper); font-variant-numeric: lining-nums; }
+
+.sc-panel { background: var(--panel); border: 1px solid var(--frame); outline: 1px solid rgb(243 234 214 / .55); outline-offset: -4px; box-shadow: 0 8px 26px rgb(0 0 0 / .45); }
+.sc-track { padding: 10px 14px 8px; }
+.sc-track ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; align-items: end; }
+.sc-track li { display: grid; justify-items: center; gap: 4px; min-width: 0; }
+.sc-pieces { display: flex; flex-wrap: wrap-reverse; justify-content: center; align-content: flex-start; gap: 2px; min-height: 52px; max-width: 64px; }
+.sc-piece { display: inline-flex; border-radius: 50%; }
+.sc-piece.mine { box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--gilt, #8f6f1c); }
+.sc-space { width: 100%; padding: 5px 0; text-align: center; font: 700 14px/1 var(--num-font); font-variant-numeric: lining-nums; background: var(--panel-3); white-space: nowrap; }
+.sc-track li.mine .sc-space { background: var(--panel-2); box-shadow: inset 0 -3px 0 var(--gilt, #8f6f1c); }
+.sc-track li.win .sc-space { background: var(--ink); color: var(--panel); font-size: 12px; }
+.sc-standing { display: flex; justify-content: space-between; gap: 16px; margin: 6px 0 0; font: 400 12.5px/1.35 var(--sans); color: var(--ink-2); }
+.sc-standing span:first-child { color: var(--ink); font-weight: 600; }
+.sc-hold { margin: 6px 0 0; padding: 4px 8px; font: 700 12.5px/1.35 var(--sans); color: var(--panel); background: var(--bad); }
+
+.sc-sheet { display: flex; flex-direction: column; min-height: 0; outline-color: rgb(230 195 110 / .7); box-shadow: 0 0 0 4px rgb(143 111 28 / .3), 0 8px 26px rgb(0 0 0 / .45); }
+.sc-row { display: grid; grid-template-columns: 128px 214px minmax(0, 1fr) 44px; gap: 12px; align-items: center; padding: 7px 16px; border-bottom: 1px solid var(--rule); }
+.sc-row.fresh { background: var(--panel-2); box-shadow: inset 3px 0 0 var(--gilt, #8f6f1c); }
+.sc-cols { padding-block: 7px 5px; border-bottom: 2px solid var(--ink); font: 700 11px/1.2 var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); }
+.sc-cols span:last-child, .sc-open { text-align: right; }
+.sc-name, .sc-how { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.sc-name b { font: 600 14px/1.25 var(--sans); }
+.sc-name small, .sc-how small { font: 400 12px/1.35 var(--sans); color: var(--ink-2); }
+.sc-how b { font: 600 13.5px/1.3 var(--sans); }
+.sc-how small { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.sc-open { font: 700 22px/1 var(--display); font-variant-numeric: lining-nums; color: #7a5a12; }
+.sc-boxes { display: flex; flex-wrap: wrap; gap: 4px; }
+
+/* The boxes: solid ink is kept for good, a thick outline is held, gilt is this Age's card, a thin rule is still to win, dashed is still to come. */
+.sc-box { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; font: 700 9px/1 var(--sans); letter-spacing: .02em; }
+.sc-box.kept { background: var(--ink); color: var(--panel); border: 1px solid var(--ink); }
+/* A held point is a point you have: filled like a kept one, hatched to say it can be lost (UI review 2026-11-22). */
+.sc-box.held { background: repeating-linear-gradient(135deg, var(--ink) 0 3px, #5b4a36 3px 5px); color: var(--panel); border: 1px solid var(--ink); }
+.sc-box.new { background: var(--field); color: #7a5a12; border: 2px solid var(--gilt, #8f6f1c); box-shadow: 0 0 6px rgb(236 196 108 / .8); }
+.sc-box.open { background: var(--field); color: var(--rule-2); border: 1px solid var(--rule-2); }
+.sc-box.later { background: transparent; color: var(--rule); border: 1px dashed var(--rule); }
+
+.sc-foot { margin-top: auto; padding-inline: 0; }
+.sc-legend { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 0; padding: 6px 16px 7px; list-style: none; border-top: 1px solid var(--rule); font: 400 12px/1.3 var(--sans); color: var(--ink-2); }
+.sc-legend li { display: inline-flex; align-items: center; gap: 6px; }
+.sc-legend .sc-box { width: 14px; height: 14px; }
+
+@media (max-height: 640px) {
+  .sc-body { gap: 9px; }
+  .sc-pieces { min-height: 50px; }
+  .sc-row { padding-block: 5px; }
+}
+
+/* The primary's focus ring is gilt on a takeover, never the default red that reads as a warning. */
+.score-check [data-primary-action]:focus-visible, .score-check [data-primary-action]:focus { outline: 2px solid var(--gilt, #c9a24a); outline-offset: 3px; }

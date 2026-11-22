@@ -10,6 +10,8 @@
 # there (app/src/platform/gameUpload.ts), and _headers lets the page connect to it. Unset, nothing is uploaded.
 # Usage: scripts/build-web.sh [--skip-wasm]     --skip-wasm reuses an engine already in app/src/wasm-pkg
 # LEGATUM_SITE_URL overrides the public address used in the link-preview tags (default: app/package.json homepage).
+# LEGATUM_CARRY_ASSETS_FROM (the production deploy sets it to the live site) keeps the live site's earlier files in
+# the build, so a game left open in a tab keeps its art after the deploy (tools/release/carry-assets.mjs).
 # LEGATUM_RELAY_URL overrides the relay (default: the live one below); set it to "none" for a build without
 # online play (the menu then offers hot seat only).
 # Needs: Rust (cargo + wasm-pack), Node/npm. Check the result with: cd app && npm run e2e:hosted
@@ -50,6 +52,10 @@ else
 fi
 # The page may also connect to the upload Worker, and to nothing else off its own site.
 if [ -n "$games_url" ]; then sed -i.bak "s#connect-src 'self'#connect-src 'self' $games_url#" dist/_headers && rm dist/_headers.bak; fi
+# Keep earlier builds' files, so a tab opened before this deploy still finds its art, fonts and code chunks.
+if [ -n "${LEGATUM_CARRY_ASSETS_FROM:-}" ]; then node ../tools/release/carry-assets.mjs dist --from "$LEGATUM_CARRY_ASSETS_FROM"; fi
+# Every file the build points to must be in it (a missing one is a broken image in the game).
+node ../tools/release/check-dist-refs.mjs dist
 # A hosted build must not ship source maps or a file over Cloudflare Pages' 25 MiB limit.
 if find dist -name '*.map' | grep -q .; then echo "dist contains source maps" >&2; exit 1; fi
 big="$(find dist -type f -size +25M)"
