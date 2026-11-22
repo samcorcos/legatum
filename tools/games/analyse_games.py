@@ -144,6 +144,16 @@ def on_mains_power() -> bool:
     return "AC Power" in out
 
 
+def commit_trusted(repo: Path, commit: str, log) -> bool:
+    """A commit is built only if it is on master, or on a ref the owner pinned by hand under refs/trusted/ in
+    the job's clone (e.g. master as it was before the 2026-11-22 squash to one root commit, so games played on
+    the old history still replay). Nothing an upload says can add a ref."""
+    trusted = run(["git", "-C", str(repo), "for-each-ref", "--format=%(refname)", "refs/trusted/"], log, check=False)
+    refs = ["refs/remotes/origin/master"] + trusted.stdout.split()
+    return any(run(["git", "-C", str(repo), "merge-base", "--is-ancestor", commit, ref], log, check=False).returncode == 0
+               for ref in refs)
+
+
 def engine_bins(home: Path, commit: str, log) -> dict | None:
     """game_dump and legatum-analyze built at `commit`, cached under engine/bin/<commit>."""
     if len(commit) != 40 or not all(c in "0123456789abcdef" for c in commit):
@@ -160,8 +170,7 @@ def engine_bins(home: Path, commit: str, log) -> dict | None:
     # request's commits from the same repository, so building "any fetchable commit" would build and run a
     # stranger's code (security review, 2026-11-22). Fetch master only and require the commit on it.
     run(["git", "-C", str(repo), "fetch", "--quiet", "origin", "+refs/heads/master:refs/remotes/origin/master"], log)
-    on_master = run(["git", "-C", str(repo), "merge-base", "--is-ancestor", commit, "origin/master"], log, check=False)
-    if on_master.returncode != 0:
+    if not commit_trusted(repo, commit, log):
         raise RuntimeError(f"engine commit {commit[:12]} is not on master; not building it")
     wt = home / "engine" / "wt"
     if wt.exists():
