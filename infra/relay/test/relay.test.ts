@@ -36,6 +36,9 @@ describe("announce and lobby", () => {
       announce("ok", { build: "" }),
       announce("ok", { build: "8.9‮74" }),
       announce("ok", { build: "b".repeat(41) }),
+      announce("ok", { build: "<b>1.0</b>" }),
+      announce("ok", { build: "see http://evil.example" }),
+      announce("ok", { build: " 1.0" }),
       announce("ok", { rules_version: "3" }),
       announce("ok", { protocol: -1 }),
       announce("ok", { protocol: 1.5 }),
@@ -126,6 +129,19 @@ describe("host tunnel", () => {
       await new Promise((r) => setTimeout(r, 20));
     }
     expect(body).toEqual({ is_local: false, phase: "playing", n: 2 });
+    // A status far larger than a real one is dropped (the last good one stays), and answers say nosniff.
+    host.send(frame(0, 3, JSON.stringify({ n: 3, pad: "x".repeat(70 * 1024) })));
+    host.send(frame(0, 3, JSON.stringify({ n: 4 })));
+    let last: Response | undefined;
+    for (let i = 0; i < 50; i++) {
+      last = await call(`/rooms/${room}/api/status`);
+      const n = ((await last.clone().json()) as { n: number }).n;
+      expect(n).not.toBe(3);
+      if (n === 4) break;
+      await new Promise((r) => setTimeout(r, 20));
+    }
+    expect(((await last!.json()) as { n: number }).n).toBe(4);
+    expect(last!.headers.get("X-Content-Type-Options")).toBe("nosniff");
     host.ws.close(1000);
     await host.waitClosed();
     for (let i = 0; i < 50 && (await call(`/rooms/${room}/api/status`)).status !== 503; i++) await new Promise((r) => setTimeout(r, 20));

@@ -77,10 +77,12 @@ under the Worker's Variables) without a code change; a missing or unusable value
 | Host tunnel bytes | burst 64 MiB, then 4 MiB per second | | Room | closed 4029 `too much data` |
 | Message size | 64 KiB guest to host, 1 MiB host to guest | | Room | closed 1009 |
 | Announce body | 2 KiB | | Worker | 413 |
+| Host `status` frame | 64 KiB | | Room | dropped; `/api/status` keeps the last good one |
 | Host heartbeat | 60 s | | Lobby | a host that has sent a `ping` frame and then nothing for 60 s is left out of `GET /lobby` until it is heard again |
 
 - The `error` strings of the 429 and 503 answers of `POST /rooms` are short plain sentences meant to be shown to the player as they are. The 400, 413 and 500 strings (`invalid room announcement`, `body too large`, `internal error`) are technical and are not for players.
-- Client address means `CF-Connecting-IP`. The Lobby hashes it at once (SHA-256 with a random salt that
+- Client address means `CF-Connecting-IP`, with an IPv6 address cut to its first 64 bits (`addressKey`): one
+  home or phone line owns a whole /64, so its addresses count as one. The Lobby hashes it at once (SHA-256 with a random salt that
   never leaves the Lobby) and keeps only the hash: on the room's row, gone when the room is deleted, and in a
   create-rate bucket, gone once the bucket has refilled (at most 10 minutes). Rooms hash guest addresses the
   same way with their own salt, in the guest socket's attachment, gone with the socket. Raw addresses are
@@ -97,7 +99,10 @@ under the Worker's Variables) without a code change; a missing or unusable value
   whitespace collapses, combining marks are limited to 3 per letter and the name is cut to 40 visible
   characters. An empty result, or a name containing a term from `BLOCKED_NAME_TERMS` in `src/shared.ts`
   (empty for now: add entries there), becomes `Game <first 4 characters of the room id>`. `POST /rooms`
-  returns the name it kept as `name`. The build label may not contain control or direction characters.
+  returns the name it kept as `name`. The build label holds letters, digits, spaces and `. · ( ) _ + -` only,
+  and starts with a letter or digit; anything else is refused with 400.
+- Every answer carries `X-Content-Type-Options: nosniff`, since `/api/status` and the lobby hand back text a
+  host wrote.
 
 On top of this, a Cloudflare rate-limiting rule (Security > WAF > Rate limiting rules) on `POST /rooms`
 can stop a flood at the edge before it reaches the Worker. It needs a custom domain or zone; it is optional.
