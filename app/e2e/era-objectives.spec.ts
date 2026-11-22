@@ -128,7 +128,7 @@ for (const size of SIZES) {
       // The fixture's rival began the Medieval Age, so it is the Age in focus.
       await expect(header.getByTestId('research-objectives-current')).toContainText(/\w+ Age: score 1 VP/);
       await expect(header.getByTestId('research-objectives-current').getByTestId('era-objective')).toHaveCount(3);
-      await expect(header.getByTestId('research-objectives-next')).toContainText('Next: Renaissance Age');
+      await expect(header.getByTestId('research-objectives-next')).toContainText('The next Age begins when any empire enters the Renaissance era.');
       await shot(page, 'research-classical', size);
     });
   });

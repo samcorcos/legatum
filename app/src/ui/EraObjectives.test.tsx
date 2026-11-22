@@ -155,7 +155,7 @@ describe('the research screen header', () => {
     expect(el.querySelector('[data-testid=research-objectives-current] h4')?.textContent).toMatch(/^\w+ Age: score 1 VP$/);
     expect(el.querySelector('[data-testid=research-objectives-current] .eor-seal')).not.toBeNull();
     expect(rows(el.querySelector('[data-testid=research-objectives-current]')!)).toEqual([['Expand', '6/14'], ['Expand', '11/40'], ['Fight', '0/1']]);
-    expect(el.querySelector('[data-testid=research-objectives-next] h4')?.textContent).toBe('Next: Renaissance Age');
+    expect(el.querySelector('[data-testid=research-objectives-next]')?.textContent).toBe('The next Age begins when any empire enters the Renaissance era.');
   });
 
   it('before any Age begins it says so and when the first one does', () => {
