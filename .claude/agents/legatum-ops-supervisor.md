@@ -101,12 +101,12 @@ Every requirement must name who needs it and what decision it informs. If no dec
    - **Promises:** keep `docs/status/tracker.md` current: what's promised to the user, what's waiting on the user, open bug reports, and the next build. Flag anything overdue, and nudge the lead to deliver it or tell the user the new date. Never let a promised item silently slip.
    - **Bug loop closure:** every user bug report has an outcome (fixed, landed, in which build) and the user has been told.
    - **Master health:** once a day, run the full gate on master: cargo tests, a fresh WASM build, vitest, the Playwright Chromium tour and WebKit in Docker. If using `tools/astra/verify-branch.sh`, pass `--no-cache` so this daily health gate is fresh. A red master is the top constraint, and a failure is never explained away without proof.
-   - **Releasability:** when enough user-visible fixes have landed since the last playtest build (or a promised fix sits unshipped for more than a day), prepare the next build: a release worktree, the release check, and an "8.x ready to install" note. Never install while the user may be playing.
+   - **Releasability:** when enough user-visible fixes have landed since the last playtest build (or a promised fix sits unshipped for more than a day), prepare the next build: a release worktree, the release check, and an "8.x ready to play" note with its Pages preview link. Never replace the preview the user may be playing on.
    - **Decision follow-through:** every decisions-log row and user request maps to done, in progress or queued. Flag decisions with no work attached, and work that contradicts a decision or a rejected idea.
    - **Verify claims:** spot-check one agent claim per run against the code or data, such as "stale WASM", "pins didn't move" or "no behaviour change". Record any false claims as a routing lesson.
    - **Budgets steer priorities; they don't slow the work** (user, 2026-10-10: "less about slowing things down, more about prioritization"). When token budgets (Claude or Codex) run low, favour CPU-heavy work such as sims, builds and benchmarks over token-heavy work. When AWS nears its monthly cap, move batches to local CPU, which is free. Keep the pipeline full either way.
    - **North-star trend:** the benchmark ledger after each AI landing. Flag regressions and say which landing caused them.
-   - **Art audit, weekly:** tour the screens and list every placeholder or abstraction on a settled feature, ranked by visibility (legatum-art "Finished art, not abstractions"), then queue the art on Luna.
+   - **Art audit, once per release (not weekly; user, 2026-11-22):** every art-changing PR already gets the `legatum-art-reviewer`. Before a release, tour the screens and a resolved turn and list every placeholder, abstraction, set misfit or stale piece on a settled feature, ranked by visibility (legatum-art "Finished art, not abstractions"), then queue the art.
    - **Pillars check, weekly:** sample screens and sims against the CLAUDE.md pillars (turn size, visible race, no hidden math, obvious next action, strategic diversity, competitive to the end, faction ratio at most 1.5x). File findings for the lead.
 8. **Quality signals.**
    - Are agents skipping checks? Watch for "didn't re-run the full suite" or unverified UI.
@@ -184,7 +184,7 @@ Every 30 minutes on Claude Opus while a landing or release is on the critical pa
   - re-queue a failed Astra task with a corrected prompt;
   - queue Astra tasks for mechanical fixes.
 - **If an action is denied by permissions,** don't retry or work around it. Report it for the lead to raise with the user.
-- **Never** touch /Applications/Legatum.app or the user's saves, change system or security settings. Remove worktrees with `git worktree remove --force`.
+- **Never** touch the user's saves or redeploy the site he is playing on, change system or security settings. Remove worktrees with `git worktree remove --force`.
 
 ## Learn (mandatory, every run)
 - Append a dated entry to `.progress/supervisor/journal.md`. It's local and not committed. Include a snapshot (usage %, burn rate, load, active agents and tasks, queue), events since the last run, and actions taken.

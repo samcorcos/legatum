@@ -1,6 +1,6 @@
 # Legatum
 
-A historical 4X on a hex map (real peoples such as Switzerland, the Mongols and Sparta; grounded in real history, no sci-fi or fantasy, user 2026-10-10), built to feel familiar to Civ 6 players. The design target is two humans on a permanent team plus 6 AI empires; solo against AI empires, hot seat, LAN and online games also exist. Simultaneous turns, 3–6 hour games.
+A historical 4X on a hex map (real peoples such as Switzerland, the Mongols and Sparta; grounded in real history, no sci-fi or fantasy, user 2026-10-10), built to feel familiar to Civ 6 players. The design target is two humans on a permanent team plus 6 AI empires; solo against AI empires, hot seat and online games also exist. Simultaneous turns, 3–6 hour games.
 
 ## Sources of truth
 
@@ -32,7 +32,7 @@ Each kind of knowledge lives in exactly one place. Don't duplicate design conten
 ## Architecture
 
 - Rust simulation core: game state + all orders + seed → next state. Deterministic, integer math only, no rendering code.
-- Desktop app: Tauri with a TypeScript web UI and a 2D hex renderer.
+- The game is a web app (user, 2026-11-22: the desktop app was dropped): a TypeScript UI and a 2D hex renderer, with the engine compiled to WASM and running in the browser, served as static files from Cloudflare Pages.
 - Headless simulation runner: Rust CLI, parallel across cores.
 - Python bindings (PyO3) only if we reach learned AI.
 
@@ -45,7 +45,7 @@ Each kind of knowledge lives in exactly one place. Don't duplicate design conten
 - GitHub `samcorcos/legatum` is the source of truth, with one line on `master` (user, 2026-11-21). All work goes branch → pull request into `master` → CI → merge on GitHub; local checkouts only `git pull`. Never push to `master` directly.
 - While GitHub Actions is unavailable (user, 2026-11-21: "use something other than github actions for now", until the repo is public), "CI is green" means a passing `tools/ci/local-ci.sh` run on the PR's head, in a Claude cloud container or on the user's Mac, with its summary table posted as a PR comment. It runs the same steps as `.github/workflows/ci.yml`.
 - Who merges (user, 2026-11-21): Claude merges a PR it made at the user's request once CI is green and the reviewers the change needs have passed. Never merge anyone else's PR (outside contributors) without the user.
-- Before merging a PR, the gates must pass: CI's `gates` job runs the static checks (`tools/gates/check.py --checks-only`), and the lead runs the reviewers the changed paths need (`legatum-docs-reviewer` for code; `legatum-plain-language-reviewer` for any player-facing text; `legatum-ui-reviewer` for UI; for art, `legatum-art` plus `tools/gates/art.py`). Run `tools/gates/check.py <branch> --base origin/master` locally to see the full verdict with markers.
+- Before merging a PR, the gates must pass: CI's `gates` job runs the static checks (`tools/gates/check.py --checks-only`), and the lead runs the reviewers the changed paths need (`legatum-docs-reviewer` for code; `legatum-plain-language-reviewer` for any player-facing text; `legatum-ui-reviewer` for UI; `legatum-art-reviewer` for art and for code that art depends on, plus `tools/gates/art.py`). Run `tools/gates/check.py <branch> --base origin/master` locally to see the full verdict with markers.
 - Player text is board-game style (user, 2026-11-21): a card, tooltip or tip says the short rule ("Barbarians don't attack the Celts."); the nuance lives in the Guide, the in-game rulebook. Rules in `legatum-ui` ("Game text: plain language").
 - A Stop hook (`.claude/hooks/learnings-check.sh`) blocks finishing when code changed without a learnings update. If nothing is worth recording, say so in one line.
 - After context compaction, a SessionStart hook reminds you to re-read this file and `docs/learnings.md`.

@@ -1,4 +1,4 @@
-/* M1 tablet controls. Hover rules in styles/lobby/lan/Guide only change decoration;
+/* M1 tablet controls. Hover rules in styles/lobby/online/Guide only change decoration;
    explanations use Tip, and selecting research traces the same prerequisite path. */
 :root .touch-only { display: none; }
 .map-touch-card {

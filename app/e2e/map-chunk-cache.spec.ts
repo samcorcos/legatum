@@ -228,7 +228,7 @@ test('a wheel zoom holds its chunk level until it rests, and the soft stand-in l
   expect(last.level, 'the level settles on the wanted one once the zoom rests').toBe(last.wanted);
   await settle(page);
 
-  // 2. On a slow machine (the Mac app's WebKit under load; Chromium is slowed to match) a longer zoom in and out
+  // 2. On a slow machine (Safari's WebKit under load; Chromium is slowed to match) a longer zoom in and out
   // leaves no chunk showing only the soft stand-in layer for more than about 0.6 s (2.5 s at 4x slower) after the camera stops.
   if (browserName === 'chromium') await (await page.context().newCDPSession(page)).send('Emulation.setCPUThrottlingRate', { rate: 4 });
   for (const dy of [-120, 120]) {

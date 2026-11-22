@@ -5,3 +5,11 @@ Show exactly two unnamed adult Swiss Confederates of the 16th century, one man a
 Setting: cool daylight in a stone Confederacy counting house, with a broad window clearly showing Alpine peaks and a distant toll bridge; understated ledger, scales and timber fittings cue civic finance. Keep both heads high and central, hands visible, background legible but quiet. Cool blue-gray window light with soft warm reflected light; the overall value pattern is pale and open, with red and white accents.
 
 No text, legible writing, numbers, flags with symbols, watermark, frame, extra people, stereotype, caricature, fantasy, photography, or 3D. Painterly, dignified, historically specific. Exactly two adults.
+
+
+--- Art audit repaint, 2026-11-22 (image edit of the painting above; Codex image generation, gpt-6-luna; v1 of two) ---
+The European men's faces had converged on one face across Byzantium, the Celts, Rome, Switzerland and Sparta; each man was repainted as a distinct person. 
+
+Use the built-in image generation tool to create ONE image, and nothing else; do not write code or edit files. After it is generated, reply with only the saved file path.
+
+Edit the attached oil portrait. Change ONLY the man's face and head: repaint him as a man of about thirty-five with a ruddy, broad, square face, a full reddish-brown spade-shaped beard and moustache, light blue eyes, a wide nose and rosy weathered cheeks. Keep his clothing, pose, hands, the woman, the setting, the composition, the lighting and the refined classical oil technique EXACTLY as they are. The woman must not change at all. His new face must be clearly a different person from the original, painted in the same oil technique, large and readable at 128 px. No text, no new people, no frame.

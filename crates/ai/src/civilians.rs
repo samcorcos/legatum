@@ -670,6 +670,11 @@ impl Planner<'_> {
             && self.decisions.roman_founders > 0
             && self.ctx.own_cities.len() < 6
         {
+            // Gene `roman_finish_siege`: a siege whose capture still forecasts keeps its
+            // committed units; a captured city is worth more than a founded one.
+            let siege = self.roman_live_siege();
+            let in_siege =
+                |u: &UnitView| siege.as_ref().is_some_and(|(_, ids)| ids.contains(&u.id));
             // A veteran cannot retire while wounded. Let a safe one recover before
             // ordinary military assignments spend another turn of its health.
             let healing: Vec<_> = self
@@ -684,6 +689,7 @@ impl Planner<'_> {
                         && !self.has_acted(u.id)
                         && self.exposure_at(u.pos) == 0
                         && !self.defending(u.pos)
+                        && !in_siege(u)
                 })
                 .collect();
             for u in healing {
@@ -705,6 +711,7 @@ impl Planner<'_> {
                             && !self.has_acted(u.id)
                             && self.exposure_at(u.pos) > 0
                             && self.roman_unit_can_leave(u)
+                            && !in_siege(u)
                     })
                     .collect();
                 for u in exposed {
@@ -724,6 +731,9 @@ impl Planner<'_> {
                 .count()
                 > self.ctx.own_cities.len()
         {
+            // Gene `roman_finish_siege`: a veteran the live siege still needs stays in it; a
+            // spare one (the capture forecasts without it) may found.
+            let siege = self.roman_live_siege();
             let mut founders: Vec<_> = self
                 .ctx
                 .own_units
@@ -735,6 +745,13 @@ impl Planner<'_> {
                         && legatum_core::data::unit_class(u.kind) == Some(UnitClass::Melee)
                         && !self.has_acted(u.id)
                         && self.roman_unit_can_leave(u)
+                        && siege.as_ref().is_none_or(|(city, ids)| {
+                            !ids.contains(&u.id) || {
+                                let rest: Vec<UnitId> =
+                                    ids.iter().copied().filter(|id| *id != u.id).collect();
+                                self.roman_capture_holds(city, &rest)
+                            }
+                        })
                 })
                 .collect();
             founders.sort_by_key(|u| (self.unit_keep_value(u), u.id));
@@ -787,6 +804,41 @@ impl Planner<'_> {
                 **x + attacks + capture >= legatum_core::data::PROMOTION_XP[0]
             })
             .count() as i32
+    }
+
+    /// Gene `roman_finish_siege`: the target and committed units of Rome's campaign while its
+    /// capture forecast holds on that force.
+    pub(crate) fn roman_live_siege(&self) -> Option<(legatum_core::view::CityView, Vec<UnitId>)> {
+        if self.faction != Faction::Rome
+            || !self.hard_defense()
+            || self.decisions.roman_founders == 0
+            || self.decisions.roman_finish_siege == 0
+        {
+            return None;
+        }
+        let active = self.campaigns.active.as_ref()?;
+        let v = self.view();
+        let city = v.cities.iter().find(|c| c.id == active.target)?;
+        (v.at_war(v.me, city.owner)
+            && !v.same_team(v.me, city.owner)
+            && self.roman_capture_holds(city, &active.committed))
+        .then(|| (city.clone(), active.committed.clone()))
+    }
+
+    /// Whether `force` still forecasts the capture of `city` (the campaign's own tests). A
+    /// visible city shot down to 0 HP falls to the first melee unit that walks in; the siege
+    /// forecasts stop pricing it there, which is exactly when the veterans must stay.
+    fn roman_capture_holds(&self, city: &legatum_core::view::CityView, force: &[UnitId]) -> bool {
+        (city.visible
+            && city.hp <= 0
+            && force.iter().any(|id| {
+                self.ctx
+                    .own_units
+                    .iter()
+                    .any(|u| u.id == *id && crate::composition::charges(u.kind))
+            }))
+            || self.campaign_can_take(city, force)
+            || self.grind_forecast(city, force).is_some()
     }
 
     /// Gene `roman_soldier_route`: a Roman military founder routes and is priced as a soldier.
