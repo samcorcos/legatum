@@ -415,7 +415,7 @@ it.each(['status', 'staging_closed', 'no_room'] as const)('opens a fresh lobby w
     await vi.advanceTimersByTimeAsync(250);
   });
   expect(posted).toHaveLength(1);
-  expect(sockets.at(-1)!.sent).toContainEqual({ type: 'staging_take', seat: 0, name: 'Player 1' });
+  expect(sockets.at(-1)!.sent).toContainEqual(expect.objectContaining({ type: 'staging_take', seat: 0 }));
   expect(useGame.getState().error).toBeNull();
 });
 

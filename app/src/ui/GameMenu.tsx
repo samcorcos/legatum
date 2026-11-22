@@ -125,7 +125,14 @@ export function GameMenu() {
           <button disabled={!hasReport} onClick={() => (trigger.current?.focus(), set({ reportOpen: true, reportTurn: null }), setOpen(false))}>Last turn report (L)</button>
           <hr />
           {kind === 'remote' ? (
-            <button onClick={() => (leaveLan(), setOpen(false))}>Leave the game (free this seat)</button>
+            hostHere ? (
+              <button onClick={() => {
+                setOpen(false);
+                if (window.confirm('End this game for everyone? Other players go back to the title, and the game cannot be resumed.')) leaveLan();
+              }}>End the game for everyone</button>
+            ) : (
+              <button onClick={() => (leaveLan(), setOpen(false))}>Leave the game (free this seat)</button>
+            )
           ) : (
             <button onClick={() => (goto('title'), setOpen(false))}>Exit to title</button>
           )}

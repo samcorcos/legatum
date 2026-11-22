@@ -856,3 +856,12 @@ Verify UI changes with Playwright screenshots at the three sizes and attach them
 - A notice about data leaving the player's device says "uploaded" or "sent to us", never "saved": players read "saved" as their own local save. Storage words such as "bucket" stay out of anything a player reads.
 - Small centred notes that can wrap to two lines use `text-wrap: balance`, so a link or a lone word doesn't dangle on the second line.
 - The hosted title screen (with `VITE_LEGATUM_GAMES_URL` set) has about 10px to spare at 1000x600: any further hosted-only line on the main menu needs a layout change, not just another line.
+
+## From the browser co-op review (2026-11-22, the host's tab runs the game)
+
+- A menu item that ends a shared game says so and asks first. When "leave" means different things for the host and a guest, the label branches on the role ("End the game for everyone" for the host, with a confirmation; "Leave the game" for a guest).
+- Connection and status text is written from the viewer's role (host, guest or observer). The host's connection tooltip never says "Connected to the host".
+- A name the player types before a room opens appears in the room and in the game, on both sides.
+- When a branch retires a concept (LAN, host address, "network player"), grep the whole Guide and app/src for the old words: a Guide paragraph the diff never touched stayed false.
+- A branch that deletes tour shots adds replacements in the same change. Every online state (menu, game list states, host and guest rooms, turn one on each side, host gone) has a shot at both sizes (app/e2e/tour/online.spec.ts).
+- Durability text matches the storage behind it: don't write "saves" for a copy that lives only as long as the tab.

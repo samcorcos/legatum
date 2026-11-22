@@ -169,7 +169,7 @@ export function TopBar() {
       </div>
       <div className="tb-right">
         {lan && (
-          <Tip content={lan.conn === 'open' ? 'Connected to the host' : 'Connection lost: reconnecting automatically'} className={`net ${lan.conn}`}>
+          <Tip content={lan.status.is_local ? 'You host this game in this tab. Keep it open.' : lan.conn === 'open' ? 'Connected to the host' : 'Connection lost: reconnecting automatically'} className={`net ${lan.conn}`}>
             <span className={`conn-dot ${lan.conn === 'open' ? 'on' : 'warn'}`} />
             {lan.conn === 'open' ? 'Online' : lan.conn === 'taken' ? 'Seat taken' : 'Reconnecting'}
 
