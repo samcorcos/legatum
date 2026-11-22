@@ -98,7 +98,7 @@ Don't copy those rules here; extend them there and keep this skill to direction 
 
 1. **Mocks first:** 2–3 variants as screenshots in the real map or screen context, at 1000x600 and 1440x900, before implementing any new visual feature. The user picks.
 2. **Build to the house style,** reusing tokens, pen weights and icon grid.
-3. **Review against this skill** from screenshots (headless Playwright only; never the app's browser pane). Codex-built art is never final until a Claude agent has looked at it.
+3. **Review against this skill** from screenshots (headless Playwright only; never the app's browser pane). Codex-built art is never final until a Claude agent has looked at it. Every branch that changes art, or the names, kinds or wiring art depends on, gets the `legatum-art-reviewer` agent before it merges (user, 2026-11-22); the gate requires its marker. It judges changed art beside its set (`tools/art/art-review.py sheet`) and looks for art the branch should have changed but didn't (`art-review.py impact`: renamed or new kinds, wiring with no file, deleted art still listed).
 4. **Record** the pick and any new rule here in the same change.
 
 ## Consistency audit (checklist)
@@ -131,7 +131,7 @@ Report each finding with a screenshot path, the rule it breaks and a proposed fi
 "A target player loves the art and beauty of those things, so we need to fix that... it's ok to use placeholders when we're iterating, but once we've nailed it down, we should make sure the art gets updated properly."
 - **Placeholders are fine while a feature is iterating.** Once its design is settled (the user has approved it, or it has shipped in a playtest build with no open redesign), its art must be finished, painterly and covetable in the house style. A settled feature that still shows abstract shapes (cubes, plain glyphs) is a defect.
 - **Cities:** art per era and per size tier, so cities visibly grow with population and change architecture each era (Civ style). **Done (2026-10-10, `claude/era-takeover`):** the 28 painted miniatures (`app/src/assets/cities/`) are wired into the map by `map/cityArt.ts` and `terrain.ts`; the abstract cubes are gone.
-- **The art audit** is recurring: the ops supervisor tours the screens and lists every remaining placeholder or abstraction, ranked by how visible it is in play, and queues the art.
+- **The art audit** is recurring: once per release (not weekly, since 2026-11-22 every art PR gets the art reviewer), the ops supervisor tours the screens and a resolved turn and lists every remaining placeholder, abstraction or set misfit, ranked by how visible it is in play, and queues the art.
 - **Era advancement** gets celebration art: a full-screen takeover with music. The board changes too, as cities and units take on the new era's look.
 - **Art audit status (first audit 2026-10-10):** it ranked 25 placeholders and abstractions (the report and its crops were working files and are not in the repository). Queued from it: `title-keyart-historical`, `terrain-feature-art`, `moment-vignettes`, `camp-ruin-map-art` (each starts with a comparison sheet, no wiring). Deferred until the era overhaul and historical rename land: units, techs, buildings, cities, Great Works, era and victory art, faction ornaments and crests. Re-run the audit after the era overhaul.
 
