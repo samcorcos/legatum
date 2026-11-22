@@ -1742,3 +1742,75 @@ fn research_queue_survives_lan_restart_advances_and_hides_rival_plans() {
             .any(|e| e["type"] == "ResearchQueueAdvanced")
     );
 }
+
+/// "Save to file" then "Host from a save": the host's save, kept as a file, starts a new host on a
+/// fresh browser with the same turn and seat names, and the same text loads as a solo game.
+#[test]
+fn host_save_file_resumes_on_a_fresh_browser_and_loads_solo() {
+    let first = Disk::new();
+    let server = Running::start(&first);
+    server.create(&setup());
+    let (mut a, _) = server.join(0);
+    let (mut b, _) = server.join(1);
+    a.ready(true);
+    b.ready(true);
+    a.turn(2, 0);
+    b.turn(2, 1);
+    let file = server.save();
+    let before = server.status();
+    drop((a, b));
+    drop(server);
+
+    // A different browser: its disk holds nothing but the file the host chose.
+    let fresh = Disk::new();
+    *fresh.save.borrow_mut() = Some(file.clone());
+    let resumed = Running::start(&fresh);
+    let after = resumed.status();
+    assert_eq!(after["turn"], before["turn"]);
+    assert_eq!(after["has_game"], true);
+    let names = |status: &Value| -> Vec<Value> {
+        status["seats"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|s| s["name"].clone())
+            .collect()
+    };
+    assert_eq!(names(&after), names(&before));
+    assert_eq!(resumed.save(), file);
+    // A resume alone keeps every seat reserved; hosting from a file opens the guests' seats.
+    assert_eq!(after["seats"][1]["reserved"], true);
+    {
+        let mut world = resumed.world.borrow_mut();
+        world.host.open_guest_seats();
+        world.pump();
+    }
+    let opened = resumed.status();
+    assert_eq!(
+        opened["seats"][0]["reserved"], true,
+        "the host's own seat stays its own"
+    );
+    assert_eq!(opened["seats"][1]["reserved"], false);
+    assert_eq!(names(&opened), names(&before), "seat names carry over");
+    // The host takes seat 0 and a guest takes seat 1, each with a new credential.
+    let (_, view) = resumed.join(0);
+    assert_eq!(view.turn, 2);
+    let mut guest = resumed.guest();
+    guest.send(json!({"type": "game_take", "seat": 0}));
+    assert!(
+        guest.until("error")["message"]
+            .as_str()
+            .unwrap()
+            .contains("reserved")
+    );
+    guest.send(json!({"type": "game_take", "seat": 1}));
+    let token = guest.until("seat_token")["token"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    guest.send(json!({"type": "join", "seat": 1, "name": "Human 1", "token": token}));
+    assert_eq!(guest.until("welcome")["seat"], 1);
+
+    let solo = legatum_wasm::Game::from_save_json(&file);
+    assert!(solo.is_ok(), "an online save is a normal engine save");
+}

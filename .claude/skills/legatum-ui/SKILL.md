@@ -866,4 +866,7 @@ Verify UI changes with Playwright screenshots at the three sizes and attach them
 - When a branch retires a concept (LAN, host address, "network player"), grep the whole Guide and app/src for the old words: a Guide paragraph the diff never touched stayed false.
 - A branch that deletes tour shots adds replacements in the same change. Every online state (menu, game list states, host and guest rooms, turn one on each side, host gone) has a shot at both sizes (app/e2e/tour/online.spec.ts).
 - Durability text matches the storage behind it: don't write "saves" for a copy that lives only as long as the tab.
+- A title-menu action that can fail owns its own busy and failed state: the spinner and "Try again" appear only on the control the player pressed (Host from a save once borrowed Host Game's).
+- A flow that resumes a shared game tells the host who still has to come back, and how.
+- The seat screen describes the host's own seat from the guest's side ("The host's seat"), never with a call to action the guest can't take.
 - Troubleshooting footers name things the player can act on (a game id, a state hash), never internal runtimes or engine builds (the menu once said "Core (WASM)" after the desktop runtime was gone).
