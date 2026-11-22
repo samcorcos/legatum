@@ -437,7 +437,7 @@ describe('event formatting', () => {
   it('era events read naturally, with the era named by the core', () => {
     const named = { ...ctx, eraName: (era: number) => (era === 2 ? 'Classical' : undefined) };
     expect(formatEvent({ type: 'EraEntered', player: 0, era: 2, first: false }, named)).toMatchObject({
-      text: 'You entered the Classical era: its three objectives are open to you', tone: 'good', category: 'victory',
+      text: 'You entered the Classical era', tone: 'good', category: 'victory',
     });
     // Your own era-up can be told again from its report line; a rival's cannot.
     expect(formatEvent({ type: 'EraEntered', player: 0, era: 2, first: true }, named).reopenEra).toEqual({ era: 2, first: true });
@@ -447,9 +447,9 @@ describe('event formatting', () => {
       text: 'Hollow Crown entered the Medieval era first', category: 'science', weight: 2,
     });
     expect(formatEvent({ type: 'EraObjectiveScored', player: 2, era: 2, slot: 1, objective: 'Gain 4 cities' }, named)).toMatchObject({
-      text: 'Hollow Crown scored the Classical era (+1 VP): Gain 4 cities', tone: 'neutral', weight: 2,
+      text: 'Hollow Crown scored the Classical Age with Gain 4 cities: +1 VP', tone: 'neutral', weight: 2,
     });
-    expect(formatEvent({ type: 'EraObjectiveScored', player: 0, era: 2, slot: 0, objective: 'Learn 9 technologies' }, named).tone).toBe('good');
+    expect(formatEvent({ type: 'EraObjectiveScored', player: 0, era: 2, slot: 0, objective: 'Gain 4 cities' }, named).tone).toBe('good');
     // A World Age game: the first empire's entry opens the Age for everyone, and a scored card is named.
     const age = { ...named, ageCard: (_era: number, slot: number) => (slot === 1 ? { kind: 'Veterans', n: 4 } : { kind: 'Breach' }) };
     expect(formatEvent({ type: 'EraEntered', player: 2, era: 2, first: true }, age).text).toBe('Hollow Crown entered the Classical era first');
@@ -842,7 +842,7 @@ describe('the Mongols’ Yam Relay Station in the report', () => {
 });
 
 describe('objectiveCloseLines', () => {
-  it('names an era objective the turn you come within one of it, as a good, notable report line', async () => {
+  it('names an Age card the turn you come within one of it, as a good, notable report line', async () => {
     const client = new FixtureClient();
     await client.newGame(await client.standardSetup('42', 'India', 'Byzantium', 'Ada', 'Bo'));
     const base = structuredClone(client.view(0));
@@ -851,8 +851,8 @@ describe('objectiveCloseLines', () => {
     const lines = objectiveCloseLines(before, after);
     expect(lines).toHaveLength(1);
     expect(lines[0]).toMatchObject({ category: 'victory', tone: 'good', weight: 2, players: [after.me] });
-    expect(lines[0].text).toBe('Close to the Classical era’s VP: Gain 4 cities (3 of 4, 1 to go)');
-    expect(lines[0].details[0]).toContain('any one of the Classical era’s three objectives to score its 1 VP');
+    expect(lines[0].text).toBe('Close to the Classical Age’s VP: Gain 4 cities (3 of 4, 1 to go)');
+    expect(lines[0].details[0]).toContain('Meet the Classical Age’s card to score its 1 VP');
     // The next turn it is still one away: the line does not repeat.
     expect(objectiveCloseLines(after, after)).toEqual([]);
   });

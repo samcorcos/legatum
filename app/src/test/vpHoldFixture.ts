@@ -1,6 +1,6 @@
 // Shared fixture for the VP hold rule (core `scoring::update_vp_holds`): a team wins by VP only after holding its
 // target for `data::VP_HOLD_TURNS` consecutive turn ends. At the fixture's four-per-seat target, teams of three
-// get 11 VP from faction goals and scored era objectives; a scored fourth-era objective supplies the last point.
+// get 11 VP from faction goals and scored Age cards; a scored fourth-Age card supplies the last point.
 import { fromOffset, within } from '../hex';
 import { idxOf } from './fixtureEngine';
 import { createState, makeStandardSetup, spawnUnit } from './fixtureEngine';
@@ -17,9 +17,9 @@ export interface HoldSpec {
   reach?: Record<number, number>;
   /** Players who start without a Settler: with no city either they are eliminated at the first turn end. */
   noSettler?: number[];
-  /** Players without the usual scored era objective. */
+  /** Players without the usual scored Age card. */
   oneShort?: number[];
-  /** Players with another scored era objective (the last point for a team of three). */
+  /** Players with another scored Age card (the last point for a team of three). */
   bonusEra?: number[];
 }
 

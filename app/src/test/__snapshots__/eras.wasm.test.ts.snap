@@ -221,7 +221,7 @@ exports[`eras: core behavior > Railways, Code of Laws, Printing Press and the Ca
       "building": "RelayUplink",
       "kind": "Building",
     },
-    600,
+    400,
     {
       "food": 0,
       "gold": 0,
@@ -236,7 +236,7 @@ exports[`eras: core behavior > Railways, Code of Laws, Printing Press and the Ca
       "building": "Pyramids",
       "kind": "Building",
     },
-    240,
+    360,
     {
       "food": 0,
       "gold": 0,
@@ -381,7 +381,7 @@ exports[`eras: core behavior > Railways, Code of Laws, Printing Press and the Ca
     5,
   ],
   [
-    "MilitaryEngineering",
+    "Machinery",
     {
       "building": "StarFort",
       "kind": "Building",
@@ -1057,7 +1057,7 @@ exports[`eras: core behavior > entering the next era and the first-into-era mark
   },
   {
     "era": 2,
-    "first": true,
+    "first": false,
     "player": 0,
     "type": "EraEntered",
   },
@@ -1073,7 +1073,7 @@ exports[`eras: core behavior > entering the next era and the first-into-era mark
   },
   {
     "era": 2,
-    "first": false,
+    "first": true,
     "player": 1,
     "type": "EraEntered",
   },
@@ -1094,7 +1094,7 @@ exports[`eras: core behavior > entering the next era and the first-into-era mark
   },
   {
     "era": 2,
-    "first": true,
+    "first": false,
     "player": 0,
     "type": "EraEntered",
   },
@@ -1105,7 +1105,7 @@ exports[`eras: core behavior > entering the next era and the first-into-era mark
   },
   {
     "era": 2,
-    "first": false,
+    "first": true,
     "player": 1,
     "type": "EraEntered",
   },
@@ -1165,7 +1165,7 @@ exports[`eras: core behavior > entering the next era and the first-into-era mark
   "firsts": [
     [
       1,
-      0,
+      1,
     ],
   ],
   "known": [
@@ -1183,7 +1183,7 @@ exports[`eras: core behavior > entering the next era and the first-into-era mark
 [
   {
     "era": 2,
-    "first": true,
+    "first": false,
     "player": 0,
     "type": "EraEntered",
   },
@@ -1194,7 +1194,7 @@ exports[`eras: core behavior > entering the next era and the first-into-era mark
   },
   {
     "era": 2,
-    "first": false,
+    "first": true,
     "player": 1,
     "type": "EraEntered",
   },
@@ -1259,7 +1259,7 @@ exports[`eras: core behavior > entering the next era and the first-into-era mark
   "firsts": [
     [
       1,
-      0,
+      1,
     ],
   ],
   "known": [
@@ -1277,13 +1277,13 @@ exports[`eras: core behavior > entering the next era and the first-into-era mark
 [
   {
     "era": 2,
-    "first": true,
+    "first": false,
     "player": 0,
     "type": "EraEntered",
   },
   {
     "era": 2,
-    "first": false,
+    "first": true,
     "player": 1,
     "type": "EraEntered",
   },
@@ -1343,7 +1343,7 @@ exports[`eras: core behavior > entering the next era and the first-into-era mark
   "firsts": [
     [
       1,
-      0,
+      1,
     ],
   ],
   "known": [
@@ -1412,7 +1412,7 @@ exports[`eras: core behavior > entering the next era and the first-into-era mark
   "firsts": [
     [
       1,
-      0,
+      1,
     ],
   ],
   "known": [
@@ -1481,7 +1481,7 @@ exports[`eras: core behavior > entering the next era and the first-into-era mark
   "firsts": [
     [
       1,
-      0,
+      1,
     ],
   ],
   "known": [
@@ -1550,7 +1550,7 @@ exports[`eras: core behavior > entering the next era and the first-into-era mark
   "firsts": [
     [
       1,
-      0,
+      1,
     ],
   ],
   "known": [
@@ -1619,7 +1619,7 @@ exports[`eras: core behavior > entering the next era and the first-into-era mark
   "firsts": [
     [
       1,
-      0,
+      1,
     ],
   ],
   "known": [
@@ -1688,7 +1688,7 @@ exports[`eras: core behavior > entering the next era and the first-into-era mark
   "firsts": [
     [
       1,
-      0,
+      1,
     ],
   ],
   "known": [
@@ -1757,7 +1757,7 @@ exports[`eras: core behavior > entering the next era and the first-into-era mark
   "firsts": [
     [
       1,
-      0,
+      1,
     ],
   ],
   "known": [

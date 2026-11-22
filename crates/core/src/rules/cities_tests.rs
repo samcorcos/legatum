@@ -260,7 +260,7 @@ fn mongols_cannot_produce_engineers_walls_castles_or_star_forts_before_the_medie
         TechId::Feudalism,
         TechId::Chivalry,
         TechId::Mathematics,
-        TechId::MilitaryEngineering,
+        TechId::Machinery,
     ]);
     for item in [
         building(BuildingKind::Walls),
@@ -480,14 +480,16 @@ fn raze_allows_original_capitals_and_goal_buildings() {
         .buildings
         .insert(BuildingKind::CourierHall);
     assert!(raze_blocker(&s, P0, target).is_none());
-    // The captor scored the first capture before it can raze, and razing keeps the point.
-    assert_eq!(s.player(P0).capitals_taken.len(), 1);
-    let (next, _) = crate::resolve_turn(
+    // The captor holds the capital's point until it razes the city: razing gives it up.
+    assert_eq!(crate::scoring::capitals_held(&s, P0).len(), 1);
+    let (next, events) = crate::resolve_turn(
         &s,
         &BTreeMap::from([(P0, vec![Order::Raze { city: capital }])]),
     );
     assert!(!next.cities.contains_key(&capital));
-    assert_eq!(next.player(P0).capitals_taken.len(), 1);
+    assert!(crate::scoring::capitals_held(&next, P0).is_empty());
+    assert!(events.iter().any(|e| matches!(e,
+        Event::CapitalLost { player, capital: id, .. } if *player == P0 && *id == capital)));
 }
 
 #[test]
@@ -3218,4 +3220,149 @@ fn the_view_lists_buyable_tiles_nearest_ring_first_for_a_human_only() {
             .unwrap()
             .contains("already bought something this turn")
     );
+}
+
+#[test]
+fn no_purchase_under_threat_stops_military_buys_near_an_enemy_and_is_off_by_default() {
+    let mut s = two_players();
+    let id = found(&mut s, P0, at(5, 5));
+    s.player_mut(P0).gold = 10_000;
+    let soldier = ProductionItem::Unit {
+        unit: UnitKind::Soldier,
+    };
+    let settler_free = ProductionItem::Building {
+        building: BuildingKind::Granary,
+    };
+    // An enemy military unit two tiles from the city.
+    let near = s.cities[&id]
+        .pos
+        .within(2)
+        .into_iter()
+        .find(|h| h.distance(s.cities[&id].pos) == 2)
+        .unwrap();
+    let enemy = spawn_unit(&mut s, P1, UnitKind::Soldier, near);
+    // Off by default: nothing changes.
+    assert_eq!(economy::buy_block(&s, city(&s, id), soldier), None);
+    s.setup
+        .rule_experiments
+        .apply("no-purchase-under-threat")
+        .unwrap();
+    assert_eq!(
+        economy::buy_block(&s, city(&s, id), soldier),
+        Some(economy::BuyBlock::UnderThreat)
+    );
+    let reason = validate_city_order(
+        &s,
+        P0,
+        &Order::BuyItem {
+            city: id,
+            item: soldier,
+        },
+    )
+    .unwrap_err();
+    assert!(
+        reason.contains("can't buy military units while an enemy unit is within 2 tiles"),
+        "{reason}"
+    );
+    // Buildings are still for sale.
+    assert_eq!(economy::buy_block(&s, city(&s, id), settler_free), None);
+    // Three tiles out, or at Peace, it no longer blocks.
+    let far = s.cities[&id]
+        .pos
+        .within(3)
+        .into_iter()
+        .find(|h| h.distance(s.cities[&id].pos) == 3)
+        .unwrap();
+    s.units.get_mut(&enemy).unwrap().pos = far;
+    assert_eq!(economy::buy_block(&s, city(&s, id), soldier), None);
+    s.units.get_mut(&enemy).unwrap().pos = near;
+    for r in &mut s.diplomacy.as_mut().unwrap().relations {
+        r.state = crate::diplomacy::RelationState::Peace;
+    }
+    assert_eq!(economy::buy_block(&s, city(&s, id), soldier), None);
+}
+
+#[test]
+fn two_empires_buying_one_tile_the_same_turn_is_drawn_by_seed_not_seat() {
+    let mut s = two_players();
+    let a = found(&mut s, P0, at(8, 8));
+    let b = found(&mut s, P1, at(8, 12));
+    crate::visibility::update_explored(&mut s);
+    s.player_mut(P0).gold = 1000;
+    s.player_mut(P1).gold = 1000;
+    let shared = buy_candidates(&s, city(&s, a))
+        .into_iter()
+        .find(|h| buy_candidates(&s, city(&s, b)).contains(h))
+        .expect("the two cities border a common free tile");
+    let orders = BTreeMap::from([
+        (P0, vec![buy_tile(a, shared)]),
+        (P1, vec![buy_tile(b, shared)]),
+    ]);
+    let mut winners = BTreeSet::new();
+    for seed in 0..40 {
+        s.dice_seed = Some(seed);
+        let (control, _) = crate::resolve_turn(&s, &BTreeMap::new());
+        let (next, events) = crate::resolve_turn(&s, &orders);
+        let winner = next
+            .map
+            .get(shared)
+            .unwrap()
+            .owner
+            .expect("someone buys it");
+        let loser = if winner == P0 { P1 } else { P0 };
+        winners.insert(winner);
+        // The loser fails the ordinary way and keeps its Gold.
+        assert!(events.iter().any(|e| matches!(e,
+            Event::OrderFailed { player, reason } if *player == loser && reason.contains("already owned"))));
+        assert_eq!(next.player(loser).gold, control.player(loser).gold);
+        assert!(next.player(winner).gold < control.player(winner).gold);
+        // The same seed gives the same result.
+        assert_eq!(
+            crate::resolve_turn(&s, &orders)
+                .0
+                .map
+                .get(shared)
+                .unwrap()
+                .owner,
+            Some(winner)
+        );
+    }
+    assert_eq!(winners.len(), 2, "either seat can win the tile");
+}
+
+#[test]
+fn a_same_turn_world_wonder_race_goes_to_more_overflow_then_to_a_seeded_draw() {
+    let mut s = two_players();
+    let a = found(&mut s, P0, at(5, 5));
+    let b = found(&mut s, P1, at(14, 14));
+    let pyramids = ProductionItem::Building {
+        building: BuildingKind::Pyramids,
+    };
+    let cost_a = economy::city_production_cost(&s, city(&s, a), pyramids);
+    let cost_b = economy::city_production_cost(&s, city(&s, b), pyramids);
+    for (id, cost) in [(a, cost_a), (b, cost_b)] {
+        let c = city_mut(&mut s, id);
+        c.producing = Some(pyramids);
+        c.production_stored = cost - 10;
+    }
+    let yields = |pa: i32, pb: i32| {
+        BTreeMap::from([(a, Yields::new(0, pa, 0, 0)), (b, Yields::new(0, pb, 0, 0))])
+    };
+    // The higher city id finishes with more overflow: it goes first, whatever the seed.
+    for seed in 0..10 {
+        s.dice_seed = Some(seed);
+        assert_eq!(wonder_race_order(&s, &yields(12, 20)), vec![b, a]);
+        assert_eq!(wonder_race_order(&s, &yields(20, 12)), vec![a, b]);
+        // Only one city finishes: no race, id order.
+        assert_eq!(wonder_race_order(&s, &yields(5, 20)), vec![a, b]);
+    }
+    // Exactly equal overflow: a seeded draw, so either city can win.
+    let firsts: BTreeSet<CityId> = (0..40)
+        .map(|seed| {
+            s.dice_seed = Some(seed);
+            wonder_race_order(&s, &yields(15, 15))[0]
+        })
+        .collect();
+    assert_eq!(firsts, BTreeSet::from([a, b]));
+    // `resolve_wonder_race` then hands the losers their refund, as before.
 }

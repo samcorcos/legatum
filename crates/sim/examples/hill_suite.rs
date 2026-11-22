@@ -4,9 +4,11 @@
 //!   hill_suite --tape TAPE.json --states STATES.jsonl --out RUNS.jsonl --branch 51 --end 81
 //!              --mode tape|hybrid|hard|storm|quiet [--seat 0] [--salts 48] [--victim 3]
 //!              [--war-turn 61] [--storm 3] [--report 60] [--arms control,NAME=PARAMS.json]
-//!              [--threads N] [--hybrid-defend on|off]
+//!              [--threads N] [--hybrid-defend on|off] [--accept-rules 49]
 //!
-//! `--states` is `audit_states` output (every recorded hash checked). Every seat's Hard brain
+//! `--states` is `audit_states` output (every recorded hash checked). `--accept-rules 49` reads states
+//! written by a rules-49 engine through `legatum_wasm::json::upgrade_value_from_49` (sim only; see it
+//! for what changes); without it a state carrying a rules-49-only field is refused. Every seat's Hard brain
 //! shadows the recorded game up to `--branch` so it has its real opponent memory. From the branch
 //! the designer's seat is played by:
 //! - `tape`: his recorded orders for each turn (orders that no longer apply fail; each failure the
@@ -76,6 +78,8 @@ struct Args {
     report: Option<u32>,
     arms: Vec<(String, Option<AiParams>)>,
     hybrid_defend: bool,
+    /// Read rules-49 recorded states through the upgrade (`--accept-rules 49`).
+    accept_49: bool,
 }
 
 fn parse_args() -> Args {
@@ -94,6 +98,7 @@ fn parse_args() -> Args {
         report: None,
         arms: vec![("control".into(), None)],
         hybrid_defend: true,
+        accept_49: false,
     };
     let mut it = std::env::args().skip(1);
     while let Some(flag) = it.next() {
@@ -112,6 +117,13 @@ fn parse_args() -> Args {
             "--storm" => a.storm = v.parse().unwrap(),
             "--report" => a.report = Some(v.parse().unwrap()),
             "--hybrid-defend" => a.hybrid_defend = v == "on",
+            "--accept-rules" => {
+                assert_eq!(
+                    v, "49",
+                    "--accept-rules takes 49 (the one older rules version with an upgrade)"
+                );
+                a.accept_49 = true;
+            }
             "--threads" => {
                 rayon::ThreadPoolBuilder::new()
                     .num_threads(v.parse().unwrap())
@@ -269,7 +281,7 @@ fn warm(tape: &Tape, args: &Args) -> Snapshot {
         let line = lines.next().expect("states file too short").unwrap();
         let hash = legatum_core::state::fnv1a(line.as_bytes());
         assert_eq!(hash.to_string(), expect, "recorded state hash");
-        recorded_state(&line)
+        recorded_state(&line, args.accept_49)
     };
     let mut state = read(&tape.initial_hash.to_string());
     let mut brains: BTreeMap<PlayerId, ScriptedBrain> = state
@@ -341,7 +353,15 @@ fn warm(tape: &Tape, args: &Args) -> Snapshot {
     snap
 }
 
-fn recorded_state(line: &str) -> GameState {
+fn recorded_state(line: &str, accept_49: bool) -> GameState {
+    if accept_49 {
+        let value: Value = serde_json::from_str(line).expect("recorded state json");
+        return legatum_wasm::json::upgrade_value_from_49(value).expect("rules-49 state upgrade");
+    }
+    assert!(
+        !line.contains("\"capitals_taken\""),
+        "a rules-49 recorded state (it carries capitals_taken): pass --accept-rules 49"
+    );
     match serde_json::from_str(line) {
         Ok(state) => state,
         Err(error) if error.to_string().contains("unknown variant `extra`") => {
@@ -1283,7 +1303,7 @@ mod tests {
             {"user": {"kind": "unit", "unit": 1}, "resource": "Iron", "since": 1},
             {"user": {"kind": "extra", "unit": 1}, "resource": "Oil", "since": 1}
         ]);
-        let loaded = recorded_state(&historical.to_string());
+        let loaded = recorded_state(&historical.to_string(), false);
         let mut expected = historical;
         expected["players"][0]["supply"]
             .as_array_mut()

@@ -25,7 +25,7 @@ const ordinary = city(13, 1);
 
 describe('capital mark', () => {
   it('names population, holder, city and the founder-specific scoring star', () => {
-    expect(bannerTooltip(view(), captured)).toBe("Population 3 · Switzerland · City 11 · Original capital of Byzantium · each rival that captures it scores +1 VP, once");
+    expect(bannerTooltip(view(), captured)).toBe("Population 3 · Switzerland · City 11 · Original capital of Byzantium · a rival scores 1 VP while it holds it");
     expect(bannerTooltip(view(), ordinary)).toBe('Population 3 · Byzantium · City 13');
     expect(bannerTooltip(view(), { ...held, visible: false })).toContain('Population unknown · Byzantium');
   });
@@ -68,33 +68,31 @@ describe('capital mark', () => {
 
 describe('capital line', () => {
   it('states the rule for a rival capital, naming its founder', () => {
-    expect(capitalLineOf(view(), held)).toBe("Byzantium's original capital. Capture it to score +1 VP, kept for good. Each empire scores it once.");
+    expect(capitalLineOf(view(), held)).toBe("Byzantium's original capital. Hold it to score 1 VP.");
   });
 
   it('names the founder, not the holder, after capture', () => {
     expect(capitalLineOf(view(), captured)).toContain("Byzantium's original capital.");
   });
 
-  it('says you scored it, and that taking it again scores nothing', () => {
-    expect(capitalLineOf(view({ 0: [11] }), captured)).toBe("Byzantium's original capital. You scored its +1 VP when you took it; taking it again scores nothing.");
+  it('says you score it while you hold it', () => {
+    expect(capitalLineOf(view({ 0: [11] }), { ...captured, owner: 0 })).toBe("Byzantium's original capital. You score 1 VP while you hold it.");
   });
 
-  it('tells you a teammate scored it and you still can', () => {
-    expect(capitalLineOf(view({ 2: [11] }), captured)).toBe("Byzantium's original capital. Your teammate has scored it. You can still score it by capturing it.");
-    // Held by your own team: you cannot capture it until a rival takes it, so the line says what must happen first.
-    expect(capitalLineOf(view({ 2: [11] }), { ...captured, owner: 2 })).toBe("Byzantium's original capital. Your teammate scored it. If a rival takes it, you can score it by capturing it yourself.");
+  it('tells you a teammate holds its point', () => {
+    expect(capitalLineOf(view({ 2: [11] }), { ...captured, owner: 2 })).toBe("Byzantium's original capital. Your teammate scores 1 VP while holding it.");
   });
 
-  it('warns the owner that a rival scores on a capture', () => {
+  it('warns the owner that a rival scores while holding it', () => {
     const mine = city(1, 0, { is_capital: true, original_capital: true, original_capital_of: 0 });
-    expect(capitalLineOf(view(), mine)).toBe('Your original capital. Each rival that captures it scores +1 VP.');
+    expect(capitalLineOf(view(), mine)).toBe('Your original capital. A rival scores 1 VP while it holds it.');
     // Still true after it is lost.
-    expect(capitalLineOf(view(), { ...mine, owner: 1 })).toBe('Your original capital. Each rival that captures it scores +1 VP.');
+    expect(capitalLineOf(view(), { ...mine, owner: 1 })).toBe('Your original capital. A rival scores 1 VP while it holds it.');
   });
 
   it("words a teammate's capital as theirs, not as a point you can score", () => {
     const mate = city(20, 3, { original_capital: true, original_capital_of: 2 });
-    expect(capitalLineOf(view(), mate)).toBe("Your teammate's original capital (Germany). Each rival that captures it scores +1 VP.");
+    expect(capitalLineOf(view(), mate)).toBe("Your teammate's original capital (Germany). A rival scores 1 VP while it holds it.");
   });
 
   it('is built from the mark alone', () => {

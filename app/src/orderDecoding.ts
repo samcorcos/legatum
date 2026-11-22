@@ -6,7 +6,7 @@ const ORDER_KINDS = new Set<Order['type']>([
   'SetAutomation', 'SetAutoFire', 'MoveUnit', 'MoveUnitPath', 'SleepUnit', 'SkipUnit', 'FoundCity',
   'DisbandUnit', 'SetProduction', 'SetProductionQueue', 'SetCityAutomation', 'BuyItem', 'HireCompany', 'BuyTile',
   'SetResearch', 'SetResearchQueue', 'SetScienceConversion', 'RangedAttack', 'AirStrike', 'AirRecon', 'Rebase', 'UpgradeAircraft',
-  'UpgradeUnit', 'UpgradeSiege', 'Action',
+  'UpgradeUnit', 'UpgradeSiege', 'Action', 'GiveGold',
 ]);
 
 export function isKnownOrderKind(kind: unknown): kind is Order['type'] {

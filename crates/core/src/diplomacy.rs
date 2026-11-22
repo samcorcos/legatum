@@ -547,6 +547,18 @@ impl DiplomacyState {
     }
 }
 
+/// The team that waives the Alliance between `a` and `b` its upkeep this turn, if any: a team
+/// either ally is at War with that is close to winning (`scoring::near_victory`). The lowest such
+/// team id is named. Sam, 2026-11-22 (via the Fable review).
+pub fn upkeep_waived_by(state: &GameState, a: TeamId, b: TeamId) -> Option<TeamId> {
+    state.teams().into_iter().find(|&t| {
+        t != a
+            && t != b
+            && (state.teams_at_war(a, t) || state.teams_at_war(b, t))
+            && crate::scoring::near_victory(state, t)
+    })
+}
+
 impl GameState {
     pub fn at_war(&self, a: PlayerId, b: PlayerId) -> bool {
         self.teams_at_war(self.team_of(a), self.team_of(b))

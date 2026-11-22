@@ -15,8 +15,9 @@ use std::collections::BTreeSet;
 mod goals;
 
 impl Planner<'_> {
-    /// Permanent VP from this seat's first capture of a rival's original capital.
-    /// Public score sources and original ownership make this exact even if it changed hands.
+    /// The 1 VP this seat would hold by capturing a rival's original capital (rules 50: held while
+    /// it owns the city, lost if retaken or razed). Public score sources and original ownership
+    /// make this exact even if it changed hands.
     pub(crate) fn capital_capture_vp(&self, city: &CityView) -> i32 {
         let my_team = self
             .view()

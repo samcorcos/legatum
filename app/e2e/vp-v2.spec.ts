@@ -12,7 +12,7 @@ import { test, expect } from './fixtures';
 test.beforeEach(async ({ page }) => { await page.addInitScript(() => { try { localStorage.setItem('legatum.dev.no-era-hud', '1'); } catch { /* storage blocked */ } }); });
 import type { useGame } from '../src/store';
 import { withV2, type V2Options } from '../src/test/vpV2Fixture';
-import { decadencePercent, ERA_COUNT } from '../src/data';
+import { decadencePercent } from '../src/data';
 import { endPlanning } from './turnActions';
 import { chooseCapitalProduction } from './opening';
 import { stageCityDecadence } from './vpStage';
@@ -55,22 +55,19 @@ for (const size of SIZES) {
   test.describe(`VP v2 at ${size.width}x${size.height}`, () => {
     test.use({ viewport: size });
 
-    test('the ledger lists each era’s objectives, scorers and your progress', async ({ page }) => {
+    test('the ledger lists each begun Age’s card, scorers and your progress', async ({ page }) => {
       await startEightEmpires(page);
       await page.getByRole('button', { name: /^Every way to score/ }).click();
       const sheet = page.getByTestId('objective-sheet');
       await expect(sheet.locator('.sl-row.k-work')).toHaveCount(1);
-      await expect(sheet.locator('.sl-row.k-era')).toHaveCount(ERA_COUNT - 1);
-      await expect(sheet.locator('.sl-row[data-row="era-2"] .sl-status')).toContainText('next');
-      const nextEra = sheet.locator('.sl-row[data-row="era-2"] button');
-      if (await nextEra.getAttribute('aria-expanded') === 'false') await nextEra.click();
-      await expect(sheet.locator('#sl-detail-era-2 .vh-obj')).toHaveCount(3);
+      // No Age has begun on turn 1: its card stays hidden until the first empire enters the era.
+      await expect(sheet.locator('.sl-row.k-era')).toHaveCount(0);
       await expect(sheet).not.toContainText(/Developed Empire|Six Technologies|Twenty Population|Most Populous|Most Territory/);
       await page.keyboard.press('Escape');
       await stage(page, { era: 2, scored: [] });
       await page.getByRole('button', { name: /^Every way to score/ }).click();
       const era2 = sheet.locator('.sl-row[data-row="era-2"]');
-      await expect(era2.locator('.sl-status')).toContainText('open to you');
+      await expect(era2.locator('.sl-status')).toContainText('open to every empire');
       if (await era2.locator('button').getAttribute('aria-expanded') === 'false') await era2.locator('button').click();
       await expect(sheet.locator('#sl-detail-era-2')).toContainText('2 of 4');
       await expect(sheet.locator('#sl-detail-era-2 .vh-marker')).toHaveCount(1);
@@ -89,7 +86,7 @@ for (const size of SIZES) {
       await page.keyboard.press('Escape');
       await stage(page, { era: 7, scored: [2, 3, 4] });
       await page.getByRole('button', { name: /^Every way to score/ }).click();
-      // The staged v2 view deliberately supplies a six-era deck.
+      // Six Ages have begun in the staged view.
       await expect(sheet.locator('.sl-row.k-era')).toHaveCount(6);
       const future = sheet.locator('.sl-row[data-row="era-7"]');
       await expect(future.locator('.sl-name')).toContainText('Future');

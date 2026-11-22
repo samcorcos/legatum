@@ -47,15 +47,14 @@ describe('the victory race model', () => {
     expect(team.members.every((e) => e.isMine)).toBe(true);
   });
 
-  it('lists every way to score under VP v2: the Great Work, the eras in play, one goal per living empire', async () => {
+  it('lists every way to score: the Great Work, the Ages that have begun, one goal per living empire', async () => {
     const view = withV2(await eightEmpireView());
     const m = buildVpModel(view);
     // Great Works have their own scoring source.
     expect(m.works.map((s) => s.id)).toEqual(['GreatWork']);
-    expect(m.eras.map((s) => s.id)).toEqual(['era-2', 'era-3', 'era-4', 'era-5', 'era-6', 'era-7']);
+    // An Age is in the view only once the first empire enters its era (the fixture's rival is in era 3).
+    expect(m.eras.map((s) => s.id)).toEqual(['era-2', 'era-3']);
     expect(m.goals).toHaveLength(view.players.filter((p) => p.alive).length);
-    // Era 4 has been entered by nobody: it is on the sheet but has no token, so the arrow keys skip it.
-    expect(m.all.map((s) => s.id)).not.toContain('era-4');
     expect(m.all.length).toBe(1 + 2 + m.goals.length);
     for (const s of m.all) { expect(s.rule.length).toBeGreaterThan(5); expect(s.icon).toBeTruthy(); }
     const words = JSON.stringify(m.all.map((s) => [s.name, s.rule, s.terms]));
@@ -118,25 +117,25 @@ describe('the victory race model', () => {
     expect(tuned.raceRules.rules).toMatchObject({ decadenceSlope: 25 });
   });
 
-  it('turns each era into a way to score: three objectives, who scored with which, and only your own progress', async () => {
+  it('turns each Age into a way to score: its cards, who scored with which, and only your own progress', async () => {
     const view = withV2(await eightEmpireView(), { era: 2, scored: [] });
     const m = buildVpModel(view);
     const rival = view.players.find((p) => p.team !== view.team && p.alive)!.id;
     const era2 = m.byId.get('era-2')!;
     expect(era2.kind).toBe('era');
     expect(era2.vp).toBe(1);
-    expect(era2.rule).toMatch(/any one of its three objectives/);
+    expect(era2.rule).toMatch(/Score this Age’s card whenever you like/);
     expect(era2.era!.eraName).toBe('Classical');
-    expect(era2.era!.objectives.map((o) => [o.family, o.scorers])).toEqual([['Build', [rival]], ['Expand', []], ['Fight', []]]);
+    expect(era2.era!.objectives.map((o) => [o.family, o.scorers])).toEqual([['Expand', [rival]], ['Expand', []], ['Fight', []]]);
     expect(era2.era!.objectives[1].mine).toEqual({ current: 2, target: 4 });
     expect(era2.era).toMatchObject({ myEntered: true, myScored: false });
     expect(era2.owners).toEqual([rival]);
     expect(era2.own).toBe('theirs');
-    // The next era (3) carries your progress too, but you have not entered it.
-    expect(m.byId.get('era-3')!.era).toMatchObject({ myEntered: false, myScored: false });
+    // An Age a rival began is open to you too, with your progress, though you have not entered its era.
+    expect(m.byId.get('era-3')!.era).toMatchObject({ myEntered: true, myScored: false });
     expect(m.byId.get('era-3')!.era!.objectives[0].mine).toEqual({ current: 6, target: 14 });
-    // An era beyond the next has no progress to show.
-    expect(m.byId.get('era-4')!.era!.objectives.every((o) => o.mine === undefined)).toBe(true);
+    // An Age nobody has begun is not in the view.
+    expect(m.byId.get('era-4')).toBeUndefined();
     // Your own score makes it yours.
     const scored = buildVpModel(withV2(await eightEmpireView(), { era: 2, scored: [2] })).byId.get('era-2')!;
     expect(scored.own).toBe('mine');
