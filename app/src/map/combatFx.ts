@@ -10,7 +10,7 @@
 //   - No library: effects are pure functions of elapsed ms, drawn by the map's own rAF loop on the existing canvas
 //     (MapCanvas.tsx draw loop -> render.ts `inp.fx` -> combatFxDraw.ts). That keeps them deterministic, so the media
 //     captures can frame-step them on Playwright's clock, and cheap (strokes, fills and pre-rendered wash sprites; no
-//     shadowBlur, filters or per-frame canvases). Only canvas 2D calls WebKit supports (the Mac app is WKWebView).
+//     shadowBlur, filters or per-frame canvases). Only canvas 2D calls WebKit (Safari) supports.
 //   - Plan once, draw many: build a plain-data plan when the turn resolves (store.ts applyTurn attaches it to `anim`),
 //     then each frame asks what is on screen at t (`fxUnits` for unit offsets, `drawCombatFx` for the effects).
 //   - Gate every effect on `useCombatFx()` (feel/combatFxPreferences.ts: the Settings toggle and speed) and on

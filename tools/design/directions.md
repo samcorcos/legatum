@@ -28,7 +28,7 @@ Rebuild with `node tools/design/mockups/build/build.mjs a b c title-c lobby-c`. 
 - **House ornament: the four-point star** from the A (path `M0 -5L.95 -.95L5 0L.95 .95L0 5L-.95 .95L-5 0L-.95 -.95Z`). It marks capitals, panel headers, the selected-row state in lists, and dividers. Use at most one star per panel header. Never use it as a bullet in running text.
 - **Harmony with the wordmark.** The wordmark has wide Roman proportions and monoline geometric strokes. Each direction pairs it with a display face of the same lineage (A: Roman inscriptional capitals; B: Garamond; C: a Didone of the deco era, with a 1920s geometric sans). Tracked uppercase labels (0.14–0.32em) echo the wordmark's spacing.
 - **One token source.** Each direction ships as one `tokens.css` (the `TOKENS_*` blocks in the variant files are the seed), consumed by the game UI, the dashboard, and the icon export script. No component defines its own colors.
-- **Fonts are bundled**, not loaded from Google at runtime (the Tauri app runs offline). All faces used are OFL-licensed.
+- **Fonts are bundled**, not loaded from Google at runtime (the game makes no requests to font services). All faces used are OFL-licensed.
 - **Neutral wording.** Name seats by player ("Ada", "Bo"), group them by team ("Team 1", "Your team"), and label the panel "Council" or "This Turn". Never write copy that assumes two particular people.
 
 ### Crests and small glyphs

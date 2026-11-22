@@ -73,7 +73,7 @@ test.describe(`${look} look`, () => {
       await page.keyboard.press('Escape');
       await expect(dialog).toBeHidden();
       expect(blocking(await auditLayout(page))).toEqual([]);
-      // The whole menu shows without scrolling, even with the desktop app's extra Quit item.
+      // The whole menu shows without scrolling.
       const fits = () => page.locator('.title-menu').evaluate((menu) => {
         const settings = [...menu.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Settings')!.getBoundingClientRect();
         const box = menu.getBoundingClientRect();

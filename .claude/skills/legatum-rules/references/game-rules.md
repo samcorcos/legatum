@@ -57,14 +57,13 @@ scored by rollouts of up to 20 turns (Hard continues for the seat; the enemy alt
 sortie policy; common dice for every candidate), `crates/ai/src/training.rs`. The searched orders
 replace Hard's only for the battle's units; nothing else changes, and the human seat is never
 searched live (his battle positions are logged with his orders instead). The search runs while
-the human plans (natively on all cores but one in the desktop app, `app/src-tauri/src/lib.rs`
-`training_start`; in WASM slices in the browser) and is capped at 15 s a turn
+the human plans (in WASM slices in the browser) and is capped at 15 s a turn
 (`localStorage['legatum.training.capMs']`); at the cap the best orders found so far are played.
 The UI: a top-bar chip while it runs, a progress card if End Turn has to wait, and a turn-report
 line on what changed (`app/src/training.ts`, `app/src/ui/Training.tsx`). Every searched battle,
-every human battle position and each one's realised outcome are logged as JSON lines to
-`<app data>/training/<archive game id>.jsonl` (schema 1, with the arena embedded so any line can be
-searched again: `legatum-sim --retrain LOG`); a Training game's archive is marked `mode: training`
+every human battle position and each one's realised outcome become JSON log lines (schema 1, with
+the arena embedded so any line can be searched again: `legatum-sim --retrain LOG`), kept in memory
+for the session as `globalThis.legatumTrainingLog` (the latest 5,000, `app/src/training.ts`); a Training game's archive is marked `mode: training`
 (`crates/wasm/src/history.rs::Metadata`). Headless: `legatum-sim --training DIR` (every Hard seat),
 `combat_lab --training-compare OUT`, `war_suite --brain training`; summarise with
 `tools/sim/training-report.py`.
@@ -2716,4 +2715,4 @@ Routine questions scale down by each VP of lead over the best rival (`why.rs::vp
 
 The card (`WhyCard.tsx`) floats under the top bar and takes focus when a question arrives. Cmd or Ctrl+Return sends; Skip skips. Esc or the Later button only hides it behind a "Coach question" button in the same spot, keeping any draft (user, 2026-11-21); the question stays waiting. While the turn report is open the button stays out of the way, and Answer or Answer now closes the report before the card returns. The latest turn report (L) lists the waiting question with Answer, or the last answered or skipped one; a skipped one has Answer now, which restores it, removes that skip from `skipped`, and appends a second line for the same question (the later line is the answer that counts). The recent question and the hidden state are app memory only, not saved; a new or loaded game clears them.
 
-Answers (his words, or `skipped`) are appended as JSON lines to `<app data>/training/answers/<game-id>.jsonl` with the question, evidence and build; `tools/training/collect.py` copies them into `docs/playtests/training-answers/`. A question skipped and then answered late has two lines (`skipped`, then his words) with the same `turn`, `category` and `question`; read the later line as the answer. `collect.py` recopies a file whenever it has more lines, so a late answer is picked up.
+Answers (his words, or `skipped`) become JSON lines with the question, evidence and build, kept in memory for the session (`why.ts::unwrittenAnswers`; the desktop app that wrote them to disk was dropped 2026-11-22). A question skipped and then answered late has two lines (`skipped`, then his words) with the same `turn`, `category` and `question`; read the later line as the answer.

@@ -2,7 +2,7 @@
 # Build the hosted web version ("Play in your browser") into app/dist: static files for a plain web host
 # such as Cloudflare Pages, with no legatum-server behind them.
 #   1. the WASM engine (crates/wasm -> app/src/wasm-pkg)
-#   2. the third-party licence notices (app/public/THIRD_PARTY_LICENSES.txt, web scope)
+#   2. the third-party licence notices (app/public/THIRD_PARTY_LICENSES.txt)
 #   3. the web UI with VITE_LEGATUM_HOSTED=1 (app/src/platform/hosted.ts: no server probes, network play explained)
 #   4. the host files from app/hosted/ (_headers, 404.html)
 # Usage: scripts/build-web.sh [--skip-wasm]     --skip-wasm reuses an engine already in app/src/wasm-pkg
@@ -17,9 +17,9 @@ if [ "${1:-}" != "--skip-wasm" ]; then scripts/build-wasm.sh; fi
 
 cd app
 [ -d node_modules ] || npm ci
-node ../tools/release/third-party-licenses.mjs --scope web
+node ../tools/release/third-party-licenses.mjs
 
-# The title screen shows this label; it carries the app version (package.json, the same as tauri.conf.json).
+# The title screen shows this label; it carries the app version (package.json).
 version="$(node -p "require('./package.json').version")"
 commit="$(git rev-parse --short=7 HEAD 2>/dev/null || true)"
 export LEGATUM_BUILD_LABEL="${LEGATUM_BUILD_LABEL:-Version $version${commit:+ · web $commit}}"

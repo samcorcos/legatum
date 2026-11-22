@@ -8,17 +8,17 @@ import { CombatFxSettings } from './CombatFxSettings';
 import { loadFromFile, saveToFile } from '../platform/files';
 import { checkSaveText } from '../platform/saveLimits';
 import { loadErrorMessage, parseSaveFile } from '../saveErrors';
-import { exportRetainedHistories, retryGameHistory } from '../platform/archive';
+import { exportRetainedHistories } from '../platform/archive';
 import { currentActivePlaySeconds, startActivePlayClock } from '../activePlayTime';
 import { archivePlaySeconds, formatPlayDuration } from '../playTime';
 
-export async function saveGameToFile() {
+export function saveGameToFile() {
   const { client, views } = useGame.getState();
   if (!client || !views) return;
   try {
     const s = saveFile(client, views);
     // Serialize the envelope only; s.game stays an opaque string.
-    await saveToFile(JSON.stringify(s), s.turn);
+    saveToFile(JSON.stringify(s), s.turn);
   } catch (e) {
     useGame.getState().set({ error: String(e) });
   }
@@ -82,7 +82,7 @@ export function GameMenu() {
         }
       }}
       onBlur={(e) => {
-        // Safari and WKWebView (the Mac app) do not focus a <button> on click: mousedown moves focus
+        // Safari and other WebKit views do not focus a <button> on click: mousedown moves focus
         // from the previously focused element to <body>, so blur fires with relatedTarget null in the
         // middle of every click on a menu item. Closing on that blur (even after a rAF check of
         // activeElement) unmounts the item before mouseup and the click never fires. Only keyboard
@@ -142,10 +142,6 @@ export function GameMenu() {
                 setOpen(false);
                 void exportRetainedHistories(useGame.getState().client?.archive?.()).catch((e) => set({ error: String(e) }));
               }}>Export game history</button>
-              <button onClick={() => {
-                setOpen(false);
-                void retryGameHistory().catch((e) => set({ error: String(e) }));
-              }}>Retry history archive</button>
             </>}
             <div className="menu-foot">
               {kind === 'remote' ? 'LAN client' : 'Core (WASM)'}

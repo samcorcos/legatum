@@ -83,32 +83,9 @@ to put in front of a player first.
 
 ## Ship it without a release
 
-A scenario is data, so it needs no app build and no full test run (2026-11-07). After `cut.sh`:
-
-```sh
-tools/scenarios/publish.sh scenarios/lab/mongol-hold-the-line.json   # about 5 seconds, no build, no install
-```
-
-`publish.sh` checks the file against the **installed** app's rules version (it must be the version the scenario's state
-was made for), loads the state on the engine, parses the objective, runs the copy lint, then copies the file to
-`~/LegatumData/scenarios/lab/<id>.json`. The desktop app reads that folder each time the Scenario Lab opens, so
-the scenario is there the next time the Lab opens it, with no restart. Commit the file to `scenarios/lab/` too, so
-later builds bundle it.
-
-How the app treats the folder:
-
-| Case | What the Lab does |
-| --- | --- |
-| A good file | Listed next to the bundled ones (tagged "Added file"), in `lab.order` order |
-| Same `id` as a bundled scenario | Replaces it. Raise `revision` so old results are not compared with the new position |
-| Made for another rules version, not a Lab scenario, unreadable, or waiting on a change (`lab.requires`) | Listed greyed out as "Cannot be played" with the reason ("Made for rules version 24; this app is 23."), never dropped, never a crash |
-| The browser and phone builds | Ignore the folder |
-
-The installed rules version is read from `~/LegatumData/app-info.json` (the app writes it at every launch), else
-inferred from the newest `playtest-*` tag older than `/Applications/Legatum.app`; `--rules-version N` overrides.
-After a playtest build lands a rules change, every scenario cut on master since then is for the new version and
-`publish.sh` refuses it until that build is installed. The state is loaded in the engine only when the installed
-version is this checkout's; otherwise the shape, version and copy are checked and the script says so.
+A scenario is data, so it needs no full test run (2026-11-07). Commit the file to `scenarios/lab/` on its own branch
+(below). The web build bundles every file in `scenarios/lab/`, so the scenario is playable as soon as the branch is
+merged and the site is redeployed.
 
 ### Landing scenario files in the repo
 

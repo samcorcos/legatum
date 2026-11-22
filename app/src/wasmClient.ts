@@ -42,10 +42,8 @@ interface WasmGame {
   attach_scenario(scenarioJson: string): void;
   scenario_status(): string;
   training_begin?(capMs: number): string;
-  training_request?(): string;
   training_step?(maxRollouts: number, elapsedMs: number): string;
   training_finish?(elapsedMs: number): string;
-  training_apply?(resultJson: string): string;
   training_game_id?(): string;
   why_review?(player: number, ordersJson: string, askedJson: string): string;
   free?(): void;
@@ -146,14 +144,12 @@ export class WasmClient implements GameClient, TrainingEngine {
   trainingBegin(capMs: number): TrainingProgress | null {
     return this.g.training_begin ? JSON.parse(this.g.training_begin(capMs)) : null;
   }
-  trainingRequest(): string { return this.g.training_request!(); }
   trainingStep(maxRollouts: number, elapsedMs: number): TrainingProgress | null {
     return JSON.parse(this.g.training_step!(maxRollouts, elapsedMs));
   }
   trainingFinish(elapsedMs: number): TrainingFinish | null {
     return JSON.parse(this.g.training_finish!(elapsedMs));
   }
-  trainingApply(resultJson: string): TrainingFinish { return JSON.parse(this.g.training_apply!(resultJson)); }
   trainingGameId(): string { return this.g.training_game_id?.() ?? 'unknown'; }
   /** Coach questions: what Hard would have ordered in his seat, compared with his orders. */
   whyReview(player: number, orders: Order[], asked: { keys: string[]; last: [number, WhyCategory] | null; skipped?: WhyCategory[] }): { question: WhyQuestion | null; candidates: WhyQuestion[]; hard_orders: Order[] } {

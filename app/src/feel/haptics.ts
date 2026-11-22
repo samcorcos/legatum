@@ -1,6 +1,5 @@
 // Semantic contract: docs/design/haptics.md.
-// No Tauri code is loaded until a supported native mobile shell actually emits feedback.
-import { inTauri } from '../tauri';
+// Haptics go through the Vibration API, which only Android browsers offer.
 import { useHaptics } from './preferences';
 import { playSound, soundAudible, SOUND_FILES, type CelebrationSound } from './sound';
 
@@ -44,7 +43,7 @@ export function cancelTurnFeedback(): void {
   if (lastWasTurn) blockedUntil = -Infinity;
 }
 
-/** Also invalidates an in-flight lazy import, so turning off cannot emit a late pulse. */
+/** Also invalidates queued pulses, so turning off cannot emit a late one. */
 export function cancelFeedback(): void {
   generation++;
   timers.forEach(clearTimeout);
@@ -63,19 +62,10 @@ function later(fn: () => void, delay: number): void {
   timers.add(timer);
 }
 
-function platform(): 'ios' | 'android' | null {
-  const nav = globalThis.navigator;
-  if (!nav) return null;
-  if (/Android/i.test(nav.userAgent)) return 'android';
-  // iPadOS can identify itself as desktop Safari; real Macs have no touch points.
-  if (/iPad|iPhone|iPod/i.test(nav.userAgent) || (/Macintosh/i.test(nav.userAgent) && nav.maxTouchPoints > 1)) return 'ios';
-  return null;
-}
-
 /** Whether this device can give haptic feedback at all; Settings hides the toggle where it would do nothing. */
 export function hapticsAvailable(): boolean {
-  const os = platform();
-  return !!os && (inTauri() || (os === 'android' && typeof globalThis.navigator?.vibrate === 'function'));
+  const nav = globalThis.navigator;
+  return !!nav && /Android/i.test(nav.userAgent) && typeof nav.vibrate === 'function';
 }
 
 const vibration: Record<Pulse, number | number[]> = {
@@ -83,29 +73,19 @@ const vibration: Record<Pulse, number | number[]> = {
   success: [12, 25, 18], warning: [20, 30, 20], error: [30, 25, 30],
 };
 
-async function play(pattern: Pattern, token: number, current: () => boolean): Promise<void> {
-  try {
-    const os = platform();
-    if (!os) return;
-    const native = inTauri();
-    if (!native && (os !== 'android' || typeof navigator.vibrate !== 'function')) return;
-    const plugin = native ? await import('@tauri-apps/plugin-haptics') : null;
-    const pulse = async (kind: Pulse) => {
-      try {
-        if (token !== generation || !useHaptics.getState().enabled || !current()) return;
-        if (!plugin) { navigator.vibrate(vibration[kind]); return; }
-        // Use the platform's feedback APIs; system haptics preferences remain authoritative.
-        if (kind === 'selection') await plugin.selectionFeedback();
-        else if (kind === 'success' || kind === 'warning' || kind === 'error') await plugin.notificationFeedback(kind);
-        else await plugin.impactFeedback(kind);
-      } catch { /* Unsupported hardware, denied capability or unregistered native plugin. */ }
-    };
-    if (token !== generation || !useHaptics.getState().enabled || !current()) return;
-    for (const [delay, kind] of pattern) {
-      if (delay) later(() => { void pulse(kind); }, delay);
-      else void pulse(kind);
-    }
-  } catch { /* Feedback must never affect gameplay, including a failed lazy import. */ }
+function play(pattern: Pattern, token: number, current: () => boolean): void {
+  if (!hapticsAvailable()) return;
+  const pulse = (kind: Pulse) => {
+    try {
+      if (token !== generation || !useHaptics.getState().enabled || !current()) return;
+      navigator.vibrate(vibration[kind]);
+    } catch { /* Feedback must never affect gameplay. */ }
+  };
+  if (token !== generation || !useHaptics.getState().enabled || !current()) return;
+  for (const [delay, kind] of pattern) {
+    if (delay) later(() => pulse(kind), delay);
+    else pulse(kind);
+  }
 }
 
 /** Each feel call is a haptic and a sound; either may be off, and the debounce covers both. */
@@ -126,7 +106,7 @@ function emit(name: FeelName, isReady?: boolean, current?: () => boolean, soundH
       if (log.length > 500) log.splice(0, log.length - 500);
     }
     playSound(soundHook && SOUND_FILES[soundHook] ? soundHook : name === 'ready' && isReady === false ? 'unready' : name);
-    if (useHaptics.getState().enabled) void play(pattern, generation, current ?? (() => true));
+    if (useHaptics.getState().enabled) play(pattern, generation, current ?? (() => true));
   } catch { /* Even diagnostics are best-effort. */ }
 }
 

@@ -32,7 +32,7 @@ Each kind of knowledge lives in exactly one place. Don't duplicate design conten
 ## Architecture
 
 - Rust simulation core: game state + all orders + seed → next state. Deterministic, integer math only, no rendering code.
-- Desktop app: Tauri with a TypeScript web UI and a 2D hex renderer.
+- The game is a web app (user, 2026-11-22: the desktop app was dropped): a TypeScript UI and a 2D hex renderer, with the engine compiled to WASM and running in the browser, served as static files from Cloudflare Pages.
 - Headless simulation runner: Rust CLI, parallel across cores.
 - Python bindings (PyO3) only if we reach learned AI.
 

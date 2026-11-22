@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
-# Full release check plus the Tauri app bundle, for a playtest worktree.
+# Full release check for a playtest worktree.
 # Usage: tools/release/check.sh <worktree> <log> "<label>"   e.g. "Playtest 7a" (run detached: nohup ... & disown)
 # Set RELEASE_CHECK_DRY_RUN=1 to exercise every step and its timing row without running builds or tests.
 # Steps: build sim + server (release and debug; Playwright's staging spec spawns the debug server),
-# re-record every scenario baseline, fmt, clippy, tests, WASM, tsc, vitest, app build, Playwright,
-# Tauri. Each step logs "== name HH:MM" then "exit N"; the summary prints at the end.
+# re-record every scenario baseline, fmt, clippy, tests, WASM, tsc, vitest, app build, Playwright.
+# Each step logs "== name HH:MM" then "exit N"; the summary prints at the end.
 # Release is the critical path: its Cargo steps do not queue in tools/sim/build-slot.sh (Codex tasks do; the
 # inner scripts must never take a slot because build-slot is not re-entrant).
 # Independent steps overlap: fmt and clippy run beside the tests, and the WebKit container runs beside vitest and
 # Playwright Chromium. Each overlapped step logs to its own file that is appended to $L when it is joined, so the
 # "== name" / "exit N" pairs stay together. Everything still runs, and any failed step fails the check.
-# Linux: the surface counter and the Tauri macOS bundle are skipped (the bundle needs macOS).
+# Linux: the surface counter is skipped.
 set -uo pipefail
 W="${1:?worktree}"; L="${2:?log file}"; export LEGATUM_BUILD_LABEL="${3:?build label, e.g. Playtest 7a}"
 cd "$W" || exit 1
@@ -59,7 +59,7 @@ step() {
   [ -n "$cpu" ] || cpu=0
   tree="$(git rev-parse --short=12 'HEAD^{tree}' 2>/dev/null || echo unknown)"
   timed_record release "$name" "$LEGATUM_BUILD_LABEL" "$tree" "$rc" "$((SECONDS - t0))" "$cpu" "$load1"
-  case "$name" in build-*|tauri)
+  case "$name" in build-*)
     timed_record build "$name" "$LEGATUM_BUILD_LABEL" "$tree" "$rc" "$((SECONDS - t0))" "$cpu" "$load1";;
   esac
   echo "exit $rc (surfaces $(surf))" >> "$out"
@@ -112,11 +112,6 @@ step vitest npx vitest run --maxWorkers=6 --testTimeout=60000
 # with failures growing with the count: more workers than cores to feed them buy nothing.
 step playwright npx playwright test --workers="${LEGATUM_PW_WORKERS:-$(pw_workers)}"
 join_steps
-if [ "$(uname -s)" = Darwin ]; then
-  step tauri env RUSTC_WRAPPER= npm run tauri:build -- --bundles app  # sccache serves stale embedded assets
-else
-  echo "== tauri SKIPPED (the app bundle needs macOS)" >> "$L"; echo "exit 0 (skipped)" >> "$L"
-fi
 grep -E "^== |^exit " "$L" | paste - - | tee -a "$L.summary"
 # Every step runs so one check reports everything, but any failed step fails the release check.
 FAILED=""; [ ! -f "$L.failed" ] || FAILED="$(tr '\n' ' ' < "$L.failed")"

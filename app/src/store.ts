@@ -49,16 +49,14 @@ import {
 import { StagingClient, type StagingState } from './staging';
 import { rememberPlayerName, arrivedAsHost, inHostedWindow, markHostedWindow, online, returnToBundledApp, type OnlineInfo } from './platform/online';
 import { HOST_AWAY, connectionFirst, roomBase } from './platform/relayLobby';
-import { readNativeAutosave, writeNativeAutosave } from './platform/files';
 import { checkSaveText } from './platform/saveLimits';
 import { abandonGameHistory, recordGameHistory } from './platform/archive';
 import { currentActivePlaySeconds, currentPlaySessionId, resetActivePlayTurn } from './activePlayTime';
 import { cancelTurnFeedback, feel, feedbackForTurn, playTurnFeedback } from './feel';
 import { newRun, saveRecord, type ScenarioEntry, type ScenarioFeedback, type ScenarioRun, type ScenarioStatus } from './scenarios/scenarios';
-import { checkpointScenarioRun, saveScenarioRun, type SavedRun } from './platform/scenarioRuns';
+import { saveScenarioRun, type SavedRun } from './platform/scenarioRuns';
 import { NO_WHY, answerLine, remember as rememberWhy, writeAnswer, type WhyEngine, type WhyMemory, type WhyQuestion } from './why';
 import { TrainingDriver, reportLine as trainingReportLine, trainingCapMs, writeTrainingLog, type TrainingEngine, type TrainingProgress, type TrainingUi } from './training';
-import { inTauri } from './tauri';
 import { setSeatFactions } from './theme';
 
 function isMissingWasmError(message: string): boolean {
@@ -409,12 +407,8 @@ function parseAutosave(raw: string | null): SaveFile | null {
   }
 }
 
-export async function readAutosave(): Promise<SaveFile | null> {
-  // Wait for any queued disk write before comparing the two copies.
-  const native = parseAutosave(await readNativeAutosave().catch(() => null));
-  let local: SaveFile | null = null;
-  try { local = parseAutosave(localStorage.getItem(AUTOSAVE_KEY)); } catch { /* Storage may be blocked. */ }
-  return native && (!local || Date.parse(native.savedAt) > Date.parse(local.savedAt)) ? native : local;
+export function readAutosave(): SaveFile | null {
+  try { return parseAutosave(localStorage.getItem(AUTOSAVE_KEY)); } catch { return null; /* Storage may be blocked. */ }
 }
 
 function writeAutosave(client: GameClient, views: PlayerView[]) {
@@ -426,8 +420,6 @@ function writeAutosave(client: GameClient, views: PlayerView[]) {
   try {
     const contents = JSON.stringify(saveFile(client, views));
     checkSaveText(contents);
-    // The disk copy still runs when localStorage is full or unavailable.
-    void writeNativeAutosave(contents).catch(() => {});
     localStorage.setItem(AUTOSAVE_KEY, contents);
   } catch {
     // Storage full or blocked: autosave is best-effort.
@@ -578,13 +570,12 @@ export const useGame = create<State>((set, get) => {
       if (get().training) set({ training: null });
       return;
     }
-    const native = inTauri();
-    const driver: TrainingDriver = new TrainingDriver(engine as TrainingEngine, progress, capMs, native, (p) => {
+    const driver: TrainingDriver = new TrainingDriver(engine as TrainingEngine, progress, capMs, (p) => {
       const t = get().training;
       if (trainingDriver === driver && t) set({ training: { ...t, progress: p } });
     });
     trainingDriver = driver;
-    set({ training: { progress, startedAt: driver.started, capMs, waiting: false, native } });
+    set({ training: { progress, startedAt: driver.started, capMs, waiting: false } });
   };
 
   /** After a scenario turn: record it, and finish the run when the objective is decided. */
@@ -608,14 +599,12 @@ export const useGame = create<State>((set, get) => {
       ...sc.run,
       turns: [...sc.run.turns, { turn: result.turn, orders, hash: result.hash, score: status.score, outcome: status.outcome, turns_left: status.turns_left, ms: Math.max(0, now - sc.turnStartedAt), events }],
     };
-    let archive: unknown = null;
-    try { archive = client.archive ? JSON.parse(client.archive()) : null; } catch { /* the turns still hold every order */ }
     if (status.outcome === 'Playing') {
       set({ scenario: { ...sc, status, run, turnStartedAt: now } });
-      // Kept as an unfinished run until it ends, in case the app closes mid-run (training data).
-      void checkpointScenarioRun({ ...run, abandoned: true, finished_at: null, outcome: status, score: status.score, archive }).catch(() => { /* the next turn tries again */ });
       return;
     }
+    let archive: unknown = null;
+    try { archive = client.archive ? JSON.parse(client.archive()) : null; } catch { /* the turns still hold every order */ }
     const finished: ScenarioRun = { ...run, finished_at: new Date().toISOString(), outcome: status, score: status.score, archive };
     saveRecord(sc.entry.file.id, sc.entry.file.revision, status);
     set({ scenario: { ...sc, status, run: finished, resultOpen: true, saved: null, turnStartedAt: now }, reportOpen: false, techOpen: false, citiesOpen: false, selection: null });

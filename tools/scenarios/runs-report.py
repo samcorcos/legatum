@@ -4,8 +4,8 @@
 Usage:
   tools/scenarios/runs-report.py [--dir DIR]... [--scenario ID] [--since YYYY-MM-DD] [--json]
 
-Reads every `legatum-scenario-run` file the app saved: ~/LegatumData/scenarios/ on the desktop app,
-<saves>/scenarios/ on the web build (see scenarios/README.md). For each scenario it prints the plays
+Reads every `legatum-scenario-run` file in the folders given (default ~/LegatumData/scenarios/, where the
+run files the browser downloads are collected). For each scenario it prints the plays
 (met, failed or abandoned), turns and score against the Hard AI baseline in the scenario file, the time
 the player spent per turn, and the feedback (Fun, Fair, "felt like", free text). Feedback is the
 reason the scenario exists: quote it in a review rather than summarising it away.

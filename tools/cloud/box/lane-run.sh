@@ -37,7 +37,7 @@ case "$prep" in
       echo "$key" > app/src/wasm-pkg/.src-key
     fi
     if [ "$prep" != wasm ]; then
-      akey="$(find app -type f -not -path 'app/node_modules/*' -not -path 'app/dist/*' -not -path 'app/test-results/*' -not -path 'app/src-tauri/*' \
+      akey="$(find app -type f -not -path 'app/node_modules/*' -not -path 'app/dist/*' -not -path 'app/test-results/*' \
         -not -path 'app/src/wasm-pkg/*' -not -path 'app/playwright-report/*' | LC_ALL=C sort | xargs sha256sum | sha256sum | cut -c1-16)-$key"
       if [ "$(cat app/dist/.src-key 2>/dev/null)" != "$akey" ]; then
         echo "lane-run: building app/dist"

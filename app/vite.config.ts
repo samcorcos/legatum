@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 import { readFileSync, realpathSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 
-// Tauri expects a fixed dev port and a relative base for the bundled app.
+// A relative base, so the build works from any folder of a static host.
 // LEGATUM_SERVER=http://localhost:7878 npm run dev  -> the dev UI talks to a running legatum-server.
 const server = process.env.LEGATUM_SERVER;
 // The title screen's build label (src/buildLabel.ts): the release label if set, else git describe

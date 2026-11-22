@@ -184,7 +184,7 @@ Every 30 minutes on Claude Opus while a landing or release is on the critical pa
   - re-queue a failed Astra task with a corrected prompt;
   - queue Astra tasks for mechanical fixes.
 - **If an action is denied by permissions,** don't retry or work around it. Report it for the lead to raise with the user.
-- **Never** touch /Applications/Legatum.app or the user's saves, change system or security settings. Remove worktrees with `git worktree remove --force`.
+- **Never** touch the user's saves or redeploy the site he is playing on, change system or security settings. Remove worktrees with `git worktree remove --force`.
 
 ## Learn (mandatory, every run)
 - Append a dated entry to `.progress/supervisor/journal.md`. It's local and not committed. Include a snapshot (usage %, burn rate, load, active agents and tasks, queue), events since the last run, and actions taken.

@@ -2,6 +2,14 @@
 
 Newest first. One entry per non-obvious finding: what we learned, the evidence, and what we changed. Correct or delete entries that turn out to be wrong.
 
+## 2026-11-22: Dropping the desktop app: what the browser build had been leaning on (`web-only`)
+
+- **Most "desktop-only" code was a second copy of a browser path, not a feature.** Autosave, game history, training logs, why-answers, scenario runs and haptics each had a Tauri branch that wrote to `~/LegatumData` and a browser branch (localStorage, IndexedDB, download, Vibration API). Removing Tauri meant deleting the native branch and making the browser branch the only one, plus making `readAutosave` synchronous (the title screen no longer waits on "Checking autosaves…").
+- **Native training ran the AI search on threads in Rust; the browser runs it in slices on the main thread.** `TrainingDriver` lost its native mode; the sim keeps the parallel `search_turn` feature for itself.
+- **A fake-timer test hung vitest for 12 minutes.** `vi.useFakeTimers()` freezes `performance.now()`, so the training slice loop (`do { … } while (performance.now() < deadline)`) never ended. Time-capped loops need real timers in tests (a 100 ms cap is enough).
+- **The online host could not stay native.** The Mac app embedded `legatum-server`, which dialed the Cloudflare relay. In the browser the authoritative host (game, staging, AI) runs in the host's tab as WASM and a JS tunnel speaks the relay's frame format; the LAN server is gone, since the relay replaces it and the designer's firewall blocked LAN anyway.
+- **Scenario folder drop-ins existed only because the app could read a folder.** On the web a scenario ships by merging to master (the Pages deploy), and playtests are Pages previews (`scripts/deploy-preview.sh <label>`).
+
 ## 2026-11-22: Performance checks lapsed inside the ops supervisor; a separate nightly supervisor (`perf-supervisor`)
 
 - **The old performance watcher was a few sections of `legatum-ops-supervisor`, and they quietly stopped.** The ops check kept running every 6 hours on the Mac, but its runs grew into fleet, disk and budget checks; the last sim-speed baseline is 2026-10-31, the AI turn budget 2026-10-27, app size 2026-10-23, and the `ledger.csv` it was told to compare against never existed. A check buried in a long checklist with heavier duties gets dropped first. Performance and tech debt now belong to `legatum-perf-supervisor`, which only measures, flags and makes one improvement a week.

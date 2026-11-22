@@ -9,7 +9,6 @@ import { MAX_SAVE_BYTES } from '../platform/saveLimits';
 vi.mock('../platform/files', () => ({
   loadFromFile: vi.fn(),
   saveToFile: vi.fn(),
-  writeNativeAutosave: vi.fn().mockResolvedValue(undefined),
 }));
 
 const game = '{\n"seed":18446744073709551615,"seen":[9007199254740993]\n}';
@@ -26,7 +25,7 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 it('passes the engine save through the file envelope and back without rounding u64s', async () => {
-  await saveGameToFile();
+  saveGameToFile();
   const [text, turn] = vi.mocked(saveToFile).mock.calls[0];
   expect(turn).toBe(9);
   vi.mocked(loadFromFile).mockResolvedValue(text);
@@ -39,8 +38,8 @@ it('passes the engine save through the file envelope and back without rounding u
 });
 
 it('shows save failures in the existing error UI', async () => {
-  vi.mocked(saveToFile).mockRejectedValue(new Error('Disk full'));
-  await saveGameToFile();
+  vi.mocked(saveToFile).mockImplementation(() => { throw new Error('Disk full'); });
+  saveGameToFile();
   expect(useGame.getState().error).toBe('Error: Disk full');
 });
 

@@ -10,7 +10,6 @@ Helper programs around the engine. Everything here is optional for building and 
 | `tools/art/` | Unit-art distinctness checks and derivative generation. |
 | `tools/audio/` | Build the shipped audio from raw downloads: trim, loudness-normalise, encode, write credits. |
 | `scripts/build-wasm.sh` | Build the engine as WASM for the web UI. |
-| `scripts/build-mac-app.sh`, `scripts/build-ios-sim.sh` | Build the macOS app and the iOS Simulator app. |
 | `scripts/lan-host.sh` | Build the UI and run the LAN host. |
 | `scripts/archive-stats` | Summarise or export the game-archive index. |
 | `scripts/wasm-tape-check.mjs`, `scripts/wasm-search-check.mjs` | Check that WASM and native builds produce identical per-turn state hashes. |

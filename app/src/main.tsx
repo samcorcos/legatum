@@ -7,7 +7,6 @@ import './lan.css';
 import './touch.css';
 import { App } from './App';
 import { useGame } from './store';
-import { retryGameHistory } from './platform/archive';
 import { installSound } from './feel';
 import { setMusicForView } from './feel/sound';
 import { loadTerrainSprites } from './map/terrainVariant';
@@ -29,7 +28,3 @@ void Promise.all([loadTerrainSprites().catch(() => undefined), loadWasmModule().
 
 // Handy for debugging and scripted play-throughs.
 (window as unknown as { legatum: typeof useGame }).legatum = useGame;
-
-const retryArchives = () => { void retryGameHistory().catch((error) => useGame.getState().set({ error: String(error) })); };
-window.addEventListener('online', retryArchives);
-retryArchives();

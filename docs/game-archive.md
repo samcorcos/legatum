@@ -1,10 +1,11 @@
 # Game archive
 
 Legatum records full owner histories so balance analysis does not depend on replaying an old
-engine. Native storage defaults to `~/LegatumData/archive`. `LEGATUM_ARCHIVE` overrides the
-default, and `--archive-dir <directory>` overrides the environment in the simulator, server,
-and Mac app. Archive roots inside **any Git checkout** are rejected, including symlink aliases.
-The archive is private local data, outside the repository; it is not a cloud upload.
+engine. The simulator's native archive defaults to `~/LegatumData/archive`. `LEGATUM_ARCHIVE`
+overrides the default, and `--archive-dir <directory>` overrides the environment. Archive roots inside **any Git checkout** are rejected, including symlink aliases.
+The archive is private local data, outside the repository. Games played in the browser stay in that
+browser (below) until they are exported. Histories from the Mac app, before it was dropped on
+2026-11-22, are in the same `~/LegatumData/archive` on that Mac.
 
 ```sh
 export PATH="$HOME/.cargo/bin:/opt/homebrew/bin:$PATH"
@@ -31,7 +32,6 @@ archive/
   in-progress/2026/09/<game_id>.tape.json.zst
   index.jsonl
   archive.lock
-  incoming/                       # temporary Mac app plugin-fs writes
 ```
 
 The UTC creation date determines the year/month directories. Native writers use zstd level 9
@@ -39,7 +39,7 @@ with a frame checksum (a throughput/compression tradeoff); readers also accept g
 and uncompressed `.json` exports. There is one final file per game and one metadata-only JSON
 line per finished/stopped game in `index.jsonl`. Checkpoints are not counted as finished games.
 Finishing removes that game's in-progress checkpoint. Index appends and file replacement share
-an OS file lock across simulator threads, server processes and the desktop app. Files are
+an OS file lock across simulator threads and processes. Files are
 flushed and renamed atomically; repeated uploads/finish recovery do not duplicate index lines.
 Finished files are immutable. Earlier checkpoints cannot replace later ones.
 
@@ -101,37 +101,14 @@ design. A loadable legacy save gets an `initial_state` anchor and `complete_hist
 records subsequent turns. The replay command verifies from that anchor. Earlier turns are never
 invented.
 
-For local single-player and hot-seat WASM sessions, the app captures history at setup, every
-five turns, and finish. The complete tape is also in the ordinary per-turn autosave.
-Pending deliveries are retained in IndexedDB, gzip-compressed where browser compression is
-available, before attempting delivery. Uploads retry after reload, when the browser comes
-online, at the next checkpoint, or through **Retry history archive** in the game menu.
-The current game can be exported even if browser storage is denied/full; failures surface in
-the existing error UI. Do not clear browser storage before exporting undelivered histories.
-
-When served by `legatum-server`, the app sends JSON to `POST /api/archive`. The route uses the
-same explicit Host/Origin allowlist and JSON content-type requirement as other server APIs.
-Loopback TCP peers may write; LAN peers must present an existing seat/staging token in
-`Authorization: Bearer …`. The token is transport-only. Requests have the existing 16 MiB body
-limit; native decompression is bounded at 64 MiB. LAN games themselves are recorded by the
-authoritative server, never reconstructed from player views. A LAN visitor without a seat
-credential retains local games for export until an authorized upload is possible.
-
-On Mac, `tauri-plugin-fs` writes the compressed payload under the resolved archive root.
-Native commands prepare checksum-enabled zstd and finalize the staged file/index under the
-shared lock. The plugin's added runtime scope is limited to that archive directory; existing
-user-selected save permissions and the single app-data autosave remain. macOS may not inherit
-shell variables when launched from Finder; launch the executable with `--archive-dir` or an
-environment variable to override the default.
-
-A plain static host retains histories locally and offers **Export game history** in the game
-menu. It exports the current game and retained games, one gzip file per game (plain JSON if
-CompressionStream is unavailable). The browser may ask to allow multiple downloads. Exported
-files can be analyzed/replayed without access to the original browser. Automatic writes to
-arbitrary Mac directories are unavailable to ordinary static web pages.
-
-Mobile storage in app data and syncing to an authorized server are follow-up work; no mobile
-archive transport is implemented here.
+In the browser, the app captures each game's history at setup, every five turns, and at the finish,
+and keeps it in IndexedDB (gzip-compressed where browser compression is available); a newer
+checkpoint of a game replaces the older one. The complete tape is also in the ordinary per-turn
+autosave. **Export game history** in the game menu (Advanced) downloads the current game and every
+retained one, one gzip file per game (plain JSON if CompressionStream is unavailable); the browser
+may ask to allow multiple downloads. Exported files can be analyzed and replayed without the
+original browser. The current game can be exported even if browser storage is denied or full;
+failures surface in the existing error UI. Do not clear browser storage before exporting.
 
 ## Analysis, replay and recovery
 
@@ -155,8 +132,7 @@ Checksums and bounded decompression reject truncated/corrupt zstd files. Corrupt
 never silently replaced by a new game. There is no destructive automatic cleanup of completed
 games. If a crash committed a finished file but not its index line, retrying that game repairs
 the line. `scripts/archive-stats --repair-index` can also scan finished files and append missing
-metadata under the same lock; a torn final index line is discarded before recovery. Retained
-`incoming` Mac files are staging artifacts; browser retry can complete interrupted deliveries.
+metadata under the same lock; a torn final index line is discarded before recovery.
 
 The original 2026-09-27 tape-only measurements were 245–614 KB raw, 12–32 KB with gzip -9 and
 10–26 KB with zstd -19 per Standard game (roughly 25 GB per million). This envelope adds

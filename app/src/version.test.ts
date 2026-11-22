@@ -3,16 +3,6 @@ import { expect, it } from 'vitest';
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
 
-// The web build's label and the Mac release both take the version from these files
-// (scripts/build-web.sh, .github/workflows/release-mac.yml), so they must agree.
-it('the app version is the same in package.json, tauri.conf.json and the desktop crate', () => {
-  const pkg = JSON.parse(read('../package.json')) as { version: string; homepage: string };
-  const tauri = JSON.parse(read('../src-tauri/tauri.conf.json')) as { version: string };
-  const crate = /^version = "(.+)"$/m.exec(read('../src-tauri/Cargo.toml'))?.[1];
-  expect(tauri.version).toBe(pkg.version);
-  expect(crate).toBe(pkg.version);
-});
-
 // A link pasted into a chat or a post shows this card. The tags need an absolute address, which
 // vite.config.ts fills in from package.json's homepage.
 it('index.html carries the link-preview tags', () => {
