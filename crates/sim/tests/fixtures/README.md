@@ -10,6 +10,18 @@ determinism tests. The runner pin tests read that file and name the command when
 a digest differs. Keep `pins.json` outside this directory: replay import and the
 WASM checker treat every JSON file here as a tape.
 
+## World Ages only, Celtic sack point, master merged; still rules 50 (2026-11-22)
+
+On the combined tree (the rules batch, the Celtic sack exception, `origin/master` merged in and World
+Ages as the only era scoring with three peaceful cards per Age), `LEGATUM_REPIN_THREADS=4
+tools/sim/repin.sh` rewrote all three mixed-AI tapes and the fixed-order tape
+`city-strike-awareness.json`. In `pins.json`, all three 80-turn mixed digests moved
+(`6795863348978152354` to `4630297540251091882`, `5356065880517054856` to `7388004569627699792`,
+`7765247304216437743` to `11442789816384383562`). The 160-turn scripted-Hard city-fire digest also
+moved (`9439788634490833228` to `12822712017351877491`). The causes are a different card per Age
+(the draw is over the new pool) and the AI chasing the peaceful cards. The pin tests and all 12
+determinism tests passed after regeneration.
+
 ## Fable review batch, rules 50 (2026-11-22)
 
 `LEGATUM_REPIN_THREADS=4 tools/sim/repin.sh` regenerated the mixed-AI tapes. Only

@@ -1928,6 +1928,7 @@ mod tests {
         // The survive-him genes (2026-11-21: neighbour_alarm, the production-thrash fix) leave four cities at T62 and no VP at T100;
         // with searching rivals the seat then wins by elimination at T173 on this fixed tape.
         // The leader war and the siege clock (2026-11-21) returned it to five cities at T62 and two VP at T100, with no win; with the clock off by default (held-out finding, 2026-11-21) it is four cities at T62, no VP at T100 and the elimination win at T173 of the survive-him genes.
+        // World Ages as the only era scoring, with its peaceful cards (rules 50, 2026-11-22), keeps four cities at T62 and no VP at T100, and the seat no longer wins on this tape.
         assert_eq!(
             first_map_game(true),
             json!({
@@ -1936,9 +1937,9 @@ mod tests {
                 "cities_t62": 4,
                 "vp_t100": 0,
                 "vp_t60": 0,
-                "win": true,
-                "win_turn": 173,
-                "win_type": "elimination",
+                "win": false,
+                "win_turn": null,
+                "win_type": null,
             })
         );
     }
