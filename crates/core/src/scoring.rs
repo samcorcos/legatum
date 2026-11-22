@@ -1,4 +1,4 @@
-//! Victory points: era objectives, held rival capitals, Great Works and faction goals.
+//! Victory points: World Age cards, held rival capitals, Great Works and faction goals.
 //! Metric and VP math live here; `update` (run at the end of each turn) applies changes.
 
 use crate::economy;

@@ -84,7 +84,7 @@ it('teaches the exported era curve, pre-Modern class bonus, Keshig upgrade and b
 it('names every scoring category and the current-era research queue controls', () => {
   const victory = renderToStaticMarkup(<GuideContent section="victory" />);
   const controls = renderToStaticMarkup(<GuideContent section="controls" />);
-  expect(victory).toContain('members’ faction goals, scored era objectives, held rival original capitals, and held world wonders');
+  expect(victory).toContain('members’ faction goals, scored Age cards, sacked capitals (Celts only), held rival original capitals, and held world wonders');
   expect(victory).toContain('You lose points when you lose a held goal, capital or wonder');
   expect(controls).toContain('Click a current-era technology to research it now, moving it to the front while keeping the rest of the queue in order');
   expect(controls).toContain('Shift+click adds a technology to the end of the queue');
@@ -220,8 +220,7 @@ it('always shows the occupation lock, and the World Ages entry only when that op
   expect(on).toContain('it builds nothing and buys nothing');
   expect(on).toContain('as soon as you make Peace with the empire you took the city from');
   expect(on).not.toMatch(/at the defence ratio|scaled by the ratio|added up/);
-  expect(render(undefined, 'victory')).toContain('Era objectives · ');
-  const ages = render({ objectives_deck: true }, 'victory');
+  const ages = render(undefined, 'victory');
   expect(ages).toContain('World Ages · ');
   expect(ages).toContain('per Age, kept for good');
 });

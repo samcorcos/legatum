@@ -46,15 +46,15 @@ describe('VP v2 moments', () => {
   });
   const run = (events: Event[]) => momentsForTurn(events, 0, view, withV2(view, { era: 2, scored: [2] }));
 
-  it('entering an era is your held era card that lists the three objectives; scoring one is a major +1 VP moment', () => {
+  it('entering an era is your held era card that lists each open Age card; scoring one is a major +1 VP moment', () => {
     const [entered] = run([{ type: 'EraEntered', player: 0, era: 2, first: false }]);
     expect(entered).toMatchObject({ tier: 'major', title: 'The Classical era', kicker: 'A new era', effect: 'A new era begins' });
-    // The three objectives with your progress on each (the fixture: 6 of 9 techs, 2 of 4 cities, no capture yet).
-    expect(entered.eraUp?.objectives.map((o) => [o.family, o.text, o.current, o.target])).toEqual([['Build', 'Learn 9 technologies', 6, 9], ['Expand', 'Gain 4 cities', 2, 4], ['Fight', 'Capture 1 enemy city', 0, 1]]);
+    // Every open Age with your progress on its card.
+    expect(entered.eraUp?.openAges.length).toBeGreaterThan(0);
     // A rival's entry is a notable card for a teammate only; elsewhere it is the report line and the era notice.
     expect(run([{ type: 'EraEntered', player: 2, era: 2, first: true }])).toEqual([]);
     const [scored] = run([{ type: 'EraObjectiveScored', player: 0, era: 2, slot: 1, objective: 'Gain 4 cities' }]);
-    expect(scored).toMatchObject({ tier: 'major', title: 'The Classical era', effect: '+1 permanent VP', kicker: 'Era objective met', details: ['Gain 4 cities', '1 of 6 era VP scored'], emblem: 'milestone' });
+    expect(scored).toMatchObject({ tier: 'major', title: 'The Classical Age', effect: '+1 VP, kept for good', kicker: 'Age card scored', emblem: 'milestone' });
     expect(scored.deltas).toEqual([{ counter: 'vp', amount: 1 }]);
     // A rival's score is a report line, not your card.
     expect(run([{ type: 'EraObjectiveScored', player: 2, era: 2, slot: 1, objective: 'Gain 4 cities' }])).toEqual([]);
@@ -62,7 +62,6 @@ describe('VP v2 moments', () => {
 
   it('names the Age you scored while only one Age has begun, and counts Ages once there are several', () => {
     const after = withV2(view, { era: 2, scored: [2] });
-    after.rule_experiments = { ...after.rule_experiments, objectives_deck: true };
     after.eras = after.eras!.filter((e) => e.era === 2);
     after.eras[0].objectives = [{ slot: 0, family: 'Fight', text: 'Breach: capture a walled city', target: 1, objective: { kind: 'Breach' } }];
     const score = (state: PlayerView) => momentsForTurn([{ type: 'EraObjectiveScored', player: 0, era: 2, slot: 0, objective: 'Breach: capture a walled city' }], 0, view, state)[0];

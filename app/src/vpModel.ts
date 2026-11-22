@@ -7,7 +7,7 @@
 // held, by whom, and what each empire's public number is.
 import type { Faction, Hex, ObjectiveFamily, PlayerId, PlayerView, UnitView } from './types';
 import {
-  BUILDING_NAME, ERA_RULE, FACTION_GOAL, FACTION_INFO, GREAT_WORK_ICON, GREAT_WORK_NAME, GREAT_WORK_RULE,
+  BUILDING_NAME, FACTION_GOAL, FACTION_INFO, GREAT_WORK_ICON, GREAT_WORK_NAME, GREAT_WORK_RULE,
   factionGoalRule, factionGoalTerms, factionGoalVp, decadenceRules, factionObjectiveText, isGreatWork, type DecadenceRules,
 } from './data';
 import { roman } from './brand/ornaments';
@@ -152,7 +152,6 @@ export interface VpRow {
 export interface VpModel {
   /** Public held points: the rival original capitals each empire holds now. */
   capitals: { owner: PlayerId; names: string[] }[];
-  deck?: boolean;
   gold?: number;
   me: PlayerId;
   turn: number;
@@ -263,12 +262,12 @@ export function buildVpModel(view: PlayerView): VpModel {
     });
     const info: EraInfo = {
       era: ev.era, eraName: ev.name, entered: ev.entered_by.filter(isAlive), objectives,
-      myEntered: !!view.rule_experiments?.objectives_deck || ev.entered_by.includes(me), myScored: scored.some((x) => x.player === me),
+      myEntered: true, myScored: scored.some((x) => x.player === me),
     };
     return {
-      id: eraId(ev.era), kind: 'era', name: `${view.rule_experiments?.objectives_deck ? 'Age' : 'Era'} ${roman(ev.era)}: ${ev.name}`, icon: ERA_ICON, vp: 1, rule: view.rule_experiments?.objectives_deck ? 'Score this Age’s card whenever you like; 1 VP, kept for good' : ERA_RULE,
-      terms: view.rule_experiments?.objectives_deck ? 'Kept for good · once per Age · the cards never expire' : 'Kept for good · once each · stays open until you score it', live: false, owners, own: own(owners),
-      facts: alive.map((p) => ({ id: p.id, value: owners.includes(p.id) ? 2 : ev.entered_by.includes(p.id) ? 1 : 0, label: owners.includes(p.id) ? 'Scored' : view.rule_experiments?.objectives_deck ? 'Open' : ev.entered_by.includes(p.id) ? 'Entered' : 'Not entered' })),
+      id: eraId(ev.era), kind: 'era', name: `Age ${roman(ev.era)}: ${ev.name}`, icon: ERA_ICON, vp: 1, rule: 'Score this Age’s card whenever you like; 1 VP, kept for good',
+      terms: 'Kept for good · once per Age · the cards never expire', live: false, owners, own: own(owners),
+      facts: alive.map((p) => ({ id: p.id, value: owners.includes(p.id) ? 2 : ev.entered_by.includes(p.id) ? 1 : 0, label: owners.includes(p.id) ? 'Scored' : 'Open' })),
       unit: '', era: info,
     };
   });
@@ -345,7 +344,7 @@ export function buildVpModel(view: PlayerView): VpModel {
   const open = [...works, ...raceEras].filter((s) => s.own === 'open');
   return { me, turn: view.turn, rows, empires, works, eras, capitalSources,
     capitals: view.players.map((p) => ({ owner: p.id, names: [...(p.capitals_taken ?? []).map(([, name]) => name), ...(p.capitals_sacked ?? []).map(([, name]) => `${name} (sacked)`)] })),
-    deck: !!view.rule_experiments?.objectives_deck, gold: view.economy.gold, raceRules: { era: myEra, decadence: mePublic?.decadence_percent ?? 0, rules: decadenceRules(view.rule_experiments) },
+    gold: view.economy.gold, raceRules: { era: myEra, decadence: mePublic?.decadence_percent ?? 0, rules: decadenceRules(view.rule_experiments) },
     goals, all, open, byId,
     holds: rows.filter((r) => r.hold).sort((a, b) => a.hold!.left - b.hold!.left || Number(b.isMine) - Number(a.isMine)) };
 }

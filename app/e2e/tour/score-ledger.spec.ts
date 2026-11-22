@@ -63,15 +63,17 @@ for (const size of SIZES) test.describe(`score ledger ${size.name}`, () => {
     const sheet = await openLedger(page);
     await expect(sheet.getByRole('button', { name: 'Close objectives' })).toHaveClass(/\bbtn\b/);
     await expect(sheet.locator('.sl-col')).toHaveCount(2);
-    await expect(sheet.locator('.sl-row.k-era')).toHaveCount(6);
-    await expect(sheet.locator('.sl-section')).toContainText(['Kept for good', 'Held', 'Eras']);
+    // The two Ages that have begun in the staged view.
+    await expect(sheet.locator('.sl-row.k-era')).toHaveCount(2);
+    await expect(sheet.locator('.sl-section')).toContainText(['Kept for good', 'Held', 'Ages']);
     await expect(sheet.locator('.sl-row.k-heldGoal')).toHaveCount(1);
     for (const seal of await sheet.locator('.sl-row .sl-seal').all()) {
       const box = (await seal.boundingBox())!, dialog = (await sheet.boundingBox())!;
       expect(box.x, 'VP seal stays inside the ledger').toBeGreaterThanOrEqual(dialog.x);
       expect(box.x + box.width, 'VP seal stays inside the ledger').toBeLessThanOrEqual(dialog.x + dialog.width);
     }
-    await expect(sheet.locator('.sl-row-detail')).toHaveCount(size.height === 600 ? 0 : 1);
+    // The newest Age you have not scored opens with the ledger, at every window size.
+    await expect(sheet.locator('.sl-row-detail')).toHaveCount(1);
     await fitLedger(page, size.height);
     await page.mouse.move(4, size.height / 2);
     await shot(page, size, '80a-score-ledger-2-empires');
@@ -81,7 +83,8 @@ for (const size of SIZES) test.describe(`score ledger ${size.name}`, () => {
     await openLateRace(page);
     const sheet = await openLedger(page);
     await expect(sheet.locator('.sl-col')).toHaveCount(8);
-    await expect(sheet.locator('.sl-row-detail')).toHaveCount(size.height === 600 ? 0 : 1);
+    // At most the newest Age you have not scored is open.
+    expect(await sheet.locator('.sl-row-detail').count()).toBeLessThanOrEqual(1);
     await fitLedger(page, size.height);
     await page.mouse.move(4, size.height / 2);
     await shot(page, size, '80b-score-ledger-8-empires');

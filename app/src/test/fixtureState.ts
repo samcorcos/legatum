@@ -105,7 +105,7 @@ export interface MPlayer {
   science: number;
   settlersTrained: number;
   militaryPurchases?: number;
-  /** Scored era objectives in a core save. */
+  /** Scored Age cards in a core save. */
   eras?: Record<number, { entered: number; scored?: { turn: number; slot: number } }>;
   greatWorkCompleted?: BuildingKind;
   greatWorkHolder?: PlayerId | null;

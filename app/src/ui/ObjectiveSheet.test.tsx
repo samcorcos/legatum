@@ -55,8 +55,9 @@ it('shows all score sources in rank ordered columns, with the viewer gilt', () =
   expect(sheet().querySelectorAll('.sl-row.k-work')).toHaveLength(1);
   expect(sheet().querySelectorAll('.sl-row.k-goal')).toHaveLength(1);
   expect(sheet().querySelectorAll('.sl-row.k-heldGoal')).toHaveLength(1);
-  expect(sheet().querySelectorAll('.sl-row.k-era')).toHaveLength(6);
-  expect(sheet().querySelectorAll('.sl-row-detail')).toHaveLength(0);
+  // The Ages that have begun; the newest one you have not scored opens with the ledger.
+  expect(sheet().querySelectorAll('.sl-row.k-era')).toHaveLength(2);
+  expect(sheet().querySelectorAll('.sl-row-detail')).toHaveLength(1);
 });
 
 it('opens one row at a time with the public numbers, rule and era progress', () => {
@@ -66,7 +67,7 @@ it('opens one row at a time with the public numbers, rule and era progress', () 
   act(() => row('era-2').querySelector<HTMLButtonElement>('button')!.click());
   expect(sheet().querySelector('#sl-detail-GreatWork')).toBeNull();
   expect(sheet().querySelectorAll('#sl-detail-era-2 .vh-obj')).toHaveLength(3);
-  expect(row('era-2').querySelector('.sl-token')?.getAttribute('title')).toMatch(/scored the Classical era/);
+  expect(row('era-2').querySelector('.sl-token')?.getAttribute('title')).toMatch(/scored the Classical Age/);
 });
 
 it('shows team VP over its first member and hold turns in that head', () => {

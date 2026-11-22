@@ -914,11 +914,10 @@ impl PlayerPublic {
     }
 }
 
-/// One public era objective (VP v2).
+/// One public World Age card.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ObjectiveView {
-    /// The objective's slot in its era: the family's index (0 Build, 1 Expand, 2 Fight), or in a
-    /// World Age game always 0 (one card per Age).
+    /// The card's slot in its Age: always 0 (one card per Age).
     pub slot: u8,
     pub family: crate::objectives::Family,
     pub text: String,
@@ -945,7 +944,7 @@ pub struct EraView {
     pub scored_by: Vec<EraScoredView>,
 }
 
-/// The viewer's own progress on one era objective (VP v2).
+/// The viewer's own progress on one World Age card.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ObjectiveProgress {
     pub era: u8,
@@ -956,10 +955,10 @@ pub struct ObjectiveProgress {
     pub entered: bool,
     /// The viewer has already scored this era.
     pub era_scored: bool,
-    /// World Ages only: the turn the Age began (when counting started).
+    /// The turn the Age began (when counting started).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub entered_turn: Option<u32>,
-    /// World Ages only: the card is met and scores at turn end.
+    /// The card is met and scores at turn end.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ready: Option<bool>,
 }
@@ -1640,14 +1639,7 @@ fn era_views(state: &GameState) -> Vec<EraView> {
             entered_by: state
                 .players
                 .iter()
-                .filter(|p| {
-                    p.alive
-                        && if state.setup.rule_experiments.objectives_deck {
-                            objectives::era_of(state, p.id) >= era
-                        } else {
-                            p.eras.contains_key(&era)
-                        }
-                })
+                .filter(|p| p.alive && objectives::era_of(state, p.id) >= era)
                 .map(|p| p.id)
                 .collect(),
             scored_by: state
@@ -1668,13 +1660,8 @@ fn era_views(state: &GameState) -> Vec<EraView> {
 
 /// The viewer's progress on every objective of the eras it has entered and the next one.
 fn objective_progress(state: &GameState, me: PlayerId) -> Vec<ObjectiveProgress> {
-    let reached = objectives::era_of(state, me);
     let player = state.player(me);
-    (2..=if state.setup.rule_experiments.objectives_deck {
-        objectives::revealed_era(state)
-    } else {
-        (reached + 1).min(data::era_count())
-    })
+    (2..=objectives::revealed_era(state))
         .flat_map(|era| {
             objectives::era_objectives(&state.setup, era)
                 .into_iter()
@@ -1685,17 +1672,8 @@ fn objective_progress(state: &GameState, me: PlayerId) -> Vec<ObjectiveProgress>
                     target: o.target(),
                     entered: player.eras.contains_key(&era),
                     era_scored: player.eras.get(&era).is_some_and(|r| r.scored.is_some()),
-                    entered_turn: state
-                        .setup
-                        .rule_experiments
-                        .objectives_deck
-                        .then(|| player.eras.get(&era).map(|r| r.entered))
-                        .flatten(),
-                    ready: state
-                        .setup
-                        .rule_experiments
-                        .objectives_deck
-                        .then(|| o.met(state, me, era)),
+                    entered_turn: player.eras.get(&era).map(|r| r.entered),
+                    ready: Some(o.met(state, me, era)),
                 })
         })
         .collect()
@@ -1760,11 +1738,7 @@ pub(crate) fn order_check_view(state: &GameState, me: PlayerId) -> PlayerView {
                 faction_goal_done: p.faction_goal_done,
                 sakoku_turns: p.sakoku_turns,
                 goal_rule: Some(crate::goals::rule(state, p.id)),
-                era: if state.setup.rule_experiments.objectives_deck {
-                    objectives::era_of(state, p.id)
-                } else {
-                    1
-                },
+                era: objectives::era_of(state, p.id),
                 gold: 0,
                 economy: 0,
                 army: 0,
@@ -2083,16 +2057,13 @@ pub fn player_view_cached(
         eras,
         standings,
     } = public.clone();
-    // World Ages: a future Age's cards stay hidden from every view until an empire enters it.
-    let eras = if state.setup.rule_experiments.objectives_deck {
-        eras.iter()
-            .filter(|e| e.era <= objectives::revealed_era(state))
-            .cloned()
-            .collect::<Vec<_>>()
-            .into()
-    } else {
-        eras
-    };
+    // A future Age's card stays hidden from every view until an empire enters it.
+    let eras = eras
+        .iter()
+        .filter(|e| e.era <= objectives::revealed_era(state))
+        .cloned()
+        .collect::<Vec<_>>()
+        .into();
 
     let science = income.science.total;
     let economy = EconomyView {

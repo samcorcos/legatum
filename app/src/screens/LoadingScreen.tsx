@@ -17,7 +17,7 @@ const TIPS = [
   'Ancient ruins dot the land. The first unit to explore one is rewarded.',
   'A city’s forecast shows what it will make before you commit to it.',
   'A Mongol Keshig shoots or charges each turn, never both.',
-  'Scored era objectives are kept for good; world wonders, held goals and rival capitals can be lost.',
+  'Scored Age cards are kept for good; world wonders, held goals and rival capitals can be lost.',
   'Spartan soldiers train hard, but peace can empty their ranks.',
 ];
 

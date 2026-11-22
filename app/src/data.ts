@@ -443,7 +443,6 @@ export const DECADENCE_FOOD_RULE = 'Food itself is never cut, so no city starves
 export const POWER_RULE = `Power is an empire's total yields (Food, Production, Gold and Science) per turn, averaged over the last ${RULES.decadence.powerWindowTurns} turns, so a conquest raises it gradually. The average empire's Power is the mean of everyone still alive, you included. Decadence compares you with it.`;
 
 /** The era rule in plain words, one wording on every surface. */
-export const ERA_RULE = 'Score this era with any one of its three objectives. Each counts only what you gain after you enter the era and after your last era score. Worth 1 VP, kept for good, once per empire.';
 
 export interface FactionInfo {
   name: string;

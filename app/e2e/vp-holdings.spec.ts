@@ -57,7 +57,7 @@ for (const size of [{ width: 1000, height: 600 }, { width: 1440, height: 900 }])
         await expect(work.locator('td:not(.mine) .sl-socket')).toHaveCount(scenario.rows - 1);
         await expect(sheet.locator('.sl-row[data-row="goal"] td.mine [role="progressbar"], .sl-row[data-row="held-goal"] td.mine [role="progressbar"]')).toBeVisible();
         await expect(sheet.locator('.sl-row.k-era .sl-token').first()).toBeVisible();
-        await expect(sheet.locator('.sl-row.k-era .sl-socket.faint').first()).toBeVisible();
+        await expect(sheet.locator('.sl-row.k-era .sl-socket').first()).toBeVisible();
         await expect(sheet).not.toContainText(/fastest|recommend|suggest/i);
       });
 

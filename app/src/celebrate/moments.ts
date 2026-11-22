@@ -261,16 +261,16 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
         break;
       case 'EraObjectiveScored': {
         const era = after.eras?.find((x) => x.era === e.era);
-        const card = after.rule_experiments?.objectives_deck ? era?.objectives.find((o) => o.slot === e.slot)?.objective : undefined;
-        if (card && era) {
+        const card = era?.objectives.find((o) => o.slot === e.slot)?.objective;
+        if (era) {
           push(i, e.player, { tier: 'major', at: capital(e.player), kicker: 'Age card scored', title: `The ${era.name} Age`,
             effect: '+1 VP, kept for good', lore: 'A claim made lasting in the chronicle.', deltas: [{ counter: 'vp', amount: 1 }], emblem: 'milestone',
-            details: [`Scored with ${cardName(e.objective)}`, after.eras.length === 1 ? `${era.name} Age scored` : `${after.eras.filter((x) => x.scored_by.some((s) => s.player === e.player)).length} of ${after.eras.length} Ages scored`] });
+            details: [card ? `Scored with ${cardName(e.objective)}` : e.objective, after.eras.length === 1 ? `${era.name} Age scored` : `${after.eras.filter((x) => x.scored_by.some((s) => s.player === e.player)).length} of ${after.eras.length} Ages scored`] });
           break;
         }
-        push(i, e.player, { tier: 'major', at: capital(e.player), kicker: 'Era objective met', title: era ? `The ${era.name} era` : `Era ${e.era}`,
-          effect: '+1 permanent VP', lore: 'A claim made lasting in the chronicle.', deltas: [{ counter: 'vp', amount: 1 }], emblem: 'milestone',
-          details: [e.objective, ...(after.eras?.length ? [`${after.eras.filter((x) => x.scored_by.some((s) => s.player === e.player)).length} of ${after.eras.length} era VP scored`] : [])] }); break;
+        push(i, e.player, { tier: 'major', at: capital(e.player), kicker: 'Age card scored', title: `Age ${e.era}`,
+          effect: '+1 VP, kept for good', lore: 'A claim made lasting in the chronicle.', deltas: [{ counter: 'vp', amount: 1 }], emblem: 'milestone',
+          details: [e.objective] }); break;
       }
       // A Live goal regained is a normal report line, not the legendary first completion.
       // The Byzantium's held goal changes hands: capturing the Heir is a big moment for the captor, losing him a sober card

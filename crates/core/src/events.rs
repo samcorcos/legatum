@@ -582,15 +582,15 @@ pub enum Event {
         building: BuildingKind,
         vp: u32,
     },
-    /// VP v2: an empire meets one of an era's public objectives and earns that era's 1 permanent
-    /// VP. `slot` is the objective's family index (Build, Expand, Fight). Public.
+    /// An empire completes an Age's card and earns that Age's 1 permanent VP. `slot` is the
+    /// card's slot in its Age (always 0). Public.
     EraObjectiveScored {
         player: PlayerId,
         era: u8,
         slot: u8,
         objective: String,
     },
-    /// World Ages (`objectives_deck`): an Age began, so its card is open to every empire.
+    /// World Ages: an Age began, so its card is open to every empire.
     /// `era` is 1-based like `EraEntered`; `first` is the empire that entered the era first (it may
     /// be you). Emitted once per Age, the turn `objectives::update` opens it. Public.
     AgeBegan {

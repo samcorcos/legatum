@@ -1,5 +1,5 @@
 // Fixes from the train-1103 UI review (ui-fix-1103): the build list at 1000x600 (long names fit their column), the objective deck
-// cards in plain words, and a Germany era objective that names the Ruhr Foundry. The other fixed screens (Alliance offer at Peace,
+// cards in plain words, and a Germany Age card that names the ordinary Factory. The other fixed screens (Alliance offer at Peace,
 // world wonders drawer, raze confirm, wonder moments, tile card, ledger header, Sparta clock, old-save notice, Keshig sheet) are in
 // their own domains and in ui-review-1103. Run alone: `npx playwright test e2e/tour/ui-fix-1103`.
 import { test, expect } from '../fixtures';
@@ -42,7 +42,6 @@ for (const size of SIZES) test.describe(`ui fix 1103 ${size.name}`, () => {
     const s = improvementCity({ techs: ['Masonry'] });
     await loadFixture(page, coreFixture(s), 12);
     await stage(page, (v) => {
-      v.rule_experiments = { ...v.rule_experiments, objectives_deck: true };
       v.eras = v.eras!.filter((e) => e.era === 2);
       v.eras[0].objectives = [
         { slot: 0, family: 'Fight', text: 'Veterans: earn 4 promotions in battle (a promotion is a level a unit gains from combat experience after this Age began)', target: 4, objective: { kind: 'Veterans', n: 4 } },
@@ -63,14 +62,14 @@ for (const size of SIZES) test.describe(`ui fix 1103 ${size.name}`, () => {
     // The status line states the rule once; the fine print no longer repeats it in the plural.
     await expect(detail).toContainText('Every empire sees this card the turn the first empire enters the era, and it never expires.');
     await expect(detail).not.toContainText('and they never expire');
-    await expect(detail).toContainText('Capture cards count captures from now on');
+    await expect(detail).toContainText('Each card counts only what you do after its Age begins');
     await expect(detail).toContainText('Veterans: earn 4 promotions in battle (a promotion is a level a unit gains from combat experience after this Age began)');
     await expect(detail).toContainText('Walled cities captured since the Age began: 0 of 1');
     await page.mouse.move(4, size.height / 2);
     await shot(page, size, 'd1-objective-deck-cards');
   });
 
-  test('a Germany era objective names the ordinary Factory', async ({ page }) => {
+  test('a Germany Age card names the ordinary Factory', async ({ page }) => {
     const s = improvementCity({ techs: ['Masonry'] });
     s.players[0].faction = 'Germany';
     await loadFixture(page, coreFixture(s), 12);

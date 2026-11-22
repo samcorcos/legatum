@@ -285,7 +285,7 @@ test('era', async ({ page }) => {
   await page.waitForTimeout(1700);
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('era-takeover')).toBeVisible();
-  // The takeover on a VP v2 view: the three era objectives.
+  // The takeover on a staged view: every open Age's card.
   const base = await page.evaluate(() => { const s = (window as unknown as W).legatum.getState(); return structuredClone(s.views[s.seat]); });
   const view = withV2(base, { era: 2 });
   await page.evaluate((v) => {

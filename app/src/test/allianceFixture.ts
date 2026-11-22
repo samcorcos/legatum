@@ -50,7 +50,7 @@ export function allianceCoreSave() {
 /** Turn 16: team 3 leads and teams 0 (human, 0 Gold) and 1 are at War with it. */
 export function leaderAllianceOfferCoreSave() {
   const setup = makeStandardSetup('9943', 'Switzerland', 'India', 'Switzerland', 'India');
-  // Four scored era objectives and a permanent goal are 5 VP: a low target makes that a lead big enough to threaten victory.
+  // Four scored Age cards and a permanent goal are 5 VP: a low target makes that a lead big enough to threaten victory.
   setup.rule_experiments = { ...setup.rule_experiments, vp_target: 5 };
   setup.players = setup.players.slice(0, 4).map((p, id) => ({ ...p, team: id, is_human: id === 0 }));
   const s = createState(setup);

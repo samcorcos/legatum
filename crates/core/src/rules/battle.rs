@@ -3157,7 +3157,6 @@ mod tests {
     #[test]
     fn celtic_sack_of_a_rival_original_capital_keeps_its_point_for_good() {
         let mut s = game(&[0, 1]);
-        s.setup.rule_experiments.apply("objectives=deck").unwrap();
         let capital = city(&mut s, 1, hex(5, 5), 3);
         s.player_mut(PlayerId(0)).faction = Faction::Celts;
         let mut events = Vec::new();

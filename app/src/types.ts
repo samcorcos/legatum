@@ -1336,7 +1336,6 @@ export interface GameSetup {
 export interface RuleSwitches {
   start_met?: boolean;
   start_settlers?: number;
-  objectives_deck?: boolean;
   walls_cost?: number;
   decadence_slope?: number; vp_target?: number;
   /** Experiment: a city can't buy a military unit while an enemy unit at War is within 2 tiles. */

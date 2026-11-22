@@ -3,7 +3,7 @@
 // from data joins this list in the same change.
 import { renderToStaticMarkup } from 'react-dom/server';
 import {
-  BUILDING_KINDS, CLASS_NOTE, DECADENCE_FOOD_RULE, DECADENCE_RULE, ERA_RULE, FACTIONS, FACTION_GOAL, FACTION_INFO,
+  BUILDING_KINDS, CLASS_NOTE, DECADENCE_FOOD_RULE, DECADENCE_RULE, FACTIONS, FACTION_GOAL, FACTION_INFO,
   IMPROVEMENT_KINDS, GREAT_WORK_DESC, GREAT_WORK_RULE, POWER_RULE, SWARM_GOAL,
   TECHS, TECH_NAME, TECH_STATS, THIN_LEVIES, UNIT_KINDS, availableToFaction, decadenceCurveText,
   factionDescription, factionExcludedBuilding, factionGoalTerms, factionUnavailableReason, greatWorkRules, itemCardText,
@@ -23,7 +23,6 @@ import { hallCardText } from '../ui/goalText';
 import { FactionSheetView } from '../ui/FactionPicker';
 import { GUIDE_SECTIONS, GuideContent } from '../ui/GuideContent';
 import { LEVY_CHIP_LABEL } from '../ui/Levy';
-import { afterTechnologies } from '../ui/EraObjectives';
 import { tileDefenceText } from '../ui/TileCard';
 import { siegeCityHint } from '../ui/UnitPanel';
 import { POSTGAME_ARMY_TEXT } from '../ui/PostGameReport';
@@ -40,7 +39,6 @@ export function interfaceText(): TextGroup[] {
     { label: 'city territory', blocks: [TILE_RELEASE_RULE] },
     { label: 'city tile focus', blocks: [tileFocusNoteText('Balanced', 'no active build')] },
     { label: 'Levy chip', blocks: [LEVY_CHIP_LABEL] },
-    { label: 'era objectives', blocks: [afterTechnologies(1), afterTechnologies(3)] },
     { label: 'Hills tile card', blocks: [tileDefenceText(3)] },
     { label: 'unit siege hint', blocks: [siegeCityHint(4)] },
     { label: 'post-game army column', blocks: [POSTGAME_ARMY_TEXT] },
@@ -131,7 +129,7 @@ export function guideText(): TextGroup[] {
 /** Decadence, eras, Great Works and the combat rules shown in tooltips. */
 export function victoryText(): TextGroup[] {
   return [
-    { label: 'victory rules', blocks: [ERA_RULE, POWER_RULE, DECADENCE_RULE, DECADENCE_FOOD_RULE, decadenceCurveText(), GREAT_WORK_DESC, GREAT_WORK_RULE] },
+    { label: 'victory rules', blocks: [POWER_RULE, DECADENCE_RULE, DECADENCE_FOOD_RULE, decadenceCurveText(), GREAT_WORK_DESC, GREAT_WORK_RULE] },
     ...[undefined, ...FACTIONS].map((f) => ({ label: `great work rules ${f ?? ''}`, blocks: [greatWorkRules(f)] })),
     { label: 'combat rules', blocks: [CITY_STRIKE_RULE, CITY_HEAL_RULE] },
   ];
