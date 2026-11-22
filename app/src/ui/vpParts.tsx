@@ -139,8 +139,7 @@ function HeldLines({ model, s, goalOwner }: { model: VpModel; s: Source; goalOwn
       {holder ? <Marker e={holder} size={16} /> : <Socket size={16} />}
       <b>{s.holdNote}</b>
     </div>
-    {s.heldAt && <p className="vh-private" data-testid="heir-locate-hint">{hall ? 'Its city is on your map: click its token in the race panel to show it.' : 'His position is public: click his token in the race panel to show him on the map.'}</p>}
-    {holder && <p className="vh-private">{hall ? 'The points and the open road go with its city: a rival that captures the city scores them, and they return when it is retaken.' : 'The points go with him: a rival that captures him scores them, and they return when he is retaken.'}</p>}
+    {s.heldAt && <p className="vh-private" data-testid="heir-locate-hint">{hall ? 'Click its token in the race panel to show it on the map.' : 'Click his token in the race panel to show him on the map.'}</p>}
   </div>;
 }
 
@@ -169,7 +168,7 @@ export function SourceCard({ model, s, compact, terms = true, as: As = 'article'
     <p className="vh-rule">{s.rule}</p>
     {terms && <p className="vh-terms">{s.terms}</p>}
     {s.kind === 'era' && <EraObjectives model={model} s={s} />}
-    {s.kind === 'era' && s.era && <p className="vh-private">{s.era.myScored ? `You have scored this ${model.deck ? 'Age' : 'era'}.` : model.deck ? 'Every empire sees this card the turn the first empire enters the era, and it never expires.' : s.era.myEntered ? 'You have entered it: meet any one to score.' : `You have not entered it yet: finish the ${eraName(s.era.era - 2)} era's last technology.`}</p>}
+    {s.kind === 'era' && s.era && <p className="vh-private">{s.era.myScored ? `You have scored this ${model.deck ? 'Age' : 'era'}.` : model.deck ? 'The card never expires.' : s.era.myEntered ? 'You have entered it.' : `Not entered yet: finish the ${eraName(s.era.era - 2)} era's last technology.`}</p>}
     {(s.kind === 'work' || s.kind === 'era') && <ControlRow model={model} s={s} size={sockets} />}
     {s.kind === 'work' && <WorkLines model={model} s={s} />}
     {s.kind === 'goal' && s.progress && <Meter p={s.progress} color={goalOwner?.ink} />}

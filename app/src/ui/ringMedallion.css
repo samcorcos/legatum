@@ -93,3 +93,7 @@
   box-shadow: 0 0 0 1px var(--panel);
 }
 .te.bad .te-sign { background: var(--bad); }
+
+/* Report lines: an era's numeral seal and a natural wonder's own painting stand in the ring. */
+.rm .rm-numeral { font-family: var(--display); font-weight: 700; line-height: 1; letter-spacing: -0.02em; }
+.rm .rm-wonder { border-radius: 50%; object-fit: cover; display: block; }

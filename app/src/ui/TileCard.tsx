@@ -164,7 +164,7 @@ export function TileCard({ view, hex, anchor, routeWarning, blockedReason, reinf
           : `Striped: ${owningCity.name} owns this tile beyond its ${WORK_RADIUS}-tile work radius. It gives no yield. It blocks rivals.`}
       </div>}
       {barbarianHeld && <div className="tilecard-row bad">Barbarians hold the tile: it yields nothing.</div>}
-      {(camp || units.some((u) => isBarbarian(u.owner))) && faction === 'Celts' && <div className="tilecard-row good">Barbarians never attack you.</div>}
+      {(camp || units.some((u) => isBarbarian(u.owner))) && faction === 'Celts' && <div className="tilecard-row good">Barbarians don't attack you.</div>}
       {city && view.players.find((p) => p.id === view.me)?.faction === 'Celts' && owner?.id !== view.me && city.founder !== view.me && <div className="tilecard-row bad">Celts sack this city when they capture it.</div>}
       {t.ruin && <div className="tilecard-row ruin"><Icon name="ruin" size={15} color="currentColor" /> ancient ruin: unexplored</div>}
       {camp && (

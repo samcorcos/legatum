@@ -165,6 +165,8 @@ export function glance(hud: EraHud, members = 1): Glance {
 
 /** The sources of VP that make up the target, and your team's count in each. */
 export interface HowYouWin {
+  /** World Ages: the scoring unit is an Age (its card), not an era. */
+  deck: boolean;
   /** Your faction and its ink on parchment, for the goal's crest. */
   faction: Faction;
   ink: string;
@@ -186,9 +188,9 @@ export function howYouWin(model: VpModel): HowYouWin | null {
   // An eliminated empire has no member left to show.
   if (!me) return null;
   return {
-    faction: me.faction, ink: me.ink, vp: row.vp, target: row.target, members,
+    deck: !!model.deck, faction: me.faction, ink: me.ink, vp: row.vp, target: row.target, members,
     parts: [
-      { key: 'eras', label: 'Eras', title: `Era objectives: 1 VP for each era you score, kept for good (${eraMax} available${members > 1 ? ' to your team' : ''})`, have: sum('era'), max: eraMax },
+      { key: 'eras', label: model.deck ? 'Ages' : 'Eras', title: `${model.deck ? 'Age cards: 1 VP for each Age you score' : 'Era objectives: 1 VP for each era you score'}, kept for good (${eraMax} available${members > 1 ? ' to your team' : ''})`, have: sum('era'), max: eraMax },
       { key: 'goal', label: 'Faction', title: `Your faction goal: ${goalVp} VP${members > 1 ? ' for each of you' : ''}`, have: sum('goal'), max: goalVp * members },
       { key: 'work', label: 'World wonder', title: 'Each held world wonder gives 2 VP. Each empire may complete one; conquest can hold more.', have: sum('work'), max: null },
     ],

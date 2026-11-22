@@ -137,7 +137,7 @@ export function LensSwitcher({ lens, onChange, sites, onInspect, settlerId, play
     </div>}
     {lens !== 'default' && <div className="lens-legend" aria-live="polite">
       {lens !== 'settle' && <p>{LENS_CAVEATS[lens] ? <Tip placement="right" content={LENS_CAVEATS[lens]}><span className="lens-legend-line">{LENS_LEGENDS[lens]}</span></Tip> : LENS_LEGENDS[lens]}</p>}
-      {empty && EMPTY[lens] && <p className="lens-empty"><b>{lens === 'threat' && players.find((p) => p.id === me)?.faction === 'Celts' && visibleBarbarians ? 'Nothing in sight can attack you next turn. Barbarians never attack you.' : EMPTY[lens]}</b></p>}
+      {empty && EMPTY[lens] && <p className="lens-empty"><b>{lens === 'threat' && players.find((p) => p.id === me)?.faction === 'Celts' && visibleBarbarians ? "Nothing in sight can attack you next turn. Barbarians don't attack you." : EMPTY[lens]}</b></p>}
       {lens === 'settle' && <>
         {!persistentLegend && settleLegend}
         {best.length ? <><p className="settle-top-key" data-testid="settle-top-key">{settlerId === null ? 'Top three from your capital, marked on the map:' : 'Top three for this Settler, marked on the map:'}</p><div className="settle-recommendations" aria-label="Recommended settlement sites">{best.map((s) => <button className="btn" key={s.rank} data-settle-rank={s.rank} onClick={() => { if (compact) close(); onInspect(s.pos); }} aria-label={s.rank === 1 ? 'Inspect best spot' : `Inspect recommended site ${s.rank}`}>{s.rank === 1 ? 'Best spot' : `#${s.rank}`}</button>)}</div></>

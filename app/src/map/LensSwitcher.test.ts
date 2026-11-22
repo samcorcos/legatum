@@ -38,7 +38,7 @@ it('names visible barbarians in the Celts Threat empty state', () => {
   })));
   try {
     render('Celts', true);
-    expect(host.querySelector('.lens-empty')?.textContent).toBe('Nothing in sight can attack you next turn. Barbarians never attack you.');
+    expect(host.querySelector('.lens-empty')?.textContent).toBe("Nothing in sight can attack you next turn. Barbarians don't attack you.");
     render('Celts', false);
     expect(host.querySelector('.lens-empty')?.textContent).toBe('No known enemy military can reach any tile next turn.');
     render('India', true);

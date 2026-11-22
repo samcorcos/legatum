@@ -250,8 +250,8 @@ export function FactionSheetView({
           {goal && (
             <div className="fs-fact fs-goal">
               <span className="lbl"><Icon name={goal.icon} size={13} />Goal</span>
-              <div className="fs-goal-head"><b>{goal.name}</b><span>{factionGoalTerms(faction)}</span></div>
-              <p><Amounts text={`${goal.detail()}.`} /></p>
+              <div className="fs-goal-head"><b>{goal.name}</b><span><Amounts text={factionGoalTerms(faction)} /></span></div>
+              <p><Amounts text={`${(goal.sheet ?? goal.detail)()}.`} /></p>
               {where && <p className="fs-goal-location">{where}</p>}
             </div>
           )}

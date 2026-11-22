@@ -52,7 +52,7 @@ export function ObjectiveRows({ lines, preview = false, big = false, inline = fa
     {lines.map((l) => {
       const family = FAMILY_LABEL[l.family];
       const idle = done && !l.scoredHere;
-      const label = `${family}: ${l.text}, ${l.scoredHere ? 'scored' : idle ? 'not needed: the era is scored' : preview ? 'revealed when you enter the era' : `${l.shown} of ${l.target}`}`;
+      const label = `${family}: ${l.text}, ${l.scoredHere ? 'scored' : idle ? `not needed: the ${deck ? 'Age' : 'era'} is scored` : preview ? 'revealed when you enter the era' : `${l.shown} of ${l.target}`}`;
       return <li key={l.slot} className={`eo-line fam-${l.family.toLowerCase()}${l.met && !preview && !idle ? ' met' : ''}${l.scoredHere ? ' scored' : ''}${idle ? ' idle' : ''}${l === nearest ? ' nearest' : ''}`} data-testid="era-objective" data-slot={l.slot} data-family={l.family}>
         <span className="eo-fam" title={compact ? family : undefined}>
           {compact ? <><Icon name={FAMILY_ICON[l.family]} size={14} /><span className="sr-only">{family}</span></> : family}
@@ -77,12 +77,12 @@ export function ObjectiveRows({ lines, preview = false, big = false, inline = fa
  * the VP sources behind it with your count in each.
  */
 function HowYouWinLine({ win, open, toggle, scored }: { win: HowYouWin; open: boolean; toggle?: boolean; scored?: string }) {
-  const action = open ? 'Show one line' : 'Show every era objective';
+  const action = open ? 'Show one line' : win.deck ? 'Show every Age card' : 'Show every era objective';
   return <>
     <header className="eo-win">
       <h4>How you win</h4>
       {scored && <span className="eo-scored" data-testid="era-scored-tag" title={`${scored}: 1 VP scored, kept for good`}>
-        <Icon name="ui-check" size={11} className="ui-mark" /><span className="eo-scored-w">Era scored</span><span className="sr-only">: {scored}, 1 VP scored, kept for good</span>
+        <Icon name="ui-check" size={11} className="ui-mark" /><span className="eo-scored-w">{win.deck ? 'Age scored' : 'Era scored'}</span><span className="sr-only">: {scored}, 1 VP scored, kept for good</span>
       </span>}
       <span className="eo-vp" data-testid="how-you-win-vp"><b>{win.vp}</b> of {win.target} VP</span>
       {toggle && <button type="button" className="eo-toggle" data-testid="era-hud-toggle" aria-expanded={open} onClick={() => setEraHudOpen(!open)}
@@ -135,7 +135,7 @@ function Glance({ hud, members }: { hud: EraHud; members: number }) {
   if (!line) return null;
   const preview = hud.focus.state === 'preview';
   const pct = preview ? 0 : line.target > 0 ? Math.min(100, (line.shown / line.target) * 100) : 0;
-  const label = `${tag}${hud.deck ? '' : ', any one of three objectives scores it. Closest'}: ${FAMILY_LABEL[line.family]}, ${line.text}, ${preview ? 'counts what you gain after you enter the era' : `${line.shown} of ${line.target}`}. Show every era objective`;
+  const label = `${tag}${hud.deck ? '' : ', any one of three objectives scores it. Closest'}: ${FAMILY_LABEL[line.family]}, ${line.text}, ${preview ? 'counts what you gain after you enter the era' : `${line.shown} of ${line.target}`}. Show every ${hud.deck ? 'Age card' : 'era objective'}`;
   return <button type="button" className={`eo-glance${line.met && !preview ? ' met' : ''}`} data-testid="era-glance" aria-expanded={false} aria-label={label} onClick={() => setEraHudOpen(true)}>
     <span className="eo-fill" aria-hidden="true"><i style={{ width: `${pct}%` }} /></span>
     <span className="eo-g-tag" title={hud.deck ? "This Age's card" : "Any one of the era's three objectives scores it; this is the closest"}>{tag}</span>
@@ -161,7 +161,7 @@ export function EraObjectivesHud({ view, model }: { view: PlayerView; model: VpM
   const left = hud.entry ? hud.entry.total - hud.entry.known : 0;
   // An era already scored has nothing left to do this era: compact, the block is the band alone, and the band says which era is kept.
   const scoredBand = !expanded && focus.state === 'scored';
-  return <section className={`era-hud st-${focus.state}${expanded ? ' expanded' : ' compact'}${scoredBand ? ' band-only' : ''}`} data-testid="era-hud" data-state={focus.state} data-era={focus.era} data-open={expanded} aria-label="How you win: era objectives">
+  return <section className={`era-hud st-${focus.state}${expanded ? ' expanded' : ' compact'}${scoredBand ? ' band-only' : ''}`} data-testid="era-hud" data-state={focus.state} data-era={focus.era} data-open={expanded} aria-label={hud.deck ? 'How you win: Age cards' : 'How you win: era objectives'}>
     <HowYouWinLine win={win} open={expanded} toggle scored={scoredBand ? focus.name : undefined} />
     {!expanded && !scoredBand && <Glance hud={hud} members={win.members} />}
     {expanded && <>
@@ -202,7 +202,7 @@ export function EraObjectivesResearch({ view }: { view: PlayerView }) {
   // In the first era the focus is already the preview; later the next era is previewed beside the current one.
   const upcoming = hud.noObjective ? focus : hud.next ?? eraObjectivesFor(view, focus.era + 1);
   const left = r.era_total - r.era_known;
-  return <section className={`era-objectives-research${hud.noObjective ? ' no-obj' : ''}`} data-testid="research-objectives" aria-label="Era objectives">
+  return <section className={`era-objectives-research${hud.noObjective ? ' no-obj' : ''}`} data-testid="research-objectives" aria-label={hud.deck ? 'Age cards' : 'Era objectives'}>
     <div className="eor-col current" data-testid="research-objectives-current">
       <h4>{hud.noObjective ? <>{hud.myEraName} era: no objective</> : focus.state === 'scored' ? <>{focus.name} {hud.deck ? 'Age' : 'era'}: 1 VP scored</> : <>Score 1 VP this {hud.deck ? 'Age' : 'era'} <small>{focus.name}{hud.deck ? '' : ' · any one of three'}</small></>}</h4>
       {hud.noObjective
@@ -210,7 +210,7 @@ export function EraObjectivesResearch({ view }: { view: PlayerView }) {
         : focus.state === 'scored' && !hud.deck ? <p className="eo-sub">Kept for good. The next era’s objectives open when you enter it.</p> : <ObjectiveRows lines={focus.lines} inline accounting view={view} era={focus.era} />}
     </div>
     {upcoming && <div className="eor-col next" data-testid="research-objectives-next">
-      <h4>Next: {upcoming.name} era <small>{left <= 0 ? 'opens when you enter it' : `opens ${afterTechnologies(left)}`}</small></h4>
+      <h4>Next: {upcoming.name} {hud.deck ? 'Age' : 'era'} <small>{left <= 0 ? 'opens when you enter it' : `opens ${afterTechnologies(left)}`}</small></h4>
       {hud.deck ? <p className="eo-sub">The {upcoming.name} Age begins when any empire enters the {upcoming.name} era.</p> : <ObjectiveRows lines={upcoming.lines} preview inline />}
     </div>}
     {hud.deck && !upcoming && focus.era < ERA_COUNT && <div className="eor-col next" data-testid="research-objectives-next"><h4>Next: {eraName(focus.era)} Age</h4><p className="eo-sub">Begins when any empire enters the {eraName(focus.era)} era.</p></div>}
