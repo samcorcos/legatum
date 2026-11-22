@@ -10,7 +10,7 @@ import { distance, tileIndex } from './hex';
 import { atWar, isThreat } from './diplomacy';
 import { firesIndirect, itemName, pluralUnit, unitClass } from './data';
 import {rangedClear, viewTerrain, walledGarrisonAt} from './los';
-import { unitCanReach } from './settlement';
+import { unitsCanReach } from './settlement';
 
 /** Cities this far from the tile can send out units next turn (a 2-move unit steps twice, then strikes). */
 const UNSEEN_CITY_RANGE = 3;
@@ -84,16 +84,15 @@ export function attackAftermath(view: PlayerView, unit: UnitView, target: Hex, f
     if (!cityCanFire(city.walls, city.hp) || !atWar(view, city.owner) || gap < 1 || gap > 2) continue;
     hits.push({ kind: 'city', phase: 'city', label: `${city.name}'s walls`, count: 1, each: 0, strength: city.strength, against: null });
   }
-  for (const enemy of view.units) {
-    if (!enemy.military || enemy.hp <= 0 || enemy.id === defender.id || !isThreat(view, enemy.owner)) continue;
-    const eFaction = view.players.find((p) => p.id === enemy.owner)?.faction;
-    const shoots = enemy.ranged > 0 && distance(enemy.pos, target) <= enemy.range
+  const threats = view.units.filter((enemy) => enemy.military && enemy.hp > 0 && enemy.id !== defender.id && isThreat(view, enemy.owner))
+    .map((enemy) => ({ enemy, shoots: enemy.ranged > 0 && distance(enemy.pos, target) <= enemy.range
       && rangedClear(enemy.kind, enemy.pos, target, terrain,
         firesIndirect(enemy.kind),
-        walledGarrisonAt(view, enemy.owner, enemy.pos));
-    if (!shoots) {
-      if (!unitCanReach(view, enemy, target)) continue;
-    }
+        walledGarrisonAt(view, enemy.owner, enemy.pos)) }));
+  const reaching = unitsCanReach(view, threats.filter((t) => !t.shoots).map((t) => t.enemy), target);
+  for (const { enemy, shoots } of threats) {
+    if (!shoots && !reaching.has(enemy.id)) continue;
+    const eFaction = view.players.find((p) => p.id === enemy.owner)?.faction;
     const strength = shoots
       ? unitRangedStrength(enemy.kind, enemy.hp, eFaction, enemy.level ?? 0).total
       : unitAttackStrength(enemy.kind, enemy.hp, eFaction, enemy.level ?? 0).total;

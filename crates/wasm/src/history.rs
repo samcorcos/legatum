@@ -150,6 +150,49 @@ pub struct Recording {
     /// Wall-clock play time is client telemetry and never participates in replay hashes.
     #[serde(default)]
     pub turn_times: Vec<TurnPlayTime>,
+    /// How smoothly the browser ran each turn (client telemetry, never in replay hashes): read by the perf supervisor.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub frame_times: Vec<TurnFrameTime>,
+}
+
+/// One turn's rendering and input timing in the browser, summed over the time the tab was visible.
+/// Durations are whole milliseconds unless the name says tenths (`_ms10`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct TurnFrameTime {
+    pub turn: u32,
+    /// Animation frames seen, their median and 95th-percentile gap (tenths of ms), the worst gap, and gaps over 50 ms.
+    pub frames: u32,
+    pub frame_p50_ms10: u32,
+    pub frame_p95_ms10: u32,
+    pub frame_max_ms: u32,
+    pub slow_frames: u32,
+    /// Pointer moves, presses and keys: time from the event to the next frame (95th percentile and worst), and how many.
+    pub inputs: u32,
+    pub input_p95_ms: u32,
+    pub input_max_ms: u32,
+    /// Main-thread tasks over 50 ms: how many, and their summed length.
+    pub long_tasks: u32,
+    pub long_task_ms: u32,
+    /// Map canvas draws: how many, mean (tenths of ms) and worst.
+    pub map_draws: u32,
+    pub map_draw_mean_ms10: u32,
+    pub map_draw_max_ms: u32,
+    /// What was on the map at the end of the turn: units and cities in the viewer's view, and the zoom (x100).
+    pub units: u32,
+    pub cities: u32,
+    pub zoom100: u32,
+    /// The map canvas's size in device pixels, in tenths of a megapixel (what a frame has to fill). Nothing that
+    /// tells players or devices apart is recorded: no browser, window size or screen.
+    pub canvas_mp10: u32,
+}
+
+impl TurnFrameTime {
+    fn valid(&self) -> bool {
+        self.frame_p50_ms10 <= self.frame_p95_ms10
+            && self.canvas_mp10 <= 2_000
+            && self.frames <= 10_000_000
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -277,6 +320,7 @@ impl Recording {
             initial_state: (!complete).then(|| json::state_to_json(state)),
             telemetry: vec![],
             turn_times: vec![],
+            frame_times: vec![],
         };
         this.update_metadata(state);
         this.telemetry
@@ -320,6 +364,22 @@ impl Recording {
         } else {
             self.turn_times.push(time);
             self.turn_times.sort_by_key(|t| t.turn);
+        }
+        Ok(())
+    }
+
+    pub fn record_frame_time(&mut self, time: TurnFrameTime) -> Result<(), String> {
+        if time.turn < self.metadata.first_turn
+            || time.turn >= self.metadata.first_turn + self.metadata.turn_count
+            || !time.valid()
+        {
+            return Err("invalid turn frame time".into());
+        }
+        if let Some(existing) = self.frame_times.iter_mut().find(|t| t.turn == time.turn) {
+            *existing = time;
+        } else {
+            self.frame_times.push(time);
+            self.frame_times.sort_by_key(|t| t.turn);
         }
         Ok(())
     }
@@ -456,6 +516,17 @@ impl Recording {
                 || previous_turn.is_some_and(|turn| turn >= time.turn)
             {
                 return Err("invalid archive turn play times".into());
+            }
+            previous_turn = Some(time.turn);
+        }
+        let mut previous_turn = None;
+        for time in &self.frame_times {
+            if time.turn < m.first_turn
+                || time.turn >= m.first_turn + m.turn_count
+                || !time.valid()
+                || previous_turn.is_some_and(|turn| turn >= time.turn)
+            {
+                return Err("invalid archive frame times".into());
             }
             previous_turn = Some(time.turn);
         }
@@ -730,6 +801,63 @@ mod tests {
             .remove("turn_times");
         let old = Session::from_save_json(&old_save.to_string(), |_| BrainKind::Scripted).unwrap();
         assert!(old.history.as_ref().unwrap().turn_times.is_empty());
+    }
+
+    #[test]
+    fn frame_times_survive_load_and_bad_ones_are_refused() {
+        let setup = GameSetup::standard(42, [Faction::India, Faction::Byzantium]);
+        let mut session = Session::new(&setup, |_| BrainKind::Scripted);
+        session.step(&OrderMap::new());
+        let history = session.history.as_mut().unwrap();
+        let time = TurnFrameTime {
+            turn: 1,
+            frames: 3600,
+            frame_p50_ms10: 167,
+            frame_p95_ms10: 334,
+            frame_max_ms: 120,
+            slow_frames: 4,
+            inputs: 900,
+            input_p95_ms: 40,
+            input_max_ms: 130,
+            long_tasks: 2,
+            long_task_ms: 140,
+            map_draws: 700,
+            map_draw_mean_ms10: 52,
+            map_draw_max_ms: 31,
+            units: 40,
+            cities: 12,
+            zoom100: 200,
+            canvas_mp10: 52,
+        };
+        history.record_frame_time(time.clone()).unwrap();
+        assert!(
+            history
+                .record_frame_time(TurnFrameTime {
+                    frame_p50_ms10: 400,
+                    ..time.clone()
+                })
+                .is_err()
+        );
+        assert!(
+            history
+                .record_frame_time(TurnFrameTime {
+                    turn: 9,
+                    ..time.clone()
+                })
+                .is_err()
+        );
+        let saved = session.save_json();
+        let loaded = Session::from_save_json(&saved, |_| BrainKind::Scripted).unwrap();
+        assert_eq!(loaded.history.as_ref().unwrap().frame_times, vec![time]);
+        // An archive from before frame times has none, and an archive without them writes no key.
+        let mut old_save: serde_json::Value = serde_json::from_str(&saved).unwrap();
+        old_save["archive"]
+            .as_object_mut()
+            .unwrap()
+            .remove("frame_times");
+        let old = Session::from_save_json(&old_save.to_string(), |_| BrainKind::Scripted).unwrap();
+        assert!(old.history.as_ref().unwrap().frame_times.is_empty());
+        assert!(!old.save_json().contains("frame_times"));
     }
 
     #[test]
