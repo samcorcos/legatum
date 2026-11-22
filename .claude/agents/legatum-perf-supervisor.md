@@ -90,7 +90,9 @@ should be looking out for proactively?" Yes: this class is the first thing to hu
 - **Where to look next** (known suspects, cross off with a measurement): map draw at device pixel ratio 2 on a
   real screen (the headless leftover was hover redrawing the whole map, fixed 2026-11-22, plus software
   rendering, which says nothing about a GPU: judge it from players' `frame_times` at high `canvas_mp10`); new
-  terrain chunks while panning at DPR 2 (four times the chunks per screen); the engine save going through a JSON value tree; the save text being escaped again inside the autosave
+  terrain chunks while panning or zooming at DPR 2 (four times the chunks per screen; the per-turn field rebuild
+  and part of the coast pass went 2026-11-22, a wheel zoom still renders every level it passes through); End Turn
+  as one main-thread task (engine step, views, autosave); the top bar measuring its width after every render; the engine save going through a JSON value tree; the save text being escaped again inside the autosave
   envelope; the 1.2 MB view parsed per seat per turn; report, notice and history lists that only grow;
   anything in `app/src` that maps over `view.units`, `view.cities` or `view.tiles` inside a render or a
   pointer handler; AI planning per unit pair.
@@ -154,7 +156,7 @@ Rules for your PRs:
 ## Record
 - Every run appends one ledger row (the script does it). Weekly, update `docs/status/tech-debt.md`
   (top 10, ranked) and `docs/sim-results/perf/README.md` when a baseline really moved.
-- Something non-obvious learned goes in the current month's `docs/learnings/<YYYY-MM>.md`; a check that proved useful or useless
+- Something non-obvious learned goes in its own file, `docs/learnings/<YYYY-MM>/<DD>-<slug>.md`; a check that proved useful or useless
   goes in "Learned" below.
 
 ## Report (brief)
@@ -175,6 +177,10 @@ CI about 15 minutes on 4 cores (after PR #14).
   chunk renders) and compare runs on the same DPR; never call a retina screen slow or smooth from it.
   Measured on the Mac's GPU the same day (lead's ask; headless with `--use-angle=metal --ignore-gpu-blocklist`),
   the dense turn-131 hover sweep at DPR 2 ran at 60 fps with no slow frames, before and after the hover fix.
+- 2026-11-22: a player's "a little jumpy at turn 131" showed in `frame_times` as long tasks per turn rising with
+  cities while map draw time stayed flat. Plot long tasks first, not frame p95. The cause was terrain cache work
+  (a whole-map field rebuild each turn, chunk rendering on zoom), found only by replaying the turn with a CPU
+  profile on a real GPU.
 - 2026-11-22 (user): this agent always runs on Fable.
 - 2026-11-21: performance used to be sections of the ops supervisor and lapsed after late October
   (last sim baseline 10-31, AI turn budget 10-27, app size 10-23) because the run grew into fleet

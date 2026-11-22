@@ -62,7 +62,7 @@ BACKUP = re.compile(r"(\.backup|\.bak|\.orig|~)$")
 MIGRATION = re.compile(r"(^|/)migrations?/")
 SPLIT_FILES = [
     ("docs/learnings.md", 30_000,
-     "re-add your entries at the top of docs/learnings/<YYYY-MM>.md, or run `python3 tools/docs/split_learnings.py "
+     "re-add each entry as its own file docs/learnings/<YYYY-MM>/<DD>-<slug>.md, or run `python3 tools/docs/split_learnings.py "
      "<your branch before the merge> --base $(git merge-base origin/master <that commit>) --write`"),
     (".claude/skills/legatum-rules/references/game-rules.md", 5_000,
      "re-add your rule lines to the matching file in .claude/skills/legatum-rules/references/ (index.md lists them)"),

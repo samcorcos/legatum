@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Stop hook: a one-line reminder, never a block. When code changed since the last check and no learnings file
-# (the docs/learnings.md digest or a docs/learnings/<YYYY-MM>.md archive) changed, print one reminder line,
+# (the docs/learnings.md digest or any file under docs/learnings/) changed, print one reminder line,
 # once per change set. It used to block finishing, which grew docs/learnings.md to 1.5 MB (2026-11-22).
 # It must never fail a session: any missing tool (git, jq, shasum) or error means a silent exit 0.
 trap 'exit 0' ERR
@@ -52,5 +52,5 @@ printf '%s %s %s\n' "$head" "$fp" "$learn" > "$state_file" 2>/dev/null || true
 [ "$learn" != "$last_learn" ] && exit 0
 [ "$fp" = "$last_fp" ] && exit 0
 
-printf '%s\n' '{"systemMessage": "Reminder: if this work taught something non-obvious, add a dated entry to the current month'"'"'s docs/learnings/<YYYY-MM>.md (promote it to the docs/learnings.md digest only if durable)."}'
+printf '%s\n' '{"systemMessage": "Reminder: if this work taught something non-obvious, add a dated entry as its own file, docs/learnings/<YYYY-MM>/<DD>-<slug>.md (promote it to the docs/learnings.md digest only if durable)."}'
 exit 0

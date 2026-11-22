@@ -7,7 +7,7 @@ A historical 4X on a hex map (real peoples such as Switzerland, the Mongols and 
 | What | Where |
 | --- | --- |
 | Design: what we're building, why, and the decisions log | Design doc (Claude Doc): (a private document, not published) — read it with the docs connector before any design work |
-| Engineering learnings: bug causes, balance findings, dead ends, gotchas | `docs/learnings.md` (short digest, read it) and `docs/learnings/<YYYY-MM>.md` (full monthly archive: new entries go to the current month) |
+| Engineering learnings: bug causes, balance findings, dead ends, gotchas | `docs/learnings.md` (short digest, read it) and `docs/learnings/` (full archive: each new entry is its own file, `docs/learnings/<YYYY-MM>/<DD>-<slug>.md`; the `<YYYY-MM>.md` month files are closed) |
 | AI work: method, gates, progress | The live method is the Hard AI hill-climb, gated on the designer-seat score (`tools/hill-climb/README.md`). `plans/ai-war.md` and `plans/ai-war.prd.json` are the background plan; `plans/ai-war-progress.txt` is still appended every session that touches AI work |
 | Simulation results | `docs/sim-results/`, written by the simulation runner |
 | How the game actually works: orders, turn resolution, what's available when, systems that don't exist | `.claude/skills/legatum-rules/` (code-verified). Load it before proposing any mechanic, faction, opening or balance change; update it in the same change whenever a rule or mechanic changes |
@@ -39,7 +39,7 @@ Each kind of knowledge lives in exactly one place. Don't duplicate design conten
 ## Recording what we learn (mandatory)
 
 - A design decision is made → add a row to the design doc's decisions log in the same turn.
-- Something non-obvious is learned → add a dated entry to the current month's `docs/learnings/<YYYY-MM>.md` in the same turn; promote it to the `docs/learnings.md` digest only if it is durable. Correct or delete entries that turn out to be wrong.
+- Something non-obvious is learned → add a dated entry as its own new file, `docs/learnings/<YYYY-MM>/<DD>-<slug>.md`, in the same turn (never append to a shared file: every open pull request then conflicts); promote it to the `docs/learnings.md` digest only if it is durable. Correct or delete entries that turn out to be wrong.
 - The user states a preference, rejects an idea, or corrects a recommendation → update the matching skill in the same turn: `legatum-design` (design philosophy, decided and rejected ideas), `legatum-factions` (faction method, current designs, lessons), `legatum-ui` (UI preferences), `legatum-art` (art direction and consistency), `legatum-workflow` (how we work, operational gotchas), `legatum-rules` (how the game works). Load the relevant skills before design, UI or planning work so settled questions aren't reopened.
 - Playtest builds ship first and are reviewed after (user, 2026-11-11): cut the build as soon as the code passes verify, then run the `legatum-ui-reviewer` agent (`.claude/agents/`) only if the build changes enough UI to warrant it, and ship its fixes as a follow-up build. Before merging any branch that changes UI to master, the reviewer still runs. It tours every screen at 1000x600 (the user's laptop) and 1440x900, and judges the screenshots against `legatum-ui`. Fix blockers first, and fold its proposed rules into the skills.
 - GitHub `samcorcos/legatum` is the source of truth, with one line on `master` (user, 2026-11-21). All work goes branch → pull request into `master` → CI → merge on GitHub; local checkouts only `git pull`. Never push to `master` directly.

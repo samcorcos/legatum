@@ -22,7 +22,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "printf '%s\\n' '{\"hookSpecificOutput\": {\"hookEventName\": \"SessionStart\", \"additionalContext\": \"Context was just compacted. Re-read CLAUDE.md and the docs/learnings.md digest before continuing. If the compaction summary mentions decisions or findings that are not yet recorded, record them now: the design doc decisions log, the matching skill, or the current month docs/learnings/<YYYY-MM>.md archive.\"}}'"
+            "command": "printf '%s\\n' '{\"hookSpecificOutput\": {\"hookEventName\": \"SessionStart\", \"additionalContext\": \"Context was just compacted. Re-read CLAUDE.md and the docs/learnings.md digest before continuing. If the compaction summary mentions decisions or findings that are not yet recorded, record them now: the design doc decisions log, the matching skill, or a new file docs/learnings/<YYYY-MM>/<DD>-<slug>.md.\"}}'"
           }
         ]
       }

@@ -47,6 +47,7 @@ Current principles and decisions, one line each with date and who. The user's fu
 - Era scoring is World Ages only (owner, 2026-11-22, rules 50): the three-objective era arm and its switch are deleted; iterate on World Ages itself (cards, counts, pacing). Each Age's pool has three peaceful cards every faction can reach; one card is drawn per Age.
 - At Peace, strength settles a contested tile (Sam, 2026-11-22, rules 51): units of empires not at War stepping onto one tile never both bounce; the team with the most combined strength among its claimants moves in (as force decides a fallen city), nobody fights, ties are a seeded draw; an exact force tie at a fallen city is a seeded draw too. Nobody is pushed off a tile they already stand on.
 - Fable review batch (Sam, 2026-11-22, rules 50): a rival's original capital is 1 VP only while held (the Celtic sack keeps its point for good); Alliance upkeep is waived while at War with a near-winner; same-turn ties between empires are drawn by seed; co-op Gold gifts to a teammate exist; `no_purchase_under_threat` is an off-by-default experiment. First pass the owner may veto: wonder prices on one era curve, Star Fort at Machinery. Details: `references/decided-2026-10-31-onward.md`.
+- Humble the mighty works for the leader (owner, 2026-11-22, rules 53, "Leader's card counts top rival"): when no rival team is ahead of yours, a capture from the rival with the most VP counts (ties included). Rejected with it: a default 300-turn limit, a per-empire redraw, leaving it.
 - Diplomacy: Peace, Alliance or War; Alliances cost Gold per turn, no signing fee; defenders join at once and an ally's offensive war raises a call to arms (user, 2026-10-03, 2026-10-23, 2026-11-01). Folding calls into plain war was decided on 2026-11-11, but `WarCall` is still in `crates/core` on 2026-11-22: check the code before relying on either. Peace starts a 10-turn truce (user, 2026-10-25).
 - Captures: a captured city loses half its population; the occupation lock is the rule in every game; any empire can raze a captured city (user, 2026-11-13, 2026-10-25/31).
 - Start: every empire starts with its capital founded on a balanced site of 8 Food and 8 Production (user, 2026-11-07, 2026-11-17).
@@ -66,6 +67,7 @@ Use a short template: broken rule, flavour-linked constraint, path to 10 VP, vis
 - Every missing Civ 6 system has a recorded reason in the rules reference (`not-in-game.md`) (user, 2026-10-18).
 
 ## Rejected ideas (don't re-propose without new evidence)
+- For Humble the mighty's dead card for the leader (owner, 2026-11-22): a default 300-turn limit (no turn limit by default stays the design), a per-empire redraw of a card it cannot score (breaks the one shared card per Age), and leaving it as it was.
 - A fungible production pool that carries over to any item (too exploitable; the user rejected it).
 - The map-reveal ruin reward ("cartographer's cache"): it felt useless, so it was removed on 2026-10-03. Ruin rewards should be things you feel.
 - Removing tech diffusion: it's a rubber band that keeps games competitive (pillar 11). Keep it, and make it visible in research forecasts.

@@ -14,4 +14,4 @@
 
 Build and contribution instructions are in [../CONTRIBUTING.md](../CONTRIBUTING.md).
 
-The development layer is public too: `CLAUDE.md` and `.claude/` (skills, agents, hooks) record how the project is run with AI agents; `docs/learnings.md` is a short digest of the engineering log, whose full monthly archive is `docs/learnings/` (`engineering-notes.md` is the curated version); `docs/ops/`, `docs/status/` and `tools/` hold the operations side (cloud build box, spot simulations, test gates).
+The development layer is public too: `CLAUDE.md` and `.claude/` (skills, agents, hooks) record how the project is run with AI agents; `docs/learnings.md` is a short digest of the engineering log, whose full archive is `docs/learnings/` (one file per entry; the older month files are closed) (`engineering-notes.md` is the curated version); `docs/ops/`, `docs/status/` and `tools/` hold the operations side (cloud build box, spot simulations, test gates).
