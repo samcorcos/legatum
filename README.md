@@ -39,7 +39,7 @@
 
 ---
 
-Legatum is a turn-based strategy game in the tradition of Civilization VI. You found cities, research through nine eras, raise armies, make and break alliances, and race your rivals for victory points. A full game is paced for about 300 turns.
+Legatum is a turn-based strategy game in the tradition of Civilization VI. You found cities, research through nine eras, raise armies, make and break alliances, and race your rivals for victory points. A full game is designed for 250 to 300 turns; in the 2026-11-22 census of 2,112 all-Hard eight-empire games the median game ended on turn 220.
 
 It is an open-source project in active development. The game runs in a browser, on a laptop, tablet or phone, and online for two or more players. There is no stable release yet; see [Status](#status).
 
@@ -223,7 +223,7 @@ Direction, in rough order of how soon it matters:
 
 - **An AI that plays like a strong human.** The AI is being tuned against milestones recorded from human games, and it has not reached its targets yet. This comes before faction balance work, because balance numbers mean little while the AI is weak.
 - **Finishing Egypt and Rome.** Neither has a faction goal yet.
-- **Faction balance.** The aim is that the best people's win rate is at most 1.5 times the worst's, checked on about 2,000 games plus held-out seeds. Balance changes add drawbacks or deepen a weak identity; they do not flatten strengths.
+- **Faction balance.** The aim is that the best people's win rate is at most 1.5 times the worst's, checked on about 2,000 games plus held-out seeds. It is not met yet: the 2026-11-22 census ([results](docs/sim-results/2026-11-22-census-eleven-factions-rules50.md)) has Egypt at 21.4% and Rome at 2.3% of wins, a ratio of 9.1 (2.6 among the nine finished peoples). Balance changes add drawbacks or deepen a weak identity; they do not flatten strengths.
 - **A late-game way to score for stalemated games.** A stalled game should have a hard path to two more points in the Future era. It waits until simulations show it is needed.
 - **Delegation for the mid-game.** War across a big empire is tedious by hand. Generals who run a campaign for you are planned once the AI's own campaign logic is good enough to trust.
 

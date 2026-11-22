@@ -54,7 +54,7 @@ Japan is not a playable faction until Tokugawa lands: its `Faction` slot is Indi
 - **A Mercenary Company is the seller's own special unit; the hire shop sells only special units** (user, 2026-11-14). Contracts last 30 turns (user, 2026-10-17).
 - **The AI must play the kit,** not a generic game with a faction label (user, 2026-11-05); AI genes may be on for some factions and off for others (user, 2026-10-11).
 - **Measure identity per faction, never in aggregate** (user, 2026-10-03): Sparta and Mongols by captures and first-war timing; Switzerland by interest; Byzantium by Companies; India by cluster and Revenue Office coverage; Germany by project output. Judge AI combat by efficiency (captures per war, units lost per capture).
-- **Balance target:** best/worst faction win ratio at most 1.5x at Standard, about 2,000 games plus held-out seeds, scripted Hard; census win share is per game, convert to per seat (see `docs/learnings.md`).
+- **Balance target:** best/worst faction win ratio at most 1.5x at Standard, about 2,000 games plus held-out seeds, scripted Hard. This is the aim, not the state: the 2026-11-22 census (rules 50, 11 factions, 2,112 games) read 9.1 (Egypt 21.4%, Rome 2.3%; 2.6 among the nine finished) in `docs/sim-results/2026-11-22-census-eleven-factions-rules50.md`; census win share is per game, convert to per seat (see `docs/learnings.md`).
 - **Start sites:** every founding territory is the same 8 Food and 8 Production (rules 24, 2026-11-07); only India has a start preference.
 - **Keeping it current:** after any faction discussion or change, update the table and the one-line rulings here, and put detail in the matching reference file, in the same turn.
 
