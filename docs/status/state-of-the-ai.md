@@ -1,4 +1,4 @@
-> **Dated 2026-11-22:** this page predates the current rules (it was written on `RULES_VERSION` 14) and its numbers are stale. AI strength is now measured by a duel ladder: one changed AI among five baseline AIs on paired seeds. Read the content below as history.
+> **Dated 2026-11-22:** this page predates the current rules (it was written on `RULES_VERSION` 14) and its numbers are stale. AI strength is now measured by the hill-climb suite (`tools/hill-climb/`): two engine builds compared on recorded decision points with paired salts. Read the content below as history.
 
 # State of the AI (index)
 

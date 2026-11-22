@@ -21,7 +21,7 @@ Helper programs around the engine. Everything here is optional for building and 
 | `tools/evolve/` | CMA-ES evolution of the scripted AI's parameters. | `crates/ai/src/params.rs`, `.private.example/cloud.env`, archived evolution docs | historical |
 | `tools/film/` | Renders storyboard films and reports from runs. | `tools/evolve/`, `tools/dashboard/` | historical |
 | `tools/gates/` | The merge gates: static checks, art, engine invariants, hygiene, markers. | `ci.yml`, `CLAUDE.md`, `CONTRIBUTING.md`, `tools/ci/local-ci.sh`, scenario lint tests | active |
-| `tools/hill-climb/` | Hard AI hill-climb measurement suite and duel ladder. | Run by hand by the AI hill-climb work | active |
+| `tools/hill-climb/` | Hard AI hill-climb measurement suite: two engine builds compared on recorded decision points. | Run by hand by the AI hill-climb work | active |
 | `tools/league/` | Hard-AI handoff and opening-league analysis and tuned-opening export. | `crates/ai` (`hard_v2.rs`, `tuned_openings.rs`), `tools/duel/README.md` | historical |
 | `tools/llm-teacher/` | LLM-teacher experiment built from the designer's recorded reasoning. | `docs/status/state-of-the-ai.md`, the legatum-design skill | historical |
 | `tools/ops/` | Agent worktrees, background jobs, landing, test timing and Playwright worker helpers. | `scripts/build-wasm.sh`, `.config/nextest.toml`, `tools/astra/`, `tools/cloud/`, `tools/release/check.sh` | active |
@@ -32,7 +32,7 @@ Helper programs around the engine. Everything here is optional for building and 
 | `tools/training/` | Copies Training-mode answers from the desktop app into the repo. | The legatum-rules reference only | historical (desktop app is being removed) |
 | `tools/ui/` | Playwright bridge helpers and WebKit tooling for UI checks. | `docs/pw-bridge.md`, `app/e2e/`, workflow skill | active |
 
-## Scripts
+## Main scripts
 
 | Path | What it does |
 | --- | --- |
