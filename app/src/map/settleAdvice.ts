@@ -24,9 +24,11 @@ export function yieldPhrase(y: SettlementSite['potential_yields']): string {
 
 /** The points of a site's quality, one per cause, in the order the hover lists them. They sum to `site.quality`. */
 export interface QualityPart { id: 'land' | 'strategic' | 'foreign' | 'wonder'; label: string; points: number }
-export function qualityParts(site: SettlementSite): QualityPart[] {
+export function qualityParts(site: SettlementSite, faction?: string): QualityPart[] {
   const y = site.potential_yields;
-  const parts: QualityPart[] = [{ id: 'land', label: `Land within ${WORK_RADIUS} tiles, outer ring at half: Food ×4 + Production ×3 + Gold ×2`, points: y.food * 4 + y.production * 3 + y.gold * 2 }];
+  // The Nile: Egypt's site numbers already hold double Food and no Production, so its formula names no Production.
+  const formula = faction === 'Egypt' ? 'Food ×4 + Gold ×2 (Food doubled by the Nile)' : 'Food ×4 + Production ×3 + Gold ×2';
+  const parts: QualityPart[] = [{ id: 'land', label: `Land within ${WORK_RADIUS} tiles, outer ring at half: ${formula}`, points: y.food * 4 + y.production * 3 + y.gold * 2 }];
   const strategic = site.resources.filter((r) => isStrategic(r.resource));
   if (strategic.length) parts.push({ id: 'strategic', label: `${strategic.map((r) => RESOURCE_INFO[r.resource].name).join(' and ')}: ${STRATEGIC_SITE_VALUE} each`, points: strategic.length * STRATEGIC_SITE_VALUE });
   if (site.foreign_tiles) parts.push({ id: 'foreign', label: `${tiles(site.foreign_tiles)} of foreign land: −${FOREIGN_TILE_COST} each`, points: -site.foreign_tiles * FOREIGN_TILE_COST });
@@ -42,7 +44,9 @@ const levelOf = (n: number, plenty: number, some: number): Level => n >= plenty 
 const levelWords = (level: Level, yieldName: string) => level === 'plenty' ? `plenty of ${yieldName}` : level === 'some' ? `some ${yieldName}` : `little ${yieldName}`;
 
 /** "plenty of Food and Production nearby", "plenty of Food but little Production nearby". */
-export function landClause(y: SettlementSite['potential_yields']): string {
+export function landClause(y: SettlementSite['potential_yields'], faction?: string): string {
+  // The Nile: Egypt has no Production and its Food is already doubled in the site's numbers, so it hears about Food alone.
+  if (faction === 'Egypt') return `${levelWords(levelOf(y.food, FOOD_PLENTY * 2, FOOD_SOME * 2), 'Food')} nearby`;
   const food = levelOf(y.food, FOOD_PLENTY, FOOD_SOME), production = levelOf(y.production, PRODUCTION_PLENTY, PRODUCTION_SOME);
   if (food === production) return food === 'little' ? 'little Food or Production nearby' : `${levelWords(food, 'Food and Production')} nearby`;
   return `${levelWords(food, 'Food')} ${(food === 'little') !== (production === 'little') ? 'but' : 'and'} ${levelWords(production, 'Production')} nearby`;
@@ -62,8 +66,8 @@ const NAMED_RESOURCES = 2;
  * The hover's first sentence, in plain words (pillar 5, plain-language guide): "Great spot for a city: plenty of Food and
  * Production nearby, Wheat 3 tiles away and the terrain gives units here +3 defence." The numbers follow in `qualityLines`.
  */
-export function siteVerdict(site: Pick<SettlementSite, 'band' | 'potential_yields' | 'resources' | 'defense_bonus'> & { border_risk?: boolean }): { head: string; rest: string } {
-  const parts = [landClause(site.potential_yields)];
+export function siteVerdict(site: Pick<SettlementSite, 'band' | 'potential_yields' | 'resources' | 'defense_bonus'> & { border_risk?: boolean }, faction?: string): { head: string; rest: string } {
+  const parts = [landClause(site.potential_yields, faction)];
   for (const r of nearestFirst(site).slice(0, NAMED_RESOURCES)) parts.push(`${RESOURCE_INFO[r.resource].name} ${away(r.distance)}`);
   if (site.defense_bonus > 0) parts.push(`the terrain gives units here +${site.defense_bonus} defence`);
   return { head: `${site.band} spot for a city${site.border_risk ? ' (unconfirmed)' : ''}`, rest: `${joinWords(parts)}.` };

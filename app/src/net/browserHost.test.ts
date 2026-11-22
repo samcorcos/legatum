@@ -29,6 +29,9 @@ class FakeEngine implements HostEngine {
   summary() { return '{"players":1}'; }
   new_game() { this.save = 'saved'; }
   load_game() {}
+  open_guest_seats() {}
+  save_game() { if (!this.live) throw new Error('No game in progress'); return 'live save'; }
+  live = true;
   configure_staging() {}
   close_staging() {}
   start_staging() { return '{"code":"not_ready","message":"Not everyone is ready."}'; }
@@ -323,4 +326,11 @@ it('tells the host when the relay refuses to list a forgotten room again, and ke
   expect(seen[0].message).toBe('You have opened too many games lately. Try again in 2 minutes.');
   await vi.waitFor(() => expect(timers.some((t) => !t.every && !t.dead)).toBe(true));
   host.stop();
+});
+
+it('saveGame hands over the live save on demand, or null when there is no game', () => {
+  const host = new BrowserHost(options());
+  expect(host.saveGame()).toBe('live save');
+  engine.live = false;
+  expect(host.saveGame()).toBeNull();
 });
