@@ -226,6 +226,10 @@ pub struct GameRecord {
     /// Team VP after resolving turn 100 (the census's runaway-leader read, pillar 11).
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub team_vp_turn_100: BTreeMap<u8, u32>,
+    /// The furthest era any empire reached by the end (0 = Ancient). None on panics and on
+    /// records written before this field existed: unknown, not Ancient.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_era: Option<u8>,
     /// None on panics and legacy records: unavailable observations are not zero counts.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub telemetry: Option<GameTelemetry>,
@@ -261,6 +265,7 @@ impl GameRecord {
             workable_claims_after: 0,
             team_vp_turn_75: BTreeMap::new(),
             team_vp_turn_100: BTreeMap::new(),
+            max_era: None,
             telemetry: None,
             wall_ms,
             hashes: vec![],
@@ -418,6 +423,14 @@ pub struct Summary {
     /// Final VP of every player: vp -> count.
     pub vp_histogram: BTreeMap<u32, u32>,
     pub length: Option<Dist>,
+    /// Games (non-panic) whose end state records an era, and how many had any empire in the
+    /// World War era or later. The share is over the games that recorded an era.
+    pub era_observed_games: usize,
+    pub world_war_games: usize,
+    pub world_war_share: f64,
+    /// Share of non-panic games by how they ended, as fractions of non-panic games:
+    /// capitals victory, VP hold, turn limit, everything else (conquest, draw, stalled).
+    pub ending_shares: EndingShares,
     /// Turns resolved per outcome kind (VP hold, conquest, turn limit, draw, stalled).
     pub length_by_outcome: BTreeMap<Outcome, TurnStats>,
     /// VP-hold telemetry: holds started/broken/completed, first reach to win, comebacks.
@@ -432,6 +445,46 @@ pub struct Summary {
     pub determinism_failures: usize,
     pub telemetry: TelemetrySummary,
     pub openings: OpeningSummary,
+}
+
+/// The era index of "World War" in `legatum_core::eras::ERA_NAMES`.
+pub fn world_war_era() -> u8 {
+    legatum_core::eras::ERA_NAMES
+        .iter()
+        .position(|n| *n == "World War")
+        .expect("the era table names a World War era") as u8
+}
+
+/// How non-panic games ended, as shares of those games (they sum to 1 when any game ended).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize)]
+pub struct EndingShares {
+    pub capitals: f64,
+    pub vp_hold: f64,
+    pub turn_limit: f64,
+    pub other: f64,
+}
+
+impl EndingShares {
+    pub fn of(outcomes: &BTreeMap<Outcome, usize>) -> Self {
+        let n = |o: Outcome| outcomes.get(&o).copied().unwrap_or(0);
+        let played: usize = Outcome::ALL
+            .iter()
+            .filter(|o| **o != Outcome::Panic)
+            .map(|o| n(*o))
+            .sum();
+        if played == 0 {
+            return Self::default();
+        }
+        let share = |c: usize| c as f64 / played as f64;
+        let (capitals, vp_hold, turn_limit) =
+            (n(Outcome::Capitals), n(Outcome::Vp), n(Outcome::TurnLimit));
+        Self {
+            capitals: share(capitals),
+            vp_hold: share(vp_hold),
+            turn_limit: share(turn_limit),
+            other: share(played - capitals - vp_hold - turn_limit),
+        }
+    }
 }
 
 fn rate(w: &mut WinRate) {
@@ -480,6 +533,10 @@ pub fn summarize(records: &[GameRecord]) -> Summary {
             continue;
         }
         lengths.push(r.turns);
+        if let Some(era) = r.max_era {
+            s.era_observed_games += 1;
+            s.world_war_games += (era >= world_war_era()) as usize;
+        }
         lengths_by_outcome
             .entry(r.outcome)
             .or_default()
@@ -568,6 +625,10 @@ pub fn summarize(records: &[GameRecord]) -> Summary {
     }
     s.winner_vp = Dist::of(winner_vp);
     s.length = Dist::of(lengths);
+    if s.era_observed_games > 0 {
+        s.world_war_share = s.world_war_games as f64 / s.era_observed_games as f64;
+    }
+    s.ending_shares = EndingShares::of(&s.outcomes);
     s
 }
 
@@ -828,6 +889,29 @@ fn overview_markdown(s: &Summary) -> String {
         .collect::<Vec<_>>()
         .join(", ");
     o += &format!("| Win reason mix | {mix} |\n");
+    // Appended rows (keep existing rows stable for parsers): the length and ending read the
+    // review asked for on every census.
+    let e = &s.ending_shares;
+    o += &format!(
+        "| Median end turn | {} |\n| Ending shares of played games (capitals / VP hold / turn limit / other) | {:.1}% / {:.1}% / {:.1}% / {:.1}% |\n",
+        s.length
+            .as_ref()
+            .map_or_else(|| "-".into(), |d| d.median.to_string()),
+        100.0 * e.capitals,
+        100.0 * e.vp_hold,
+        100.0 * e.turn_limit,
+        100.0 * e.other,
+    );
+    if s.era_observed_games == 0 {
+        o += "| Games reaching the World War era | not observed (no era in these records) |\n";
+    } else {
+        o += &format!(
+            "| Games reaching the World War era (any empire) | {} of {} ({:.1}%) |\n",
+            s.world_war_games,
+            s.era_observed_games,
+            100.0 * s.world_war_share,
+        );
+    }
     if h.observed_games == 0 {
         o += "| VP holds | not observed (no hold telemetry in these records) |\n";
     } else {
@@ -1295,6 +1379,7 @@ mod tests {
             workable_claims_after: 0,
             team_vp_turn_75: BTreeMap::new(),
             team_vp_turn_100: BTreeMap::new(),
+            max_era: None,
             telemetry: None,
             hashes: vec![],
             panic: None,
@@ -1514,5 +1599,51 @@ mod tests {
             assert_eq!(metric.never_empires, 0);
             assert!(metric.turns.is_none());
         }
+    }
+
+    #[test]
+    fn world_war_is_era_six_and_shares_count_only_games_that_recorded_an_era() {
+        assert_eq!(world_war_era(), 6);
+        let mut a = game(0, Some(0), Outcome::Vp, 120);
+        a.max_era = Some(6);
+        let mut b = game(1, Some(0), Outcome::Capitals, 140);
+        b.max_era = Some(5);
+        let mut c = game(2, Some(1), Outcome::TurnLimit, 160);
+        c.max_era = Some(8);
+        let legacy = game(3, Some(1), Outcome::Conquest, 180);
+        let s = summarize(&[a, b, c, legacy, GameRecord::panicked(4, 4, "x".into(), 0)]);
+        assert_eq!(s.era_observed_games, 3);
+        assert_eq!(s.world_war_games, 2);
+        assert!((s.world_war_share - 2.0 / 3.0).abs() < 1e-9);
+        // Median end turn is over the four played games (nearest rank, upper median).
+        assert_eq!(s.length.as_ref().unwrap().median, 160);
+        let e = s.ending_shares;
+        assert!((e.vp_hold - 0.25).abs() < 1e-9);
+        assert!((e.capitals - 0.25).abs() < 1e-9);
+        assert!((e.turn_limit - 0.25).abs() < 1e-9);
+        assert!((e.other - 0.25).abs() < 1e-9);
+    }
+
+    #[test]
+    fn overview_appends_the_length_and_era_rows_after_the_stable_ones() {
+        let mut a = game(0, Some(0), Outcome::Vp, 100);
+        a.max_era = Some(7);
+        let md = overview_markdown(&summarize(&[a]));
+        let mix = md.find("| Win reason mix").unwrap();
+        let median = md.find("| Median end turn | 100 |").unwrap();
+        assert!(mix < median);
+        assert!(md.contains("| Games reaching the World War era (any empire) | 1 of 1 (100.0%) |"));
+        assert!(md.contains("100.0% / 0.0% / 0.0%") || md.contains("0.0% / 100.0% / 0.0% / 0.0%"));
+        let legacy = overview_markdown(&summarize(&[game(0, Some(0), Outcome::Vp, 100)]));
+        assert!(legacy.contains("not observed (no era in these records)"));
+    }
+
+    #[test]
+    fn a_record_without_max_era_reads_as_unknown() {
+        let mut value = serde_json::to_value(game(0, None, Outcome::Draw, 10)).unwrap();
+        assert!(value.get("max_era").is_none());
+        value["max_era"] = serde_json::json!(6);
+        let r: GameRecord = serde_json::from_value(value).unwrap();
+        assert_eq!(r.max_era, Some(6));
     }
 }

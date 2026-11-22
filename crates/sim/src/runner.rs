@@ -965,6 +965,13 @@ pub fn record(index: usize, p: &Played, wall_ms: u64, keep_hashes: bool) -> Game
         workable_claims_after: p.workable_claims_after,
         team_vp_turn_75: p.team_vp_turn_75.clone(),
         team_vp_turn_100: p.team_vp_turn_100.clone(),
+        max_era: (p.panic.is_none()).then(|| {
+            st.players
+                .iter()
+                .map(|x| legatum_core::eras::era_of(st, x.id))
+                .max()
+                .unwrap_or(0)
+        }),
         telemetry: Some(p.telemetry.clone()),
         wall_ms,
         hashes: if keep_hashes {
