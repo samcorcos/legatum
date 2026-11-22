@@ -180,7 +180,7 @@ export const FACTION_SHEETS: Record<Faction, FactionSheet> = {
     ratings: { aggression: 4, economy: 3, complexity: 4 },
     pairs: [
       { strength: `A sack carries off ${RULES.celtsSackGoldPerPopulation} Gold per population and raises a warband camp near the ruins.`, price: "Celts can't keep cities they capture: they sack and burn them. A city you founded comes home intact when you retake it.", strengthIcon: 'yield-gold', priceIcon: 'city' },
-      { strength: 'Barbarians never attack the Celts, all game. No camp, scout or raider touches your units, cities or Settlers, and the warband camps you raise raid your rivals only.', strengthIcon: 'ui-camp' },
+      { strength: "Barbarians don't attack the Celts.", strengthIcon: 'ui-camp' },
       specialRow('Celts', 'unit-gaesatae'),
     ],
     counteredBy: 'Garrison your cities and build Walls: a sacked city is gone, but a held one costs the Celts their army.',

@@ -97,3 +97,7 @@
 .te.sm:not(.bad) .te-sign { display: none; }
 .te.sm.bad .te-sign { width: 46%; height: 46%; }
 .te.sm .te-ring { top: 8%; bottom: 8%; }
+
+/* Report lines: an era's numeral seal and a natural wonder's own painting stand in the ring. */
+.rm .rm-numeral { font-family: var(--display); font-weight: 700; line-height: 1; letter-spacing: -0.02em; }
+.rm .rm-wonder { border-radius: 50%; object-fit: cover; display: block; }

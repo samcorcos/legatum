@@ -93,7 +93,7 @@ describe('faction content and setup', () => {
     expect(FACTION_INFO.Switzerland.weakness).toContain('Military unit upkeep is triple: 3 Gold a turn instead of 1.');
     expect(FACTION_INFO.Celts.weakness).toContain("Celts can't keep cities they capture: they sack and burn them.");
     expect(FACTION_INFO.Celts.weakness).not.toContain('less strength');
-    expect(FACTION_INFO.Celts.ability).toContain('Barbarians never attack the Celts');
+    expect(FACTION_INFO.Celts.ability).toContain("Barbarians don't attack the Celts");
     expect(FACTION_INFO.Mongols.ability).toContain('at least 8 tiles from your capital');
     expect(FACTION_INFO.Mongols.ability).toContain('+2 Gold');
     for (const building of ['Market', 'Clearinghouse'] as const) {

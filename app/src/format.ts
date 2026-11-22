@@ -12,7 +12,7 @@ import { techCardUnlocks, techUnlockSummary } from './ui/techCardUnlocks';
 import { eraName } from './ui/eraResearch';
 import { cardName } from './ageCards';
 import { CITY_HEAL, CITY_HP, cityCanFire } from './combat';
-import { BUILDING_NAME, FACTION_ADJECTIVE, FACTION_GOAL, factionGoalVp, RULES, TECH_NAME, CAPTURE_RESISTANCE_TURNS, eraScaled, factionGoalRule, UNIT_NAME, itemName, pluralUnit } from './data';
+import { BUILDING_NAME, unitIconName, FACTION_ADJECTIVE, FACTION_GOAL, factionGoalVp, RULES, TECH_NAME, CAPTURE_RESISTANCE_TURNS, eraScaled, factionGoalRule, UNIT_NAME, itemName, pluralUnit } from './data';
 import { closeObjectives } from './eraObjectives';
 import { bearing, empireNameOf, empireOfPlayer, empireTitle, PEOPLE_NAME, placeName } from './empires';
 import { CAMP_CLEAR_GOLD, isBarbarian } from './barbarians';
@@ -1393,6 +1393,7 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
     case 'SiegeBought':
       return line('economy', `${unitLabel(ctx, e.unit, e.owner)} bought Siege for ${e.gold} Gold: its attacks on a city ignore enemy Walls`, {
         players: [e.owner],
+        icon: ctx.unitKind(e.unit) ? unitIconName(ctx.unitKind(e.unit)!, ctx.playerFaction?.(e.owner)) : undefined,
       });
     case 'UnitUpgraded':
       return line('economy', `${unitLabel(ctx, e.unit, e.owner)} upgraded to ${itemName({ kind: 'Unit', unit: e.to }, ctx.playerFaction?.(e.owner))} for ${e.gold} Gold`, {
@@ -1459,7 +1460,7 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
         at: e.at,
         players: ctx.team,
         weight: 1,
-        details: [`Destroy its guard, then move a military unit onto the camp for ${CAMP_CLEAR_GOLD} Gold. ${ctx.playerFaction?.(ctx.me) === 'Celts' ? 'Barbarians never attack you.' : 'Its scouts bring raiders to cities they find.'}`],
+        details: [`Destroy its guard, then move a military unit onto the camp for ${CAMP_CLEAR_GOLD} Gold. ${ctx.playerFaction?.(ctx.me) === 'Celts' ? "Barbarians don't attack you." : 'Its scouts bring raiders to cities they find.'}`],
       });
     case 'BarbarianScoutSpotted':
       return line('combat', `A barbarian scout spotted ${ctx.cityName(e.city)} and is heading home. Kill it before it reaches its camp, or raiders will follow.`, {

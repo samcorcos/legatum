@@ -262,7 +262,7 @@ export function ScoreLedger({ model, turn, close, closeRef }: { model: VpModel; 
         <span className="sl-kick"><Star size={8} /> Victory points · turn {turn}</span>
         <h2 id="vh-sheet-title">Score ledger</h2>
       </div>
-      <p className="sl-win">The first team to hold <b>{target} VP</b> for 10 turns wins. World wonders and held goals can change hands; era and capital points stay earned.</p>
+      <p className="sl-win">The first team to hold <b>{target} VP</b> for 10 turns wins. World wonders and held goals can change hands; {model.deck ? 'Age' : 'era'} and capital points stay earned.</p>
       <button ref={closeRef} type="button" className="btn quiet vh-close" onClick={close} aria-label="Close objectives">Close <kbd className="kbd">Esc</kbd></button>
     </header>
     <div className="sl-body" ref={body}>

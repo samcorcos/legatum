@@ -5373,3 +5373,8 @@ Replayed from his autosave tape with `decision_audit --seat 4 --diff-only --sett
 ## 2026-11-22: Chrome consistency (ui-tour/chrome)
 - **All-caps key hints came from `.btn { text-transform: uppercase }` reaching the `<kbd>` inside it.** `.kbd` and `:is(.btn,.act,.cta,.prod,.link) kbd` now set `text-transform: none`, so "Return" and "Esc" print as typed in every button.
 - **Renaming a visible label means renaming its `aria-label` and every e2e `getByRole` name with it.** The Score ledger link kept `aria-label="All objectives"` and about 25 specs matched on it; the link now has no aria-label (its text is its name). Specs matching "Diplomacy inbox" now match `/^Diplomacy/`.
+## UI tour fixes: copy and icons (2026-11-22)
+
+- **Faction sheets read `FACTION_GOAL[f].sheet` (one sentence), not `detail`.** `detail` keeps the fine print for the Guide, `vpModel` and the picker blurb; a goal without a `sheet` falls back to `detail`. VP amounts on the sheet go through `Amounts` so they wear the VP icon.
+- **Report medallions take two pseudo-icon names:** `era-numeral:III` (the era's numeral seal) and `wonder:<Wonder>` (a natural wonder's painting), both handled by `Glyph` in `ringMedallion.tsx`. `EraEntered` was unreachable at its second `case` (the tech case came first), so era lines drew the tech emblem.
+- **Deck mode is the "Age" mode:** a screen that can show either mode must pick the word from `view.rule_experiments.objectives_deck` (the `HowYouWin.deck` flag for the HUD); screens with no view (the loading tips) stay neutral ("Scored objectives").
