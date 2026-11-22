@@ -114,15 +114,20 @@ export class RelayRefusal extends Error {
   }
 }
 
+/** Live rooms one internet address may hold. Mirrors MAX_ROOMS_PER_IP in infra/relay/src/shared.ts (the server's number is
+ * the one that counts; a changed server value only changes this wording, never what is allowed). */
+export const MAX_ROOMS_PER_ADDRESS = 2;
+
 /** What the host reads for each refusal: what happened and the one next step. */
 export function refusalMessage(kind: RefusalKind, retryAfterS: number | null = null): string {
   switch (kind) {
     case 'too_fast': {
-      const minutes = Math.max(1, Math.ceil((retryAfterS ?? 0) / 60));
+      if (retryAfterS === null) return 'You have opened too many games lately. Try again in a few minutes.';
+      const minutes = Math.max(1, Math.ceil(retryAfterS / 60));
       return `You have opened too many games lately. Try again in ${minutes} ${minutes === 1 ? 'minute' : 'minutes'}.`;
     }
     case 'too_many':
-      return 'You already have games open. Close one before hosting another.';
+      return `Your internet connection already has ${MAX_ROOMS_PER_ADDRESS} games open. Close one before hosting another.`;
     case 'full':
       return 'The game list is full right now. Try again in a few minutes.';
     case 'closed':
@@ -134,12 +139,38 @@ export function refusalMessage(kind: RefusalKind, retryAfterS: number | null = n
   }
 }
 
-/** The relay answers POST /rooms: 429 (with Retry-After when it is the creation rate), 503 (paused or full). */
+/** What Host Game's sub-line says after a refusal. Only a refusal that a retry can fix says "Try again". */
+export function retryLine(kind: RefusalKind, retryAfterS: number | null = null): string {
+  switch (kind) {
+    case 'too_fast': {
+      if (retryAfterS === null) return 'Try again in a few minutes';
+      const minutes = Math.max(1, Math.ceil(retryAfterS / 60));
+      return `Try again in ${minutes} ${minutes === 1 ? 'minute' : 'minutes'}`;
+    }
+    case 'too_many':
+      return 'Close one of your games first';
+    case 'closed':
+      return 'Paused for now';
+    default:
+      return 'Try again';
+  }
+}
+
+/** A refusal where pressing Host Game again right away cannot work, so it is not the next action. */
+export const retryWouldFail = (kind: RefusalKind): boolean => kind === 'too_fast' || kind === 'too_many' || kind === 'closed';
+
+/**
+ * The relay answers POST /rooms: 429 (the creation rate, or the per-address room cap) and 503 (paused or full).
+ * A browser calling the relay from another origin can read Retry-After only if the relay exposes it, so the two 429s are
+ * also told apart by their body text, which the relay has always sent.
+ */
 export function refusalFor(status: number, error: string | undefined, retryAfter: string | null): RelayRefusal {
   const detail = `The relay refused the room (${status}): ${error ?? 'no reason given'}`;
   if (status === 429) {
     const secs = retryAfter !== null && /^\d{1,6}$/.test(retryAfter.trim()) ? Number(retryAfter.trim()) : null;
-    return secs !== null ? new RelayRefusal('too_fast', detail, secs) : new RelayRefusal('too_many', detail);
+    if (secs !== null || /too quickly|too fast/i.test(error ?? '')) return new RelayRefusal('too_fast', detail, secs);
+    if (/games? open/i.test(error ?? '')) return new RelayRefusal('too_many', detail);
+    return new RelayRefusal('other', detail);
   }
   if (status === 503) return new RelayRefusal(/paused/i.test(error ?? '') ? 'closed' : 'full', detail);
   return new RelayRefusal('other', detail);

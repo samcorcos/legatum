@@ -1,5 +1,5 @@
 import { beforeEach, expect, it, vi } from 'vitest';
-import { BrowserHost, MAX_BACKOFF_MS, MIN_BACKOFF_MS, PING_MS, RelayRefusal, refusalMessage, type HostEngine, type TunnelSocket } from './browserHost';
+import { BrowserHost, MAX_BACKOFF_MS, MIN_BACKOFF_MS, PING_MS, RelayRefusal, refusalMessage, retryLine, retryWouldFail, type HostEngine, type TunnelSocket } from './browserHost';
 import { KIND_BYE, KIND_CLOSE, KIND_DATA, KIND_OPEN, KIND_PING, KIND_STATUS, KIND_SUMMARY, decodeFrame, encodeFrame, frameText } from './tunnel';
 
 /** An engine that echoes: every received text goes back to its sender. */
@@ -243,11 +243,12 @@ it("the host's own socket and admin calls reach the engine in the tab", async ()
 });
 
 /** A relay that answers POST /rooms with a refusal. */
-const refusing = (status: number, error: string, retryAfter?: string) => ({
+const refusing = (status: number, error: string, retryAfter?: string, readable = true) => ({
   fetch: async () => ({
     ok: false,
     status,
-    headers: { get: (n: string) => (n.toLowerCase() === 'retry-after' ? retryAfter ?? null : null) },
+    // A browser on another origin gets no Retry-After unless the relay exposes it: `readable` false hides it, as there.
+    headers: { get: (n: string) => (readable && n.toLowerCase() === 'retry-after' ? retryAfter ?? null : null) },
     json: async () => ({ error }),
     text: async () => JSON.stringify({ error }),
   }),
@@ -265,7 +266,7 @@ it.each([
   [429, 'You are opening games too quickly.', '300', 'too_fast', 'You have opened too many games lately. Try again in 5 minutes.'],
   [429, 'You are opening games too quickly.', '1', 'too_fast', 'You have opened too many games lately. Try again in 1 minute.'],
   [429, 'You are opening games too quickly.', '601', 'too_fast', 'You have opened too many games lately. Try again in 11 minutes.'],
-  [429, 'You already have 2 games open.', undefined, 'too_many', 'You already have games open. Close one before hosting another.'],
+  [429, 'You already have 2 games open. Close one before hosting another.', undefined, 'too_many', 'Your internet connection already has 2 games open. Close one before hosting another.'],
   [503, 'This lobby is full. Try again in a few minutes.', undefined, 'full', 'The game list is full right now. Try again in a few minutes.'],
   [503, 'Hosting new games is paused. Try again later.', undefined, 'closed', 'Hosting new games is paused. Try again later.'],
   [400, 'invalid room announcement', undefined, 'other', 'Could not open your game. Try again.'],
@@ -273,6 +274,27 @@ it.each([
   const e = await refusalOf(refusing(status, error, retryAfter));
   expect(e.kind).toBe(kind);
   expect(e.message).toBe(message);
+});
+
+it.each([
+  ['You are opening games too quickly. Try again in a few minutes.', 'too_fast', 'You have opened too many games lately. Try again in a few minutes.'],
+  ['You already have 2 games open. Close one before hosting another.', 'too_many', 'Your internet connection already has 2 games open. Close one before hosting another.'],
+] as const)('tells the two 429s apart by their text when Retry-After cannot be read (%s)', async (error, kind, message) => {
+  const e = await refusalOf(refusing(429, error, '300', false));
+  expect(e.kind).toBe(kind);
+  expect(e.message).toBe(message);
+  expect(e.retryAfterS).toBeNull();
+});
+
+it('says a retry is useless only for the refusals that a retry cannot fix', () => {
+  expect(retryLine('offline')).toBe('Try again');
+  expect(retryLine('full')).toBe('Try again');
+  expect(retryLine('other')).toBe('Try again');
+  expect(retryLine('too_fast', 130)).toBe('Try again in 3 minutes');
+  expect(retryLine('too_fast', null)).toBe('Try again in a few minutes');
+  expect(retryLine('too_many')).toBe('Close one of your games first');
+  expect(retryLine('closed')).toBe('Paused for now');
+  expect(['too_fast', 'too_many', 'closed', 'offline', 'full', 'other'].filter((k) => retryWouldFail(k as never))).toEqual(['too_fast', 'too_many', 'closed']);
 });
 
 it('treats a network failure as offline with the connection advice', async () => {
