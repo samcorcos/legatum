@@ -4,7 +4,7 @@ Legatum records full owner histories so balance analysis does not depend on repl
 engine. Native storage defaults to `~/LegatumData/archive`. `LEGATUM_ARCHIVE` overrides the
 default, and `--archive-dir <directory>` overrides the environment in the simulator, server,
 and Mac app. Archive roots inside **any Git checkout** are rejected, including symlink aliases.
-The archive is private local data, outside the repository; it is not a cloud upload.
+The archive is private local data, outside the repository; the native apps and the LAN host never upload it. The one upload is the hosted web build's: with `LEGATUM_GAMES_URL` set it sends each game's recording, every seat renamed to its default (`Recording::anonymized`, replayed so the hashes still match), to the R2 bucket behind `infra/games` (see `infra/games/README.md` and the README's Privacy section).
 
 ```sh
 export PATH="$HOME/.cargo/bin:/opt/homebrew/bin:$PATH"
@@ -68,7 +68,7 @@ Metadata fields:
 | `first_turn`, `complete_history` | Where recording starts, and whether orders cover the game from setup |
 | `parent_game_id` | Original identity when an explicitly loaded save forks another play |
 
-Names stay as entered, including LAN join names, independently of hashed engine state.
+Names stay as entered, including LAN join names, independently of hashed engine state (they are in the state hash, which is why an anonymized recording replays its orders to recompute every hash). The only exception is the recording the hosted web build uploads and queues: seat names are "Player N" / "AI N".
 No seat credentials, authorization headers, tokens, pending socket messages or connection
 addresses enter the recording. Archives intentionally contain full game information for the
 owner's analysis, including information hidden by fog in the player UI. The server does not
