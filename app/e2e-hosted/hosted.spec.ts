@@ -119,6 +119,24 @@ test('an engine that cannot download shows Reload, never a blank page', async ({
   await expect(page.getByRole('heading', { name: 'Legatum', exact: true })).toBeVisible({ timeout: 60_000 });
 });
 
+test('a kept build plays from its own address, and sends new games to the newest version', async ({ page, baseURL }) => {
+  const problems = watch(page, new URL(baseURL!).origin);
+  // tools/release/keep-builds.mjs lists this build first and publishes it at v/<id>/ too.
+  const list = JSON.parse(readFileSync(new URL('../dist/versions.json', import.meta.url), 'utf8')) as { builds: { id: string }[] };
+  const mine = list.builds[0];
+  await page.goto(`/v/${mine.id}/`);
+  await expect(page.getByRole('heading', { name: 'Legatum', exact: true })).toBeVisible({ timeout: 60_000 });
+  await expect(page.locator('.title-update-note')).toHaveCount(0);
+  // A newer deploy lands while this tab sits on the title: it says so, and a new game opens on the newest version.
+  await page.route('**/versions.json', (route) => route.fulfill({ json: { builds: [{ ...mine, id: 'newer00', label: 'Newer' }, { ...mine, retiredAt: new Date().toISOString() }] } }));
+  await page.reload();
+  await expect(page.locator('.title-update-note')).toContainText('A new version of Legatum is ready.');
+  await page.getByRole('button', { name: /^Single Player/ }).click();
+  await expect(page.getByRole('button', { name: /^Start game/ })).toBeVisible({ timeout: 60_000 });
+  expect(new URL(page.url()).pathname).toBe('/');
+  expect(problems).toEqual([]);
+});
+
 test('a visitor plays: title, a people, turns, a second city, save and load, with no server', async ({ page, baseURL, request }) => {
   test.setTimeout(300_000);
   const problems = watch(page, new URL(baseURL!).origin);
