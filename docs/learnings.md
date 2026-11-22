@@ -2,6 +2,11 @@
 
 Newest first. One entry per non-obvious finding: what we learned, the evidence, and what we changed. Correct or delete entries that turn out to be wrong.
 
+## 2026-11-22: Coach answers were silently dropped after the web-only change (`claude/coach-answers-saved`)
+
+- **Cause:** `writeAnswer` only appended to a module-level array (`unwrittenAnswers`); the desktop app that used to write it to disk was removed, so answers died with the tab while the designer was answering in a real game.
+- **Fix:** answers now live in `WhyMemory.answers` (last 500, so the save file and localStorage autosave carry them; old saves load with none) and the hosted build's upload copy carries them as top-level `coach_answers` (`historyToRecord`). The engine's `Recording` has `deny_unknown_fields`, so the key exists only in the upload copy: `exportGameHistory` strips it and `client.archive()` never has it. The Worker accepts an array of at most 2000 objects. README Privacy and the title notice say so.
+
 ## 2026-11-22: Engine robustness review: save references, aircraft upgrade Gold, save/hash allocations (`claude/review-engine-robustness`)
 
 - **Save validation may only refuse what would index out of bounds: player ids (into `players`) and tiles (into the map).** Team, city and unit references are stale in ordinary play (a razed Hall city, pruned camp rosters, memories, supply records, relations of a team whose empires are gone) and every reader uses `.get` or a member filter; no code indexes by a team id. A first version also refused stale team references and stale city/unit ids (those named by Hall records, camp rosters, memories and the like) and was wrong: it refused the app's Hall and Broadcast fixtures and an analysis test (`hall.wasm.test.ts`, `actions.wasm.test.ts`, `analysis/tests/rules.rs`). `save_fuzz.rs` now round-trips three full all-Hard games through `parse_state` every 5 turns.

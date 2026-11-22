@@ -39,6 +39,14 @@ describe("game uploads", () => {
     expect((await env.GAMES.list({ prefix: "games/" })).objects.filter((o) => o.key === key)).toHaveLength(1);
   });
 
+  it("accepts coach answers as a short list of objects and refuses anything else", async () => {
+    const answers = [{ type: "answer", turn: 12, answer: "Their Settler was alone." }];
+    expect((await put({ ...record(), coach_answers: answers })).status).toBe(200);
+    expect((await put({ ...record(), coach_answers: "text" })).status).toBe(422);
+    expect((await put({ ...record(), coach_answers: ["text"] })).status).toBe(422);
+    expect((await put({ ...record(), coach_answers: Array.from({ length: 2001 }, () => ({})) })).status).toBe(422);
+  });
+
   it("refuses typed names, other sites, bad ids and non-gzip bodies", async () => {
     const typed = record();
     typed.metadata.seats[0]!.name = "Dana";
