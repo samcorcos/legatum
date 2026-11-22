@@ -243,6 +243,7 @@ impl ViewBuilder {
                     cost: None,
                     turns_left: None,
                     known: Vec::new(),
+                    skipped: Vec::new(),
                     available: Vec::new(),
                     catalog: Vec::new(),
                     unlocks: Vec::new(),

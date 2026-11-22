@@ -135,7 +135,6 @@ export function FreeTechPicker() {
   }, [up]);
   if (!up || !view || !free) return null;
   const research = view.research;
-  const me = view.players.find((p) => p.id === view.me)!;
   const from = free.from !== null ? view.players.find((p) => p.id === free.from) : undefined;
   const target = freeTechTarget(view);
   const left = target - chosen.length;
