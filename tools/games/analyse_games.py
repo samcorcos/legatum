@@ -72,6 +72,8 @@ def merge_listing(ledger: dict, listing: list[dict]) -> None:
 
 def due(entry: dict, now: dt.datetime, force: bool = False) -> str | None:
     """Why this game should be analysed now ("final" or "checkpoint"), or None."""
+    if entry.get("excluded"):
+        return None  # the owner said this game teaches nothing (e.g. misclicks); `include` undoes it
     if entry.get("analysed_etag") == entry.get("etag") and not force:
         return None
     if entry.get("failed_etag") == entry.get("etag") and entry.get("attempts", 0) >= MAX_ATTEMPTS and not force:
@@ -259,6 +261,11 @@ def frame_summary(frames: list[dict]) -> str | None:
             f"map draw mean {draw_mean:.1f} ms")
 
 
+# Keys the website adds to the uploaded copy only; the engine's Recording denies unknown fields, so they are
+# stripped before any record goes back to the engine.
+UPLOAD_ONLY_KEYS = ("coach_answers", "rewinds")
+
+
 def build_facts(record: dict, events: list[dict] | None = None, narrative: str | None = None,
                 replay_note: str = "not replayed") -> str:
     m = record["metadata"]
@@ -386,6 +393,18 @@ def build_facts(record: dict, events: list[dict] | None = None, narrative: str |
             L.append("Other rare events: " + ", ".join(f"{k} ×{n}" for k, n in rare))
         L.append("")
 
+    rewinds = [r for r in (record.get("rewinds") or []) if isinstance(r, dict)]
+    if rewinds:
+        L.append("## Rewinds")
+        L.append("")
+        L.append("The player went back to an earlier turn; the abandoned turns are not in the tape or these numbers.")
+        L.append("")
+        for r in rewinds[:50]:
+            L.append(f"- {clip(r.get('at'), 25)}: from T{clip(r.get('from_turn'), 6)} back to T{clip(r.get('to_turn'), 6)}")
+        if len(rewinds) > 50:
+            L.append(f"- … and {len(rewinds) - 50} more")
+        L.append("")
+
     answers = record.get("coach_answers") or []
     L.append("## Coach questions and the player's answers")
     L.append("")
@@ -491,7 +510,7 @@ def analyse_game(home: Path, base: str, token: str, key: str, entry: dict, kind:
                 events = [json.loads(line) for line in (dump_dir / "events.jsonl").open()]
                 (dump_dir / "events.jsonl").replace(game_dir / "events.jsonl")
                 shutil.rmtree(dump_dir, ignore_errors=True)  # snaps are large; re-run game_dump to get them back
-            engine_record = {k: v for k, v in record.items() if k != "coach_answers"}
+            engine_record = {k: v for k, v in record.items() if k not in UPLOAD_ONLY_KEYS}
             archive = game_dir / "archive.json"
             archive.write_text(json.dumps(engine_record))
             a = run([str(bins["analyze"]), str(archive), "--out", str(game_dir / "ai-analysis")], log, check=False, timeout=600)
@@ -518,8 +537,16 @@ def write_index(home: Path, ledger: dict) -> None:
          "| Analysed | Game | Kind | Outcome | Turns | Seats | Reviewer |", "|---|---|---|---|---|---|---|"]
     for at, key, e in rows:
         gid = Path(key).name.removesuffix(".json.gz")
+        if e.get("excluded"):
+            continue
         L.append(f"| {at} | [{gid}]({gid}/) | {e.get('analysed_kind', '')} | {e.get('outcome', '')} | {e.get('turns', '')} | "
                  f"{e.get('seats', '')} | {e.get('reviewer', '')} |")
+    excluded = sorted((k, e) for k, e in ledger["games"].items() if e.get("excluded"))
+    if excluded:
+        L += ["", "## Excluded (not evidence for AI work)", "", "| Game | Seats | Turns | Why |", "|---|---|---|---|"]
+        for key, e in excluded:
+            gid = Path(key).name.removesuffix(".json.gz")
+            L.append(f"| {gid} | {e.get('seats', '')} | {e.get('turns', '')} | {e['excluded']} |")
     (home / "reports").mkdir(parents=True, exist_ok=True)
     (home / "reports" / "INDEX.md").write_text("\n".join(L) + "\n")
 
@@ -531,6 +558,33 @@ def notify(text: str) -> None:
         subprocess.run(["osascript", "-e", "on run argv", "-e",
                         'display notification (item 1 of argv) with title "Legatum game analysis"', "-e", "end run",
                         text], capture_output=True)
+
+
+def set_excluded(ledger: dict, match: str, reason: str | None) -> list[str]:
+    """Mark the games whose key contains `match` as excluded (reason given) or included again (None)."""
+    keys = [k for k in ledger["games"] if match in k]
+    for k in keys:
+        if reason:
+            ledger["games"][k]["excluded"] = f"{reason} ({now_iso()[:10]})"
+        else:
+            ledger["games"][k].pop("excluded", None)
+    return keys
+
+
+def exclude(args) -> int:
+    home = Path(args.home).expanduser()
+    if (home / ".lock").exists():
+        print("an analysis run holds the ledger; try again in a few minutes", file=sys.stderr)
+        return 1
+    ledger = load_ledger(home)
+    keys = set_excluded(ledger, args.game, None if args.cmd == "include" else args.reason)
+    if len(keys) != 1:
+        print(f"{len(keys)} games match {args.game!r}; give a longer part of the game id", file=sys.stderr)
+        return 1
+    save_ledger(home, ledger)
+    write_index(home, ledger)
+    print(f"{args.cmd}d {keys[0]}")
+    return 0
 
 
 def poll(args) -> int:
@@ -629,6 +683,13 @@ def main() -> int:
     p.add_argument("--only", help="only games whose key contains this")
     p.add_argument("--no-review", action="store_true", help="facts only, no model review")
     p.add_argument("--dry-run", action="store_true", help="list what is due and stop")
+    for name, text in (("exclude", "leave a game out of analysis and the index (e.g. a game abandoned after misclicks)"),
+                       ("include", "undo exclude")):
+        x = sub.add_parser(name, help=text)
+        x.add_argument("game", help="the game id, or a unique part of it")
+        x.add_argument("--home", default="~/LegatumData/game-analysis")
+        if name == "exclude":
+            x.add_argument("--reason", required=True, help="one line, kept in the ledger and the index")
     f = sub.add_parser("facts")
     f.add_argument("record")
     f.add_argument("--events")
@@ -636,6 +697,8 @@ def main() -> int:
     args = ap.parse_args()
     if args.cmd == "poll":
         return poll(args)
+    if args.cmd in ("exclude", "include"):
+        return exclude(args)
     raw = Path(args.record).read_bytes()
     record = json.loads(gzip.decompress(raw) if raw[:2] == b"\x1f\x8b" else raw)
     events = [json.loads(line) for line in open(args.events)] if args.events else None

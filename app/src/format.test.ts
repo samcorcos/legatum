@@ -291,6 +291,12 @@ describe('event formatting', () => {
     expect(l.details[0]).toContain('keeps its order');
   });
 
+  it("a rival's outmatched unit gets no advice to re-route it", () => {
+    const l = formatEvent({ type: 'MoveBlocked', unit: 9, owner: 3, at: { q: 1, r: 1 }, toward: { q: 2, r: 1 },
+      reason: `${OUTMATCHED_PREFIX}your Spearman is stronger (28 against 20) and moved in` }, ctx);
+    expect(l.details[0]).not.toContain('new route');
+  });
+
   it('G2: attack pursuit outcomes say plainly what happened', () => {
     const base = { type: 'AttackPursuit' as const, unit: 7, owner: 0, at: { q: 1, r: 1 }, target: 9, target_owner: 3, target_kind: 'Scout' as const };
     const followed = formatEvent({ ...base, target_at: { q: 3, r: 1 }, outcome: 'Followed' }, ctx);
@@ -601,6 +607,16 @@ it('names players as the rest of the UI does: You, or the empire, never a raw se
   expect(formatEvent({ type: 'MoveBlocked', unit: 7, owner: 0, at: { q: 2, r: 1 }, toward: { q: 3, r: 1 }, reason: `${PEACE_BLOCK_PREFIX}Swiss envoy's Scout` } as Event, { ...ctx, unitKind: () => 'Soldier' }).text)
     .toBe("Your Spearman couldn't enter this tile: Switzerland's Scout is there and you're at Peace");
   expect(ctx.renamePlayers!("blocked by Player 1's Spearman and AI 4's Scout")).toBe("blocked by your Spearman and Celts · AI 4's Scout");
+  // A fallen city's force contest names the winning side by its empire, never its seat label.
+  const cityTie = (reason: string) => formatEvent({ type: 'MoveBlocked', unit: 7, owner: 0, at: { q: 2, r: 1 }, toward: { q: 3, r: 1 }, reason } as Event,
+    { ...ctx, unitKind: () => 'Soldier' }).details?.[0];
+  expect(cityTie('AI 4 brought equal force (30 each) and won the draw for the city')).toContain('Celts · AI 4 brought equal force (30 each)');
+  expect(cityTie('AI 4 took the city with force 40 against your 30')).toContain('Celts · AI 4 took the city');
+  expect(cityTie('Player 1 brought equal force (30 each) and won the draw for the city')).toBe('You brought equal force (30 each) and won the draw for the city');
+  // The reason is written for the losing unit's owner: a rival's loss names that rival, never "your".
+  const rivalLoss = (reason: string) => formatEvent({ type: 'MoveBlocked', unit: 9, owner: 1, at: { q: 2, r: 1 }, toward: { q: 3, r: 1 }, reason } as Event,
+    { ...ctx, unitKind: () => 'Soldier' }).details?.[0];
+  expect(rivalLoss('Player 1 took the city with force 40 against your 30')).toBe("You took the city with force 40 against Switzerland's 30");
 });
 
 it('renames leading player subjects in invalidation reasons, including elimination and regex characters', () => {
