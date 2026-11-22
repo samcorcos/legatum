@@ -118,6 +118,8 @@ export const BANNED: CopyRule[] = [
   { pattern: /\bgross Gold\b/i, reason: 'an accounting word (8.9.23 UI review: "half their gross Gold")', instead: '"half the Gold they make"', source: true },
   { pattern: /\bresting defense\b/i, reason: 'American spelling of a rule name; the game uses British spelling (8.9.23 UI review)', instead: '"resting defence"', source: true },
   { pattern: /\bstays banked in [A-Z]/, reason: 'bookkeeping word order for what a city keeps (8.9.23 UI review: "Granary progress 12 stays banked in Astra")', instead: '"Astra keeps the 12 Production already put into the Granary."', source: true },
+  { pattern: /\bwindows from your connection\b/i, reason: 'awkward, and the others may be other people on the same network (relay messages review)', instead: '"people on your internet connection"', source: true },
+  { pattern: /\bsent too quickly\b|\btoo much (?:was )?sent\b/i, reason: 'passive network talk with no subject (relay messages review)', instead: '"You are sending too much, too fast."', source: true },
 ];
 
 /**
