@@ -123,7 +123,7 @@ for (const size of SIZES) testWithFailingRequests.describe(`online co-op ${size.
   testWithFailingRequests.use({ viewport: { width: size.width, height: size.height } });
 
   testWithFailingRequests('host room, guest room, both on turn one, game menu', async ({ page: host, browser, baseURL, relay }) => {
-    testWithFailingRequests.setTimeout(240_000);
+    testWithFailingRequests.setTimeout(420_000);
     const guestContext = await browser.newContext({ baseURL, viewport: { width: size.width, height: size.height } });
     const guest = await guestContext.newPage();
     expect(relay).toBeTruthy();
@@ -198,6 +198,13 @@ for (const size of SIZES) testWithFailingRequests.describe(`online co-op ${size.
       await expect(p.locator('#game-menu')).toHaveCount(0);
     }
 
+    // The host saves the online game to a file (Save to file…, host only).
+    await host.getByRole('button', { name: 'Menu', exact: true }).click();
+    const download = host.waitForEvent('download');
+    await host.getByRole('button', { name: 'Save to file…', exact: true }).click();
+    const savePath = testWithFailingRequests.info().outputPath('online-save.legatum.json');
+    await (await download).saveAs(savePath);
+
     // The seat list (Turn details) as each side sees it.
     for (const [p, name] of [[host, '55b-host-seats'], [guest, '55c-guest-seats']] as const) {
       const details = p.locator('details.sidebar-turn-more').first();
@@ -220,6 +227,58 @@ for (const size of SIZES) testWithFailingRequests.describe(`online co-op ${size.
     await guest.waitForTimeout(8000);
     await guest.mouse.move(size.width / 2, size.height - 4);
     await shot(guest, size, '58-guest-host-gone');
+
+    // Host from a save: a new tab picks the file on the Multiplayer screen, then the guest rejoins.
+    const host2Context = await browser.newContext({ baseURL, viewport: { width: size.width, height: size.height } });
+    const host2 = await host2Context.newPage();
+    await noHints(host2);
+    await multiplayer(host2);
+    await host2.getByLabel('Your name in the game list').fill(hostName);
+    // A file that is not a save first: the refusal.
+    const junkPath = testWithFailingRequests.info().outputPath('junk.json');
+    (await import('node:fs')).writeFileSync(junkPath, '{"hello":1}');
+    let chooser = host2.waitForEvent('filechooser');
+    await host2.getByRole('button', { name: /^Host from a save/ }).click();
+    await (await chooser).setFiles(junkPath);
+    await host2.waitForTimeout(800);
+    await host2.mouse.move(5, 5);
+    await shot(host2, size, '60-host-from-save-bad-file');
+    chooser = host2.waitForEvent('filechooser');
+    await host2.getByRole('button', { name: /^Host from a save/ }).click();
+    await (await chooser).setFiles(savePath);
+    await expect(host2.getByTestId('turn-number')).toBeVisible({ timeout: 90_000 });
+    await host2.waitForTimeout(1500);
+    await dismissInterstitials(host2);
+    await host2.mouse.move(size.width / 2, size.height - 4);
+    await shot(host2, size, '61-host-from-save-turn');
+    await host2.getByRole('button', { name: 'Menu', exact: true }).click();
+    await host2.waitForTimeout(300);
+    await shot(host2, size, '62-host-from-save-menu');
+    await host2.keyboard.press('Escape');
+
+    const guest2Context = await browser.newContext({ baseURL, viewport: { width: size.width, height: size.height } });
+    const guest2 = await guest2Context.newPage();
+    await noHints(guest2);
+    await multiplayer(guest2);
+    await guest2.getByRole('button', { name: /^Join Game/ }).click();
+    const row2 = guest2.locator('.online-room').filter({ hasText: hostName });
+    await expect(row2.first()).toBeVisible({ timeout: 20_000 });
+    await guest2.mouse.move(5, 5);
+    await shot(guest2, size, '63-guest-list-resumed');
+    await row2.first().getByRole('button', { name: /^Join/ }).click();
+    await guest2.waitForTimeout(3000);
+    await guest2.mouse.move(5, 5);
+    await shot(guest2, size, '64-guest-resumed-arrived');
+    await guest2.getByRole('button', { name: /Rejoin as Alice/ }).click();
+    await expect(guest2.getByTestId('turn-number')).toBeVisible({ timeout: 60_000 });
+    await guest2.waitForTimeout(1500);
+    await dismissInterstitials(guest2);
+    await guest2.mouse.move(size.width / 2, size.height - 4);
+    await shot(guest2, size, '65-guest-resumed-seated');
+    await host2.mouse.move(size.width / 2, size.height - 4);
+    await shot(host2, size, '66-host-resumed-guest-back');
+    await guest2Context.close();
+    await host2Context.close();
     await guestContext.close();
   });
 });
