@@ -1341,7 +1341,7 @@ export interface RuleSwitches {
 export interface TurnResult {
   turn: number;
   events: Event[];
-  /** Local clients filter separately for each human player. LAN events are already filtered. */
+  /** Local clients filter separately for each human player. Online events are already filtered. */
   events_by_player?: Record<PlayerId, Event[]>;
   hash: string;
   finished: boolean;

@@ -2,7 +2,7 @@
 
 The contract every piece of the first playable is built against. Design intent lives in the design doc (see CLAUDE.md); this file holds the concrete rules, numbers and interfaces for this milestone. Numbers are starting values for simulation tuning, not final balance. Revised after an independent review by gpt-6-astra (`.reviews/astra-spec-review.md`, 2026-09-26).
 
-**Done means:** two humans on one Mac play a full game in the desktop app against 6 scripted AIs: explore, found cities, grow, research, fight, and race on a live victory-point track, with simultaneous turns, save/resume and autosave.
+**Done means:** two humans on one computer play a full game in the browser against 6 scripted AIs: explore, found cities, grow, research, fight, and race on a live victory-point track, with simultaneous turns, save/resume and autosave.
 
 **Out of scope for this milestone:** LAN, delegation/governors, fronts and army templates, diplomacy, internal pressure, coalitions, navies, rivers, map wrapping.
 
@@ -13,10 +13,10 @@ crates/core   legatum-core   rules, map generation, views, forecasts. Pure + det
 crates/ai     legatum-ai     AI brains. Reads only PlayerView (fog applied). Never sees full state.
 crates/sim    legatum-sim    headless runner CLI: parallel games (rayon), determinism check, writes docs/sim-results/
 crates/wasm   legatum-wasm   wasm-bindgen API over core + ai for the UI
-app/                         Vite + React + TypeScript UI, canvas hex renderer; app/src-tauri wraps it as a Mac app
+app/                         Vite + React + TypeScript UI, canvas hex renderer; served as a static web app (the Mac/Tauri app was dropped 2026-11-22)
 ```
 
-The UI runs the whole game locally through WASM, so the same UI works in a browser (for testing) and in Tauri.
+The UI runs the whole game locally through WASM, so the whole game runs in the browser.
 
 ### Determinism rules (core)
 

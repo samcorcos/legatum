@@ -59,8 +59,8 @@ What the options mean:
 | `--local` | Run on this Mac instead of the box (slow; only if the box is unavailable). |
 
 The command writes `scenarios/lab/ID.json` and `docs/sim-results/scenarios/ID-baseline.{json,md}`.
-Commit both. The scenario appears in the Scenarios screen after the next app build, or at once in the installed
-desktop app if you also publish it (next section).
+Commit both. The scenario appears in the Scenarios screen once the branch is merged to `master` and the site is rebuilt
+(scenarios ship by merging; there are no drop-in folders).
 Put an existing scenario file on the list (for example one in `scenarios/war/`) and measure its baseline with
 `tools/scenarios/cut.sh --card scenarios/war/FILE.json --question ... --blurb ... --order K`.
 
@@ -83,32 +83,9 @@ to put in front of a player first.
 
 ## Ship it without a release
 
-A scenario is data, so it needs no app build and no full test run (2026-11-07). After `cut.sh`:
-
-```sh
-tools/scenarios/publish.sh scenarios/lab/mongol-hold-the-line.json   # about 5 seconds, no build, no install
-```
-
-`publish.sh` checks the file against the **installed** app's rules version (it must be the version the scenario's state
-was made for), loads the state on the engine, parses the objective, runs the copy lint, then copies the file to
-`~/LegatumData/scenarios/lab/<id>.json`. The desktop app reads that folder each time the Scenario Lab opens, so
-the scenario is there the next time the Lab opens it, with no restart. Commit the file to `scenarios/lab/` too, so
-later builds bundle it.
-
-How the app treats the folder:
-
-| Case | What the Lab does |
-| --- | --- |
-| A good file | Listed next to the bundled ones (tagged "Added file"), in `lab.order` order |
-| Same `id` as a bundled scenario | Replaces it. Raise `revision` so old results are not compared with the new position |
-| Made for another rules version, not a Lab scenario, unreadable, or waiting on a change (`lab.requires`) | Listed greyed out as "Cannot be played" with the reason ("Made for rules version 24; this app is 23."), never dropped, never a crash |
-| The browser and phone builds | Ignore the folder |
-
-The installed rules version is read from `~/LegatumData/app-info.json` (the app writes it at every launch), else
-inferred from the newest `playtest-*` tag older than `/Applications/Legatum.app`; `--rules-version N` overrides.
-After a playtest build lands a rules change, every scenario cut on master since then is for the new version and
-`publish.sh` refuses it until that build is installed. The state is loaded in the engine only when the installed
-version is this checkout's; otherwise the shape, version and copy are checked and the script says so.
+A scenario is data, so it needs no full test run (2026-11-07). Commit the file to `scenarios/lab/` on its own branch
+(below). The web build bundles every file in `scenarios/lab/`, so the scenario is playable as soon as the branch is
+merged and the site is redeployed.
 
 ### Landing scenario files in the repo
 
@@ -120,18 +97,13 @@ on the title, briefing, objective and card text. Any other change in the branch 
 
 ## Where runs and feedback are saved
 
-The app saves each run as one JSON file after every turn and again when it ends, so a run survives the app closing mid-run (desktop and server; a static host saves only at the end):
-
-| Build | Folder |
-| --- | --- |
-| Desktop app | `~/LegatumData/scenarios/` (dropped-in scenario files go in its `lab/` subfolder) |
-| Static web host | a download |
+The app keeps each run as one JSON file and downloads it when the run ends (the web build has no folder to write to).
 
 File name: `<id>-<UTC start time>.json` (one file per run; each save replaces the last), format `legatum-scenario-run`. It holds the player's orders for every
 turn with the time spent on each (`ms`), the score and outcome, the turn-by-turn report lines that
 mattered, the **feedback** (`fun`, `fair`, `felt`, `text`) and `archive`: the engine's full history of the
 run (the tape of every empire's orders and state hashes), so the coach can replay it. The feedback is
-written into the same file when the player saves it. A run left before the end, or still unfinished when the app closed, has `abandoned: true`.
+written into the same file when the player saves it. A run left before the end, or still unfinished when the tab closed, has `abandoned: true`.
 
 Read them with:
 

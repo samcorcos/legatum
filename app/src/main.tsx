@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import './brand/tokens.css';
 import './brand/fonts';
 import './styles.css';
-import './lan.css';
+import './online.css';
 import './touch.css';
 import { App } from './App';
 import { useGame } from './store';
@@ -54,6 +54,7 @@ void Promise.all([
 // Handy for debugging and scripted play-throughs.
 (window as unknown as { legatum: typeof useGame }).legatum = useGame;
 
-const retryArchives = () => { void retryGameHistory().catch((error) => useGame.getState().set({ error: String(error) })); };
+// A finished game whose upload failed is sent again when the browser comes back online.
+const retryArchives = () => { void retryGameHistory().catch((error) => console.warn('game upload', error)); };
 window.addEventListener('online', retryArchives);
 retryArchives();

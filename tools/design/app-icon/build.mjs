@@ -8,14 +8,10 @@
 //   app/public/favicon.svg                    favicon, drawn for 16-32 px (also served by the dashboard)
 //   app/public/favicon-32.png, favicon-16.png PNG fallbacks
 //   app/public/apple-touch-icon.png           180 px full-bleed
-//   app/src-tauri/icons/*                     via `npx tauri icon`, then icon.icns and 32x32.png are
-//                                             rebuilt so 16-32 px use the bold small-size drawing
 // The parchment texture (parchment.jpg) was generated with Codex image generation; the mark itself
 // is pure vector.
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
-import { execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 
@@ -99,25 +95,7 @@ const sealSvg = () => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 
 // on light and dark tab strips alike.
 const faviconSvg = () => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><circle cx="16" cy="16" r="15.1" fill="${C.paper}" stroke="${C.ink}" stroke-width="1.8"/><path d="${aLegs({ cx: 16, top: 6.6, base: 25, half: 8, w: 3.3 })}" fill="${C.ink}"/><path d="${star(16, 19.9, 4.3, 0.3)}" fill="${C.brick}"/></svg>\n`;
 
-/* ---- App icon: 1024 canvas on the macOS grid (824 body at 100, continuous corners, shadow) ---- */
-function squircle(x, y, s, e = 268, n = 4.2) {
-  // Quarter-superellipse corners: zero curvature where they meet the straight sides.
-  const pts = [];
-  const corner = (cx, cy, a0) => {
-    for (let i = 0; i <= 48; i++) {
-      const t = a0 + (i / 48) * (Math.PI / 2);
-      const c = Math.cos(t);
-      const sn = Math.sin(t);
-      pts.push(`${f(cx + Math.sign(c) * Math.abs(c) ** (2 / n) * e)} ${f(cy + Math.sign(sn) * Math.abs(sn) ** (2 / n) * e)}`);
-    }
-  };
-  corner(x + s - e, y + s - e, 0);
-  corner(x + e, y + s - e, Math.PI / 2);
-  corner(x + e, y + e, Math.PI);
-  corner(x + s - e, y + e, (3 * Math.PI) / 2);
-  return `M${pts.join('L')}Z`;
-}
-const SQ = squircle(100, 100, 824);
+/* ---- Touch icon: the seal on parchment, drawn on a 1024 canvas (824 body at 100) ---- */
 const PARCHMENT = `data:image/jpeg;base64,${fs.readFileSync(path.join(HERE, 'parchment.jpg')).toString('base64')}`;
 
 const defs = `
@@ -149,7 +127,7 @@ const paper = `<rect x="100" y="100" width="824" height="824" fill="${C.paper}"/
   <rect x="100" y="100" width="824" height="824" filter="url(#grain)"/>`;
 const light = `<rect x="100" y="100" width="824" height="824" fill="url(#vig)"/><rect x="100" y="100" width="824" height="824" fill="url(#sheen)"/>`;
 
-// Full detail (64 px and up): the seal blind-embossed as a raised paper disc, the ink pressed in.
+// Full detail: the seal blind-embossed as a raised paper disc, the ink pressed in.
 function detailed() {
   const s = 7.15;
   const t = f(512 - 50 * s);
@@ -159,26 +137,9 @@ function detailed() {
   <circle cx="512" cy="512" r="345.49" fill="none" stroke="url(#discRim)" stroke-width="4"/>
   <g transform="translate(${t} ${t}) scale(${s})">${rays('appr', 0.3)}<g filter="url(#press)">${seal()}</g></g>`;
 }
-// Small drawing (16-32 px): one heavy ring and a bold A.
-function simple() {
-  return `<g transform="translate(155 155) scale(7.14)">
-    <circle cx="50" cy="50" r="45" fill="none" stroke="${C.ink}" stroke-width="6.5"/>
-    <path d="${aLegs({ cx: 50, top: 21, base: 77, half: 24, w: 10.5 })}" fill="${C.ink}"/>
-    <path d="${star(50, 61, 12.5, 0.3)}" fill="${C.brick}"/></g>`;
-}
-
-function appSvg(inner, { bleed = false } = {}) {
-  if (bleed) {
-    // Full-bleed square for apple-touch-icon and iOS: the OS draws the mask and shadow.
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="100 100 824 824" width="1024" height="1024"><defs>${defs}</defs>${paper}${inner}${light}</svg>`;
-  }
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024"><defs>${defs}
-  <clipPath id="sq"><path d="${SQ}"/></clipPath>
-  <filter id="shadow" x="-10%" y="-10%" width="120%" height="125%"><feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#000" flood-opacity=".3"/></filter></defs>
-  <g filter="url(#shadow)"><path d="${SQ}" fill="${C.paper}"/></g>
-  <g clip-path="url(#sq)">${paper}${inner}${light}</g>
-  <path d="${SQ}" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="3" clip-path="url(#sq)" opacity=".7"/>
-  <path d="${SQ}" fill="none" stroke="rgba(0,0,0,.28)" stroke-width="1.2"/></svg>`;
+// Full-bleed square for apple-touch-icon: the OS draws the mask and shadow.
+function touchIconSvg(inner) {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="100 100 824 824" width="1024" height="1024"><defs>${defs}</defs>${paper}${inner}${light}</svg>`;
 }
 
 async function render(browser, svg, out, size) {
@@ -189,8 +150,6 @@ async function render(browser, svg, out, size) {
   await page.close();
 }
 
-const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'legatum-icon-'));
-const icons = path.join(APP, 'src-tauri/icons');
 const pub = path.join(APP, 'public');
 fs.mkdirSync(pub, { recursive: true });
 fs.writeFileSync(path.join(HERE, 'seal.svg'), sealSvg());
@@ -198,28 +157,9 @@ fs.writeFileSync(path.join(pub, 'favicon.svg'), faviconSvg());
 
 const browser = await chromium.launch();
 try {
-  const full = appSvg(detailed());
-  const small = appSvg(simple());
-  await render(browser, full, path.join(tmp, 'master.png'), 1024);
   await render(browser, faviconSvg(), path.join(pub, 'favicon-32.png'), 32);
   await render(browser, faviconSvg(), path.join(pub, 'favicon-16.png'), 16);
-  await render(browser, appSvg(detailed(), { bleed: true }), path.join(pub, 'apple-touch-icon.png'), 180);
-
-  execFileSync('npx', ['tauri', 'icon', path.join(tmp, 'master.png'), '-o', icons], { cwd: APP, stdio: 'inherit' });
-  // Mobile and Windows Store sets are regenerated by `tauri icon` when those targets exist; we ship macOS only.
-  for (const extra of ['android', 'ios', ...fs.readdirSync(icons).filter((n) => /^(Square|StoreLogo)/.test(n))]) {
-    const p = path.join(icons, extra);
-    if (fs.existsSync(p)) execFileSync('trash', [p]);
-  }
-
-  // icon.icns by hand, so the 16 and 32 px slots get the bold small drawing instead of a blur.
-  const set = path.join(tmp, 'icon.iconset');
-  fs.mkdirSync(set);
-  for (const [name, px] of [['16x16', 16], ['16x16@2x', 32], ['32x32', 32], ['32x32@2x', 64], ['128x128', 128], ['128x128@2x', 256], ['256x256', 256], ['256x256@2x', 512], ['512x512', 512], ['512x512@2x', 1024]]) {
-    await render(browser, px <= 32 ? small : full, path.join(set, `icon_${name}.png`), px);
-  }
-  execFileSync('iconutil', ['-c', 'icns', set, '-o', path.join(icons, 'icon.icns')]);
-  await render(browser, small, path.join(icons, '32x32.png'), 32);
+  await render(browser, touchIconSvg(detailed()), path.join(pub, 'apple-touch-icon.png'), 180);
 } finally {
   await browser.close();
 }

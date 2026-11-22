@@ -99,7 +99,7 @@ export function cancelWarPrompt() {
   });
 }
 
-/** What core would say about this one unit order before it is queued (local clients; LAN validates on the host). */
+/** What core would say about this one unit order before it is queued (local clients; online validates on the host). */
 function orderProblem(order: Order): string | null {
   const s = st();
   const view = seatView();

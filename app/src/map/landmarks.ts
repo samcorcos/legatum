@@ -2,7 +2,7 @@
 import type { BuildingKind, Faction, Hex, PlayerView } from '../types';
 import { buildingIconName, itemName } from '../data';
 import { hexAt, hexToPixel } from '../hex';
-import { itemArtUrl } from '../unlockArt';
+import { buildingArtSlug, itemArtUrl } from '../unlockArt';
 import { tintedIcon } from '../icons';
 import { HEX_SIZE, isFar } from './grid';
 import { ATLAS } from './style';
@@ -22,6 +22,16 @@ export function landmarksOf(view: PlayerView): Landmark[] {
   return out;
 }
 
+// The map's own grade of a landmark painting (muted to the towns' palette, ground washed into the hex). The research
+// cards and production list use the ungraded copy in assets/unlocks (tools/art/card-grade.py, art audit 2026-11-22).
+const mapGraded = import.meta.glob<string>('../assets/landmarks/*-256.png', { eager: true, query: '?url', import: 'default' });
+const mapGradedBySlug = new Map(Object.entries(mapGraded).map(([path, url]) => [/\/([a-z0-9-]+)-256\.png$/.exec(path)![1], url]));
+/** The landmark's map painting: the map-graded copy when there is one, else the unlock art. */
+export function landmarkArtUrl(building: BuildingKind, faction: Faction | undefined): string | null {
+  return mapGradedBySlug.get(buildingArtSlug(building, faction)) ?? mapGradedBySlug.get(buildingArtSlug(building))
+    ?? itemArtUrl({ kind: 'Building', building }, faction, 256);
+}
+
 const art = new Map<string, HTMLImageElement | null>();
 const listeners = new Set<() => void>();
 /** Called when a landmark painting finishes decoding, so the map repaints (there is no placeholder to stand in). */
@@ -30,7 +40,7 @@ export function onLandmarkArtLoad(cb: () => void): () => void {
   return () => listeners.delete(cb);
 }
 export function landmarkImage(building: BuildingKind, faction: Faction | undefined): HTMLImageElement | null {
-  const url = itemArtUrl({ kind: 'Building', building }, faction, 256);
+  const url = landmarkArtUrl(building, faction);
   if (!url || typeof Image === 'undefined') return null;
   let img = art.get(url);
   if (img === undefined) {

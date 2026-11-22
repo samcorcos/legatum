@@ -1,11 +1,6 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 
-const native = vi.hoisted(() => ({
-  impactFeedback: vi.fn().mockResolvedValue(null), notificationFeedback: vi.fn().mockResolvedValue(null),
-  selectionFeedback: vi.fn().mockResolvedValue(null),
-}));
-vi.mock('@tauri-apps/plugin-haptics', () => native);
 let haptics: typeof import('./haptics');
 let preferences: typeof import('./preferences');
 let vibrate: ReturnType<typeof vi.fn>;
@@ -55,44 +50,28 @@ it('defaults on, persists the toggle and cancels pending patterns and turn feedb
 });
 
 it.each([
-  ['Macintosh; Intel Mac OS X', 0, false], ['Macintosh; Intel Mac OS X', 0, true],
-  ['Windows NT 10.0', 0, true], ['X11; Linux x86_64', 0, false], ['iPhone', 1, false],
-])('is a hardware no-op on %s (touch=%s, Tauri=%s)', async (userAgent, maxTouchPoints, tauri) => {
+  ['Macintosh; Intel Mac OS X', 0], ['Windows NT 10.0', 0], ['X11; Linux x86_64', 0], ['iPhone', 1], ['Macintosh; Intel Mac OS X', 5],
+])('is a hardware no-op on %s (touch=%s)', async (userAgent, maxTouchPoints) => {
   vi.stubGlobal('navigator', { userAgent, maxTouchPoints, vibrate });
-  if (tauri) vi.stubGlobal('__TAURI_INTERNALS__', {});
+  expect(haptics.hapticsAvailable()).toBe(false);
   haptics.feel.commit();
   await vi.runAllTimersAsync();
   expect(vibrate).not.toHaveBeenCalled();
-  expect(native.impactFeedback).not.toHaveBeenCalled();
   expect(window.__feelLog?.map((e) => e.name)).toEqual(['commit']);
 });
 
-it.each([['iPhone', 1], ['Android', 1], ['Macintosh; Intel Mac OS X', 5]] as const)(
-  'loads the plugin only in the %s native shell', async (userAgent, maxTouchPoints) => {
-    vi.stubGlobal('navigator', { userAgent, maxTouchPoints, vibrate });
-    vi.stubGlobal('__TAURI_INTERNALS__', {});
-    haptics.feel.commitAttack();
-    await vi.dynamicImportSettled();
-    expect(native.impactFeedback).toHaveBeenCalledWith('rigid');
-    expect(vibrate).not.toHaveBeenCalled();
-  },
-);
-
 it('uses light feedback for Unready and preserves the victory timing', async () => {
-  vi.stubGlobal('__TAURI_INTERNALS__', {});
   haptics.feel.ready(false);
-  await vi.dynamicImportSettled();
-  expect(native.impactFeedback).toHaveBeenLastCalledWith('light');
+  expect(vibrate).toHaveBeenLastCalledWith(12);
   vi.advanceTimersByTime(80);
   haptics.feel.victory();
-  await vi.dynamicImportSettled();
-  expect(native.notificationFeedback).toHaveBeenLastCalledWith('success');
+  expect(vibrate).toHaveBeenLastCalledWith([12, 25, 18]);
   await vi.advanceTimersByTimeAsync(179);
-  expect(native.impactFeedback).toHaveBeenCalledTimes(1);
+  expect(vibrate).toHaveBeenCalledTimes(2);
   await vi.advanceTimersByTimeAsync(1);
-  expect(native.impactFeedback).toHaveBeenLastCalledWith('heavy');
+  expect(vibrate).toHaveBeenLastCalledWith(35);
   await vi.advanceTimersByTimeAsync(180);
-  expect(native.impactFeedback).toHaveBeenLastCalledWith('rigid');
+  expect(vibrate).toHaveBeenLastCalledWith(25);
 });
 
 it('spaces turn calls 120 ms apart, replacing old turns and stopping when the viewer changes', async () => {
@@ -112,34 +91,24 @@ it('spaces turn calls 120 ms apart, replacing old turns and stopping when the vi
   expect(window.__feelLog?.at(-1)?.name).toBe('vpGained');
 });
 
-it('catches absent native plugin errors and throwing browser vibration', async () => {
-  vi.stubGlobal('__TAURI_INTERNALS__', {});
-  native.impactFeedback.mockRejectedValueOnce(new Error('plugin not registered'));
-  expect(() => haptics.feel.commit()).not.toThrow();
-  await vi.dynamicImportSettled();
-  vi.unstubAllGlobals();
-  vi.advanceTimersByTime(80);
+it('catches throwing browser vibration', () => {
   vi.stubGlobal('navigator', { userAgent: 'Android', vibrate: () => { throw new Error('unavailable'); } });
   expect(() => haptics.feel.commit()).not.toThrow();
 });
 
-it('does not replay an import that completes after the toggle turns off', async () => {
-  vi.stubGlobal('__TAURI_INTERNALS__', {});
-  haptics.feel.commit();
+it('drops a queued pulse when the toggle turns off', async () => {
+  haptics.feel.victory();
   preferences.useHaptics.getState().setEnabled(false);
-  await vi.dynamicImportSettled();
-  expect(native.impactFeedback).not.toHaveBeenCalled();
+  await vi.advanceTimersByTimeAsync(500);
+  expect(vibrate).toHaveBeenCalledTimes(1);
 });
 
-it('keeps the native Ready acknowledgement when a hot-seat handoff cancels turn feedback during the import', async () => {
-  vi.stubGlobal('__TAURI_INTERNALS__', {});
+it('keeps the Ready acknowledgement when a hot-seat handoff cancels turn feedback', async () => {
   haptics.feel.ready();
   haptics.playTurnFeedback(['turnResolved', 'cityFounded']);
   haptics.cancelTurnFeedback();
-  await vi.dynamicImportSettled();
   await vi.advanceTimersByTimeAsync(500);
-  expect(native.impactFeedback.mock.calls).toEqual([['heavy']]);
-  expect(native.notificationFeedback).not.toHaveBeenCalled();
+  expect(vibrate.mock.calls).toEqual([[35]]);
 });
 
 it('does not create a production log', () => {

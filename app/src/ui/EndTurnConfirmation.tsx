@@ -14,7 +14,7 @@ export function EndTurnConfirmation({ onConfirm }: { onConfirm: () => void }) {
   const siegeSeen = useGame((s) => s.siegeSeen);
   const airHeld = useGame((s) => s.airHeld);
   const report = useGame((s) => s.report);
-  const blocked = useGame((s) => !!s.busy || (s.client?.kind === 'remote' && s.lan?.conn !== 'open'));
+  const blocked = useGame((s) => !!s.busy || (s.client?.kind === 'remote' && s.net?.conn !== 'open'));
   const dialog = useRef<HTMLDialogElement>(null);
   const firstButton = useRef<HTMLButtonElement>(null);
   const title = useId();

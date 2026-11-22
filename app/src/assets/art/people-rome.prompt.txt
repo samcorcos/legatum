@@ -5,3 +5,11 @@ Create a finished square 1024x1024 paired historical oil portrait for Legatum. U
 --- Prop correction (image edit of the original painting) ---
 2. The groma he rests his right hand on (a pole with a crossbar and rope): redraw it as a real groma: a wooden staff standing upright with a bracket at the top carrying a horizontal wooden cross of four arms (two bars crossing at right angles, seen in slight perspective), and from the end of each of the four arms a thin plumb line hangs down with a small pointed bronze plumb-bob. The coiled rope stays as it is.
 No text, no writing, no inscriptions, no new people.
+
+
+--- Art audit repaint, 2026-11-22 (image edit of the painting above; Codex image generation, gpt-6-luna; v1 of two) ---
+The European men's faces had converged on one face across Byzantium, the Celts, Rome, Switzerland and Sparta; each man was repainted as a distinct person. 
+
+Use the built-in image generation tool to create ONE image, and nothing else; do not write code or edit files. After it is generated, reply with only the saved file path.
+
+Edit the attached oil portrait. Change ONLY the man's face and head: repaint him as a man of about fifty with a round, heavy-jawed, clean-shaven face, a receding hairline with short grey hair, a broad nose that was once broken, small wrinkled eyes and a deep weathered tan. Keep his clothing, pose, hands, the woman, the setting, the composition, the lighting and the refined classical oil technique EXACTLY as they are. The woman must not change at all. His new face must be clearly a different person from the original, painted in the same oil technique, large and readable at 128 px. No text, no new people, no frame.

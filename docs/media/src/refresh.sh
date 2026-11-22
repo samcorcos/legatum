@@ -21,7 +21,6 @@ if [ "$capture" = 1 ]; then
   [ -f app/src/wasm-pkg/legatum_bg.wasm ] || LEGATUM_PLAYTEST_PROFILE=1 scripts/build-wasm.sh
   [ -d app/node_modules ] || (cd app && npm ci)
   (cd app && npm run build)
-  [ -x "${CARGO_TARGET_DIR:-target}/release/legatum-server" ] || cargo build --release -p legatum-server
   (cd app && MEDIA_OUT="$masters" npx playwright test -c playwright.media.config.ts launch.media.ts --trace off)
 fi
 

@@ -1,6 +1,6 @@
 ---
 name: premium-mobile-feel
-description: This skill should be used when building or reviewing any Legatum mobile or touch feature (the Tauri v2 iOS/Android app, touch controls, tablet or phone layouts) or when adding feedback polish anywhere in the app — haptics, motion, press states, sound, loading and transition moments. It defines the premium-feel standard, the game-event-to-haptic map, and how to implement and verify it.
+description: This skill should be used when building or reviewing any Legatum mobile or touch feature (the game in a phone or tablet browser, touch controls, tablet or phone layouts) or when adding feedback polish anywhere in the app — haptics, motion, press states, sound, loading and transition moments. It defines the premium-feel standard, the game-event-to-haptic map, and how to implement and verify it.
 ---
 
 # Premium mobile feel
@@ -22,9 +22,9 @@ The user's bar: Legatum should feel like a premium native application, "refined 
 
 ## Implementation
 
-- **Haptics:** use the official Tauri v2 plugin — Rust crate `tauri-plugin-haptics` (use the 2.x line matching the other Tauri plugins, not 3.0 alphas) and npm `@tauri-apps/plugin-haptics` (2.4.x). Its API is `impactFeedback('light'|'medium'|'heavy'|'soft'|'rigid')`, `notificationFeedback('success'|'warning'|'error')`, `selectionFeedback()` and `vibrate(ms)`. It works on iOS and Android only.
+- **Haptics:** the browser's Vibration API (`navigator.vibrate`), which Android browsers offer and iOS Safari does not. There is no native app (dropped 2026-11-22), so iPhone feedback is visual and sound only.
 - **Wrap everything behind one module**, `app/src/feel/haptics.ts`, exposing semantic calls such as `feel.select()`, `feel.commit()` and `feel.turnResolved()`, not raw plugin calls. The module must:
-  - no-op on desktop and web (use `navigator.vibrate` on Android web only if available), so callers never branch;
+  - no-op everywhere but Android browsers with `navigator.vibrate`, so callers never branch;
   - honor a Settings toggle for haptics (default on) plus the OS setting;
   - debounce so one user action produces at most one haptic;
   - never throw into gameplay: all calls are fire-and-forget with caught errors.
@@ -36,8 +36,8 @@ The user's bar: Legatum should feel like a premium native application, "refined 
 
 - Unit-test the event→feedback mapping as a pure function: given a turn's events for a viewer, produce the expected ordered feedback list. Test also debounce, the toggle, and the desktop no-op.
 - Playwright with `hasTouch` on iPad and iPhone viewports: every tappable control responds with its pressed state, nothing is hover-only, and there is no horizontal page scroll.
-- On the iOS simulator (no haptic hardware there), log `feel.*` calls in dev builds and assert them. Real haptics need a device (plans/mobile.md M4); note that in reports rather than claiming they were felt.
-- Frame-time check while panning and zooming the map on the simulator or a device, with the `?perf=1` overlay.
+- Dev builds log `feel.*` calls (`window.__feelLog`); assert them in tests. Real vibration needs an Android device; note that in reports rather than claiming it was felt.
+- Frame-time check while panning and zooming the map on a device, with the `?perf=1` overlay.
 
 ## Review checklist
 

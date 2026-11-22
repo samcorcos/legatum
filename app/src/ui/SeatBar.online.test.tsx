@@ -21,7 +21,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-it('waits for living LAN players and drops eliminated players from the waiting text', async () => {
+it('waits for living online players and drops eliminated players from the waiting text', async () => {
   const mock = new FixtureClient();
   await mock.newGame(await mock.standardSetup('7', 'India', 'Byzantium', 'Ana', 'Ben'));
   const view = mock.view(0);
@@ -32,7 +32,7 @@ it('waits for living LAN players and drops eliminated players from the waiting t
   useGame.setState({
     client: new RemoteClient(0, 'Ana'), views: [view], humans: [0], seat: 0,
     ready: [true], orders: [[]], errors: [[]],
-    lan: {
+    net: {
       status: { mode: 'server', has_game: true, turn: view.turn, seats, is_local: true },
       seats, mySeat: 0, conn: 'open',
     },
@@ -44,9 +44,9 @@ it('waits for living LAN players and drops eliminated players from the waiting t
     views: [{ ...view, players: view.players.map((p) => p.id === seats[1].player ? { ...p, alive: false } : p) }],
   }));
   expect(label()).toBe(`Waiting for ${seats[2].name}…`);
-  const lan = useGame.getState().lan!;
+  const net = useGame.getState().net!;
   act(() => useGame.setState({
-    lan: { ...lan, seats: seats.map((s) => s.seat === 2 ? { ...s, ready: true } : s) },
+    net: { ...net, seats: seats.map((s) => s.seat === 2 ? { ...s, ready: true } : s) },
   }));
   expect(label()).toBe('Resolving…');
 });

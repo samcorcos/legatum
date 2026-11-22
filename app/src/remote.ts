@@ -174,6 +174,7 @@ export interface RemoteEvents {
   error(message: string, code?: string): void;
 }
 
+// The key keeps its pre-online name so seat credentials saved by older builds still load.
 const SEAT_KEY = 'legatum.lan.seat';
 
 export interface RememberedSeat {

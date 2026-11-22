@@ -47,8 +47,8 @@ export function GameOver() {
   });
   const eliminationTurn = useGame((s) => s.views ? s.eliminationTurns[s.views[s.seat].me] : undefined);
   const resolveToEnd = useGame((s) => s.resolveToEnd);
-  const disconnected = useGame((s) => s.client?.kind === 'remote' && s.lan?.conn !== 'open');
-  const lan = useGame((s) => s.client?.kind === 'remote' ? s.lan : null);
+  const disconnected = useGame((s) => s.client?.kind === 'remote' && s.net?.conn !== 'open');
+  const net = useGame((s) => s.client?.kind === 'remote' ? s.net : null);
   const set = useGame((s) => s.set);
   const dialog = useRef<HTMLDialogElement>(null);
   const closing = useRef(false);
@@ -141,7 +141,7 @@ export function GameOver() {
           reason={reason} finish={finish} kicker={kicker} tone={tone} settled={settled} onSettle={() => setSettled(true)}
           actions={defeated ? [
             { label: 'Watch the rest of the game', primary: true, onClick: dismiss },
-            ...(canResolveToEnd(view, lan) ? [{ label: 'Resolve to the end', onClick: resolveToEnd, disabled: disconnected }] : []),
+            ...(canResolveToEnd(view, net) ? [{ label: 'Resolve to the end', onClick: resolveToEnd, disabled: disconnected }] : []),
             { label: 'Return to title', onClick: toTitle },
           ] : pg ? [
             { label: 'See the game report', primary: true, onClick: openReport },

@@ -117,8 +117,8 @@ function architecture(p) {
   b += text(40, 90, "One Rust engine. Everything else drives it.", "serif h");
   // Front ends.
   const fe = [
-    { x: 40, w: 440, t: "The Mac app", s: "Tauri shell · TypeScript UI · 2D hex renderer", n: "engine runs inside the app as WebAssembly" },
-    { x: 500, w: 440, t: "The LAN server", s: "Two humans on a team and six AI in one game", n: "native binary, trusted networks only" },
+    { x: 40, w: 440, t: "The game in your browser", s: "TypeScript UI · 2D hex renderer · phone to desktop", n: "engine runs in the page as WebAssembly" },
+    { x: 500, w: 440, t: "The online host", s: "Two humans on a team and six AI in one game", n: "runs in the host's tab, through a relay" },
   ];
   fe.forEach((f) => { b += box(f.x, 116, f.w, 84, p) + text(f.x + 20, 148, f.t, "serif bd", 'style="font-size:22px"') + text(f.x + 20, 170, f.s, "sm") + text(f.x + 20, 188, f.n, "sm", `style="fill:${p.gilt};font-weight:600"`); });
   // Core.
@@ -143,7 +143,7 @@ function architecture(p) {
   b += arrow("M322 479H346", p, { color: p.gilt, sw: 2.2 }) + arrow("M632 479H656", p, { color: p.gilt, sw: 2.2 });
   b += text(198, 404, "plays whole games", "sm") + text(818, 404, "orders in, view out", "sm");
   b += text(334, 420, "results", "sm c", 'style="font-size:11px"') + text(644, 420, "tuned", "sm c", 'style="font-size:11px"');
-  return shell({ w: W, h: H, title: "Legatum architecture", desc: "A deterministic Rust engine, legatum-core, takes game state, orders and a seed and returns the next state. The Mac app runs it as WebAssembly; the LAN server and the headless runner run it natively. The AI sees only a player's view, and the climb tunes the AI's parameters from runner results.", body: b }, p);
+  return shell({ w: W, h: H, title: "Legatum architecture", desc: "A deterministic Rust engine, legatum-core, takes game state, orders and a seed and returns the next state. The browser game and the online host (a player's tab) run it as WebAssembly; the headless runner runs it natively. The AI sees only a player's view, and the climb tunes the AI's parameters from runner results.", body: b }, p);
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
