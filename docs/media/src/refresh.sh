@@ -41,8 +41,9 @@ loop() {
 }
 # shellcheck source=/dev/null
 . "$here/loops.sh"
-# The teaser's preview (the first seconds, silent) for the README.
-"$here/webp.sh" "$out/legatum-teaser.mp4" "$out/teaser-preview.webp" 0 8 720 8 36
+# The teaser's poster for the README: one full-size frame with a play mark. A still stays sharp on a retina screen,
+# where the animated preview it replaced (720 px wide, 8 fps) looked pixelated and jumpy (user, 2026-11-22).
+ffmpeg -y -loglevel error -ss 2.0 -i "$out/legatum-teaser.mp4" -i "$here/play-mark.png" -filter_complex overlay -frames:v 1 -q:v 3 "$out/teaser-poster.jpg"
 
 node "$here/banner.mjs"
 node "$here/diagrams.mjs"

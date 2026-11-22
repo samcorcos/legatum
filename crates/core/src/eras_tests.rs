@@ -1240,6 +1240,13 @@ fn walled_garrison_shoots_through_forest_but_unwalled_garrison_and_field_unit_do
     };
     let error = shot(&s).unwrap_err();
     assert!(error.contains("No line of sight"), "{error}");
+    let name = s.cities[&home].name.clone();
+    assert!(
+        error.contains(&format!(
+            "Fire from a hill, move adjacent, or build Walls in {name}."
+        )),
+        "{error}"
+    );
     assert!(forecast(&s).is_none());
     for tier in [
         BuildingKind::Walls,

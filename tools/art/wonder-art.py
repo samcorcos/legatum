@@ -1,7 +1,8 @@
 """Turn a generated wonder painting on a flat magenta field into a registered landmark asset.
 
     python3 tools/art/wonder-art.py master RAW.png building-pyramids [COOL [LIGHT]]  # key, fit, grade, write master + 256/128/64 (COOL shifts the colour cooler, negative warmer; LIGHT scales brightness)
-    python3 tools/art/wonder-art.py stage RAW.png building-pyramids 2    # same for a construction stage, registered to the master
+    python3 tools/art/wonder-art.py master RAW.png building-eiffeltower --lattice    # also fill the magenta seen through a lattice tower's shaft
+    python3 tools/art/wonder-art.py stage RAW.png building-pyramids 2    # same for a construction stage, registered to the master (--lattice works here too)
     python3 tools/art/wonder-art.py sheet OUT.png stem...                # side-by-side check sheet beside the Great Library
 
 Every piece gets the same treatment the Great Library, Grand Bazaar and Royal Arsenal got:
@@ -58,6 +59,67 @@ def key_magenta(raw: Image.Image) -> Image.Image:
     return out
 
 
+def fill_lattice(raw: Image.Image, darken: float = 0.55, gap: int = 30) -> Image.Image:
+    """Fill the magenta seen through an open-lattice tower with a dark iron tone, before keying.
+
+    The generator paints the Eiffel Tower's shaft as open lattice over the magenta field; keyed as is, the pull-in eats
+    the shaft and it breaks into floating bits at card size.  Each row above the ground patch (narrower than 40% of the
+    canvas) is walked out from the tower's centre line; pinkish pixels between its outer iron edges become the shaft's
+    mean iron colour darkened, which reads as the lattice's far side."""
+    import numpy as np
+
+    a = np.asarray(raw.convert("RGB")).astype(int)
+    m = np.minimum(a[..., 0], a[..., 2]) - a[..., 1]
+    mag, pink = m > 60, m > 18
+    solid = ~pink
+    h, w = mag.shape
+    rows = [y for y in range(h) if 0 < (~mag[y]).sum() < 0.4 * w]
+    top = rows[0]
+    cx = int(np.median(np.nonzero(~mag[top:top + 150])[1]))
+    holes = np.zeros_like(mag)
+    iron = []
+
+    def edge(y, step):
+        x, run, last = cx, 0, cx
+        while 0 <= x < w and run <= gap:
+            last, run = (x, 0) if solid[y, x] else (last, run + 1)
+            x += step
+        return last
+
+    for y in range(top, h):
+        if (~mag[y]).sum() >= 0.4 * w:
+            break
+        lo, hi = edge(y, -1), edge(y, 1)
+        if hi > lo:
+            holes[y, lo:hi + 1] = pink[y, lo:hi + 1]
+            iron.append(a[y, lo:hi + 1][solid[y, lo:hi + 1]])
+    out = a.copy()
+    out[holes] = (np.concatenate(iron).mean(axis=0) * darken).astype(int)
+    return Image.fromarray(out.clip(0, 255).astype("uint8"))
+
+
+def drop_floaters(img: Image.Image) -> Image.Image:
+    """Clear opaque bits separated from the painting by a fully clear row (a keyed-off crane jib or mast tip)."""
+    import numpy as np
+
+    a = np.asarray(img.getchannel("A"))
+    rows = a.max(axis=1) > 28
+    runs, start = [], None
+    for y, on in enumerate(list(rows) + [False]):
+        if on and start is None:
+            start = y
+        elif not on and start is not None:
+            runs.append((start, y))
+            start = None
+    if len(runs) < 2:
+        return img
+    keep = max(runs, key=lambda r: r[1] - r[0])
+    out = np.asarray(img).copy()
+    out[:keep[0], :, 3] = 0
+    out[keep[1]:, :, 3] = 0
+    return Image.fromarray(out)
+
+
 def bbox(img: Image.Image):
     return img.getchannel("A").point(lambda a: 255 if a > 28 else 0).getbbox()
 
@@ -104,8 +166,9 @@ def save(img: Image.Image, path: Path, sizes):
         img.resize((size, size), Image.Resampling.LANCZOS).save(path.with_name(f"{path.stem}-{size}.png"), optimize=True)
 
 
-def master(raw: Path, stem: str, cool_amount=0.0, light=1.0):
-    keyed = key_magenta(Image.open(raw))
+def master(raw: Path, stem: str, cool_amount=0.0, light=1.0, lattice=False):
+    src = Image.open(raw)
+    keyed = drop_floaters(key_magenta(fill_lattice(src) if lattice else src))
     canvas, so = fit(keyed)
     canvas = cool(canvas, cool_amount, light) if (cool_amount or light != 1.0) else canvas
     table = fits()
@@ -118,8 +181,9 @@ def master(raw: Path, stem: str, cool_amount=0.0, light=1.0):
     print(stem, "scale", round(so[0], 3), "bbox", bbox(graded))
 
 
-def stage(raw: Path, stem: str, n: int):
-    keyed = key_magenta(Image.open(raw))
+def stage(raw: Path, stem: str, n: int, lattice=False):
+    src = Image.open(raw)
+    keyed = drop_floaters(key_magenta(fill_lattice(src) if lattice else src))
     entry = fits()[stem]
     if list(keyed.size) != entry["raw_size"]:
         keyed = keyed.resize(tuple(entry["raw_size"]), Image.Resampling.LANCZOS)
@@ -142,11 +206,13 @@ def sheet(out: Path, stems):
 
 
 if __name__ == "__main__":
-    cmd = sys.argv[1]
+    lattice = "--lattice" in sys.argv
+    argv = [a for a in sys.argv if a != "--lattice"]
+    cmd = argv[1]
     if cmd == "master":
-        master(Path(sys.argv[2]), sys.argv[3], *(float(v) for v in sys.argv[4:6]))
+        master(Path(argv[2]), argv[3], *(float(v) for v in argv[4:6]), lattice=lattice)
     elif cmd == "stage":
-        stage(Path(sys.argv[2]), sys.argv[3], int(sys.argv[4]))
+        stage(Path(argv[2]), argv[3], int(argv[4]), lattice=lattice)
     elif cmd == "sheet":
         sheet(Path(sys.argv[2]), sys.argv[3:])
     else:
