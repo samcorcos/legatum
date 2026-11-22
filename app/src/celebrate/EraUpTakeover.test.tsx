@@ -41,14 +41,8 @@ describe('the era-up takeover', () => {
     expect(t.querySelector('.et-title')?.textContent).toBe('The Classical Era');
     expect(t.querySelector('.et-numeral')?.textContent).toBe('II');
     expect(t.querySelector('.et-kicker')?.textContent).toBe('You are the first empire into this era');
-    const obj = t.querySelector('[data-testid=era-up-objectives]')!;
-    expect(obj.querySelector('h3')?.textContent).toContain('Victory points open now');
-    expect(obj.textContent).toContain('Each Age has one card worth 1 VP');
-    // Every open Age, oldest first (the fixture's rival has begun the Medieval Age), with your progress on its card.
-    expect([...obj.querySelectorAll('.et-age h4')].map((h) => h.textContent)).toEqual(['Classical Age', 'Medieval Age']);
-    expect([...obj.querySelectorAll('.et-age')][0].querySelectorAll('.eo-line .eo-num')[1]?.textContent).toBe('2/4');
-    // The objectives lead the panels: they are how you win.
-    expect(t.querySelector('.et-changes > .et-col')?.getAttribute('data-testid')).toBe('era-up-objectives');
+    // The points open now live on the Age's score check, not here.
+    expect(t.querySelector('[data-testid=era-up-objectives]')).toBeNull();
     // The board change: the Ancient city beside the Classical one.
     expect(t.querySelectorAll('[data-testid=era-up-board] img')).toHaveLength(2);
     expect(t.querySelector('[data-testid=era-up-board]')?.textContent).toContain('Ancient');

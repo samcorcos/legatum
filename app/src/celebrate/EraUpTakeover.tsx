@@ -1,10 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { feel, useCombatFx } from '../feel';
-import { useGame } from '../store';
 import { Icon } from '../ui/bits';
 import { useReducedMotion } from '../ui/useReducedMotion';
-import { ObjectiveRows } from '../ui/EraObjectives';
-import { VpSeal } from '../ui/vpParts';
 import { cityStem, cityUrl } from '../map/cityArt';
 import type { Moment } from './moments';
 import type { EraBring, EraUpCard } from './eraUp';
@@ -30,8 +27,8 @@ const MOTES = Array.from({ length: 18 }, (_, i) => ({
 
 /**
  * The viewer's own era-up (legatum-ui "Big moments"): a full-screen takeover with the era's painting, a short animation
- * (under 4 s, and none under reduced motion), what changes (new units and buildings, the three objectives,
- * and how your cities now look) and one primary, Continue. Everything that triggers it lives outside this file:
+ * (under 4 s, and none under reduced motion), what changes (new units and buildings and how your cities now look;
+ * the Age's points are the score check that follows) and one primary, Continue. Everything that triggers it lives outside this file:
  * `momentsForTurn` makes a held `Moment` with `eraUp` set from the public `EraEntered` event, and `MomentLane` renders
  * it here and treats it like an unlock card: it waits for Return, Esc or its own buttons, never times out, never
  * touches an order in progress, and never blocks a teammate (it is local to this screen; simultaneous turns go on).
@@ -42,10 +39,8 @@ export function EraUpTakeover({ moment, dismiss }: { moment: Moment; dismiss(): 
   const animationsOn = useCombatFx((s) => s.enabled);
   const reduced = motionOff || !animationsOn;
   const art = eraArt(card.era);
-  const view = useGame((s) => (s.views ? s.views[s.seat] : null)) ?? undefined;
   const primary = useRef<HTMLButtonElement>(null);
   useEffect(() => { primary.current?.focus({ preventScroll: true }); }, [moment.id]);
-  const hero = card.openAges.length > 0;
   const shown = card.brings.slice(0, BRING_SHOWN);
   const more = card.brings.length - shown.length;
   const remaining = card.techs.filter((t) => !t.known).length;
@@ -69,12 +64,7 @@ export function EraUpTakeover({ moment, dismiss }: { moment: Moment; dismiss(): 
       <h2 className="et-title">The {card.eraName} Era</h2>
       <div className="et-rule" aria-hidden="true"><svg width="12" height="12" viewBox="-5.5 -5.5 11 11"><path d="M0 -5L.95 -.95L5 0L.95 .95L0 5L-.95 .95L-5 0L-.95 -.95Z" fill="currentColor" /></svg></div>
     </header>
-    <section className={`et-changes${hero ? ' has-hero' : ''}`} aria-label="What changes">
-      {hero && <div className="et-col et-obj" data-testid="era-up-objectives">
-        <h3><span className="et-obj-title">Victory points open now</span><VpSeal vp={1} className="inline" /></h3>
-        <p className="et-obj-sub">Each Age has one card worth 1 VP, kept for good. It never expires, and every empire can score it.</p>
-        {card.openAges.map((a) => <div className="et-age" key={a.era} data-era={a.era}><h4>{a.name} Age</h4><ObjectiveRows lines={a.lines} big view={view} era={a.era} /></div>)}
-      </div>}
+    <section className="et-changes" aria-label="What changes">
       <div className="et-col et-new" data-testid="era-up-new">
         <h3>New this era</h3>
         {shown.length > 0 && <ul>
