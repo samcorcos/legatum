@@ -37,6 +37,8 @@ export interface StagingConfig {
   turn_limit: number | null;
   /** Barbarian camps; servers from before barbarians omit it (read as on). */
   barbarians?: boolean;
+  /** The AI-only teams start in Alliances of two; servers from before it omit it (read as off). */
+  ai_alliances?: boolean;
   seats: StagingSeat[];
 }
 
@@ -88,6 +90,7 @@ export function configFromLobby(l: Lobby): StagingConfig {
     turn_limit: l.turnLimit,
     // Omitted when on (the server's default), so default rooms keep their old config shape.
     ...(l.barbarians === false ? { barbarians: false } : {}),
+    ...(l.aiAlliances ? { ai_alliances: true } : {}),
     seats: l.slots.map((s) => ({ kind: KIND[s.kind], name: s.name, faction: s.faction, team: s.team, difficulty: s.difficulty, ...(levelOf(s) === 'Training' ? { search: true } : {}) })),
   };
 }
@@ -107,6 +110,7 @@ export function lobbyFromStaging(st: StagingState, includeOccupants = true): Lob
     mapSize,
     turnLimit: c.turn_limit ?? null,
     barbarians: c.barbarians !== false,
+    aiAlliances: c.ai_alliances === true,
     ...levelFields(level),
     slots: c.seats.map((s, i) => {
       const o = includeOccupants ? st.occupants[i] : null;
@@ -141,7 +145,7 @@ export function settingsAcknowledged(config: StagingConfig, acknowledged: Stagin
   const host = state?.occupants[0];
   // Barbarians default to on: servers and configs may omit the flag, so compare it normalized.
   const canon = (c: Omit<StagingConfig, 'seed'> | undefined) => c && JSON.stringify({
-    width: c.width, height: c.height, turn_limit: c.turn_limit, barbarians: c.barbarians !== false, seats: c.seats,
+    width: c.width, height: c.height, turn_limit: c.turn_limit, barbarians: c.barbarians !== false, ai_alliances: c.ai_alliances === true, seats: c.seats,
   });
   const { seed, ...settings } = config;
   return config === acknowledged && !!host?.connected &&

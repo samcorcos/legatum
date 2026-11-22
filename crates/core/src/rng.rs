@@ -19,6 +19,8 @@ pub mod purpose {
     pub const TILE_CONTEST: u64 = 10;
     pub const ERA_FIRST: u64 = 11;
     pub const WONDER_RACE: u64 = 12;
+    /// Which AI teams start allied (`GameSetup::ai_alliance_pairs`).
+    pub const AI_ALLIANCES: u64 = 13;
 }
 
 /// `items` in a seeded random order, the same for the same `(seed, parts)` whatever order they

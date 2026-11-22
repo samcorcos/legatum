@@ -22,6 +22,7 @@ pub(crate) fn test_game(players: &[(Faction, u8)]) -> GameState {
             .collect(),
         turn_limit: Some(150),
         legacy_all_war: false,
+        ai_alliances: false,
         barbarians: false,
         rule_experiments: Default::default(),
     };

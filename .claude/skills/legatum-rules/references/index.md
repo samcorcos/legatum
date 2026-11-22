@@ -13,7 +13,7 @@ The reference was one file, `game-rules.md`, until 2026-11-22. It is now one fil
 | `not-in-game.md` | Which Civ 6 systems do not exist here (always read before proposing a mechanic) |
 | `turn-and-orders.md` | What orders exist; one order per unit per turn; Sleep, Skip and Heal; auto-explore; the resolution phases; automatic garrison fire; order UI; co-op Gold gifts to a teammate (`GiveGold`, rules 50) |
 | `movement.md` | Movement rules, multi-turn goto, meeting engagements, roads and Roadworks, passing through your own units, route previews |
-| `setup.md` | New-game faction choice, AI levels (Easy, Normal, Hard, Training), the calendar, what every empire starts with and what is legal on turn 1 |
+| `setup.md` | New-game faction choice, AI levels (Easy, Normal, Hard, Training), co-op AI alliances (the AIs start allied in pairs), the calendar, what every empire starts with and what is legal on turn 1 |
 | `research-and-eras.md` | The nine eras, the tech tree and its gates, research costs, game length and pacing |
 | `units.md` | Unit stats and costs, the land triangle, Outriders, indirect fire and built-in Siege, Future-era units, one unit per class per era |
 | `air.md` | Aircraft, strikes, recon, rebase, hangars, Air Defence, aircraft promotion, aircraft sight |

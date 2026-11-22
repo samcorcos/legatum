@@ -70,6 +70,7 @@ fn setup_for(view: &PlayerView, seed: u64) -> GameSetup {
             .collect(),
         turn_limit: view.turn_limit,
         legacy_all_war: view.diplomacy.legacy,
+        ai_alliances: false,
         // Lobby settings aren't in the view; barbarian camps are on in every current game.
         barbarians: !view.diplomacy.legacy,
     }

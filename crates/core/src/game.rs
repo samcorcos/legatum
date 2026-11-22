@@ -67,6 +67,9 @@ pub fn blank_game(setup: &GameSetup, map: Map) -> GameState {
             if setup.rule_experiments.start_met {
                 d.meet_all(&teams);
             }
+            for (a, b) in setup.ai_alliance_pairs() {
+                d.start_alliance(a, b);
+            }
             d
         }),
         setup: setup.clone(),

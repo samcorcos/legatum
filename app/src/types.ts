@@ -1332,6 +1332,8 @@ export interface GameSetup {
   legacy_all_war?: boolean;
   /** Civ 6 style barbarian camps. Omitted (off) in setups from before barbarians existed. */
   barbarians?: boolean;
+  /** The teams with no human seat start in Alliances of two (core `GameSetup::ai_alliances`). Omitted when off. */
+  ai_alliances?: boolean;
   /** Core rule experiments (only the switches the app reads); omitted when all default. */
   rule_experiments?: RuleSwitches;
 }
