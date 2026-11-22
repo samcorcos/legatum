@@ -365,16 +365,14 @@
   .research-queue-head { height: auto; min-height: 26px; }
   .research-queue-head .btn:not(.primary) { height: 24px; font-size: 12px; }
   .research-queue-cta .btn.primary { min-height: 30px; padding: 3px 14px; }
-  /* A slot is one 30 px line: number, name, arrival, then the three 24 px controls (the audit's minimum target),
-     so the strip costs the cards as little height as it can. */
-  .research-queue-slots { grid-auto-columns: minmax(258px, 1fr); grid-template-rows: 30px; }
-  .research-queue li { grid-template-columns: 20px minmax(0, max-content) minmax(0, 1fr) 24px auto; grid-template-rows: 24px; align-content: center; gap: 0 6px; padding-block: 2px; }
-  .research-queue li .rq-number { grid-column: 1; grid-row: 1; align-self: center; }
-  .research-queue li .rq-name { grid-column: 2; grid-row: 1; font-size: 14px; }
-  .research-queue li .rq-arrival { grid-column: 3; grid-row: 1; padding-left: 0; font-size: 11px; }
-  .research-queue li .rq-remove { grid-column: 4; grid-row: 1; align-self: center; }
-  .research-queue li .research-queue-controls { grid-column: 5; grid-row: 1; align-self: center; }
-  .rq-ghost { padding-block: 2px; }
+  /* A slot is two short lines (name over arrival) beside its three 24 px controls (the audit's minimum target). */
+  .research-queue-slots { grid-auto-columns: minmax(258px, 1fr); grid-template-rows: 38px; }
+  .research-queue li { grid-template-columns: 20px minmax(0, 1fr) 24px auto; grid-template-rows: 17px 15px; align-content: center; gap: 0 6px; padding-block: 2px; }
+  .research-queue li .rq-number { grid-column: 1; grid-row: 1 / 3; align-self: center; }
+  .research-queue li .rq-name { grid-column: 2; grid-row: 1; font-size: 14px; line-height: 17px; }
+  .research-queue li .rq-arrival { grid-column: 2; grid-row: 2; padding-left: 0; font-size: 11.5px; line-height: 15px; }
+  .research-queue li .rq-remove { grid-column: 3; grid-row: 1 / 3; align-self: center; }
+  .research-queue li .research-queue-controls { grid-column: 4; grid-row: 1 / 3; align-self: center; }
   .research-scroll { gap: 6px; padding-bottom: 4px; scroll-padding-block: 6px; }
   .era-cards { padding-top: 19px; }
   .era-unlocks { gap: 3px; }
@@ -462,16 +460,18 @@
    its buttons at the right, so the technology cards keep their names in view with a card's details open.
    The band keeps one height whatever is queued (nothing moves under the pointer). */
 @media (max-height: 700px) {
-  .research-queue { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-rows: auto auto auto; align-items: center; gap: 0 10px; padding-block: 4px; }
+  /* One fixed height whether idle (one button) or queued (two stacked buttons), so picking moves no card. */
+  .research-queue { display: grid; grid-template-columns: minmax(160px, auto) minmax(0, 1fr) auto; grid-template-rows: 1fr 1fr; align-items: center; gap: 0 10px; box-sizing: border-box; height: 54px; padding-block: 2px; }
   .research-queue .research-queue-head { display: contents; }
   .research-queue-title { grid-column: 1; grid-row: 1; align-self: end; }
-  .research-queue-hint, .research-queue-total { grid-column: 1; grid-row: 2; align-self: start; font-size: 11.5px; }
-  .research-queue-pending { grid-column: 1; grid-row: 3; margin-left: 0; }
+  .research-queue-hint, .research-queue-total { grid-column: 1; grid-row: 2; align-self: start; justify-self: start; font-size: 11.5px; }
+  .research-queue-pending { grid-column: 1; grid-row: 2; justify-self: end; align-self: start; margin-left: 0; }
   /* Queued, the numbered slots already say the order: the sentence steps aside for the finish turn. */
   .research-queue:not(.idle) .research-queue-hint { display: none; }
-  .research-queue-slots { grid-column: 2; grid-row: 1 / -1; grid-auto-columns: minmax(262px, 1fr); }
+  .research-queue-slots { grid-column: 2; grid-row: 1 / -1; grid-auto-columns: minmax(244px, 1fr); }
   .research-queue-cta, .research-queue-actions { grid-column: 3; grid-row: 1 / -1; margin-left: 0; justify-self: end; }
-  .research-queue-actions { flex-direction: column; align-items: stretch; gap: 3px; }
+  .research-queue-actions { flex-direction: column; align-items: stretch; gap: 2px; }
+  .research-queue-head .research-queue-actions .btn:not(.primary) { height: 24px; padding: 0 8px; font-size: 11px; }
   .research-queue-actions:empty { display: none; }
-  .research-queue-cta .btn.primary { padding-inline: 10px; letter-spacing: .04em; }
+  .research-queue-cta .btn.primary { min-height: 32px; padding-inline: 10px; letter-spacing: .04em; }
 }
