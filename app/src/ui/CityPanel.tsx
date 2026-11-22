@@ -537,6 +537,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
       return <div className="production-choice project-choice" key={itemKey(o.item)} data-item={itemKey(o.item)}>
         <Tip as="div" placement="right" summary={itemDescription(o.item, owner?.faction)} content={itemDescription(o.item, owner?.faction)}>
           <button className="prod" aria-label={`Run ${name}`} onClick={() => buildNow(o.item)} disabled={view.finished}>
+            <span className="prod-icons"><ItemArt item={o.item} faction={owner?.faction} size={20} /></span>
             <span className="prod-name">{name}</span>
             <span className="prod-cost">{projectRate(o.item, o.yields)}</span>
             <span className="prod-go">{sameItem(producing, o.item) ? 'Active' : isGrow(o.item) ? 'Grow →' : 'Run project →'}</span>
@@ -731,7 +732,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
   /** Improvements: every worked, known resource tile this city can still improve, with what it adds. Resources lie dormant until then. */
   const improvementOptions = listOptions.filter((o) => o.item.kind === 'Improvement');
   // The same check as the map's faded medallions and the tile card: owned, known and unimproved.
-  const dormant = d.territory.filter((h) => { const t = view.tiles[tileIndex(h, view.width, view.height)]; return !!t && isDormant(t, view.me); }).length;
+  const dormant = d.territory.filter((h) => { const t = view.tiles[tileIndex(h, view.width, view.height)]; return !!t && isDormant(t, view.me, owner?.faction); }).length;
   const improvements = (city.owner === view.me && improvementOptions.length > 0) ? <section aria-label="Improvements" data-testid="improvements-group">
     <Tip as="div" className="cp-sub" content={`A resource yields its bonus only once its tile is improved. A strategic deposit supplies its resource as soon as it is inside your borders. Its improvement (${['Mine', 'SaltpeterWorks', 'OilWell', 'QuartzMine'].map((k) => withArticle(IMPROVEMENT_INFO[k as ImprovementKind].name)).join(', ')}) adds its tile's yield and 1 more supply. Pick a tile here or click it on the map. Improvements upgrade by themselves with technology; a released tile keeps its improvement, and a captured city's land keeps it.`}>
       Improvements <span className="cp-sub-note">· {dormant} resource tile{dormant === 1 ? '' : 's'} unimproved</span>

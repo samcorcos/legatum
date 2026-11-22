@@ -92,7 +92,7 @@ export function TileCard({ view, hex, anchor, routeWarning, blockedReason, reinf
     .sort((a, b) => a.distance - b.distance || a.city.id - b.city.id)[0]?.city : undefined;
   const builder = view.cities.filter((c) => c.owner === view.me)
     .sort((x, y) => Number(holds(y)) - Number(holds(x)) || distance(x.pos, hex) - distance(y.pos, hex))[0];
-  const dormantNote = resource && kind && isDormant(t, view.me)
+  const dormantNote = resource && kind && isDormant(t, view.me, faction)
     ? `${isStrategic(resource) ? `Its ${bonusYieldName(resource)} bonus is dormant` : 'Dormant'}: build the ${improvementName(kind)}${builder ? ` from ${builder.name}'s production list` : " from a city's production list"}`
     : null;
   // The next action for the tile's resource: improve it (yours), claim it (nobody's) or who holds it.
@@ -125,7 +125,7 @@ export function TileCard({ view, hex, anchor, routeWarning, blockedReason, reinf
           <ul className="tilecard-benefits">
             {resourceBenefitLines(resource, view.research.known, view.players.find((p) => p.id === view.me)?.faction).map((line) => <li key={line}><Amounts text={line} /></li>)}
           </ul>
-          {resourceStatus && <div className={`tilecard-status ${isDormant(t, view.me) && !isStrategic(resource) ? 'bad' : ''}`} data-testid="tile-improvement"><Amounts text={resourceStatus} /></div>}
+          {resourceStatus && <div className={`tilecard-status ${isDormant(t, view.me, faction) && !isStrategic(resource) ? 'bad' : ''}`} data-testid="tile-improvement"><Amounts text={resourceStatus} /></div>}
         </div>
       )}
       {routeWarning && <div className={isCalmRouteNote(routeWarning) ? 'tilecard-warn route-note' : 'tilecard-warn'} role={isCalmRouteNote(routeWarning) ? undefined : 'alert'} data-testid="route-warning">{routeWarning}</div>}

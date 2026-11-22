@@ -17,7 +17,7 @@ describe('Egypt sees no Production', () => {
   });
 
   it('says a Quarry gives Egypt nothing, and keeps a strategic deposit to its supply', () => {
-    expect(resourceBenefitLines('Stone', [], 'Egypt')).toEqual(['Egypt has no Production, so this adds nothing']);
+    expect(resourceBenefitLines('Stone', [], 'Egypt')).toEqual(['Nothing to build here: you have no Production']);
     expect(resourceBenefitLines('Stone', [], 'India')[0]).toContain('Production');
     const iron = resourceBenefitLines('Iron', [], 'Egypt');
     expect(iron.join(' ')).not.toContain('Production');
