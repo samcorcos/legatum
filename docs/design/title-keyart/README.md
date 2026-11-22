@@ -30,7 +30,7 @@ Cons: most map-like and least immediately cinematic; the dense relief and landma
 
 ## C · The road at dawn
 
-Files: `app/src/assets/art/title-keyart-c-road-at-dawn.png`, `title-keyart-c-road-at-dawn-1600.jpg`, and adjacent `.prompt.txt`.
+Files: the full-size master title-keyart-c-road-at-dawn.png (archived outside the repository; `python3 tools/art/fetch-sources.py --all` restores it), `title-keyart-c-road-at-dawn-1600.jpg`, and adjacent `.prompt.txt`.
 
 A single long road crosses a ridge, plains and river valleys into dawn haze and distant sea. Tiny separated hearth smoke and watch-fires suggest many societies; weathered ruins sit in the lower-left grass.
 

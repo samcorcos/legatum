@@ -6,7 +6,7 @@ Save: `~/LegatumRuns/bug-saves/mongols-win-2026-10-30/autosave.legatum`, plus th
 
 **Method.** The whole game replays at the 8.9.17 tag with 0 hash mismatches over 172 turns, and every AI order list matches (600 of 600). What-ifs: 30 branches × 32 runs from T60, T96, T133 and T150, on the box (about 4 minutes). Tools and data: `~/LegatumRuns/coach-tools/coach-8917-mongols/`.
 
-![VP race and army size](2026-10-30-mongols-review.png)
+VP race and army size (archived outside the repository)
 
 ## Coach's verdict
 
