@@ -78,6 +78,35 @@ fn building(b: BuildingKind) -> ProductionItem {
     ProductionItem::Building { building: b }
 }
 
+/// An online guest's order: the pick is stored on the city unchecked, and a tile off the map there made
+/// every later save fail `check_state` (security review, 2026-11-22).
+#[test]
+fn an_automation_pick_off_the_map_is_refused_and_the_state_stays_loadable() {
+    let mut state = test_game(&[(Faction::Athens, 0)]);
+    let id = found(&mut state, P0, at(5, 5));
+    for picked in [
+        ProductionItem::Wonder {
+            building: BuildingKind::Pyramids,
+            tile: at(-9, 0),
+        },
+        ProductionItem::Improvement {
+            improvement: ImprovementKind::Farm,
+            tile: at(500, 500),
+        },
+    ] {
+        let order = Order::SetCityAutomation {
+            city: id,
+            focus: Some(CityBuildFocus::Military),
+            picked: Some(picked),
+        };
+        let errors = validate_city_orders(&state, P0, std::slice::from_ref(&order));
+        assert_eq!(errors.len(), 1, "{picked:?}");
+        let (next, _) = crate::resolve_turn(&state, &BTreeMap::from([(P0, vec![order])]));
+        assert_eq!(city(&next, id).last_auto_pick, None);
+        assert_eq!(crate::validation::check_state(&next), Ok(()));
+    }
+}
+
 #[test]
 fn stopping_city_automation_keeps_current_build_and_drops_its_future_pick() {
     let mut state = test_game(&[(Faction::Athens, 0)]);

@@ -32,6 +32,8 @@ function withHeaders(resp: Response): Response {
   // A browser on another origin can read only the headers listed here: without this the Retry-After on a 429 is hidden from the app.
   out.headers.set("Access-Control-Expose-Headers", "Retry-After");
   out.headers.set("Cache-Control", "no-store");
+  // Rooms hand back text their host wrote (`/api/status`, lobby names): a browser must never guess it is a page.
+  out.headers.set("X-Content-Type-Options", "nosniff");
   return out;
 }
 
