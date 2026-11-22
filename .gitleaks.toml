@@ -5,4 +5,4 @@ useDefault = true
 [[allowlists]]
 description = "UI storage-key constants"
 regexTarget = "line"
-regexes = ['''(RECORDS_KEY|SORT_KEY) = ''']
+regexes = ['''(RECORDS_KEY|SORT_KEY|NARROW_PLATE_KEY|CRASH_MARKER_KEY) = ''']
