@@ -71,7 +71,7 @@ export function UnitPanel({ unit, view, peek = false }: { unit: UnitView; view: 
   const onlyBarbarianStrength = barbarianStrengthKey && strengthTargets.every((u) => isBarbarian(u.owner));
   const closed = mine && !canEnter(view, unit.kind, view.tiles[tileIndex(unit.pos, view.width, view.height)]?.owner ?? null);
   const owner = view.players.find((p) => p.id === unit.owner);
-  // Standing on a Courier Hall holder's land at Peace: the road is open now and closes if the Hall changes hands.
+  // Standing on a Yam Relay Station holder's land at Peace: the road is open now and closes if the Station changes hands.
   const roadOwner = mine ? view.tiles[tileIndex(unit.pos, view.width, view.height)]?.owner ?? null : null;
   const onRoad = roadOwner !== null && view.players.find((p) => p.id === roadOwner)?.team !== view.team && !!view.courier_halls?.some((h) => h.holder === roadOwner) && !atWar(view, roadOwner);
   // A unit that starts its turn on a road gets extra moves (+1, +2 with Railways): say so where the number is.
@@ -98,7 +98,7 @@ export function UnitPanel({ unit, view, peek = false }: { unit: UnitView; view: 
   const madeBy = unit.origin ?? owner?.faction;
   const fromLabel = itemName({ kind: 'Unit', unit: unit.kind }, madeBy);
   const col = playerInk(unit.owner);
-  // The Sparta's one-time unit action: a veteran (at RULES.spartaRetireLevel or higher) is offered retirement, valid only in a city with a War Shrine.
+  // The Sparta's one-time unit action: a veteran (at RULES.spartaRetireLevel or higher) is offered retirement, valid only in a city with an Agoge.
   const veteran = mine ? retireEntry(view, unit.id) : undefined;
   const retiring = !!pendingRetire(orders, unit.id);
   const locked = mine && unit.occupation_lock != null;
@@ -307,16 +307,16 @@ export function UnitPanel({ unit, view, peek = false }: { unit: UnitView; view: 
   );
 }
 
-/** Honour the Fallen: retire this veteran (at the retire level or higher). Offered only on a veteran; valid only in an own city with a War Shrine, which the map marks while he is selected. */
+/** Honour the Fallen: retire this veteran (at the retire level or higher). Offered only on a veteran; valid only in an own city with an Agoge, which the map marks while he is selected. */
 function RetireAction({ unit, view, retiring, blocker }: { unit: UnitView; view: PlayerView; retiring: boolean; blocker: string | null }) {
   const set = useGame((s) => s.set);
   const jumpTo = useGame((s) => s.jumpTo);
   const editOrders = useGame((s) => s.editOrders);
   const r = view.actions!.retire!;
   const goal = FACTION_GOAL.Sparta, vp = factionGoalVp('Sparta');
-  const shrine = view.cities.find((c) => r.shrines.includes(c.id));
-  const reason = blocker && (shrine
-    ? <>{blocker.split(':')[0]}. The map marks the cities where he can retire. <button className="link" onClick={() => jumpTo(shrine.pos)}>Show on map</button></>
+  const agoge = view.cities.find((c) => r.shrines.includes(c.id));
+  const reason = blocker && (agoge
+    ? <>{blocker.split(':')[0]}. The map marks the cities where he can retire. <button className="link" onClick={() => jumpTo(agoge.pos)}>Show on map</button></>
     : 'Build an Agoge first: veterans retire in a city that has one.');
   return <Action label={goal.unitAction ?? 'Retire this veteran'} active={retiring} disabled={!!blocker && !retiring} reason={retiring ? undefined : reason ?? undefined}
     onClick={() => (retiring ? editOrders((o) => clearRetire(o, unit.id)) : set({ goalDialog: 'RetireVeteran', goalDialogUnit: unit.id }))}

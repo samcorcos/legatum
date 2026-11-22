@@ -585,7 +585,7 @@ impl GameState {
     /// Whether `mover`'s unit of `kind` may stand in land owned by `land_owner`: unowned land,
     /// its own team's, an enemy's (War), an ally's, or land its faction crosses at Peace
     /// or the
-    /// land of a Courier Hall's holder, which is open to every empire's units, military
+    /// land of a Yam Relay Station's holder, which is open to every empire's units, military
     /// included (`goals::holds_open_road`). This is the single passage rule.
     pub fn passage_allowed(
         &self,

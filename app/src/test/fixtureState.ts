@@ -114,7 +114,7 @@ export interface MPlayer {
   factionGoalReachedBefore?: boolean;
   /** Core `Player::goal_holder`: who scored this empire's held goal (the Heir's holder) at the last scoring. */
   goalHolder?: PlayerId | null;
-  /** Core `Player::hall_city`: Mongols's Courier Hall city. The Hall exists only while that city still stands with the building (`hallCity` in rules). */
+  /** Core `Player::hall_city`: Mongols's Yam Relay Station city. The Station exists only while that city still stands with the building (`hallCity` in rules). */
   hallCity?: CityId | null;
   /** Core `Player::diwan_city`: India's Imperial Diwan city, including after capture. */
   diwanCity?: CityId | null;
@@ -162,9 +162,9 @@ export interface MState {
   landmark?: ({ building: BuildingKind; city: CityId; of: PlayerId } | null)[];
   /** Road links per tile (core `Tile::road`: bit d links direction d, 64 = road tile); absent until roads are laid (`roads.ts`). */
   road?: number[];
-  /** Where the road network is rooted: the first Courier Hall's city tile (core `Map::road_hub`). */
+  /** Where the road network is rooted: the first Yam Relay Station's city tile (core `Map::road_hub`). */
   roadHub?: Hex;
-  /** Whether any tile carries a road (core `Map::roaded`): Hall roads or a city's Roadworks. */
+  /** Whether any tile carries a road (core `Map::roaded`): Station roads or a city's Roadworks. */
   roaded?: boolean;
   /** Owner per tile, -1 = none. */
   owner: number[];

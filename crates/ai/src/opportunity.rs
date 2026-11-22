@@ -1044,7 +1044,7 @@ mod sparta_wound_tests {
     }
 
     #[test]
-    fn a_wounded_sparta_soldier_can_join_a_city_strike_forecast() {
+    fn a_wounded_sparta_spearman_can_join_a_city_strike_forecast() {
         let v = ViewBuilder::new(20, 12)
             .faction(Faction::Sparta)
             .city(1, ME, off(3, 5), 3)

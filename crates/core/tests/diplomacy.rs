@@ -653,10 +653,10 @@ fn explicit_attack_forecasts_reject_closed_territory_like_validation() {
     let (mut s, _) = step(&game(&[0, 1, 2, 0]), &[(0, vec![war(2)])]);
     let origin = h(6, 5);
     let target = h(7, 5);
-    let ranger = spawn_unit(&mut s, PlayerId(0), UnitKind::Archer, origin);
+    let archer = spawn_unit(&mut s, PlayerId(0), UnitKind::Archer, origin);
     spawn_unit(&mut s, PlayerId(2), UnitKind::Spearman, target);
     let shot = Order::RangedAttack {
-        unit: ranger,
+        unit: archer,
         target,
     };
     for owner in [
@@ -671,11 +671,11 @@ fn explicit_attack_forecasts_reject_closed_territory_like_validation() {
         let closed = owner == Some(PlayerId(1));
         for mode in [AttackMode::Melee, AttackMode::Ranged] {
             assert_eq!(
-                forecast_attack_mode(&view, ranger, target, mode).is_none(),
+                forecast_attack_mode(&view, archer, target, mode).is_none(),
                 closed
             );
         }
-        assert_eq!(forecast_attack(&view, ranger, target).is_none(), closed);
+        assert_eq!(forecast_attack(&view, archer, target).is_none(), closed);
         let errors = validate_orders(&s, PlayerId(0), std::slice::from_ref(&shot));
         if closed {
             assert_eq!(
@@ -903,20 +903,20 @@ fn former_ally_stays_in_closed_land_then_can_attack_after_declaration() {
     for tile in h(6, 5).within(2) {
         s.map.get_mut(tile).unwrap().owner = Some(PlayerId(1));
     }
-    let ranger = spawn_unit(&mut s, PlayerId(0), UnitKind::Archer, h(6, 5));
+    let archer = spawn_unit(&mut s, PlayerId(0), UnitKind::Archer, h(6, 5));
     let target = spawn_unit(&mut s, PlayerId(1), UnitKind::Spearman, h(7, 5));
     let (s, _) = step(&s, &[(0, vec![leave(1)])]);
     assert_eq!(alliance_relation(&s, 0, 1).state, RelationState::Peace);
-    assert_eq!(s.units[&ranger].pos, h(6, 5));
-    assert!(!s.unit_in_open_land(&s.units[&ranger]));
+    assert_eq!(s.units[&archer].pos, h(6, 5));
+    assert!(!s.unit_in_open_land(&s.units[&archer]));
     let shot = Order::RangedAttack {
-        unit: ranger,
+        unit: archer,
         target: h(7, 5),
     };
     assert!(!validate_orders(&s, PlayerId(0), std::slice::from_ref(&shot)).is_empty());
     let (s, _) = step(&s, &[(0, vec![war(1)])]);
-    assert_eq!(s.units[&ranger].pos, h(6, 5));
-    assert!(s.unit_in_open_land(&s.units[&ranger]));
+    assert_eq!(s.units[&archer].pos, h(6, 5));
+    assert!(s.unit_in_open_land(&s.units[&archer]));
     assert!(s.units.contains_key(&target));
     assert!(validate_orders(&s, PlayerId(0), &[shot]).is_empty());
 }

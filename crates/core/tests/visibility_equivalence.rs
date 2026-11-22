@@ -531,7 +531,7 @@ fn numeric_market_purchase_preserves_item() {
 }
 
 #[test]
-fn numeric_ranger_purchase_preserves_item() {
+fn numeric_archer_purchase_preserves_item() {
     assert_eq!(
         tape_order(&[5, 29, 0, 3]),
         Order::BuyItem {
@@ -664,7 +664,7 @@ fn numeric_market_purchase_replays_identical_state_and_views() {
 }
 
 #[test]
-fn numeric_ranger_purchase_replays_identical_state_and_views() {
+fn numeric_archer_purchase_replays_identical_state_and_views() {
     assert_numeric_purchase_matches_direct(
         ProductionItem::Unit {
             unit: UnitKind::Archer,

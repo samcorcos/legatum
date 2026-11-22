@@ -81,7 +81,7 @@ fn at_peace(mut view: PlayerView) -> PlayerView {
     view
 }
 
-fn soldier_production(city: u32) -> Order {
+fn spearman_production(city: u32) -> Order {
     Order::SetProduction {
         city: CityId(city),
         item: ProductionItem::Unit {
@@ -108,19 +108,19 @@ fn is_settler_order(order: &Order) -> bool {
 }
 
 #[test]
-fn trains_soldiers_and_queues_no_early_settler() {
+fn trains_spearmen_and_queues_no_early_settler() {
     let view = ViewBuilder::new(20, 16)
         .city(1, ME, off(4, 5), 2)
         .unit(1, ME, UnitKind::Spearman, off(5, 5))
         .gold(400)
         .build();
     let orders = HumanPlaybookV7Brain::default().orders(&view);
-    assert!(orders.contains(&soldier_production(1)), "{orders:?}");
+    assert!(orders.contains(&spearman_production(1)), "{orders:?}");
     assert!(!orders.iter().any(is_settler_order), "{orders:?}");
 }
 
 #[test]
-fn a_settler_waits_for_the_first_wave_of_soldiers() {
+fn a_settler_waits_for_the_first_wave_of_spearmen() {
     let mut view = ViewBuilder::new(20, 16)
         .city(1, ME, off(4, 5), 3)
         .unit(1, ME, UnitKind::Spearman, off(5, 5))
@@ -142,7 +142,7 @@ fn a_settler_waits_for_the_first_wave_of_soldiers() {
 }
 
 #[test]
-fn buys_soldiers_toward_the_goal_and_not_a_firing_line_first() {
+fn buys_spearmen_toward_the_goal_and_not_a_firing_line_first() {
     let mut view = ViewBuilder::new(20, 16)
         .city(1, ME, off(4, 5), 2)
         .gold(400)
@@ -194,7 +194,7 @@ fn conquering() -> HumanPlaybookV7Brain {
 }
 
 #[test]
-fn declares_war_and_strikes_a_defended_city_with_soldiers_in_the_same_turn() {
+fn declares_war_and_strikes_a_defended_city_with_spearmen_in_the_same_turn() {
     let view = assault_view();
     let target = off(10, 5);
     let orders = conquering().orders(&view);
@@ -214,7 +214,7 @@ fn declares_war_and_strikes_a_defended_city_with_soldiers_in_the_same_turn() {
 }
 
 #[test]
-fn waits_at_peace_for_the_third_soldier() {
+fn waits_at_peace_for_the_third_spearman() {
     let mut view = assault_view();
     view.units
         .retain(|u| !matches!(u.id, UnitId(3) | UnitId(4)));

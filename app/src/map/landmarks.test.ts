@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { landmarkArtUrl, landmarkBox, landmarkBoxes, landmarkCore, landmarksOf, shortLabel } from './landmarks';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { LANDMARK_REF_ZOOM, townCover, landmarkArtUrl, landmarkBox, landmarkBoxes, landmarkCore, landmarksOf, shortLabel } from './landmarks';
 import { itemArtUrl } from '../unlockArt';
 import { GREAT_WORKS } from '../data';
 import { CITY_WORLD } from './terrain';
 import { HEX_SIZE } from './grid';
-import { tileIndex } from '../hex';
+import { hexToPixel, tileIndex } from '../hex';
 import type { BuildingKind, Hex, PlayerView } from '../types';
 
 const W = 12, H = 10;
@@ -23,7 +25,7 @@ describe('constructed wonder landmarks', () => {
     const hexPx = HEX_SIZE * zoom;
     const centre = { x: 200, y: 200 };
     const ordinary = landmarkBox(centre, hexPx);
-    // The Courier Hall is the narrowest painting: 224 of its 256 source pixels.
+    // The Yam Relay Station is the narrowest painting: 224 of its 256 source pixels.
     expect(ordinary.s * (224 / 256)).toBeGreaterThanOrEqual(CITY_WORLD * zoom);
     const banner = { x: ordinary.x + 20, y: ordinary.y, w: 70, h: 25 };
     const placed = landmarkBox(centre, hexPx, [banner]);
@@ -77,6 +79,44 @@ describe('constructed wonder landmarks', () => {
     expect(next.get(5)).toEqual(first.get(5));
     expect(next.get(6)).toEqual(first.get(6));
     expect(next.get(5)).not.toEqual(next.get(6));
+  });
+  it('keeps a wonder on the same spot of its tile at every zoom and pan (Sam, 2026-11-22: it hopped a hex while zooming)', () => {
+    // A site beside a city whose banner sits over the centred footprint, as beside Patna and Ahmedabad.
+    const hex = { q: 5, r: 4 };
+    const world = hexToPixel(hex, HEX_SIZE);
+    const ref = { x: world.x * LANDMARK_REF_ZOOM, y: world.y * LANDMARK_REF_ZOOM };
+    const refPx = HEX_SIZE * LANDMARK_REF_ZOOM;
+    const banner = { x: ref.x - 60, y: ref.y - refPx * 1.1, w: 120, h: 26 };
+    const spotOf = (zoom: number, panX: number, panY: number) => {
+      const toScreen = (p: { x: number; y: number }) => ({ x: (p.x - panX) * zoom + 500, y: (p.y - panY) * zoom + 300 });
+      const hexPx = HEX_SIZE * zoom;
+      const c = toScreen(world);
+      const b = landmarkBoxes([{ tile: 9, hex }], toScreen, hexPx, [banner]).get(9)!;
+      expect(b.s).toBeCloseTo(hexPx * 3);
+      return [Math.round((b.x - (c.x - b.s / 2)) / hexPx * 100) / 100, Math.round((b.y - (c.y - b.s * 0.36)) / hexPx * 100) / 100];
+    };
+    const at = spotOf(LANDMARK_REF_ZOOM, world.x, world.y);
+    expect(at).not.toEqual([0, 0]);
+    for (const zoom of [0.62, 0.9, 1.3, 1.8, 2.4]) {
+      for (const [px, py] of [[world.x, world.y], [world.x + 400, world.y - 250], [world.x - 900, world.y + 600]]) expect(spotOf(zoom, px, py), `zoom ${zoom}`).toEqual(at);
+    }
+  });
+  it('only the landmark footprint uses the reference-zoom banners; labels, badges and medallions avoid the banners as drawn', () => {
+    // PR #81 first fed the reference covers to everything that keeps clear of banners, in the wrong coordinates.
+    const src = readFileSync(resolve(__dirname, 'render.ts'), 'utf8');
+    expect(src).toMatch(/const bannerCovers = banners\.map\(\(b\) => b\.cover\);/);
+    const uses = src.split('referenceBannerCovers(').length - 1;
+    expect(uses, 'the definition and the one landmarkBoxes call').toBe(2);
+    expect(src).toMatch(/landmarkBoxes\([^;]*referenceBannerCovers\(/);
+  });
+  it('keeps a wonder beside a city off the painted town', () => {
+    const city = { q: 4, r: 4 }, site = { q: 5, r: 4 };
+    const refPx = HEX_SIZE * LANDMARK_REF_ZOOM;
+    const ref = (h: Hex) => { const p = hexToPixel(h, HEX_SIZE); return { x: p.x * LANDMARK_REF_ZOOM, y: p.y * LANDMARK_REF_ZOOM }; };
+    const town = townCover(ref(city), refPx);
+    const b = landmarkBoxes([{ tile: 1, hex: site }], (p) => ({ x: p.x * LANDMARK_REF_ZOOM, y: p.y * LANDMARK_REF_ZOOM }), refPx, [town]).get(1)!;
+    const core = landmarkCore(b);
+    expect(Math.max(0, Math.min(core.x + core.w, town.x + town.w) - Math.max(core.x, town.x))).toBe(0);
   });
 });
 

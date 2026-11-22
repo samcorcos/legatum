@@ -199,7 +199,7 @@ fn athens_t36_garrisons_before_a_legal_spartan_declaration() {
 }
 
 #[test]
-fn scout_can_capture_broken_city_so_a_free_soldier_garrisons_it() {
+fn scout_can_capture_broken_city_so_a_free_spearman_garrisons_it() {
     let city = Hex::new(6, 6);
     let mut view = ViewBuilder::new(20, 14)
         .city(1, ME, city, 3)
@@ -229,7 +229,7 @@ fn scout_can_capture_broken_city_so_a_free_soldier_garrisons_it() {
     assert!(
         orders.iter().any(|o| matches!(o,
         Order::MoveUnit { unit: UnitId(1), to } if *to == city)),
-        "the free Soldier should protect the city: {orders:?}"
+        "the free Spearman should protect the city: {orders:?}"
     );
     let mut legacy = crate::fixture::planner(&view, 7);
     legacy.difficulty = AiDifficulty::Hard;

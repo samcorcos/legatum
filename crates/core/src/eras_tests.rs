@@ -941,10 +941,10 @@ fn printing_press_and_the_future_techs_add_their_city_effects() {
     assert_eq!(science(&s), base + 1);
     // The Printing Press bonus rides with the Library family through a University.
     s.cities.get_mut(&id).unwrap().buildings = [BuildingKind::University].into();
-    let with_college = science(&s);
+    let with_university = science(&s);
     s.player_mut(P0).techs.remove(&TechId::PrintingPress);
     s.player_mut(P0).techs.remove(&TechId::RecursiveAi);
-    assert_eq!(with_college, science(&s) + 1);
+    assert_eq!(with_university, science(&s) + 1);
     // Stealth Technology unlocks aircraft, with no Science bonus.
     s.cities.get_mut(&id).unwrap().buildings = [BuildingKind::ResearchLab].into();
     let lab = science(&s);
@@ -1030,16 +1030,16 @@ fn earlier_tech_effects_change_city_yields_and_unit_costs() {
     let factory = yields(&s).production;
     s.player_mut(P0).techs.insert(TechId::ReplaceableParts);
     assert_eq!(yields(&s).production, factory + 2);
-    let soldier = ProductionItem::Unit {
+    let spearman = ProductionItem::Unit {
         unit: UnitKind::Spearman,
     };
-    let cost = economy::production_cost(&s, P0, soldier);
+    let cost = economy::production_cost(&s, P0, spearman);
     let settler = ProductionItem::Unit {
         unit: UnitKind::Settler,
     };
     let civilian_cost = economy::production_cost(&s, P0, settler);
     s.player_mut(P0).techs.insert(TechId::MilitaryScience);
-    assert_eq!(economy::production_cost(&s, P0, soldier), cost * 90 / 100);
+    assert_eq!(economy::production_cost(&s, P0, spearman), cost * 90 / 100);
     assert_eq!(
         economy::production_cost(&s, P0, settler),
         civilian_cost * 90 / 100
@@ -1240,6 +1240,13 @@ fn walled_garrison_shoots_through_forest_but_unwalled_garrison_and_field_unit_do
     };
     let error = shot(&s).unwrap_err();
     assert!(error.contains("No line of sight"), "{error}");
+    let name = s.cities[&home].name.clone();
+    assert!(
+        error.contains(&format!(
+            "Fire from a hill, move adjacent, or build Walls in {name}."
+        )),
+        "{error}"
+    );
     assert!(forecast(&s).is_none());
     for tier in [
         BuildingKind::Walls,

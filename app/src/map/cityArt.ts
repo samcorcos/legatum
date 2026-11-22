@@ -57,12 +57,17 @@ export function cityStem(era: number, tier: CityTier, exists: Has = has): string
   return null;
 }
 
-/** The wall overlay stem for an era: the era's own, else the nearest finished one (World War, Modern and Future share the last). A star fort is the Customs Bastion. */
+/** The wall overlay stem for an era: the era's own, else the nearest finished one (World War, Modern and Future share the last). A star fort is the Alpine Redoubt. */
 export function wallStem(era: number, bastion: boolean, exists: Has = has): string | null {
   const e = clampEra(era);
   const ok = (name: string) => exists(`${name}-walls`, 128) || exists(`${name}-walls`, 512);
   const pick = bastion && ok('renaissance') ? 'renaissance' : nearest(CITY_ERAS, e, ok);
   return pick ? `${pick}-walls` : null;
+}
+
+/** A city's visible wall level for its banner: 0 none (or not in sight), 1 Walls, 2 Castle, 3 Star Fort. */
+export function wallTierOf(c: { visible: boolean; walls: boolean; citadel?: boolean; star_fort?: boolean }): number {
+  return c.visible && c.walls ? 1 + (c.citadel ? 1 : 0) + (c.star_fort ? 1 : 0) : 0;
 }
 
 /** Shared far-zoom mark for a tier (not era-specific). */

@@ -643,7 +643,7 @@ fn boundary_unaffordable_buys_and_upgrades() {
     let mut base = arena(105, &[0, 1]);
     let city = add_city(&mut base, p, Hex::new(3, 3));
     let city_pos = base.cities[&city].pos;
-    let soldier = spawn_unit(&mut base, p, UnitKind::Spearman, city_pos);
+    let spearman = spawn_unit(&mut base, p, UnitKind::Spearman, city_pos);
     base.player_mut(p).techs.extend([
         TechId::BronzeWorking,
         TechId::IronWorking,
@@ -684,7 +684,7 @@ fn boundary_unaffordable_buys_and_upgrades() {
                         unit: UnitKind::Spearman,
                     },
                 }, // appears first, but unit upgrades are charged first
-                Order::UpgradeUnit { unit: soldier },
+                Order::UpgradeUnit { unit: spearman },
                 Order::BuyItem {
                     city,
                     item: ProductionItem::Unit {
@@ -709,7 +709,7 @@ fn boundary_unaffordable_buys_and_upgrades() {
             "unaffordable buys never complete",
         );
         case.require(
-            next.units[&soldier].kind
+            next.units[&spearman].kind
                 == if gold >= upgrade_cost {
                     UnitKind::Phalangite
                 } else {
@@ -777,11 +777,11 @@ fn boundary_zero_hp_city_is_valid_until_capture() {
     let pos = Hex::new(4, 4);
     let city = add_city(&mut state, PlayerId(1), pos);
     state.cities.get_mut(&city).unwrap().hp = 1;
-    let ranger = spawn_unit(&mut state, PlayerId(0), UnitKind::Archer, pos.neighbor(0));
+    let archer = spawn_unit(&mut state, PlayerId(0), UnitKind::Archer, pos.neighbor(0));
     let orders = Orders::from([(
         PlayerId(0),
         vec![Order::RangedAttack {
-            unit: ranger,
+            unit: archer,
             target: pos,
         }],
     )]);

@@ -44,7 +44,7 @@ fn egypt_food_construction_and_switches_keep_the_two_banks_separate() {
     let mut s = classic_egypt();
     let id = city(&mut s, at(4, 4));
     let granary = building(BuildingKind::Granary);
-    let soldier = unit(UnitKind::Spearman);
+    let spearman = unit(UnitKind::Spearman);
     let food = economy::city_totals(&s, &s.cities[&id]).food;
     let surplus = (food - 2).max(0);
     assert!(surplus > 0);
@@ -83,7 +83,7 @@ fn egypt_food_construction_and_switches_keep_the_two_banks_separate() {
     s.cities
         .get_mut(&id)
         .unwrap()
-        .switch_production_for(Some(soldier), false);
+        .switch_production_for(Some(spearman), false);
     assert_eq!(s.cities[&id].banked(granary), progress);
     assert_eq!(s.cities[&id].production_stored, 0);
     s.cities.get_mut(&id).unwrap().food_stored = data::FIRST_GROWTH - 1;
@@ -162,7 +162,7 @@ fn grow() -> ProductionItem {
 fn nile_surplus_food_builds_everything_and_a_building_city_does_not_grow() {
     let mut s = state(Faction::Egypt);
     let id = city(&mut s, at(4, 4));
-    let soldier = unit(UnitKind::Spearman);
+    let spearman = unit(UnitKind::Spearman);
     let base = {
         let mut classic = s.clone();
         classic
@@ -179,7 +179,7 @@ fn nile_surplus_food_builds_everything_and_a_building_city_does_not_grow() {
     let surplus = growing.food - data::FOOD_PER_POP;
     let progress = surplus * i32::from(legatum_core::experiments::EGYPT_NILE_BUILD_PERCENT) / 100;
     for item in [
-        soldier,
+        spearman,
         unit(UnitKind::Settler),
         building(BuildingKind::Granary),
     ] {
@@ -188,7 +188,7 @@ fn nile_surplus_food_builds_everything_and_a_building_city_does_not_grow() {
         assert_eq!(building.production, progress, "{item:?}");
     }
     let c = s.cities.get_mut(&id).unwrap();
-    c.switch_production(Some(soldier));
+    c.switch_production(Some(spearman));
     c.food_stored = data::FIRST_GROWTH - 1;
     // The view's cached forecasts key on whether the city builds (a debug assertion checks).
     let d = player_view(&s, P)
@@ -207,7 +207,7 @@ fn nile_surplus_food_builds_everything_and_a_building_city_does_not_grow() {
         .unwrap()
         .switch_production(Some(grow()));
     // Forecasts price builds and growth from one cached city (a debug assertion checks).
-    for producing in [Some(grow()), None, Some(soldier)] {
+    for producing in [Some(grow()), None, Some(spearman)] {
         let mut s = s.clone();
         s.cities.get_mut(&id).unwrap().producing = producing;
         let _ = player_view(&s, P);
@@ -215,7 +215,7 @@ fn nile_surplus_food_builds_everything_and_a_building_city_does_not_grow() {
     }
     rules::cities::process_cities(&mut s, &mut vec![]);
     assert_eq!(s.cities[&id].population, 2);
-    assert_eq!(s.cities[&id].banked(soldier), progress);
+    assert_eq!(s.cities[&id].banked(spearman), progress);
     // Gold buys as usual, and nothing about the rule leaves the save.
     assert!(
         economy::buy_blocker(&s, &s.cities[&id], building(BuildingKind::Granary))
@@ -1079,7 +1079,7 @@ fn every_goal_requires_own_state_out_of_resistance_and_awards_its_vp_once() {
         s.player_mut(P).gold = 0;
         s.player_mut(P).techs.clear();
         s.cities.clear();
-        // The Heir's and the Hall's VP are held, not kept: they follow the unit or the city.
+        // The Heir's and the Station's VP are held, not kept: they follow the unit or the city.
         if f != Faction::Byzantium {
             s.units.clear();
         }
@@ -1144,7 +1144,7 @@ fn goal_thresholds_do_not_accept_nearly_complete_empires_or_allied_territory() {
                 s.barbarians.as_mut().unwrap().camps.remove(0);
             }
             Faction::Mongols => {
-                // A rival holds the Hall's city: Mongols itself no longer scores.
+                // A rival holds the Station's city: Mongols itself no longer scores.
                 s.cities.values_mut().next().unwrap().owner = PlayerId(1);
             }
             Faction::Egypt => unreachable!("Egypt has no faction goal"),
@@ -1404,7 +1404,7 @@ fn research_cards_show_only_what_helps_the_faction() {
 }
 
 #[test]
-fn the_byzantium_builds_a_library_and_its_relay_uplink_needs_one_like_everyone() {
+fn the_byzantium_builds_a_library_and_its_great_library_needs_one_like_everyone() {
     let relay = |tile| ProductionItem::Wonder {
         building: BuildingKind::GreatLibrary,
         tile,

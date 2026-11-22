@@ -18,7 +18,7 @@ export const constructionStage = (k: number): number => k >= 1 ? 4 : k >= .75 ? 
 const clamp = (k: number) => Math.max(0, Math.min(1, Number.isFinite(k) ? k : 0));
 const memo = new WeakMap<PlayerView, ConstructionSite[]>();
 
-/** A chosen wonder site is public; own Walls also use their private production detail. */
+/** A chosen wonder site and Walls under construction are public; own sites use their private production detail. */
 export function sitesOf(view: PlayerView): ConstructionSite[] {
   const cached = memo.get(view);
   if (cached) return cached;
@@ -34,7 +34,7 @@ export function sitesOf(view: PlayerView): ConstructionSite[] {
       if (tile >= 0) out.push({ city: c.id, owner: c.owner, tile, hex: hexAt(tile, view.width), building: wonder.building,
         era: Math.max(0, (view.players.find(p => p.id === c.owner)?.era ?? 1) - 1), k: wonder.k,
         stage: constructionStage(wonder.k), seed: c.id * 29 + tile, walls: false });
-    } else if (c.owner === view.me && item?.kind === 'Building' && item.building === 'Walls') {
+    } else if (c.walls_building || c.owner === view.me && item?.kind === 'Building' && item.building === 'Walls') {
       const tile = tileIndex(c.pos, view.width, view.height);
       if (tile >= 0) out.push({ city: c.id, owner: c.owner, tile, hex: c.pos, building: 'Walls',
         era: Math.max(0, (view.players.find(p => p.id === c.owner)?.era ?? 1) - 1), k: ownK,

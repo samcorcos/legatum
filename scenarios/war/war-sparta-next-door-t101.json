@@ -67,7 +67,7 @@
     "turns": 20,
     "units_lost": 1,
     "cities_lost": 0,
-    "summary": "Sparta (the Spartan AI, Hard) declared on Athens on turn 101, when the human player had seven cities and two military units (an Arquebusier and an Assault Trooper) and Athens Colony 7 had just been founded: pop 1, no Walls, five tiles from Sellasia. Sparta's own view showed none of his military; its campaign aimed at Phaleron and on turn 104 moved to the Mongol city of Shangdu. Twenty-nine turns at war and no attack on an Athenian city; Peace on turn 130. One Spartan combat unit died in the window.",
+    "summary": "Sparta (the Spartan AI, Hard) declared on Athens on turn 101, when the human player had seven cities and two military units (an Arquebusier and a Musketman) and Athens Colony 7 had just been founded: pop 1, no Walls, five tiles from Sellasia. Sparta's own view showed none of his military; its campaign aimed at Phaleron and on turn 104 moved to the Mongol city of Shangdu. Twenty-nine turns at war and no attack on an Athenian city; Peace on turn 130. One Spartan combat unit died in the window.",
     "game": "Playtest 8.9.13 (Athens vs Hard AIs, Standard, 5 empires), engine a58e80856"
   },
   "ai_memory": {

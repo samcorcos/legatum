@@ -10,7 +10,7 @@ import { pendingDecisions } from '../turnFlow';
 import { topDismissible } from '../gameplayKeys';
 import { Icon, Kbd } from './bits';
 import { useCoarsePointer } from './useCoarsePointer';
-import { empireMembers, empireTitle, isTeamAlive, unitsNearOurs } from '../empires';
+import { empireMembers, empireOfPlayer, empireTitle, isTeamAlive, unitsNearOurs } from '../empires';
 import { playerColor, playerInk } from '../theme';
 import { EmpireMark, EmpireWhere } from './EmpireIdentity';
 import { ALLIANCE_SHARES, allianceTerms, TREATY_TERMS, treatyDefinition } from '../treaties';
@@ -193,7 +193,7 @@ function Unavailable({ actions, view }: { actions: DiplomaticAction[]; view: Pla
   </>;
 }
 
-/** Peace closes borders, except where a Courier Hall's holder opens its land to every empire. */
+/** Peace closes borders, except where a Yam Relay Station's holder opens its land to every empire. */
 export function peaceBorders(relation: Relation, view: PlayerView): string {
   const other = relation.a === view.team ? relation.b : relation.a;
   const holds = (team: number) => (view.courier_halls ?? []).some((h) => view.players.find((p) => p.id === h.holder)?.team === team);
@@ -607,7 +607,7 @@ export function DiplomacyPanel() {
   const teams = view.standings.filter((s) => s.team !== view.team && isTeamAlive(view, s.team));
   const team = selected !== null && teams.some((s) => s.team === selected) ? selected : teams[0]?.team;
   const relation = team === undefined ? undefined : relationWith(view, team);
-  const name = (p: number) => view.players.find((x) => x.id === p)?.name ?? `Empire ${p}`;
+  const name = (p: number) => empireOfPlayer(view, p);
   const forecastView = withLocalDiplomacy(view, humans, localOrders);
   const queued = forecastView.diplomacy.queued.filter((q) => q.player !== view.me);
   const errs = errorsWhere(orders, errors, (o) => otherTeam(view, o) !== null);

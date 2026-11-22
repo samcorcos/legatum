@@ -28,6 +28,7 @@ describe('capital mark', () => {
     expect(bannerTooltip(view(), captured)).toBe("Population 3 · Switzerland · City 11 · Original capital of Byzantium · a rival scores 1 VP while it holds it");
     expect(bannerTooltip(view(), ordinary)).toBe('Population 3 · Byzantium · City 13');
     expect(bannerTooltip(view(), { ...held, visible: false })).toContain('Population unknown · Byzantium');
+    expect(bannerTooltip(view(), { ...ordinary, walls: true, citadel: true })).toBe('Population 3 · Byzantium · City 13 · Castle (II): fires at enemy military units within 2 tiles');
   });
   it('marks an original capital held by its founder, in the founder ink', () => {
     const star = capitalStar(view(), held)!;

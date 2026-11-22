@@ -2278,7 +2278,7 @@ impl Planner<'_> {
                 (threat > 0).then_some((threat, stake, *c))
             })
             .collect();
-        // A Hall city (its land is open to every empire) is answered first, and widest.
+        // A Station city (its land is open to every empire) is answered first, and widest.
         order.sort_by(|a, b| {
             self.holds_hall_city(b.2)
                 .cmp(&self.holds_hall_city(a.2))
@@ -4472,7 +4472,7 @@ mod military_scout_tests {
     use legatum_core::AiDifficulty;
 
     #[test]
-    fn idle_soldier_collects_safe_ruin_only_with_gene() {
+    fn idle_spearman_collects_safe_ruin_only_with_gene() {
         let ruin = off(6, 5);
         let view = ViewBuilder::new(12, 12)
             .city(1, ME, off(3, 5), 3)
@@ -4516,7 +4516,7 @@ mod military_scout_tests {
     }
 
     #[test]
-    fn idle_soldier_moves_toward_nearby_unknown_land() {
+    fn idle_spearman_moves_toward_nearby_unknown_land() {
         let view = ViewBuilder::new(12, 12)
             .city(1, ME, off(3, 5), 3)
             .unit(1, ME, UnitKind::Spearman, off(6, 5))

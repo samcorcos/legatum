@@ -147,13 +147,13 @@ fn the_vow_closes_and_reopens_and_is_public() {
 }
 
 #[test]
-fn closing_needs_no_alliance_and_no_courier_hall() {
+fn closing_needs_no_alliance_and_no_yam_relay_station() {
     let mut s = world();
     relate(&mut s, P0, P1, RelationState::Alliance);
     assert!(sakoku_blocker(&s, P0, true).unwrap().contains("Alliance"));
     relate(&mut s, P0, P1, RelationState::Peace);
     assert!(sakoku_blocker(&s, P0, true).is_none());
-    // A captured Courier Hall opens its holder's road: the vow contradicts it.
+    // A captured Yam Relay Station opens its holder's road: the vow contradicts it.
     let hall_city = s.cities_of(P0).next().unwrap().id;
     s.cities
         .get_mut(&hall_city)

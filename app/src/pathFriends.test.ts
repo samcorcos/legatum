@@ -77,7 +77,7 @@ describe('routeAroundFriends (mirrors core path::route_around_friends)', () => {
     });
 
     it('waits behind a friend it cannot cross that moves on later rather than circling (playtest 8.6)', () => {
-      // The friend sits on hills (cost 2) with the next tile beyond it (cost 1): a Soldier cannot pay for both.
+      // The friend sits on hills (cost 2) with the next tile beyond it (cost 1): a Spearman cannot pay for both.
       expect(run(slow, true, false).length).toBeGreaterThan(12);
       expect(run(slow, true, true)).toEqual(findPath(12, 10, start, goal, slow)!);
     });
@@ -193,7 +193,7 @@ describe('previewRoute: the screenshot case and its warnings', () => {
     const onto = previewRoute(view, a.pos, fromOffset(3, 4), [], a.id);
     expect(onto.risk).toMatchObject({ hex: fromOffset(3, 4), stays: true, destination: true });
     expect(routeRiskText(view, onto.risk!)).toBe("Your Spearman stays on that tile: this unit can't end its move on it and stops beside it.");
-    // Two friends in a row cost more to cross than a Soldier has moves: it waits behind them.
+    // Two friends in a row cost more to cross than a Spearman has moves: it waits behind them.
     spawnUnit(s, 0, 'Spearman', fromOffset(4, 4), false);
     refreshVision(s);
     const jam = previewRoute(viewFromFixture(s, 0), a.pos, goal, [], a.id);

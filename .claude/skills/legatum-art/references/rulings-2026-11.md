@@ -57,3 +57,8 @@ His words, after seeing the Modern era sheet: "you still have some placeholders.
 - **Judge a crest at the size the app draws it** (40 to 80 px), not on the 240 px sheet. Anything shown under 64 px needs heavier relief or a small-crest variant; Rome's signum, the Celts' torc and the Mongols' bow are thin at pin size and are the first to redo.
 - **Rejected tagline (user, 2026-11-21):** "Real peoples. Simultaneous turns. An AI that never cheats." The banner, share image and teaser all use "Empires rise and fall. Some are remembered."
 - **Launch media is recorded from the running game** with `docs/media/src/refresh.sh`; anything staged for a shot (scripted orders, a patched save) is listed in the kit's README and the copy says "recorded from the running game", never "unedited".
+
+## Walls on the map (designer, 2026-11-22)
+- **Walls under construction show only the era's stage-1 footings**, from 0% until done, for every viewer and through fog. Stages 2 and 3 were deleted: anything above footings drawn in the finished ring's frame reads as finished at map zoom (Sam read an unwalled Multan as walled).
+- **An icon on the map or a banner meets the loaded-sign rule at its smallest size:** no hexagram, pentagram, cross or crescent outlines, even by accident of geometry. The six-point Star Fort icon read as a Star of David at banner size, and a five-bastion trace still read as a star at 11 px.
+- **On a banner, a star means the capital seal only.** The wall level is the Walls icon plus II (Castle) or III (Star Fort), not each building's icon.

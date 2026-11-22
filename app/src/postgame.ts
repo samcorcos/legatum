@@ -1,7 +1,7 @@
 // The post-game report's model: the core's recorded history (`PlayerView.history`, present only once a game is
 // finished) arranged for the charts, the timeline and the statistics table. Presentation only: every number is
 // one the core recorded; this file only picks, sums, ranks and words them.
-import { ARMY_RULE, ERA_NAMES, FACTION_GOAL, itemName } from './data';
+import { ageName, ARMY_RULE, ERA_NAMES, FACTION_GOAL, itemName } from './data';
 import { empireNameOf } from './empires';
 import { playerInk } from './theme';
 import { WONDER_INFO } from './wonders';
@@ -219,7 +219,7 @@ function timelineEntry(c: Chronicle, view: PlayerView, nameOf: (id: PlayerId | n
       return { ...base, icon: 'emblem-ruin', text: `${nameOf(c.player)} discovered ${WONDER_INFO[c.wonder]?.name ?? c.wonder}`, who: [c.player], tone: yoursP(c.player) ? 'mine' : 'neutral', yours: yoursP(c.player) };
     case 'Objective': {
       const name = ERA_NAMES[c.era - 1] ?? `era ${c.era}`;
-      return { ...base, icon: 'emblem-milestone', text: `${nameOf(c.player)} scored the ${name} Age: ${c.objective} (+1 VP)`, who: [c.player], tone: yoursP(c.player) ? 'mine' : 'neutral', yours: yoursP(c.player) };
+      return { ...base, icon: 'emblem-milestone', text: `${nameOf(c.player)} scored the ${ageName(name)}: ${c.objective} (+1 VP)`, who: [c.player], tone: yoursP(c.player) ? 'mine' : 'neutral', yours: yoursP(c.player) };
     }
     case 'Goal': {
       const faction = view.players.find((p) => p.id === c.player)?.faction;

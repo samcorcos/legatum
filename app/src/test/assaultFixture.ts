@@ -1,4 +1,4 @@
-// A wounded, garrisoned rival city beside two of your Soldiers, for the combined city-attack forecast (user, 2026-10-19, T187 Lugano).
+// A wounded, garrisoned rival city beside two of your Spearmen, for the combined city-attack forecast (user, 2026-10-19, T187 Lugano).
 // Injected visual fixture only; not imported by the app. Built on the walls fixture's map.
 import { fromOffset } from '../hex';
 import { spawnUnit } from './fixtureEngine';

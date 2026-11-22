@@ -50,7 +50,7 @@
     ]
   },
   "predictions": {
-    "good_play": "Act while the conqueror's new cities are wrecked. Buy a second Soldier (Switzerland buys at 175%), declare war on Mongols (Player 1), and retake Resonator: the Ranger shoots its garrison from two hexes and a Soldier walks in. That is a capture and one city fewer for the runaway, offsetting Lodestar. Keep Greywater Customs garrisoned, research Fortification for the Alpine Redoubt, and pause the Settler until the front is safe. Leave Athens standing at Carrier as a buffer.",
+    "good_play": "Act while the conqueror's new cities are wrecked. Buy a second Spearman (Switzerland buys at 175%), declare war on Mongols (Player 1), and retake Resonator: the Archer shoots its garrison from two hexes and a Spearman walks in. That is a capture and one city fewer for the runaway, offsetting Lodestar. Keep Greywater Customs garrisoned, research Fortification for the Alpine Redoubt, and pause the Settler until the front is safe. Leave Athens standing at Carrier as a buffer.",
     "ai_play": "Revised after the r1 baseline: the Swiss AI never declared war on the conqueror and scored the same 150 in all 50 runs (held both cities; the conqueror took Lodestar and nothing else in 20 turns). With the tighter containment target I expect the same passive play, 150 points, and no run that meets the objective.",
     "ai_score": {
       "median": 150,

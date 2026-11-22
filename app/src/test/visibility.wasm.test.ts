@@ -121,8 +121,8 @@ describe.skipIf(!available)('Celtic archers in plain sight, core behavior', () =
     const s = fixture();
     city(s, 0, at(6, 5));
     const h = unit(s, 0, 'Archer', at(6, 5));
-    const soldier = unit(s, 1, 'Spearman', at(5, 5));
-    const { reports } = play(s, [{ 1: [{ type: 'MoveUnit', unit: soldier.id, to: at(6, 5) }] }]);
+    const spearman = unit(s, 1, 'Spearman', at(5, 5));
+    const { reports } = play(s, [{ 1: [{ type: 'MoveUnit', unit: spearman.id, to: at(6, 5) }] }]);
     // The city shields its garrison (Civ 6): the archer is not fought.
     expect(reports[0].some((e) => e.type === 'Battle' && e.defender.kind === 'City')).toBe(true);
     expect(reports[0].some((e) => e.type === 'Battle' && e.defender.kind === 'Unit' && e.defender.unit === h.id)).toBe(false);
@@ -132,8 +132,8 @@ describe.skipIf(!available)('Celtic archers in plain sight, core behavior', () =
     const s = fixture();
     city(s, 0, at(6, 5)).hp = 0;
     const h = unit(s, 0, 'Archer', at(6, 5));
-    const soldier = unit(s, 1, 'Spearman', at(5, 5));
-    const { reports } = play(s, [{ 1: [{ type: 'MoveUnit', unit: soldier.id, to: at(6, 5) }] }]);
+    const spearman = unit(s, 1, 'Spearman', at(5, 5));
+    const { reports } = play(s, [{ 1: [{ type: 'MoveUnit', unit: spearman.id, to: at(6, 5) }] }]);
     expect(reports[0].some((e) => e.type === 'Battle' && e.defender.kind === 'Unit' && e.defender.unit === h.id)).toBe(true);
   });
 });

@@ -2,7 +2,7 @@
 // public card with the viewer's own live progress, and "how you win" (the VP sources that make up the target). Everything is read from the viewer's PlayerView (`eras`, `objective_progress`, `research`) and the VP
 // model; nothing here is a rule, and nothing suggests a route: it says what each objective asks and how far along you are.
 import type { VpModel } from './vpModel';
-import { factionObjectiveText } from './data';
+import { ageName, factionObjectiveText } from './data';
 import type { Faction, ObjectiveFamily, PlayerView } from './types';
 
 /** One objective of an era, with your progress on it. */
@@ -131,7 +131,7 @@ export function glance(hud: EraHud, members = 1): Glance {
   const { focus } = hud;
   // The stake stays in the line: what the objective scores, and which era it is in.
   const vp = members > 1 ? '1 VP each' : '1 VP';
-  const tag = focus.state === 'preview' ? `Next: ${vp} in ${focus.name}` : focus.state === 'scored' ? focus.name : `${focus.name} Age · ${vp}`;
+  const tag = focus.state === 'preview' ? `Next: ${vp} in ${focus.name}` : focus.state === 'scored' ? focus.name : `${ageName(focus.name)} · ${vp}`;
   if (focus.state === 'scored') return { tag, line: null };
   const line = focus.lines.reduce<ObjectiveLine | null>((best, l) => (!best || suggestionRank(l) > suggestionRank(best) ? l : best), null);
   return { tag, line };

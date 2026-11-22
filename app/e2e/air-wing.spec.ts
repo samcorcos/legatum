@@ -25,7 +25,7 @@ const SIZES = [{ name: '1000x600', width: 1000, height: 600 }, { name: '1440x900
 const SHOTS = path.resolve('test-results/air-wing');
 const PLANES = [{ id: 900, kind: 'Bomber' }, { id: 901, kind: 'Fighter' }] as const;
 
-/** Waypost Seven with a Bomber and a Fighter in the hangar and two enemy Soldiers three tiles out (the siege fixture's approach). */
+/** Waypost Seven with a Bomber and a Fighter in the hangar and two enemy Spearmen three tiles out (the siege fixture's approach). */
 async function start(page: Page, opts: { enemies?: boolean; planes?: readonly { id: number; kind: string }[]; producing?: 'Fighter' | 'Bomber'; forest?: boolean; noCities?: boolean; rebaseDestination?: boolean } = {}) {
   const { enemies = true, planes = PLANES, producing, forest = false, rebaseDestination = false } = opts;
   const setup = siegeFixture({ approach: true });
@@ -38,8 +38,8 @@ async function start(page: Page, opts: { enemies?: boolean; planes?: readonly { 
     setup.fixture.cities = setup.fixture.cities.filter((c) => kept.has(c.id)); setup.fixture.knownCities = {};
   }
   if (forest) {
-    // Forest on the two rings between the city and the Soldiers three tiles out: a ground shooter has no line, and the
-    // city cannot see over it, so a Scout of yours stands beside the first Soldier to give the strike its sight.
+    // Forest on the two rings between the city and the Spearmen three tiles out: a ground shooter has no line, and the
+    // city cannot see over it, so a Scout of yours stands beside the first Spearman to give the strike its sight.
     const f = setup.fixture;
     const home = f.cities.find((c) => c.id === setup.own)!.pos;
     for (const r of [1, 2]) for (const h of ring(home, r)) f.terrain[tileIndex(h, f.width, f.height)] = 'Forest';

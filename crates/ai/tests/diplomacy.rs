@@ -37,13 +37,13 @@ fn situation() -> GameState {
 /// treaty answers move it back out of strike reach (still within campaign range).
 fn beyond_strike_reach(s: &mut GameState) {
     let spots = [h(1, 10), h(2, 10), h(1, 11), h(2, 11), h(3, 11)];
-    let troopers: Vec<UnitId> = s
+    let pikemen: Vec<UnitId> = s
         .units
         .values()
         .filter(|u| u.owner == PlayerId(0) && u.kind == UnitKind::Pikeman)
         .map(|u| u.id)
         .collect();
-    for (id, pos) in troopers.into_iter().zip(spots) {
+    for (id, pos) in pikemen.into_iter().zip(spots) {
         s.units.get_mut(&id).unwrap().pos = pos;
     }
     visibility::update_explored(s);
@@ -128,10 +128,10 @@ fn identical_fogged_views_ignore_unseen_world_and_produce_identical_declarations
 }
 
 #[test]
-fn surprise_war_ranger_shoots_on_the_declaration_turn() {
+fn surprise_war_archer_shoots_on_the_declaration_turn() {
     let mut s = situation();
     s.player_mut(PlayerId(0)).gold = 2_000;
-    let ranger = spawn_unit(&mut s, PlayerId(0), UnitKind::Archer, h(9, 7));
+    let archer = spawn_unit(&mut s, PlayerId(0), UnitKind::Archer, h(9, 7));
     visibility::update_explored(&mut s);
     let target = h(11, 6);
     let view = player_view(&s, PlayerId(0));
@@ -146,7 +146,7 @@ fn surprise_war_ranger_shoots_on_the_declaration_turn() {
     );
     assert!(
         orders.contains(&Order::RangedAttack {
-            unit: ranger,
+            unit: archer,
             target
         }),
         "{orders:?}"
@@ -166,7 +166,7 @@ fn surprise_war_ranger_shoots_on_the_declaration_turn() {
     assert!(
         !control
             .iter()
-            .any(|o| matches!(o, Order::RangedAttack { unit, .. } if *unit == ranger)),
+            .any(|o| matches!(o, Order::RangedAttack { unit, .. } if *unit == archer)),
         "{control:?}"
     );
 }

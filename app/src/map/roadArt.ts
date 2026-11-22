@@ -62,7 +62,7 @@ function stroke(ctx: CanvasRenderingContext2D, path: Path2D, hexPx: number, far:
   ctx.restore();
 }
 
-/** Draws every road the viewer knows, above terrain and below the Hall's rose, banners and units. */
+/** Draws every road the viewer knows, above terrain and below the Station's rose, banners and units. */
 export function drawRoads(ctx: CanvasRenderingContext2D, view: PlayerView, s2: S2, hexPx: number, w: number, h: number) {
   if (!view.tiles.some((t) => t.road)) return;
   const far = isFar(hexPx);

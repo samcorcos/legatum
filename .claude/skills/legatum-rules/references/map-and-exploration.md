@@ -50,6 +50,8 @@ landmark and that tile's owner are public even if the tile is unexplored (`view.
 `CityView.construction` publicly names a queued wonder's chosen tile, building and progress stage,
 including through fog once its city is explored; the owner's private production detail still carries
 the exact cost and stored production (`view.rs::player_view_detail`, `app/src/map/constructionSites.ts`).
+`CityView.walls_building` likewise tells every viewer that a city is building Walls, through fog too
+(no progress; the map draws the era's Walls footings for the whole build, 2026-11-22).
 `TileMemory` retains last-seen private facts
 (improvements and city population, HP and defenses); a newly public city with no observation
 uses a neutral 1-population, full-HP estimate until sighted. Units remain sight-limited. Fogged city

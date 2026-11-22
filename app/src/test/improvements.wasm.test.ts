@@ -19,7 +19,7 @@ let makeCore: () => WasmClient;
 type Turn = Record<number, Order[]>;
 const farm = (col: number, row: number): ProductionItem => ({ kind: 'Improvement', improvement: 'Farm', tile: fromOffset(col, row) });
 const mine = (col: number, row: number): ProductionItem => ({ kind: 'Improvement', improvement: 'Mine', tile: fromOffset(col, row) });
-const SOLDIER: ProductionItem = { kind: 'Unit', unit: 'Spearman' };
+const SPEARMAN: ProductionItem = { kind: 'Unit', unit: 'Spearman' };
 
 /** Two empires on grassland; A (P0, Byzantium: no terrain bonuses) owns radius 3 around (4,4) with Wheat, Copper and a hidden Iron. */
 function fixture() {
@@ -173,7 +173,7 @@ describe.skipIf(!available)('WASM improvement behavior', () => {
     bank.cities[0].producing = mine(6, 4);
     bank.cities[0].prod = 12;
     const b = start(bank);
-    turn(b.fixtureClient, b.core, { 0: [{ type: 'SetProduction', city: a.id, item: SOLDIER }] });
+    turn(b.fixtureClient, b.core, { 0: [{ type: 'SetProduction', city: a.id, item: SPEARMAN }] });
     expect(b.fixtureClient.view(0).cities[0].detail!.production_banked).toEqual([{ item: mine(6, 4), progress: 12 }]);
     turn(b.fixtureClient, b.core, { 0: [{ type: 'SetProduction', city: a.id, item: mine(6, 4) }] });
 

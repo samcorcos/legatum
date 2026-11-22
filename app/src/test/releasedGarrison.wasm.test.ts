@@ -23,7 +23,7 @@ beforeAll(async () => {
 
 const middle = fromOffset(5, 5);
 
-/** Two empires at War; seat 1 owns an undefended city and a Soldier of seat 0 stands beside it, ordered in. */
+/** Two empires at War; seat 1 owns an undefended city and a Spearman of seat 0 stands beside it, ordered in. */
 function captureFixture(): MState {
   const setup = makeStandardSetup('7', 'Switzerland', 'Switzerland', 'A', 'B');
   setup.width = 20; setup.height = 12;
@@ -42,7 +42,7 @@ function captureFixture(): MState {
   s.cities.push(capital, { ...city, isCapital: false }); s.nextCityId = 2;
   s.owner[idxOf(s, home)] = 1; s.tileCity[idxOf(s, home)] = capital.id;
   s.owner[idxOf(s, middle)] = 1; s.tileCity[idxOf(s, middle)] = city.id;
-  const soldier = spawnUnit(s, 0, 'Spearman', neighbors(middle)[0], false); soldier.goto = middle;
+  const spearman = spawnUnit(s, 0, 'Spearman', neighbors(middle)[0], false); spearman.goto = middle;
   refreshVision(s);
   return s;
 }

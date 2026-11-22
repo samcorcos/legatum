@@ -5,7 +5,7 @@ import { idxOf, refreshVision } from './fixtureEngine';
 
 /**
  * The real AI declares war on the human (playtest 6: Sparta's war went unnoticed). An
- * Sparta army of five Troopers stands beside our lone city with a Scout in sight of it, the
+ * Sparta army of five Pikemen stands beside our lone city with a Scout in sight of it, the
  * scripted AI's "viable campaign" (crates/ai/tests/diplomacy.rs). Nothing is injected: ending
  * turn 1 resolves the AI's own DeclareWar. `teammate` adds a second human on our team (hot seat).
  */

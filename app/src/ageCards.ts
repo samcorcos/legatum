@@ -25,7 +25,7 @@ export function cardMeter(objective: CardRule, current: number, target: number):
   switch (objective.kind) {
     case 'Veterans': return { value: current, target, label: `Promotions earned since the Age began: ${Math.min(current, target)} of ${target}` };
     case 'Breach': return { value: current, target, label: `Walled cities captured since the Age began: ${Math.min(current, target)} of ${target}` };
-    case 'HumbleTheMighty': return { value: current, target, label: `Cities captured from an empire ahead of you on VP since the Age began: ${Math.min(current, target)} of ${target}` };
+    case 'HumbleTheMighty': return { value: current, target, label: `Humble the mighty captures since the Age began: ${Math.min(current, target)} of ${target}` };
     case 'Population': return { value: current, target, label: `Population grown since the Age began: ${Math.min(current, target)} of ${target}` };
     case 'Cities': return { value: current, target, label: `Cities gained since the Age began: ${Math.min(current, target)} of ${target}` };
     case 'Territory': return { value: current, target, label: `Tiles of territory gained since the Age began: ${Math.min(current, target)} of ${target}` };

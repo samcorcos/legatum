@@ -50,7 +50,7 @@ function placeHall(s: MState, c: MCity, of: number) {
   s.landmark[idxOf(s, tile)] = { building: 'YamRelayStation', city: c.id, of };
 }
 
-/** A Courier Hall of Mongols empire `of`, standing in a new city of `owner` (the holder). */
+/** A Yam Relay Station of Mongols empire `of`, standing in a new city of `owner` (the holder). */
 function hallCity(s: MState, of: number, owner: number, col: number, row: number, extra: Partial<MCity> = {}) {
   const c = city(s, owner, col, row, { buildings: ['YamRelayStation'], ...extra });
   placeHall(s, c, of);
@@ -67,7 +67,7 @@ function pair(s: MState) {
 
 const goalEvents = (events: { type: string }[]) => events.filter((e) => e.type.startsWith('FactionGoal'));
 const cityOf = (view: { cities: CityView[] }, id: number) => view.cities.find((c) => c.id === id)!;
-/** What a city's production list says about the Courier Hall: whether it is offered, its price and the reason it is held back. */
+/** What a city's production list says about the Yam Relay Station: whether it is offered, its price and the reason it is held back. */
 const listing = (view: { cities: CityView[] }, id: number) => {
   const d = cityOf(view, id).detail!;
   return { options: d.options.filter((o) => isHall(o.item)), unavailable: d.unavailable.filter((o) => isHall(o.item)) };
@@ -127,10 +127,10 @@ describe.skipIf(!available)('Yam Relay Station and the Mongols goal: WASM behavi
     s.players[0].techs.push('Mathematics');
     s.players[0].gold = 5000;
     for (const relation of s.diplomacy!.relations) relation.state = 'War';
-    const soldier = spawnUnit(s, 0, 'Spearman', fromOffset(5, 4), false);
+    const spearman = spawnUnit(s, 0, 'Spearman', fromOffset(5, 4), false);
     const taker = spawnUnit(s, 0, 'Spearman', fromOffset(9, 10), false);
     const { fixtureClient, core } = pair(s);
-    const offer = (client: FixtureClient | WasmClient) => client.view(0).units.find((u) => u.id === soldier.id)!.siege_offer;
+    const offer = (client: FixtureClient | WasmClient) => client.view(0).units.find((u) => u.id === spearman.id)!.siege_offer;
     expect(offer(core)?.blocker).toContain('Medieval era');
     (expect(offer(fixtureClient)).toMatchSnapshot(), void (offer(core)));
     const a = fixtureClient.endTurn({ 0: [{ type: 'MoveUnit', unit: taker.id, to: workshopCity.pos }] });
@@ -281,7 +281,7 @@ describe.skipIf(!available)('Yam Relay Station and the Mongols goal: WASM behavi
       expect(core.view(1).courier_halls).toHaveLength(1);
     });
 
-    // The Hall changes hands with its city. `held` is `goal_holder` at the start of the turn.
+    // The Station changes hands with its city. `held` is `goal_holder` at the start of the turn.
     const phases: { name: string; owner: number | null; held: number | null; before: boolean; resisting?: number; expected: object[]; scorer: number | null; label: string }[] = [
       { name: 'the Mongols built it and holds it', owner: 0, held: null, before: false, expected: [completed(0)], scorer: 0, label: 'stands' },
       { name: 'still held: nothing changes', owner: 0, held: 0, before: true, expected: [], scorer: 0, label: 'stands' },
@@ -327,10 +327,10 @@ describe.skipIf(!available)('Yam Relay Station and the Mongols goal: WASM behavi
       const hall = hallCity(s, 0, 0, 10, 10); hall.hp = 0;
       city(s, 1, 16, 16);
       for (const relation of s.diplomacy!.relations) relation.state = 'War';
-      const soldier = spawnUnit(s, 1, 'Spearman', fromOffset(9, 10), false);
+      const spearman = spawnUnit(s, 1, 'Spearman', fromOffset(9, 10), false);
       s.players[0].goalHolder = 0; s.players[0].factionGoalDone = true; s.players[0].factionGoalReachedBefore = true;
       const { fixtureClient, core } = pair(s);
-      const capture: Order[] = [{ type: 'MoveUnit', unit: soldier.id, to: hall.pos }];
+      const capture: Order[] = [{ type: 'MoveUnit', unit: spearman.id, to: hall.pos }];
       let a = fixtureClient.endTurn({ 1: capture }), b = core.endTurn({ 1: capture });
       (expect(a.events).toMatchSnapshot(), void (b.events));
       expect(b.events.some((e) => e.type === 'CityCaptured')).toBe(true);
@@ -409,7 +409,7 @@ describe.skipIf(!available)('Yam Relay Station and the Mongols goal: WASM behavi
   });
 
   describe('the open road: passage through the holder’s land', () => {
-    /** Player 0 holds a city with (or without) a Courier Hall of the Mongols empire; a unit of player 1 stands two hexes outside it and is told to step one hex in. */
+    /** Player 0 holds a city with (or without) a Yam Relay Station of the Mongols empire; a unit of player 1 stands two hexes outside it and is told to step one hex in. */
     function crossing(holder: 'Mongols' | 'India', kind: UnitKind, hall: boolean) {
       const mover = holder === 'Mongols' ? 'India' : 'Mongols';
       const s = fixture(holder, mover);

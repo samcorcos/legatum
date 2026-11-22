@@ -158,7 +158,7 @@ export const upgradeCost = (s: MState, u: MUnit): number | null =>
 export const developmentForecast = (s: MState, owner: number) => viewFromFixture(s, owner).development!;
 export const exploreStep = (view: PlayerView, unit: number): Order | null => JSON.parse(explore_step(JSON.stringify(view), unit));
 
-/** Let the core lay Hall and Roadworks links, preserving the arranged scene's other fields. */
+/** Let the core lay Station and Roadworks links, preserving the arranged scene's other fields. */
 export function refreshRoads(s: MState): void {
   const after = resolveFixture(s);
   s.road = after.road;

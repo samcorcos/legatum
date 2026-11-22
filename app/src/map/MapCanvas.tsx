@@ -178,7 +178,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
   const busy = useGame((s) => s.busy);
   const view: PlayerView | null = views ? views[seat] : null;
   // A goal action, while it is weighed or ordered: the Great Migration's shrinking cities and released tiles,
-  // the warbands's cities and camps. A veteran's retirement marks the valid War Shrine cities (below).
+  // the warbands's cities and camps. A veteran's retirement marks the valid Agoge cities (below).
   const swarmOpen = useGame((s) => s.goalDialog === 'Swarm' || !!(s.orders[s.seat] ?? []).find((o) => o.type === 'Action' && o.action.action === 'Swarm'));
   const wildOpen = useGame((s) => s.goalDialog === 'CallTheWild' || !!(s.orders[s.seat] ?? []).find((o) => o.type === 'Action' && o.action.action === 'CallTheWild'));
   const retireWeighing = useGame((s) => s.goalDialog === 'RetireVeteran');
@@ -679,6 +679,8 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
       const world = hexToPixel(at, HEX_SIZE);
       const origin = { x: (world.x - camera.x) * camera.zoom + r.width / 2, y: (world.y - camera.y) * camera.zoom + r.height / 2 };
       const bounds = { left: 8, top: 8, right: r.width - 8, bottom: r.height - 8 };
+      // A unit already off screen is one the player panned or jumped away from: a panel opening is no reason to fly back.
+      if (origin.x < 0 || origin.y < 0 || origin.x > r.width || origin.y > r.height) return;
       const obstacles = hudObstacles(canvas, game);
       const visible = visibleTilePoint(origin, Math.max(100, HEX_SIZE * camera.zoom * 2.5), bounds, obstacles)
         ?? visibleTilePoint(origin, HEX_SIZE * camera.zoom + 12, bounds, obstacles);

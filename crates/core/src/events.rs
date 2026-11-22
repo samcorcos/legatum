@@ -642,8 +642,8 @@ pub enum Event {
         receivers: Vec<PlayerId>,
         techs_each: u8,
     },
-    /// The first Courier Hall's roads were laid (`roads::extend`): every city now joins `city`,
-    /// the Hall's city of `owner` (a Mongols empire), at `at`; `linked` cities were joined.
+    /// The first Yam Relay Station's roads were laid (`roads::extend`): every city now joins `city`,
+    /// the Station's city of `owner` (a Mongols empire), at `at`; `linked` cities were joined.
     /// Public.
     RoadsLaid {
         owner: PlayerId,

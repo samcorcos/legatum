@@ -148,40 +148,40 @@ fn a_scout_moves_away_even_when_rough_ground_prevents_a_complete_escape() {
 }
 
 #[test]
-fn garrison_sorties_against_an_adjacent_ranger_in_one_turn_even_when_wounded() {
+fn garrison_sorties_against_an_adjacent_archer_in_one_turn_even_when_wounded() {
     for difficulty in [AiDifficulty::Normal, AiDifficulty::Hard] {
-        for (soldier_hp, ranger_hp) in [(100, 100), (55, 30)] {
+        for (spearman_hp, archer_hp) in [(100, 100), (55, 30)] {
             let mut state = scenario();
-            let soldier = spawn_unit(&mut state, ME, UnitKind::Spearman, at(8, 8));
-            state.units.get_mut(&soldier).unwrap().hp = soldier_hp;
-            state.units.get_mut(&soldier).unwrap().moves_left = 0;
-            let ranger = spawn_unit(&mut state, ENEMY, UnitKind::Archer, at(9, 8));
-            state.units.get_mut(&ranger).unwrap().hp = ranger_hp;
+            let spearman = spawn_unit(&mut state, ME, UnitKind::Spearman, at(8, 8));
+            state.units.get_mut(&spearman).unwrap().hp = spearman_hp;
+            state.units.get_mut(&spearman).unwrap().moves_left = 0;
+            let archer = spawn_unit(&mut state, ENEMY, UnitKind::Archer, at(9, 8));
+            state.units.get_mut(&archer).unwrap().hp = archer_hp;
             let orders = decide(&mut state, difficulty);
             let forecast = forecast_attack_mode(
                 &player_view(&state, ME),
-                soldier,
+                spearman,
                 at(9, 8),
                 AttackMode::Melee,
             )
             .unwrap();
             assert!(forecast.loss_chance <= 25);
             assert!(orders.contains(&Order::MoveUnit {
-                unit: soldier,
+                unit: spearman,
                 to: at(9, 8)
             }));
             let (_, events) = play(
                 &state,
                 orders,
                 vec![Order::RangedAttack {
-                    unit: ranger,
+                    unit: archer,
                     target: at(8, 8),
                 }],
             );
             assert!(events.iter().any(|e| matches!(e,
                 Event::Battle { attacker, defender: Defender::Unit { unit, .. },
                     damage_to_defender, ranged: false, .. }
-                    if *attacker == soldier && *unit == ranger && *damage_to_defender > 0
+                    if *attacker == spearman && *unit == archer && *damage_to_defender > 0
             )));
         }
     }
@@ -191,9 +191,9 @@ fn garrison_sorties_against_an_adjacent_ranger_in_one_turn_even_when_wounded() {
 fn a_bombarded_city_buys_ranged_relief_when_its_garrison_cannot_answer() {
     let mut state = scenario();
     let city = state.cities_of(ME).next().unwrap().id;
-    let soldier = spawn_unit(&mut state, ME, UnitKind::Spearman, at(8, 8));
-    state.units.get_mut(&soldier).unwrap().fortify = 6;
-    let ranger = spawn_unit(&mut state, ENEMY, UnitKind::Archer, at(10, 8));
+    let spearman = spawn_unit(&mut state, ME, UnitKind::Spearman, at(8, 8));
+    state.units.get_mut(&spearman).unwrap().fortify = 6;
+    let archer = spawn_unit(&mut state, ENEMY, UnitKind::Archer, at(10, 8));
     state.map.get_mut(at(9, 8)).unwrap().terrain = Terrain::Ocean;
     state.player_mut(ME).gold = 1000;
     let orders = decide(&mut state, AiDifficulty::Normal);
@@ -210,7 +210,7 @@ fn a_bombarded_city_buys_ranged_relief_when_its_garrison_cannot_answer() {
         &state,
         orders,
         vec![Order::RangedAttack {
-            unit: ranger,
+            unit: archer,
             target: at(8, 8),
         }],
     );
@@ -222,7 +222,7 @@ fn a_bombarded_city_buys_ranged_relief_when_its_garrison_cannot_answer() {
 }
 
 #[test]
-fn three_healthy_soldiers_attack_a_lightly_defended_city_together_before_retreating() {
+fn three_healthy_spearmen_attack_a_lightly_defended_city_together_before_retreating() {
     let target = at(20, 8);
     for difficulty in [AiDifficulty::Normal, AiDifficulty::Hard] {
         for (faction, positions) in [
@@ -242,23 +242,23 @@ fn three_healthy_soldiers_attack_a_lightly_defended_city_together_before_retreat
             state.player_mut(ME).faction = faction;
             let garrison = spawn_unit(&mut state, ENEMY, UnitKind::Spearman, target);
             state.units.get_mut(&garrison).unwrap().hp = 70;
-            let soldiers = positions.map(|pos| spawn_unit(&mut state, ME, UnitKind::Spearman, pos));
+            let spearmen = positions.map(|pos| spawn_unit(&mut state, ME, UnitKind::Spearman, pos));
             let orders = decide(&mut state, difficulty);
-            for soldier in soldiers {
+            for spearman in spearmen {
                 assert!(
                     orders.contains(&Order::MoveUnit {
-                        unit: soldier,
+                        unit: spearman,
                         to: target
                     }),
                     "{faction:?} {difficulty:?} {orders:?}"
                 );
             }
             let (_, events) = play(&state, orders, vec![]);
-            for soldier in soldiers {
+            for spearman in spearmen {
                 assert!(
                     events.iter().any(|e| matches!(e,
                         Event::Battle { attacker, at, damage_to_defender, ranged: false, .. }
-                            if *attacker == soldier && *at == target && *damage_to_defender > 0
+                            if *attacker == spearman && *at == target && *damage_to_defender > 0
                     )),
                     "{events:?}"
                 );
@@ -268,15 +268,15 @@ fn three_healthy_soldiers_attack_a_lightly_defended_city_together_before_retreat
 }
 
 #[test]
-fn two_healthy_soldiers_do_not_charge_a_full_garrison_without_a_favorable_group() {
+fn two_healthy_spearmen_do_not_charge_a_full_garrison_without_a_favorable_group() {
     let mut state = scenario();
     let target = at(20, 8);
     let garrison = spawn_unit(&mut state, ENEMY, UnitKind::Spearman, target);
-    let soldiers =
+    let spearmen =
         [at(17, 8), at(17, 9)].map(|pos| spawn_unit(&mut state, ME, UnitKind::Spearman, pos));
     // Continued reconnaissance isolates staging exposure from the lost-sight regression.
     let scout = spawn_unit(&mut state, ME, UnitKind::Scout, target.neighbor(0));
-    for id in soldiers {
+    for id in spearmen {
         assert_eq!(state.units[&id].pos.distance(target), 3);
         assert_eq!(state.units[&id].hp, 100);
     }
@@ -286,7 +286,7 @@ fn two_healthy_soldiers_do_not_charge_a_full_garrison_without_a_favorable_group(
     assert!(player_view(&state, ME).tile(target).unwrap().visible);
     let (next, events) = play(&state, orders, vec![Order::SkipUnit { unit: garrison }]);
     assert_eq!(next.units[&garrison].pos, target, "stationary defender");
-    for id in soldiers {
+    for id in spearmen {
         assert_eq!(next.units[&id].hp, 100);
         assert!(
             !events
@@ -297,7 +297,7 @@ fn two_healthy_soldiers_do_not_charge_a_full_garrison_without_a_favorable_group(
 }
 
 #[test]
-fn distant_support_does_not_commit_a_lone_soldier_to_an_unfavorable_city_attack() {
+fn distant_support_does_not_commit_a_lone_spearman_to_an_unfavorable_city_attack() {
     let mut state = scenario();
     let target = at(20, 8);
     spawn_unit(&mut state, ENEMY, UnitKind::Spearman, target);
@@ -317,20 +317,20 @@ fn distant_support_does_not_commit_a_lone_soldier_to_an_unfavorable_city_attack(
 }
 
 #[test]
-fn shardfall_soldier_counters_a_ranger_in_or_near_the_city_within_two_turns() {
+fn shardfall_spearman_counters_an_archer_in_or_near_the_city_within_two_turns() {
     for difficulty in [AiDifficulty::Normal, AiDifficulty::Hard] {
-        for soldier_pos in [at(8, 8), at(7, 8)] {
+        for spearman_pos in [at(8, 8), at(7, 8)] {
             let mut state = scenario();
-            let soldier = spawn_unit(&mut state, ME, UnitKind::Spearman, soldier_pos);
+            let spearman = spawn_unit(&mut state, ME, UnitKind::Spearman, spearman_pos);
             // Moves were spent last turn; resolution gives the defender a fresh budget.
-            state.units.get_mut(&soldier).unwrap().moves_left = 0;
-            let ranger = spawn_unit(&mut state, ENEMY, UnitKind::Archer, at(9, 8));
+            state.units.get_mut(&spearman).unwrap().moves_left = 0;
+            let archer = spawn_unit(&mut state, ENEMY, UnitKind::Archer, at(9, 8));
             let mut countered = false;
             for _ in 0..2 {
                 let ours = decide(&mut state, difficulty);
-                let target = state.units[&soldier].pos;
+                let target = state.units[&spearman].pos;
                 let theirs = vec![Order::RangedAttack {
-                    unit: ranger,
+                    unit: archer,
                     target,
                 }];
                 let (next, events) = play(&state, ours, theirs);
@@ -338,7 +338,7 @@ fn shardfall_soldier_counters_a_ranger_in_or_near_the_city_within_two_turns() {
                     matches!(e,
                         Event::Battle { attacker, defender: Defender::Unit { unit, .. },
                             damage_to_defender, ranged: false, .. }
-                            if *attacker == soldier && *unit == ranger && *damage_to_defender > 0
+                            if *attacker == spearman && *unit == archer && *damage_to_defender > 0
                     )
                 });
                 state = next;
@@ -346,34 +346,38 @@ fn shardfall_soldier_counters_a_ranger_in_or_near_the_city_within_two_turns() {
                     break;
                 }
             }
-            assert!(countered, "{difficulty:?}, Soldier at {soldier_pos:?}");
+            assert!(countered, "{difficulty:?}, Spearman at {spearman_pos:?}");
         }
     }
 }
 
 #[test]
-fn wounded_soldier_retreats_out_of_ranger_range_then_heals_and_fortifies() {
+fn wounded_spearman_retreats_out_of_archer_range_then_heals_and_fortifies() {
     let mut state = scenario();
-    let soldier = spawn_unit(&mut state, ME, UnitKind::Spearman, at(10, 8));
-    state.units.get_mut(&soldier).unwrap().hp = 45;
-    let ranger = spawn_unit(&mut state, ENEMY, UnitKind::Archer, at(12, 8));
+    let spearman = spawn_unit(&mut state, ME, UnitKind::Spearman, at(10, 8));
+    state.units.get_mut(&spearman).unwrap().hp = 45;
+    let archer = spawn_unit(&mut state, ENEMY, UnitKind::Archer, at(12, 8));
     let orders = decide(&mut state, AiDifficulty::Normal);
     let (mut next, _) = play(
         &state,
         orders,
         vec![Order::RangedAttack {
-            unit: ranger,
+            unit: archer,
             target: at(10, 8),
         }],
     );
-    assert_eq!(next.units[&soldier].pos, at(8, 8), "retreat into Shardfall");
-    assert!(next.units[&soldier].pos.distance(next.units[&ranger].pos) > 2);
-    let hp = next.units[&soldier].hp;
+    assert_eq!(
+        next.units[&spearman].pos,
+        at(8, 8),
+        "retreat into Shardfall"
+    );
+    assert!(next.units[&spearman].pos.distance(next.units[&archer].pos) > 2);
+    let hp = next.units[&spearman].hp;
     let orders = decide(&mut next, AiDifficulty::Normal);
-    assert!(orders.contains(&Order::SkipUnit { unit: soldier }));
+    assert!(orders.contains(&Order::SkipUnit { unit: spearman }));
     let (healed, _) = play(&next, orders, vec![]);
-    assert!(healed.units[&soldier].hp > hp);
-    assert!(healed.units[&soldier].fortify > 0);
+    assert!(healed.units[&spearman].hp > hp);
+    assert!(healed.units[&spearman].fortify > 0);
 }
 
 #[test]
@@ -389,7 +393,7 @@ fn threatened_city_switches_build_and_buys_a_defender_at_the_quoted_price() {
         state.cities.get_mut(&city).unwrap().producing = producing;
         // A Settler needs population 2 to be built at all.
         state.cities.get_mut(&city).unwrap().population = 2;
-        let ranger = spawn_unit(&mut state, ENEMY, UnitKind::Archer, at(9, 8));
+        let archer = spawn_unit(&mut state, ENEMY, UnitKind::Archer, at(9, 8));
         update_explored(&mut state);
         // The healthy city absorbs the bombardment (Civ 6), so the AI buys a shooter
         // that answers it from safety.
@@ -428,7 +432,7 @@ fn threatened_city_switches_build_and_buys_a_defender_at_the_quoted_price() {
             &state,
             orders,
             vec![Order::RangedAttack {
-                unit: ranger,
+                unit: archer,
                 target: at(8, 8),
             }],
         );
@@ -459,70 +463,70 @@ fn threatened_city_switches_build_and_buys_a_defender_at_the_quoted_price() {
 #[test]
 fn ranged_defender_returns_fire_and_prefers_a_damaged_harasser() {
     let mut state = scenario();
-    let ranger = spawn_unit(&mut state, ME, UnitKind::Archer, at(8, 8));
+    let archer = spawn_unit(&mut state, ME, UnitKind::Archer, at(8, 8));
     spawn_unit(&mut state, ENEMY, UnitKind::Archer, at(9, 8));
     let wounded = spawn_unit(&mut state, ENEMY, UnitKind::Archer, at(8, 9));
     state.units.get_mut(&wounded).unwrap().hp = 30;
     let orders = decide(&mut state, AiDifficulty::Normal);
     assert!(orders.contains(&Order::RangedAttack {
-        unit: ranger,
+        unit: archer,
         target: at(8, 9)
     }));
     let (_, events) = play(&state, orders, vec![]);
     assert!(events.iter().any(|e| matches!(e,
         Event::Battle { attacker, damage_to_defender, ranged: true, .. }
-            if *attacker == ranger && *damage_to_defender > 0)));
+            if *attacker == archer && *damage_to_defender > 0)));
 }
 
 #[test]
 fn threatened_city_calls_in_a_reinforcement() {
     let mut state = scenario();
-    let soldier = spawn_unit(&mut state, ME, UnitKind::Spearman, at(4, 8));
+    let spearman = spawn_unit(&mut state, ME, UnitKind::Spearman, at(4, 8));
     spawn_unit(&mut state, ENEMY, UnitKind::Archer, at(9, 8));
     spawn_unit(&mut state, ENEMY, UnitKind::Spearman, at(10, 8));
     let orders = decide(&mut state, AiDifficulty::Normal);
     let (next, _) = play(&state, orders, vec![]);
-    assert!(next.units[&soldier].pos.distance(at(8, 8)) < 4);
+    assert!(next.units[&spearman].pos.distance(at(8, 8)) < 4);
 }
 
 #[test]
 fn healthy_unit_avoids_an_unfavorable_exposed_position() {
     let mut state = scenario();
-    let soldier = spawn_unit(&mut state, ME, UnitKind::Spearman, at(11, 8));
+    let spearman = spawn_unit(&mut state, ME, UnitKind::Spearman, at(11, 8));
     spawn_unit(&mut state, ENEMY, UnitKind::Musketman, at(12, 8));
     let orders = decide(&mut state, AiDifficulty::Normal);
-    assert!(!orders.contains(&Order::SkipUnit { unit: soldier }));
+    assert!(!orders.contains(&Order::SkipUnit { unit: spearman }));
     assert!(!orders.contains(&Order::MoveUnit {
-        unit: soldier,
+        unit: spearman,
         to: at(12, 8)
     }));
     let (next, _) = play(&state, orders, vec![]);
-    assert!(next.units[&soldier].pos.distance(at(12, 8)) > 2);
+    assert!(next.units[&spearman].pos.distance(at(12, 8)) > 2);
 }
 
 #[test]
-fn a_melee_forecast_is_not_proof_of_reaching_the_ranger_this_turn() {
+fn a_melee_forecast_is_not_proof_of_reaching_the_archer_this_turn() {
     let mut state = scenario();
-    let soldier = spawn_unit(&mut state, ME, UnitKind::Spearman, at(8, 8));
+    let spearman = spawn_unit(&mut state, ME, UnitKind::Spearman, at(8, 8));
     spawn_unit(&mut state, ENEMY, UnitKind::Archer, at(10, 8));
     state.map.get_mut(at(9, 8)).unwrap().terrain = Terrain::Mountains;
     let orders = decide(&mut state, AiDifficulty::Normal);
     assert!(!orders.contains(&Order::MoveUnit {
-        unit: soldier,
+        unit: spearman,
         to: at(10, 8)
     }));
     // The Spearman garrisons the city: it holds against the bombardment instead of
     // retreating (a field unit retreats: see the exposed-position test above).
     let (next, _) = play(&state, orders, vec![]);
-    assert_eq!(next.units[&soldier].pos, at(8, 8));
+    assert_eq!(next.units[&spearman].pos, at(8, 8));
 }
 
 #[test]
-fn a_trapped_wounded_ranger_still_returns_fire() {
+fn a_trapped_wounded_archer_still_returns_fire() {
     let mut state = scenario();
     let pos = at(8, 8);
-    let ranger = spawn_unit(&mut state, ME, UnitKind::Archer, pos);
-    state.units.get_mut(&ranger).unwrap().hp = 25;
+    let archer = spawn_unit(&mut state, ME, UnitKind::Archer, pos);
+    state.units.get_mut(&archer).unwrap().hp = 25;
     for h in pos.neighbors() {
         state.map.get_mut(h).unwrap().terrain = Terrain::Mountains;
     }
@@ -531,13 +535,13 @@ fn a_trapped_wounded_ranger_still_returns_fire() {
     spawn_unit(&mut state, ENEMY, UnitKind::Archer, at(10, 8));
     let orders = decide(&mut state, AiDifficulty::Normal);
     assert!(orders.contains(&Order::RangedAttack {
-        unit: ranger,
+        unit: archer,
         target: at(10, 8)
     }));
 }
 
 #[test]
-fn two_rangers_concentrate_fire_on_a_wounded_unit() {
+fn two_archers_concentrate_fire_on_a_wounded_unit() {
     let mut state = scenario();
     let a = spawn_unit(&mut state, ME, UnitKind::Archer, at(8, 8));
     let b = spawn_unit(&mut state, ME, UnitKind::Archer, at(8, 9));
@@ -675,11 +679,11 @@ fn swiss_discount_saves_a_falling_city_without_hoarding_the_goal_reserve() {
     let mut state = scenario();
     state.player_mut(ME).faction = Faction::Switzerland;
     let city = state.cities_of(ME).next().unwrap().id;
-    let soldier = ProductionItem::Unit {
+    let spearman = ProductionItem::Unit {
         unit: UnitKind::Spearman,
     };
     let buy_cost =
-        legatum_core::economy::buy_cost_for(&state, &state.cities[&city], soldier).unwrap();
+        legatum_core::economy::buy_cost_for(&state, &state.cities[&city], spearman).unwrap();
     assert_eq!(buy_cost, 140);
     state.player_mut(ME).gold = 1000;
     spawn_unit(&mut state, ENEMY, UnitKind::Spearman, at(9, 8));
@@ -703,7 +707,7 @@ fn swiss_discount_saves_a_falling_city_without_hoarding_the_goal_reserve() {
     let orders = decide(&mut state, AiDifficulty::Normal);
     assert!(orders.contains(&Order::BuyItem {
         city,
-        item: soldier
+        item: spearman
     }));
     let (next, events) = play(&state, orders, vec![]);
     assert!(next.player(ME).gold < buy_cost);
@@ -726,13 +730,13 @@ fn a_bombarded_garrison_holds_its_city_instead_of_leaving_it_to_the_infantry() {
     let garrison = spawn_unit(&mut state, ME, UnitKind::Spearman, city);
     // Wounded enough that maximum rolls could kill it, but not certain to.
     state.units.get_mut(&garrison).unwrap().hp = 70;
-    let ranger = spawn_unit(&mut state, ENEMY, UnitKind::Archer, at(10, 8));
+    let archer = spawn_unit(&mut state, ENEMY, UnitKind::Archer, at(10, 8));
     // A mountain keeps the Archer out of sortie reach, as bombardment usually is.
     state.map.get_mut(at(9, 8)).unwrap().terrain = Terrain::Mountains;
     let infantry = spawn_unit(&mut state, ENEMY, UnitKind::Spearman, at(9, 7));
     let attacks = vec![
         Order::MoveUnit {
-            unit: ranger,
+            unit: archer,
             to: city,
         },
         Order::MoveUnit {

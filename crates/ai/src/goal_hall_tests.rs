@@ -31,7 +31,7 @@ fn hall_item(v: &PlayerView, city: CityId) -> ProductionItem {
 
 fn planner(v: &PlayerView) -> Planner<'_> {
     let mut p = Planner::new(v, Knobs::for_faction(v.faction_of(ME)), v.faction_of(ME), 7);
-    // These Hall tests predate the capitals victory and compare ordinary cities.
+    // These Station tests predate the capitals victory and compare ordinary cities.
     p.decisions.capitals = 0;
     p
 }
@@ -61,7 +61,7 @@ fn standings(vp: u32, target: u32) -> Vec<TeamStanding> {
 }
 
 /// A Mongols with three cities on open plains, each garrisoned twice, a far-off rival, and a
-/// Hall that takes `hall_turns` to build wherever it can start. Turn `turn` of the game.
+/// Station that takes `hall_turns` to build wherever it can start. Turn `turn` of the game.
 fn mongols(turn: u32, vp: u32, target: u32) -> PlayerView {
     let mut b = ViewBuilder::new(48, 28)
         .faction(Faction::Mongols)
@@ -117,7 +117,7 @@ fn set_hall(v: &mut PlayerView, of: PlayerId, holder: PlayerId, city: u32) {
 
 #[test]
 fn the_hall_waits_for_expansion_to_finish() {
-    // Early, with land to settle: expansion is the core loop, so no Hall.
+    // Early, with land to settle: expansion is the core loop, so no Station.
     let early = mongols(30, 14, 16);
     assert!(planner(&early).expansion_room());
     assert!(!planner(&early).hall_wanted());
@@ -138,7 +138,7 @@ fn the_hall_waits_until_its_two_vp_decide_something() {
     // Far from the target and not late: the exposure is not worth 2 VP yet.
     let far = mongols(70, 4, 16);
     assert!(!planner(&far).hall_wanted());
-    // Within reach of the target (with the lead the Hall earns while built): it pays.
+    // Within reach of the target (with the lead the Station earns while built): it pays.
     let near = mongols(70, 12, 16);
     assert!(planner(&near).hall_wanted());
     // Late in the game the points are banked whatever the race looks like.
@@ -246,7 +246,7 @@ fn the_brain_starts_the_hall_in_the_chosen_city_and_not_before_it_pays() {
             || orders.contains(&Order::BuyItem { city: site, item }),
         "{orders:?}"
     );
-    // Far from the target and not late: no Hall.
+    // Far from the target and not late: no Station.
     let far = mongols(70, 4, 16);
     let orders = brain(&far);
     assert!(
@@ -319,7 +319,7 @@ fn a_hall_under_construction_stays_the_plan_when_the_race_moves_on() {
 
 #[test]
 fn a_held_hall_city_garrisons_and_walls_before_anything_else() {
-    // The Hall stands in city 1, whose garrison is gone.
+    // The Station stands in city 1, whose garrison is gone.
     let mut v = mongols(70, 12, 16);
     v.units
         .retain(|u| u.owner != ME || u.pos.distance(off(4, 4)) > 1);
@@ -343,13 +343,13 @@ fn a_held_hall_city_garrisons_and_walls_before_anything_else() {
         )),
         "{orders:?}"
     );
-    // A captured Hall is held, and defended, by its captor.
+    // A captured Station is held, and defended, by its captor.
     let mut captor = mongols(70, 12, 16);
     captor.players[0].faction = Faction::Sparta;
     set_hall(&mut captor, ENEMY, ME, 2);
     assert!(planner(&captor).holds_hall_city(&captor.cities[1]));
     assert!(!planner(&captor).holds_hall_city(&captor.cities[0]));
-    // A Hall city that is not ours is not ours to guard.
+    // A Station city that is not ours is not ours to guard.
     let mut theirs = mongols(70, 12, 16);
     set_hall(&mut theirs, ME, ENEMY, 9);
     assert!(!planner(&theirs).hall_guard_city(&theirs.cities[0]));
@@ -358,7 +358,7 @@ fn a_held_hall_city_garrisons_and_walls_before_anything_else() {
 #[test]
 fn a_threatened_hall_city_is_answered_before_a_busier_one() {
     // Two cities, one free defender between them. City 1 (lower id) is threatened harder, but
-    // the Hall stands in city 2.
+    // the Station stands in city 2.
     let mut v = ViewBuilder::new(40, 24)
         .faction(Faction::Mongols)
         .city(1, ME, off(4, 4), 4)
@@ -393,13 +393,13 @@ fn a_threatened_hall_city_is_answered_before_a_busier_one() {
     assert!(guard_to.is_some(), "{:?}", guard.orders);
     assert!(
         guard_to.unwrap().distance(off(4, 14)) <= 2,
-        "the Hall city is answered first: {guard_to:?} (without the Hall {plain_to:?})"
+        "the Station city is answered first: {guard_to:?} (without the Station {plain_to:?})"
     );
 }
 
-// ---------- rivals: capturing the Hall city ----------
+// ---------- rivals: capturing the Station city ----------
 
-/// A rival view: me (an Sparta) beside two equal enemy cities, the second holding a Hall.
+/// A rival view: me (an Sparta) beside two equal enemy cities, the second holding a Station.
 fn rival_view() -> PlayerView {
     let mut v = ViewBuilder::new(40, 24)
         .faction(Faction::Sparta)
@@ -429,17 +429,17 @@ fn capturing_a_hall_city_is_worth_its_two_vp_swing() {
     assert_eq!(p.capture_goal_swing(&v.cities[2]), (0, 0));
     assert_eq!(p.hall_in_city_value(&v.cities[2]), 0, "another city");
     assert!(p.hoard_denial_value(&v.cities[3]) >= swing);
-    // A team-mate's Hall is not ours to take.
+    // A team-mate's Station is not ours to take.
     let mut mate = v.clone();
     mate.courier_halls[0].holder = PlayerId(1);
     assert_eq!(planner(&mate).hall_in_city_value(&mate.cities[3]), 0);
-    // A Celts razes the city and the Hall with it: it only denies.
+    // A Celts razes the city and the Station with it: it only denies.
     let mut celts = v.clone();
     celts.players[0].faction = Faction::Celts;
     assert_eq!(planner(&celts).capture_goal_swing(&celts.cities[3]), (0, 2));
     assert!(planner(&celts).hall_in_city_value(&celts.cities[3]) < swing);
     assert!(planner(&celts).hall_in_city_value(&celts.cities[3]) > 0);
-    // Retaking our own Hall is worth more than taking a stranger's.
+    // Retaking our own Station is worth more than taking a stranger's.
     let mut retake = v.clone();
     retake.players[0].faction = Faction::Mongols;
     retake.courier_halls[0].of = ME;
@@ -449,7 +449,7 @@ fn capturing_a_hall_city_is_worth_its_two_vp_swing() {
 #[test]
 fn the_hard_conquest_nomination_prefers_the_hall_city() {
     let mut v = rival_view();
-    // City 3 is a hair easier, so without a Hall it is the objective.
+    // City 3 is a hair easier, so without a Station it is the objective.
     v.cities[2].strength = 10;
     v.cities[3].strength = 14;
     assert_eq!(hard(&v).conquest_city().map(|c| c.id), Some(CityId(3)));
@@ -460,7 +460,7 @@ fn the_hard_conquest_nomination_prefers_the_hall_city() {
 #[test]
 fn a_captor_that_holds_the_hall_is_a_war_target_for_its_points() {
     let mut v = rival_view();
-    // The Hall is the Mongols PlayerId(3)'s, held by the enemy captor ENEMY.
+    // The Station is the Mongols PlayerId(3)'s, held by the enemy captor ENEMY.
     v.players[3].faction = Faction::Mongols;
     v.players[2].faction = Faction::Switzerland;
     set_hall(&mut v, PlayerId(3), ENEMY, 4);
@@ -469,7 +469,7 @@ fn a_captor_that_holds_the_hall_is_a_war_target_for_its_points() {
     v.players[2].vp_sources = vec![(VpSource::FactionGoal { of: PlayerId(3) }, 2)];
     let denial = planner(&v).held_goal_denial(enemy_team);
     assert!(denial > 0);
-    // The Mongols whose Hall it was prices the war that retakes it higher.
+    // The Mongols whose Station it was prices the war that retakes it higher.
     let mut owner = v.clone();
     owner.players[0].faction = Faction::Mongols;
     owner.players[3].faction = Faction::Switzerland;
@@ -530,7 +530,7 @@ fn peace(v: &mut PlayerView) {
 }
 
 /// At Peace, a Hard Sparta army beside the Mongols holder's land. The holder's territory is
-/// every tile within 3 of its cities; the Hall (if any) is in `hall_city`.
+/// every tile within 3 of its cities; the Station (if any) is in `hall_city`.
 fn staging_view(with_hall: bool) -> PlayerView {
     let hall_city = off(18, 8);
     let mut v = ViewBuilder::new(40, 20)
@@ -571,11 +571,11 @@ fn moves(p: &Planner) -> Vec<Hex> {
 #[test]
 fn at_peace_rivals_stage_inside_the_holders_land_beside_the_hall_city() {
     let hall_city = off(18, 8);
-    // Without a Hall the holder's border is closed: the army can only stage outside it.
+    // Without a Station the holder's border is closed: the army can only stage outside it.
     let closed = staging_view(false);
     let p = hard(&closed);
     assert!(!p.ctx.reachable(closed.units[0].pos, hall_city));
-    // With the Hall every empire, military included, may cross all of the holder's land.
+    // With the Station every empire, military included, may cross all of the holder's land.
     let open = staging_view(true);
     let mut p = hard(&open);
     assert!(p.ctx.reachable(open.units[0].pos, hall_city));
@@ -610,7 +610,7 @@ fn at_peace_rivals_stage_inside_the_holders_land_beside_the_hall_city() {
 fn an_army_staged_beside_the_hall_city_declares_war_and_strikes_the_same_turn() {
     let hall_city = off(18, 8);
     let mut v = staging_view(true);
-    // Assembled one tile from the Hall city, inside the holder's land.
+    // Assembled one tile from the Station city, inside the holder's land.
     for (i, pos) in [off(17, 8), off(17, 9), off(16, 8), off(16, 9)]
         .into_iter()
         .enumerate()
@@ -625,7 +625,7 @@ fn an_army_staged_beside_the_hall_city_declares_war_and_strikes_the_same_turn() 
         breach: false,
     };
     assert!(orders.contains(&declare), "{orders:?}");
-    // And the control: the same army without the Hall cannot even be standing there.
+    // And the control: the same army without the Station cannot even be standing there.
     let mut closed = staging_view(false);
     for (i, pos) in [off(17, 8), off(17, 9), off(16, 8), off(16, 9)]
         .into_iter()
@@ -639,8 +639,8 @@ fn an_army_staged_beside_the_hall_city_declares_war_and_strikes_the_same_turn() 
 #[test]
 fn the_holder_counts_a_rival_army_at_its_border_as_a_threat() {
     // The Mongols's side of the same staging: a rival army at its border at Peace could
-    // declare and walk into its Hall city, so the city is threatened and defended. (The reach a
-    // declaration opens already covers the declarer's own land, Hall or not.)
+    // declare and walk into its Station city, so the city is threatened and defended. (The reach a
+    // declaration opens already covers the declarer's own land, Station or not.)
     let mut v = ViewBuilder::new(40, 20)
         .faction(Faction::Mongols)
         .city(1, ME, off(18, 8), 4)
@@ -673,7 +673,7 @@ fn the_holder_counts_a_rival_army_at_its_border_as_a_threat() {
 
 #[test]
 fn a_game_with_no_limit_has_no_last_turn_to_miss() {
-    // Turn 800 of a game with no turn limit, 9 of 10 VP, a Hall that takes 50 turns: the old
+    // Turn 800 of a game with no turn limit, 9 of 10 VP, a Station that takes 50 turns: the old
     // fiction put the end 22 turns ahead, so it never paid and a 9-VP Mongols sat idle for
     // 900 turns (stalled seed 9983, 2026-10-23).
     let mut v = mongols(400, 9, 10);
@@ -699,7 +699,7 @@ fn a_game_with_no_limit_has_no_last_turn_to_miss() {
 
 #[test]
 fn a_hall_that_wins_the_game_is_not_held_back_by_exposure() {
-    // 8 of 10 VP: the Hall's 2 VP reach the target. The Hall city is not garrisoned and an army
+    // 8 of 10 VP: the Station's 2 VP reach the target. The Station city is not garrisoned and an army
     // far larger than ours stands near: the old rule waited for both to clear, which at war with
     // half the map never happens.
     let mut v = mongols(100, 8, 10);
@@ -718,7 +718,7 @@ fn a_hall_that_wins_the_game_is_not_held_back_by_exposure() {
     let mut careful = planner(&v);
     careful.decisions.hall_decisive = 0;
     assert!(!careful.hall_ready(), "the gene at 0 keeps the old check");
-    // Two VP short of the target after the Hall: the check still holds.
+    // Two VP short of the target after the Station: the check still holds.
     let mut far = v.clone();
     far.standings = standings(5, 10).into();
     assert!(!planner(&far).hall_ready());
@@ -727,7 +727,7 @@ fn a_hall_that_wins_the_game_is_not_held_back_by_exposure() {
 #[test]
 fn a_hall_that_wins_the_game_replaces_the_unit_its_city_keeps_building() {
     // 8 of 10 VP; every city repeats a Drone (cities keep a unit in production for good), so none
-    // is ever idle for the goal pass to give the Hall to.
+    // is ever idle for the goal pass to give the Station to.
     let drone = ProductionItem::Unit {
         unit: UnitKind::Spearman,
     };
@@ -744,18 +744,18 @@ fn a_hall_that_wins_the_game_replaces_the_unit_its_city_keeps_building() {
     };
     let orders = |gene: i32| {
         let mut b = ScriptedBrain::with_difficulty(Faction::Mongols, 7, ME, AiDifficulty::Hard);
-        // Isolate the Hall genes: modernization independently reconsiders busy queues.
+        // Isolate the Station genes: modernization independently reconsiders busy queues.
         b.decisions.modernization_value = 0;
         b.decisions.hall_decisive = gene;
         b.decisions.goal_open_end = gene;
         b.orders(&v)
     };
-    assert!(orders(1).contains(&set_hall), "the Hall is built");
+    assert!(orders(1).contains(&set_hall), "the Station is built");
     assert!(
         !orders(0).contains(&set_hall),
         "the gene at 0 leaves the Drone"
     );
-    // Two VP short of the target after the Hall: busy cities stay busy.
+    // Two VP short of the target after the Station: busy cities stay busy.
     let mut far = v.clone();
     far.standings = standings(5, 10).into();
     let mut b = ScriptedBrain::with_difficulty(Faction::Mongols, 7, ME, AiDifficulty::Hard);

@@ -96,6 +96,7 @@ Moved verbatim from SKILL.md on 2026-11-22 (original order kept). The current ru
 - **A longer top-bar label re-checks the 1440x900 research cell** with its turn count; a truncated "T7" is a regression. Keep chip labels short ("Units 0/3") and the full wording in the aria label and tip.
 - **A faction's signature payoff card uses that faction's own painting**, never the generic moment picture.
 - **Map-art tour shots** frame the piece at close zoom with no banner, tooltip or region label over it, and move the mouse away first. A landmark's name label stays clear of unit counters.
+- **A map piece placed by avoiding banners is placed at one reference zoom, never the live one (2026-11-22, `claude/project-thread-30mobv`):** a wonder or construction site must not hop as the player zooms or pans. Banners keep a near-fixed pixel size, so the clearest spot changes with zoom. `landmarkBoxes` chooses the spot at `LANDMARK_REF_ZOOM` against all cities' banners (`render.ts::referenceBannerCovers`) and scales it to the camera.
 - Player text bans "work radius" (say "within 3 tiles"), "that part", "army points" and "build focus".
 - **A reward granted through a shared prompt names its real source.** Greece Captive reused the free-tech prompt and told the captor "Athens shared its learning"; a new source of a grant updates every prompt and report line that names the old one.
 - **Ledger and score fixtures come from engine output, never a hand-filled view**: turns and totals must be possible for the game shown (the objectives tour showed turn 112 in a turn-2 game).
@@ -208,3 +209,5 @@ Moved verbatim from SKILL.md on 2026-11-22 (original order kept). The current ru
 - **An older save opens in the kept build that made it** (`platform/versions.ts`); the refusal notice appears only when no kept build has its rules.
 - **"New version" news rides on Single Player's sub-line, never a separate title note:** the note pushed the menu off the screen at 1000x600. It shows between games only.
 - **A joinable game on another version gets a neutral mark, never the red "!":** red is for rows that cannot be joined.
+
+- **Walls on the map (Sam, 2026-11-22, PR #87).** Walls under construction show only the era's footings for the whole build, public to every viewer, through fog too. A walled city's banner ends in the Walls mark after the name, plus II for a Castle or III for a Star Fort (plain Walls: the mark alone; never the six-point Star Fort icon, and a star on a banner means the capital seal). A city banner's tooltip names every mark the banner draws, in order: a new banner mark adds its tooltip part in the same change. Every new map mark gets a tour shot with its hover (`e2e/tour/wall-levels.spec.ts`).

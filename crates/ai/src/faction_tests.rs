@@ -39,23 +39,23 @@ fn hard_military_personality_keeps_funding_its_field_force() {
         .unit(1, ME, UnitKind::Spearman, off(5, 8))
         .build();
     v.turn = 60;
-    let soldier = ProductionItem::Unit {
+    let spearman = ProductionItem::Unit {
         unit: UnitKind::Spearman,
     };
     let market = ProductionItem::Building {
         building: BuildingKind::Market,
     };
     let options = &mut v.cities[0].detail.as_mut().unwrap().options;
-    options.retain(|o| o.item == soldier || o.item == market);
+    options.retain(|o| o.item == spearman || o.item == market);
     for option in options {
-        option.turns = if option.item == soldier { 70 } else { 1 };
+        option.turns = if option.item == spearman { 70 } else { 1 };
     }
     let mut hard = ScriptedBrain::with_difficulty(Faction::Sparta, 7, ME, AiDifficulty::Hard);
     let orders = hard.orders(&v);
     assert_valid(&v, &orders);
     assert!(orders.contains(&Order::SetProduction {
         city: CityId(1),
-        item: soldier
+        item: spearman
     }));
     let quiet =
         crate::difficulty::scale_knobs(Knobs::for_faction(Faction::Sparta), AiDifficulty::Easy);
@@ -63,7 +63,7 @@ fn hard_military_personality_keeps_funding_its_field_force() {
     assert!(
         orders.contains(&Order::SetProduction {
             city: CityId(1),
-            item: soldier
+            item: spearman
         }),
         "even the cautious personality must rebuild a depleted Sparta army"
     );
@@ -96,7 +96,7 @@ fn industry_payback_does_not_delay_stalled_growth() {
         opt.turns = (opt.cost + 15) / 16;
         opt.yields = d.yields.clone();
     }
-    // Both are useful, but the Machine Shop takes over fifty Standard turns to
+    // Both are useful, but the Forge takes over fifty Standard turns to
     // repay its price. Food immediately resumes growth in the existing city.
     assert!(orders(&v).contains(&Order::SetProduction {
         city: CityId(1),

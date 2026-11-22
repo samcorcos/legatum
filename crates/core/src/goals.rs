@@ -8,7 +8,7 @@
 //! - **Live**: scores only while its condition stands; it is lost the turn it stops holding and
 //!   regained when it holds again (the Switzerland' hoard).
 //! - **Held**: a capturable item; whoever holds it scores (Byzantium's Heir; the
-//!   Courier Hall).
+//!   Yam Relay Station).
 
 use crate::data;
 use crate::experiments::{FactionRule, RuleExperiments};
@@ -46,7 +46,7 @@ pub enum GoalRule {
     Wild,
     /// Sparta: retire veterans (Permanent, an action).
     Retire,
-    /// Mongols: hold the Courier Hall (Held).
+    /// Mongols: hold the Yam Relay Station (Held).
     Hall,
     /// Athens: share the learning (Permanent, an action).
     Broadcast,
@@ -61,7 +61,7 @@ pub const AZTEC_NEW_FIRE_POPULATION: i32 = 30;
 pub const SAKOKU_TURNS: i32 = 30;
 /// Athens, Share the Signal: free technologies each rival chooses.
 pub const SIGNAL_FREE_TECHS: u8 = 3;
-/// Sparta, Honour the Fallen: veterans to retire in a War Shrine city.
+/// Sparta, Honour the Fallen: veterans to retire in an Agoge city.
 pub const SPARTA_RETIRE_COUNT: i32 = 3;
 /// Sparta, Honour the Fallen: the promotion level a retiring veteran needs.
 pub const SPARTA_RETIRE_LEVEL: u8 = 3;
@@ -180,9 +180,9 @@ pub fn spec_for(rule: GoalRule) -> GoalSpec {
         GoalRule::Factories => goal(GoalKind::Live, data::GERMANY_GOAL_CITIES, "Ruhr Foundries"),
         // Call the warbands: live, a wild camp in the territory of every city owned (no minimum).
         GoalRule::Wild => goal(GoalKind::Live, 1, "cities with a wild camp"),
-        // Honour the Fallen: three veterans retired in a War Shrine city.
+        // Honour the Fallen: three veterans retired in an Agoge city.
         GoalRule::Retire => goal(GoalKind::Permanent, SPARTA_RETIRE_COUNT, "veterans retired"),
-        // The Courier Hall: held, not counted.
+        // The Yam Relay Station: held, not counted.
         GoalRule::Hall => goal(GoalKind::Held, 1, "Yam Relay Station held"),
         GoalRule::Broadcast => goal(GoalKind::Permanent, 1, "learning shared"),
     }
@@ -338,9 +338,9 @@ pub fn heir_holder(state: &GameState, of: PlayerId) -> Option<PlayerId> {
         .filter(|o| !o.is_barbarian())
 }
 
-/// The city holding Mongols empire `of`'s Courier Hall: the city it was built in, if it still
-/// stands with the Hall in it (a Celts capture razes the city and its wonder tile). A captured
-/// Hall normally stays in its city; a released tile can be claimed by another city.
+/// The city holding Mongols empire `of`'s Yam Relay Station: the city it was built in, if it still
+/// stands with the Station in it (a Celts capture razes the city and its wonder tile). A captured
+/// Station normally stays in its city; a released tile can be claimed by another city.
 pub fn hall_city(state: &GameState, of: PlayerId) -> Option<&crate::state::City> {
     state
         .player(of)
@@ -349,7 +349,7 @@ pub fn hall_city(state: &GameState, of: PlayerId) -> Option<&crate::state::City>
         .filter(|c| data::has_building(&c.buildings, BuildingKind::YamRelayStation))
 }
 
-/// Who holds `of`'s Courier Hall and so scores the Mongols goal: the owner of its tile.
+/// Who holds `of`'s Yam Relay Station and so scores the Mongols goal: the owner of its tile.
 pub fn hall_holder(state: &GameState, of: PlayerId) -> Option<PlayerId> {
     if let Some((_, holder)) = crate::landmarks::site(state, of, BuildingKind::YamRelayStation) {
         return holder.filter(|o| !o.is_barbarian());
@@ -384,7 +384,7 @@ pub fn imperial_diwans(state: &GameState) -> Vec<crate::view::ImperialDiwanView>
         .collect()
 }
 
-/// Whether `owner` holds a Courier Hall: every empire may then cross all of its land at Peace
+/// Whether `owner` holds a Yam Relay Station: every empire may then cross all of its land at Peace
 /// (`GameState::passage_allowed`).
 pub fn holds_open_road(state: &GameState, owner: PlayerId) -> bool {
     state
@@ -393,7 +393,7 @@ pub fn holds_open_road(state: &GameState, owner: PlayerId) -> bool {
         .any(|p| p.hall_city.is_some() && hall_holder(state, p.id) == Some(owner))
 }
 
-/// Every standing Courier Hall, for the public view.
+/// Every standing Yam Relay Station, for the public view.
 pub fn courier_halls(state: &GameState) -> Vec<crate::view::CourierHallView> {
     state
         .players
@@ -531,7 +531,7 @@ pub fn view(state: &GameState, p: PlayerId) -> Option<FactionGoalView> {
             )
         }
         GoalRule::Hall => {
-            // Held: whoever owns the Hall's city scores; the owner's own meter says only whether it does.
+            // Held: whoever owns the Station's city scores; the owner's own meter says only whether it does.
             let holds = hall_holder(state, p) == Some(p);
             let label = match hall_city(state, p).map(|c| (c.owner, c.name.as_str())) {
                 None => "The Yam Relay Station is not built".to_string(),

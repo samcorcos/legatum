@@ -42,16 +42,16 @@ export function drawSite(ctx: CanvasRenderingContext2D, site: ConstructionSite, 
 }
 
 /**
- * The era's painted Walls stages (`assets/construction/<era>-walls-stage1..3`: footings, half-height courses, nearly finished),
- * registered to the finished overlay's canvas, so the ring never jumps when the Walls complete. Under 10% nothing stands yet.
+ * The era's painted Walls footings (`assets/construction/<era>-walls-stage1`), registered to the finished overlay's canvas,
+ * held for the whole build: the later stages looked finished on the map (Sam, 2026-11-22), so they are not drawn.
  */
 export function wallsSiteStem(site: ConstructionSite, faction?: Faction): string | null {
   return wallStem(site.era, faction === 'Switzerland');
 }
 
 export function drawWallsSite(ctx: CanvasRenderingContext2D, site: ConstructionSite, center: Pt, zoom: number, dpr: number, k = site.k, faction?: Faction) {
-  const stage = constructionStage(clamp(k));
-  if (stage < 1 || stage > 3) return;
+  if (clamp(k) >= 1) return;
+  const stage = 1;
   const s = CITY_WORLD * zoom, scale = s / CITY_CANVAS;
   const stem = wallsSiteStem(site, faction);
   const img = stem ? stageImage(stem, stage, s * dpr) : null;

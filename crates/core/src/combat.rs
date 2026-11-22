@@ -900,7 +900,7 @@ pub fn city_defense_covered_rules(
 }
 
 /// City strike, as in Civ 6: only a walled city fires. Any Walls tier counts (a Castle upgrades
-/// Walls, and the Switzerland' Customs Bastion is their Walls), and a city at 0 HP stops firing.
+/// Walls, and the Switzerland' Alpine Redoubt is their Walls), and a city at 0 HP stops firing.
 /// Unwalled cities rely on their garrison and HP alone. Resolution, forecasts and the AI all ask
 /// this one function.
 pub fn city_can_fire(walls: bool, hp: i32) -> bool {

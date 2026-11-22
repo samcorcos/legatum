@@ -8,12 +8,13 @@ import { useEffect, useRef } from 'react';
 import { useCombatFx } from '../feel';
 import { useReducedMotion } from './useReducedMotion';
 import { motionStill } from './motion';
-import { ERA_COUNT } from '../data';
+import { ageName, ERA_COUNT } from '../data';
 import { Icon } from './bits';
 import { Tip } from './Tip';
 import { CrestMedallion } from '../brand/ornaments';
 import { cardHint, cardName, scoredCard } from '../ageCards';
 import { eraHud, eraObjectivesFor, FAMILY_LABEL, glance, howYouWin, type EraHud, type EraObjectives, type HowYouWin, type ObjectiveLine } from '../eraObjectives';
+import { empireOfPlayer } from '../empires';
 import type { PlayerView } from '../types';
 import type { VpModel } from '../vpModel';
 import { noEraHud, setEraHudOpen, useEraHudOpen } from './eraHudOpen';
@@ -66,7 +67,7 @@ export function ObjectiveRows({ lines, preview = false, big = false, inline = fa
           <span className="eo-account" data-testid="era-count-account">{l.countTotal} {COUNT_UNIT[l.kind] ?? 'total'} now · counting since turn {l.countingSinceTurn}, from {l.countBaseline}</span>}
         {!compact && !inline && !preview && !l.scoredHere && !idle && cardHint(l.kind) && <span className="eo-scored-by">{cardHint(l.kind)}</span>}
         {l.scoredHere && turn !== undefined && <span className="eo-scored-by">Scored on turn {turn} with {cardName(l.text)}</span>}
-        {view && l.scoredBy.length > 0 && !(l.scoredHere && turn !== undefined) && <span className="eo-scored-by">Scored by {l.scoredBy.map(id => id === view.me ? 'you' : view.players.find(p => p.id === id)?.name ?? `Empire ${id}`).join(', ')}</span>}
+        {view && l.scoredBy.length > 0 && !(l.scoredHere && turn !== undefined) && <span className="eo-scored-by">Scored by {l.scoredBy.map(id => id === view.me ? 'you' : empireOfPlayer(view, id)).join(', ')}</span>}
         <span className="eo-bar" role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={l.target} aria-valuenow={preview || idle ? 0 : l.shown}>
           <i style={{ width: `${preview || idle ? 0 : l.target > 0 ? Math.min(100, (l.shown / l.target) * 100) : 0}%` }} />
         </span>
@@ -108,7 +109,7 @@ function HowYouWinLine({ win, open, toggle, scored }: { win: HowYouWin; open: bo
 /** The Age's heading for its card, from its state: a title and the short rule beside it. */
 function heading(era: EraObjectives, members: number): { title: string; rule: string } {
   const vp = members > 1 ? '1 VP each' : '1 VP';
-  return era.state === 'scored' ? { title: `${era.name} Age: 1 VP scored`, rule: 'kept for good' } : { title: `Score ${vp} in the ${era.name} Age`, rule: 'never expires' };
+  return era.state === 'scored' ? { title: `${ageName(era.name)}: 1 VP scored`, rule: 'kept for good' } : { title: `Score ${vp} in the ${ageName(era.name)}`, rule: 'never expires' };
 }
 
 /** A line under the card: when the first or next Age begins. */
@@ -214,7 +215,7 @@ export function EraObjectivesResearch({ view }: { view: PlayerView }) {
         <RingMedallion icon={`era-numeral:${eraNumeral(focus.era - 1)}`} tone={focus.state === 'scored' ? 'gilt' : 'hollow'} size={46} className={`eor-seal${stamp ? ' stamp' : ''}`} />
         <div className="eor-body">
           <header className="eor-head">
-            <h4>{focus.state === 'scored' ? <>{focus.name} Age: 1 VP scored</> : <>{focus.name} Age: score 1 VP</>}</h4>
+            <h4>{focus.state === 'scored' ? <>{ageName(focus.name)}: 1 VP scored</> : <>{ageName(focus.name)}: score 1 VP</>}</h4>
             {focus.era < ERA_COUNT && <p className="eo-sub eor-next" data-testid="research-objectives-next">The next Age begins when any empire enters the {eraName(focus.era)} era.</p>}
           </header>
           <ObjectiveRows lines={focus.lines} inline accounting view={view} era={focus.era} flash={flash} />

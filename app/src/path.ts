@@ -246,7 +246,7 @@ export interface RouteRisk {
   destination?: boolean;
 }
 
-/** The route warning, from the viewer's side: "Path may be blocked by your Soldier". */
+/** The route warning, from the viewer's side: "Path may be blocked by your Spearman". */
 export function routeRiskText(view: PlayerView, risk: RouteRisk): string {
   const owner = view.players?.find((p) => p.id === risk.unit.owner);
   const name = itemName({ kind: 'Unit', unit: risk.unit.kind }, owner?.faction);

@@ -8,7 +8,7 @@ use legatum_core::events::Defender;
 use legatum_core::{Event, GameState, Hex, PlayerId, UnitId, player_view, resolve_turn};
 use legatum_wasm::tape::TapeTurn;
 
-const SOLDIER: UnitId = UnitId(3);
+const SPEARMAN: UnitId = UnitId(3);
 const GUARD: UnitId = UnitId(27);
 
 fn fixture() -> (GameState, Vec<TapeTurn>) {
@@ -19,7 +19,7 @@ fn fixture() -> (GameState, Vec<TapeTurn>) {
     (state, turns)
 }
 
-fn soldier_attacks(events: &[Event]) -> Vec<(i32, i32)> {
+fn spearman_attacks(events: &[Event]) -> Vec<(i32, i32)> {
     events
         .iter()
         .filter_map(|e| match e {
@@ -29,7 +29,7 @@ fn soldier_attacks(events: &[Event]) -> Vec<(i32, i32)> {
                 attacker_hp_after,
                 defender_hp_after,
                 ..
-            } if *attacker == SOLDIER && *unit == GUARD => {
+            } if *attacker == SPEARMAN && *unit == GUARD => {
                 Some((*attacker_hp_after, *defender_hp_after))
             }
             _ => None,
@@ -38,10 +38,10 @@ fn soldier_attacks(events: &[Event]) -> Vec<(i32, i32)> {
 }
 
 #[test]
-fn the_camp_attack_is_one_attack_then_the_soldier_needs_orders() {
+fn the_camp_attack_is_one_attack_then_the_spearman_needs_orders() {
     let (mut state, turns) = fixture();
     assert_eq!(state.turn, 17);
-    assert_eq!(state.units[&SOLDIER].pos, Hex { q: 18, r: 17 });
+    assert_eq!(state.units[&SPEARMAN].pos, Hex { q: 18, r: 17 });
     assert_eq!(state.units[&GUARD].pos, Hex { q: 17, r: 17 });
     assert!(
         state
@@ -55,19 +55,19 @@ fn the_camp_attack_is_one_attack_then_the_soldier_needs_orders() {
     for (i, turn) in turns.iter().enumerate() {
         assert_eq!(turn.turn, state.turn);
         let (next, events) = resolve_turn(&state, &turn.orders);
-        attacks.push(soldier_attacks(&events));
+        attacks.push(spearman_attacks(&events));
         state = next;
         if i == 0 {
             // The recorded battle, unchanged: 100 -> 68 HP against the guard's 100 -> 80.
             assert_eq!(attacks[0], vec![(68, 80)]);
-            let u = &state.units[&SOLDIER];
+            let u = &state.units[&SPEARMAN];
             assert_eq!(
                 (u.pos, u.goto, u.attack_target),
                 (Hex { q: 18, r: 17 }, None, None),
                 "stays where it fought, with no standing attack"
             );
             let view = player_view(&state, PlayerId(0));
-            let v = view.units.iter().find(|u| u.id == SOLDIER).unwrap();
+            let v = view.units.iter().find(|u| u.id == SPEARMAN).unwrap();
             assert!(
                 v.goto.is_none() && v.standing_order.is_none(),
                 "the client lists it as needing orders"
@@ -76,5 +76,5 @@ fn the_camp_attack_is_one_attack_then_the_soldier_needs_orders() {
     }
     // The recorded game had two more attacks (68 -> 36 -> dead). Now: none without orders.
     assert_eq!(attacks[1..], [vec![], vec![]]);
-    assert!(state.units.contains_key(&SOLDIER), "the Soldier survives");
+    assert!(state.units.contains_key(&SPEARMAN), "the Spearman survives");
 }

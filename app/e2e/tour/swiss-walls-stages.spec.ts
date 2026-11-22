@@ -6,11 +6,11 @@ import { SIZES, loadFixture, shot, type GameWindow } from './helpers';
 for (const size of SIZES) test.describe(`Swiss Walls stages ${size.name}`, () => {
   test.use({ viewport: { width: size.width, height: size.height } });
 
-  test('the star fort grows through all three stages into the finished overlay', async ({ page }) => {
+  test('the star fort shows its footings while building, then the finished overlay', async ({ page }) => {
     const setup = wallsFixture();
     await loadFixture(page, coreFixture(setup.fixture), 2);
     await page.mouse.move(5, size.height / 2);
-    for (const [name, stored] of [['stage-1', 200], ['stage-2', 500], ['stage-3', 800], ['finished', 1000]] as const) {
+    for (const [name, stored] of [['footings-early', 200], ['footings-late', 800], ['finished', 1000]] as const) {
       await page.evaluate(({ id, stored }) => {
         const w = window as unknown as GameWindow & { legatumMap: { redraw(): void } };
         const game = w.legatum, state = game.getState(), views = [...state.views!], v = views[state.seat];

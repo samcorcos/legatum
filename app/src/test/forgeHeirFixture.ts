@@ -45,12 +45,12 @@ export function forgeHeirFixture(viewer: 'Germany' | 'Byzantium', heir: HeirStat
     const at = { q: capital.pos.q + 1, r: capital.pos.r };
     const unit = spawnUnit(f, heir === 'own' ? 0 : 1, 'HeirToTheThrone', at, false);
     unit.heir_of = 0;
-    // Your Soldier stands beside him, so the tile can offer the capture.
+    // Your Spearman stands beside him, so the tile can offer the capture.
     if (heir === 'captured') for (const r of f.diplomacy!.relations) if (r.a + r.b === 1) r.state = 'War';
     if (heir === 'captured') { spawnUnit(f, 0, 'Spearman', { q: capital.pos.q, r: capital.pos.r + 1 }, false); }
   }
   refreshVision(f);
-  const soldier = f.units.find((u) => u.owner === 0 && u.kind === 'Spearman')?.id ?? null;
+  const spearman = f.units.find((u) => u.owner === 0 && u.kind === 'Spearman')?.id ?? null;
   const heirUnit = f.units.find((u) => u.kind === 'HeirToTheThrone')?.id ?? null;
-  return { fixture: f, capital: capital.id, soldier, heirUnit, forged: own.filter((x) => x !== capital).map((c) => c.id), heirHex: viewer === 'Byzantium' ? { q: capital.pos.q + 1, r: capital.pos.r } : null };
+  return { fixture: f, capital: capital.id, spearman, heirUnit, forged: own.filter((x) => x !== capital).map((c) => c.id), heirHex: viewer === 'Byzantium' ? { q: capital.pos.q + 1, r: capital.pos.r } : null };
 }

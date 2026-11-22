@@ -1,12 +1,12 @@
-// Faction goals increment 5 for the screen tour and tests: the Courier Hall in each state a player
+// Faction goals increment 5 for the screen tour and tests: the Yam Relay Station in each state a player
 // meets it. Injected visual fixture only; not imported by the app.
-//  own:       you are Mongols; the Hall stands in your city B (its land is open to everyone), A is walled
-//  ownWalled: as `own`, but the Hall's own city is walled (the plaque must clear the wall ring)
-//  buildable: you are Mongols with no Hall yet: any city can build it
+//  own:       you are Mongols; the Station stands in your city B (its land is open to everyone), A is walled
+//  ownWalled: as `own`, but the Station's own city is walled (the plaque must clear the wall ring)
+//  buildable: you are Mongols with no Station yet: any city can build it
 //  building:  as `buildable`, but C is already building it, so A's card is locked
-//  lost:      you are Mongols; a rival (Sparta) captured the Hall's city
-//  rival:     you are Sparta; the Mongols rival holds the Hall in a city you can see
-//  captured:  you are Sparta and own the Mongols rival's Hall city (you took it)
+//  lost:      you are Mongols; a rival (Sparta) captured the Station's city
+//  rival:     you are Sparta; the Mongols rival holds the Station in a city you can see
+//  captured:  you are Sparta and own the Mongols rival's Station city (you took it)
 import { fromOffset, within } from '../hex';
 import { FixtureClient } from './fixtureEngine';
 import { createState, makeStandardSetup, spawnUnit } from './fixtureEngine';
@@ -59,10 +59,10 @@ export function hallFixture(mode: HallMode) {
       for (let i = 0; i < f.owner.length; i++) if (f.tileCity[i] === B.id) f.owner[i] = B.owner;
     }
   }
-  // The Hall's roads, as the first turn after it completed would have laid them.
+  // The Station's roads, as the first turn after it completed would have laid them.
   if (mode === 'building') { C.producing = { kind: 'Wonder', building: 'YamRelayStation', tile: fromOffset(7, 10) }; C.prod = 40; }
   f.players[0].gold = 600;
-  // A scout beside the rival's Hall city, so it is in sight.
+  // A scout beside the rival's Station city, so it is in sight.
   const scout = spawnUnit(f, 0, 'Scout', fromOffset(mode === 'rival' || mode === 'captured' ? 12 : 4, mode === 'rival' || mode === 'captured' ? 6 : 6), false);
   if (f.players[g].hallCity) refreshRoads(f);
   refreshVision(f);

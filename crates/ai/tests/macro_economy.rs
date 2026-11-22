@@ -255,7 +255,7 @@ fn a_frontier_garrison_gets_its_quoted_upgrade_before_a_routine_rush_purchase() 
         TechId::Masonry,
         TechId::Feudalism,
     ]);
-    let soldier = spawn_unit(&mut s, ME, UnitKind::Phalangite, at(6, 8));
+    let spearman = spawn_unit(&mut s, ME, UnitKind::Phalangite, at(6, 8));
     spawn_unit(&mut s, ME, UnitKind::Archer, at(5, 8));
     spawn_unit(&mut s, ENEMY, UnitKind::Scout, at(9, 8));
     let item = ProductionItem::Building {
@@ -269,7 +269,7 @@ fn a_frontier_garrison_gets_its_quoted_upgrade_before_a_routine_rush_purchase() 
     let upgrade = player_view(&s, ME)
         .units
         .iter()
-        .find(|u| u.id == soldier)
+        .find(|u| u.id == spearman)
         .unwrap()
         .upgrade_breakdown
         .as_ref()
@@ -286,10 +286,10 @@ fn a_frontier_garrison_gets_its_quoted_upgrade_before_a_routine_rush_purchase() 
     let orders = decide(&mut s);
     assert!(!bought(&orders, city), "{orders:?}");
     assert!(
-        orders.contains(&Order::UpgradeUnit { unit: soldier }),
+        orders.contains(&Order::UpgradeUnit { unit: spearman }),
         "{orders:?}"
     );
-    assert_eq!(resolve(&s, orders).units[&soldier].kind, UnitKind::Pikeman);
+    assert_eq!(resolve(&s, orders).units[&spearman].kind, UnitKind::Pikeman);
 }
 
 #[test]

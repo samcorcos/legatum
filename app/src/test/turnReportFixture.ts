@@ -1,4 +1,4 @@
-// Turn report checks: our Ranger two tiles from an AI Soldier, at War, so ending a turn with a
+// Turn report checks: our Archer two tiles from an AI Spearman, at War, so ending a turn with a
 // ranged order produces a combat line with a known attacker position.
 import { promotionFixture } from './promotionFixture';
 

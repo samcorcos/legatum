@@ -107,7 +107,7 @@ Every review ends by creating 1 or 2 Scenario Lab scenarios cut from the game. P
   - mark patterns that a landed AI change has fixed.
   
   Keep SKILL.md under about 15 KB: one line per pattern, detail in its `references/` files.
-- Append the user's reasoning, if this game revealed any, to `docs/playtests/human-reasoning.md`. Add a dated entry to the current month's `docs/learnings/<YYYY-MM>.md` for anything non-obvious (promote it to the `docs/learnings.md` digest only if durable).
+- Append the user's reasoning, if this game revealed any, to `docs/playtests/human-reasoning.md`. Add a dated entry as its own file, `docs/learnings/<YYYY-MM>/<DD>-<slug>.md`, for anything non-obvious (promote it to the `docs/learnings.md` digest only if durable).
 - Add the top AI recommendations to `docs/sim-results/ai-quality/ideas.md` (merge with existing ideas; don't duplicate).
 - Return to the lead:
   - the verdict;

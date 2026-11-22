@@ -60,13 +60,13 @@ fn the_army_it_wants_never_exceeds_the_cap() {
 
 #[test]
 fn a_city_building_an_armed_unit_at_the_cap_switches_to_something_else() {
-    let soldier = ProductionItem::Unit {
+    let spearman = ProductionItem::Unit {
         unit: UnitKind::Spearman,
     };
     let mut v = byzantium(4, 4);
     for c in v.cities.iter_mut().filter(|c| c.detail.is_some()) {
         let d = c.detail.as_mut().unwrap();
-        d.producing = Some(soldier);
+        d.producing = Some(spearman);
     }
     move_units_to_unavailable(&mut v);
     let mut p = planner(&v);
@@ -87,7 +87,7 @@ fn a_city_building_an_armed_unit_at_the_cap_switches_to_something_else() {
     // Under the cap the same city keeps an armed build: its Spearman or, with no enemy in
     // sight, a Horseman (riders stand above the melee line since 2026-10-31).
     let mut v = byzantium(3, 4);
-    v.cities[0].detail.as_mut().unwrap().producing = Some(soldier);
+    v.cities[0].detail.as_mut().unwrap().producing = Some(spearman);
     let mut p = planner(&v);
     p.plan_cities();
     assert!(

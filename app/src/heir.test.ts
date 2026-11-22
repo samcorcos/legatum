@@ -29,7 +29,7 @@ it('says what capturing him scores in the tile card line', () => {
 });
 
 it('the minimap shows every Heir, in fog too, and no other foreign unit out of sight', () => {
-  const soldier = { id: 3, kind: 'Spearman', owner: 2, pos: { q: 2, r: 2 } } as unknown as UnitView;
-  const units = minimapUnits({ ...view, units: [heir(1), soldier] } as PlayerView);
+  const spearman = { id: 3, kind: 'Spearman', owner: 2, pos: { q: 2, r: 2 } } as unknown as UnitView;
+  const units = minimapUnits({ ...view, units: [heir(1), spearman] } as PlayerView);
   expect(units.map((u) => [u.owner, u.heir])).toEqual([[1, true]]);
 });

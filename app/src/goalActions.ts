@@ -38,7 +38,7 @@ export interface GoalPreview {
   released: Hex[];
   /** Where Call the warbands would raise its camps. */
   camps: Hex[];
-  /** Valid places for a one-time unit action (War Shrine cities for a retiring veteran). */
+  /** Valid places for a one-time unit action (Agoge cities for a retiring veteran). */
   places: Hex[];
 }
 const NO_PREVIEW: GoalPreview = { cities: [], released: [], camps: [], places: [] };
@@ -94,13 +94,13 @@ export function wildPreview(view: PlayerView): GoalPreview | null {
 export const retireEntry = (view: PlayerView, unit: UnitId): RetireVeteranView | undefined =>
   view.actions?.retire?.veterans.find((v) => v.unit === unit);
 
-/** The cities where a veteran retires (own cities with a War Shrine), as the map marks them. */
+/** The cities where a veteran retires (own cities with an Agoge), as the map marks them. */
 export function retirePlaces(view: PlayerView): Hex[] {
   const shrines = view.actions?.retire?.shrines ?? [];
   return view.cities.filter((c) => shrines.includes(c.id)).map((c) => c.pos);
 }
 
-/** The map marks the valid War Shrine cities while a veteran is selected (and not yet standing in one) or being retired. */
+/** The map marks the valid Agoge cities while a veteran is selected (and not yet standing in one) or being retired. */
 export function retirePreview(view: PlayerView, unit: UnitView | null, weighing: boolean): GoalPreview | null {
   const places = retirePlaces(view);
   if (!places.length) return null;

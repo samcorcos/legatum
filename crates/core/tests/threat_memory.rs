@@ -10,15 +10,15 @@ fn sighting() -> (GameState, UnitId, UnitId) {
     setup.players[0].is_human = true;
     let mut state = blank_game(&setup, Map::new(48, 32, Terrain::Grassland));
     let scout = spawn_unit(&mut state, PlayerId(1), UnitKind::Scout, Hex::new(8, 8));
-    let soldier = spawn_unit(&mut state, PlayerId(2), UnitKind::Spearman, Hex::new(10, 8));
+    let spearman = spawn_unit(&mut state, PlayerId(2), UnitKind::Spearman, Hex::new(10, 8));
     state.turn = 20;
     update_explored(&mut state);
-    (state, scout, soldier)
+    (state, scout, spearman)
 }
 
 #[test]
 fn observations_are_shared_save_stable_and_never_follow_hidden_units() {
-    let (mut state, scout, soldier) = sighting();
+    let (mut state, scout, spearman) = sighting();
     let observed = state.players[0].observed_threats.clone();
     assert_eq!(observed.len(), 1);
     assert_eq!(observed, state.players[1].observed_threats);
@@ -26,14 +26,14 @@ fn observations_are_shared_save_stable_and_never_follow_hidden_units() {
     state.units.get_mut(&scout).unwrap().pos = Hex::new(1, 1);
     update_explored(&mut state);
     let before = player_view(&state, PlayerId(0));
-    assert!(before.units.iter().all(|u| u.id != soldier));
+    assert!(before.units.iter().all(|u| u.id != spearman));
     assert_eq!(before.observed_threats, observed);
     // Neither relocation, changed health/kind, nor death outside vision is evidence.
-    state.units.get_mut(&soldier).unwrap().pos = Hex::new(20, 8);
-    state.units.get_mut(&soldier).unwrap().kind = UnitKind::Pikeman;
+    state.units.get_mut(&spearman).unwrap().pos = Hex::new(20, 8);
+    state.units.get_mut(&spearman).unwrap().kind = UnitKind::Pikeman;
     update_explored(&mut state);
     assert_eq!(player_view(&state, PlayerId(0)).observed_threats, observed);
-    state.units.remove(&soldier);
+    state.units.remove(&spearman);
     update_explored(&mut state);
     state = serde_json::from_str(&serde_json::to_string(&state).unwrap()).unwrap();
     assert_eq!(player_view(&state, PlayerId(0)).observed_threats, observed);
@@ -46,8 +46,8 @@ fn observations_are_shared_save_stable_and_never_follow_hidden_units() {
 
 #[test]
 fn new_sighting_replaces_the_old_location_and_expiry_does_not_refresh_in_fog() {
-    let (mut state, scout, soldier) = sighting();
-    state.units.get_mut(&soldier).unwrap().pos = Hex::new(20, 8);
+    let (mut state, scout, spearman) = sighting();
+    state.units.get_mut(&spearman).unwrap().pos = Hex::new(20, 8);
     state.units.get_mut(&scout).unwrap().pos = Hex::new(18, 8);
     state.turn += 1;
     update_explored(&mut state);
@@ -96,7 +96,7 @@ fn bounded_memory_keeps_the_newest_observations_deterministically() {
 
 #[test]
 fn legacy_save_does_not_populate_fog_with_live_threats() {
-    let (mut state, scout, soldier) = sighting();
+    let (mut state, scout, spearman) = sighting();
     state.units.get_mut(&scout).unwrap().pos = Hex::new(1, 1);
     let mut json = serde_json::to_value(&state).unwrap();
     for player in json["players"].as_array_mut().unwrap() {
@@ -106,5 +106,5 @@ fn legacy_save_does_not_populate_fog_with_live_threats() {
     update_explored(&mut loaded);
     let view = player_view(&loaded, PlayerId(0));
     assert!(view.observed_threats.is_empty());
-    assert!(view.units.iter().all(|u| u.id != soldier));
+    assert!(view.units.iter().all(|u| u.id != spearman));
 }

@@ -72,11 +72,11 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     try {
       const p3 = await war.newPage();
       await loadFixture(p3, warPromptCoreSave(), 1);
-      const soldier = await p3.evaluate((at) => {
+      const spearman = await p3.evaluate((at) => {
         const s = (window as unknown as GameWindow).legatum.getState(), v = s.views![s.seat];
         return v.units.find((u) => u.owner === v.me && u.pos.q === at.q && u.pos.r === at.r)!.id;
-      }, WAR_PROMPT.soldier);
-      await selectThing(p3, 'unit', soldier);
+      }, WAR_PROMPT.spearman);
+      await selectThing(p3, 'unit', spearman);
       const at = await hexPoint(p3, WAR_PROMPT.scout);
       await p3.mouse.move(at.x, at.y);
       await expect(p3.locator('.peace-hint')).toBeVisible();
@@ -194,14 +194,14 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
   });
 
   test('attack at Peace: foreign city card, ranged War prompt and the Fix order card', async ({ page }) => {
-    const CITY = { q: 19, r: 8 }; // Switzerland' capital Harmonia; the Ranger stands 2 tiles west.
+    const CITY = { q: 19, r: 8 }; // Switzerland' capital Harmonia; the Archer stands 2 tiles west.
     await loadFixture(page, warPromptCoreSave(false, true), 1);
-    const ranger = await page.evaluate(() => {
+    const archer = await page.evaluate(() => {
       const s = (window as unknown as GameWindow).legatum.getState(), v = s.views![s.seat];
       return v.units.find((u) => u.owner === v.me && u.kind === 'Archer')!.id;
     });
-    await selectThing(page, 'unit', ranger);
-    await centred(page, ranger);
+    await selectThing(page, 'unit', archer);
+    await centred(page, archer);
     const city = await hexPoint(page, CITY);
     await page.mouse.click(city.x, city.y);
     const card = page.getByTestId('foreign-city-actions');
@@ -220,11 +220,11 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await expect(dialog).toHaveCount(0);
 
     // A stale ranged order on a team at Peace: the Fix order call to action.
-    await page.evaluate(({ ranger, city }) => {
+    await page.evaluate(({ archer, city }) => {
       const s = (window as unknown as GameWindow).legatum.getState();
-      s.editOrders((o) => [...o, { type: 'RangedAttack', unit: ranger, target: city }]);
-      s.select({ kind: 'unit', id: ranger });
-    }, { ranger, city: CITY });
+      s.editOrders((o) => [...o, { type: 'RangedAttack', unit: archer, target: city }]);
+      s.select({ kind: 'unit', id: archer });
+    }, { archer, city: CITY });
     // A broken order is the next decision: "Fix order" with its reason, and the one primary.
     await expect(page.locator('.seatbar .cta .cta-label')).toHaveText('Fix order');
     await expect(page.locator('.seatbar .cta .cta-sub')).toContainText('declare War first');

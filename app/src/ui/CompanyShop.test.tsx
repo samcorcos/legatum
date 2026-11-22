@@ -137,9 +137,9 @@ it('says why the shop is empty before first contact', async () => {
 
 it('a hired Company says whose it was, its countdown and its upkeep in the unit panel and tile card; the last turn says so', async () => {
   const { client, view } = await renderShop();
-  const soldier = view.units.find((u) => u.owner === 0 && u.kind !== 'Settler') ?? client.view(0).units.find((u) => u.owner === 0)!;
-  const hired = { ...soldier, kind: 'Spearman' as const, military: true, contract_until: view.turn + 7, origin: 'Sparta' as const };
-  const v = { ...view, units: [hired, ...view.units.filter((u) => u.id !== soldier.id)] };
+  const spearman = view.units.find((u) => u.owner === 0 && u.kind !== 'Settler') ?? client.view(0).units.find((u) => u.owner === 0)!;
+  const hired = { ...spearman, kind: 'Spearman' as const, military: true, contract_until: view.turn + 7, origin: 'Sparta' as const };
+  const v = { ...view, units: [hired, ...view.units.filter((u) => u.id !== spearman.id)] };
   useGame.setState({ views: [v], selection: { kind: 'unit', id: hired.id } });
   act(() => root.render(<UnitPanel unit={hired} view={v} />));
   expect(container.querySelector('[data-testid="company-tag"]')!.textContent).toContain(`Hired from Sparta: 7 turns of contract left, upkeep ${RULES.company.upkeep} Gold a turn`);

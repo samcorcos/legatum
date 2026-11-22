@@ -51,7 +51,7 @@ describe.skipIf(!available)('F8/F12 real WASM scenarios', () => {
     makeCore = () => new WasmClient(mod.Game);
   });
 
-  it('both confirmed Ranger orders follow the actual client preview, through save/load', async () => {
+  it('both confirmed Archer orders follow the actual client preview, through save/load', async () => {
     vi.useFakeTimers();
     try {
       const client = await fixture();

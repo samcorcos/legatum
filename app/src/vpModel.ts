@@ -88,7 +88,7 @@ export interface Source {
   privacy?: string;
   /** Your own progress where only you can see it. */
   progress?: Progress;
-  /** A held goal (Byzantium's Heir, Mongols's Courier Hall): whoever holds the item scores it, so `owners` are the holders, not the faction. */
+  /** A held goal (Byzantium's Heir, Mongols's Yam Relay Station): whoever holds the item scores it, so `owners` are the holders, not the faction. */
   held?: boolean;
   /** Held goals: who holds the item now, and where it stands when the viewer can place it (public facts only). */
   holdNote?: string;
@@ -362,7 +362,7 @@ function visibleHeir(view: PlayerView, of: PlayerId): UnitView | undefined {
   return view.units.find((u) => u.kind === 'HeirToTheThrone' && u.heir_of === of);
 }
 
-/** Where a held goal's item stands, when the viewer can place it: the Heir's tile (public every turn; `seen` says whether it is in sight now); the Hall's city while it is on the viewer's map (`seen` says whether it is in sight now). Public facts only. */
+/** Where a held goal's item stands, when the viewer can place it: the Heir's tile (public every turn; `seen` says whether it is in sight now); the Station's city while it is on the viewer's map (`seen` says whether it is in sight now). Public facts only. */
 function heldPlace(view: PlayerView, of: PlayerId, faction: Faction): { pos: Hex; seen: boolean; city?: string; barbarian?: boolean } | undefined {
   if (faction === 'Byzantium') {
     const heir = visibleHeir(view, of);

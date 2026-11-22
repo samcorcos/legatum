@@ -109,7 +109,7 @@ pub fn ranged_first() -> Vec<UnitKind> {
 }
 
 /// The ranged line, then the cheapest melee unit.
-pub fn ranged_then_soldier() -> Vec<UnitKind> {
+pub fn ranged_then_spearman() -> Vec<UnitKind> {
     RANGED_LADDER
         .into_iter()
         .chain([UnitKind::Spearman])

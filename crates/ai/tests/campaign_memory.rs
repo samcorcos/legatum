@@ -5,7 +5,7 @@ use legatum_core::*;
 use std::collections::BTreeMap;
 
 const ME: PlayerId = PlayerId(1);
-const SOLDIERS: [UnitId; 2] = [UnitId(40), UnitId(44)];
+const SPEARMEN: [UnitId; 2] = [UnitId(40), UnitId(44)];
 
 fn original() -> GameState {
     let state: GameState = serde_json::from_reader(flate2::read::GzDecoder::new(
@@ -63,11 +63,11 @@ fn archived_campaign_does_not_repeat_approach_retreat_with_holding_defenders() {
     for _ in 0..8 {
         loaded = roundtrip(&loaded);
         assert_eq!(decide(&uninterrupted), decide(&loaded));
-        for (i, id) in SOLDIERS.iter().enumerate() {
+        for (i, id) in SPEARMEN.iter().enumerate() {
             positions[i].push(uninterrupted.units[id].pos);
         }
         let (next, events) = advance(&uninterrupted);
-        for (i, id) in SOLDIERS.iter().enumerate() {
+        for (i, id) in SPEARMEN.iter().enumerate() {
             attacks[i].push(events.iter().any(|e| {
                 matches!(e,
                     Event::Battle { attacker, damage_to_defender, .. }
@@ -82,7 +82,7 @@ fn archived_campaign_does_not_repeat_approach_retreat_with_holding_defenders() {
             assert_eq!(uninterrupted.units[&id].pos, pos, "defender must hold");
         }
     }
-    for ((id, mut path), attacks) in SOLDIERS.into_iter().zip(positions).zip(attacks) {
+    for ((id, mut path), attacks) in SPEARMEN.into_iter().zip(positions).zip(attacks) {
         path.push(uninterrupted.units[&id].pos);
         // Successful attacks can end adjacent to a surviving city and legitimately
         // require recovery. Reject the reported empty movement loop, not real combat.
@@ -167,5 +167,5 @@ fn reconnaissance_clears_defender_memories_without_forcing_a_city_assault() {
         orders.insert(ME, ours);
         state = resolve_turn(&roundtrip(&state), &orders).0;
     }
-    assert!(SOLDIERS.iter().all(|id| state.units.contains_key(id)));
+    assert!(SPEARMEN.iter().all(|id| state.units.contains_key(id)));
 }

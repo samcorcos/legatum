@@ -1,5 +1,5 @@
 // Roads on a real generated map, for the road-art shots and the screen tour: N empires (seat 0 a
-// Mongols human), a Courier Hall in seat 0's capital, extra cities scattered over land at least
+// Mongols human), a Yam Relay Station in seat 0's capital, extra cities scattered over land at least
 // five hexes apart, borders three hexes around each city, and the roads the core lays. Injected
 // visual fixture only; not imported by the app.
 import { distance, fromOffset, within } from '../hex';
@@ -55,7 +55,7 @@ export function roadsFixture(opts: { players?: number; width?: number; height?: 
     c.buildings = []; c.producing = null; c.prod = 0; c.productionQueue = []; c.productionBanked = [];
     for (const h of within(c.pos, 3)) { const i = idxOf(f, h); if (i >= 0 && moveCost(f.terrain[i]) !== null && f.owner[i] < 0) { f.owner[i] = c.owner; f.tileCity[i] = c.id; } }
   }
-  // The Hall stands in the most central city, which seat 0 owns: the roads then radiate across the whole map.
+  // The Station stands in the most central city, which seat 0 owns: the roads then radiate across the whole map.
   const middle = fromOffset(Math.floor(width / 2), Math.floor(height / 2));
   const mine = f.cities.reduce((a, c) => (distance(c.pos, middle) < distance(a.pos, middle) ? c : a), f.cities[0]);
   mine.owner = 0; mine.name = 'Crossroads';

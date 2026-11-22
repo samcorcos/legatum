@@ -19,6 +19,6 @@ as a pair.
 
 The only other faction-goal map landmark currently drawn by `app/src/map/` is
 the Mongols' Courier Hall rose. It is drawn from the shared atlas palette in
-`map/courierHall.ts`, rather than from a building PNG or construction-stage set.
+`map/yamRelayStation.ts`, rather than from a building PNG or construction-stage set.
 Other faction-goal buildings are represented in their cities but have no
 separate landmark tile.

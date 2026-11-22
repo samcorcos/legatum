@@ -58,12 +58,12 @@ export function shotBlockReason(view: PlayerView, from: Hex, to: Hex, kind?: Uni
   const at = losBlocker(from, to, viewTerrain(view));
   if (!at) return null;
   const terrain = viewTerrain(view)(at) ?? 'unknown terrain';
-  const ownUnwalledCity = view.cities.some((c) => c.owner === owner && hexEq(c.pos, from) && !c.walls);
-  const remedy = terrain === 'Mountains'
-    ? ownUnwalledCity ? 'Move adjacent, around it, or build Walls.' : 'Move adjacent or around it.'
-    : terrain === 'unknown terrain'
-      ? ownUnwalledCity ? 'Scout the route, move adjacent, or build Walls.' : 'Scout the route or move adjacent.'
-      : ownUnwalledCity ? 'Fire from a hill, move adjacent, or build Walls.' : 'Fire from a hill or move adjacent.';
+  const ownUnwalledCity = view.cities.find((c) => c.owner === owner && hexEq(c.pos, from) && !c.walls);
+  const options = terrain === 'Mountains' ? ['Move adjacent', 'around it']
+    : terrain === 'unknown terrain' ? ['Scout the route', 'move adjacent']
+      : ['Fire from a hill', 'move adjacent'];
+  if (ownUnwalledCity) options.push(`build Walls in ${ownUnwalledCity.name}`);
+  const remedy = `${options.slice(0, -1).join(', ')}${options.length > 2 ? ',' : ''} or ${options[options.length - 1]}.`;
   const place = placeName(view, at, Infinity);
   return `No line of sight: the ${terrain} ${place ? place.includes(' of ') ? place : `at ${place}` : 'on this tile'} blocks the shot. ${remedy}`;
 }

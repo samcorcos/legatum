@@ -6,7 +6,7 @@ import { coreFixture } from '../src/test/coreFixture';
 import { createState, makeStandardSetup, spawnUnit } from '../src/test/fixtureEngine';
 import { idxOf, refreshVision } from '../src/test/fixtureEngine';
 
-const ranger: Hex = { q: 6, r: 5 };
+const archer: Hex = { q: 6, r: 5 };
 const target: Hex = { q: 8, r: 5 };
 const forest: Hex = { q: 7, r: 5 };
 type GameWindow = Window & { legatum: typeof useGame; legatumMap: { toScreen(hex: Hex): { x: number; y: number } } };
@@ -21,7 +21,7 @@ function save() {
   s.owner.fill(-1); s.tileCity.fill(-1); s.ruin.fill(0);
   s.units = []; s.cities = []; s.nextUnitId = 0; s.nextCityId = 0;
   for (const p of s.players) spawnUnit(s, p.id, 'Settler', { q: 1 + 12 * p.id, r: 10 }, false);
-  const shooter = spawnUnit(s, 0, 'Archer', ranger, false);
+  const shooter = spawnUnit(s, 0, 'Archer', archer, false);
   spawnUnit(s, 0, 'Scout', { q: 8, r: 4 }, false); // The rival remains visible from another source.
   spawnUnit(s, 1, 'Spearman', target, false);
   refreshVision(s);
@@ -43,7 +43,7 @@ async function start(page: Page) {
     s.select({ kind: 'unit', id });
     s.jumpTo(at);
     s.setMode('ranged');
-  }, { id: shooter, at: ranger });
+  }, { id: shooter, at: archer });
 }
 
 async function point(page: Page, hex: Hex) {

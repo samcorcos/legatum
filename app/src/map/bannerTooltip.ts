@@ -1,9 +1,20 @@
 import { empireOfPlayer } from '../empires';
+import { itemName } from '../data';
 import type { CityView, PlayerView } from '../types';
+import { wallTierOf } from './cityArt';
+import { WALL_TIER_LABEL } from './sprites';
 
 /** The parts of a drawn banner, in their visual order. The star describes the capital's held point. */
 export function bannerTooltip(view: Pick<PlayerView, 'players'>, city: CityView): string {
   const parts = [`Population ${city.visible ? city.population : 'unknown'}`, empireOfPlayer(view, city.owner), city.name];
+  const tier = wallTierOf(city);
+  if (tier > 0) {
+    // The Walls mark and its numeral, named for the owner's faction (the Swiss build the Alpine Redoubt).
+    const building = (['Walls', 'Walls', 'Castle', 'StarFort'] as const)[tier];
+    const faction = view.players.find((p) => p.id === city.owner)?.faction;
+    const label = WALL_TIER_LABEL[tier];
+    parts.push(`${itemName({ kind: 'Building', building }, faction)}${label ? ` (${label})` : ''}: fires at enemy military units within 2 tiles`);
+  }
   if (city.original_capital) {
     const founder = empireOfPlayer(view, city.original_capital_of ?? city.owner);
     parts.push(`Original capital of ${founder} · a rival scores 1 VP while it holds it`);

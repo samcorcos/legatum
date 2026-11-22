@@ -144,8 +144,8 @@ fn case(
 }
 fn cases(roster: &[UnitKind]) -> Vec<Case> {
     let mut out = Vec::new();
-    let soldier = kind("Spearman");
-    let ranger = kind("Archer");
+    let spearman = kind("Spearman");
+    let archer = kind("Archer");
     let scout = kind("Scout");
     for (a, b) in [(1, 1), (2, 2), (3, 3), (4, 5), (5, 4), (6, 6), (3, 6)] {
         for k in roster {
@@ -185,8 +185,8 @@ fn cases(roster: &[UnitKind]) -> Vec<Case> {
             Goal::Destroy,
             g,
             3,
-            repeat(soldier, 4),
-            repeat(soldier, 4),
+            repeat(spearman, 4),
+            repeat(spearman, 4),
             "defender_edge",
         ));
     }
@@ -200,8 +200,8 @@ fn cases(roster: &[UnitKind]) -> Vec<Case> {
                         Goal::TakeCity,
                         Ground::Open,
                         3,
-                        repeat(soldier, attackers),
-                        if garrison { vec![soldier] } else { vec![] },
+                        repeat(spearman, attackers),
+                        if garrison { vec![spearman] } else { vec![] },
                         if walls && garrison && !damaged && attackers < 6 {
                             "wall_holds"
                         } else if !walls && attackers >= 4 {
@@ -220,9 +220,9 @@ fn cases(roster: &[UnitKind]) -> Vec<Case> {
         }
     }
     for (a, b, label) in [
-        (soldier, ranger, "melee_vs_ranged"),
-        (ranger, soldier, "ranged_vs_melee"),
-        (soldier, scout, "melee_vs_scout"),
+        (spearman, archer, "melee_vs_ranged"),
+        (archer, spearman, "ranged_vs_melee"),
+        (spearman, scout, "melee_vs_scout"),
     ] {
         out.push(case(
             label,
@@ -232,7 +232,7 @@ fn cases(roster: &[UnitKind]) -> Vec<Case> {
             2,
             repeat(a, (160 / data::unit_stats(a).cost) as usize),
             repeat(b, (160 / data::unit_stats(b).cost) as usize),
-            if a == ranger || (a == soldier && b == scout) {
+            if a == archer || (a == spearman && b == scout) {
                 "attacker_wins"
             } else {
                 "valid_orders"
@@ -247,7 +247,7 @@ fn cases(roster: &[UnitKind]) -> Vec<Case> {
             Ground::Open,
             3,
             repeat(mounted, 3),
-            repeat(ranger, 3),
+            repeat(archer, 3),
             "attacker_wins",
         ));
         out.push(case(
@@ -256,7 +256,7 @@ fn cases(roster: &[UnitKind]) -> Vec<Case> {
             Goal::Destroy,
             Ground::Open,
             2,
-            repeat(soldier, 3),
+            repeat(spearman, 3),
             repeat(mounted, 3),
             "attacker_wins",
         ));
@@ -267,8 +267,8 @@ fn cases(roster: &[UnitKind]) -> Vec<Case> {
         Goal::Destroy,
         Ground::Open,
         4,
-        repeat(ranger, 4),
-        repeat(soldier, 5),
+        repeat(archer, 4),
+        repeat(spearman, 5),
         "ranged_not_dominant",
     );
     kite.kiting = true;
@@ -280,8 +280,8 @@ fn cases(roster: &[UnitKind]) -> Vec<Case> {
             Goal::Destroy,
             Ground::Open,
             2,
-            repeat(soldier, 3),
-            repeat(soldier, 3),
+            repeat(spearman, 3),
+            repeat(spearman, 3),
             "attacker_wins",
         );
         v.veteran = level;
@@ -319,8 +319,8 @@ fn cases(roster: &[UnitKind]) -> Vec<Case> {
                 Ground::Mixed
             },
             3,
-            vec![soldier, ranger, scout],
-            vec![soldier, ranger, scout],
+            vec![spearman, archer, scout],
+            vec![spearman, archer, scout],
             expectation,
         );
         c.city = matches!(
@@ -332,19 +332,29 @@ fn cases(roster: &[UnitKind]) -> Vec<Case> {
         out.push(c);
     }
     for (id, a, b, low) in [
-        ("all-scout", repeat(scout, 6), repeat(soldier, 3), false),
+        ("all-scout", repeat(scout, 6), repeat(spearman, 3), false),
         (
             "one-veteran-six-green",
-            repeat(soldier, 1),
-            repeat(soldier, 6),
+            repeat(spearman, 1),
+            repeat(spearman, 6),
             false,
         ),
-        ("ten-v-one", repeat(soldier, 10), repeat(soldier, 1), false),
-        ("one-hp", vec![soldier, ranger], vec![soldier, ranger], true),
+        (
+            "ten-v-one",
+            repeat(spearman, 10),
+            repeat(spearman, 1),
+            false,
+        ),
+        (
+            "one-hp",
+            vec![spearman, archer],
+            vec![spearman, archer],
+            true,
+        ),
         (
             "settler-in-mix",
-            vec![soldier, UnitKind::Settler, ranger],
-            vec![soldier, scout],
+            vec![spearman, UnitKind::Settler, archer],
+            vec![spearman, scout],
             false,
         ),
     ] {
@@ -362,7 +372,7 @@ fn cases(roster: &[UnitKind]) -> Vec<Case> {
         Ground::Mixed,
         3,
         repeat(scout, 3),
-        vec![soldier],
+        vec![spearman],
         "valid_orders",
     ));
     out

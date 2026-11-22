@@ -47,7 +47,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('the unit panel shows level, XP and promoted strength; enemies show their level only', async ({ page }) => {
-  await select(page, setup.trooper);
+  await select(page, setup.pikeman);
   const rank = page.locator('.unit-panel .up-rank');
   await expect(rank).toContainText('Level 3 · +30%');
   await expect(rank).toContainText('102/150 XP');
@@ -55,7 +55,7 @@ test('the unit panel shows level, XP and promoted strength; enemies show their l
   // Pikeman base 32 (the Medieval step of the era curve), +30%: 32 * 130 / 100 = 41 (rounded down).
   await expect(page.locator('.unit-panel .up-stat', { hasText: 'Strength' }).locator('b')).toHaveText('41');
 
-  await select(page, setup.ranger);
+  await select(page, setup.archer);
   await expect(page.locator('.unit-panel .up-rank')).toContainText('49/90 XP');
   await expect(page.locator('.unit-panel .up-stat', { has: page.locator('.lbl', { hasText: /^Ranged$/ }) }).locator('b')).toContainText('18');
 
@@ -65,8 +65,8 @@ test('the unit panel shows level, XP and promoted strength; enemies show their l
 });
 
 test('the combat forecast shows each side\'s promotion as its own line', async ({ page }) => {
-  await select(page, setup.trooper);
-  const at = await hexPoint(page, setup.enemy, setup.trooper);
+  await select(page, setup.pikeman);
+  const at = await hexPoint(page, setup.enemy, setup.pikeman);
   await page.mouse.move(at.x, at.y);
   const card = page.locator('.forecast');
   await expect(card).toBeVisible();
@@ -76,8 +76,8 @@ test('the combat forecast shows each side\'s promotion as its own line', async (
 });
 
 test('the tile tooltip shows the same promoted unit badge', async ({ page }) => {
-  await select(page, setup.trooper);
-  const at = await hexPoint(page, setup.trooper, setup.trooper);
+  await select(page, setup.pikeman);
+  const at = await hexPoint(page, setup.pikeman, setup.pikeman);
   await page.evaluate(() => (window as unknown as GameWindow).legatum.getState().select(null));
   await page.mouse.move(at.x, at.y);
   const row = page.locator('.tilecard-unit').first();

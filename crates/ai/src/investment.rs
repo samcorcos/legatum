@@ -424,7 +424,7 @@ mod tests {
     }
 
     #[test]
-    fn an_existing_machine_shop_can_win_the_remaining_research_and_construction_race() {
+    fn an_existing_forge_can_win_the_remaining_research_and_construction_race() {
         let mut v = ViewBuilder::new(24, 16)
             .faction(Faction::Germany)
             .known_techs(

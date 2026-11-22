@@ -726,8 +726,15 @@ export interface BannerSpec {
   capital: CapitalStar | null;
   selected: boolean;
   glyph: string | null;
-  walls: boolean;
+  /** Visible wall level: 0 none, 1 Walls, 2 Castle, 3 Star Fort. Drawn after the name as the Walls mark and the level. */
+  wallTier: number;
 }
+
+/**
+ * The banner's level after the Walls mark: none for plain Walls, II for a Castle, III for a Star Fort. One mark plus a numeral,
+ * not each building's icon: the Star Fort icon reads as a star at banner size, and a star on a banner means the capital seal.
+ */
+export const WALL_TIER_LABEL = ['', '', 'II', 'III'] as const;
 
 /** Draw a city banner with its bottom center at (x, y). Returns the drawn rect (CSS px). */
 export function drawBanner(ctx: CanvasRenderingContext2D, look: LookId, b: BannerSpec, x: number, y: number, fs: number, dpr: number, alpha = 1) {
@@ -748,7 +755,7 @@ export function bannerRect(look: LookId, b: BannerSpec, x: number, y: number, fs
 
 function bannerSprite(look: LookId, b: BannerSpec, fs: number, dpr: number): Sprite {
   const q = Math.round(fs * 2) / 2;
-  return cached(`ban|${look}|${b.owner}|${b.name}|${b.pop}|${b.color}|${starKey(b.capital)}|${b.selected}|${b.glyph}|${b.walls}|${q}|${dpr}`, () =>
+  return cached(`ban|${look}|${b.owner}|${b.name}|${b.pop}|${b.color}|${starKey(b.capital)}|${b.selected}|${b.glyph}|${b.wallTier}|${q}|${dpr}`, () =>
     atlasBanner(b, q, dpr),
   );
 }
@@ -905,11 +912,16 @@ function atlasBanner(b: BannerSpec, fs: number, dpr: number): Sprite {
   const nameW = smallCaps(m, b.name, 0, 0, disp, fs, fs * 0.06, false);
   const popS = b.pop === null ? 0 : Math.round(h * 0.69);
   const glyphW = b.glyph ? fs * 0.95 + 4 : 0;
+  const wallLabel = b.wallTier > 0 ? WALL_TIER_LABEL[b.wallTier] ?? '' : null;
+  const wallFont = disp(Math.round(fs * 0.8));
+  m.font = wallFont;
+  const wallLabelW = wallLabel ? m.measureText(wallLabel).width + 1 : 0;
+  const wallW = wallLabel !== null ? fs * 1.05 + 4 + wallLabelW : 0;
   // An original capital ends in a star seal in place of the right swallowtail: a disc about 1.4 banners tall, so the star
   // reads at a glance. The banner is widened by the seal's radius so the name never runs under it.
   const R = b.capital ? capitalSealRadius(fs) : 0;
   const pad = b.capital ? Math.max(0, Math.ceil(R - (h + 1) / 2)) + 1 : 0;
-  const inner = 4 + (popS ? 11 + popS + 8 : 0) + glyphW + nameW + 8 + R;
+  const inner = 4 + (popS ? 11 + popS + 8 : 0) + glyphW + nameW + wallW + 8 + R;
   const W = Math.ceil(inner);
   const totalW = cap + W + (b.capital ? R + 2 : cap);
   const [c, g] = canvas(totalW, h + 2 + 2 * pad, dpr);
@@ -975,6 +987,18 @@ function atlasBanner(b: BannerSpec, fs: number, dpr: number): Sprite {
   }
   g.fillStyle = I.ink;
   smallCaps(g, b.name, cx, base, disp, fs, fs * 0.06);
+  if (wallLabel !== null) {
+    // The wall level after the name, so an attacker sees how strong the Walls are before the city fires.
+    const ww = fs * 1.05, wx = cx + nameW + 4;
+    const ic = tintedIcon('building-walls', I.ink, ww * dpr);
+    if (ic) g.drawImage(ic, wx, 0.5 + (h - ww) / 2, ww, ww);
+    if (wallLabel) {
+      g.font = wallFont;
+      g.textBaseline = 'middle';
+      g.fillText(wallLabel, wx + ww + 1, 0.5 + h / 2 + 0.5);
+      g.textBaseline = 'alphabetic';
+    }
+  }
   if (b.capital) {
     // The seal: vellum disc, ink rule, a fine gilt ring and the founder's star (outlined once you have scored it).
     const sx = x0 + W, sy = 0.5 + h / 2;

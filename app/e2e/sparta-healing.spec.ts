@@ -8,7 +8,7 @@ import { promotionFixture } from '../src/test/promotionFixture';
 type GameWindow = Window & { legatum: typeof useGame; legatumMap: { toScreen(hex: Hex): { x: number; y: number } } };
 const setup = promotionFixture();
 setup.fixture.players[0].faction = 'Sparta';
-setup.fixture.units.find((unit) => unit.id === setup.trooper)!.hp = 40;
+setup.fixture.units.find((unit) => unit.id === setup.pikeman)!.hp = 40;
 
 async function select(page: Page, id: number) {
   await page.evaluate((id) => {
@@ -51,7 +51,7 @@ test.beforeEach(async ({ page }) => {
 for (const size of [{ width: 1000, height: 600 }, { width: 1440, height: 900 }]) {
   test(`Sparta Fortify heals at the normal rate and shows kill healing at ${size.width}x${size.height}`, async ({ page }, testInfo) => {
     await page.setViewportSize(size);
-    await select(page, setup.trooper);
+    await select(page, setup.pikeman);
     const heal = page.locator('.unit-panel button.act', { hasText: /^Fortify/ });
     await expect(heal).toBeVisible();
     await expect(heal).toBeEnabled();
@@ -69,7 +69,7 @@ for (const size of [{ width: 1000, height: 600 }, { width: 1440, height: 900 }])
 
     // Pressing F (the map hover is off the enemy now) queues Fortify, which heals at the normal rate.
     await page.mouse.move(5, size.height / 2);
-    await select(page, setup.trooper);
+    await select(page, setup.pikeman);
     await page.keyboard.press('f');
     await expect.poll(() => page.evaluate(() => {
       const s = (window as unknown as GameWindow).legatum.getState();

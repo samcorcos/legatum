@@ -38,13 +38,18 @@ it('draws no canvas line art for a Walls site', () => {
   }
 });
 
-it('has the three painted Walls stages for every era with a finished wall overlay', () => {
+it('has the painted Walls footings for every era with a finished wall overlay, and nothing later', () => {
   const dir = (d: string) => new URL(`../assets/${d}/`, import.meta.url);
   const eras = readdirSync(dir('cities')).flatMap((f) => /^([a-z]+)-walls\.png$/.exec(f)?.[1] ?? []);
   expect(eras.length).toBeGreaterThan(0);
   const stages = new Set(readdirSync(dir('construction')));
-  for (const era of eras) for (const n of [1, 2, 3]) expect(stages.has(`${era}-walls-stage${n}.png`), `${era} stage ${n}`).toBe(true);
+  for (const era of eras) {
+    expect(stages.has(`${era}-walls-stage1.png`), `${era} stage 1`).toBe(true);
+    // Later stages looked finished on the map (Sam, 2026-11-22): the footings stand for the whole build.
+    for (const n of [2, 3]) expect(stages.has(`${era}-walls-stage${n}.png`), `${era} stage ${n}`).toBe(false);
+  }
 });
+
 
 it('uses the Renaissance star fort for Swiss Walls at every construction stage', () => {
   for (const era of [0, 1, 2, 3, 4, 5, 6]) {

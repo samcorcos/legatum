@@ -7,11 +7,11 @@ const dir = new URL('./assets/construction/', import.meta.url).pathname;
 const sources = [
   ...['building-greatlibrary', 'building-grandbazaar', 'building-royalarsenal', 'building-pyramids', 'building-hagiasophia', 'building-eiffeltower', 'building-iterfusionreactor', 'building-yamrelaystation'].map(stem => ({ stem, base: 1254, sizes: [null, 256, 128] })),
   ...['ancient', 'classical', 'medieval', 'renaissance', 'industrial', 'modern', 'future'].map(era => ({ stem: `${era}-hamlet`, base: 512, sizes: [null, 128, 64] })),
-  ...['ancient', 'classical', 'medieval', 'renaissance', 'industrial'].map(era => ({ stem: `${era}-walls`, base: 512, sizes: [null, 128, 64] })),
+  ...['ancient', 'classical', 'medieval', 'renaissance', 'industrial'].map(era => ({ stem: `${era}-walls`, base: 512, sizes: [null, 128, 64], stages: [1] })),
 ];
 
 describe('aligned construction paintings', () => {
-  for (const { stem, base, sizes } of sources) for (const stage of [1, 2, 3]) for (const size of sizes) {
+  for (const { stem, base, sizes, stages = [1, 2, 3] } of sources as { stem: string; base: number; sizes: (number | null)[]; stages?: number[] }[]) for (const stage of stages) for (const size of sizes) {
     const name = `${stem}-stage${stage}${size ? `-${size}` : ''}`;
     it(`${name}: source dimensions and transparent corners`, () => {
       const file = `${dir}${name}.png`;

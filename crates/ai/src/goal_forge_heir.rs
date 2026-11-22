@@ -367,7 +367,7 @@ impl Planner<'_> {
     }
 
     /// Denial value of making war on `team`: it scores a held faction goal (the Heir or the
-    /// Courier Hall) that capture would take. Public: `vp_sources` carries `FactionGoal { of }`
+    /// Yam Relay Station) that capture would take. Public: `vp_sources` carries `FactionGoal { of }`
     /// for the holder.
     pub(crate) fn held_goal_denial(&self, against: legatum_core::TeamId) -> i32 {
         let v = self.view();

@@ -13,6 +13,7 @@ the AI, the app, the build and CI, the code and the docs every session loads.
 - The ledger: `$LEGATUM_PERF_LEDGER` (default `~/LegatumRuns/perf/ledger.jsonl`). Read the last ~14 rows.
 - `infra/games/README.md` and `tools/games/README.md`: how players' game records are stored and read.
 - `docs/status/tech-debt.md` (you own it; create it if missing).
+- `docs/status/perf-surface.md` (you own it): the map of everything that costs a player time, and what watches each.
 
 ## Question every requirement first (CLAUDE.md pillar 1)
 Before speeding anything up, ask whether it should exist. Order: question, delete, simplify, then
@@ -89,7 +90,9 @@ should be looking out for proactively?" Yes: this class is the first thing to hu
 - **Where to look next** (known suspects, cross off with a measurement): map draw at device pixel ratio 2 on a
   real screen (the headless leftover was hover redrawing the whole map, fixed 2026-11-22, plus software
   rendering, which says nothing about a GPU: judge it from players' `frame_times` at high `canvas_mp10`); new
-  terrain chunks while panning at DPR 2 (four times the chunks per screen); the engine save going through a JSON value tree; the save text being escaped again inside the autosave
+  terrain chunks while panning or zooming at DPR 2 (four times the chunks per screen; the per-turn field rebuild
+  and part of the coast pass went 2026-11-22, a wheel zoom still renders every level it passes through); End Turn
+  as one main-thread task (engine step, views, autosave); the top bar measuring its width after every render; the engine save going through a JSON value tree; the save text being escaped again inside the autosave
   envelope; the 1.2 MB view parsed per seat per turn; report, notice and history lists that only grow;
   anything in `app/src` that maps over `view.units`, `view.cities` or `view.tiles` inside a render or a
   pointer handler; AI planning per unit pair.
@@ -97,6 +100,29 @@ should be looking out for proactively?" Yes: this class is the first thing to hu
   `tools/games/analyse_games.py`): read frame p95, slow frames, input lag and map-draw time against the units,
   cities and canvas megapixels of each game's worst turns (`worst_turns` in `analyse_games.py telemetry`). Older
   games have only `turn_times`. A slope is a finding.
+
+## Surface sweep: look where nobody is looking (user, 2026-11-22)
+Sam: "have some kind of general reviewer that looks for more surface area that needs to be optimized ... there is
+surface area beyond what we have defined now." Every lag found so far sat outside every benchmark, so part of
+the job is to widen what is watched, not only to speed up what already is.
+- **The map:** `docs/status/perf-surface.md` lists every surface (opening the game, each frame, each turn, memory
+  and storage, network, phones, and what runs outside the browser), what triggers it, what it grows with, and the
+  number that watches it. A row with no number says **unwatched**.
+- **Weekly, before choosing the improvement:** take the two or three unwatched rows most likely to hurt a player
+  (by how often the trigger fires and how fast the cost grows), and measure each once with whatever is cheapest: a
+  CPU profile of that action, a count, a byte total, a heap sample. Then do one of three things with each row:
+  record the number and name its watcher (a ledger metric, a telemetry field, a probe script); open a fix or add it
+  to the weekly candidates; or write "measured, negligible" with the number. Never leave a row unwatched because it
+  is probably fine.
+- **Keep the map true:** re-run the survey each sweep and add a row for anything new. In `app/src`, outside tests:
+  `addEventListener(`, `requestAnimationFrame`, `setInterval(`, `localStorage` and `indexedDB`, `fetch(` and
+  `WebSocket(`, `measureTurn(`. In `infra/`: every Worker route. A new loop, listener, timer, store or request in
+  the week's merged PRs is a new surface until a row says what watches it.
+- **Ask the questions a benchmark doesn't:** what does a first visit download, and how long to turn 1? What does
+  the page do when the player does nothing? What does a phone do? What does the tab hold in memory at turn 250?
+  What does one game cost the Workers? What does a player on a slow connection wait for?
+- **Log it:** one line per sweep in the page's sweep log. If a sweep finds nothing to fix, the rows it closed are
+  still the result.
 
 ## Weekly: improve (one or two small PRs)
 Pick the single biggest win from this list, by expected gain over effort:
@@ -130,7 +156,7 @@ Rules for your PRs:
 ## Record
 - Every run appends one ledger row (the script does it). Weekly, update `docs/status/tech-debt.md`
   (top 10, ranked) and `docs/sim-results/perf/README.md` when a baseline really moved.
-- Something non-obvious learned goes in the current month's `docs/learnings/<YYYY-MM>.md`; a check that proved useful or useless
+- Something non-obvious learned goes in its own file, `docs/learnings/<YYYY-MM>/<DD>-<slug>.md`; a check that proved useful or useless
   goes in "Learned" below.
 
 ## Report (brief)
@@ -151,6 +177,10 @@ CI about 15 minutes on 4 cores (after PR #14).
   chunk renders) and compare runs on the same DPR; never call a retina screen slow or smooth from it.
   Measured on the Mac's GPU the same day (lead's ask; headless with `--use-angle=metal --ignore-gpu-blocklist`),
   the dense turn-131 hover sweep at DPR 2 ran at 60 fps with no slow frames, before and after the hover fix.
+- 2026-11-22: a player's "a little jumpy at turn 131" showed in `frame_times` as long tasks per turn rising with
+  cities while map draw time stayed flat. Plot long tasks first, not frame p95. The cause was terrain cache work
+  (a whole-map field rebuild each turn, chunk rendering on zoom), found only by replaying the turn with a CPU
+  profile on a real GPU.
 - 2026-11-22 (user): this agent always runs on Fable.
 - 2026-11-21: performance used to be sections of the ops supervisor and lapsed after late October
   (last sim baseline 10-31, AI turn budget 10-27, app size 10-23) because the run grew into fleet

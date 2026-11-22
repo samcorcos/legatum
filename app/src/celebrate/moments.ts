@@ -1,9 +1,10 @@
 import type { Event, Faction, Hex, PlayerId, PlayerView, Resource, RuinReward, UnitKind } from '../types';
-import { BUILDING_NAME, BUILDING_STATS, factionGoalVp, TECH_NAME, isGreatWork, itemName } from '../data';
+import { ageName, BUILDING_NAME, BUILDING_STATS, factionGoalVp, TECH_NAME, isGreatWork, itemName } from '../data';
 import { TECH_QUOTE } from '../techQuotes';
 import { claimedTile, growthUnlocks } from '../milestones';
 import { yieldsText } from '../cityProgress';
 import { empireOfPlayer, placeName } from '../empires';
+import { isBarbarian } from '../barbarians';
 import { blockedQueueHead, wonderLostLine } from '../wonderRace';
 import { distance } from '../hex';
 import { unlockCardFor, type UnlockCard } from './unlockCard';
@@ -249,7 +250,7 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
       }
       case 'AgeBegan':
         // Every player tallies up when a World Age begins (user, 2026-11-22): after the opener's own era-up, before the rest of the story.
-        push(i, viewer, { tier: 'major', at: null, title: 'Score check', effect: `The ${eraName(e.era - 1)} Age begins`, kicker: 'A new Age',
+        push(i, viewer, { tier: 'major', at: null, title: 'Score check', effect: `The ${ageName(eraName(e.era - 1))} begins`, kicker: 'A new Age',
           lore: '', details: [], deltas: [], scoreCheck: scoreCheckFor(after, e.era, e.first) });
         break;
       case 'ProductionCompleted':
@@ -275,9 +276,9 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
         const era = after.eras?.find((x) => x.era === e.era);
         const card = era?.objectives.find((o) => o.slot === e.slot)?.objective;
         if (era) {
-          push(i, e.player, { tier: 'major', at: capital(e.player), kicker: 'Age card scored', title: `The ${era.name} Age`,
+          push(i, e.player, { tier: 'major', at: capital(e.player), kicker: 'Age card scored', title: `The ${ageName(era.name)}`,
             effect: '+1 VP, kept for good', lore: 'A claim made lasting in the chronicle.', deltas: [{ counter: 'vp', amount: 1 }], emblem: 'milestone',
-            details: [card ? `Scored with ${cardName(e.objective)}` : e.objective, after.eras.length === 1 ? `${era.name} Age scored` : `${after.eras.filter((x) => x.scored_by.some((s) => s.player === e.player)).length} of ${after.eras.length} Ages scored`] });
+            details: [card ? `Scored with ${cardName(e.objective)}` : e.objective, after.eras.length === 1 ? `${ageName(era.name)} scored` : `${after.eras.filter((x) => x.scored_by.some((s) => s.player === e.player)).length} of ${after.eras.length} Ages scored`] });
           break;
         }
         push(i, e.player, { tier: 'major', at: capital(e.player), kicker: 'Age card scored', title: `Age ${e.era}`,
@@ -388,11 +389,11 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
       case 'CityCaptured': {
         // The held capital point has its own Tier A card for every viewer.
         if (events.some((x) => x.type === 'CapitalTaken' && x.capital === e.city) && team.has(e.to)) break;
-        // The Courier Hall's city is told by the Hall's own moment (the road and the points went with it).
+        // The Yam Relay Station's city is told by the Station's own moment (the road and the points went with it).
         if (after.courier_halls?.some((h) => h.city === e.city)) break;
         // A capture is a major moment for the taker; a loss is a sober card of the same weight.
         const city = after.cities.find((c) => c.id === e.city) ?? cities.get(e.city);
-        const nameOf = (id: number) => after.players.find((p) => p.id === id)?.name ?? `Empire ${id}`;
+        const nameOf = (id: number) => isBarbarian(id) ? 'Barbarians' : empireOfPlayer(after, id);
         // A city that holds a world wonder moves its points with it: one card names the wonder and the VP that moved.
         const taken = events.flatMap((x) => x.type === 'GreatWorkCompleted' && x.again && x.player === e.to ? [x] : []);
         const lost = events.flatMap((x) => x.type === 'GreatWorkLost' && x.player === e.from ? [x] : []);
@@ -463,7 +464,7 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
       }
       case 'CityRazed': {
         if (events.some((x) => x.type === 'CapitalTaken' && x.capital === e.city) && team.has(e.by)) break;
-        // The Hall's own loss card names its sacked city. Do not add a second card for that event.
+        // The Station's own loss card names its sacked city. Do not add a second card for that event.
         const hallLoss = events.some((x) => x.type === 'FactionGoalLost' && x.faction === 'Mongols' && x.player === e.from);
         if (after.courier_halls?.some((h) => h.city === e.city) || hallLoss) break;
         const nameOf = (id: number) => empireOfPlayer(after, id);

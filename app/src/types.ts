@@ -506,6 +506,8 @@ export interface CityView {
   great_works: BuildingKind[];
   /** Public chosen wonder tile and current construction stage, including through fog. */
   construction?: { building: BuildingKind; tile: Hex; stage: number; progress: number } | null;
+  /** The city is building Walls: public, including through fog, like a wonder site. */
+  walls_building?: boolean;
   visible: boolean;
   detail: CityDetail | null;
 }
@@ -870,7 +872,7 @@ interface RetireView {
   target: number;
   /** The promotion level a veteran needs. */
   level: number;
-  /** Own cities with a War Shrine: where veterans retire. */
+  /** Own cities with an Agoge: where veterans retire. */
   shrines: CityId[];
   /** Every unit of the required level, in id order. */
   veterans: RetireVeteranView[];
@@ -947,7 +949,7 @@ export interface PlayerView {
   faction_goal?: FactionGoalView | null;
   /** The viewer's one-time actions and pending free technologies. */
   actions?: ActionsView;
-  /** Every standing Courier Hall (public): whose it is, who holds it now (the owner of its city) and where. Its holder's land is open to every empire at Peace. */
+  /** Every standing Yam Relay Station (public): whose it is, who holds it now (the owner of its city) and where. Its holder's land is open to every empire at Peace. */
   courier_halls?: CourierHallView[];
   imperial_diwans?: ImperialDiwanView[];
   /** Your team's aircraft, each in one city's hangar (never on the map). */
@@ -1070,7 +1072,7 @@ export type GameAction =
   | { action: 'Broadcast' }
   /** Spend a broadcast's free technologies (1 to the pending count, prerequisites known or listed first). */
   | { action: 'ChooseFreeTechs'; techs: TechId[] }
-  /** Sparta, Honour the Fallen: retire a veteran standing in an own War Shrine city. */
+  /** Sparta, Honour the Fallen: retire a veteran standing in an own Agoge city. */
   | { action: 'RetireVeteran'; unit: UnitId }
   /** Celts, Call the warbands: raise a barbarian camp in the territory of every Celts city. */
   | { action: 'CallTheWild' };

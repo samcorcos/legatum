@@ -180,8 +180,8 @@ impl Family {
 pub enum Objective {
     /// Veterans: your units earn `n` promotions (levels gained through XP) after the reveal.
     Veterans { n: u16 },
-    /// Humble the mighty: capture a city from an empire ahead of you on VP. A capital or wonder
-    /// city never counts.
+    /// Humble the mighty: capture a city from an empire ahead of you on VP; if you lead, from
+    /// the rival with the most VP (`humbles`). A capital or wonder city never counts.
     HumbleTheMighty,
     /// Breach: capture a walled city. A capital or wonder city never counts.
     Breach,
@@ -250,7 +250,7 @@ impl Objective {
                 "Veterans: earn {n} promotions in battle (a promotion is a level a unit gains from combat experience after this Age began)"
             ),
             Objective::HumbleTheMighty => {
-                "Humble the mighty: capture a city from an empire ahead of you on VP".into()
+                "Humble the mighty: capture a city from an empire ahead of you on VP or, if you lead, from the rival with the most VP".into()
             }
             Objective::Breach => "Breach: capture a walled city".into(),
             Objective::Cities { .. } => format!("Dominion: gain {n} {cities}"),
@@ -452,9 +452,33 @@ impl CaptureVpSnapshot {
         }
     }
 
-    fn ahead(&self, victim: TeamId, taker: TeamId) -> bool {
-        self.vp.get(&victim).copied().unwrap_or(0) > self.vp.get(&taker).copied().unwrap_or(0)
+    /// Whether a capture by `taker`'s team from `victim`'s team counts for Humble the mighty,
+    /// on the turn-start standings (`humbles`).
+    fn humbles(&self, victim: TeamId, taker: TeamId) -> bool {
+        humbles(&self.vp, victim, taker)
     }
+}
+
+/// The Humble the mighty test on each living team's VP (rules 53, owner 2026-11-22: "Leader's
+/// card counts top rival"). A capture from `victim`'s team counts when that team is strictly
+/// ahead of `taker`'s team, or when no rival team is ahead of `taker`'s team and `victim`'s team
+/// has the highest VP among its rivals (every team tied for that highest counts). So the leader,
+/// or teams tied for the lead, can still score the card. The AI values the card with this too.
+pub fn humbles(vp: &BTreeMap<TeamId, u32>, victim: TeamId, taker: TeamId) -> bool {
+    if victim == taker {
+        return false;
+    }
+    let of = |t: TeamId| vp.get(&t).copied().unwrap_or(0);
+    let (theirs, mine) = (of(victim), of(taker));
+    if theirs > mine {
+        return true;
+    }
+    let top_rival = vp
+        .iter()
+        .filter(|(t, _)| **t != taker)
+        .map(|(_, v)| *v)
+        .max();
+    vp.contains_key(&victim) && top_rival.is_some_and(|top| top <= mine && theirs == top)
 }
 
 /// A capital or a wonder city: capturing it already pays VP, so a World Age Fight card never
@@ -529,9 +553,9 @@ fn record_fights(state: &mut GameState, events: &[Event], vp: &CaptureVpSnapshot
         if taker.is_barbarian() || victim.is_barbarian() || taker == victim {
             continue;
         }
-        let ahead = vp.ahead(state.team_of(victim), state.team_of(taker));
+        let humbled = vp.humbles(state.team_of(victim), state.team_of(taker));
         let f = &mut state.player_mut(taker).fight;
-        if ahead && !t.prize {
+        if humbled && !t.prize {
             f.humbled = f.humbled.saturating_add(1);
         }
         if t.walled && !t.prize {

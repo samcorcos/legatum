@@ -1,1 +1,0 @@
-Lanczos 64 px derivative of industrial-walls-stage2.png. See industrial-walls-stage2.prompt.txt for the image edit prompt.

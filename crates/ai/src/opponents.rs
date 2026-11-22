@@ -17,10 +17,10 @@ pub(crate) const NEIGHBOR_RADIUS: i32 = 10;
 /// A faction built to rush, by its public unit rules: Spearmen with more moves, more strength
 /// per Production, or infantry that ignore wounds.
 pub fn rush_capable(faction: Faction) -> bool {
-    let soldier = data::unit_stats_for(faction, UnitKind::Spearman);
+    let spearman = data::unit_stats_for(faction, UnitKind::Spearman);
     let baseline = data::unit_stats(UnitKind::Spearman);
-    soldier.moves > baseline.moves
-        || soldier.strength * baseline.cost > baseline.strength * soldier.cost
+    spearman.moves > baseline.moves
+        || spearman.strength * baseline.cost > baseline.strength * spearman.cost
         || data::ignores_wounds(faction, UnitKind::Spearman)
 }
 

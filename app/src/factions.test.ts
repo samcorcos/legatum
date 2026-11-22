@@ -11,9 +11,9 @@ describe('faction content and setup', () => {
     expect(foundry).not.toContain('Food');
     expect(foundry).toContain('Upgrades a Workshop in a city of 4 or more');
     expect(foundry).toContain('Needs Iron');
-    const listeningHouse = itemDescription(FACTION_PIECES.Athens.item, 'Athens');
-    expect(listeningHouse).toContain('70 Production');
-    expect(listeningHouse).toContain('+6 Science');
+    const lyceum = itemDescription(FACTION_PIECES.Athens.item, 'Athens');
+    expect(lyceum).toContain('70 Production');
+    expect(lyceum).toContain('+6 Science');
     const revenueOffice = itemDescription(FACTION_PIECES.India.item, 'India');
     expect(revenueOffice).toContain('60 Production');
     expect(revenueOffice).toContain('+3 Gold');
@@ -145,7 +145,7 @@ describe('faction-accurate items', () => {
     expect(itemDescription(FACTION_PIECES.Byzantium.item, 'Byzantium')).toContain('Tagmatic Soldier replaces Pikeman');
   });
 
-  it('gives the Byzantium a Library like everyone, and its Relay Uplink needs one', async () => {
+  it('gives the Byzantium a Library like everyone, and its Great Library needs one', async () => {
     const { availableToFaction, greatWorkRequirement } = await import('./data');
     const library = { kind: 'Building', building: 'Library' } as const;
     expect(availableToFaction('Byzantium', library)).toBe(true);

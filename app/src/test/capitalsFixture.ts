@@ -46,7 +46,7 @@ export function capitalsFixture() {
   retake(e, 0); e.isCapital = false; g.isCapital = true;
   retake(t, 4); t.isCapital = false; u.isCapital = true;
   for (const city of [a, b, c, d, e, g, h, t, u]) city.population = 3;
-  // Garrisons: your Soldier in your capital, Byzantium's in its own.
+  // Garrisons: your Spearman in your capital, Byzantium's in its own.
   spawnUnit(f, 0, 'Spearman', a.pos, false);
   spawnUnit(f, 1, 'Spearman', b.pos, false);
   // A scout beside each rival city keeps them in sight.

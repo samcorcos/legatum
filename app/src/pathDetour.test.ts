@@ -34,7 +34,7 @@ function tessitura(): PlayerView {
 
 describe('Tessitura attack at turn 38', () => {
   // The order sequence that reproduced the archived five-step path exactly: the city's
-  // Oathbearer (id 26) was first sent at the same enemy through the shared hex. Core declares
+  // Spartan Hoplite (id 26) was first sent at the same enemy through the shared hex. Core declares
   // in unit-id order, so unit 3 takes that hex first; 26's route must not push 3 around the city.
   it('takes the shared hex while a higher-id friend is ordered through it', () => {
     const view = tessitura();

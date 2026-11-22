@@ -60,18 +60,18 @@ fn disband_is_refused_so_it_cannot_dodge_the_lock() {
 
 #[test]
 fn fortify_heal_and_shoot_are_allowed() {
-    let (mut s, _, soldier) = occupied();
+    let (mut s, _, spearman) = occupied();
     let archer = unit(&mut s, 0, UnitKind::Archer, hex(AT.0, AT.1));
-    s.units.get_mut(&soldier).unwrap().hp = 60;
+    s.units.get_mut(&spearman).unwrap().hp = 60;
     let enemy = unit(&mut s, 1, UnitKind::Spearman, hex(AT.0 + 2, AT.1));
     let ok = |os: Vec<Order>| validate_orders(&s, PlayerId(0), &os).is_empty();
-    assert!(ok(vec![Order::SkipUnit { unit: soldier }]));
+    assert!(ok(vec![Order::SkipUnit { unit: spearman }]));
     assert!(ok(vec![Order::SleepUnit {
-        unit: soldier,
+        unit: spearman,
         until_healed: true
     }]));
     assert!(ok(vec![Order::MoveUnit {
-        unit: soldier,
+        unit: spearman,
         to: hex(AT.0, AT.1)
     }]));
     assert!(ok(vec![Order::RangedAttack {
@@ -312,19 +312,19 @@ fn a_locked_garrison_is_never_a_relief_for_another_city() {
 
 #[test]
 fn a_locked_unit_is_held_by_the_turn_and_never_asks_for_orders() {
-    let (mut s, _, soldier) = occupied();
+    let (mut s, _, spearman) = occupied();
     // The civ it was taken from stays alive, or the elimination releases the lock.
     s.player_mut(PlayerId(0)).gold = 500;
     city(&mut s, 1, hex(AT.0 + 8, AT.1 + 8), 3);
     let archer = unit(&mut s, 0, UnitKind::CompositeArcher, hex(AT.0, AT.1));
     let far = unit(&mut s, 0, UnitKind::Spearman, hex(AT.0 + 3, AT.1));
-    for id in [soldier, archer] {
+    for id in [spearman, archer] {
         let u = s.units.get_mut(&id).unwrap();
         u.needs_orders = true;
         u.goto = Some(hex(AT.0 + 2, AT.1));
     }
     let (next, _) = resolve_turn(&s, &BTreeMap::new());
-    let held = &next.units[&soldier];
+    let held = &next.units[&spearman];
     assert_eq!(held.standing_order, Some(StandingOrder::Sleep));
     assert_eq!((held.needs_orders, held.goto), (false, None));
     // A ranged unit takes auto-fire so the lock never costs a shot.

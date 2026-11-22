@@ -82,7 +82,7 @@ export function fromText(owners: readonly number[], name: (id: number) => string
 
 const plural = (name: string, n: number) => (n === 1 ? name : pluralUnit(name));
 
-/** "3 Soldiers", "2 Soldiers and a Ranger"; unknown kinds count as units. */
+/** "3 Spearmen", "2 Spearmen and an Archer"; unknown kinds count as units. */
 export function forceText(kinds: readonly ({ kind: UnitKind | null; faction?: Faction })[]): string {
   const counts = new Map<string, number>();
   for (const k of kinds) {
@@ -125,7 +125,7 @@ export interface CityAlarm {
   /** Expected damage per turn at average rolls. */
   perTurn: number;
   forecast: Forecast;
-  /** What the attackers are, in words: "3 Soldiers". */
+  /** What the attackers are, in words: "3 Spearmen". */
   force: string;
   /** Whose they are: "Byzantium · Rival". */
   from: string;

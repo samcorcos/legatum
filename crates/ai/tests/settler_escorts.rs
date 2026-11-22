@@ -205,7 +205,7 @@ fn arrived_escort_leaves_when_the_settler_disappears_or_changes_destination() {
 }
 
 #[test]
-fn another_friendly_soldier_at_the_site_becomes_the_only_escort() {
+fn another_friendly_spearman_at_the_site_becomes_the_only_escort() {
     let Scenario {
         mut state,
         settler,
@@ -269,11 +269,11 @@ fn another_friendly_scout_blocks_recruitment() {
     spawn_unit(&mut state, ME, UnitKind::Scout, SITE);
     update_explored(&mut state);
     let generated = orders(&state);
-    for soldier in [escort, spare] {
+    for spearman in [escort, spare] {
         assert_ne!(
-            unit_order(&generated, soldier),
+            unit_order(&generated, spearman),
             &Order::MoveUnit {
-                unit: soldier,
+                unit: spearman,
                 to: SITE
             }
         );
@@ -301,11 +301,11 @@ fn a_settler_founding_without_an_escort_does_not_recruit_one() {
         unit_order(&generated, settler),
         &Order::FoundCity { unit: settler }
     );
-    for soldier in [escort, spare] {
+    for spearman in [escort, spare] {
         assert_ne!(
-            unit_order(&generated, soldier),
+            unit_order(&generated, spearman),
             &Order::MoveUnit {
-                unit: soldier,
+                unit: spearman,
                 to: SITE
             }
         );

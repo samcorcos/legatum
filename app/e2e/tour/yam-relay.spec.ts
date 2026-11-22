@@ -14,7 +14,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
 
 
 
-  // Faction goals 5: the Mongols' Courier Hall (Portolan rose landmark, build card, held goal, capture).
+  // Faction goals 5: the Mongols' Yam Relay Station (Portolan rose landmark, build card, held goal, capture).
   test('Yam Relay Station: held in your own cities (a walled one too), at normal and far zoom', async ({ page }) => {
     test.setTimeout(150_000);
     const f = await openHall(page, 'own');
@@ -24,7 +24,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await shot(page, size, '95b-hall-own-map-close');
     await frameHall(page, f.hallPos, 0.55);
     await shot(page, size, '95c-hall-own-map-far');
-    // The Hall's own city lists the standing building and its chosen tile.
+    // The Station's own city lists the standing building and its chosen tile.
     await selectThing(page, 'city', f.b);
     const built = page.locator('.city-panel .cp-foot');
     await built.scrollIntoViewIfNeeded();

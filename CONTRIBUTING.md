@@ -123,7 +123,7 @@ lacking them. They may lead to follow-up commits or requests.
    human: a level may change how it decides, never its yields, costs, combat strength or sight.
 6. **Delete, don't comment out.** Remove dead code and old experiments; git has the history.
 7. **Rules docs follow code.** If you change a rule or mechanic, update the matching file under `.claude/skills/legatum-rules/references/` (`index.md` lists them) in the same change.
-8. **Branches cut before the 2026-11-22 split.** If your branch conflicts on `docs/learnings.md` or `.claude/skills/legatum-rules/references/game-rules.md`, take master's version of that file (`git checkout origin/master -- <file>`), then either re-add your entry by hand (a learning goes at the top of the current month's `docs/learnings/<YYYY-MM>.md`; a rule goes in the matching per-system file) or carry your learnings over with `python3 tools/docs/split_learnings.py <your branch> --base $(git merge-base origin/master <your branch>) --write`. The hygiene gate fails while `docs/learnings.md` is over 30 KB or the `game-rules.md` stub over 5 KB.
+8. **Branches cut before the 2026-11-22 split.** If your branch conflicts on `docs/learnings.md` or `.claude/skills/legatum-rules/references/game-rules.md`, take master's version of that file (`git checkout origin/master -- <file>`), then either re-add your entry by hand (a learning goes in its own new file, `docs/learnings/<YYYY-MM>/<DD>-<slug>.md`; a rule goes in the matching per-system file) or carry your learnings over with `python3 tools/docs/split_learnings.py <your branch> --base $(git merge-base origin/master <your branch>) --write`. The hygiene gate fails while `docs/learnings.md` is over 30 KB or the `game-rules.md` stub over 5 KB.
 
 ## Licence of contributions
 

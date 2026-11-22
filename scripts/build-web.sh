@@ -6,6 +6,7 @@
 #   2. the third-party licence notices (app/public/THIRD_PARTY_LICENSES.txt)
 #   3. the web UI, with the relay's address baked in (app/src/platform/online.ts)
 #   4. the host files from app/hosted/ (_headers, whose connect-src names the relay, and 404.html)
+#   5. the teaser video the README links to (docs/media/legatum-teaser.mp4 -> media/legatum-teaser.mp4)
 # LEGATUM_GAMES_URL (optional) is the game-upload Worker (infra/games): every game played on the build is sent
 # there (app/src/platform/gameUpload.ts), and _headers lets the page connect to it. Unset, nothing is uploaded.
 # Usage: scripts/build-web.sh [--skip-wasm]     --skip-wasm reuses an engine already in app/src/wasm-pkg
@@ -77,6 +78,10 @@ protocol="$(sed -n 's/^export const ONLINE_PROTOCOL = \([0-9]*\);.*/\1/p' src/pl
 node ../tools/release/keep-builds.mjs dist --id "$LEGATUM_BUILD_ID" --rules "$rules" --protocol "$protocol" \
   --label "$LEGATUM_BUILD_LABEL" --commit "$commit" ${LEGATUM_CARRY_ASSETS_FROM:+--from "$LEGATUM_CARRY_ASSETS_FROM"} \
   ${legacy_keep[@]+"${legacy_keep[@]}"}
+# The README's teaser poster links to the video on the site: GitHub's own page for an mp4 this size shows
+# "can't show files this big" instead of playing it. Copied after keep-builds so it is not repeated under v/<id>/.
+mkdir -p dist/media
+cp ../docs/media/legatum-teaser.mp4 dist/media/legatum-teaser.mp4
 # Every file the build points to must be in it (a missing one is a broken image in the game).
 node ../tools/release/check-dist-refs.mjs dist
 # A hosted build must not ship source maps or a file over Cloudflare Pages' 25 MiB limit.

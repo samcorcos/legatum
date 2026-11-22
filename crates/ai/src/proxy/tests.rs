@@ -50,7 +50,7 @@ fn ranged_harasses_garrison_without_melee_suicide() {
 }
 
 #[test]
-fn one_melee_occupies_a_defeated_city_while_rangers_stop_firing() {
+fn one_melee_occupies_a_defeated_city_while_archers_stop_firing() {
     let city = off(8, 5);
     let mut view = ViewBuilder::new(20, 16)
         .city(1, ME, off(3, 5), 3)

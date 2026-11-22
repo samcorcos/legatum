@@ -41,21 +41,21 @@ async function shownReport(page: Page) {
   return report;
 }
 
-/** Order the Ranger to fire on the enemy Soldier, end the turn, and return the turn and the shot. */
+/** Order the Archer to fire on the enemy Spearman, end the turn, and return the turn and the shot. */
 async function fireAndEndTurn(page: Page) {
-  await page.evaluate(({ ranger, enemy }) => {
+  await page.evaluate(({ archer, enemy }) => {
     const s = (window as unknown as GameWindow).legatum.getState(), view = s.views![s.seat];
     const target = view.units.find((u) => u.id === enemy)!.pos;
     s.set({ techOpen: false });
-    s.editOrders((o) => [...o, { type: 'RangedAttack', unit: ranger, target }]);
-  }, { ranger: setup.ranger, enemy: setup.enemy });
+    s.editOrders((o) => [...o, { type: 'RangedAttack', unit: archer, target }]);
+  }, { archer: setup.archer, enemy: setup.enemy });
   await endPlanning(page);
   await expect(page.getByTestId('turn-number')).toHaveText('3');
-  return page.evaluate((ranger) => {
+  return page.evaluate((archer) => {
     const s = (window as unknown as GameWindow).legatum.getState();
-    const shot = s.report!.events[s.seat].find((e) => e.type === 'Battle' && e.attacker === ranger) as Extract<Event, { type: 'Battle' }>;
+    const shot = s.report!.events[s.seat].find((e) => e.type === 'Battle' && e.attacker === archer) as Extract<Event, { type: 'Battle' }>;
     return { turn: s.report!.turn, from: shot.attacker_at!, to: shot.at };
-  }, setup.ranger);
+  }, setup.archer);
 }
 
 test('end a turn with combat, close the report, reopen it from Last turn, step back, and locate the attacker', async ({ page }) => {
@@ -63,11 +63,11 @@ test('end a turn with combat, close the report, reopen it from Last turn, step b
   // Before any turn resolves there is nothing to reopen: This Turn keeps its subtitle.
   await expect(page.locator('.seatbar .last-turn')).toHaveCount(0);
   const shot = await fireAndEndTurn(page);
-  const ranger = await page.evaluate((id) => {
+  const archer = await page.evaluate((id) => {
     const s = (window as unknown as GameWindow).legatum.getState();
     return s.views![s.seat].units.find((u) => u.id === id)?.pos ?? null;
-  }, setup.ranger);
-  expect(shot.from).toEqual(ranger);
+  }, setup.archer);
+  expect(shot.from).toEqual(archer);
 
   let report = await shownReport(page);
   const line = report.locator('.rline', { hasText: 'Your Archer bombarded' });

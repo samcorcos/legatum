@@ -100,30 +100,30 @@ it.each([
   }
 });
 
-it.each(['normal', 'ranged'] as const)('forecasts the Ranger attack that right-click submits in %s mode', (mode) => {
+it.each(['normal', 'ranged'] as const)('forecasts the Archer attack that right-click submits in %s mode', (mode) => {
   vi.useFakeTimers();
   const client = useGame.getState().client as FixtureClient;
   const state = client.debugState();
   for (const r of state.diplomacy?.relations ?? []) r.state = 'War';
-  const ranger = state.units.find((u) => u.owner === 0 && u.kind === 'Spearman')!;
+  const archer = state.units.find((u) => u.owner === 0 && u.kind === 'Spearman')!;
   const defender = state.units.find((u) => u.owner === 2 && u.kind === 'Spearman')!;
-  state.units = [ranger, defender];
+  state.units = [archer, defender];
   state.terrain.fill('Grassland');
-  Object.assign(ranger, { kind: 'Archer', hp: 20, pos: { q: 5, r: 5 } });
+  Object.assign(archer, { kind: 'Archer', hp: 20, pos: { q: 5, r: 5 } });
   defender.pos = { q: 6, r: 5 };
   const forecast = vi.spyOn(client, 'forecast');
-  act(() => useGame.setState({ views: [client.view(0)], mode, selection: { kind: 'unit', id: ranger.id } }));
+  act(() => useGame.setState({ views: [client.view(0)], mode, selection: { kind: 'unit', id: archer.id } }));
   const { x, y } = (window as unknown as { legatumMap: { toScreen(h: { q: number; r: number }): { x: number; y: number } } }).legatumMap.toScreen(defender.pos);
   act(() => map.dispatchEvent(new PointerEvent('pointermove', { clientX: x, clientY: y, bubbles: true })));
-  expect(forecast).toHaveBeenLastCalledWith(0, ranger.id, defender.pos, mode === 'ranged' ? 'Ranged' : 'Melee');
+  expect(forecast).toHaveBeenLastCalledWith(0, archer.id, defender.pos, mode === 'ranged' ? 'Ranged' : 'Melee');
   const shown = forecast.mock.results.at(-1)!.value;
   expect(shown.expected_damage_to_attacker).toBe(mode === 'ranged' ? 0 : 20);
   expect(shown.loss_chance).toBe(mode === 'ranged' ? 0 : 100);
   expect(document.querySelector('.forecast-kind')?.textContent).toBe(mode === 'ranged' ? 'Ranged strike' : 'Attack');
   act(() => map.dispatchEvent(new MouseEvent('contextmenu', { clientX: x, clientY: y, bubbles: true, cancelable: true })));
   expect(useGame.getState().orders[0]).toEqual([mode === 'ranged'
-    ? { type: 'RangedAttack', unit: ranger.id, target: defender.pos }
-    : { type: 'MoveUnit', unit: ranger.id, to: defender.pos }]);
+    ? { type: 'RangedAttack', unit: archer.id, target: defender.pos }
+    : { type: 'MoveUnit', unit: archer.id, to: defender.pos }]);
 });
 
 it('arrow panning leaves text entry alone, pans from plain buttons, and stops a held key when focus or an overlay changes', () => {
@@ -248,7 +248,7 @@ function settlerAtLegalSite() {
   return { view, settler: view.units.find((u) => u.owner === view.me && u.kind === 'Settler')! };
 }
 
-function selectSoldierByCity() {
+function selectSpearmanByCity() {
   const client = useGame.getState().client as FixtureClient;
   const state = client.debugState();
   state.terrain.fill('Grassland');
@@ -263,7 +263,7 @@ function selectSoldierByCity() {
 
 it.each(['unit', 'city'] as const)('phone taps select a %s without a tile card; holding or Inspect opens it without orders', (kind) => {
   vi.useFakeTimers(); capture();
-  const { unit, city } = selectSoldierByCity();
+  const { unit, city } = selectSpearmanByCity();
   act(() => {
     Object.assign(preference, { matches: true });
     preference.dispatchEvent(new Event('change'));
@@ -336,9 +336,9 @@ it('touch previews the path without orders, then tap-tap or Confirm uses the des
   expect(useGame.getState().orders[0]).toEqual([{ type: 'MoveUnitPath', unit: unit.id, to: other, path: confirmedPath }]);
 });
 
-it.each(['city', 'territory'] as const)('touch previews and confirms a Soldier move into empty owned %s', (destination) => {
+it.each(['city', 'territory'] as const)('touch previews and confirms a Spearman move into empty owned %s', (destination) => {
   vi.useFakeTimers(); capture();
-  const { unit, city } = selectSoldierByCity();
+  const { unit, city } = selectSpearmanByCity();
   const view = useGame.getState().views![0];
   const target = destination === 'city' ? city.pos : neighbors(city.pos).find((h) =>
     view.tiles[tileIndex(h, view.width, view.height)]?.owner === view.me && !view.units.some((u) => hexEq(u.pos, h)))!;
@@ -358,7 +358,7 @@ it.each(['city', 'territory'] as const)('touch previews and confirms a Soldier m
 
 it.each([false, true])('long-press on an empty owned city offers a garrison move without committing (preview already open: %s)', (previewOpen) => {
   vi.useFakeTimers(); capture();
-  const { unit, city } = selectSoldierByCity();
+  const { unit, city } = selectSpearmanByCity();
   if (previewOpen) tap(city.pos);
   touch('pointerdown', city.pos);
   act(() => vi.advanceTimersByTime(600));
@@ -376,7 +376,7 @@ it.each([false, true])('long-press on an empty owned city offers a garrison move
 
 it.each([false, true])('touch still selects another own unit instead of previewing a move (in city: %s)', (inCity) => {
   vi.useFakeTimers(); capture();
-  const { client, city } = selectSoldierByCity();
+  const { client, city } = selectSpearmanByCity();
   const other = client.debugState().units.find((u) => u.owner === 0 && u.kind === 'Scout')!;
   if (inCity) other.pos = city.pos;
   act(() => useGame.setState({ views: [client.view(0)] }));
@@ -388,7 +388,7 @@ it.each([false, true])('touch still selects another own unit instead of previewi
 
 it('touch still selects an empty owned city when no unit is selected', () => {
   vi.useFakeTimers(); capture();
-  const { city } = selectSoldierByCity();
+  const { city } = selectSpearmanByCity();
   act(() => useGame.getState().select(null));
   tap(city.pos);
   expect(useGame.getState().selection).toEqual({ kind: 'city', id: city.id });
@@ -398,7 +398,7 @@ it('touch still selects an empty owned city when no unit is selected', () => {
 
 it('desktop hover keeps the city selection affordance and right-click still orders a garrison move', () => {
   vi.useFakeTimers();
-  const { unit, city } = selectSoldierByCity();
+  const { unit, city } = selectSpearmanByCity();
   const { x, y } = (window as unknown as { legatumMap: { toScreen(h: typeof city.pos): { x: number; y: number } } }).legatumMap.toScreen(city.pos);
   act(() => map.dispatchEvent(new PointerEvent('pointermove', { clientX: x, clientY: y, pointerType: 'mouse', bubbles: true })));
   frame(performance.now());
@@ -425,18 +425,18 @@ it.each(['normal', 'ranged'] as const)('touch previews the same combat forecast 
   const client = useGame.getState().client as FixtureClient;
   const state = client.debugState();
   for (const r of state.diplomacy?.relations ?? []) r.state = 'War';
-  const ranger = state.units.find((u) => u.owner === 0 && u.kind === 'Spearman')!;
+  const archer = state.units.find((u) => u.owner === 0 && u.kind === 'Spearman')!;
   const defender = state.units.find((u) => u.owner === 2 && u.kind === 'Spearman')!;
-  state.units = [ranger, defender]; state.terrain.fill('Grassland');
-  Object.assign(ranger, { kind: 'Archer', pos: { q: 5, r: 5 } }); defender.pos = { q: 6, r: 5 };
+  state.units = [archer, defender]; state.terrain.fill('Grassland');
+  Object.assign(archer, { kind: 'Archer', pos: { q: 5, r: 5 } }); defender.pos = { q: 6, r: 5 };
   const forecast = vi.spyOn(client, 'forecast');
-  act(() => useGame.setState({ views: [client.view(0)], mode, selection: { kind: 'unit', id: ranger.id } }));
+  act(() => useGame.setState({ views: [client.view(0)], mode, selection: { kind: 'unit', id: archer.id } }));
   tap(defender.pos);
-  expect(forecast).toHaveBeenLastCalledWith(0, ranger.id, defender.pos, mode === 'ranged' ? 'Ranged' : 'Melee');
+  expect(forecast).toHaveBeenLastCalledWith(0, archer.id, defender.pos, mode === 'ranged' ? 'Ranged' : 'Melee');
   expect(document.querySelector('.forecast-kind')?.textContent).toBe(mode === 'ranged' ? 'Ranged strike' : 'Attack');
   expect(useGame.getState().orders[0]).toEqual([]);
   tap(defender.pos);
-  expect(useGame.getState().orders[0]).toEqual([mode === 'ranged' ? { type: 'RangedAttack', unit: ranger.id, target: defender.pos } : { type: 'MoveUnit', unit: ranger.id, to: defender.pos }]);
+  expect(useGame.getState().orders[0]).toEqual([mode === 'ranged' ? { type: 'RangedAttack', unit: archer.id, target: defender.pos } : { type: 'MoveUnit', unit: archer.id, to: defender.pos }]);
 });
 
 it('long-press opens actions without an order, including the native contextmenu and release', () => {
@@ -506,8 +506,8 @@ const chosenLens = () => document.querySelector('[role="radio"][aria-checked="tr
 it('auto-enables Settle temporarily, remembers explicit choices, and restores them after leaving a Settler', () => {
   const v = useGame.getState().views![0];
   const settler = v.units.find((u) => u.owner === v.me && u.kind === 'Settler')!;
-  const soldier = v.units.find((u) => u.owner === v.me && u.kind === 'Spearman')!;
-  act(() => useGame.setState({ selection: { kind: 'unit', id: soldier.id } }));
+  const spearman = v.units.find((u) => u.owner === v.me && u.kind === 'Spearman')!;
+  act(() => useGame.setState({ selection: { kind: 'unit', id: spearman.id } }));
   chooseLens('Movement');
   // An overlay the player turned on rides through every automatic switch.
   act(() => setOverlay('yields', true));
@@ -517,7 +517,7 @@ it('auto-enables Settle temporarily, remembers explicit choices, and restores th
   expect(vi.mocked(draw).mock.lastCall![1].lensTiles!.filter((t) => t.rank)).toHaveLength(3);
   expect(vi.mocked(draw).mock.lastCall![1].overlays).toMatchObject({ yields: true });
   expect(vi.mocked(draw).mock.lastCall![1].yieldTiles!.length).toBeGreaterThan(0);
-  act(() => useGame.setState({ selection: { kind: 'unit', id: soldier.id } }));
+  act(() => useGame.setState({ selection: { kind: 'unit', id: spearman.id } }));
   expect(chosenLens()).toBe('Movement');
   expect(document.querySelector('[role="checkbox"][data-overlay="yields"]')?.getAttribute('aria-checked')).toBe('true');
   act(() => useGame.setState({ selection: { kind: 'unit', id: settler.id } }));
@@ -541,10 +541,10 @@ it('lens arrow keys select and focus the next radio without panning or ending th
 
 it('A4 draws selection without even a queued route when hovering another own unit', () => {
   const v = useGame.getState().views![0];
-  const soldier = v.units.find((u) => u.owner === v.me && u.kind === 'Spearman')!;
+  const spearman = v.units.find((u) => u.owner === v.me && u.kind === 'Spearman')!;
   const settler = v.units.find((u) => u.owner === v.me && u.kind === 'Settler')!;
-  const order = { type: 'MoveUnit' as const, unit: soldier.id, to: emptyBeside(soldier, 2) };
-  act(() => useGame.setState({ selection: { kind: 'unit', id: soldier.id }, orders: [[order]] }));
+  const order = { type: 'MoveUnit' as const, unit: spearman.id, to: emptyBeside(spearman, 2) };
+  act(() => useGame.setState({ selection: { kind: 'unit', id: spearman.id }, orders: [[order]] }));
   const { x, y } = (window as unknown as { legatumMap: { toScreen(h: typeof settler.pos): { x: number; y: number } } }).legatumMap.toScreen(settler.pos);
   act(() => map.dispatchEvent(new PointerEvent('pointermove', { clientX: x, clientY: y, bubbles: true })));
   frame(performance.now());
@@ -566,22 +566,22 @@ it('keeps a mouse drag route when an escort targets a friendly Settler tile', ()
   const state = client.debugState();
   state.terrain.fill('Grassland');
   const settler = state.units.find((u) => u.owner === 0 && u.kind === 'Settler')!;
-  const soldier = state.units.find((u) => u.owner === 0 && u.kind === 'Spearman')!;
-  soldier.pos = neighbors(settler.pos).find((h) => tileIndex(h, state.width, state.height) >= 0)!;
-  act(() => useGame.setState({ views: [client.view(0)], selection: { kind: 'unit', id: soldier.id } }));
-  mouse('pointerdown', soldier.pos);
+  const spearman = state.units.find((u) => u.owner === 0 && u.kind === 'Spearman')!;
+  spearman.pos = neighbors(settler.pos).find((h) => tileIndex(h, state.width, state.height) >= 0)!;
+  act(() => useGame.setState({ views: [client.view(0)], selection: { kind: 'unit', id: spearman.id } }));
+  mouse('pointerdown', spearman.pos);
   mouse('pointermove', settler.pos);
   frame(performance.now());
   expect(vi.mocked(draw).mock.lastCall![1].path?.at(-1)?.hex).toEqual(settler.pos);
   mouse('pointerup', settler.pos);
-  expect(useGame.getState().orders[0]).toEqual([{ type: 'MoveUnit', unit: soldier.id, to: settler.pos }]);
+  expect(useGame.getState().orders[0]).toEqual([{ type: 'MoveUnit', unit: spearman.id, to: settler.pos }]);
 });
 
 it('keeps the settlement card route over friendly units and gives mouse-specific confirmation copy', () => {
   capture();
   const v = useGame.getState().views![0];
   const settler = v.units.find((u) => u.owner === v.me && u.kind === 'Settler')!;
-  const soldier = v.units.find((u) => u.owner === v.me && u.kind === 'Spearman')!;
+  const spearman = v.units.find((u) => u.owner === v.me && u.kind === 'Spearman')!;
   act(() => useGame.setState({ selection: { kind: 'unit', id: settler.id } }));
   const recommendations = [...document.querySelectorAll<HTMLButtonElement>('[data-settle-rank]')];
   for (const button of recommendations) {
@@ -595,7 +595,7 @@ it('keeps the settlement card route over friendly units and gives mouse-specific
   const path = vi.mocked(draw).mock.lastCall![1].path;
   expect(path?.length).toBeGreaterThan(0);
   expect(document.querySelector('.map-touch-card')?.textContent).toContain('right-click to move here');
-  mouse('pointermove', soldier.pos);
+  mouse('pointermove', spearman.pos);
   frame(performance.now());
   expect(vi.mocked(draw).mock.lastCall![1].path).toEqual(path);
 });
@@ -672,21 +672,21 @@ it('a ranged click on an enemy fires even when the Settle lens marks that tile a
   const state = client.debugState();
   state.terrain.fill('Grassland');
   const settler = state.units.find((u) => u.owner === 0 && u.kind === 'Settler')!;
-  const ranger = state.units.find((u) => u.owner === 0 && u.kind === 'Spearman')!;
+  const archer = state.units.find((u) => u.owner === 0 && u.kind === 'Spearman')!;
   const defender = state.units.find((u) => u.owner === 2 && u.kind === 'Spearman')!;
-  state.units = [settler, ranger, defender];
-  Object.assign(ranger, { kind: 'Archer', pos: { q: 12, r: 10 } }); defender.pos = { q: 13, r: 10 };
+  state.units = [settler, archer, defender];
+  Object.assign(archer, { kind: 'Archer', pos: { q: 12, r: 10 } }); defender.pos = { q: 13, r: 10 };
   settler.pos = { q: 10, r: 10 };
   for (const r of state.diplomacy?.relations ?? []) r.state = 'War';
   // The enemy stands on a tile the Settle lens scores as a site (as on neutral land it can).
   (client as unknown as { settlementSites: () => { pos: typeof defender.pos; score: number; rank: number }[] })
     .settlementSites = () => [{ pos: defender.pos, score: 30, rank: 1 }];
-  act(() => useGame.setState({ views: [client.view(0)], selection: { kind: 'unit', id: ranger.id } }));
+  act(() => useGame.setState({ views: [client.view(0)], selection: { kind: 'unit', id: archer.id } }));
   chooseLens('Settle');
   act(() => useGame.setState({ mode: 'ranged' }));
   mouse('pointerdown', defender.pos);
   mouse('pointerup', defender.pos);
-  expect(useGame.getState().orders[0]).toEqual([{ type: 'RangedAttack', unit: ranger.id, target: defender.pos }]);
+  expect(useGame.getState().orders[0]).toEqual([{ type: 'RangedAttack', unit: archer.id, target: defender.pos }]);
   expect(useGame.getState().errors[0]).toEqual([]);
 });
 
@@ -695,27 +695,27 @@ it('a ranged click on a unit of a team at Peace asks to declare War instead of q
   const client = useGame.getState().client as FixtureClient;
   const state = client.debugState();
   state.terrain.fill('Grassland');
-  const ranger = state.units.find((u) => u.owner === 0 && u.kind === 'Spearman')!;
+  const archer = state.units.find((u) => u.owner === 0 && u.kind === 'Spearman')!;
   const defender = state.units.find((u) => u.owner === 2 && u.kind === 'Spearman')!;
-  state.units = [ranger, defender];
-  Object.assign(ranger, { kind: 'Archer', pos: { q: 12, r: 10 } }); defender.pos = { q: 13, r: 10 };
-  act(() => useGame.setState({ views: [client.view(0)], selection: { kind: 'unit', id: ranger.id }, mode: 'ranged' }));
+  state.units = [archer, defender];
+  Object.assign(archer, { kind: 'Archer', pos: { q: 12, r: 10 } }); defender.pos = { q: 13, r: 10 };
+  act(() => useGame.setState({ views: [client.view(0)], selection: { kind: 'unit', id: archer.id }, mode: 'ranged' }));
   mouse('pointerdown', defender.pos);
   mouse('pointerup', defender.pos);
   expect(useGame.getState().orders[0]).toEqual([]);
-  expect(useGame.getState().warPrompt).toMatchObject({ unit: ranger.id, target: defender.pos, ranged: true });
+  expect(useGame.getState().warPrompt).toMatchObject({ unit: archer.id, target: defender.pos, ranged: true });
 });
 
 
 it('the unit card movement picker accepts a left-click through the existing validated move command', () => {
   const v = useGame.getState().views![0];
-  const soldier = v.units.find((u) => u.owner === v.me && u.kind === 'Spearman')!;
-  const destination = emptyBeside(soldier, 2);
-  act(() => useGame.setState({ selection: { kind: 'unit', id: soldier.id }, mode: 'move' }));
+  const spearman = v.units.find((u) => u.owner === v.me && u.kind === 'Spearman')!;
+  const destination = emptyBeside(spearman, 2);
+  act(() => useGame.setState({ selection: { kind: 'unit', id: spearman.id }, mode: 'move' }));
   mouse('pointermove', destination);
   mouse('pointerdown', destination);
   mouse('pointerup', destination);
-  expect(useGame.getState().orders[0]).toContainEqual(expect.objectContaining({ unit: soldier.id, to: destination }));
+  expect(useGame.getState().orders[0]).toContainEqual(expect.objectContaining({ unit: spearman.id, to: destination }));
   expect(useGame.getState().errors[0]).toEqual([]);
   expect(useGame.getState().mode).toBe('normal');
 });

@@ -91,16 +91,16 @@ pub fn apply(orders: &mut OrderMap, state: &GameState, rusher: &Rusher) {
         .or_else(|| state.cities_of(me).next())
         .map(|c| (c.id, c.pos, c.producing));
     if let Some((city, _, producing)) = &home {
-        let soldier = ProductionItem::Unit {
+        let spearman = ProductionItem::Unit {
             unit: UnitKind::Spearman,
         };
         mine.retain(|o| {
             !matches!(o, Order::SetProduction { city: c, .. } | Order::SetProductionQueue { city: c, .. } | Order::BuyItem { city: c, .. } if c == city)
         });
-        if producing.as_ref() != Some(&soldier) {
+        if producing.as_ref() != Some(&spearman) {
             mine.push(Order::SetProduction {
                 city: *city,
-                item: soldier,
+                item: spearman,
             });
         }
     }
@@ -162,7 +162,7 @@ mod tests {
     use legatum_core::{GameSetup, new_game};
 
     #[test]
-    fn the_rusher_trains_soldiers_and_leaves_other_empires_alone() {
+    fn the_rusher_trains_spearmen_and_leaves_other_empires_alone() {
         let mut session =
             Session::from_state(new_game(&GameSetup::all_ai(3)), |_| BrainKind::Scripted);
         for _ in 0..6 {
@@ -183,13 +183,13 @@ mod tests {
             .cities_of(PlayerId(1))
             .find(|c| c.is_capital)
             .expect("a capital by turn 7");
-        let soldier = ProductionItem::Unit {
+        let spearman = ProductionItem::Unit {
             unit: UnitKind::Spearman,
         };
-        let sets_soldiers = orders[&PlayerId(1)]
+        let sets_spearmen = orders[&PlayerId(1)]
             .iter()
-            .any(|o| matches!(o, Order::SetProduction { city, item } if *city == capital.id && *item == soldier));
-        assert!(sets_soldiers || capital.producing.as_ref() == Some(&soldier));
+            .any(|o| matches!(o, Order::SetProduction { city, item } if *city == capital.id && *item == spearman));
+        assert!(sets_spearmen || capital.producing.as_ref() == Some(&spearman));
         assert_eq!(orders[&PlayerId(0)], before[&PlayerId(0)]);
         assert_eq!(orders[&PlayerId(2)], before[&PlayerId(2)]);
     }

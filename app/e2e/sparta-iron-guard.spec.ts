@@ -5,7 +5,7 @@ import { thresholdsFor } from '../src/promotion';
 
 const setup = promotionFixture();
 setup.fixture.players[0].faction = 'Sparta';
-setup.fixture.units.find((unit) => unit.id === setup.trooper)!.xp =
+setup.fixture.units.find((unit) => unit.id === setup.pikeman)!.xp =
   thresholdsFor('Sparta')[5];
 
 test('Spartan Veteran shows its crest, six-part insignia and rank at desktop sizes', async ({ page }, testInfo) => {
@@ -31,7 +31,7 @@ test('Spartan Veteran shows its crest, six-part insignia and rank at desktop siz
       } } }).legatum.getState();
       game.select({ kind: 'unit', id });
       game.jumpTo(game.views[game.seat].units.find((unit) => unit.id === id)!.pos);
-    }, setup.trooper);
+    }, setup.pikeman);
     const rank = page.locator('.unit-panel .up-rank');
     await expect(rank).toContainText('Spartan Veteran');
     await expect(rank).toContainText('Level 6 · +60%');

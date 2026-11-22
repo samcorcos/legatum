@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { CITY_ERAS, CITY_TIERS, cityArtArrivals, cityArtEpoch, cityImage, cityStem, cityTier, cityUrl, markStem, missingCityArt, spriteSize, traceCityArt, wallStem } from './cityArt';
+import { CITY_ERAS, CITY_TIERS, cityArtArrivals, cityArtEpoch, cityImage, cityStem, cityTier, cityUrl, markStem, missingCityArt, spriteSize, traceCityArt, wallStem, wallTierOf } from './cityArt';
 
 const only = (...stems: string[]) => (stem: string, size: 64 | 128 | 512) => size === 512 && stems.includes(stem);
 
@@ -37,7 +37,7 @@ describe('city art', () => {
     expect(cityStem(Number.NaN, 'town')).toBe('ancient-town');
   });
 
-  it('wall overlays: each era owns its art, with a star fort for the Customs Bastion', () => {
+  it('wall overlays: each era owns its art, with a star fort for the Alpine Redoubt', () => {
     expect(wallStem(2, false)).toBe('medieval-walls');
     for (const era of [5, 6, 7, 8]) expect(wallStem(era, false)).toBe(`${CITY_ERAS[era]}-walls`);
     expect(wallStem(0, true)).toBe('renaissance-walls');
@@ -73,4 +73,13 @@ describe('city art', () => {
       vi.unstubAllGlobals();
     }
   });
+});
+
+it('gives the banner the visible wall level: Walls 1, Castle 2, Star Fort 3, nothing out of sight', () => {
+  const c = (o: object) => ({ visible: true, walls: true, ...o });
+  expect(wallTierOf(c({ walls: false }))).toBe(0);
+  expect(wallTierOf(c({}))).toBe(1);
+  expect(wallTierOf(c({ citadel: true }))).toBe(2);
+  expect(wallTierOf(c({ citadel: true, star_fort: true }))).toBe(3);
+  expect(wallTierOf(c({ visible: false, citadel: true }))).toBe(0);
 });

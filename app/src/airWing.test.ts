@@ -19,7 +19,7 @@ beforeAll(async () => {
 });
 
 const HOME = fromOffset(8, 8);
-/** Bern with a Fighter (id 50) and a Bomber (id 51) in the hangar; an enemy Soldier `tiles` east of it, when given. */
+/** Bern with a Fighter (id 50) and a Bomber (id 51) in the hangar; an enemy Spearman `tiles` east of it, when given. */
 function wing(tiles: number | null = null, extra: (v: PlayerView, city: CityView) => void = () => {}) {
   const v = JSON.parse(JSON.stringify(base)) as PlayerView;
   const city = addCity(v, 0, 'Bern', HOME);
@@ -327,7 +327,7 @@ describe('the turn report', () => {
 });
 
 describe('a strike on the turn war is declared', () => {
-  /** A rival at Peace with a Soldier 2 tiles east, and the War declaration core offers (it starts this turn). */
+  /** A rival at Peace with a Spearman 2 tiles east, and the War declaration core offers (it starts this turn). */
   function peace() {
     return wing(2, (view) => {
       const team = view.players.find((p) => p.id === 2)!.team;

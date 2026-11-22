@@ -44,14 +44,14 @@ import { drawResourceIcons, medallionTop, resourceDetail, STACK_LIFT } from './r
 import type { ScenarioTarget } from '../scenarios/scenarios';
 import { drawRoads } from './roadArt';
 import { drawClosedLand } from './sakokuLand';
-import { drawHallBadge, drawHallLand, hallBadgeAt, hallSites } from './courierHall';
+import { drawStationBadge, drawStationLand, stationBadgeAt, stationSites } from './yamRelayStation';
 import { drawWonderArt, drawWonderBadges } from './wonderArt';
 import { deathPos, hpAt, type CombatPlan, type FxGhost } from './combatFx';
 import { aircraftPassProgress, drawCombatFx, drawSiegeAmbient, siegeAmbientBox } from './combatFxDraw';
 import { smoulderVisible } from './smoulder';
 import type { March, MomentHold, MomentPlan } from './momentFx';
 import { drawChimneySmoke, drawWaterGlints, idleBoxes, type IdleView } from './idleLife';
-import { drawLandmarks, landmarkBoxes, landmarksOf } from './landmarks';
+import { drawLandmarks, LANDMARK_REF_ZOOM, landmarkBoxes, landmarksOf, townCover } from './landmarks';
 import { drawConstructionSites } from './constructionFx';
 import { constructionStage, sitesOf, type ConstructionSite } from './constructionSites';
 import { CONSTRUCTION_ANIMATION, buildPhases } from './momentFx';
@@ -59,6 +59,7 @@ import { drawMarchDust, drawMomentFx, drawMomentGround, drawRevealed, revealAt, 
 import { drawAirCandidates, drawAirLabels, drawAirOffscreen, drawAirRings, drawTileCandidates, type AirOverlay } from './airOverlay';
 import { aircraftAsUnit } from '../airWing';
 import { unworkedClaimIndexes } from './unworkedClaims';
+import { wallTierOf } from './cityArt';
 
 export { HEX_SIZE } from './grid';
 
@@ -287,11 +288,12 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   const bannerView = held?.size ? { ...view, cities: view.cities.map((c) => held.has(c.id) ? { ...c, owner: held.get(c.id)! } : c) } : view;
   const focusOf = (c: CityView) => c.owner === view.me ? (inp.cityFocuses?.has(c.id) ? inp.cityFocuses.get(c.id) : c.detail?.build_automation) ?? null : null;
   const banners = cityBanners(bannerView, cam, w, h, dpr, look, inp.selectedCity, siege, focusOf, moments?.hold.unscored, inp.cityBuilds);
-  // Landmarks use a fixed footprint chosen from banners and other landmarks, never moving units.
+  // What labels, badges and medallions keep clear of: the banners as drawn this frame (screen px).
   const bannerCovers = banners.map((b) => b.cover);
   const toScreen = (p: { x: number; y: number }) => worldToScreen(cam, w, h, p.x, p.y);
   const landmarkSites = [...landmarksOf(view), ...sitesOf(view).filter((s) => !s.walls), ...(moments?.plan.builds.filter((b) => b.wonder).map((b) => ({ tile: b.tile, hex: b.at })) ?? [])];
-  const fixedLandmarkBoxes = landmarkBoxes(landmarkSites, toScreen, hexPx, bannerCovers);
+  // Landmarks use a fixed footprint chosen from every banner at one reference zoom (never these screen covers, never moving units).
+  const fixedLandmarkBoxes = landmarkBoxes(landmarkSites, toScreen, hexPx, referenceBannerCovers(bannerView, look, siege));
   // The ink-and-wash landmark sits in the land, under everything else the map draws (full colour belongs to its cards).
   drawWonderArt(ctx, view, cam, w, h, dpr, inp.lens, overlays.yields);
   // Improvements change the land itself: drawn on it, under every lens, overlay, unit and banner.
@@ -679,10 +681,10 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   // ---- screen space ----
   screenT();
 
-  // Roads, then the Courier Hall's rhumb lines and compass-rose plaque: above terrain, below banners and units.
+  // Roads, then the Yam Relay Station's rhumb lines and compass-rose plaque: above terrain, below banners and units.
   if (reveal?.roads) drawRevealed(ctx, dpr, w, h, reveal.roads, view, (v) => drawRoads(ctx, v, S2, hexPx, w, h));
   else drawRoads(ctx, view, S2, hexPx, w, h);
-  drawHallLand(ctx, view, S2, hexPx, w, h);
+  drawStationLand(ctx, view, S2, hexPx, w, h);
   // A closed country (Sakoku): its palisade border.
   drawClosedLand(ctx, view, S2, hexPx, w, h);
 
@@ -840,7 +842,7 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
     if (siege.has(c.id)) drawSiegeBar(ctx, far.x, far.y - far.seal.ay + far.seal.h + 2, Math.max(30, far.seal.w), c.hp, c.max_hp, FONTS[look].sans, false);
   }
 
-  drawHallBadge(ctx, view, S2, hexPx, w, h);
+  drawStationBadge(ctx, view, S2, hexPx, w, h);
 
   // Units. Sharing a tile, they fan out side by side (military right, civilian left) so both
   // tokens read; three or more also carry a count badge.
@@ -1365,7 +1367,7 @@ interface FarCity { x: number; y: number; seal: ReturnType<typeof sealSprite>; n
 
 /** What a city's banner and far-zoom seal show. The star marks the original capital for the whole game, in the founder's ink; a replacement capital gets none. */
 export function bannerSpec(view: Pick<PlayerView, 'me' | 'team' | 'players'>, c: CityView, glyph: string | null, selected: boolean): BannerSpec {
-  return { owner: c.owner, name: c.name, pop: c.visible ? c.population : null, color: mapPlayerColor(c.owner), capital: capitalStar(view, c), selected, glyph, walls: c.visible && c.walls };
+  return { owner: c.owner, name: c.name, pop: c.visible ? c.population : null, color: mapPlayerColor(c.owner), capital: capitalStar(view, c), selected, glyph, wallTier: wallTierOf(c) };
 }
 
 /** Every on-screen city banner: its spec, anchor and the screen rect it covers (health bar included). Zoomed out, the banner is a seal and a name instead. */
@@ -1395,22 +1397,50 @@ function cityBanners(view: PlayerView, cam: Camera, w: number, h: number, dpr: n
     // production meters, readable from normal zoom in, so the player can watch them without
     // opening the city.
     const meters = mine && c.visible && hexPx >= 20 ? bannerMeters(c, faction, focusOf(c), builds?.get(c.id) ?? null) : [];
-    const metersH = meters.length ? bannerMetersSize(look, meters, dpr).h + 1 : 0;
-    // The block (plate and meters) ends BANNER_BOTTOM above the centre, over the town's roofline: the meters are a fixed
-    // 17 px, so hung under the plate they covered the top of the town, most of it at small zoom.
-    const y = p.y - hexPx * BANNER_BOTTOM - metersH;
-    const rect = bannerRect(look, spec, p.x, y, fs, dpr);
-    const cover = { ...rect, h: rect.h + (siege.has(c.id) ? SIEGE_BAR_H + SIEGE_BAR_GAP + 3 : c.visible && c.hp < c.max_hp ? 6 : 0) + metersH };
+    const { y, cover } = bannerBlock(c, spec, meters, p, hexPx, fs, look, dpr, siege);
     return [{ c, spec, x: p.x, y, fs, alpha, meters, cover, far: null as FarCity | null }];
   });
-  // The Courier Hall's badge sits beside its city's seal: names keep clear of it.
-  const badges = far ? hallSites(view).map(({ city }) => {
+  // The Yam Relay Station's badge sits beside its city's seal: names keep clear of it.
+  const badges = far ? stationSites(view).map(({ city }) => {
     const q = worldToScreen(cam, w, h, hexToPixel(city.pos, HEX_SIZE).x, hexToPixel(city.pos, HEX_SIZE).y);
-    const b = hallBadgeAt(q, hexPx);
+    const b = stationBadgeAt(q, hexPx);
     return { x: b.x - b.r, y: b.y - b.r, w: b.r * 2, h: b.r * 2 };
   }) : [];
   if (far) placeFarNames(items, view.me, selectedCity, dpr, look, badges);
   return items;
+}
+
+/** A named banner's block (plate, meters, siege or damage bar) for a city centred at `p`, in screen px. */
+function bannerBlock(c: CityView, spec: BannerSpec, meters: BannerMeter[], p: { x: number; y: number }, hexPx: number, fs: number, look: LookId, dpr: number, siege: ReadonlyMap<number, SiegeLevel>) {
+  const metersH = meters.length ? bannerMetersSize(look, meters, dpr).h + 1 : 0;
+  // The block (plate and meters) ends BANNER_BOTTOM above the centre, over the town's roofline: the meters are a fixed
+  // 17 px, so hung under the plate they covered the top of the town, most of it at small zoom.
+  const y = p.y - hexPx * BANNER_BOTTOM - metersH;
+  const rect = bannerRect(look, spec, p.x, y, fs, dpr);
+  return { y, cover: { ...rect, h: rect.h + (siege.has(c.id) ? SIEGE_BAR_H + SIEGE_BAR_GAP + 3 : c.visible && c.hp < c.max_hp ? 6 : 0) + metersH } };
+}
+
+/**
+ * Every city's banner block and painted town as they stand at LANDMARK_REF_ZOOM, in world units × LANDMARK_REF_ZOOM: what a wonder's footprint
+ * is chosen against (landmarks.ts), so the choice depends on neither the camera's zoom nor what is on screen.
+ */
+const refCoverMemo = new WeakMap<PlayerView, { look: LookId; siege: ReadonlyMap<number, SiegeLevel>; covers: Rect[] }>();
+export function referenceBannerCovers(view: PlayerView, look: LookId, siege: ReadonlyMap<number, SiegeLevel>): Rect[] {
+  const hit = refCoverMemo.get(view);
+  if (hit && hit.look === look && hit.siege === siege) return hit.covers;
+  const hexPx = HEX_SIZE * LANDMARK_REF_ZOOM;
+  const fs = Math.round(Math.max(11, Math.min(16, hexPx * 0.42)) * 2) / 2;
+  const covers = view.cities.map((c) => {
+    const world = hexToPixel(c.pos, HEX_SIZE);
+    const faction = view.players.find((pl) => pl.id === c.owner)?.faction;
+    const spec = bannerSpec(view, c, faction ? `glyph-${faction.toLowerCase()}` : null, false);
+    const meters = c.owner === view.me && c.visible ? bannerMeters(c, faction) : [];
+    const at = { x: world.x * LANDMARK_REF_ZOOM, y: world.y * LANDMARK_REF_ZOOM };
+    // The painted town too, so a wonder beside a city never stands on its towers (UI review, 2026-11-22).
+    return [bannerBlock(c, spec, meters, at, hexPx, fs, look, 1, siege).cover, townCover(at, hexPx)];
+  }).flat();
+  refCoverMemo.set(view, { look, siege, covers });
+  return covers;
 }
 
 /** Names beside the seals, own and capital cities first: right of the seal, else left, below, above; no name where all four would print over another seal or name. */
