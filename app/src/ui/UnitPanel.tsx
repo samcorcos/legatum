@@ -38,7 +38,7 @@ import { EraTab } from './EraTab';
 import { foundCityUnitBlocker, isFounderCandidate } from '../settlement';
 import { UnitImprovements, upgradeCheck } from './UnitImprovements';
 import { pendingSpend, goldOnHand } from './productionPurchases';
-export { upgradeCheck, plainUpgradeBreakdown } from './UnitImprovements';
+export { upgradeCheck, upgradeStepBreakdown } from './UnitImprovements';
 import { RingMedallion } from './ringMedallion';
 import './unitPanel.css';
 import { Amounts } from './Amounts';
@@ -246,8 +246,6 @@ export function UnitPanel({ unit, view, peek = false }: { unit: UnitView; view: 
             onClick={toggleMoveSelected} active={mode === 'move'} hotkey={mode === 'move' ? 'Esc' : undefined} 
             tip="Choose a tile on the map. Your route and combat forecast appear before you click. Esc cancels targeting. You can also right-click a destination, or drag from the unit to plot a path." />}
           {unit.kind !== 'Scout' && exploreAction}
-          <UnitImprovements unit={unit} view={view} check={upgrade} primary={leads ? improvePrimary : null} pending={pending?.type} gold={gold} siegeGold={siegeGold} siegeBlocker={siegeBlocked} />
-          {veteran && <RetireAction unit={unit} view={view} retiring={retiring} blocker={veteran.blocker} />}
           {unit.ranged > 0 && (
             <Action label="Ranged Attack" disabled={closed} reason={closed ? "Leave closed foreign territory before attacking" : undefined} hotkey="R" active={mode === 'ranged' || pending?.type === 'RangedAttack'} onClick={toggleRangedMode} tip={bow ? `Shoot a target ${unit.range === 1 ? 'next to' : `within ${unit.range} tiles of`} this ${fromLabel}, from where it stands: no return fire, and it never moves. A shot cannot take a city. Right-click the target instead to charge it. One order a turn.` : `Pick a target within ${unit.range} tiles. Only if the unit doesn't move this turn.`} />
           )}
@@ -257,8 +255,8 @@ export function UnitPanel({ unit, view, peek = false }: { unit: UnitView; view: 
               onClick={toggleAutoFireSelected}
               tip={`Hold this city and shoot the best enemy in range each turn.${barbariansSpareMe(view) ? ' It never shoots barbarians, because they never attack you.' : ''} It never moves, declares War or spends Gold. Move the unit or turn this off to take control; a shot you order sets this turn’s target.`} />
           )}
+          {/* The idle orders sit right under the unit's own actions, above Improve, so a 600 px window shows them without scrolling. Fortify for military units, Wait for civilians, and Skip. */}
           <div className="unit-orders">
-            {/* The two idle orders sit side by side: Fortify for military units, Wait for civilians, and Skip. */}
             <div className={`act-pair${healOffered ? ' has-heal' : ''}`}>
               {!locked && <Action label={unit.military && unit.kind !== 'Scout' ? 'Fortify' : 'Wait'} icon={unit.military && unit.kind !== 'Scout' ? 'fortify' : 'mark-sleep'} hotkey="F" active={standing === 'Sleep'} onClick={sleepSelected}
                 tip={`Stay here${unit.military && unit.kind !== 'Scout' ? ', healing and fortifying' : ', healing and resting'}, until you give another order or an enemy military unit newly comes into sight within this unit's movement range. Enemies already that close when you choose this order do not wake it again.${closed ? ' No fortification or healing in closed foreign territory.' : ''}${unit.ranged > 0 ? ' A unit that is waiting does not fire.' : ''}`} />}
@@ -270,11 +268,13 @@ export function UnitPanel({ unit, view, peek = false }: { unit: UnitView; view: 
               {!locked && <Action label="Skip this turn" icon="mark-skip" hotkey="Space" active={pending?.type === 'SkipUnit'} onClick={skipSelected} tip="Do nothing this turn. Cancels Fortify, Wait or Heal, or a destination, and the unit asks for orders again next turn." />}
             </div>
             {healOffered && healBlocked && standing !== 'Heal' && <p className="act-reason" id={healReasonId} data-testid="heal-blocked">{healBlocked}</p>}
-            <div className="unit-dismiss">
+          </div>
+          <UnitImprovements unit={unit} view={view} check={upgrade} primary={leads ? improvePrimary : null} pending={pending?.type} gold={gold} siegeGold={siegeGold} siegeBlocker={siegeBlocked} />
+          {veteran && <RetireAction unit={unit} view={view} retiring={retiring} blocker={veteran.blocker} />}
+          <div className="unit-dismiss">
             {asking ? <HeirDisbandConfirm unit={unit} view={view} /> : locked ? null :
             <Action label="Disband" onClick={disbandSelected} danger active={pending?.type === 'DisbandUnit'} tip={unit.kind === 'Heir' ? 'Remove the Heir permanently. You forfeit his 2 VP, and Byzantium can train a new one.' : 'Remove this unit permanently (saves upkeep).'} quiet />}
             {pending && <Action label="Cancel order" hotkey="⌫" onClick={cancelSelected} quiet tip="Clear this unit's pending order." />}
-            </div>
           </div>
         </div>
       )}

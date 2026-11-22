@@ -3,7 +3,7 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { improvementReason, upgradeGain } from './UnitImprovements';
-import { UnitPanel, plainUpgradeBreakdown, upgradeCheck } from './UnitPanel';
+import { UnitPanel, upgradeStepBreakdown, upgradeCheck } from './UnitPanel';
 import { FixtureClient } from '../test/fixtureEngine';
 import { useGame } from '../store';
 import { tileIndex } from '../hex';
@@ -132,7 +132,10 @@ it('shows marked requirements beside the row when more than one is unmet', async
   expect(reason.querySelector('.resource-reason-link')?.textContent).toBe('Iron');
   const info = container.querySelector<HTMLButtonElement>('.improve-row .tip-info')!;
   act(() => info.click());
-  expect(document.getElementById(info.getAttribute('aria-controls')!)!.textContent).toContain('Iron supply: needs 1 spare, you have none');
+  // The Needs line under the row is the one place that lists them: the ⓘ card has the stats and the price.
+  const card = document.getElementById(info.getAttribute('aria-controls')!)!.textContent;
+  expect(card).not.toContain('Iron supply: needs 1 spare');
+  expect(card).toContain('Upgrade cost');
 });
 
 it('puts Gold and supply costs beside the benefit, keeping the treasury forecast in details', async () => {
@@ -200,9 +203,17 @@ it('an unsupplied unit with no loss from the core shows its strength unchanged',
   expect(container.querySelector('[data-testid="unit-strength-idle"]')).toBeNull();
 });
 
-it('labels the upgrade price in plain words', () => {
-  const b = plainUpgradeBreakdown({ total: 180, parts: [['Base upgrade Gold', 200], ['Faction', -20]] }, 'India');
-  expect(b.parts.map(([l]) => l)).toEqual(['Twice the Production difference', 'India price']);
+it('prices an upgrade one line per step, each with its own faction part', () => {
+  const b = upgradeStepBreakdown({ total: 164, parts: [['Base upgrade Gold', 60], ['Faction', 20], ['Base upgrade Gold', 84]] }, 'Soldier', ['Phalangite', 'Trooper'], 'Byzantium');
+  expect(b.parts.map(([, v]) => v)).toEqual([80, 84]);
+  expect(b.parts[0][0]).toMatch(/^Spearman → /);
+  expect(b.total).toBe(164);
+});
+
+it('prices the whole path as one line when a free step leaves no part to split on', () => {
+  const b = upgradeStepBreakdown({ total: 84, parts: [['Base upgrade Gold', 84]] }, 'Soldier', ['Phalangite', 'Trooper'], 'India');
+  expect(b.parts).toHaveLength(1);
+  expect(b.parts[0][1]).toBe(84);
 });
 
 it.each(['Soldier', 'Trooper', 'AssaultTrooper', 'Ranger'] as const)(
