@@ -207,7 +207,7 @@ Legatum is built largely with AI coding agents, and all of its art is AI-generat
 
 - [CLAUDE.md](CLAUDE.md) is the standing brief the agents work under: the design pillars, where each kind of knowledge lives, and the review gates.
 - [.claude/skills/](.claude/skills/) holds what an agent loads before a task: the code-checked rules reference, and the design, faction, UI, art and workflow notes with the decisions behind them.
-- [docs/learnings.md](docs/learnings.md) is the unedited engineering log: bug causes, balance findings and dead ends.
+- [docs/learnings.md](docs/learnings.md) is a digest of the engineering log; the unedited log, with every bug cause, balance finding and dead end, is in [docs/learnings/](docs/learnings/).
 
 [docs/README.md](docs/README.md) indexes the rest, including the simulation reports and playtest reviews.
 
