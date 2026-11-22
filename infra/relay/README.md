@@ -135,8 +135,8 @@ build uses it.
 - `POST /rooms` needs no account, and CORS stays open (`*`) because an origin check stops no one who
   scripts requests. What bounds a stranger is the limits table above: one address can hold 2 rooms and
   make 6 every 10 minutes, so filling the 64-room lobby takes 32 addresses, and `LOBBY_OPEN=0` stops new rooms
-  at once if it happens. Someone with many addresses can still fill it; then add a Cloudflare rate-limiting
-  rule or a shared secret on `POST /rooms`.
+  at once if it happens. Someone with many addresses can still fill it; then tighten the edge
+  rule above (lower the limit) or add a shared secret on `POST /rooms`.
 
 ## Cost on the free plan
 
