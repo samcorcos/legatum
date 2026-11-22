@@ -147,21 +147,20 @@ it('puts Gold and supply costs beside the benefit, keeping the treasury forecast
   expect(row.querySelector('.improve-supply .amt-iron .amt-icon')).not.toBeNull();
 });
 
-it('gives Upgrade and Siege each their Iron reason and links both disabled controls to it', async () => {
+it('shares one Iron reason between Upgrade and Siege and links both disabled controls to it', async () => {
   const { view, unit, client } = await soldier({ tech: true, owned: true, gold: 500, spare: 0 });
   unit.siege_offer = { price: { total: 160, parts: [] }, blocker: `Siege: ${NO_IRON[0].toLowerCase()}${NO_IRON.slice(1)}` };
   useGame.setState({ client, views: [view], humans: [0], orders: [[]], errors: [[]], seat: 0 });
   act(() => root.render(<UnitPanel unit={unit} view={view} />));
   const reasons = container.querySelectorAll('.improve-reason');
-  expect(reasons).toHaveLength(2);
-  expect(reasons[0].textContent).toBe('Upgrade needs 1 Iron. All 6 of your Iron are in use: claim another Iron deposit or build a Mine (+1).');
-  expect(reasons[1].textContent).toBe('Siege needs 1 Iron. All 6 of your Iron are in use: claim another Iron deposit or build a Mine (+1).');
+  expect(reasons).toHaveLength(1);
+  expect(reasons[0].textContent).toBe('Upgrade and Siege need 1 Iron. All 6 Iron are in use: claim another Iron deposit or build a Mine (+1).');
   expect(reasons[0].querySelector('.resource-reason-link')?.getAttribute('aria-label')).toBe('Open Iron supply');
   const buttons = [...container.querySelectorAll<HTMLButtonElement>('.improve-row button.act')];
   expect(buttons.length).toBeGreaterThan(0);
-  buttons.forEach((button, i) => {
+  buttons.forEach((button) => {
     expect(button.disabled).toBe(true);
-    expect(button.getAttribute('aria-describedby')).toContain(reasons[Math.min(i, 1)].id);
+    expect(button.getAttribute('aria-describedby')).toContain(reasons[0].id);
   });
 });
 

@@ -31,7 +31,7 @@ export function improvementReason(reason: string | null, resource: Resource | nu
   const state = !s.supplied.total ? `You have no ${resource}`
     : (s.idle?.length ?? 0) ? `You have ${s.supplied.total} ${resource} for ${s.used.total} needs`
     : (s.held?.length ?? 0) ? `You have ${s.supplied.total} ${resource}, none spare (${s.held?.length ?? 0} reserved for construction)`
-    : `All ${s.supplied.total} of your ${resource} are in use`;
+    : `All ${s.supplied.total} ${resource} are in use`;
   return `${subject} needs 1 ${resource}. ${state}: ${fix}.`;
 }
 
@@ -56,10 +56,14 @@ export function UnitImprovements({ unit, view, check, primary, pending, gold, si
     && view.cities.some((c) => c.owner === unit.owner && c.pos.q === unit.pos.q && c.pos.r === unit.pos.r && c.detail?.buildings.includes('Walls'))
     && unitClass(unit.kind) === 'Melee' ? Math.min(50, 100 - unit.hp) : 0;
   const offer = unit.siege_offer;
-  const upgradeWhy = improvementReason(check?.blocker ?? null, check?.need, view);
+  let upgradeWhy = improvementReason(check?.blocker ?? null, check?.need, view);
   // The Mongol era gate is a closed door, not a price you can't pay: it replaces the price, and the reason line steps aside.
   const siegeClosed = siegeBlocker === MONGOL_SIEGE_REASON ? `${faction} can buy Siege from the Medieval era.` : null;
-  const siegeWhy = siegeClosed ? null : improvementReason(siegeBlocker ?? null, SIEGE_USES_IRON ? 'Iron' : null, view);
+  let siegeWhy = siegeClosed ? null : improvementReason(siegeBlocker ?? null, SIEGE_USES_IRON ? 'Iron' : null, view);
+  // The same shortage blocks both: one line for both, not two.
+  if (upgradeWhy?.startsWith('Upgrade needs ') && siegeWhy?.startsWith('Siege needs ') && upgradeWhy.slice('Upgrade'.length) === siegeWhy.slice('Siege'.length)) {
+    upgradeWhy = siegeWhy = `Upgrade and Siege need ${upgradeWhy.slice('Upgrade needs '.length)}`;
+  }
   const upgradeChecklist = !!check && check.needs.filter((n) => !n.met).length > 1;
   const reasons = [...new Set([upgradeChecklist ? null : upgradeWhy, siegeWhy].filter((r): r is string => !!r))];
   const upgradeReasonId = upgradeChecklist ? `${id}-upgrade-needs` : upgradeWhy ? `${id}-${reasons.indexOf(upgradeWhy)}` : undefined;
@@ -96,7 +100,7 @@ export function UnitImprovements({ unit, view, check, primary, pending, gold, si
         </span>)}</span>
     </p>}
     {reasons.map((reason, i) => <p className="act-reason improve-reason" id={`${id}-${i}`} key={reason}>
-      {reasons.length > 1 || (upgradeChecklist && reason === siegeWhy) || (!!upgradeWhy !== !!siegeWhy && !!check && !!offer) ? !/^(Siege|Upgrade) needs /.test(reason) && <b>{reason === upgradeWhy && !upgradeChecklist ? 'Upgrade' : 'Siege'}: </b> : null}
+      {reasons.length > 1 || (upgradeChecklist && reason === siegeWhy) || (!!upgradeWhy !== !!siegeWhy && !!check && !!offer) ? !/^(Siege|Upgrade)( and Siege)? needs? /.test(reason) && <b>{reason === upgradeWhy && !upgradeChecklist ? 'Upgrade' : 'Siege'}: </b> : null}
       {((reason === upgradeWhy && check?.need && reason.includes(check.need)) || (reason === siegeWhy && SIEGE_USES_IRON && reason.includes('Iron')))
         ? <ResourceReason text={reason} resource={reason === upgradeWhy && check?.need ? check.need : 'Iron'} />
         : <Amounts text={reason} />}
