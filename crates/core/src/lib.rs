@@ -47,7 +47,8 @@ pub mod rules;
 /// 48: Egypt's Nile: double Food, no Production, surplus Food builds everything and the Grow project grows.
 /// 49: A faction skips every technology that gives it nothing (Egypt: Bronze Working), known from the start; Egypt's cards drop Production-only lines.
 /// 50: Fable review batch (Sam, 2026-11-22): a rival's original capital scores 1 VP only while held; Alliance upkeep is waived at War with a team close to winning; experiment `no_purchase_under_threat`; same-turn tile buys, era firsts and exact world-wonder ties between empires are drawn by seed. `Player::capitals_taken` is gone from the save.
-pub const RULES_VERSION: u32 = 50;
+/// 51: Units of empires not at War stepping onto one tile in the same round no longer all bounce: the team with the most combined strength among its claimants moves in, the rest stay put, nobody fights; equal totals are drawn by seed, and so is an exact force tie at a fallen city, which used to bounce everyone (Sam, 2026-11-22).
+pub const RULES_VERSION: u32 = 51;
 pub mod scenario;
 pub mod scoring;
 pub mod settlement;

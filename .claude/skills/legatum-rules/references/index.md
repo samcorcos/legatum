@@ -4,7 +4,7 @@ Facts below are cited to file (and usually function), read 2026-10-02 and audite
 recommendations that assume Civ 6 defaults this game doesn't have. If a fact isn't in the cited
 file, say so rather than guessing.
 
-**Rules version: 50** (`crates/core/src/lib.rs::RULES_VERSION`, checked 2026-11-22). Every save carries `save_version = RULES_VERSION`; a save or tape from any other version is refused, and there are no migrations. The version log and old compatibility notes are in `history.md`.
+**Rules version: 51** (`crates/core/src/lib.rs::RULES_VERSION`, checked 2026-11-22). Every save carries `save_version = RULES_VERSION`; a save or tape from any other version is refused, and there are no migrations. The version log and old compatibility notes are in `history.md`.
 
 The reference was one file, `game-rules.md`, until 2026-11-22. It is now one file per system, each holding its original text verbatim and in its original order. Open only the files your question needs, plus `not-in-game.md` before proposing anything.
 
@@ -12,7 +12,7 @@ The reference was one file, `game-rules.md`, until 2026-11-22. It is now one fil
 | --- | --- |
 | `not-in-game.md` | Which Civ 6 systems do not exist here (always read before proposing a mechanic) |
 | `turn-and-orders.md` | What orders exist; one order per unit per turn; Sleep, Skip and Heal; auto-explore; the resolution phases; automatic garrison fire; order UI; co-op Gold gifts to a teammate (`GiveGold`, rules 50) |
-| `movement.md` | Movement rules, multi-turn goto, meeting engagements, roads and Roadworks, passing through your own units, route previews |
+| `movement.md` | Movement rules, multi-turn goto, meeting engagements, peaceful contests for a tile (rules 51), roads and Roadworks, passing through your own units, route previews |
 | `setup.md` | New-game faction choice, AI levels (Easy, Normal, Hard, Training), the calendar, what every empire starts with and what is legal on turn 1 |
 | `research-and-eras.md` | The nine eras, the tech tree and its gates, research costs, game length and pacing |
 | `units.md` | Unit stats and costs, the land triangle, Outriders, indirect fire and built-in Siege, Future-era units, one unit per class per era |
