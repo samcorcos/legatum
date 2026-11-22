@@ -2,3 +2,7 @@
 Reference images and requested edits: see docs/design/art-pass-2/generation-*.json.
 
 Edit only the BACKGROUND of this existing refined oil portrait, intended to show Sparta in the fifth century BCE. The enormous stone city fortification and hanging lambda banner are historically wrong for unwalled Classical Sparta. Replace that wall and banner with an unwalled Laconian settlement of low plastered mudbrick houses with simple terracotta pitched roofs, sparse olive trees and cypresses, against the rugged Taygetus mountains at golden evening light. No defensive city wall, no towers, no banners. Preserve both adults EXACTLY: faces, helmet crest, bronze cuirass, cloak, peplos, spear, shield and all visible fingers, foreground scale, pigments and rich oil technique. Background only, do not shift either person. No words or watermark.
+
+
+2026-11-22 follow-up (masked edit; only a feathered ellipse over the mouth was pasted back into the shipped portrait):
+Edit the attached oil portrait. Change ONLY the man's upper lip: remove his moustache completely so the skin between his nose and upper lip is shaved bare and clean (the Spartan custom), while his full dark beard on the chin and jaw stays exactly as it is. Keep everything else EXACTLY as it is: his face, eyes, nose, hair, helmet, clothing, pose and hands, the woman, the setting, the composition, the lighting and the refined classical oil technique. The woman must not change at all. No text, no new people, no frame.
