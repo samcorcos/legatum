@@ -865,7 +865,7 @@ export function itemSummary(item: ProductionItem, faction?: Faction): string {
   if (item.kind === 'Unit') return UNIT_STATS[item.unit].summary;
   if (item.kind === 'Building' || item.kind === 'Wonder') return BUILDING_STATS[item.building].summary;
   // The Nile: Egypt has no Production, so its Mine is for Copper's Gold and the supply.
-  if (item.kind === 'Improvement') return faction === 'Egypt' && item.improvement === 'Mine' ? 'Adds Gold on Copper, supply on Iron or Coal' : IMPROVEMENT_SUMMARY[item.improvement];
+  if (item.kind === 'Improvement') return faction === 'Egypt' && item.improvement === 'Mine' ? 'Gives Gold on Copper, and supply on Iron or Coal' : IMPROVEMENT_SUMMARY[item.improvement];
   return PROJECT_COPY[item.project].summary;
 }
 

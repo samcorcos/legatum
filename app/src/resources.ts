@@ -168,7 +168,7 @@ export const supplyRuleText = (r: Resource, faction?: string): string => `Each $
 export function resourceBenefitLines(r: Resource, known: readonly TechId[], faction?: string): string[] {
   const info = RESOURCE_INFO[r];
   const gain = nileYields(faction, improvementGain(r, known));
-  const lines = YIELD_WORD.some(([k]) => gain[k]) ? [`${bonusText(r, gain)} with ${aWorks(r)}`] : info.class === 'Strategic' ? [] : ['Gives Egypt nothing: Egypt has no Production'];
+  const lines = YIELD_WORD.some(([k]) => gain[k]) ? [`${bonusText(r, gain)} with ${aWorks(r)}`] : info.class === 'Strategic' ? [] : ['Egypt has no Production, so this adds nothing'];
   if (info.class === 'Strategic') lines.push(`Supplies ${supplyPerDeposit(faction)} ${info.name} inside your borders, ${supplyPerDeposit(faction) + supplyPerMine(faction)} with ${aWorks(r)}`);
   return lines;
 }

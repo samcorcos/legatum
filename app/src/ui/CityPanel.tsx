@@ -805,7 +805,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
       <div className="cp-yields" aria-label="City yields per turn" data-testid="city-yields">
         {YIELD_KEYS.map((k) => owner?.faction === 'Egypt' && k === 'production' ? (
           // The Nile: Egypt has no Production, so this cell says what its surplus Food builds instead.
-          <Tip key={k} content={`Egypt has no Production. While ${city.name} is building, its surplus Food goes into the build. Otherwise it grows the city.`} className="cp-yield" placement="top">
+          <Tip key={k} content={`Egypt has no Production. Surplus Food builds what ${city.name} is working on, or grows it if you choose Grow.`} className="cp-yield" placement="top">
             <span><YieldIcon k="food" size={15} /> <b data-testid="city-nile-builds">{egyptBuilding ? egyptProgress : 0}</b></span>
             <span className="cp-yield-l">Builds</span>
           </Tip>
