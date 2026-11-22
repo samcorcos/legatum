@@ -2,6 +2,7 @@ import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import { readFileSync, realpathSync } from 'node:fs';
 import { execSync } from 'node:child_process';
+import { webpAssets } from './vite-plugin-webp.ts';
 
 // The title screen's build label (src/buildLabel.ts): the release label if set, else git describe
 // against the last playtest-* tag.
@@ -24,7 +25,8 @@ const rulesVersion = Number(/pub const RULES_VERSION: u32 = (\d+);/.exec(readFil
 if (!Number.isInteger(rulesVersion)) throw new Error('RULES_VERSION not found in crates/core/src/lib.rs');
 
 export default defineConfig({
-  plugins: [react(), { name: 'legatum-site-url', transformIndexHtml: (html: string) => html.replaceAll('%SITE_URL%', siteUrl) }],
+  // The hosted web build (scripts/build-web.sh) serves the bundled PNG art as WebP; the desktop build and the dev server keep PNG (LEGATUM_WEBP=0 turns it off, =1 forces it).
+  plugins: [react(), ...(process.env.LEGATUM_WEBP === '1' || (process.env.VITE_LEGATUM_HOSTED === '1' && process.env.LEGATUM_WEBP !== '0') ? [webpAssets()] : []), { name: 'legatum-site-url', transformIndexHtml: (html: string) => html.replaceAll('%SITE_URL%', siteUrl) }],
   define: {
     __BUILD_LABEL__: JSON.stringify(process.env.LEGATUM_BUILD_LABEL ?? ''),
     __BUILD_DESCRIBE__: JSON.stringify(describe),
