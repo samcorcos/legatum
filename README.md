@@ -13,7 +13,7 @@
 <h3 align="center">A historical 4X on a hex map, built for people who love Civilization.</h3>
 
 <p align="center">
-  Real peoples, from Switzerland to the Aztecs. Play solo against five AI empires, or with a friend on one team against six.<br>
+  Real peoples, from Switzerland to the Aztecs. Play solo against one to seven AI empires, or with a friend on one team against six.<br>
   Everyone plans at once, the race to victory is always visible, and the AI gets no bonuses at Easy, Normal or Hard.
 </p>
 
@@ -108,7 +108,7 @@ These clips are recorded from the running game.
 - **Diplomacy with Peace, Alliance and War.** An Alliance fights as one side, a call to arms is one decision card, and a public warning shows when rivals line up against a leader.
 - **Asymmetric peoples.** Each has its own rules, units or buildings, and a drawback that pays for them.
 - **A public victory race.** A team wins by holding its VP target for ten turns: 10 VP for one empire, 20 for a team of two. VP come from era objectives (1 VP in each era after the first, with three ways to score it), captured original capitals, world wonders and faction goals. A team also wins when it is the only one still holding an original capital of its own.
-- **Solo or together.** Single Player is you against five AI empires by default. Multiplayer is hot seat on one computer, a game on your local network, or an online game from the desktop app: Host Game lists your game for others and Join Game shows the games that are open (all games are public for now). The co-op setup puts two humans on one team against six AI empires.
+- **Solo or together.** Single Player is you against one to seven AI empires (five by default). Multiplayer is hot seat on one computer, a game on your local network, or an online game from the desktop app: Host Game lists your game for others and Join Game shows the games that are open (all games are public for now). The co-op setup puts two humans on one team against six AI empires.
 - **Scenarios.** Short positions that each ask one question ("can you hold this city?"), with the Hard AI's result from the same start to compare against.
 - **Art and sound.** All of the art is AI-generated (see [How it was made](#how-it-was-made)). The music and sound effects are CC0 recordings by Kenney and others, credited in the game.
 - **A post-game report.** The victory race over time, empires over time, an event timeline and a statistics table.

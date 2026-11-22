@@ -9,7 +9,7 @@ import type { BuildingKind, CityView, Faction, Order, PlayerView, ProductionItem
 import { comparisonSentence, pieceAgainst, pieceComparison } from '../pieceCompare';
 import { PieceVsLine } from './PieceVs';
 import { razeLossLines, razeLosses, razeWorkText } from '../razeLosses';
-import { BUILDING_NAME, BUILDING_STATS, TERRAIN_NAME, FIRST_GROWTH, GROWTH_BASE, GROWTH_PER_POP, WORK_RADIUS, GERMANY_PROJECT_GOLD_PERCENT, GERMANY_PROJECT_SCIENCE_PERCENT, greatWorkRules, greatWorkRequirement, GREAT_WORKS, isGreatWork, isProductionBuilding, TECH_NAME, CAPTURE_RESISTANCE_TURNS, itemCardText, itemDescription, itemSummary, moreText, itemKey, itemName as baseItemName, IMPROVEMENT_INFO, sameItem, buildingFamily, RULES, HORSE_MOUNTED } from '../data';
+import { BUILDING_NAME, BUILDING_STATS, TERRAIN_NAME, FIRST_GROWTH, GROWTH_BASE, GROWTH_PER_POP, WORK_RADIUS, GERMANY_PROJECT_GOLD_PERCENT, GERMANY_PROJECT_SCIENCE_PERCENT, costInFactionYield, costYield, isGrow, greatWorkRules, greatWorkRequirement, GREAT_WORKS, isGreatWork, isProductionBuilding, TECH_NAME, CAPTURE_RESISTANCE_TURNS, itemCardText, itemDescription, itemSummary, moreText, itemKey, itemName as baseItemName, IMPROVEMENT_INFO, sameItem, buildingFamily, RULES, HORSE_MOUNTED } from '../data';
 import { effectiveProduction, errorsWhere, orderCity, productionQueue, queueAfterBuild, setProductionQueue, toggleBuy } from '../orders';
 import { distance, hexEq, tileIndex } from '../hex';
 import { WONDER_INFO, WONDER_PERCENT, cityWonders, wonderArt, wonderBonusSentence, wonderYieldWord } from '../wonders';
@@ -319,8 +319,22 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
   const option = producing ? d.options.find((o) => sameItem(o.item, producing)) : null;
   const yields = buildChanged ? producing ? option?.yields ?? d.yields : d.idle_yields ?? d.yields : d.yields;
   const surplus = yields.total.food - 2 * city.population;
-  const egyptBuilding = owner?.faction === 'Egypt' && producing?.kind === 'Building';
-  const egyptProgress = Math.max(0, surplus) * 2;
+  // The Nile (core `economy::nile`): while an Egyptian city builds anything but Grow, its surplus Food is already
+  // converted in the yields, so the Production total is the progress from Food and the converted Food is on its own line.
+  const egyptBuilding = owner?.faction === 'Egypt' && !!producing && !isGrow(producing);
+  const egyptProgress = Math.max(0, yields.total.production);
+  /** A project's per-turn result: Germany's Gold or Science, or how soon Grow grows the city. */
+  const projectRate = (item: ProductionItem & { kind: 'Project' }, y: typeof yields): string => {
+    if (item.project === 'Grow') {
+      const gain = y.total.food - 2 * city.population;
+      if (gain <= 0) return 'No surplus Food';
+      const turns = Math.max(1, Math.ceil((d.growth_threshold - d.food_stored) / gain));
+      return `Grows in ${turns} turn${turns === 1 ? '' : 's'}`;
+    }
+    return `+${Math.floor(y.total.production * (item.project === 'Gold' ? GERMANY_PROJECT_GOLD_PERCENT : GERMANY_PROJECT_SCIENCE_PERCENT) / 100)} ${item.project}/turn`;
+  };
+  const growOption = owner?.faction === 'Egypt' ? d.options.find((o) => isGrow(o.item)) ?? null : null;
+  const nileSurplus = egyptBuilding ? -(yields.sources.find((src) => src.label.startsWith('The Nile: surplus Food builds'))?.yields.food ?? 0) : 0;
   const turnsToGrow = buildChanged
     ? d.resistance > 0 || egyptBuilding ? null
       : d.food_stored + surplus >= d.growth_threshold ? 1
@@ -355,7 +369,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
   const growthLabelText = growth?.state === 'starving' ? 'Starving' : `Grows to ${city.population + 1}${claim ? ` · ${claim.text}` : ''}${unlockNames ? ` · unlocks ${unlockNames}` : ''}`;
   const counts = territoryCounts(d);
   const ownedWonders = cityWonders(view, city);
-  const growthTurns = egyptBuilding && d.resistance === 0 && !d.food_construction_paused ? 'Food builds instead'
+  const growthTurns = egyptBuilding && d.resistance === 0 ? 'Food builds instead'
     : growth?.state === 'resisting' ? 'Paused'
     : growth?.state === 'starving' ? `−1 population in ${growth.turns}`
     : growth?.state === 'growing' ? `${growth.turns} turn${growth.turns === 1 ? '' : 's'}`
@@ -364,15 +378,16 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
   const growthTip = (
     <div className="bd">
       <div className="bd-title">Growth</div>
-      <div className="bd-row"><span>Food per turn</span><span>{yields.total.food}</span></div>
+      <div className="bd-row"><span>Food per turn</span><span>{yields.total.food + nileSurplus}</span></div>
       <div className="bd-row"><span>Eaten (2 per population)</span><span className="neg">−{2 * city.population}</span></div>
-      <div className="bd-row bd-total"><span>Surplus</span><span>{surplus}</span></div>
-      {egyptBuilding && <div className="bd-row"><span>Building progress from Food</span><span>+{egyptProgress}/turn</span></div>}
+      <div className="bd-row bd-total"><span>Surplus</span><span>{surplus + nileSurplus}</span></div>
+      {egyptBuilding && <div className="bd-row"><span>Goes into the {producing ? itemName(producing, owner?.faction) : 'build'}</span><span>−{nileSurplus} Food, +{egyptProgress} progress</span></div>}
+      {egyptBuilding && <div className="bd-row bd-total"><span>Left to grow</span><span>{surplus}</span></div>}
       <div className="bd-row"><span>Stored</span><span><Amount n={`${d.food_stored}/${d.growth_threshold}`} unit="Food" /></span></div>
       <div className="bd-note"><Amounts text={
         growth?.state === 'starving' ? `Stored Food runs out and ${city.name} loses 1 population in ${growth.turns} turn${growth.turns === 1 ? '' : 's'}. Build a Farm or a Granary to add Food.`
           : growth?.state === 'resisting' ? `No growth during resistance (${d.resistance} turns).`
-          : egyptBuilding && !d.food_construction_paused ? `Each 1 surplus Food gives 2 progress to this building instead of growth. Stored Food stays stored; ${yields.total.production} Production this turn does not help it.`
+          : egyptBuilding ? `While ${city.name} is building, its surplus Food goes into the build and the city doesn't grow. Choose Grow to grow it instead.`
           : `Grows at ${d.growth_threshold} Food. The first growth costs ${FIRST_GROWTH} Food. After that, each growth costs ${GROWTH_BASE} Food plus ${GROWTH_PER_POP} for every population above 1. Leftover Food carries over, and a city grows at most 1 population a turn. Each growth claims one more tile.`
       } /></div>
       {unlockItems.map((item) => <div className="bd-note" key={itemKey(item)}>{unlockReason(item, itemName(item, owner?.faction), city.population + 1)}</div>)}
@@ -503,7 +518,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
         onChange={(event) => { setPhoneChoice(event.target.value); feel.select(); }}>
         {/* The current build says so, so the closed picker names what the city is making (playtest-6 M2). */}
         {d.options.map((o) => <option key={itemKey(o.item)} value={itemKey(o.item)} disabled={!!o.resource_blocker && !sameItem(o.item, producing)}>
-          {sameItem(o.item, producing) ? 'Building: ' : ''}{itemName(o.item, owner?.faction)} · {o.item.kind === 'Project' ? `+${o.item.project === 'Gold' ? Math.floor(o.yields.total.production * GERMANY_PROJECT_GOLD_PERCENT / 100) : Math.floor(o.yields.total.production * GERMANY_PROJECT_SCIENCE_PERCENT / 100)} ${o.item.project}/turn` : `${o.turns > 0 ? `${o.turns} turns` : 'No output'} · ${o.cost} Production`}{o.supply_need ? ` · ${needText(o.supply_need)}` : ''}{o.resource_blocker && !sameItem(o.item, producing) ? ` · ${o.resource_blocker}` : ''}
+          {sameItem(o.item, producing) ? 'Building: ' : ''}{itemName(o.item, owner?.faction)} · {o.item.kind === 'Project' ? projectRate(o.item, o.yields) : `${o.turns > 0 ? `${o.turns} turns` : 'No output'} · ${costInFactionYield(owner?.faction ?? 'India', o.cost)} ${costYield(owner?.faction ?? 'India')}`}{o.supply_need ? ` · ${needText(o.supply_need)}` : ''}{o.resource_blocker && !sameItem(o.item, producing) ? ` · ${o.resource_blocker}` : ''}
         </option>)}
       </select>
       <button className="btn primary" data-primary-action disabled={view.finished || !choice || choiceBlocked}
@@ -519,13 +534,12 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     // A tile-chosen build not yet placed stands for every eligible tile, so it goes by its plain name.
     const name = o.item.kind === 'Wonder' && !siteChosen(o) ? baseItemName(o.item, owner?.faction) : itemName(o.item, owner?.faction);
     if (o.item.kind === 'Project') {
-      const amount = o.item.project === 'Gold' ? Math.floor(o.yields.total.production * GERMANY_PROJECT_GOLD_PERCENT / 100) : Math.floor(o.yields.total.production * GERMANY_PROJECT_SCIENCE_PERCENT / 100);
       return <div className="production-choice project-choice" key={itemKey(o.item)} data-item={itemKey(o.item)}>
         <Tip as="div" placement="right" summary={itemDescription(o.item, owner?.faction)} content={itemDescription(o.item, owner?.faction)}>
           <button className="prod" aria-label={`Run ${name}`} onClick={() => buildNow(o.item)} disabled={view.finished}>
             <span className="prod-name">{name}</span>
-            <span className="prod-cost">+{amount} {o.item.project}/turn</span>
-            <span className="prod-go">{sameItem(producing, o.item) ? 'Active' : 'Run project →'}</span>
+            <span className="prod-cost">{projectRate(o.item, o.yields)}</span>
+            <span className="prod-go">{sameItem(producing, o.item) ? 'Active' : isGrow(o.item) ? 'Grow →' : 'Run project →'}</span>
           </button>
         </Tip>
         <EffectMore effect={itemSummary(o.item, owner?.faction)}><Amounts text={moreText(itemDescription(o.item, owner?.faction), itemSummary(o.item, owner?.faction))} /></EffectMore>
@@ -596,7 +610,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
         <span className="prod-name">{imp ? <><span className="prod-what">{improvementName(imp.improvement, preview?.resource)}</span><span className="prod-where">{improvementWhere(imp, city.pos)}</span></> : site ? <><span className="prod-what">{baseItemName(site, owner?.faction)}</span>{unplaced && !isGreatWork(site.building) && <span className="prod-where place-where">{placingHere ? 'Click a lit tile on the map' : 'Choose its tile on the map'}</span>}{!unplaced && <><span className="prod-where">{sitePlace(site.tile)}</span>{o.wonder && <span className="prod-where site-cost"><Amounts text={`gives up ${yieldsText(o.wonder.lost)}`} /></span>}</>}</> : name} {positions.length > 1
           ? <span className="queue-badge queue-count" title={`In the queue ${positions.length} times (positions ${positions.join(', ')})`}>×{positions.length}</span>
           : positions.map((n) => <span className="queue-badge" key={n} title={`Position ${n} in the queue`}>{n}</span>)}</span>
-        <span className="prod-cost">{progress ? <span className="prod-progress">{progress}</span> : <>{o.cost} <YieldIcon k="production" size={11} /></>}{o.supply_need && <span className="prod-supply-need" title={`${needText(o.supply_need)} for as long as it exists. ${supplyRuleText(o.supply_need, view.players.find((p) => p.id === view.me)?.faction)}`}><Amounts text={needText(o.supply_need)} /></span>}</span>
+        <span className="prod-cost">{progress ? <span className="prod-progress">{progress}</span> : <>{costInFactionYield(owner?.faction ?? 'India', o.cost)} <YieldIcon k={costYield(owner?.faction ?? 'India') === 'Food' ? 'food' : 'production'} size={11} /></>}{o.supply_need && <span className="prod-supply-need" title={`${needText(o.supply_need)} for as long as it exists. ${supplyRuleText(o.supply_need, view.players.find((p) => p.id === view.me)?.faction)}`}><Amounts text={needText(o.supply_need)} /></span>}</span>
         <span className="prod-turns">{o.turns > 0 ? `${o.turns} turn${o.turns === 1 ? '' : 's'}` : 'No output'}</span>
         {o.item.kind === 'Unit' && <span className={`prod-upkeep ${o.upkeep ? o.upkeep.free ? 'free' : 'paid' : 'none'}`}><Amounts text={upkeepText(o.upkeep)} />{o.upkeep && o.upkeep.gold_per_turn_after < 0 && <span className="prod-upkeep-after" title="Your total Gold/turn once this unit exists"> → <Amounts text={`${signed(o.upkeep.gold_per_turn_after)} Gold/turn`} /></span>}</span>}
         {imp && <span className="prod-upkeep none">No upkeep</span>}
@@ -643,7 +657,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
           <ItemArt item={u.item} faction={owner?.faction} size={20} />
           <span className="prod-name">{name}</span>
           {/* One statement of why not: a clicked card says it in red below, so the grey line steps aside. */}
-          <span className="prod-cost">{u.reason.startsWith('Already built') || hallStands(u.reason) ? <><Icon name="ui-check" size={11} className="ui-mark" /> Built</> : u.production_banked > 0 ? <span className="prod-progress">{u.production_banked}/{u.cost} banked</span> : <>{u.cost} <YieldIcon k="production" size={11} /></>}</span>
+          <span className="prod-cost">{u.reason.startsWith('Already built') || hallStands(u.reason) ? <><Icon name="ui-check" size={11} className="ui-mark" /> Built</> : u.production_banked > 0 ? <span className="prod-progress">{u.production_banked}/{u.cost} banked</span> : <>{costInFactionYield(owner?.faction ?? 'India', u.cost)} <YieldIcon k={costYield(owner?.faction ?? 'India') === 'Food' ? 'food' : 'production'} size={11} /></>}</span>
           <span className="prod-go">{u.reason.startsWith('Already built') || hallStands(u.reason) ? 'Built' : isPermanentlyUnavailable(u, faction) ? 'Never available' : 'Not yet'}</span>
         </button>
       </Tip>
@@ -760,7 +774,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     if (option) return renderOption(siteCard(building));
     const name = baseItemName({ kind: 'Building', building }, faction);
     return <div className="production-choice unavailable wonder-locked" key={building} data-unavailable="true" data-wonder={building}>
-      <button className="prod" aria-label={`${name} unavailable`} disabled><ItemArt item={{ kind: 'Building', building }} faction={faction} size={20} /><span className="prod-name">{name}</span><span className="prod-cost">{BUILDING_STATS[building].cost} <YieldIcon k="production" size={11} /></span><span className="prod-go">Not yet</span></button>
+      <button className="prod" aria-label={`${name} unavailable`} disabled><ItemArt item={{ kind: 'Building', building }} faction={faction} size={20} /><span className="prod-name">{name}</span><span className="prod-cost">{costInFactionYield(faction ?? 'India', BUILDING_STATS[building].cost)} <YieldIcon k={costYield(faction ?? 'India') === 'Food' ? 'food' : 'production'} size={11} /></span><span className="prod-go">Not yet</span></button>
       {industryFood({ kind: 'Building', building }) && <div className="prod-effect"><Amounts text={`+${BUILDING_STATS[building].yields.production} Production · −1 Food`} /></div>}
       <div className="production-blocker prod-unavailable">{wonderBlocker(building)}</div>
     </div>;
@@ -786,10 +800,16 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     <div ref={panel} className="panel city-panel" style={{ ['--pc' as string]: col }}>
       {head}
       <div className="cp-yields" aria-label="City yields per turn" data-testid="city-yields">
-        {YIELD_KEYS.map((k) => (
+        {YIELD_KEYS.map((k) => owner?.faction === 'Egypt' && k === 'production' ? (
+          // The Nile: Egypt has no Production, so this cell says what its surplus Food builds instead.
+          <Tip key={k} content={`Egypt has no Production. While ${city.name} is building, its surplus Food goes into the build; on Grow, or with nothing to build, it grows the city.`} className="cp-yield" placement="top">
+            <span><YieldIcon k="food" size={15} /> <b data-testid="city-nile-builds">{egyptBuilding ? egyptProgress : 0}</b></span>
+            <span className="cp-yield-l">Builds</span>
+          </Tip>
+        ) : (
           <Tip key={k} content={<YieldSourceTable yields={yields} k={k} />} summary={<CityYieldHover yields={yields} k={k} eaten={k === 'food' ? 2 * city.population : undefined} />} className="cp-yield" placement="top">
             {/* Food is what is left after the population eats, so a starving city reads negative (8.9.23 review: a gross "+2 Food" beside "losing population"). */}
-            <span><YieldIcon k={k} size={15} /> <b className={k === 'food' && surplus < 0 ? 'neg' : undefined} data-testid={k === 'food' ? 'city-food-net' : undefined}>{k === 'food' ? signed(surplus) : yields.total[k]}</b></span>
+            <span><YieldIcon k={k} size={15} /> <b className={k === 'food' && surplus < 0 ? 'neg' : undefined} data-testid={k === 'food' ? 'city-food-net' : undefined}>{k === 'food' ? signed(surplus + nileSurplus) : yields.total[k]}</b></span>
             <span className="cp-yield-l">{YIELD_LABEL[k]}</span>
           </Tip>
         ))}
@@ -847,7 +867,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
 
       <div className="cp-block">
         {/* The active item shares this row, keeping at least five choices visible at 1280x800. */}
-        <ProgressBar className="cp-production" testId="city-production" name={egyptBuilding ? 'Food construction' : 'Production'} color={YIELD_COLORS.production}
+        <ProgressBar className="cp-production" testId="city-production" name={egyptBuilding ? 'Built from Food' : 'Production'} color={YIELD_COLORS.production}
           label={<span className="cp-now-line"><span className="lbl">Now producing</span>{producing ? <>
             <span className="cp-now-item"><ItemArt item={producing} faction={owner?.faction} size={16} /><span className="cp-now-name">{meterName(producing)}</span></span>
           </> : raceLost ? <>
@@ -876,10 +896,10 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
           turns={<span className="cp-now-turns">
             {producing && pendingQueue && <><span className="pending-dot" aria-hidden="true" /><span className="pending-label" title="Pending until Ready">pending</span>{' '}</>}
             {buildChanged
-              ? !producing ? '—' : producing.kind === 'Project' ? `+${producing.project === 'Gold' ? Math.floor(yields.total.production * GERMANY_PROJECT_GOLD_PERCENT / 100) : Math.floor(yields.total.production * GERMANY_PROJECT_SCIENCE_PERCENT / 100)} ${producing.project}/turn` : option
+              ? !producing ? '—' : producing.kind === 'Project' ? projectRate(producing, yields) : option
                 ? <>{option.production_stored}/{option.cost} stored · {egyptBuilding ? `+${egyptProgress} from Food` : <Amount sign="+" n={yields.total.production} unit="Production" />}/turn · {option.turns > 0 ? `${option.turns} turn${option.turns === 1 ? '' : 's'}` : '—'}</>
                 : '—'
-              : d.producing?.kind === 'Project' ? `+${d.producing.project === 'Gold' ? Math.floor(yields.total.production * GERMANY_PROJECT_GOLD_PERCENT / 100) : Math.floor(yields.total.production * GERMANY_PROJECT_SCIENCE_PERCENT / 100)} ${d.producing.project}/turn`
+              : d.producing?.kind === 'Project' ? projectRate(d.producing, yields)
               : d.producing
                 ? <>{d.production_stored}/{d.production_cost} stored · {egyptBuilding ? `+${egyptProgress} from Food` : <Amount sign="+" n={yields.total.production} unit="Production" />}/turn · {d.production_stall ? 'Stalled' : `${d.turns_to_complete ?? '—'} turn${d.turns_to_complete === 1 ? '' : 's'}`}</>
                 : raceLost ? (d.production_stored > 0 ? `Stopped · ${d.production_stored} Production held for the next build` : 'Stopped · choose a new build')
@@ -888,7 +908,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
           value={storedProduction} max={waitingCap !== null ? Math.max(1, waitingCap) : pendingQueue ? producing ? option?.cost ?? d.production_cost ?? 1 : d.idle_production_cap : d.production_cost ?? d.idle_production_cap} />
 
         {switchNote && <div className="production-switch" data-testid="production-switch" role="status"><Amounts text={`${switchNote}.`} /></div>}
-        {egyptBuilding && <div className="production-switch" data-testid="egypt-construction" role="status">{d.food_construction_paused ? `Building paused: ${d.food_construction_paused}. Surplus Food grows this city again.` : `${Math.max(0, surplus)} surplus Food gives ${egyptProgress} building progress this turn; population does not grow. ${yields.total.production} Production is unused. Progress stays with this building; excess progress on completion is lost.`}</div>}
+        {egyptBuilding && <div className="production-switch" data-testid="egypt-construction" role="status">{`${city.name}'s ${nileSurplus} surplus Food goes into the ${producing ? itemName(producing, owner?.faction) : 'build'} this turn, so ${city.name} doesn't grow.`}{growOption && <>{' '}<button className="btn quiet" data-testid="egypt-grow-instead" disabled={view.finished} onClick={() => buildNow(growOption.item)}>Grow instead →</button></>}</div>}
         {parkedText && <div className="production-choose" data-testid="production-choose"><b>Choose a new build.</b> <Amounts text={parkedText} /></div>}
         {productionWarning && <Tip as="div" className="production-warning" content={FORECAST_ASSUMPTIONS}><Amounts text={productionWarning} /></Tip>}
         {shownBanks.length > 0 && <Tip as="div" className="cp-banked" content="Progress stays with the item you switched away from, in this city. It resumes when you build that item again and never moves to another item. Buying an item is a separate full-price purchase and leaves its banked progress alone.">
@@ -949,6 +969,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
       {idleChoice && autoReason && <div className="cp-block cp-auto-note">{autoReason}</div>}
 
 
+      {growOption && <><div className="cp-sub">Growth</div><div className="prod-list">{renderOption(growOption)}</div></>}
       <div className="cp-sub"><span>Units</span>{idleChoice && buyTile('inline')}</div>
       <LevyNote />
       <div className={`prod-list ${producing ? '' : 'choosing'}`}>
