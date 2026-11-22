@@ -2887,6 +2887,32 @@ mod tests {
     }
 
     #[test]
+    fn a_barbarian_at_an_empty_zero_hp_city_besieges_it_and_never_takes_it() {
+        let mut s = game(&[0, 1]);
+        let c = city(&mut s, 1, hex(5, 4), 3);
+        s.cities.get_mut(&c).unwrap().hp = 0;
+        for kind in [UnitKind::Soldier, UnitKind::Trooper] {
+            let mut s = s.clone();
+            let b = unit(&mut s, PlayerId::BARBARIAN.0, kind, hex(4, 4));
+            goto(&mut s, b, hex(5, 4));
+            let (next, events) = resolve_units(&s, &no_orders());
+            assert_eq!(next.cities[&c].owner, PlayerId(1));
+            assert_ne!(pos(&next, b), hex(5, 4));
+            assert!(
+                !events
+                    .iter()
+                    .any(|e| matches!(e, Event::CityCaptured { .. }))
+            );
+        }
+        // The capture itself refuses a barbarian captor rather than panicking on its missing
+        // player record.
+        let mut events = Vec::new();
+        battle::capture_city(&mut s, c, PlayerId::BARBARIAN, &mut events);
+        assert_eq!(s.cities[&c].owner, PlayerId(1));
+        assert!(events.is_empty());
+    }
+
+    #[test]
     fn melee_attacker_captures_city_at_zero_hp() {
         let mut s = game(&[0, 1]);
         let c = city(&mut s, 1, hex(5, 4), 3);

@@ -428,7 +428,15 @@ currencies, every trade-off priced in Gold). Saves from another rules version do
 (`validation::MAX_GOLD`, `rules/cities.rs::pay_gold`, `validation::credit_gold`). A city stops
 growing at population 1,000; stored Food, Production, and Science stop at 1,000,000
 (`validation::MAX_POPULATION`, `validation::MAX_STORED`). Save loading rejects negative or
-out-of-range amounts with the affected field named (`validation::check_state`). These bounds
+out-of-range amounts with the affected field named (`validation::check_state`), and refuses the references
+that rules would index with (2026-11-22, `validation::check_references` and `check_state`): a player id past the seats,
+a tile off the map, an entity whose own id does not match its key or is above `next_city_id`/`next_unit_id`, a map
+tile naming a missing city, an aircraft in a missing city, a winner or VP hold naming an unseated team; all fail as
+"The save is damaged: ...". Stale references load: a team id in relations, chronicle or memories of a team with no
+empire left, and a city or unit id that has merely fallen (a razed Hall or Diwan city, camp rosters, memories, supply
+records and air sightings are pruned or read with `.get`, never indexed), because real games produce them.
+The save is parsed once and the same JSON tree is decoded into the state (`wasm::session::from_save_json`,
+`json::state_from_value`); `GameState::hash` streams the JSON into FNV-1a with the same bytes and hash as before. These bounds
 leave ordinary game pacing unchanged while keeping long-run arithmetic within range.
 
 **Population is territory** (user decision 2026-10-04): a city works **every** tile it owns within
@@ -583,7 +591,10 @@ increment 1, the Production line). Nothing is stored and nothing is paid:
   hold). Queue heads wait ("…skipped queued Pikeman: No Iron to spare…; kept in queue"); validation runs
   orders in list order, so the second of two Forges with one spare Iron is refused. Upgrades take supply
   in list order before city orders (`rules/mod.rs::validate_orders`, which builds the after-upgrade state
-  for the city orders). A Factory also needs this city's Forge working (`start_check`). Wording
+  for the city orders). Aircraft upgrades are paid later, in the ranged phase, in aircraft-id order, so they are
+  checked last, against the Gold and supply the unit upgrades and city orders of the same list leave, each valid one
+  applied before the next (`air::validate_orders` takes that projected state from
+  `cities::validate_city_orders_projected`; the order list's order does not matter for who is refused). A Factory also needs this city's Forge working (`start_check`). Wording
   (`shortage_text`): "No Iron to spare: your deposits supply 6 and 5 are in use, plus 1 held for the Forge in
   Bern. Win another Iron deposit, or build a Mine on one (+1 Iron)"; none at all: "Needs 1 Iron: you have no
   Iron yet. Bring an Iron deposit inside your borders"; unrevealed: "Needs Iron: Iron Working reveals Iron on

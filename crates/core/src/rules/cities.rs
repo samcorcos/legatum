@@ -523,6 +523,16 @@ pub fn validate_city_orders(
     player: PlayerId,
     orders: &[Order],
 ) -> Vec<OrderError> {
+    validate_city_orders_projected(state, player, orders).0
+}
+
+/// `validate_city_orders`, also returning the state after the valid city orders are applied: what
+/// the later phases of the same turn (aircraft upgrades) see of the treasury and supply.
+pub fn validate_city_orders_projected(
+    state: &GameState,
+    player: PlayerId,
+    orders: &[Order],
+) -> (Vec<OrderError>, GameState) {
     let mut sim = state.clone();
     let mut bought = BTreeSet::new();
     let mut touched = BTreeSet::new();
@@ -543,7 +553,7 @@ pub fn validate_city_orders(
             Err(message) => errors.push(OrderError { index, message }),
         }
     }
-    errors
+    (errors, sim)
 }
 
 /// Orders split by [`defer_contested_tile_buys`]: each empire's kept list, then the deferred
