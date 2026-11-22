@@ -174,7 +174,7 @@ describe('RemoteClient', () => {
     expect(sockets[0].sent.at(-1)).toEqual({ type: 'ready', game_id: 'g1', turn: 1, ready: true });
   });
 
-  it('validation previews cannot overwrite orders, clear errors or send a LAN message', () => {
+  it('validation previews cannot overwrite orders, clear errors or send an online message', () => {
     const { client, sockets } = setup();
     client.connect(); sockets[0].open();
     sockets[0].push({ type: 'welcome', seat: 1, game_id: 'g1', orders: [] });

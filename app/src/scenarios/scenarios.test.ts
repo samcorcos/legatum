@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { SOON_SLOTS, heldBackCatalog, aiResultLine, bestResultLine, compareToAi, leadTarget, newRun, mergeDropins, nextRecords, parseEntries, runFileName, scenarioCatalog, targetText, turnsText, versusBaseline, type ScenarioFile, type ScenarioRecord, type ScenarioStatus, type ScenarioTarget } from './scenarios';
+import { SOON_SLOTS, heldBackCatalog, aiResultLine, bestResultLine, compareToAi, leadTarget, newRun, nextRecords, parseEntries, runFileName, scenarioCatalog, targetText, turnsText, versusBaseline, type ScenarioFile, type ScenarioRecord, type ScenarioStatus, type ScenarioTarget } from './scenarios';
 
 const status = (p: Partial<ScenarioStatus> = {}): ScenarioStatus => ({
   turn: 21, start_turn: 21, end_turn: 36, turns_left: 15, outcome: 'Playing', reason: '', score: 100,
@@ -177,47 +177,5 @@ describe('the comparison with the Hard AI', () => {
     expect(bestResultLine(hold, rec({}))).toBe('Your best: objective met, score 300');
     expect(bestResultLine(hold, rec({ bestOutcome: 'Lost', best: 120 }))).toBe('Your best: failed, score 120');
     expect(bestResultLine(race, rec({ revision: 0 }))).toBe('Not played yet');
-  });
-});
-
-describe('the scenarios folder', () => {
-  const bundled = scenarioCatalog();
-  const good = (id: string, over: Record<string, unknown> = {}) => JSON.stringify({
-    format: 'legatum-scenario', version: 1, id, revision: 1, title: `Title ${id}`, faction: 'Sparta', seat: 0, minutes: 10, briefing: 'b',
-    lab: { question: 'q?', blurb: 'b', order: 5 }, objective: { summary: 's', turns: 3, score: [] }, ...over,
-  });
-
-  it('adds a good file next to the bundled scenarios and lets it replace one with the same id', () => {
-    const id = bundled[0].file.id;
-    const { entries, unavailable } = mergeDropins(bundled, [
-      { file: 'new.json', text: good('new-one'), reason: null },
-      { file: `${id}.json`, text: good(id, { title: 'Replaced' }), reason: null },
-    ]);
-    expect(unavailable).toEqual([]);
-    expect(entries).toHaveLength(bundled.length + 1);
-    expect(entries.find((e) => e.file.id === 'new-one')).toMatchObject({ fromFolder: true });
-    expect(entries.find((e) => e.file.id === id)?.file.title).toBe('Replaced');
-  });
-
-  it('lists a file the app refused greyed out with its reason, and never drops one', () => {
-    const { entries, unavailable } = mergeDropins(bundled, [
-      { file: 'old.json', text: good('old-one'), reason: 'made for rules version 24; this app is 23' },
-      { file: 'garbage.json', text: '{ nope', reason: 'invalid scenario: expected value at line 1' },
-      { file: 'huge.json', text: null, reason: 'larger than 16 MB' },
-      { file: 'run.json', text: JSON.stringify({ format: 'legatum-scenario-run' }), reason: null },
-      { file: 'held.json', text: good('held', { lab: { question: 'q?', blurb: 'b', requires: 'walls halve siege damage' } }), reason: null },
-    ]);
-    expect(entries).toHaveLength(bundled.length);
-    expect(unavailable).toEqual([
-      { file: 'old.json', title: 'Title old-one', reason: 'Made for rules version 24; this app is 23.' },
-      { file: 'garbage.json', title: 'garbage', reason: 'This file is not a readable scenario.', detail: 'Invalid scenario: expected value at line 1.' },
-      { file: 'huge.json', title: 'huge', reason: 'Larger than 16 MB.' },
-      { file: 'run.json', title: 'run', reason: 'Is not a Lab scenario.' },
-      { file: 'held.json', title: 'Title held', reason: 'Waits for a change: walls halve siege damage.' },
-    ]);
-  });
-
-  it('is the bundled list when the folder is empty or absent', () => {
-    expect(mergeDropins(bundled, []).entries.map((e) => e.file.id)).toEqual(bundled.map((e) => e.file.id));
   });
 });

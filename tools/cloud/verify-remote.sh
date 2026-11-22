@@ -19,7 +19,7 @@
 #              auto (the default) shards only when the box has the slots free right now (no queue, at least 3 free), up to
 #              4 shards, and only when the branch needs Playwright; 1 never shards. Sharding does not add CPU: on a busy
 #              box the shards queue like any job, so auto stays at 1 there.
-# verify-branch.sh has no macOS-only step (the Tauri bundle belongs to tools/release/check.sh and is not run here).
+# verify-branch.sh has no macOS-only step.
 # The box needs no GitHub or user credentials: code travels as a bundle, over S3 and Session Manager.
 # Do not wrap this script in an outer `timeout`: it hides job ids and final status. Use --budget instead.
 set -euo pipefail

@@ -23,8 +23,8 @@
 //! it can reach). The score is one integer: capture or hold, earlier is better, units and HP
 //! lost and killed at their Production cost, and city HP.
 //!
-//! The run is a resumable state machine (`TrainingRun::step`), so the app can run it natively
-//! on all cores or in WASM in short slices, and the caller enforces the time cap: when it hits,
+//! The run is a resumable state machine (`TrainingRun::step`), so the browser can run it in WASM
+//! in short slices (the simulator runs it natively), and the caller enforces the time cap: when it hits,
 //! the best orders found so far are played. Deterministic for a given state and budget.
 
 use crate::ScriptedBrain;
@@ -2627,16 +2627,7 @@ impl TrainingRun {
     }
 }
 
-/// What the desktop app's native search thread needs for one turn. Plain serde on both ends
-/// (Rust to Rust through the webview as an opaque string): never the save encoding, which
-/// writes `setup.seed` as a string for JavaScript.
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct TrainingRequest {
-    pub state: GameState,
-    pub hard: BTreeMap<PlayerId, Vec<Order>>,
-}
-
-/// Search a whole turn at once (the headless simulator and the desktop app's native thread).
+/// Search a whole turn at once (the headless simulator).
 /// `clock` returns ms since the run began; pass `|| 0` with `max_rollouts_per_battle` for a
 /// deterministic budget.
 pub fn search_turn(

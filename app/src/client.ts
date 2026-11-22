@@ -1,4 +1,4 @@
-// The UI talks to the Rust core through WASM, or to the same core on a LAN host.
+// The UI talks to the Rust core through WASM, or to the same core on the online host.
 import type {
   AttackMode,
   AlongsideAttack,

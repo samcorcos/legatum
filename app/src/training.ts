@@ -1,12 +1,10 @@
 // Training mode (designer, 2026-11-07): AI seats at the Training level search their battles.
-// The search starts when a turn begins, while the human plans, natively on every core in the
-// desktop app (a Tauri command) and in short WASM slices in the browser. End Turn waits for it
-// (at most the cap) behind a progress card; the turn report then says what it changed. Every
-// searched battle, the human's own battle positions and their realised outcomes go to a log
-// under the app data dir's `training/` folder (`crates/ai/src/training.rs`).
+// The search starts when a turn begins, while the human plans, in short WASM slices. End Turn
+// waits for it (at most the cap) behind a progress card; the turn report then says what it
+// changed. Every searched battle, the human's own battle positions and their realised outcomes
+// become training log lines (`crates/ai/src/training.rs`), kept in memory for the session.
 import type { Hex, PlayerView } from './types';
 import type { ReportLine } from './format';
-import { tauriInvoke, inTauri } from './tauri';
 
 export type BattleKind = 'attack' | 'defend' | 'field';
 
@@ -36,10 +34,8 @@ export interface TrainingFinish {
 /** What the engine client offers for Training mode (the local WASM client). */
 export interface TrainingEngine {
   trainingBegin(capMs: number): TrainingProgress | null;
-  trainingRequest(): string;
   trainingStep(maxRollouts: number, elapsedMs: number): TrainingProgress | null;
   trainingFinish(elapsedMs: number): TrainingFinish | null;
-  trainingApply(resultJson: string): TrainingFinish;
   trainingGameId(): string;
 }
 
@@ -61,7 +57,6 @@ export interface TrainingUi {
   capMs: number;
   /** The human ended the turn: the progress card is up. */
   waiting: boolean;
-  native: boolean;
 }
 
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
@@ -133,22 +128,16 @@ export function reportLine(p: TrainingProgress, view: PlayerView): ReportLine | 
   };
 }
 
-/** Lines that could not be written (the browser build has no log folder): kept for tests. */
+/** This session's training log lines (the latest 5,000), also on `globalThis.legatumTrainingLog`. */
 export const unwrittenLog: string[] = [];
 (globalThis as { legatumTrainingLog?: string[] }).legatumTrainingLog = unwrittenLog;
 
-/** Append log lines to `<app data>/training/<game>.jsonl` (desktop app only). */
-export function writeTrainingLog(gameId: string, lines: string[]): void {
+/** Keep log lines for this session. `_gameId` names the game the lines belong to. */
+export function writeTrainingLog(_gameId: string, lines: string[]): void {
   if (!lines.length) return;
-  if (!inTauri()) {
-    unwrittenLog.push(...lines);
-    if (unwrittenLog.length > 5000) unwrittenLog.splice(0, unwrittenLog.length - 5000);
-    return;
-  }
-  void tauriInvoke('training_log_append', { gameId, lines }).catch((e) => console.warn('legatum: training log not written', e));
+  unwrittenLog.push(...lines);
+  if (unwrittenLog.length > 5000) unwrittenLog.splice(0, unwrittenLog.length - 5000);
 }
-
-interface Poll { turn: number; progress: TrainingProgress | null; result: string | null }
 
 /** The hard watchdog: this long past the cap, the turn goes ahead on Hard's orders regardless. */
 export const TRAINING_WATCHDOG_MS = 2000;
@@ -157,7 +146,7 @@ export const TRAINING_WATCHDOG_MS = 2000;
  * One turn's search. `onProgress` fires as it advances; `finish()` resolves once the searched
  * orders are in the engine, or once the search failed or ran past the cap plus the watchdog,
  * when the training seats play Hard's orders (the engine's pending orders). It never waits
- * forever (playtest 8.9.27, T44: a failed native start left End Turn waiting).
+ * forever (playtest 8.9.27, T44: a failed search start left End Turn waiting).
  */
 export class TrainingDriver {
   private cancelled = false;
@@ -172,11 +161,9 @@ export class TrainingDriver {
     private engine: TrainingEngine,
     readonly progress0: TrainingProgress,
     private capMs: number,
-    readonly native: boolean,
     private onProgress: (p: TrainingProgress) => void,
   ) {
-    if (native) void this.runNative();
-    else this.schedule();
+    this.schedule();
     this.armWatchdog();
   }
 
@@ -236,7 +223,7 @@ export class TrainingDriver {
     setTimeout(check, Math.max(10, this.capMs + TRAINING_WATCHDOG_MS));
   }
 
-  /** WASM: short slices on the main thread, yielding so planning stays smooth. */
+  /** Short slices on the main thread, yielding so planning stays smooth. */
   private schedule() {
     const slice = () => {
       if (this.cancelled || this.settled) return;
@@ -264,29 +251,5 @@ export class TrainingDriver {
       setTimeout(slice, this.urgent ? 4 : 24);
     };
     setTimeout(slice, 50);
-  }
-
-  /** Desktop: the search runs on a native thread; poll its progress. */
-  private async runNative() {
-    try {
-      await tauriInvoke('training_start', { request: this.engine.trainingRequest(), capMs: Math.round(this.capMs) });
-      while (!this.cancelled && !this.settled) {
-        await new Promise((r) => setTimeout(r, this.urgent ? 100 : 250));
-        if (this.cancelled || this.settled) return;
-        const poll = JSON.parse(String(await tauriInvoke('training_poll'))) as Poll | null;
-        if (this.cancelled || this.settled) return;
-        if (poll && poll.turn === this.progress0.turn) {
-          if (poll.result) {
-            this.complete(this.engine.trainingApply(poll.result));
-            return;
-          }
-          if (poll.progress) this.onProgress(poll.progress);
-        }
-        // A stuck or missing thread never holds the turn (the watchdog also covers a hung call).
-        if (this.elapsed() > this.capMs + TRAINING_WATCHDOG_MS) throw new Error('native training search did not answer');
-      }
-    } catch (e) {
-      this.fallBack('failed', e);
-    }
   }
 }

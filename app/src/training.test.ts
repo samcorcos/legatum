@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { TRAINING_WATCHDOG_MS, TrainingDriver, cardText, chipText, reportLine, type TrainingEngine, type TrainingProgress, type TrainingUi } from './training';
+import { describe, expect, it, vi } from 'vitest';
+import { TrainingDriver, cardText, chipText, reportLine, type TrainingEngine, type TrainingProgress, type TrainingUi } from './training';
 import type { PlayerView } from './types';
 
 const battle = (name: string, q: number, done: boolean, changed: boolean) =>
@@ -23,7 +23,7 @@ describe('Training mode text', () => {
   });
 
   it('the card names the battle, its place in the list and the seconds spent, never an unseen place', () => {
-    const ui: TrainingUi = { progress: progress([battle('Lugano', 5, true, false), battle('Thun', 9, false, false), battle('Sion', 20, false, false)], 1), startedAt: 0, capMs: 15_000, waiting: true, native: true };
+    const ui: TrainingUi = { progress: progress([battle('Lugano', 5, true, false), battle('Thun', 9, false, false), battle('Sion', 20, false, false)], 1), startedAt: 0, capMs: 15_000, waiting: true };
     expect(cardText(ui, view, 6_200)).toMatchObject({ title: 'Training: the AI is studying 3 battles', line: 'Attack on Thun (2 of 3) · 6 of 15 s' });
     const hidden = { ...ui, progress: { ...ui.progress, current: 2 } };
     expect(cardText(hidden, view, 1000).line).toBe('A battle out of sight (3 of 3) · 1 of 15 s');
@@ -47,46 +47,19 @@ describe('Training search never holds the turn', () => {
   const p0: TrainingProgress = { turn: 44, battles: [battle('Bellinzona', 28, false, false)], current: 0, done: false, rollouts: 0 };
   const engine = (step: () => TrainingProgress | null): TrainingEngine => ({
     trainingBegin: () => p0,
-    trainingRequest: () => '{}',
     trainingStep: step,
     trainingFinish: () => null,
-    trainingApply: () => { throw new Error('not reached'); },
     trainingGameId: () => 'game-1',
   });
-  const internals = globalThis as { __TAURI_INTERNALS__?: { invoke(cmd: string): Promise<unknown> } };
-
-  afterEach(() => {
-    delete internals.__TAURI_INTERNALS__;
-    vi.useRealTimers();
-  });
-
-  // Playtest 8.9.27, T44: the native start failed while he planned; End Turn then waited forever.
-  it('a native search that failed before End Turn lets the turn go ahead on Hard', async () => {
-    internals.__TAURI_INTERNALS__ = { invoke: (cmd) => (cmd === 'training_start' ? Promise.reject(new Error('invalid request')) : Promise.resolve('[]')) };
-    vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const driver = new TrainingDriver(engine(() => p0), p0, 15_000, true, () => {});
-    await new Promise((r) => setTimeout(r, 0));
-    expect(driver.done).toBe(true);
+  it('a search that never finishes settles at the cap', async () => {
+    const driver = new TrainingDriver(engine(() => ({ ...p0 })), p0, 100, () => {});
     await expect(driver.finish()).resolves.toBeNull();
-  });
-
-  it('the watchdog settles on Hard at the cap plus 2 s when the native search never answers', async () => {
-    vi.useFakeTimers();
-    internals.__TAURI_INTERNALS__ = { invoke: (cmd) => (cmd === 'training_log_append' ? Promise.resolve('') : new Promise(() => {})) };
-    vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const driver = new TrainingDriver(engine(() => p0), p0, 1_000, true, () => {});
-    const finished = vi.fn();
-    void driver.finish().then(finished);
-    await vi.advanceTimersByTimeAsync(1_000 + TRAINING_WATCHDOG_MS - 50);
-    expect(finished).not.toHaveBeenCalled();
-    await vi.advanceTimersByTimeAsync(100);
-    expect(finished).toHaveBeenCalledWith(null);
     expect(driver.done).toBe(true);
   });
 
   it('a WASM search that throws settles on Hard', async () => {
     vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const driver = new TrainingDriver(engine(() => { throw new Error('boom'); }), p0, 15_000, false, () => {});
+    const driver = new TrainingDriver(engine(() => { throw new Error('boom'); }), p0, 15_000, () => {});
     await expect(driver.finish()).resolves.toBeNull();
     expect(driver.done).toBe(true);
   });

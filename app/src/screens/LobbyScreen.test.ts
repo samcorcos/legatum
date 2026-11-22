@@ -58,7 +58,7 @@ beforeEach(() => {
   useGame.setState(useGame.getInitialState(), true);
   useGame.setState({
     screen: 'setup', setupMode: 'host',
-    lan: {
+    net: {
       status: { mode: 'server', has_game: false, turn: 0, seats: [], is_local: true, staging: null },
       mySeat: null, seats: [], conn: 'closed',
     },
@@ -74,7 +74,7 @@ afterEach(async () => {
     useGame.getState().exitStaging();
   });
   container.remove();
-  useGame.getState().leaveLan();
+  useGame.getState().leaveOnline();
   setOnlineApi();
   sessionStorage.clear();
   vi.useRealTimers();
@@ -350,8 +350,8 @@ it.each([
       { name: 'Alice', faction: 'Byzantium', connected: true, ready: true, is_host: false },
     ],
   };
-  const lan = useGame.getState().lan!;
-  useGame.setState({ lan: { ...lan, status: { ...lan.status, staging: state } } });
+  const net = useGame.getState().net!;
+  useGame.setState({ net: { ...net, status: { ...net.status, staging: state } } });
   rememberSeat({ seat: 0, name: 'Host', roomId: state.room_id, gameId: null, token: 'host-secret' });
   const fetch = vi.fn();
   vi.stubGlobal('fetch', fetch);
@@ -384,13 +384,13 @@ it.each([
 it.each(['status', 'staging_closed', 'no_room'] as const)('opens a fresh lobby when %s confirms the saved room no longer exists', async (missing) => {
   rememberSeat({ seat: 0, name: 'Host', roomId: 'deleted-room', gameId: null, token: 'expired-secret' });
   if (missing === 'staging_closed') {
-    const lan = useGame.getState().lan!;
-    useGame.setState({ lan: { ...lan, status: { ...lan.status, staging: {
+    const net = useGame.getState().net!;
+    useGame.setState({ net: { ...net, status: { ...net.status, staging: {
       room_id: 'deleted-room', config: { width: 64, height: 48, turn_limit: null, seats: [] }, occupants: [],
     } } } });
   } else if (missing === 'no_room') {
-    const lan = useGame.getState().lan!;
-    useGame.setState({ lan: { ...lan, status: { ...lan.status, has_game: true } } });
+    const net = useGame.getState().net!;
+    useGame.setState({ net: { ...net, status: { ...net.status, has_game: true } } });
   }
   const posted: StagingConfig[] = [];
   vi.stubGlobal('fetch', vi.fn(async (_url: string, init: RequestInit) => {
@@ -420,8 +420,8 @@ it.each(['status', 'staging_closed', 'no_room'] as const)('opens a fresh lobby w
 });
 
 it('recovers a missed game handoff before discarding a saved room credential', async () => {
-  const lan = useGame.getState().lan!;
-  useGame.setState({ lan: { ...lan, status: { ...lan.status, has_game: true } } });
+  const net = useGame.getState().net!;
+  useGame.setState({ net: { ...net, status: { ...net.status, has_game: true } } });
   rememberSeat({ seat: 0, name: 'Host', roomId: 'started-room', gameId: null, token: 'host-secret' });
   const fetch = vi.fn();
   vi.stubGlobal('fetch', fetch);
@@ -436,7 +436,7 @@ it('recovers a missed game handoff before discarding a saved room credential', a
   expect(rememberedSeat()).toMatchObject({ gameId: 'game', token: 'host-secret' });
   sockets[1].open();
   expect(sockets[1].sent).toEqual([{ type: 'join', seat: 0, name: 'Host', token: 'host-secret' }]);
-  useGame.getState().leaveLan();
+  useGame.getState().leaveOnline();
 });
 
 it('a seat\'s faction picker: clicking a faction in the gallery sets the seat and the dialog stays open until Close', async () => {

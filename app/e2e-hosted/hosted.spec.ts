@@ -18,6 +18,9 @@ type GameWindow = Window & {
 /** The game-upload Worker the build under test was built with, if any (scripts/build-web.sh). */
 const gamesOrigin = process.env.LEGATUM_GAMES_URL ? new URL(process.env.LEGATUM_GAMES_URL).origin : null;
 
+/** scripts/build-web.sh bakes in the live relay unless LEGATUM_RELAY_URL=none; then the title offers hot seat only. */
+const relayBuilt = process.env.LEGATUM_RELAY_URL !== 'none';
+
 const version = (JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as { version: string }).version;
 
 /** What goes wrong on a static host: collected for the whole test, asserted at the end. */
@@ -83,6 +86,39 @@ const empire = (page: Page) => page.evaluate(() => {
   };
 });
 
+const ENGINE = /\/assets\/legatum_bg-[\w-]+\.wasm$/;
+
+test('a slow engine download shows the loading plate, then the title', async ({ page, baseURL }) => {
+  const problems = watch(page, new URL(baseURL!).origin);
+  // Hold the engine until the plate has been seen, so the check never races a fast connection.
+  let release!: () => void;
+  const held = new Promise<void>((resolve) => { release = resolve; });
+  await page.route(ENGINE, async (route) => { await held; await route.continue(); });
+  await page.goto('/');
+  const plate = page.getByTestId('boot-plate');
+  await expect(plate).toBeVisible();
+  await expect(plate).toContainText('LEGATUM');
+  await expect(plate).toContainText('Loading the game…');
+  release();
+  await expect(page.getByRole('heading', { name: 'Legatum', exact: true })).toBeVisible({ timeout: 60_000 });
+  await expect(plate).toHaveCount(0);
+  expect(problems).toEqual([]);
+});
+
+test('an engine that cannot download shows Reload, never a blank page', async ({ page }) => {
+  await page.route(ENGINE, (route) => route.abort());
+  await page.goto('/');
+  const card = page.getByTestId('crash-screen');
+  await expect(card).toBeVisible({ timeout: 60_000 });
+  await expect(card.getByRole('heading', { name: 'The game could not load' })).toBeVisible();
+  const reload = card.getByRole('button', { name: /^Reload/ });
+  await expect(reload).toBeFocused();
+  // With the connection back, Return reloads into the game.
+  await page.unroute(ENGINE);
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('heading', { name: 'Legatum', exact: true })).toBeVisible({ timeout: 60_000 });
+});
+
 test('a visitor plays: title, a people, turns, a second city, save and load, with no server', async ({ page, baseURL, request }) => {
   test.setTimeout(300_000);
   const problems = watch(page, new URL(baseURL!).origin);
@@ -118,17 +154,20 @@ test('a visitor plays: title, a people, turns, a second city, save and load, wit
   expect((await request.get('/api/status')).status()).toBe(404);
   expect(await (await request.get('/THIRD_PARTY_LICENSES.txt')).text()).toContain('SIL OPEN FONT LICENSE Version 1.1');
 
-  // Title: the build label carries the app version; network play is explained, not broken.
+  // Title: the build label carries the app version; online play is offered when the build has a relay.
   await page.addInitScript(() => localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] })));
   await page.goto('/');
   await expect(page).toHaveTitle(/^Legatum/);
   await expect(page.getByRole('heading', { name: 'Legatum', exact: true })).toBeVisible();
   await expect(page.locator('.title-foot')).toContainText(`Version ${version}`);
   await page.getByRole('button', { name: /^Multiplayer/ }).click();
-  await expect(page.getByRole('button', { name: /^Host Game/ })).toBeDisabled();
-  await expect(page.getByRole('button', { name: /^Host Game/ })).toContainText('Not available on this website');
-  await expect(page.getByRole('button', { name: /^Join Game/ })).toBeDisabled();
-  await expect(page.getByRole('link', { name: 'How to host a game' })).toHaveAttribute('href', /github\.com\/samcorcos\/legatum/);
+  if (relayBuilt) {
+    await expect(page.getByRole('button', { name: /^Host Game/ })).toBeEnabled();
+    await expect(page.getByRole('button', { name: /^Join Game/ })).toBeEnabled();
+  } else {
+    await expect(page.getByRole('button', { name: /^Host Game/ })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /^Join Game/ })).toHaveCount(0);
+  }
   await expect(page.getByRole('button', { name: /^Hot Seat/ })).toBeEnabled();
   await page.getByRole('button', { name: /Back/ }).click();
 

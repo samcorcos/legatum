@@ -77,7 +77,7 @@ export function SeatsTable({
 }
 
 function Occupancy({ room, seat }: { room: RoomView; seat: number }) {
-  const local = useGame((s) => s.lan?.status.is_local);
+  const local = useGame((s) => s.net?.status.is_local);
   const mySeat = useGame((s) => s.stagingSeat);
   const busy = useGame((s) => s.busy);
   const releaseSeat = useGame((s) => s.releaseStagingSeat);

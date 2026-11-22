@@ -1,15 +1,12 @@
 #!/usr/bin/env node
 // Writes THIRD_PARTY_LICENSES.txt: the licence notices a distributed build of Legatum must carry.
 //
-//   node tools/release/third-party-licenses.mjs [--scope web|desktop] [--out FILE]
+//   node tools/release/third-party-licenses.mjs [--out FILE]
 //
-// --scope web      what the browser build ships: the crates compiled into the WebAssembly engine, the
-//                  production npm packages and the two bundled fonts.
-// --scope desktop  (default) the web set plus every crate linked into the desktop shell (app/src-tauri)
-//                  for both Mac architectures.
-// --out            default app/public/THIRD_PARTY_LICENSES.txt (git-ignored). Vite copies app/public into
-//                  app/dist, so the file is served at /THIRD_PARTY_LICENSES.txt and the in-game Credits can
-//                  read it; tauri.dist.conf.json also copies it into the app bundle's Resources.
+// Covers what the browser build ships: the crates compiled into the WebAssembly engine, the production
+// npm packages and the two bundled fonts.
+// --out  default app/public/THIRD_PARTY_LICENSES.txt (git-ignored). Vite copies app/public into app/dist,
+//        so the file is served at /THIRD_PARTY_LICENSES.txt and the in-game Credits can read it.
 //
 // Sources: `cargo metadata` (the locked dependency graph, normal and build dependencies, no dev
 // dependencies) with the licence files each crate ships in the cargo registry, and app/package-lock.json
@@ -26,17 +23,14 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const TEXTS = path.join(ROOT, 'tools/release/license-texts');
 const LICENCE_FILE = /^(licen[sc]e|copying|notice|unlicense|copyright)/i;
-const MAC_TARGETS = ['aarch64-apple-darwin', 'x86_64-apple-darwin'];
 
 function args() {
   const a = process.argv.slice(2);
-  const opt = { scope: 'desktop', out: path.join(ROOT, 'app/public/THIRD_PARTY_LICENSES.txt') };
+  const opt = { out: path.join(ROOT, 'app/public/THIRD_PARTY_LICENSES.txt') };
   for (let i = 0; i < a.length; i++) {
-    if (a[i] === '--scope') opt.scope = a[++i];
-    else if (a[i] === '--out') opt.out = path.resolve(a[++i]);
+    if (a[i] === '--out') opt.out = path.resolve(a[++i]);
     else throw new Error(`unknown argument ${a[i]}`);
   }
-  if (!['web', 'desktop'].includes(opt.scope)) throw new Error('--scope must be web or desktop');
   return opt;
 }
 
@@ -105,11 +99,6 @@ function main() {
   const components = new Map(); // "kind name version" -> component
   const add = (kind, name, version, licence, dir, file, authors) => components.set(`${kind} ${name} ${version}`, { kind, name, version, licence, dir, file, authors });
   for (const p of crates('Cargo.toml', 'legatum-wasm', 'wasm32-unknown-unknown')) add('crate', p.name, p.version, p.license, path.dirname(p.manifest_path), p.license_file, p.authors);
-  if (opt.scope === 'desktop') {
-    for (const target of MAC_TARGETS) {
-      for (const p of crates('app/src-tauri/Cargo.toml', 'legatum-desktop', target)) add('crate', p.name, p.version, p.license, path.dirname(p.manifest_path), p.license_file, p.authors);
-    }
-  }
   for (const p of npmPackages()) add('npm', p.name, p.version, p.licence, p.dir, null);
 
   const list = [...components.values()].sort((a, b) => a.kind.localeCompare(b.kind) || a.name.localeCompare(b.name) || a.version.localeCompare(b.version));

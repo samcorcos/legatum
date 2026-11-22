@@ -1,7 +1,7 @@
-// Scenarios end to end on the WASM core and the real server: open Scenarios from the title,
-// start Sparta's Nicaea Strike (its window shortened to one turn by a test override), give a turn of
-// orders, end the turn, reach the result, and check the run file the server saved. A copy of the
-// run goes to app/test-results/scenarios/ for tools/scenarios/compare.py.
+// Scenarios end to end on the WASM core: open Scenarios from the title, start Sparta's Nicaea
+// Strike (its window shortened to one turn by a test override), give a turn of orders, end the
+// turn, reach the result, and check the run file the browser downloaded. A copy of the run goes
+// to app/test-results/scenarios/ for tools/scenarios/compare.py.
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import type { useGame } from '../src/store';
@@ -81,6 +81,7 @@ test('play a scenario turn to its result, leave feedback and save the run', asyn
       ...force.map((u) => ({ type: 'MoveUnit' as const, unit: u.id, to: target.pos })),
     ]);
   });
+  const firstDownload = page.waitForEvent('download');
   await endPlanning(page);
 
   const result = page.getByTestId('scenario-result');
@@ -91,13 +92,12 @@ test('play a scenario turn to its result, leave feedback and save the run', asyn
   await expect(page.getByTestId('scenario-vs')).toContainText(/You (took|did not meet)/);
   await expect(page.getByTestId('scenario-vs')).toContainText(/The Hard AI (took|met|failed)/);
   const saved = page.getByTestId('scenario-saved');
-  await expect(saved).toContainText('Your run is saved');
-  // The player sees a short file name; the full path is its tooltip.
-  const path = (await saved.getAttribute('title'))!;
-  expect(path).toMatch(/scenarios\/war-sparta-nicaea-[\dT-]+Z\.json$/);
+  await expect(saved).toContainText(/^Your run was downloaded: war-sparta-nicaea-[\dT-]+Z\.json$/);
 
   // The run file: start state, every order the human gave, the outcome and the full history.
-  const run = JSON.parse(await readFile(path, 'utf8'));
+  const finished = await firstDownload;
+  expect(finished.suggestedFilename()).toMatch(/^war-sparta-nicaea-[\dT-]+Z\.json$/);
+  const run = JSON.parse(await readFile(await finished.path(), 'utf8'));
   expect(run.format).toBe('legatum-scenario-run');
   expect(run.scenario).toMatchObject({ id: 'war-sparta-nicaea', turns: 1 });
   expect(run.scenario.question).toMatch(/\?$/);
@@ -119,10 +119,14 @@ test('play a scenario turn to its result, leave feedback and save the run', asyn
   await feedback.getByRole('radiogroup', { name: 'Fair' }).getByRole('radio', { name: '5' }).click();
   await feedback.getByRole('radio', { name: 'Too easy' }).click();
   await feedback.locator('textarea').fill('Four Hoplites at the gate felt like cheating.');
+  const secondDownload = page.waitForEvent('download');
   await page.getByTestId('scenario-save-feedback').click();
   await expect(result.getByRole('heading', { name: 'Thank you' })).toBeVisible();
-  await expect.poll(async () => JSON.parse(await readFile(path, 'utf8')).feedback?.text).toBe('Four Hoplites at the gate felt like cheating.');
-  const withFeedback = JSON.parse(await readFile(path, 'utf8'));
+  // The answers download as the same run file again, now with the feedback.
+  const again = await secondDownload;
+  expect(again.suggestedFilename()).toBe(finished.suggestedFilename());
+  const withFeedback = JSON.parse(await readFile(await again.path(), 'utf8'));
+  expect(withFeedback.feedback?.text).toBe('Four Hoplites at the gate felt like cheating.');
   expect(withFeedback.feedback).toMatchObject({ fun: 4, fair: 5, felt: 'too-easy' });
   expect(withFeedback.archive.tape.turns).toHaveLength(1);
   await mkdir(out, { recursive: true });
@@ -150,9 +154,9 @@ test('leaving a scenario part-way saves what was played as an unfinished run', a
   await expect(page.getByTestId('scenario-bar')).toBeVisible();
   await endPlanning(page);
   await expect(page.getByTestId('scenario-turns')).toHaveText('2 turns left');
-  const upload = page.waitForRequest((r) => r.url().includes('/api/scenario-runs') && r.method() === 'POST');
+  const download = page.waitForEvent('download');
   await page.evaluate(() => (window as unknown as GameWindow).legatum.getState().exitToTitle());
-  const run = JSON.parse((await upload).postData() ?? '{}');
+  const run = JSON.parse(await readFile(await (await download).path(), 'utf8'));
   expect(run).toMatchObject({ format: 'legatum-scenario-run', abandoned: true, finished_at: null });
   expect(run.turns).toHaveLength(1);
   expect(run.outcome.outcome).toBe('Playing');
