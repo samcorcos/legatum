@@ -127,7 +127,7 @@ it('shows marked requirements beside the row when more than one is unmet', async
   const reason = upgradeReason(container);
   expect(reason.textContent).toContain('Mathematics');
   expect(reason.textContent).toContain('in your territory');
-  const marks = [...reason.querySelectorAll('.act-needs .ui-mark[aria-label]')].map((m) => m.getAttribute('aria-label'));
+  const marks = [...reason.querySelectorAll('.act-needs .ui-mark[aria-label], .act-needs .not-met-mark')].map((m) => m.getAttribute('aria-label'));
   expect(marks).toEqual(['missing', 'done', 'done', 'missing']);
   expect(reason.querySelector('.resource-reason-link')?.textContent).toBe('Iron');
   const info = container.querySelector<HTMLButtonElement>('.improve-row .tip-info')!;
