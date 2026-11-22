@@ -169,7 +169,7 @@ export const FACTION_SHEETS: Record<Faction, FactionSheet> = {
       { strength: 'Ruhr Foundry: +6 Production (a Forge gives +3).', strengthIcon: 'building-foundry', onCard: true },
       { price: 'Each Production building in a German city costs 1 Food.', priceIcon: 'yield-food' },
       { strength: 'Your strategic deposits supply twice as much.', strengthIcon: 'resource-iron' },
-      { strength: `Projects pay more: a Gold project turns ${share(GERMANY_PROJECT_GOLD_PERCENT)} of a city’s Production into Gold, a Science project ${share(GERMANY_PROJECT_SCIENCE_PERCENT)} into Science (others: ${share(PROJECT_GOLD_PERCENT)} and ${share(PROJECT_SCIENCE_PERCENT)}).`, strengthIcon: 'yield-gold' },
+      { strength: `Your Gold and Science projects pay more: ${share(GERMANY_PROJECT_GOLD_PERCENT)} and ${share(GERMANY_PROJECT_SCIENCE_PERCENT)} of a city’s Production. Other empires get ${share(PROJECT_GOLD_PERCENT)} and ${share(PROJECT_SCIENCE_PERCENT)}.`, strengthIcon: 'yield-gold' },
       specialRow('Germany', 'unit-panzer'),
     ],
     counteredBy: 'Attack early, before their Production builds up.',

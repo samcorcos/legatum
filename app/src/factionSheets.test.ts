@@ -44,7 +44,7 @@ describe('faction sheets', () => {
     expect(FACTION_SHEETS.Germany.pairs[1].strength).toBeUndefined();
     expect(FACTION_SHEETS.Germany.pairs[2].strength).toContain('strategic deposits supply twice as much');
     expect(FACTION_SHEETS.Germany.pairs).toHaveLength(5);
-    expect(FACTION_SHEETS.Germany.pairs[3].strength).toContain('a Gold project turns half of a city’s Production into Gold, a Science project a quarter into Science');
+    expect(FACTION_SHEETS.Germany.pairs[3].strength).toContain('Your Gold and Science projects pay more: half and a quarter of a city’s Production');
     // A drawback that only restates its ability is not one: the project row has no price.
     expect(FACTION_SHEETS.Germany.pairs[3].price).toBeUndefined();
     expect(FACTION_SHEETS.India.pairs[0].price).toContain('Production never falls below 3');

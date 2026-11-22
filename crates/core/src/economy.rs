@@ -399,14 +399,20 @@ fn yields_for_item<const FULL: bool>(
             .rule_experiments
             .project_percent(owner.faction, project);
         let made = y.y.total.production.max(0) * pct / 100;
+        // Egypt has no Production: its project converts the build progress its Food makes.
+        let from = if owner.faction == Faction::Egypt {
+            "build progress"
+        } else {
+            "Production"
+        };
         if project == IndustryProject::Gold {
             y.add(
-                || format!("Gold project ({pct}% of Production)"),
+                || format!("Gold project ({pct}% of {from})"),
                 Yields::new(0, 0, made, 0),
             );
         } else {
             y.add(
-                || format!("Science project ({pct}% of Production)"),
+                || format!("Science project ({pct}% of {from})"),
                 Yields::new(0, 0, 0, made),
             );
         }

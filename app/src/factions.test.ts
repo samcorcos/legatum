@@ -68,7 +68,7 @@ describe('faction content and setup', () => {
   });
   it('shows the simulation-adjusted strengths and the requested cost and movement limits', () => {
     expect(FACTION_INFO.Germany.unique).toContain('320 Production, +6 Production');
-    expect(FACTION_INFO.Germany.ability).toContain('Gold projects turn');
+    expect(FACTION_INFO.Germany.ability).toContain('Your Gold and Science projects pay more');
     expect(FACTION_INFO.Sparta.unique).toContain('20 melee');
     expect(FACTION_INFO.Sparta.ability).toContain('Spartan Veteran');
     expect(FACTION_INFO.Sparta.goal).toContain('+2 VP once, kept for good');
