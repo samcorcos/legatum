@@ -25,8 +25,8 @@ const rulesVersion = Number(/pub const RULES_VERSION: u32 = (\d+);/.exec(readFil
 if (!Number.isInteger(rulesVersion)) throw new Error('RULES_VERSION not found in crates/core/src/lib.rs');
 
 export default defineConfig({
-  // The hosted web build (scripts/build-web.sh) serves the bundled PNG art as WebP; the desktop build and the dev server keep PNG (LEGATUM_WEBP=0 turns it off, =1 forces it).
-  plugins: [react(), ...(process.env.LEGATUM_WEBP === '1' || (process.env.VITE_LEGATUM_HOSTED === '1' && process.env.LEGATUM_WEBP !== '0') ? [webpAssets()] : []), { name: 'legatum-site-url', transformIndexHtml: (html: string) => html.replaceAll('%SITE_URL%', siteUrl) }],
+  // The website build (scripts/build-web.sh sets LEGATUM_WEBP=1) serves the bundled PNG art as WebP; the dev server and a plain `npm run build` keep PNG.
+  plugins: [react(), ...(process.env.LEGATUM_WEBP === '1' ? [webpAssets()] : []), { name: 'legatum-site-url', transformIndexHtml: (html: string) => html.replaceAll('%SITE_URL%', siteUrl) }],
   define: {
     __BUILD_LABEL__: JSON.stringify(process.env.LEGATUM_BUILD_LABEL ?? ''),
     __BUILD_DESCRIBE__: JSON.stringify(describe),
