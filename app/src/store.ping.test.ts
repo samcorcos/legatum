@@ -124,7 +124,7 @@ it('online: a ping is sent to the host, shown to you at once, and a teammate\'s 
   socket.push({ type: 'map_ping', from: 3, hex: { q: 1, r: 1 }, turn: view.turn });
   expect(s().pings).toHaveLength(2);
   // The host is another player's browser: a ping with no tile, or a tile that is not two whole numbers, is dropped.
-  for (const hex of [null, {}, { q: 1 }, { q: 'a', r: 1 }, { q: 1.5, r: 2 }]) socket.push({ type: 'map_ping', from: 1, hex, turn: view.turn });
+  for (const hex of [null, {}, { q: 1 }, { q: 'a', r: 1 }, { q: 1.5, r: 2 }]) socket.push({ type: 'map_ping', from: 1, hex: hex as never, turn: view.turn });
   expect(pingsFor(view, s().pings).map((p) => [p.from, p.hex])).toEqual([[view.me, HEX], [1, { q: 6, r: 2 }]]);
 });
 
