@@ -167,7 +167,8 @@ export const supplyRuleText = (r: Resource, faction?: string): string => `Each $
  */
 export function resourceBenefitLines(r: Resource, known: readonly TechId[], faction?: string): string[] {
   const info = RESOURCE_INFO[r];
-  const lines = [`${bonusText(r, improvementGain(r, known))} with ${aWorks(r)}`];
+  const gain = nileYields(faction, improvementGain(r, known));
+  const lines = YIELD_WORD.some(([k]) => gain[k]) ? [`${bonusText(r, gain)} with ${aWorks(r)}`] : info.class === 'Strategic' ? [] : ['Nothing to build here: you have no Production'];
   if (info.class === 'Strategic') lines.push(`Supplies ${supplyPerDeposit(faction)} ${info.name} inside your borders, ${supplyPerDeposit(faction) + supplyPerMine(faction)} with ${aWorks(r)}`);
   return lines;
 }
@@ -191,7 +192,8 @@ function improvedTileBonus(r: Resource, upgraded: boolean): Yields {
 
 /**
  * Faction-adjusted terrain plus the improved resource: what a citizen working this tile earns.
- * The Yields overlay and the tile card both read this, so the glance and the detail agree.
+ * The Yields overlay and the tile card both read this, so the glance and the detail agree. For Egypt
+ * that is the Nile's double Food and no Production.
  */
 export function tileYields(faction: Faction, tile: Pick<TileView, 'terrain' | 'resource' | 'improvement' | 'landmark'>): Yields {
   if (tile.landmark) return { food: 0, production: 0, gold: 0, science: 0 };
@@ -199,7 +201,12 @@ export function tileYields(faction: Faction, tile: Pick<TileView, 'terrain' | 'r
   // A resource yields its bonus only once its tile is improved (and the upgrade's extra once the owner has it).
   const t = terrainYields(faction, tile.terrain);
   const b = tile.resource && tile.improvement ? improvedTileBonus(tile.resource, !!tile.improvement.upgraded) : ZERO;
-  return { food: t.food + b.food, production: t.production + b.production, gold: t.gold + b.gold, science: t.science + b.science };
+  return nileYields(faction, { food: t.food + b.food, production: t.production + b.production, gold: t.gold + b.gold, science: t.science + b.science });
+}
+
+/** The Nile (core `economy::nile`): Egypt's Food is doubled and it has no Production. Other factions' yields pass through. */
+export function nileYields(faction: Faction | string | undefined, y: Yields): Yields {
+  return faction === 'Egypt' ? { ...y, food: Math.floor((y.food * RULES.egyptNileFoodPercent) / 100), production: 0 } : y;
 }
 
 /** What the viewer has seen of a resource's deposits that it could still take: held by another empire, or nobody's. */
