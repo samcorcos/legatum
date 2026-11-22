@@ -16,6 +16,7 @@ import { RewardEmblem } from './RewardEmblem';
 import { DURATION, momentsForTurn, planMoments, type Counter, type Emblem, type Moment } from './moments';
 import { UnlockMomentCard, activateUnlock } from './UnlockMoment';
 import { EraUpTakeover, activateEraUp } from './EraUpTakeover';
+import { ScoreCheck } from './ScoreCheck';
 import './celebrate.css';
 
 const vignettes: Partial<Record<Emblem, string>> = {
@@ -95,10 +96,10 @@ export function CelebrationProvider({ children }: { children: ReactNode }) {
   }, []);
   // A card held for the player ignores stray gestures (map pans, taps, an opened report): only its own controls close it.
   const interrupt = useCallback(() => { if (unlockUp.current) return; cancelCelebrationFeedback(); setPlay((p) => p ? { ...p, index: 3 } : p); }, []);
-  unlockUp.current = !!(active?.unlock || active?.eraUp);
+  unlockUp.current = !!(active?.unlock || active?.eraUp || active?.scoreCheck);
   useEffect(() => {
     // An unlock card waits for the player: only its own controls, Return and Esc close it.
-    if (!active || active.unlock || active.eraUp) return;
+    if (!active || active.unlock || active.eraUp || active.scoreCheck) return;
     const timer = setTimeout(dismiss, DURATION[active.tier]);
     return () => clearTimeout(timer);
   }, [active, dismiss]);
@@ -106,7 +107,7 @@ export function CelebrationProvider({ children }: { children: ReactNode }) {
     if (!active) return;
     // A card held for the player ignores pointers entirely (a map pan or a click on End Turn leaves it up);
     // only its own buttons, Return and Esc act, and never while a dialog covers the screen.
-    if (active.unlock || active.eraUp) {
+    if (active.unlock || active.eraUp || active.scoreCheck) {
       const card = active.unlock;
       const eraUp = active.eraUp;
       const held = (e: KeyboardEvent) => {
@@ -153,7 +154,7 @@ export function CelebrationProvider({ children }: { children: ReactNode }) {
   };
   // Derive the initial hold before the playback effect runs, avoiding a one-frame report flash.
   const holding = alarmUp || (current ? !!active && play.index === 0 && !play.released : batch.shown.length > 0);
-  return <CelebrationContext.Provider value={{ active, deferred: !!(active?.unlock || active?.eraUp) && dialogOpen, started: play?.started ?? 0, reduced, collapsed: active ? batch.collapsed.length : 0, holding, dismiss, interrupt, more }}>{children}</CelebrationContext.Provider>;
+  return <CelebrationContext.Provider value={{ active, deferred: !!(active?.unlock || active?.eraUp || active?.scoreCheck) && dialogOpen, started: play?.started ?? 0, reduced, collapsed: active ? batch.collapsed.length : 0, holding, dismiss, interrupt, more }}>{children}</CelebrationContext.Provider>;
 }
 
 export function CounterDelta({ counter }: { counter: Counter }) {
@@ -168,7 +169,7 @@ export function MomentLane() {
   const lane = useRef<HTMLDivElement>(null);
   const card = active && active.tier !== 'minor' ? active : null;
   const picture = card ? card.art ?? (card.resource ? resourceArtUrl(card.resource, 256) : null) ?? (card.unit ? unitMiniatureUrl(card.unit.kind, card.unit.faction) : null) : null;
-  const vignette = card && !card.unlock && !card.eraUp ? vignetteFor(card) : null;
+  const vignette = card && !card.unlock && !card.eraUp && !card.scoreCheck ? vignetteFor(card) : null;
   // Global layout owns the reservations; publish the actual card + overflow-chip height so
   // reports and phone selection panels can share the screen without guessing text/font sizes.
   useLayoutEffect(() => {
@@ -184,7 +185,8 @@ export function MomentLane() {
     <div ref={lane} className={`moment-lane ${reduced ? 'reduced' : ''} ${card?.tier === 'legendary' ? 'legendary-lane' : ''}`} data-overlay-slot="story" data-testid="moment-lane">
       {card?.unlock && !deferred && <UnlockMomentCard moment={card} dismiss={dismiss} />}
       {card?.eraUp && !deferred && <EraUpTakeover moment={card} dismiss={dismiss} />}
-      {card && !card.unlock && !card.eraUp && <article key={card.id} className={`moment-card ${card.tier} ${card.partner ? 'partner' : ''} ${card.loss ? 'loss' : ''}`} data-tier={card.tier} aria-label={card.title} onClick={(e) => { if (!(e.target as Element).closest('button')) dismiss(); }}>
+      {card?.scoreCheck && !deferred && <ScoreCheck moment={card} dismiss={dismiss} />}
+      {card && !card.unlock && !card.eraUp && !card.scoreCheck && <article key={card.id} className={`moment-card ${card.tier} ${card.partner ? 'partner' : ''} ${card.loss ? 'loss' : ''}`} data-tier={card.tier} aria-label={card.title} onClick={(e) => { if (!(e.target as Element).closest('button')) dismiss(); }}>
         <button className="moment-dismiss" aria-label="Dismiss celebration" onClick={dismiss}><Icon name="ui-cross" size={14} /></button>
         <div className="moment-kicker">{card.kicker ?? (card.partner ? 'From your ally' : card.tier === 'legendary' ? 'Written in the chronicle' : card.tier === 'major' ? 'A moment of consequence' : 'An inheritance recovered')}</div>
         <div className="moment-body">

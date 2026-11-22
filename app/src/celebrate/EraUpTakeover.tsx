@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
 import { feel, useCombatFx } from '../feel';
-import { useGame } from '../store';
 import { Icon } from '../ui/bits';
 import { useReducedMotion } from '../ui/useReducedMotion';
 import { ObjectiveRows } from '../ui/EraObjectives';
@@ -42,10 +41,10 @@ export function EraUpTakeover({ moment, dismiss }: { moment: Moment; dismiss(): 
   const animationsOn = useCombatFx((s) => s.enabled);
   const reduced = motionOff || !animationsOn;
   const art = eraArt(card.era);
-  const view = useGame((s) => (s.views ? s.views[s.seat] : null)) ?? undefined;
   const primary = useRef<HTMLButtonElement>(null);
   useEffect(() => { primary.current?.focus({ preventScroll: true }); }, [moment.id]);
-  const hero = card.deck ? card.openAges.length > 0 : card.objectives.length > 0;
+  // In a World Ages game the score check that follows the Age's opening carries the points; this card stays on the era.
+  const hero = !card.deck && card.objectives.length > 0;
   const shown = card.brings.slice(0, BRING_SHOWN);
   const more = card.brings.length - shown.length;
   const remaining = card.techs.filter((t) => !t.known).length;
@@ -72,10 +71,8 @@ export function EraUpTakeover({ moment, dismiss }: { moment: Moment; dismiss(): 
     <section className={`et-changes${hero ? ' has-hero' : ''}`} aria-label="What changes">
       {hero && <div className="et-col et-obj" data-testid="era-up-objectives">
         <h3><span className="et-obj-title">Victory points open now</span><VpSeal vp={1} className="inline" /></h3>
-        <p className="et-obj-sub">{card.deck ? 'Each Age has one card worth 1 VP, kept for good. It never expires, and every empire can score it.' : 'Meet any one of the three and the VP is yours for good. This is how you win.'}</p>
-        {card.deck
-          ? card.openAges.map((a) => <div className="et-age" key={a.era} data-era={a.era}><h4>{a.name} Age</h4><ObjectiveRows lines={a.lines} big view={view} era={a.era} /></div>)
-          : <ObjectiveRows lines={card.objectives} big />}
+        <p className="et-obj-sub">Meet any one of the three and the VP is yours for good. This is how you win.</p>
+        <ObjectiveRows lines={card.objectives} big />
       </div>}
       <div className="et-col et-new" data-testid="era-up-new">
         <h3>New this era</h3>

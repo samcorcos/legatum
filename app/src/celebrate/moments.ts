@@ -8,6 +8,7 @@ import { blockedQueueHead, wonderLostLine } from '../wonderRace';
 import { distance } from '../hex';
 import { unlockCardFor, type UnlockCard } from './unlockCard';
 import { eraUpCardFor, type EraUpCard } from './eraUp';
+import { scoreCheckFor, type ScoreCheckCard } from './scoreCheck';
 import { eraName } from '../ui/eraResearch';
 import { cardName } from '../ageCards';
 import { WONDER_INFO, wonderArt, wonderBonusSentence } from '../wonders';
@@ -37,6 +38,8 @@ export interface Moment {
   unlock?: UnlockCard;
   /** Your own entry into a new era: held like the unlock card (phase C replaces its rendering, `EraUpTakeover`). */
   eraUp?: EraUpCard;
+  /** A World Age has begun: the score check every player gets (`ScoreCheck`), held like the era-up. */
+  scoreCheck?: ScoreCheckCard;
   emblem?: Emblem;
   /** What you won, listed in full under the title (camps and ruins); other cards state `effect` alone. */
   gains?: Gain[];
@@ -240,6 +243,11 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
         }
         break;
       }
+      case 'AgeBegan':
+        // Every player tallies up when a World Age begins (user, 2026-11-22): after the opener's own era-up, before the rest of the story.
+        push(i, viewer, { tier: 'major', at: null, title: 'Score check', effect: `The ${eraName(e.era - 1)} Age begins`, kicker: 'A new Age',
+          lore: '', details: [], deltas: [], scoreCheck: scoreCheckFor(after, e.era, e.first) });
+        break;
       case 'ProductionCompleted':
         if (e.item.kind === 'Wonder' && isGreatWork(e.item.building)) {
           // A world wonder says what it scores and gives, and that nobody else can build it.
@@ -502,6 +510,11 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
 }
 
 export function planMoments(moments: readonly Moment[]): { shown: Moment[]; collapsed: Moment[] } {
-  const ordered = [...moments].sort((a, b) => TIER_ORDER[b.tier] - TIER_ORDER[a.tier] || a.eventIndex - b.eventIndex);
-  return { shown: ordered.slice(0, 3), collapsed: ordered.slice(3).filter((m) => m.tier !== 'minor') };
+  // The score check is never collapsed: it plays right after your era-up, else first.
+  const check = moments.find((m) => m.scoreCheck);
+  const ordered = [...moments].filter((m) => m !== check).sort((a, b) => TIER_ORDER[b.tier] - TIER_ORDER[a.tier] || a.eventIndex - b.eventIndex);
+  if (!check) return { shown: ordered.slice(0, 3), collapsed: ordered.slice(3).filter((m) => m.tier !== 'minor') };
+  const others = ordered.slice(0, 2);
+  const at = others.findIndex((m) => m.eraUp) + 1;
+  return { shown: [...others.slice(0, at), check, ...others.slice(at)], collapsed: ordered.slice(2).filter((m) => m.tier !== 'minor') };
 }

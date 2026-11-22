@@ -1,7 +1,7 @@
 // A victory view for UI tests and screenshots with staged eras and objectives. Render-only;
 // the numbers are the ones the core would send for such a game.
 import { decadencePercent, decadenceRules } from '../data';
-import type { EraView, ObjectiveProgress, PlayerView, RuleSwitches } from '../types';
+import type { EraView, Faction, ObjectiveProgress, PlayerPublic, PlayerView, RuleSwitches, VpSource } from '../types';
 
 const V2_ERAS: EraView[] = [
   {
@@ -119,5 +119,51 @@ export function withWorldAges(base: PlayerView): PlayerView {
     { era: 2, slot: 0, current: 2, target: 4, entered: true, era_scored: false, ready: false },
     { era: 3, slot: 0, current: 1, target: 4, entered: true, era_scored: false, ready: false },
   ];
+  return view;
+}
+
+/**
+ * The Age score check's example game (render only): the viewer opens the Medieval Age with eight empires on the track,
+ * the Classical card scored, a world wonder held and rivals spread across the score. Extra rivals are copies of the
+ * fixture's first rival with their own ids, factions and VP sources; they have no cities or units.
+ */
+export function withScoreCheck(base: PlayerView): PlayerView {
+  const view = withWorldAges(base);
+  view.eras = view.eras.map((e) => e.era === 3
+    ? { ...e, objectives: [{ slot: 0, family: 'Fight' as const, text: 'Breach: capture a city that has Walls', target: 1, objective: { kind: 'Breach' } }] }
+    : e);
+  view.objective_progress = [
+    { era: 2, slot: 0, current: 4, target: 4, entered: true, era_scored: true, ready: true },
+    { era: 3, slot: 0, current: 0, target: 1, entered: true, era_scored: false, ready: false },
+  ];
+  const me = view.players.find((p) => p.id === view.me)!;
+  const rival = view.players.find((p) => p.team !== view.team && p.alive)!;
+  const extra: [Faction, string, number, [VpSource, number][], [number, string][]][] = [
+    ['Celts', 'Celts', 3, [[{ kind: 'EraObjective', era: 2 }, 1], [{ kind: 'CapitalTaken', capital: 901 }, 1]], [[901, 'Carthage']]],
+    ['Switzerland', 'Switzerland', 3, [[{ kind: 'EraObjective', era: 2 }, 1]], []],
+    ['Sparta', 'Sparta', 2, [[{ kind: 'CapitalTaken', capital: 902 }, 1], [{ kind: 'EraObjective', era: 2 }, 1]], [[902, 'Corinth']]],
+    ['Byzantium', 'Byzantium', 2, [], []],
+    ['Rome', 'Rome', 1, [[{ kind: 'EraObjective', era: 2 }, 1]], []],
+    ['Aztecs', 'Aztecs', 0, [], []],
+  ];
+  const firstId = Math.max(...view.players.map((p) => p.id)) + 1;
+  const firstTeam = Math.max(...view.players.map((p) => p.team)) + 1;
+  const added: PlayerPublic[] = extra.map(([faction, name, vp, sources, taken], i) => ({
+    ...structuredClone(rival), id: firstId + i, team: firstTeam + i, name, faction, vp, vp_sources: sources, capitals_taken: taken, faction_goal_done: false, alive: true,
+  }));
+  // Just you, one rival from the fixture and the added rivals: eight empires, one each.
+  view.players = view.players.filter((p) => p.id === view.me || p.id === rival.id).map((p) => {
+    if (p.id === view.me) return { ...p, vp: 3, vp_sources: [[{ kind: 'EraObjective', era: 2 }, 1], [{ kind: 'GreatWork', of: p.id }, 2]] as [VpSource, number][], capitals_taken: [] };
+    if (p.id === rival.id) return { ...p, faction: 'Mongols' as Faction, name: 'Mongols', vp: 5, vp_sources: [[{ kind: 'EraObjective', era: 2 }, 1], [{ kind: 'CapitalTaken', capital: 903 }, 1], [{ kind: 'EraObjective', era: 3 }, 1], [{ kind: 'FactionGoal', of: p.id }, 2]] as [VpSource, number][], capitals_taken: [[903, 'Tenochtitlan']] as [number, string][] };
+    return p;
+  }).concat(added);
+  const live = view.players.filter((p) => p.alive);
+  view.standings = live.map((p) => ({ team: p.team, members: [p.id], vp: p.vp, target: 10, victory_hold: null }));
+  view.eras = view.eras.map((e) => ({ ...e, scored_by: [
+    ...(e.era === 2 ? [{ player: me.id, slot: 0, turn: 60 }, ...live.filter((p) => p.vp_sources.some(([s]) => s.kind === 'EraObjective' && s.era === 2) && p.id !== me.id).map((p) => ({ player: p.id, slot: 0, turn: 70 }))] : []),
+    ...(e.era === 3 ? [{ player: rival.id, slot: 0, turn: 88 }] : []),
+  ] }));
+  view.great_works = [{ player: me.id, completed: 'RelayUplink', building: null, city: null, progress: 0, cost: 600, production_per_turn: 0, turns: null, blocker: null }];
+  view.turn = 92;
   return view;
 }

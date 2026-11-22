@@ -22,7 +22,6 @@ import { FreeTechPicker, FreeTechsPrompt } from '../ui/FreeTechs';
 import { DecisionNotice } from '../ui/DecisionNotice';
 import { SaveNotice } from '../ui/SaveNotice';
 import { EraNotice } from '../ui/EraNotice';
-import { AgeBanner } from '../ui/AgeBanner';
 import { TurnReport } from '../ui/TurnReport';
 import { HandoffScreen } from '../ui/HandoffScreen';
 import { GameOver } from '../ui/GameOver';
@@ -109,7 +108,6 @@ export function GameScreen() {
       <DecisionNotice />
       <SaveNotice />
       <EraNotice />
-      <AgeBanner />
       <TechPanel />
       <CitiesOverview />
       <GameOver />

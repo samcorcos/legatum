@@ -30,8 +30,6 @@ export interface EraUpCard {
   techs: { tech: TechId; name: string; cost: number; known: boolean }[];
   /** The era's three public objectives with your progress (VP v2: any one scores 1 VP); empty in a legacy-rules game. */
   objectives: ObjectiveLine[];
-  /** World Ages: every Age with a card you have not scored, oldest first (the one you just entered included), with your progress; empty otherwise. */
-  openAges: { era: number; name: string; lines: ObjectiveLine[] }[];
   /** Units, buildings and improvements the era's technologies open for this empire. */
   brings: EraBring[];
   cities: EraCities;
@@ -67,12 +65,8 @@ export function eraUpCardFor(view: PlayerView, era: number, first: boolean): Era
   const biggest = Math.max(0, ...view.cities.filter((c) => c.owner === view.me).map((c) => c.population));
   const tier = tierOf(biggest || 4);
   const researchSet = (r.queue?.length ?? 0) > 0;
-  const openAges = view.rule_experiments?.objectives_deck
-    ? [...(view.eras ?? [])].sort((a, b) => a.era - b.era).filter((e) => !e.scored_by.some((x) => x.player === view.me))
-        .flatMap((e) => { const o = eraObjectivesFor(view, e.era); return o ? [{ era: e.era, name: o.name, lines: o.lines }] : []; })
-    : [];
   return {
-    era, eraName: eraName(era), numeral: eraNumeral(era), first, techs, objectives: eraObjectivesFor(view, era + 1)?.lines ?? [], deck: !!view.rule_experiments?.objectives_deck, openAges, brings,
+    era, eraName: eraName(era), numeral: eraNumeral(era), first, techs, objectives: eraObjectivesFor(view, era + 1)?.lines ?? [], deck: !!view.rule_experiments?.objectives_deck, brings,
     cities: { tier, from: era > 0 ? { era: era - 1, name: eraName(era - 1) } : null, to: { era, name: eraName(era) } },
     researchSet, primary: researchSet ? 'continue' : 'research',
   };
