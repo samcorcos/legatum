@@ -23,7 +23,7 @@
 
 ## Native-feeling moments
 
-- Launch: the Tauri splash or launch screen uses the Atlas parchment color, so there is no white flash. The title's key art fades in within 300 ms of first paint.
+- Launch: the page background is the Atlas parchment color from the first paint, so there is no white flash. The title's key art fades in within 300 ms of first paint.
 - Background/foreground: autosave on `visibilitychange` to hidden; on resume, an online client reconnects silently and shows "Reconnected" briefly.
 - Loading: never a bare spinner; use the existing LoadingScreen style (compass, progress rule, a lore tip).
 - Errors: human wording, the reason and the fix, with a `feel.invalid` haptic, never a raw exception.

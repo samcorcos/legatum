@@ -1,5 +1,5 @@
 import { CALENDAR_NOTE, calendarLabel } from '../data';
-import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { useId, useLayoutEffect, useRef, useState } from 'react';
 import { readAutosave, useGame, type SaveFile } from '../store';
 import { pickSaveFile } from '../ui/GameMenu';
 import { DecoRule, Fan, Wordmark } from '../brand/ornaments';
@@ -8,7 +8,6 @@ import { HintSettings } from '../ui/FirstGameHints';
 import { HapticsSettings } from '../ui/HapticsSettings';
 import { SoundSettings } from '../ui/SoundSettings';
 import { CombatFxSettings } from '../ui/CombatFxSettings';
-import { canQuit, quitApp } from '../tauri';
 import { DEFAULT_PLAYER_NAME, MAX_PLAYER_NAME, rememberPlayerName, savedPlayerName } from '../platform/online';
 import { TitleArt } from './TitleArt';
 import { usePerfOverlay } from '../ui/PerfOverlay';
@@ -85,8 +84,7 @@ function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
   const error = useGame((s) => s.error);
   const busy = useGame((s) => s.busy);
   const views = useGame((s) => s.views);
-  const [auto, setAuto] = useState<SaveFile | null>(null);
-  const [checkingAuto, setCheckingAuto] = useState(true);
+  const [auto] = useState<SaveFile | null>(readAutosave);
   const [, refresh] = useState(0);
   const olderAuto = !!auto && (!saveHasCurrentRules(auto.game) || olderAutosaves.has(auto.savedAt));
   const unreadableAuto = !!auto && unreadableAutosaves.has(auto.savedAt);
@@ -97,13 +95,6 @@ function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
     else if (failure) unreadableAutosaves.add(save.savedAt);
     if (failure) refresh((n) => n + 1);
   };
-  useEffect(() => {
-    let active = true;
-    void readAutosave().then((save) => {
-      if (active) { setAuto(save); setCheckingAuto(false); }
-    });
-    return () => { active = false; };
-  }, []);
   // While a message shows, starting a new game is the way forward, so it takes the primary slot.
   const newGamePrimary = !views && (!auto || !!error || olderAuto || unreadableAuto);
   const continuePrimary = !views && !!auto && !error && !olderAuto && !unreadableAuto;
@@ -125,7 +116,7 @@ function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
           {olderAuto ? 'Saved game (older version)' : unreadableAuto ? 'Saved game (unreadable)' : 'Continue'}
           <span className="btn-sub">
             {olderAuto ? 'Cannot continue with these rules' : unreadableAuto ? "This save file is damaged"
-              : auto ? `${auto.names.join(' & ')} · turn ${auto.turn} · ${calendarLabel(auto.turn)} · ${new Date(auto.savedAt).toLocaleString()}` : checkingAuto ? 'Checking autosaves…' : 'No autosave yet'}
+              : auto ? `${auto.names.join(' & ')} · turn ${auto.turn} · ${calendarLabel(auto.turn)} · ${new Date(auto.savedAt).toLocaleString()}` : 'No autosave yet'}
           </span>
         </button>
         <button className="btn big quiet" onClick={() => pickSaveFile((save) => loadSave(save, true), (m) => set({ error: m }))}>
@@ -136,11 +127,6 @@ function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
         </button>
         <button className="btn big quiet" onClick={openGuide}>How to Play <span className="btn-sub">The field guide · ?</span></button>
         <Settings />
-        {canQuit() && (
-          <button className="btn big quiet" onClick={() => quitApp().catch((e) => set({ error: `Could not quit: ${String(e)}` }))}>
-            Quit
-          </button>
-        )}
       </div>
       {uploadsGames() && (
         <p className="title-hosted-note title-upload-note">

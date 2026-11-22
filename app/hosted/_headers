@@ -1,8 +1,8 @@
 # Response headers for the hosted web build (Cloudflare Pages reads this file from the site root;
 # scripts/build-web.sh copies it into app/dist, and e2e-hosted/serve.mjs applies it in the smoke test).
-# The Content-Security-Policy is the desktop app's (src-tauri/tauri.conf.json) without the Tauri IPC
-# sources: 'wasm-unsafe-eval' lets the engine compile, 'unsafe-inline' styles are React's style attributes,
-# and connect-src names the online-play relay (scripts/build-web.sh swaps in another one when the build sets one).
+# Content-Security-Policy: 'wasm-unsafe-eval' lets the engine compile, 'unsafe-inline' styles are React's
+# style attributes, and connect-src names the online-play relay (scripts/build-web.sh swaps in another one
+# when the build sets one).
 /*
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY

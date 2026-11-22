@@ -19,7 +19,7 @@ function validDisbands(view: PlayerView, orders: Order[], errors: OrderError[]):
   orders.forEach((order, index) => {
     const unit = orderUnit(order);
     if (unit === null || !view.units.some((u) => u.id === unit && u.owner === view.me) || acted.has(unit)) return;
-    // Core reserves the action even when that first order fails. An empty LAN error
+    // Core reserves the action even when that first order fails. An empty online error
     // cache is not validation: ownership and action conflicts must be checked here.
     acted.add(unit);
     if (order.type === 'DisbandUnit' && !errors.some((e) => e.index === index)) disbanded.add(unit);

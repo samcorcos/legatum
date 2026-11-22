@@ -3,14 +3,10 @@ import { act, StrictMode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { TitleScreen } from './TitleScreen';
-import { readNativeAutosave } from '../platform/files';
-import { saveFile, useGame } from '../store';
+import { AUTOSAVE_KEY, saveFile, useGame } from '../store';
 import { FixtureClient } from '../test/fixtureEngine';
 
 vi.mock('./TitleArt', () => ({ TitleArt: () => null }));
-vi.mock('../platform/files', async (orig) => ({
-  ...(await orig<typeof import('../platform/files')>()), readNativeAutosave: vi.fn(),
-}));
 let root: Root;
 let host: HTMLDivElement;
 beforeEach(() => {
@@ -27,20 +23,13 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-it('enables Continue after the asynchronous native recovery and loads that exact save', async () => {
+it('offers the autosave as the primary Continue and loads that exact save', async () => {
   const client = new FixtureClient();
   await client.newGame(await client.standardSetup('42', 'India', 'Byzantium', 'Ada', 'Bo'));
   const save = saveFile(client, [client.view(0), client.view(1)]);
-  let finish!: (value: string) => void;
-  const pending = new Promise<string>((resolve) => { finish = resolve; });
-  vi.mocked(readNativeAutosave).mockReturnValue(pending);
+  localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(save));
   act(() => root.render(<StrictMode><TitleScreen /></StrictMode>));
   const button = [...host.querySelectorAll('button')].find((b) => b.textContent?.startsWith('Continue'))!;
-  expect(button.disabled).toBe(true);
-  expect(host.querySelectorAll('.title-actions .primary')).toHaveLength(1);
-  expect(host.querySelector('.title-actions .primary')?.textContent).toMatch(/^Single Player/);
-  expect(button.textContent).toContain('Checking autosaves…');
-  await act(async () => { finish(JSON.stringify(save)); });
   expect(button.disabled).toBe(false);
   expect(host.querySelectorAll('.title-actions .primary')).toHaveLength(1);
   expect(button.classList.contains('primary')).toBe(true);
@@ -50,11 +39,19 @@ it('enables Continue after the asynchronous native recovery and loads that exact
   expect(useGame.getState().client?.save()).toBe(save.game);
 });
 
+it('keeps Single Player primary when there is no autosave', () => {
+  act(() => root.render(<TitleScreen />));
+  const button = [...host.querySelectorAll('button')].find((b) => b.textContent?.startsWith('Continue'))!;
+  expect(button.disabled).toBe(true);
+  expect(button.textContent).toContain('No autosave yet');
+  expect(host.querySelector('.title-actions .primary')?.textContent).toMatch(/^Single Player/);
+});
+
 it('keeps Resume as the sole primary when a game is already open', async () => {
   const client = new FixtureClient();
   await client.newGame(await client.standardSetup('42', 'India', 'Byzantium', 'Ada', 'Bo'));
   const views = [client.view(0), client.view(1)];
-  vi.mocked(readNativeAutosave).mockResolvedValue(JSON.stringify(saveFile(client, views)));
+  localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(saveFile(client, views)));
   useGame.setState({ client, views });
   await act(async () => root.render(<TitleScreen />));
   expect(host.querySelectorAll('.title-actions .primary')).toHaveLength(1);
@@ -67,7 +64,7 @@ it('shows the exact older-rules message in the save list before loading', async 
   const save = saveFile(client, [client.view(0), client.view(1)]);
   save.game = save.game.replace(/"save_version":\d+/, '"save_version":5');
   save.playtest = 'Playtest 8.9.19';
-  vi.mocked(readNativeAutosave).mockResolvedValue(JSON.stringify(save));
+  localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(save));
   await act(async () => root.render(<TitleScreen />));
   const saved = [...host.querySelectorAll('button')].find((b) => b.textContent?.startsWith('Saved game (older version)'))!;
   expect(saved.disabled).toBe(true);

@@ -10,7 +10,7 @@ import { ReclaimSeatButton } from '../ui/ReclaimSeatButton';
 
 /** An online game: pick which human seat this browser plays. */
 export function JoinScreen() {
-  const lan = useGame((s) => s.lan);
+  const net = useGame((s) => s.net);
   const exitToTitle = useGame((s) => s.exitToTitle);
   const joinSeat = useGame((s) => s.joinSeat);
   const refresh = useGame((s) => s.refreshStatus);
@@ -21,9 +21,9 @@ export function JoinScreen() {
     const t = setInterval(() => refresh(), 2500);
     return () => clearInterval(t);
   }, [refresh]);
-  if (!lan) return null;
+  if (!net) return null;
   const mine = rememberedSeat();
-  const seats = lan.status.seats;
+  const seats = net.status.seats;
   const colored = colorFactions(seats.map((s) => s.faction));
   return (
     <div className="setup-screen">
@@ -38,13 +38,13 @@ export function JoinScreen() {
         </div>
         <p className="setup-lede">
           Every player plays on their own computer. Pick an open seat to command that empire. Turn{' '}
-          {lan.status.turn} is being planned.
+          {net.status.turn} is being planned.
         </p>
         <div className="join-seats">
           {seats.map((s, i) => {
             const info = FACTION_INFO[s.faction];
             const wasMine = mine?.seat === s.seat && !!mine.token && !mine.roomId;
-            const reserved = !!s.reserved && !wasMine && !lan.status.is_local;
+            const reserved = !!s.reserved && !wasMine && !net.status.is_local;
             return (
               <button
                 key={s.seat}

@@ -392,7 +392,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
       if (!attackable) continue;
       if (shotBlockReason(view, ownSel.pos, h, ownSel.kind)) { blocked.push(h); continue; }
       if (client.kind === 'remote') {
-        // LAN validate() only returns the last server result. Use the advertised effective
+        // Online validate() only returns the last server result. Use the advertised effective
         // turn for a queued declaration, while LOS is checked locally from this PlayerView.
         valid.push(h);
       } else {

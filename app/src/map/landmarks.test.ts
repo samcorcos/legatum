@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { landmarkBox, landmarkBoxes, landmarkCore, landmarksOf, shortLabel } from './landmarks';
+import { landmarkArtUrl, landmarkBox, landmarkBoxes, landmarkCore, landmarksOf, shortLabel } from './landmarks';
 import { itemArtUrl } from '../unlockArt';
 import { GREAT_WORKS } from '../data';
 import { CITY_WORLD } from './terrain';
@@ -77,5 +77,20 @@ describe('constructed wonder landmarks', () => {
     expect(next.get(5)).toEqual(first.get(5));
     expect(next.get(6)).toEqual(first.get(6));
     expect(next.get(5)).not.toEqual(next.get(6));
+  });
+});
+
+describe('landmark map art and card art', () => {
+  // The map keeps the palette-graded painting; cards use the ungraded copy (tools/art/card-grade.py, 2026-11-22).
+  it('the map draws the graded copy, the cards the unlock copy', () => {
+    for (const building of ['Pyramids', 'HagiaSophia', 'EiffelTower', 'IterReactor', 'RelayUplink', 'WorldExchange', 'PlanetaryFoundry'] as BuildingKind[]) {
+      const map = landmarkArtUrl(building, undefined);
+      const card = itemArtUrl({ kind: 'Building', building }, undefined, 256);
+      expect(map, building).toMatch(/assets\/landmarks\//);
+      expect(card, building).toMatch(/assets\/unlocks\//);
+    }
+  });
+  it('a landmark with no graded copy falls back to its unlock art', () => {
+    expect(landmarkArtUrl('CourierHall' as BuildingKind, undefined)).toBe(itemArtUrl({ kind: 'Building', building: 'CourierHall' as BuildingKind }, undefined, 256));
   });
 });
