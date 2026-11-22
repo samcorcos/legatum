@@ -2,6 +2,19 @@
 
 Newest first. One entry per non-obvious finding: what we learned, the evidence, and what we changed. Correct or delete entries that turn out to be wrong.
 
+## 2026-11-22: Online co-op runs in the host's browser tab; what moving the server into WASM taught (`claude/browser-host`)
+
+- **The old server's host logic needed no transport to work.** `host.rs`, staging, protocol, events and admission moved into `crates/wasm/src/host` almost unchanged once the async outbox became a synchronous queue drained by the caller (`NetHost::drain`). The 29 server protocol tests still pass, driven synchronously in `crates/wasm/tests/net_host.rs`. `crates/server` (axum/tokio, CLI, LAN, embedded relay client) is deleted.
+- **A browser cannot send WebSocket pings.** The relay closes a host tunnel that sends text frames, and ignores unknown frame kinds. So the host sends an empty binary `ping` frame (kind 6) every 20 s. Staging clients now send a `{type:"ping"}` every 20 s too, because the host's silence timeout applies to them.
+- **A browser cannot see why a WebSocket upgrade failed.** It gets only `onclose`, with no HTTP status. A host tunnel that never opens therefore asks `GET /rooms/<id>/api/status`; a 404 means the relay forgot the room, and the host announces a new one.
+- **Background tabs throttle timers to about once a minute.** A 60 s silence timeout would have closed guests whose tab was in the background. Guests now get 120 s; the host's own in-tab connection is never timed out.
+- **`catch_unwind` does nothing in WASM (panic=abort).** A host panic ends the game for everyone. The server's per-request panic guard has no equivalent, so host bugs must be fixed rather than contained.
+- **Randomness and time in a crate that builds for both targets:** seat credentials use `crypto.getRandomValues` through a `wasm_bindgen` extern on wasm32 and `getrandom` natively; `now` is `js_sys::Date` on wasm32. `getrandom` on wasm32 would need the `wasm_js` backend and a cfg flag in every build.
+- **The title screen should not load a 15 MB engine to learn the rules version.** `vite.config.ts` reads `RULES_VERSION` from `crates/core/src/lib.rs` into a define, and `online.test.ts` checks it against the engine's `online_rules_version()`.
+- **Reload resume lives in `sessionStorage`, per tab.** The host keeps its room key and latest save (`legatum.online.hosting`, `legatum.online.save`); a guest keeps its room (`legatum.online.room`). A new tab never takes over a game. A save too large for `sessionStorage` silently loses only the reload resume.
+- **Vitest's `runAllTimersAsync` never ends while an interval runs.** The staging keepalive made one lobby test loop 10,000 timers; that test now advances a fixed 60 s.
+- **The e2e suite now runs on the static build and the real relay.** `e2e/fixtures.ts` serves `app/dist` with its own `_headers` (CSP included), and the `relay` fixture starts `infra/relay` under `wrangler dev` on 127.0.0.1:8787. The build must be made for that relay (`LEGATUM_RELAY_URL=http://127.0.0.1:8787 scripts/build-web.sh`), because the relay URL and CSP are baked in. wrangler runs workerd as a child process, so the fixture kills the whole process group.
+
 ## 2026-11-22: Performance checks lapsed inside the ops supervisor; a separate nightly supervisor (`perf-supervisor`)
 
 - **The old performance watcher was a few sections of `legatum-ops-supervisor`, and they quietly stopped.** The ops check kept running every 6 hours on the Mac, but its runs grew into fleet, disk and budget checks; the last sim-speed baseline is 2026-10-31, the AI turn budget 2026-10-27, app size 2026-10-23, and the `ledger.csv` it was told to compare against never existed. A check buried in a long checklist with heavier duties gets dropped first. Performance and tech debt now belong to `legatum-perf-supervisor`, which only measures, flags and makes one improvement a week.

@@ -1,27 +1,35 @@
-# Online play: lobby and relay
+# Online play: lobby, relay and the in-tab host
 
 Sam, 2026-11-21: two players should click **Multiplayer**, see hosted games in a lobby, click one and play. No
-addresses, no links, no Terminal, no browser, and no dependence on the LAN or the Mac's firewall. The game still
-runs on the host's own Mac; the cloud only lists games and passes messages.
+addresses, no links, no Terminal, and no dependence on the LAN or a firewall. 2026-11-22: the game is a web app
+(the desktop app was dropped), so the host's game runs **in the host's browser tab**, in the WASM engine; the
+cloud only lists games and passes messages. There is no game server program anymore.
 
-This file is the contract between the four parts. `plans/lan-protocol.md` stays the contract for the game
-protocol itself, which does not change.
+This file is the contract between the parts. `plans/lan-protocol.md` stays the contract for the game protocol
+itself (the messages between a player's UI and the host), which did not change.
 
 ## Shape
 
 ```
-guest app (tauri://)  --wss-->  Cloudflare Worker  <--wss (dials out)--  host app (embedded legatum-server)
-  UI + RemoteClient              Lobby DO: list of rooms                   authoritative game, AI, saves, archive
-                                 Room DO: one per hosted game, dumb pipe   host's own UI talks to it on 127.0.0.1
+guest tab                 --wss-->  Cloudflare Worker (infra/relay)  <--wss (dials out)--  host tab
+  UI + RemoteClient                  Lobby DO: list of rooms                                 UI + BrowserHost (WASM):
+  (app/src/remote.ts)                Room DO: one per hosted game, dumb pipe                 authoritative game, AI, save
 ```
 
-- The host's Legatum app starts `legatum-server` **inside the app process**, bound to `127.0.0.1` on a free
-  port (nothing listens on the LAN). The host's window loads the UI from that server
-  (`http://127.0.0.1:<port>/`), so the existing same-origin server mode and loopback admin rules apply unchanged.
-- The embedded server dials **out** to the relay and holds one tunnel WebSocket. Every guest connection is
-  multiplexed over it. To the server, a relayed guest is an ordinary **non-loopback** connection.
-- The guest's app stays on its bundled UI and points `RemoteClient` at the relay's room URL.
+- **Host Game** (`store.hostOnline`, `app/src/net/hosting.ts`) loads the engine's `BrowserHost`
+  (`crates/wasm/src/host`: the old server's host, staging, protocol and admission logic, with no I/O),
+  announces the room on the relay and holds one tunnel WebSocket (`app/src/net/browserHost.ts`). Every guest
+  connection is multiplexed over it and is a non-local connection to the engine.
+- The host's own UI talks to the same engine through an in-tab socket and in-tab status/admin calls
+  (`LoopbackSocket` and `BrowserHost.fetch`, installed with `setLocalEndpoint` in `remote.ts`). It is the one
+  `local` connection, so `RemoteClient`, the staging room and the host-only admin rules are unchanged.
+- The guest points `RemoteClient` at the relay's room URL.
 - The relay never parses game messages, holds no game state and makes no rule decisions.
+- **Limits**: the game lives in the host's tab. Closing that tab (or its browser) ends the game for everyone
+  (the relay drops the room after 120 s, or at once on `bye` when the host leaves through the menu). A reload of
+  the host tab resumes the game in the same room from the save kept in `sessionStorage`; a reload of a guest
+  tab rejoins its room and seat. A new tab cannot take over a hosted game. A WASM panic (a host bug) stops the
+  game: Rust's `catch_unwind` does not work in WASM.
 
 ## Relay HTTP and WebSocket API (Worker, `infra/relay/`)
 
@@ -64,9 +72,11 @@ its host tunnel drops without returning, and immediately on a `bye` frame. Use t
 | 3 status | host -> relay | UTF-8 JSON `Status` | `conn` = 0. Replace the cached `/api/status` body |
 | 4 summary | host -> relay | UTF-8 JSON `{players, humans, open_seats, phase, turn}` | `conn` = 0. Lobby row |
 | 5 bye | host -> relay | empty | `conn` = 0. Host is closing the room for good |
+| 6 ping | host -> relay | empty | `conn` = 0. Keepalive; ignored by the relay |
 
 When a new tunnel replaces an old one, or the tunnel drops, the relay closes every guest socket (1012); guests
-reconnect by themselves as they do on the LAN. The host sends WebSocket pings every 20 s; the relay answers.
+reconnect by themselves. A browser cannot send WebSocket pings, so the host sends a `ping` frame (kind 6,
+`conn` = 0, empty) every 20 s instead; the relay ignores unknown kinds, and the traffic keeps the tunnel alive.
 
 ### Large messages (host -> guest), inside `data` payloads
 
@@ -80,39 +90,54 @@ A `view` can exceed what one relayed message may carry. The host splits any gues
 sent in order with nothing from the same connection interleaved. The guest's relay socket wrapper
 (`app/src/relaySocket.ts`) concatenates the pieces and delivers the original text to `RemoteClient` as one
 message; anything else passes through untouched. Guest-to-host messages are never chunked (64 KiB cap exists
-already). LAN connections never see chunks.
+already). The host's own in-tab connection never sees chunks.
 
-## Server (`crates/server`)
+## Host (`crates/wasm/src/host`, `app/src/net`)
 
-- `connection()` becomes generic over the transport, so a relayed guest runs the same loop, heartbeats,
-  outbox and admission as a LAN socket, with `local = false`. All relayed guests share one admission "peer".
-- `relay` module: `Server::run_relay(RelayConfig { url, announce: RoomAnnounce })` announces the room, opens the
-  tunnel, pushes `status` and `summary` whenever the cached status changes, reconnects with exponential backoff
-  (1 s to 30 s) keeping the same room and host key, and sends `bye` on shutdown.
-- `embedded` API for the app: `legatum_server::embedded::start(EmbedConfig) -> Result<Handle, String>` where
-  `EmbedConfig { saves_dir, archive_dir, assets: Arc<dyn Fn(&str) -> Option<(Vec<u8>, String /*mime*/)> + Send + Sync>,
-  relay: Option<RelayConfig>, bind_lan: bool }` and `Handle { port: u16, url: String, room: Option<String> }` with
-  `Handle::stop()`. It runs on its own Tokio runtime thread. `bind_lan = false` binds `127.0.0.1` only.
-- The CLI gains `--relay <url> --name <host name> --build <label>` (so the relay can be tested without the app)
-  and keeps working exactly as today without them.
+- `NetHost` (Rust, no I/O) drives the host: `connect(local, now)`, `receive`, `disconnect`, `tick(now)` and
+  `drain(now)`, which returns every connection's queued texts and closes. It keeps the old server's heartbeats
+  and admission: a guest must join within 30 s (pings do not extend that), a seated guest silent for 120 s is
+  closed (background tabs throttle timers, so this is longer than the old 60 s), at most 8 guests. The local
+  connection is never timed out. `BrowserHost` is its wasm-bindgen wrapper; `online_rules_version()` exports
+  the rules version.
+- `app/src/net/browserHost.ts` is the transport: `POST RELAY/rooms`, the tunnel at
+  `RELAY/rooms/<id>/host?key=`, the frame codec and chunking (`tunnel.ts`), a 1 s timer that ticks the engine,
+  `status` and `summary` pushed when they change, the 20 s `ping` frame, reconnect with backoff (1 s to 30 s)
+  keeping the room and key, and `bye` on leave. A browser cannot see why a WebSocket upgrade failed, so when a
+  reconnect never opens, it asks `GET RELAY/rooms/<id>/api/status`: 404 means the relay forgot the room, and it
+  announces a new one.
+- Saves: the engine hands over the live game's save whenever it changes; `hosting.ts` keeps it (and the room
+  key) in `sessionStorage` so a reload resumes. Game histories go to the browser's archive (`recordGameHistory`)
+  like a local game's. Resumed seats get fresh credentials: the host reclaims its seat, guests take theirs again.
+- Seat credentials are 256-bit random hex from `crypto.getRandomValues`.
 
-## App shell (`app/src-tauri`)
+## Build (`scripts/build-web.sh`)
 
-- Commands: `online_host_start({ name }) -> { url, room }` (starts the embedded server with the relay from the
-  build-time `LEGATUM_RELAY_URL`, then the UI navigates the window to `url`), `online_host_stop()`,
-  `online_info() -> { relay: string | null, build: string, rules_version: number, protocol: number }`.
-- The host window on `http://127.0.0.1:<port>` must still be able to return to the bundled UI (Leave game).
-- CSP `connect-src` gains the relay's https and wss origins.
+- `VITE_LEGATUM_RELAY_URL` is baked in: the live relay by default, `LEGATUM_RELAY_URL` overrides it (`none` for a
+  build without online play). The script writes the relay's https and wss origins into `dist/_headers`'s
+  `connect-src`.
+- The rules version comes from `crates/core/src/lib.rs` at build time (`vite.config.ts`), so the title screen
+  knows it without loading the engine; a unit test checks it against the engine.
 
 ## UI (`app/src`)
 
-- **Multiplayer > Host Game** in the desktop app: calls `online_host_start`, lands in the existing staging room.
-- **Multiplayer > Join Game** in the desktop app: a lobby list from `GET /lobby` (refresh every 3 s): host name,
+- **Multiplayer > Host Game**: asks for the name shown in the game list, starts the in-tab host and lands in the
+  existing staging room. **Leave game** sends `bye`, closes the room and returns to the title.
+- **Multiplayer > Join Game**: a lobby list from `GET /lobby` (refresh every 3 s): host name,
   players, open seats, "Waiting in lobby" or "Turn N". One primary action per row: **Join**. A row whose
-  `build` differs from `online_info()` (both known) shows "This game is on version X and you have Y. Update the
+  `build` differs from this build's (both known) shows "This game is on version X and you have Y. Update the
   older one to play together."; one whose `rules_version` or `protocol` differs, or whose build is unknown, shows
   "This game is on a different version from yours. Update both to the newest to play together." The note comes first
   in the row with an alert mark; neither can be joined. Empty state: "No games are being hosted right now."
 - Joining sets the server base to `RELAY/rooms/<id>`: status from `<base>/api/status`, socket at `<base>/ws`
   through `relaySocket.ts`. Everything after that is the existing staging room and game.
-- In a browser served by `legatum-server` (LAN mode) nothing changes.
+- A build without a relay offers hot seat only.
+
+## Tests
+
+- Rust: the host's unit tests and `crates/wasm/tests/net_host.rs` (the old server protocol tests, driven synchronously).
+- Vitest: `app/src/net/tunnel.test.ts`, `browserHost.test.ts` (fake engine and tunnel: routing, chunking, pings,
+  backoff, re-announce, `bye`, the in-tab socket and admin calls).
+- Playwright: `app/e2e/game.spec.ts` "Online: ..." plays host and guest in two browser contexts through the real
+  relay under `wrangler dev` (the `relay` fixture), on the static build from
+  `LEGATUM_RELAY_URL=http://127.0.0.1:8787 scripts/build-web.sh`.
