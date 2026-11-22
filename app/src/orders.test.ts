@@ -23,7 +23,7 @@ import {
 const unit = (id: number, over: Partial<UnitView> = {}): UnitView => ({
   id,
   owner: 0,
-  kind: 'Soldier',
+  kind: 'Spearman',
   pos: { q: id, r: 0 },
   hp: 100,
   moves_left: 2,
@@ -73,7 +73,7 @@ describe('unit orders', () => {
 
 describe('city orders', () => {
   it('production replaces per city and choosing the current item cancels', () => {
-    const soldier = { kind: 'Unit', unit: 'Soldier' } as const;
+    const soldier = { kind: 'Unit', unit: 'Spearman' } as const;
     const granary = { kind: 'Building', building: 'Granary' } as const;
     let o: Order[] = [];
     o = setProduction(o, 7, soldier, null);
@@ -85,17 +85,17 @@ describe('city orders', () => {
   });
 
   it('buy toggles and is at most one per city', () => {
-    let o = toggleBuy([], 3, { kind: 'Unit', unit: 'Soldier' });
+    let o = toggleBuy([], 3, { kind: 'Unit', unit: 'Spearman' });
     expect(hasBuy(o, 3)).toBe(true);
-    o = toggleBuy(o, 4, { kind: 'Unit', unit: 'Soldier' });
-    o = toggleBuy(o, 3, { kind: 'Unit', unit: 'Soldier' });
+    o = toggleBuy(o, 4, { kind: 'Unit', unit: 'Spearman' });
+    o = toggleBuy(o, 3, { kind: 'Unit', unit: 'Spearman' });
     expect(hasBuy(o, 3)).toBe(false);
-    expect(o).toEqual([{ type: 'BuyItem', city: 4, item: { kind: 'Unit', unit: 'Soldier' } }]);
+    expect(o).toEqual([{ type: 'BuyItem', city: 4, item: { kind: 'Unit', unit: 'Spearman' } }]);
   });
 
   it('a tile purchase shares the city purchase slot with an item and a hire, and toggles off', () => {
     const tile = { q: 3, r: 2 };
-    const soldier = { kind: 'Unit', unit: 'Soldier' } as const;
+    const soldier = { kind: 'Unit', unit: 'Spearman' } as const;
     let o = toggleBuyTile([], 3, tile);
     expect(o).toEqual([{ type: 'BuyTile', city: 3, tile }]);
     expect(hasBuy(o, 3)).toBe(true);
@@ -107,7 +107,7 @@ describe('city orders', () => {
     expect(o).toEqual([{ type: 'BuyItem', city: 3, item: soldier }]);
     o = toggleBuyTile(o, 3, tile);
     expect(o).toEqual([{ type: 'BuyTile', city: 3, tile }]);
-    const hire = { type: 'HireCompany', city: 3, unit: 'Soldier', seller: 1 } as const;
+    const hire = { type: 'HireCompany', city: 3, unit: 'Spearman', seller: 1 } as const;
     expect(toggleBuyTile(toggleHire([], hire), 3, tile)).toEqual([{ type: 'BuyTile', city: 3, tile }]);
     // Other cities are untouched, and clicking the queued tile cancels it.
     o = toggleBuyTile([{ type: 'BuyItem', city: 4, item: soldier }, ...o], 3, tile);
@@ -116,16 +116,16 @@ describe('city orders', () => {
 
   it('changes production without changing the purchased item or its spending order', () => {
     const granary = { kind: 'Building', building: 'Granary' } as const;
-    const soldier = { kind: 'Unit', unit: 'Soldier' } as const;
+    const soldier = { kind: 'Unit', unit: 'Spearman' } as const;
     const scout = { kind: 'Unit', unit: 'Scout' } as const;
-    const original: Order[] = [{ type: 'BuyItem', city: 7, item: { kind: 'Unit', unit: 'Soldier' } }, { type: 'BuyItem', city: 8, item: { kind: 'Unit', unit: 'Soldier' } }];
+    const original: Order[] = [{ type: 'BuyItem', city: 7, item: { kind: 'Unit', unit: 'Spearman' } }, { type: 'BuyItem', city: 8, item: { kind: 'Unit', unit: 'Spearman' } }];
     const changed = setProduction(original, 7, soldier, granary);
     expect(changed).toEqual([...original, { type: 'SetProduction', city: 7, item: soldier }]);
     const replaced = setProduction(changed, 7, scout, granary);
     expect(replaced).toEqual([...original, { type: 'SetProduction', city: 7, item: scout }]);
     expect(setProduction(replaced, 7, granary, granary)).toEqual(original);
-    expect(toggleBuy(changed, 7, { kind: 'Unit', unit: 'Soldier' })).toEqual([
-      { type: 'BuyItem', city: 8, item: { kind: 'Unit', unit: 'Soldier' } }, { type: 'SetProduction', city: 7, item: soldier },
+    expect(toggleBuy(changed, 7, { kind: 'Unit', unit: 'Spearman' })).toEqual([
+      { type: 'BuyItem', city: 8, item: { kind: 'Unit', unit: 'Spearman' } }, { type: 'SetProduction', city: 7, item: soldier },
     ]);
   });
 
@@ -190,7 +190,7 @@ describe('errors, pruning, descriptions', () => {
   it('maps validation errors to the orders they belong to', () => {
     const o: Order[] = [
       { type: 'SleepUnit', unit: 1 },
-      { type: 'BuyItem', city: 9, item: { kind: 'Unit', unit: 'Soldier' } },
+      { type: 'BuyItem', city: 9, item: { kind: 'Unit', unit: 'Spearman' } },
     ];
     const errs = [{ index: 1, message: 'Not enough Gold' }];
     expect(errorsWhere(o, errs, (x) => x.type === 'BuyItem')).toEqual(['Not enough Gold']);
@@ -200,17 +200,17 @@ describe('errors, pruning, descriptions', () => {
   it('describes orders in plain words', () => {
     const v = view([unit(1)], [{ id: 5, owner: 0, name: 'Tithe' }]);
     expect(describeOrder({ type: 'MoveUnit', unit: 1, to: { q: 0, r: 2 } }, v)).toBe('Spearman: move to 2 tiles SE of Tithe');
-    expect(describeOrder({ type: 'SetProduction', city: 5, item: { kind: 'Building', building: 'RelayUplink' } }, v)).toBe(
+    expect(describeOrder({ type: 'SetProduction', city: 5, item: { kind: 'Building', building: 'GreatLibrary' } }, v)).toBe(
       'Tithe: build Great Library',
     );
     expect(describeOrder({ type: 'SetResearch', tech: 'Writing' }, v)).toBe('Research Writing');
-    expect(describeOrder({ type: 'SetProduction', city: 5, item: { kind: 'Building', building: 'BroodHall' } }, v)).toBe('Tithe: build Rice Storehouse');
+    expect(describeOrder({ type: 'SetProduction', city: 5, item: { kind: 'Building', building: 'RiceStorehouse' } }, v)).toBe('Tithe: build Rice Storehouse');
     v.players[0].faction = 'Sparta';
     expect(describeOrder({ type: 'SleepUnit', unit: 1 }, v)).toBe('Spartan Hoplite: fortified until woken');
   });
 
   it('names a ranged target (its city, or whose unit), never a raw coordinate', () => {
-    const v = view([unit(1, { kind: 'Ranger' }), unit(4, { owner: 1, kind: 'Scout', pos: { q: 4, r: 0 } })], [{ id: 5, owner: 1, name: 'Harmonia' }]);
+    const v = view([unit(1, { kind: 'Archer' }), unit(4, { owner: 1, kind: 'Scout', pos: { q: 4, r: 0 } })], [{ id: 5, owner: 1, name: 'Harmonia' }]);
     v.players.push({ id: 1, faction: 'Switzerland', team: 1, name: 'AI 2' } as PlayerView['players'][number]);
     expect(describeOrder({ type: 'RangedAttack', unit: 1, target: { q: 0, r: 0 } }, v)).toBe('Archer: ranged attack on Harmonia');
     expect(describeOrder({ type: 'RangedAttack', unit: 1, target: { q: 4, r: 0 } }, v)).toMatch(/^Archer: ranged attack on \S.* Scout$/);

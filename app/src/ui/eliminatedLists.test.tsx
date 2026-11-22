@@ -57,7 +57,7 @@ it('the score ledger skips the eliminated empire', () => {
   expect(sheet.textContent).not.toContain('AI 5');
   expect(sheet.querySelectorAll('.sl-cols .sl-col')).toHaveLength(5);
   // The dead empire alone had completed a Great Work: nobody living has.
-  expect(sheet.querySelector('.sl-row[data-row="RelayUplink"]')).toBeNull();
+  expect(sheet.querySelector('.sl-row[data-row="GreatLibrary"]')).toBeNull();
 });
 
 it('diplomacy lists only living empires and no betrayal record against the eliminated one', () => {

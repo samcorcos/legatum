@@ -490,7 +490,7 @@ mod tests {
         let mut s = duel();
         let me = PlayerId(0);
         let mut r = SeatRecord::default();
-        let unit = spawn_unit(&mut s, me, UnitKind::Soldier, Hex::new(11, 5));
+        let unit = spawn_unit(&mut s, me, UnitKind::Spearman, Hex::new(11, 5));
         r.observe(me, 1, &s, &[]);
         assert_eq!(
             r.first_opponent_city_pressure_turn, None,
@@ -504,7 +504,7 @@ mod tests {
             r.first_opponent_city_pressure_turn, None,
             "scout is not an assault force"
         );
-        s.units.get_mut(&unit).unwrap().kind = UnitKind::Soldier;
+        s.units.get_mut(&unit).unwrap().kind = UnitKind::Spearman;
         s.units.get_mut(&unit).unwrap().owner = PlayerId::BARBARIAN;
         r.observe(me, 3, &s, &[]);
         assert_eq!(r.first_opponent_city_pressure_turn, None);
@@ -526,7 +526,7 @@ mod tests {
         let me = PlayerId(0);
         s.diplomacy.as_mut().unwrap().relations[0].state =
             legatum_core::diplomacy::RelationState::War;
-        let unit = spawn_unit(&mut s, me, UnitKind::Ranger, Hex::new(10, 5));
+        let unit = spawn_unit(&mut s, me, UnitKind::Archer, Hex::new(10, 5));
         let mut r = SeatRecord::default();
         r.observe(me, 1, &s, &[]);
         assert_eq!(
@@ -552,7 +552,7 @@ mod tests {
         events.push(Event::UnitDestroyed {
             unit,
             owner: me,
-            unit_kind: UnitKind::Ranger,
+            unit_kind: UnitKind::Archer,
             at: Hex::new(10, 5),
         });
         r.observe(me, 2, &next, &events);
@@ -570,7 +570,7 @@ mod tests {
             legatum_core::diplomacy::RelationState::War;
         let city = s.cities_of(PlayerId(1)).next().unwrap().id;
         s.cities.get_mut(&city).unwrap().hp = 0;
-        let unit = spawn_unit(&mut s, me, UnitKind::Soldier, Hex::new(11, 5));
+        let unit = spawn_unit(&mut s, me, UnitKind::Spearman, Hex::new(11, 5));
         let orders = BTreeMap::from([(
             me,
             vec![Order::MoveUnit {
@@ -602,7 +602,7 @@ mod tests {
         let me = PlayerId(0);
         let mut r = SeatRecord::default();
         let capital = s.cities_of(me).next().unwrap().clone();
-        spawn_unit(&mut s, me, UnitKind::Soldier, capital.pos);
+        spawn_unit(&mut s, me, UnitKind::Spearman, capital.pos);
         r.observe(
             me,
             1,
@@ -621,10 +621,10 @@ mod tests {
         let mut events = Vec::new();
         found_city(&mut s, settler, &mut events).unwrap();
         let scout = spawn_unit(&mut s, me, UnitKind::Scout, pos);
-        spawn_unit(&mut s, PlayerId(1), UnitKind::Soldier, pos);
+        spawn_unit(&mut s, PlayerId(1), UnitKind::Spearman, pos);
         r.observe(me, 40, &s, &events);
         assert!(r.guarded_expansion_turns.is_empty());
-        s.units.get_mut(&scout).unwrap().kind = UnitKind::Soldier;
+        s.units.get_mut(&scout).unwrap().kind = UnitKind::Spearman;
         r.observe(me, 41, &s, &events);
         assert_eq!(r.guarded_expansion_turns, vec![41]);
         let json = serde_json::to_value(&r).unwrap();

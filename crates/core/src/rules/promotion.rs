@@ -336,14 +336,15 @@ mod tests {
     #[test]
     fn promotion_is_its_own_breakdown_line_in_every_strength() {
         let f = Faction::India;
-        let a = combat::unit_attack_strength_for(f, UnitKind::Soldier, 100, 2);
+        let a = combat::unit_attack_strength_for(f, UnitKind::Spearman, 100, 2);
         assert_eq!(a.parts[1], ("Level 2: +20%".into(), 4));
         assert_eq!(a.total, 24);
-        let d = combat::unit_defense_strength_for(f, UnitKind::Soldier, 100, Terrain::Plains, 3, 1);
+        let d =
+            combat::unit_defense_strength_for(f, UnitKind::Spearman, 100, Terrain::Plains, 3, 1);
         assert_eq!(d.parts[1], ("Level 1: +10%".into(), 2));
-        let r = combat::unit_ranged_strength_for(f, UnitKind::Ranger, 100, 3);
+        let r = combat::unit_ranged_strength_for(f, UnitKind::Archer, 100, 3);
         assert_eq!(r.parts[1], ("Level 3: +30%".into(), 4));
-        let m = combat::unit_meeting_strength_for(f, UnitKind::Soldier, 100, 0);
+        let m = combat::unit_meeting_strength_for(f, UnitKind::Spearman, 100, 0);
         assert!(m.parts.iter().all(|(l, _)| !l.starts_with("Promotion")));
     }
 
@@ -379,8 +380,8 @@ mod tests {
     #[test]
     fn melee_fight_gives_both_survivors_xp_and_ranged_gives_less() {
         let mut s = game(&[0, 1]);
-        let a = unit(&mut s, 0, UnitKind::Soldier, hex(3, 3));
-        let d = unit(&mut s, 1, UnitKind::Soldier, hex(4, 3));
+        let a = unit(&mut s, 0, UnitKind::Spearman, hex(3, 3));
+        let d = unit(&mut s, 1, UnitKind::Spearman, hex(4, 3));
         let os = orders(
             0,
             vec![Order::MoveUnit {
@@ -393,8 +394,8 @@ mod tests {
         assert_eq!(xp_of(&next, d), 3, "1 + 2 melee");
 
         let mut s = game(&[0, 1]);
-        let r = unit(&mut s, 0, UnitKind::Ranger, hex(3, 3));
-        let d = unit(&mut s, 1, UnitKind::Soldier, hex(5, 3));
+        let r = unit(&mut s, 0, UnitKind::Archer, hex(3, 3));
+        let d = unit(&mut s, 1, UnitKind::Spearman, hex(5, 3));
         let os = orders(
             0,
             vec![Order::RangedAttack {
@@ -410,7 +411,7 @@ mod tests {
     #[test]
     fn attacking_a_city_gives_xp_and_the_defeating_blow_more() {
         let mut s = game(&[0, 1]);
-        let r = unit(&mut s, 0, UnitKind::Ranger, hex(3, 3));
+        let r = unit(&mut s, 0, UnitKind::Archer, hex(3, 3));
         let c = city(&mut s, 1, hex(5, 3), 2);
         let shoot = orders(
             0,
@@ -433,8 +434,8 @@ mod tests {
     #[test]
     fn reaching_a_threshold_promotes_at_once_and_reports_it() {
         let mut s = game(&[0, 1]);
-        let a = unit(&mut s, 0, UnitKind::Soldier, hex(3, 3));
-        let d = unit(&mut s, 1, UnitKind::Soldier, hex(4, 3));
+        let a = unit(&mut s, 0, UnitKind::Spearman, hex(3, 3));
+        let d = unit(&mut s, 1, UnitKind::Spearman, hex(4, 3));
         s.units.get_mut(&a).unwrap().xp = 12;
         let os = orders(
             0,
@@ -478,8 +479,8 @@ mod tests {
     #[test]
     fn dead_units_earn_nothing_and_killers_earn_double() {
         let mut s = game(&[0, 1]);
-        let a = unit(&mut s, 0, UnitKind::Soldier, hex(3, 3));
-        let d = unit(&mut s, 1, UnitKind::Soldier, hex(4, 3));
+        let a = unit(&mut s, 0, UnitKind::Spearman, hex(3, 3));
+        let d = unit(&mut s, 1, UnitKind::Spearman, hex(4, 3));
         s.units.get_mut(&d).unwrap().hp = 1;
         let os = orders(
             0,
@@ -519,7 +520,7 @@ mod tests {
             "{events:?}"
         );
         let u = &next.units[&a];
-        assert_eq!(u.kind, UnitKind::Trooper);
+        assert_eq!(u.kind, UnitKind::Pikeman);
         assert_eq!(u.xp, 46);
         assert_eq!(level(u.xp), 2);
     }
@@ -527,7 +528,7 @@ mod tests {
     #[test]
     fn xp_is_omitted_from_saves_at_zero() {
         let mut s = game(&[0, 1]);
-        let a = unit(&mut s, 0, UnitKind::Soldier, hex(3, 3));
+        let a = unit(&mut s, 0, UnitKind::Spearman, hex(3, 3));
         let json = serde_json::to_string(&s.units[&a]).unwrap();
         assert!(!json.contains("\"xp\""));
         s.units.get_mut(&a).unwrap().xp = 12;

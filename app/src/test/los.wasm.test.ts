@@ -35,8 +35,8 @@ function fixture(to: Hex, source: Terrain, barriers: [Hex, Terrain][], city = fa
     s.cities.push({ id: 0, owner: 0, founder: 0, name: 'High city', pos: from, population: 3, food: 0, prod: 0,
       producing: null, bought: null, buildings: ['Walls'], hp: 200, grownTiles: [], tilesClaimed: 0, isCapital: true, foundedTurn: 1, resistance: 0 });
     s.nextCityId = 1; s.owner[idxOf(s, from)] = 0; s.tileCity[idxOf(s, from)] = 0;
-  } else spawnUnit(s, 0, 'Ranger', from, false);
-  spawnUnit(s, 1, 'Soldier', to, false);
+  } else spawnUnit(s, 0, 'Archer', from, false);
+  spawnUnit(s, 1, 'Spearman', to, false);
   refreshVision(s);
   return s;
 }
@@ -67,7 +67,7 @@ describe.skipIf(!available)('terrain LOS core behavior', () => {
   it.each(cases)('%s', (_label, to, source, barriers, clear) => {
     const s = fixture(to, source, barriers);
     const { fixtureClient, core } = pair(s);
-    const ranger = s.units.find((u) => u.kind === 'Ranger')!;
+    const ranger = s.units.find((u) => u.kind === 'Archer')!;
     const order: Order = { type: 'RangedAttack', unit: ranger.id, target: to };
     const mo = fixtureClient.validate(0, [order]), co = core.validate(0, [order]);
     (expect(mo.map((e) => e.message.includes('line of sight'))).toMatchSnapshot(), void (co.map((e) => e.message.includes('line of sight'))));
@@ -108,7 +108,7 @@ describe.skipIf(!available)('terrain LOS core behavior', () => {
   it('owned tiles and their one-tile ring stay visible through blocking terrain', () => {
     const s = fixture(far, 'Grassland', [[{ q: 15, r: 5 }, 'Hills'], [{ q: 16, r: 5 }, 'Forest']]);
     s.owner[idxOf(s, { q: 15, r: 5 })] = 0;
-    spawnUnit(s, 1, 'Marksman', { q: 16, r: 5 }, false);
+    spawnUnit(s, 1, 'Crossbowman', { q: 16, r: 5 }, false);
     refreshVision(s);
     const { fixtureClient, core } = pair(s);
     for (const client of [fixtureClient, core]) {
@@ -124,7 +124,7 @@ describe.skipIf(!available)('terrain LOS core behavior', () => {
   ] as const)('%s Scout sight is %i in core', (faction, expected) => {
     const s = fixture(far, 'Grassland', []);
     s.players[0].faction = faction;
-    s.units = s.units.filter((u) => !(u.owner === 0 && u.kind === 'Ranger'));
+    s.units = s.units.filter((u) => !(u.owner === 0 && u.kind === 'Archer'));
     const scout = spawnUnit(s, 0, 'Scout', from, false);
     refreshVision(s);
     const { fixtureClient, core } = pair(s);

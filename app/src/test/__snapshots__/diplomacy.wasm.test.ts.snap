@@ -33,6 +33,13 @@ exports[`WASM diplomacy behavior > auto-explore avoids a peaceful foreign Soldie
 }
 `;
 
+exports[`WASM diplomacy behavior > auto-explore avoids a peaceful foreign Spearman without treating it as a threat 1`] = `
+{
+  "q": 0,
+  "r": 5,
+}
+`;
+
 exports[`WASM diplomacy behavior > charges each empire 1 Gold upkeep per owned city after activation 1`] = `
 [
   {
@@ -4560,7 +4567,7 @@ exports[`WASM diplomacy behavior > population is territory: growth claims a tile
       "cost": 80,
       "item": {
         "kind": "Unit",
-        "unit": "Soldier",
+        "unit": "Spearman",
       },
       "production_banked": 0,
       "production_stored": 0,
@@ -4665,7 +4672,7 @@ exports[`WASM diplomacy behavior > population is territory: growth claims a tile
       "cost": 132,
       "item": {
         "kind": "Unit",
-        "unit": "Ranger",
+        "unit": "Archer",
       },
       "production_banked": 0,
       "production_stored": 0,
@@ -5986,7 +5993,7 @@ exports[`WASM diplomacy behavior > population is territory: growth claims a tile
       "cost": 80,
       "item": {
         "kind": "Unit",
-        "unit": "Soldier",
+        "unit": "Spearman",
       },
       "production_banked": 0,
       "production_stored": 5,
@@ -6126,7 +6133,7 @@ exports[`WASM diplomacy behavior > population is territory: growth claims a tile
       "cost": 132,
       "item": {
         "kind": "Unit",
-        "unit": "Ranger",
+        "unit": "Archer",
       },
       "production_banked": 0,
       "production_stored": 5,

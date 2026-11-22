@@ -60,10 +60,10 @@ fn observations_stop_at_the_horizon_and_do_not_count_late_or_captured_production
         city: CityId(1),
         owner: PlayerId(0),
         item: ProductionItem::Unit {
-            unit: UnitKind::Soldier,
+            unit: UnitKind::Spearman,
         },
     };
-    let cost = legatum_core::data::unit_stats(UnitKind::Soldier).cost as u64;
+    let cost = legatum_core::data::unit_stats(UnitKind::Spearman).cost as u64;
     let mut c = Collector::new();
     c.observe_event(60, &completion);
     c.observe_event(61, &completion);
@@ -84,7 +84,7 @@ fn observations_stop_at_the_horizon_and_do_not_count_late_or_captured_production
             city: CityId(1),
             owner: PlayerId(0),
             item: ProductionItem::Unit {
-                unit: UnitKind::Soldier,
+                unit: UnitKind::Spearman,
             },
             gold: 100,
         },

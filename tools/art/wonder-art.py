@@ -133,7 +133,7 @@ def stage(raw: Path, stem: str, n: int):
 
 def sheet(out: Path, stems):
     cell = 384
-    names = ["building-relayuplink", "building-worldexchange", "building-planetaryfoundry", *stems]
+    names = ["building-greatlibrary", "building-grandbazaar", "building-royalarsenal", *stems]
     img = Image.new("RGB", (cell * 4, cell * ((len(names) + 3) // 4)), (233, 222, 190))
     for i, stem in enumerate(names):
         art = Image.open(UNLOCKS / f"{stem}-256.png").convert("RGBA").resize((cell, cell), Image.Resampling.LANCZOS)

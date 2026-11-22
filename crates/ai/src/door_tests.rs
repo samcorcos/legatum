@@ -114,7 +114,7 @@ fn cannon_in_a_nearly_breached_city_values_adjacent_cavalry() {
         .unit(1, ME, UnitKind::FieldCannon, CITY)
         .unit_hp(50, ENEMY, UnitKind::Cavalry, Hex::new(6, 7), 66)
         .unit_hp(51, ENEMY, UnitKind::Cavalry, Hex::new(7, 6), 93)
-        .unit(52, ENEMY, UnitKind::Soldier, Hex::new(6, 8))
+        .unit(52, ENEMY, UnitKind::Spearman, Hex::new(6, 8))
         .build();
     v.cities[0].hp = 51;
     let p = planner(&v, 100);
@@ -157,7 +157,7 @@ fn an_army_within_its_march_is_a_front_and_a_far_one_is_not() {
 fn threat_counts_strength_squared_so_an_era_lead_outweighs_numbers() {
     // One Phalangite (25) outweighs one Spearman (20) by more than its linear 25%.
     let one_new = view(0, &[(50, UnitKind::Phalangite, Hex::new(9, 6), 100)]);
-    let one_old = view(0, &[(50, UnitKind::Soldier, Hex::new(9, 6), 100)]);
+    let one_old = view(0, &[(50, UnitKind::Spearman, Hex::new(9, 6), 100)]);
     let new = planner(&one_new, 100).door_fronts()[0].threat;
     let old = planner(&one_old, 100).door_fronts()[0].threat;
     assert!(new * 100 > old * 150, "{new} vs {old}");
@@ -202,7 +202,7 @@ fn the_door_buys_the_best_unit_once_and_only_while_short() {
     assert_valid(&v, &p.orders);
 
     // A city already holding the visible attack spends nothing.
-    let mut v = view(800, &[(50, UnitKind::Soldier, Hex::new(9, 6), 30)]);
+    let mut v = view(800, &[(50, UnitKind::Spearman, Hex::new(9, 6), 30)]);
     v.units.extend(
         ViewBuilder::new(24, 14)
             .unit(1, ME, UnitKind::Phalangite, CITY)
@@ -232,7 +232,7 @@ fn a_unit_at_the_door_with_no_target_upgrades_with_gold() {
     let mut v = view(70, &army(3, Hex::new(12, 6)));
     v.units.extend(
         ViewBuilder::new(24, 14)
-            .unit(1, ME, UnitKind::Soldier, CITY)
+            .unit(1, ME, UnitKind::Spearman, CITY)
             .build()
             .units,
     );
@@ -277,10 +277,10 @@ fn each_door_part_can_be_switched_off() {
 
 #[test]
 fn a_wounded_attacker_beside_the_city_is_struck_by_everything_in_reach() {
-    let mut v = view(0, &[(50, UnitKind::Soldier, Hex::new(7, 6), 30)]);
+    let mut v = view(0, &[(50, UnitKind::Spearman, Hex::new(7, 6), 30)]);
     v.units.extend(
         ViewBuilder::new(24, 14)
-            .unit(1, ME, UnitKind::Ranger, CITY)
+            .unit(1, ME, UnitKind::Archer, CITY)
             .unit(2, ME, UnitKind::Phalangite, Hex::new(6, 7))
             .build()
             .units,

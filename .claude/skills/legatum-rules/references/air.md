@@ -13,23 +13,23 @@ Moved verbatim from `game-rules.md` on 2026-11-22, in the original order; the or
 | Revenue Office (India's Market) | 60 | +3 Gold; non-capital city remits half its gross Gold to the treasury | Currency |
 | Imperial Diwan (India) | 300 | Held goal: its city holder scores 2 VP; build once every owned city has a Revenue Office | Currency |
 | Walls | 100 (rule experiment `walls-cost=N` overrides this base price; the Swiss Redoubt adds 20, so it costs 120 by default) | +10 city strength (more each era); **the city fires** (only walled cities do, §4) | Masonry |
-| Library (`Laboratory`) | 80 | +3 Science | Writing |
+| Library | 80 | +3 Science | Writing |
 | Roadworks | 140 (`data::ROADWORKS_COST`) | +1 Gold, flat; roads | Engineering. Any faction, buyable with Gold like any building, no per-empire limit. A one-time build that "just turns on": `roads::extend_roadworks` (every resolution, after the Hall's `extend`) links each Roadworks city to every city of any empire within `data::ROADWORKS_RANGE` = 8 hexes, or `RAILWAYS_ROADWORKS_RANGE` = 12 after its owner researches Railways that its road network does not reach yet, by the same layout as the Hall's roads (`roads::connect`, rooted at the Roadworks city; another network's road tiles are walked over for free and merged). A city founded or captured within that range later is linked the next resolution. The Gold is the building's flat yield, not per connection (the Hall's roads give none). Roads persist when the building's city is razed or captured; a captor's Roadworks keeps linking. Rivals use the roads: mobility for both sides, no border opened. AI production priority is described in §10; the frozen proxy AIs never build it |
 | War Shrine (Sparta) | 160 | military trained here starts one promotion level higher | Chivalry |
-| Bank (`Clearinghouse`) | 200 | +4 Gold | Banking |
-| Mill (`Hydroponics`) | 200 | +3 Food | Feudalism |
-| University (`College`) | 240 | +4 Science | Education |
+| Bank | 200 | +4 Gold | Banking |
+| Mill | 200 | +3 Food | Feudalism |
+| University | 240 | +4 Science | Education |
 | Castle (was Citadel) | 240 | +5 city strength (Walls tier 2; still fires) | Chivalry |
 | Star Fort | 320 | +5 more city strength (Walls tier 3) | Machinery (rules 50; was Military Engineering) |
-| Forge (`MachineShop`) | 320 | +3 Production; uses 1 Iron (idle without it) | Iron Working |
+| Forge | 320 | +3 Production; uses 1 Iron (idle without it) | Iron Working |
 | Stock Exchange (`StockExchange`) | 360 | +6 Gold (the Gold line's third tier, after Market and Bank); population 8; uses no resource (it keeps the Bank's Niter) | Electricity |
-| Research Lab (`InferenceCore`) | 360 | +6 Science | Electronics |
-| Factory (`Autoworks`) | 440 | +5 Production; adds 1 Coal and keeps the Forge's Iron (idle without either) | Industrialization |
+| Research Lab (`ResearchLab`) | 360 | +6 Science | Electronics |
+| Factory | 440 | +5 Production; adds 1 Coal and keeps the Forge's Iron (idle without either) | Industrialization |
 | Pyramids (Masonry, Ancient) | 360 (rules 50; was 240) | +1 Production | World wonder, +2 held VP |
-| Great Library (`RelayUplink`, Philosophy, Classical) | 400 (rules 50; was 600) | — | World wonder, +2 held VP; needs a Library in its city |
+| Great Library (`GreatLibrary`, Philosophy, Classical) | 400 (rules 50; was 600) | — | World wonder, +2 held VP; needs a Library in its city |
 | Hagia Sophia (Machinery, Medieval) | 400 | +2 Science | World wonder, +2 held VP |
-| Grand Bazaar (`WorldExchange`, Banking, Renaissance) | 600 | — | World wonder, +2 held VP; needs two Banks, including one in its city |
-| Royal Arsenal (`PlanetaryFoundry`, Ballistics, Industrial) | 600 | — | World wonder, +2 held VP; needs a Factory in its city |
+| Grand Bazaar (`GrandBazaar`, Banking, Renaissance) | 600 | — | World wonder, +2 held VP; needs two Banks, including one in its city |
+| Royal Arsenal (`RoyalArsenal`, Ballistics, Industrial) | 600 | — | World wonder, +2 held VP; needs a Factory in its city |
 | Eiffel Tower (Steel, Machine Age) | 720 | +3 Gold | World wonder, +2 held VP |
 | ITER Fusion Reactor (Fusion Power, Future) | 900 | +4 Science | World wonder, +2 held VP |
 

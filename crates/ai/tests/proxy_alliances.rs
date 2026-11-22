@@ -25,15 +25,15 @@ fn situation() -> GameState {
         rules::cities::found_city(&mut s, settler, &mut vec![]).unwrap();
     }
     for (kind, pos) in [
-        (UnitKind::Trooper, h(8, 8)),
-        (UnitKind::Ranger, h(7, 8)),
-        (UnitKind::Ranger, h(7, 7)),
+        (UnitKind::Pikeman, h(8, 8)),
+        (UnitKind::Archer, h(7, 8)),
+        (UnitKind::Archer, h(7, 7)),
         (UnitKind::Scout, h(10, 8)),
         (UnitKind::Scout, h(5, 13)),
     ] {
         spawn_unit(&mut s, ME, kind, pos);
     }
-    spawn_unit(&mut s, PlayerId(2), UnitKind::Trooper, h(5, 15));
+    spawn_unit(&mut s, PlayerId(2), UnitKind::Pikeman, h(5, 15));
     s.turn = 50;
     for player in &mut s.players {
         player.gold = 1000;
@@ -199,7 +199,7 @@ fn a_war_on_the_proxys_ally_brings_the_proxy_in() {
 fn an_enemys_local_ally_counts_even_when_its_army_is_out_of_sight() {
     let mut s = situation();
     for x in 1..6 {
-        spawn_unit(&mut s, PlayerId(2), UnitKind::AssaultTrooper, h(x, 20));
+        spawn_unit(&mut s, PlayerId(2), UnitKind::Musketman, h(x, 20));
     }
     let s = sign(&s, 1, 2, TreatyKind::Alliance);
     let v = player_view(&s, ME);
@@ -249,9 +249,9 @@ fn a_vulnerable_lead_waits_on_a_nonwinning_great_work_but_never_delays_victory()
         .get_mut(&city)
         .unwrap()
         .buildings
-        .insert(BuildingKind::Laboratory);
+        .insert(BuildingKind::Library);
     for x in 1..8 {
-        spawn_unit(&mut s, PlayerId(2), UnitKind::AssaultTrooper, h(x, 20));
+        spawn_unit(&mut s, PlayerId(2), UnitKind::Musketman, h(x, 20));
     }
     visibility::update_explored(&mut s);
     let mut v = player_view(&s, ME);

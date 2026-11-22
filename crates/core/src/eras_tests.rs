@@ -610,12 +610,12 @@ fn byzantium_library_keeps_ordinary_diffusion() {
     let tech = TechId::Writing;
     s.player_mut(P1).techs.insert(tech);
     let before = economy::tech_cost(&s, P0, tech);
-    s.cities.get_mut(&home).unwrap().buildings = [BuildingKind::Laboratory].into();
+    s.cities.get_mut(&home).unwrap().buildings = [BuildingKind::Library].into();
     let after = economy::tech_cost(&s, P0, tech);
     assert_eq!(before, after);
     assert_eq!(after.parts.len(), 2);
     assert_eq!(
-        data::building_name_for(Faction::Byzantium, BuildingKind::Laboratory),
+        data::building_name_for(Faction::Byzantium, BuildingKind::Library),
         "Library"
     );
 }
@@ -683,7 +683,7 @@ fn current_tech_names_round_trip_and_unknown_names_are_rejected() {
         assert_eq!(TechId::from_name(name), Some(tech), "{name}");
         assert_eq!(serde_json::from_str::<TechId>(&json).unwrap(), tech);
     }
-    // Cannonry is displayed "Ballistics", but the wire name "Ballistics" is the old Trooper tech.
+    // Cannonry is displayed "Ballistics", but the wire name "Ballistics" is the old Pikeman tech.
     assert_eq!(data::tech_name(TechId::Cannonry), "Ballistics");
     assert_eq!(
         serde_json::to_string(&TechId::Cannonry).unwrap(),
@@ -717,11 +717,11 @@ fn legacy_building_names_load_as_their_replacements() {
     );
     assert_eq!(
         serde_json::from_str::<BuildingKind>("\"Arcology\"").unwrap(),
-        BuildingKind::Hydroponics
+        BuildingKind::Mill
     );
     assert_eq!(
         serde_json::from_str::<BuildingKind>("\"Monument\"").unwrap(),
-        BuildingKind::BroodHall
+        BuildingKind::RiceStorehouse
     );
     assert!(serde_json::from_str::<BuildingKind>("\"Ziggurat\"").is_err());
     // New saves write the new names.
@@ -745,24 +745,119 @@ fn legacy_building_names_load_as_their_replacements() {
     let loaded: GameState = serde_json::from_value(saved).unwrap();
     assert_eq!(
         loaded.cities[&id].buildings,
-        BTreeSet::from([BuildingKind::Castle, BuildingKind::Hydroponics])
+        BTreeSet::from([BuildingKind::Castle, BuildingKind::Mill])
     );
     assert_eq!(data::fort_tier(&loaded.cities[&id].buildings), 1);
+}
+
+/// The 2026-11-22 rename (rules 52): every identifier became the PascalCase of its display name.
+/// Records written before it (tapes, archived games, fixtures, rules-49 states read by
+/// `upgrade_from_49`) name the old identifiers, which load through `#[serde(alias)]`.
+#[test]
+fn identifiers_renamed_in_rules_52_load_from_their_old_names() {
+    let units = [
+        ("Soldier", UnitKind::Spearman),
+        ("Ranger", UnitKind::Archer),
+        ("Trooper", UnitKind::Pikeman),
+        ("Marksman", UnitKind::Crossbowman),
+        ("AssaultTrooper", UnitKind::Musketman),
+        ("Heir", UnitKind::HeirToTheThrone),
+        ("Drone", UnitKind::CombatDrone),
+        ("Landship", UnitKind::EarlyTank),
+    ];
+    let buildings = [
+        ("BroodHall", BuildingKind::RiceStorehouse),
+        ("Laboratory", BuildingKind::Library),
+        ("RelayUplink", BuildingKind::GreatLibrary),
+        ("IterReactor", BuildingKind::IterFusionReactor),
+        ("Hydroponics", BuildingKind::Mill),
+        ("MachineShop", BuildingKind::Forge),
+        ("WarShrine", BuildingKind::Agoge),
+        ("College", BuildingKind::University),
+        ("Clearinghouse", BuildingKind::Bank),
+        ("Autoworks", BuildingKind::Factory),
+        ("PlanetaryFoundry", BuildingKind::RoyalArsenal),
+        ("WorldExchange", BuildingKind::GrandBazaar),
+        ("InferenceCore", BuildingKind::ResearchLab),
+        ("CourierHall", BuildingKind::YamRelayStation),
+    ];
+    let pascal = |name: &str| -> String {
+        name.split([' ', '-'])
+            .map(|word| {
+                let mut letters = word.chars();
+                let first = letters.next().map(|c| c.to_ascii_uppercase());
+                first
+                    .into_iter()
+                    .chain(letters.map(|c| c.to_ascii_lowercase()))
+                    .collect::<String>()
+            })
+            .collect()
+    };
+    for (old, kind) in units {
+        let quoted = format!("\"{old}\"");
+        assert_eq!(serde_json::from_str::<UnitKind>(&quoted).unwrap(), kind);
+        // The old name also loads as a map key and inside an order's production item.
+        let map: BTreeMap<UnitKind, u8> =
+            serde_json::from_str(&format!("{{\"{old}\":1}}")).unwrap();
+        assert_eq!(map, BTreeMap::from([(kind, 1)]));
+        let item: ProductionItem =
+            serde_json::from_str(&format!("{{\"kind\":\"Unit\",\"unit\":\"{old}\"}}")).unwrap();
+        assert_eq!(item, ProductionItem::Unit { unit: kind });
+        // The engine writes only the new name, which is the display name in PascalCase.
+        let written = serde_json::to_string(&kind).unwrap();
+        assert_ne!(written, quoted);
+        assert_eq!(written, format!("\"{}\"", pascal(data::unit_name(kind))));
+    }
+    for (old, kind) in buildings {
+        let quoted = format!("\"{old}\"");
+        assert_eq!(serde_json::from_str::<BuildingKind>(&quoted).unwrap(), kind);
+        let set: BTreeSet<BuildingKind> = serde_json::from_str(&format!("[{quoted}]")).unwrap();
+        assert_eq!(set, BTreeSet::from([kind]));
+        let written = serde_json::to_string(&kind).unwrap();
+        assert_ne!(written, quoted);
+        assert_eq!(
+            written,
+            format!("\"{}\"", pascal(data::building_name(kind)))
+        );
+    }
+    assert_eq!(
+        serde_json::from_str::<ImprovementKind>("\"SaltpeterWorks\"").unwrap(),
+        ImprovementKind::SaltpetreWorks
+    );
+    assert_eq!(
+        serde_json::to_string(&ImprovementKind::SaltpetreWorks).unwrap(),
+        "\"SaltpetreWorks\""
+    );
+    // Every unit and building identifier is its display name in PascalCase, so a new kind
+    // cannot bring back a second vocabulary.
+    for kind in UnitKind::ALL {
+        assert_eq!(format!("{kind:?}"), pascal(data::unit_name(kind)));
+    }
+    for kind in BuildingKind::ALL {
+        assert_eq!(format!("{kind:?}"), pascal(data::building_name(kind)));
+    }
+    // The order of the variants did not move: derived `Ord` and every `ALL` index follow it.
+    assert_eq!(UnitKind::ALL[2], UnitKind::Spearman);
+    assert_eq!(UnitKind::ALL[30], UnitKind::EarlyTank);
+    assert_eq!(BuildingKind::ALL[0], BuildingKind::RiceStorehouse);
+    assert_eq!(BuildingKind::ALL[22], BuildingKind::YamRelayStation);
+    assert!(UnitKind::ALL.windows(2).all(|pair| pair[0] < pair[1]));
+    assert!(BuildingKind::ALL.windows(2).all(|pair| pair[0] < pair[1]));
 }
 
 #[test]
 fn buildings_have_historical_display_names() {
     for (kind, name) in [
-        (BuildingKind::Laboratory, "Library"),
-        (BuildingKind::College, "University"),
-        (BuildingKind::Clearinghouse, "Bank"),
-        (BuildingKind::Hydroponics, "Mill"),
-        (BuildingKind::MachineShop, "Forge"),
-        (BuildingKind::Autoworks, "Factory"),
-        (BuildingKind::InferenceCore, "Research Lab"),
-        (BuildingKind::RelayUplink, "Great Library"),
-        (BuildingKind::PlanetaryFoundry, "Royal Arsenal"),
-        (BuildingKind::WorldExchange, "Grand Bazaar"),
+        (BuildingKind::Library, "Library"),
+        (BuildingKind::University, "University"),
+        (BuildingKind::Bank, "Bank"),
+        (BuildingKind::Mill, "Mill"),
+        (BuildingKind::Forge, "Forge"),
+        (BuildingKind::Factory, "Factory"),
+        (BuildingKind::ResearchLab, "Research Lab"),
+        (BuildingKind::GreatLibrary, "Great Library"),
+        (BuildingKind::RoyalArsenal, "Royal Arsenal"),
+        (BuildingKind::GrandBazaar, "Grand Bazaar"),
         (BuildingKind::Castle, "Castle"),
         (BuildingKind::StarFort, "Star Fort"),
     ] {
@@ -787,23 +882,23 @@ fn the_buildings_and_their_unlock_techs_follow_the_new_tree() {
     for (building, tech) in [
         (B::Workshop, TechId::BronzeWorking),
         (B::Market, TechId::Currency),
-        (B::Laboratory, TechId::Writing),
+        (B::Library, TechId::Writing),
         (B::Walls, TechId::Masonry),
         (B::Roadworks, TechId::Engineering),
-        (B::MachineShop, TechId::IronWorking),
-        (B::RelayUplink, TechId::Philosophy),
+        (B::Forge, TechId::IronWorking),
+        (B::GreatLibrary, TechId::Philosophy),
         (B::HagiaSophia, TechId::Machinery),
         (B::Castle, TechId::Chivalry),
-        (B::WarShrine, TechId::Chivalry),
-        (B::College, TechId::Education),
-        (B::Hydroponics, TechId::Feudalism),
+        (B::Agoge, TechId::Chivalry),
+        (B::University, TechId::Education),
+        (B::Mill, TechId::Feudalism),
         (B::StarFort, TechId::Machinery),
-        (B::Clearinghouse, TechId::Banking),
-        (B::WorldExchange, TechId::Banking),
-        (B::Autoworks, TechId::Industrialization),
-        (B::PlanetaryFoundry, TechId::Cannonry),
+        (B::Bank, TechId::Banking),
+        (B::GrandBazaar, TechId::Banking),
+        (B::Factory, TechId::Industrialization),
+        (B::RoyalArsenal, TechId::Cannonry),
         (B::StockExchange, TechId::Electricity),
-        (B::InferenceCore, TechId::Electronics),
+        (B::ResearchLab, TechId::Electronics),
     ] {
         assert_eq!(
             data::building_stats(building).requires,
@@ -813,11 +908,11 @@ fn the_buildings_and_their_unlock_techs_follow_the_new_tree() {
     }
     assert_eq!(data::building_stats(B::Granary).requires, None);
     for (unit, tech) in [
-        (UnitKind::Trooper, TechId::Feudalism),
-        (UnitKind::Marksman, TechId::Machinery),
-        (UnitKind::AssaultTrooper, TechId::Gunpowder),
+        (UnitKind::Pikeman, TechId::Feudalism),
+        (UnitKind::Crossbowman, TechId::Machinery),
+        (UnitKind::Musketman, TechId::Gunpowder),
         (UnitKind::TrenchInfantry, TechId::ReplaceableParts),
-        (UnitKind::Landship, TechId::Combustion),
+        (UnitKind::EarlyTank, TechId::Combustion),
         (UnitKind::Howitzer, TechId::Steel),
         (UnitKind::Biplane, TechId::Flight),
         (UnitKind::Infantry, TechId::MassMobilisation),
@@ -837,7 +932,7 @@ fn printing_press_and_the_future_techs_add_their_city_effects() {
     let id = city(&mut s, 0, hex(3, 3), 4);
     let science = |s: &GameState| economy::city_yields(s, &s.cities[&id]).total.science;
     let production = |s: &GameState| economy::city_yields(s, &s.cities[&id]).total.production;
-    s.cities.get_mut(&id).unwrap().buildings = [BuildingKind::Laboratory].into();
+    s.cities.get_mut(&id).unwrap().buildings = [BuildingKind::Library].into();
     let base = science(&s);
     // Printing Press adds Science to the Library family; Recursive AI boosts Production.
     s.player_mut(P0).techs.insert(TechId::PrintingPress);
@@ -845,13 +940,13 @@ fn printing_press_and_the_future_techs_add_their_city_effects() {
     s.player_mut(P0).techs.insert(TechId::RecursiveAi);
     assert_eq!(science(&s), base + 1);
     // The Printing Press bonus rides with the Library family through a University.
-    s.cities.get_mut(&id).unwrap().buildings = [BuildingKind::College].into();
+    s.cities.get_mut(&id).unwrap().buildings = [BuildingKind::University].into();
     let with_college = science(&s);
     s.player_mut(P0).techs.remove(&TechId::PrintingPress);
     s.player_mut(P0).techs.remove(&TechId::RecursiveAi);
     assert_eq!(with_college, science(&s) + 1);
     // Stealth Technology unlocks aircraft, with no Science bonus.
-    s.cities.get_mut(&id).unwrap().buildings = [BuildingKind::InferenceCore].into();
+    s.cities.get_mut(&id).unwrap().buildings = [BuildingKind::ResearchLab].into();
     let lab = science(&s);
     s.player_mut(P0).techs.insert(TechId::StealthTechnology);
     assert_eq!(science(&s), lab);
@@ -931,12 +1026,12 @@ fn earlier_tech_effects_change_city_yields_and_unit_costs() {
         .get_mut(&id)
         .unwrap()
         .buildings
-        .insert(BuildingKind::Autoworks);
+        .insert(BuildingKind::Factory);
     let factory = yields(&s).production;
     s.player_mut(P0).techs.insert(TechId::ReplaceableParts);
     assert_eq!(yields(&s).production, factory + 2);
     let soldier = ProductionItem::Unit {
-        unit: UnitKind::Soldier,
+        unit: UnitKind::Spearman,
     };
     let cost = economy::production_cost(&s, P0, soldier);
     let settler = ProductionItem::Unit {
@@ -1079,11 +1174,11 @@ fn irrigation_gives_a_food() {
 #[test]
 fn a_unit_starting_on_a_road_gets_one_extra_move_and_two_with_railways() {
     let mut s = game(&[0, 1]);
-    let on_road = unit(&mut s, 0, UnitKind::Soldier, hex(3, 3));
-    let off_road = unit(&mut s, 0, UnitKind::Soldier, hex(5, 3));
-    let rival = unit(&mut s, 1, UnitKind::Soldier, hex(3, 3));
+    let on_road = unit(&mut s, 0, UnitKind::Spearman, hex(3, 3));
+    let off_road = unit(&mut s, 0, UnitKind::Spearman, hex(5, 3));
+    let rival = unit(&mut s, 1, UnitKind::Spearman, hex(3, 3));
     s.map.get_mut(hex(3, 3)).unwrap().road = crate::roads::NODE;
-    let moves = data::unit_stats_for(Faction::Switzerland, UnitKind::Soldier).moves;
+    let moves = data::unit_stats_for(Faction::Switzerland, UnitKind::Spearman).moves;
     let reset = |s: &GameState| {
         let mut s = s.clone();
         rules::units::reset_turn(&mut s);
@@ -1115,7 +1210,7 @@ fn steel_guns_fire_over_terrain_only_at_seen_targets() {
     let target = hex(5, 3);
     s.map.get_mut(hex(4, 3)).unwrap().terrain = Terrain::Forest;
     let gun = unit(&mut s, 0, UnitKind::Artillery, from);
-    unit(&mut s, 1, UnitKind::Soldier, target);
+    unit(&mut s, 1, UnitKind::Spearman, target);
     let spotter = unit(&mut s, 0, UnitKind::Scout, hex(5, 4));
     let shot = |s: &GameState| rules::battle::ranged_target(s, P0, gun, target, &mut None);
     assert!(shot(&s).unwrap_err().contains("No line of sight"));
@@ -1136,9 +1231,9 @@ fn walled_garrison_shoots_through_forest_but_unwalled_garrison_and_field_unit_do
     let target = hex(5, 3);
     s.map.get_mut(hex(4, 3)).unwrap().terrain = Terrain::Forest;
     let home = city(&mut s, 0, from, 3);
-    let archer = unit(&mut s, 0, UnitKind::Ranger, from);
+    let archer = unit(&mut s, 0, UnitKind::Archer, from);
     unit(&mut s, 0, UnitKind::Scout, hex(5, 4));
-    unit(&mut s, 1, UnitKind::Soldier, target);
+    unit(&mut s, 1, UnitKind::Spearman, target);
     let shot = |s: &GameState| rules::battle::ranged_target(s, P0, archer, target, &mut None);
     let forecast = |s: &GameState| {
         crate::forecast_attack_mode(&player_view(s, P0), archer, target, AttackMode::Ranged)
@@ -1180,7 +1275,7 @@ fn artillery_and_drones_keep_full_builtin_siege() {
         BuildingKind::StarFort,
     ]);
     s.player_mut(P0).techs.insert(TechId::Steel);
-    for kind in [UnitKind::Artillery, UnitKind::Drone] {
+    for kind in [UnitKind::Artillery, UnitKind::CombatDrone] {
         let id = unit(&mut s, 0, kind, hex(3, 3));
         let f = crate::forecast_attack_mode(&player_view(&s, P0), id, target, AttackMode::Ranged)
             .unwrap();
@@ -1237,7 +1332,7 @@ fn city_defense_in_a_real_city_uses_its_fort_tier() {
             .find(|c| c.id == id)
             .map(|c| (c.strength, c.fort_tier(), c.citadel, c.star_fort))
     };
-    unit(&mut s, 0, UnitKind::Soldier, hex(4, 3));
+    unit(&mut s, 0, UnitKind::Spearman, hex(4, 3));
     crate::visibility::update_explored(&mut s);
     let (plain, tier, castle_flag, star_flag) = strength(&s).unwrap();
     assert_eq!((tier, castle_flag, star_flag), (0, false, false));
@@ -1484,14 +1579,14 @@ fn the_schedule_has_no_dates_without_science() {
 fn units_have_a_class_and_an_era_tier_for_the_coming_lineage() {
     use UnitKind::*;
     for (kind, class) in [
-        (Soldier, Some(UnitClass::Melee)),
-        (Trooper, Some(UnitClass::Melee)),
-        (AssaultTrooper, Some(UnitClass::Melee)),
-        (Ranger, Some(UnitClass::Ranged)),
-        (Marksman, Some(UnitClass::Ranged)),
+        (Spearman, Some(UnitClass::Melee)),
+        (Pikeman, Some(UnitClass::Melee)),
+        (Musketman, Some(UnitClass::Melee)),
+        (Archer, Some(UnitClass::Ranged)),
+        (Crossbowman, Some(UnitClass::Ranged)),
         (Scout, None),
         (Settler, None),
-        (Heir, None),
+        (HeirToTheThrone, None),
     ] {
         assert_eq!(data::unit_class(kind), class, "{kind:?}");
     }
@@ -1500,10 +1595,10 @@ fn units_have_a_class_and_an_era_tier_for_the_coming_lineage() {
         let expected = data::unit_stats(kind).requires.map_or(0, eras::era_of_tech);
         assert_eq!(data::unit_era_tier(kind), expected, "{kind:?}");
     }
-    assert_eq!(data::unit_era_tier(Soldier), 0);
-    assert_eq!(data::unit_era_tier(Trooper), 2);
-    assert_eq!(data::unit_era_tier(Marksman), 2);
-    assert_eq!(data::unit_era_tier(AssaultTrooper), 3);
+    assert_eq!(data::unit_era_tier(Spearman), 0);
+    assert_eq!(data::unit_era_tier(Pikeman), 2);
+    assert_eq!(data::unit_era_tier(Crossbowman), 2);
+    assert_eq!(data::unit_era_tier(Musketman), 3);
     assert!(
         UnitKind::ALL
             .into_iter()

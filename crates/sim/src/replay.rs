@@ -823,7 +823,7 @@ mod tests {
                 defender: Defender::Unit {
                     unit: UnitId(defender),
                     owner: PlayerId(defender_owner),
-                    unit_kind: UnitKind::Soldier,
+                    unit_kind: UnitKind::Spearman,
                 },
                 at: Hex::new(30, 9),
                 attacker_strength: Breakdown::default(),
@@ -889,7 +889,7 @@ mod tests {
             defender: Defender::Unit {
                 unit: UnitId(2),
                 owner: PlayerId(1),
-                unit_kind: UnitKind::Soldier,
+                unit_kind: UnitKind::Spearman,
             },
             at: Hex::new(2, 3),
             attacker_strength: Breakdown::default(),
@@ -932,13 +932,13 @@ mod tests {
             Event::MegaprojectStarted {
                 city: CityId(1),
                 owner: PlayerId(1),
-                building: BuildingKind::RelayUplink,
+                building: BuildingKind::GreatLibrary,
             },
             Event::ProductionCompleted {
                 city: CityId(1),
                 owner: PlayerId(1),
                 item: ProductionItem::Building {
-                    building: BuildingKind::RelayUplink,
+                    building: BuildingKind::GreatLibrary,
                 },
             },
             Event::VictoryHoldStarted {

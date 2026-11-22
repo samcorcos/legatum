@@ -47,7 +47,7 @@ export function WhereToBuild({ item, here, preview = false, onEdit, open, hideNo
   // A greyed card already says why; "no city can build it" under it adds nothing.
   if (hideNone && summary.kind === 'none') return null;
   const name = itemName(item, faction);
-  const needsTile = (item.kind === 'Building' || item.kind === 'Wonder') && (isGreatWork(item.building) || item.building === 'CourierHall');
+  const needsTile = (item.kind === 'Building' || item.kind === 'Wonder') && (isGreatWork(item.building) || item.building === 'YamRelayStation');
   const edit = (site: BuildSite, mode: 'build' | 'queue', from: Element) => {
     onEdit?.(from);
     feel.select();

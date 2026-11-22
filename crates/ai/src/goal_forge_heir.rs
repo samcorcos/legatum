@@ -12,9 +12,9 @@ const HEIR_SWING_VALUE_PER_VP: i32 = 100;
 
 impl Planner<'_> {
     fn city_has_factory(&self, c: &CityView) -> bool {
-        c.detail.as_ref().is_some_and(|d| data::has_building(&d.buildings, BuildingKind::MachineShop))
+        c.detail.as_ref().is_some_and(|d| data::has_building(&d.buildings, BuildingKind::Forge))
             || self.orders.iter().any(|o| matches!(o,
-                Order::BuyItem { city, item: ProductionItem::Building { building: BuildingKind::MachineShop } }
+                Order::BuyItem { city, item: ProductionItem::Building { building: BuildingKind::Forge } }
                 if *city == c.id))
     }
 
@@ -104,7 +104,7 @@ impl Planner<'_> {
             BuildingKind::Workshop if !data::has_building(&d.buildings, BuildingKind::Workshop) => {
                 35
             }
-            BuildingKind::MachineShop if self.forge_open() => 100,
+            BuildingKind::Forge if self.forge_open() => 100,
             _ => 0,
         };
         let share = if self.forge_open() {
@@ -166,7 +166,7 @@ impl Planner<'_> {
     pub(crate) fn factory_completes_goal(&self, city: &CityView, building: BuildingKind) -> bool {
         self.faction == Faction::Germany
             && self.germany_goal_on()
-            && building == BuildingKind::MachineShop
+            && building == BuildingKind::Forge
             && self.foundries_held_or_bought() == data::GERMANY_GOAL_CITIES - 1
             && self
                 .ctx
@@ -181,7 +181,7 @@ impl Planner<'_> {
         if city
             .detail
             .as_ref()
-            .is_some_and(|d| !data::has_building(&d.buildings, BuildingKind::MachineShop))
+            .is_some_and(|d| !data::has_building(&d.buildings, BuildingKind::Forge))
         {
             return 0;
         }
@@ -215,7 +215,7 @@ impl Planner<'_> {
             .own_units
             .iter()
             .copied()
-            .filter(|u| u.kind == UnitKind::Heir)
+            .filter(|u| u.kind == UnitKind::HeirToTheThrone)
     }
 
     /// The Heir is worth training here: the Byzantium has the cities and the time, and the city
@@ -343,7 +343,9 @@ impl Planner<'_> {
     /// VP-swing value of capturing an Heir: the captor gains the goal's VP and its holder loses
     /// them. Zero for an Heir we already hold.
     pub(crate) fn heir_capture_value(&self, heir: &UnitView) -> i32 {
-        if heir.kind != UnitKind::Heir || self.view().team_of(heir.owner) == self.view().team {
+        if heir.kind != UnitKind::HeirToTheThrone
+            || self.view().team_of(heir.owner) == self.view().team
+        {
             return 0;
         }
         // Barbarian-held: nobody scores, but a cleared camp frees him to us, and he is ours to
@@ -356,7 +358,9 @@ impl Planner<'_> {
         self.view()
             .units
             .iter()
-            .filter(|u| u.kind == UnitKind::Heir && u.pos == city.pos && u.owner == city.owner)
+            .filter(|u| {
+                u.kind == UnitKind::HeirToTheThrone && u.pos == city.pos && u.owner == city.owner
+            })
             .map(|u| self.heir_capture_value(u))
             .max()
             .unwrap_or(0)

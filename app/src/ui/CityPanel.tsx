@@ -411,8 +411,8 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
   );
   const faction = owner?.faction;
   // The Mongols's Courier Hall in its own city: a greyed card too, so the Hall reads as built where it is bought.
-  const hallHere = city.owner === view.me && faction === 'Mongols' && d.buildings.includes('CourierHall');
-  const unavailable: UnavailableOption[] = [...(d.unavailable ?? []), ...(hallHere && !(d.unavailable ?? []).some((u) => sameItem(u.item, { kind: 'Building', building: 'CourierHall' })) ? [{ item: { kind: 'Building' as const, building: 'CourierHall' as const }, cost: 0, reason: `The Yam Relay Station already stands in ${city.name}`, production_banked: 0 }] : [])];
+  const hallHere = city.owner === view.me && faction === 'Mongols' && d.buildings.includes('YamRelayStation');
+  const unavailable: UnavailableOption[] = [...(d.unavailable ?? []), ...(hallHere && !(d.unavailable ?? []).some((u) => sameItem(u.item, { kind: 'Building', building: 'YamRelayStation' })) ? [{ item: { kind: 'Building' as const, building: 'YamRelayStation' as const }, cost: 0, reason: `The Yam Relay Station already stands in ${city.name}`, production_banked: 0 }] : [])];
   const listOptions = d.options;
   const listUnavailable = unavailable;
   const permanentLine = (items: UnavailableOption[], options: ProductionOption[] = []) => {
@@ -486,7 +486,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
   const siteCard = (building: BuildingKind) => { const all = siteOptions(building); return all.find(siteChosen) ?? all[0]; };
   /** "Plains, Wheat, 3 tiles SW": the chosen tile, as the card names it. */
   const sitePlace = (tile: CityView['pos']) => { const t = view.tiles[tileIndex(tile, view.width, view.height)]; return [t?.terrain ? TERRAIN_NAME[t.terrain] : null, t?.resource ? RESOURCE_INFO[t.resource].name : null, wonderWhere(tile)].filter(Boolean).join(', '); };
-  const yamCard = listOptions.some((o) => o.item.kind === 'Wonder' && o.item.building === 'CourierHall') ? siteCard('CourierHall') : undefined;
+  const yamCard = listOptions.some((o) => o.item.kind === 'Wonder' && o.item.building === 'YamRelayStation') ? siteCard('YamRelayStation') : undefined;
   const placing = (building: BuildingKind) => place?.city === city.id && place.building === building;
   const startPlace = (building: BuildingKind, intent: 'build' | 'queue' | 'buy') => {
     setImproveHover(null);
@@ -614,7 +614,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     const description = itemDescription(o.item, owner?.faction);
     const cardText = itemCardText(o.item, owner?.faction);
     const fullCopy = cardText === description ? description : `${cardText} ${description}`;
-    const hallDetail = o.item.kind === 'Building' && o.item.building === 'CourierHall' ? hallCardText() : null;
+    const hallDetail = o.item.kind === 'Building' && o.item.building === 'YamRelayStation' ? hallCardText() : null;
     const detail = [fullCopy, effect, hallDetail, site && isGreatWork(site.building) ? `Only one empire can complete it. ${rivalBuilders.length ? `Known builders: ${rivalBuilders.join(', ')}.` : 'No known rival builder.'}` : null].filter(Boolean).join(' ');
     const cardLineBase = site && isGreatWork(site.building) ? `${itemSummary(o.item, owner?.faction).replace(/^World wonder: /, '').replace(/^whoever holds its tile scores (\+\d+ VP)$/, '$1 to its tile holder')} · one in the world${rivalBuilders.length ? `, also building: ${rivalBuilders.join(', ')}` : ''}` : [keeps, gains || itemSummary(o.item, owner?.faction)].filter(Boolean).join(' · ');
     const cardLine = industryFood(o.item) ? `${cardLineBase} · −1 Food` : cardLineBase;
@@ -748,7 +748,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
   // The same check as the map's faded medallions and the tile card: owned, known and unimproved.
   const dormant = d.territory.filter((h) => { const t = view.tiles[tileIndex(h, view.width, view.height)]; return !!t && isDormant(t, view.me, owner?.faction); }).length;
   const improvements = (city.owner === view.me && improvementOptions.length > 0) ? <section aria-label="Improvements" data-testid="improvements-group">
-    <Tip as="div" className="cp-sub" content={`A resource yields its bonus only once its tile is improved. A strategic deposit supplies its resource as soon as it is inside your borders. Its improvement (${['Mine', 'SaltpeterWorks', 'OilWell', 'QuartzMine'].map((k) => withArticle(IMPROVEMENT_INFO[k as ImprovementKind].name)).join(', ')}) adds its tile's yield and 1 more supply. Pick a tile here or click it on the map. Improvements upgrade by themselves with technology; a released tile keeps its improvement, and a captured city's land keeps it.`}>
+    <Tip as="div" className="cp-sub" content={`A resource yields its bonus only once its tile is improved. A strategic deposit supplies its resource as soon as it is inside your borders. Its improvement (${['Mine', 'SaltpetreWorks', 'OilWell', 'QuartzMine'].map((k) => withArticle(IMPROVEMENT_INFO[k as ImprovementKind].name)).join(', ')}) adds its tile's yield and 1 more supply. Pick a tile here or click it on the map. Improvements upgrade by themselves with technology; a released tile keeps its improvement, and a captured city's land keeps it.`}>
       Improvements <span className="cp-sub-note">· {dormant} resource tile{dormant === 1 ? '' : 's'} unimproved</span>
     </Tip>
     <div className={`prod-list ${producing ? '' : 'choosing'}`}>{improvementOptions.map((o) => renderOption(o))}</div>
@@ -1008,7 +1008,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
       {owner?.faction === 'Mongols' && <section aria-label="Yam Relay Station"><div className="cp-sub">Yam Relay Station · one per empire</div>{yamCard && <div className="prod-list">{renderOption(yamCard)}</div>}{!yamCard && <p className="hint">{(() => {
         const hall = view.courier_halls?.find((h) => h.of === city.owner);
         if (hall) return hall.holder === city.owner ? `The Yam Relay Station already stands in ${view.cities.find((c) => c.id === hall.city)?.name ?? 'your city'}.` : `The Yam Relay Station stands in ${view.cities.find((c) => c.id === hall.city)?.name ?? 'a rival city'}; retake the city instead.`;
-        const building = view.cities.find((c) => c.owner === city.owner && c.id !== city.id && c.detail && [c.detail.producing, ...(c.detail.production_queue ?? [])].some((item) => item?.kind === 'Wonder' && item.building === 'CourierHall'));
+        const building = view.cities.find((c) => c.owner === city.owner && c.id !== city.id && c.detail && [c.detail.producing, ...(c.detail.production_queue ?? [])].some((item) => item?.kind === 'Wonder' && item.building === 'YamRelayStation'));
         return building ? `The Yam Relay Station is already being built in ${building.name}.` : 'No eligible tile is available for the Yam Relay Station here.';
       })()}</p>}</section>}
       <section className="cp-great-works" aria-label="World wonders">

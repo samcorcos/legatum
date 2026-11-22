@@ -68,7 +68,7 @@ describe.skipIf(!available)('G2 attack pursuit core behavior', () => {
 
   it('a target that sidesteps within reach is attacked where it ends', () => {
     const s = fixture(); const { a, m, b } = line(fromOffset(4, 5)); const c = neighbors(m)[1];
-    const soldier = spawnUnit(s, 0, 'Soldier', a, false), scout = spawnUnit(s, 1, 'Scout', b, false);
+    const soldier = spawnUnit(s, 0, 'Spearman', a, false), scout = spawnUnit(s, 1, 'Scout', b, false);
     const { reports } = play(s, [{ 0: [move(soldier.id, b)], 1: [move(scout.id, c)] }]);
     expect(battlesOn(reports[0], scout.id)).toEqual([c]);
     expect(pursuit(reports[0], soldier.id)).toMatchObject({ outcome: 'Attacked', target_at: c });
@@ -76,7 +76,7 @@ describe.skipIf(!available)('G2 attack pursuit core behavior', () => {
 
   it('G18: a target that outruns the attacker is followed, then the order ends', () => {
     const s = fixture(); const { a, b } = line(fromOffset(3, 5)); const far = neighbors(neighbors(b)[0])[0];
-    const soldier = spawnUnit(s, 0, 'Soldier', a, false), scout = spawnUnit(s, 1, 'Scout', b, false);
+    const soldier = spawnUnit(s, 0, 'Spearman', a, false), scout = spawnUnit(s, 1, 'Scout', b, false);
     const { core, reports } = play(s, [{ 0: [move(soldier.id, b)], 1: [move(scout.id, far)] }, {}]);
     expect(pursuit(reports[0], soldier.id)).toMatchObject({ outcome: 'Followed', target_at: far, target_kind: 'Scout' });
     expect(battlesOn(reports[0], scout.id)).toEqual([]);
@@ -88,7 +88,7 @@ describe.skipIf(!available)('G2 attack pursuit core behavior', () => {
   it('G18: an attack whose defender survives is one attack; the attacker needs orders', () => {
     const s = fixture(); const here = fromOffset(5, 5), there = neighbors(here)[0];
     s.terrain[idxOf(s, there)] = 'Hills';
-    const soldier = spawnUnit(s, 0, 'Soldier', here, false), guard = spawnUnit(s, 1, 'Soldier', there, false);
+    const soldier = spawnUnit(s, 0, 'Spearman', here, false), guard = spawnUnit(s, 1, 'Spearman', there, false);
     guard.fortify = 6;
     const { core, reports } = play(s, [{ 0: [move(soldier.id, there)] }, {}, {}]);
     expect(battlesOn(reports[0], guard.id)).toEqual([there]);
@@ -99,7 +99,7 @@ describe.skipIf(!available)('G2 attack pursuit core behavior', () => {
   it('G18: an attack out of this turn\'s reach approaches, then ends', () => {
     const s = fixture(); const start = fromOffset(3, 5);
     let target = start; for (let i = 0; i < 4; i++) target = neighbors(target)[0];
-    const soldier = spawnUnit(s, 0, 'Soldier', start, false), guard = spawnUnit(s, 1, 'Soldier', target, false);
+    const soldier = spawnUnit(s, 0, 'Spearman', start, false), guard = spawnUnit(s, 1, 'Spearman', target, false);
     spawnUnit(s, 0, 'Scout', neighbors(neighbors(target)[2])[2], false);
     const { reports } = play(s, [{ 0: [move(soldier.id, target)] }, {}]);
     expect(pursuit(reports[0], soldier.id)).toMatchObject({ outcome: 'OutOfReach', target_at: target });
@@ -108,7 +108,7 @@ describe.skipIf(!available)('G2 attack pursuit core behavior', () => {
 
   it('G18: a meeting that both survive ends both moves', () => {
     const s = fixture();
-    const a = spawnUnit(s, 0, 'Soldier', fromOffset(3, 5), false), b = spawnUnit(s, 1, 'Soldier', fromOffset(5, 5), false);
+    const a = spawnUnit(s, 0, 'Spearman', fromOffset(3, 5), false), b = spawnUnit(s, 1, 'Spearman', fromOffset(5, 5), false);
     const { core, reports } = play(s, [{ 0: [move(a.id, fromOffset(9, 5))], 1: [move(b.id, fromOffset(0, 5))] }]);
     expect(reports[0].filter((e) => e.type === 'Battle' && e.meeting)).toHaveLength(1);
     expect(core.view(0).units.find((u) => u.id === a.id)?.goto).toBeNull();
@@ -118,7 +118,7 @@ describe.skipIf(!available)('G2 attack pursuit core behavior', () => {
   it('G21: a unit attacked while pulling back takes the hit without fortify, then completes its step', () => {
     const s = fixture(); const here = fromOffset(5, 5), there = neighbors(here)[0], away = neighbors(neighbors(there)[0])[0];
     s.terrain[idxOf(s, there)] = 'Hills';
-    const soldier = spawnUnit(s, 0, 'Soldier', here, false), ranger = spawnUnit(s, 1, 'Ranger', there, false);
+    const soldier = spawnUnit(s, 0, 'Spearman', here, false), ranger = spawnUnit(s, 1, 'Archer', there, false);
     ranger.fortify = 6;
     const { core, reports } = play(s, [{ 0: [move(soldier.id, there)], 1: [move(ranger.id, away)] }]);
     const hit = reports[0].find((e) => e.type === 'Battle' && e.attacker === soldier.id);
@@ -132,7 +132,7 @@ describe.skipIf(!available)('G2 attack pursuit core behavior', () => {
   it('a target that leaves sight ends the order: no dangling route', () => {
     const s = fixture(); const { a, b } = line(fromOffset(2, 5));
     const gone = neighbors(neighbors(neighbors(b)[0])[0])[0];
-    const soldier = spawnUnit(s, 0, 'Soldier', a, false), scout = spawnUnit(s, 1, 'Scout', b, false);
+    const soldier = spawnUnit(s, 0, 'Spearman', a, false), scout = spawnUnit(s, 1, 'Scout', b, false);
     const { core, reports } = play(s, [{ 0: [move(soldier.id, b)], 1: [move(scout.id, gone)] }]);
     expect(pursuit(reports[0], soldier.id)).toMatchObject({ outcome: 'LostSight', target_at: null });
     const v = core.view(0).units.find((u) => u.id === soldier.id)!;
@@ -141,8 +141,8 @@ describe.skipIf(!available)('G2 attack pursuit core behavior', () => {
 
   it('a pursuit never attacks an escort it was not ordered to attack', () => {
     const s = fixture(); const { a, m, b } = line(fromOffset(4, 5)); const c = neighbors(m)[1];
-    const soldier = spawnUnit(s, 0, 'Soldier', a, false), settler = spawnUnit(s, 1, 'Settler', b, false);
-    spawnUnit(s, 1, 'Soldier', c, false);
+    const soldier = spawnUnit(s, 0, 'Spearman', a, false), settler = spawnUnit(s, 1, 'Settler', b, false);
+    spawnUnit(s, 1, 'Spearman', c, false);
     const { reports } = play(s, [{ 0: [move(soldier.id, b)], 1: [move(settler.id, c)] }]);
     expect(reports[0].some((e) => e.type === 'Battle')).toBe(false);
     expect(pursuit(reports[0], soldier.id)).toMatchObject({ outcome: 'Followed', target_at: c });
@@ -150,7 +150,7 @@ describe.skipIf(!available)('G2 attack pursuit core behavior', () => {
 
   it('a move onto a unit of a team at Peace names it instead of a silent bounce', () => {
     const s = fixture(true); const here = fromOffset(5, 5), there = neighbors(here)[0];
-    const soldier = spawnUnit(s, 0, 'Soldier', here, false), scout = spawnUnit(s, 1, 'Scout', there, false);
+    const soldier = spawnUnit(s, 0, 'Spearman', here, false), scout = spawnUnit(s, 1, 'Scout', there, false);
     const { reports } = play(s, [{ 0: [move(soldier.id, there)], 1: [move(scout.id, neighbors(there)[1])] }]);
     expect(reports[0]).toContainEqual(expect.objectContaining({ type: 'MoveBlocked', unit: soldier.id, reason: `${PEACE_BLOCK_PREFIX}${s.players[1].name}'s Scout` }));
     expect(pursuit(reports[0], soldier.id)).toBeUndefined();
@@ -158,7 +158,7 @@ describe.skipIf(!available)('G2 attack pursuit core behavior', () => {
 
   it('G20: declaring War at plain Peace attacks this turn', () => {
     const s = fixture(true); const here = fromOffset(5, 5), there = neighbors(here)[0], step = neighbors(there)[1];
-    const soldier = spawnUnit(s, 0, 'Soldier', here, false), scout = spawnUnit(s, 1, 'Scout', there, false);
+    const soldier = spawnUnit(s, 0, 'Spearman', here, false), scout = spawnUnit(s, 1, 'Scout', there, false);
     const { reports } = play(s, [{ 0: [{ type: 'DeclareWar', against: 1, breach: false }, move(soldier.id, there)], 1: [move(scout.id, step)] }]);
     expect(reports[0].find((e) => e.type === 'WarDeclared')).toMatchObject({ relation: { effective_turn: s.turn } });
     expect(battlesOn(reports[0], scout.id)).toHaveLength(1);
@@ -169,7 +169,7 @@ describe.skipIf(!available)('G2 attack pursuit core behavior', () => {
   it('war on an ally holds the attack this turn, then attacks the unit where it went', () => {
     const s = fixture(true); const here = fromOffset(5, 5), there = neighbors(here)[0], step = neighbors(there)[1];
     for (const r of s.diplomacy!.relations) { r.state = 'Alliance'; r.security = { id: 1, started_turn: 0, protected_until: 0 }; }
-    const soldier = spawnUnit(s, 0, 'Soldier', here, false), scout = spawnUnit(s, 1, 'Scout', there, false);
+    const soldier = spawnUnit(s, 0, 'Spearman', here, false), scout = spawnUnit(s, 1, 'Scout', there, false);
     const declare: Record<number, Order[]> = { 0: [{ type: 'DeclareWar', against: 1, breach: true }, move(soldier.id, there)], 1: [move(scout.id, step)] };
     const held = play(s, [declare]);
     for (const c of [held.fixtureClient, held.core]) {
@@ -190,7 +190,7 @@ describe.skipIf(!available)('G2 attack pursuit core behavior', () => {
     s.nextCityId = 1;
     for (const h of within(cityAt, 1)) { const i = idxOf(s, h); s.owner[i] = 1; s.tileCity[i] = 0; }
     const here = neighbors(neighbors(cityAt)[3])[3];
-    const soldier = spawnUnit(s, 0, 'Soldier', here, false);
+    const soldier = spawnUnit(s, 0, 'Spearman', here, false);
     const { reports } = play(s, [{ 0: [{ type: 'DeclareWar', against: 1, breach: false }, move(soldier.id, cityAt)] }, {}, {}]);
     expect(reports[0].some((e) => e.type === 'MoveBlocked' || e.type === 'OrderFailed')).toBe(false);
     expect(reports[0].some((e) => e.type === 'UnitMoved' && e.unit === soldier.id)).toBe(true);

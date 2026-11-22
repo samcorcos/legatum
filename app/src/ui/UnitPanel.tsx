@@ -190,7 +190,7 @@ export function UnitPanel({ unit, view, peek = false }: { unit: UnitView; view: 
         {locked && <p className="up-status-why up-lock-note" data-testid="occupation-lock-note">{occupationNote(view, unit)}</p>}
         {broken && <p className="up-status-why" data-testid="unit-order-error">{why}</p>}
         {unit.unsupplied && <p className="up-status-why up-unsupplied" data-testid="unit-unsupplied"><Icon name="ui-alert" size={12} className="ui-mark" /> Idle: you are short of {unit.unsupplied}. It fights {UNSUPPLIED_STRENGTH_PERCENT}% weaker until supply returns.</p>}
-        {onRoad && <p className="up-status-why road" data-testid="open-road-note"><Icon name="building-courierhall" size={14} /> The open road: {ownerName(view, roadOwner!)}’s Yam Relay Station lets every empire cross their land at Peace. If the Hall changes hands this land closes behind you.</p>}
+        {onRoad && <p className="up-status-why road" data-testid="open-road-note"><Icon name="building-yamrelaystation" size={14} /> The open road: {ownerName(view, roadOwner!)}’s Yam Relay Station lets every empire cross their land at Peace. If the Hall changes hands this land closes behind you.</p>}
         {unit.military && unit.fortify > 0 && <Tip className="up-resting" content="Resting military units gain +3 defence per full turn without moving or fighting, up to +6. Movement or combat clears it.">Resting defence +{unit.fortify}</Tip>}
       </div>
       <div className="unit-panel-body" ref={scroll} tabIndex={overflow ? 0 : undefined} role="region" aria-label="Unit details and actions">
@@ -210,7 +210,7 @@ export function UnitPanel({ unit, view, peek = false }: { unit: UnitView; view: 
         {unit.military && (
           <>
             <Tip content={`Melee strength (attack and defence): ${unit.strength} for the unit${level ? `, promotion level ${level} +${strengthBonus(unit.strength, level)}` : ''}.${idleLoss ? ` No ${unit.unsupplied} supply: it fights ${UNSUPPLIED_STRENGTH_PERCENT}% weaker (−${idleLoss}) until supply returns.` : ''}`} className="up-stat">
-              <span className="lbl"><RingMedallion icon="unit-soldier" tone="neutral" size={22} />Strength</span>
+              <span className="lbl"><RingMedallion icon="unit-spearman" tone="neutral" size={22} />Strength</span>
               <b className={idleLoss ? 'bad' : undefined} data-testid={idleLoss ? 'unit-strength-idle' : undefined}>{idleLoss ? fullStrength - idleLoss : fullStrength}</b>
             </Tip>
             {idleLoss > 0 && <div className="up-strength-was muted" data-testid="unit-strength-was">was {fullStrength}: no {unit.unsupplied}</div>}
@@ -224,7 +224,7 @@ export function UnitPanel({ unit, view, peek = false }: { unit: UnitView; view: 
         )}
         {unit.ranged > 0 && (
           <Tip content={`Ranged strength, range ${unit.range}. Base ${unit.ranged}${level ? `, promotion level ${level} +${strengthBonus(unit.ranged, level)}` : ''}. Ranged attacks take no retaliation.`} className="up-stat">
-            <span className="lbl"><RingMedallion icon="unit-ranger" tone="neutral" size={22} />Ranged</span>
+            <span className="lbl"><RingMedallion icon="unit-archer" tone="neutral" size={22} />Ranged</span>
             <b>
               {unit.ranged + strengthBonus(unit.ranged, level)} <span className="muted">r{unit.range}</span>
             </b>
@@ -273,14 +273,14 @@ export function UnitPanel({ unit, view, peek = false }: { unit: UnitView; view: 
           {veteran && <RetireAction unit={unit} view={view} retiring={retiring} blocker={veteran.blocker} />}
           <div className="unit-dismiss">
             {asking ? <HeirDisbandConfirm unit={unit} view={view} /> : locked ? null :
-            <Action label="Disband" onClick={disbandSelected} danger active={pending?.type === 'DisbandUnit'} tip={unit.kind === 'Heir' ? 'Remove the Heir permanently. You forfeit his 2 VP, and Byzantium can train a new one.' : 'Remove this unit permanently (saves upkeep).'} quiet />}
+            <Action label="Disband" onClick={disbandSelected} danger active={pending?.type === 'DisbandUnit'} tip={unit.kind === 'HeirToTheThrone' ? 'Remove the Heir permanently. You forfeit his 2 VP, and Byzantium can train a new one.' : 'Remove this unit permanently (saves upkeep).'} quiet />}
             {pending && <Action label="Cancel order" hotkey="⌫" onClick={cancelSelected} quiet tip="Clear this unit's pending order." />}
           </div>
         </div>
       )}
       {/* Contextual notes stay in the scrolling side panel. */}
       <div className="up-hints">
-        {unit.kind === 'Heir' && <HeirNote unit={unit} view={view} />}
+        {unit.kind === 'HeirToTheThrone' && <HeirNote unit={unit} view={view} />}
         {isCompany(unit) && <CompanyNote unit={unit} view={view} />}
         {(unit.siege || builtInSiege(unit.kind as UnitKind)) && <div className="hint" data-testid="siege-note">{siegeNote(view, unit)}</div>}
         {firesIndirect(unit.kind) && <div className="hint">{ARTILLERY_RULE}</div>}

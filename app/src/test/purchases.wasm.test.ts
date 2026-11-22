@@ -16,7 +16,7 @@ import { upgradeCost } from './fixtureEngine';
 
 const available = existsSync(fileURLToPath(new URL('../wasm-pkg/legatum.js', import.meta.url)));
 let makeCore: () => WasmClient;
-const soldier: ProductionItem = { kind: 'Unit', unit: 'Soldier' };
+const soldier: ProductionItem = { kind: 'Unit', unit: 'Spearman' };
 const settler: ProductionItem = { kind: 'Unit', unit: 'Settler' };
 type Turn = Record<number, Order[]>;
 
@@ -53,14 +53,14 @@ function fixture() {
   return { s, a, b, ally, enemy };
 }
 
-function block(s: MState, c: MCity, owner: number, kind: UnitKind = 'Soldier') {
+function block(s: MState, c: MCity, owner: number, kind: UnitKind = 'Spearman') {
   const units = within(c.pos, 1).map((h) => spawnUnit(s, owner, kind, h, false));
   return units.find((u) => hexEq(u.pos, c.pos))!;
 }
 
 function greatWorkFixture(building: BuildingKind) {
   const result = fixture();
-  if (building === 'IterReactor') result.s.players[0].techs.push('FusionPower');
+  if (building === 'IterFusionReactor') result.s.players[0].techs.push('FusionPower');
   const { a, b } = result;
   const required = greatWorkRequirement(building)?.[0];
   for (const c of [a, b]) {
@@ -83,11 +83,11 @@ function tallGrowthFixture() {
     for (const h of within(c.pos, 1)) s.terrain[idxOf(s, h)] = 'Plains';
   }
   a.population = 8;
-  a.buildings = ['Hydroponics'];
+  a.buildings = ['Mill'];
   a.resistance = 1;
   a.food = 0;
   b.population = 7;
-  b.buildings = ['Hydroponics'];
+  b.buildings = ['Mill'];
   // The partner once had an Arcology's +5 Food over the pop-8 city; five Grassland tiles around it give that back.
   within(b.pos, 1).filter((h) => !hexEq(h, b.pos)).slice(0, 5).forEach((h) => { s.terrain[idxOf(s, h)] = 'Grassland'; });
   // Food surplus per turn of the pop-7 partner, which the forecasts count in whole turns.
@@ -165,7 +165,7 @@ describe.skipIf(!available)('WASM purchase behavior', () => {
       s.owner[idxOf(s, pos)] = home ? 0 : site === 'enemy' ? 2 : site === 'ally' ? 1 : -1;
       a.buildings = [];
       a.resistance = 0;
-      for (const kind of ['Soldier', 'Scout', 'Settler'] as const) spawnUnit(s, 0, kind, pos, false).hp = 40;
+      for (const kind of ['Spearman', 'Scout', 'Settler'] as const) spawnUnit(s, 0, kind, pos, false).hp = 40;
       const fixtureClient = new FixtureClient();
       fixtureClient.load(JSON.stringify(s));
       const core = makeCore();
@@ -207,7 +207,7 @@ describe.skipIf(!available)('WASM purchase behavior', () => {
     s.players[0].faction = 'Mongols';
     a.producing = b.producing = null;
     b.pos = fromOffset(4 + distance, 4);
-    b.buildings = ['Clearinghouse'];
+    b.buildings = ['Bank'];
     const core = makeCore();
     core.load(coreFixture(s));
     const native = core.view(0).cities.find((c) => c.id === b.id)!.detail!.yields;
@@ -241,7 +241,7 @@ describe.skipIf(!available)('WASM purchase behavior', () => {
   });
 
   it.each(['Switzerland', 'India', 'Mongols'] as const)('Great Work purchase quotes in the city option list match native for %s', (faction) => {
-    const { s, a, item } = greatWorkFixture('PlanetaryFoundry');
+    const { s, a, item } = greatWorkFixture('RoyalArsenal');
     s.players[0].faction = s.setup.players[0].faction = faction;
     const fixtureClient = new FixtureClient();
     fixtureClient.load(JSON.stringify(s));
@@ -260,7 +260,7 @@ describe.skipIf(!available)('WASM purchase behavior', () => {
     s.players[2].gold = 400;
     enemy.population = 5;
     enemy.hp = 0;
-    const attacker = spawnUnit(s, 0, 'Soldier', { q: enemy.pos.q - 1, r: enemy.pos.r }, false);
+    const attacker = spawnUnit(s, 0, 'Spearman', { q: enemy.pos.q - 1, r: enemy.pos.r }, false);
     const core = makeCore(); core.load(coreFixture(s));
     expect(core.view(0).cities.find((c) => c.id === enemy.id)?.capture_bounty).toBe(400);
     const { reports, fixtureClient } = play(s, [{ 0: [{ type: 'MoveUnit', unit: attacker.id, to: enemy.pos }] }]);
@@ -296,7 +296,7 @@ describe.skipIf(!available)('WASM purchase behavior', () => {
       s.players[0].techs = [];
       a.producing = b.producing = null;
       const spots = within(a.pos, 3).filter((h) => !hexEq(h, a.pos));
-      for (let i = 0; i < count; i++) spawnUnit(s, 0, 'Soldier', spots[i], false);
+      for (let i = 0; i < count; i++) spawnUnit(s, 0, 'Spearman', spots[i], false);
       const paid = Math.max(0, count - 2), raw = paid * 3;
       expect(upkeepBreakdown(s, 0).total).toBe(raw);
       const { core, fixtureClient } = play(s, [{}]);
@@ -330,7 +330,7 @@ describe.skipIf(!available)('WASM purchase behavior', () => {
     const count = 3;
     s.cities = Array.from({ length: count }, (_, i) => ({
       ...a, id: i + 1, pos: fromOffset(2 + i * 8, 2),
-      buildings: i === 1 ? ['CourierHall' as const] : [],
+      buildings: i === 1 ? ['YamRelayStation' as const] : [],
       producing: null, population: 1, prod: 0, isCapital: i === 0, originalCapital: i === 0,
     }));
     s.nextCityId = count;
@@ -372,7 +372,7 @@ describe.skipIf(!available)('WASM purchase behavior', () => {
     const { s, enemy } = fixture();
     enemy.population = 1;
     enemy.hp = 0;
-    const attacker = spawnUnit(s, 0, 'Soldier', { q: enemy.pos.q - 1, r: enemy.pos.r }, false);
+    const attacker = spawnUnit(s, 0, 'Spearman', { q: enemy.pos.q - 1, r: enemy.pos.r }, false);
     const settler = spawnUnit(s, 2, 'Settler', fromOffset(13, 8), false);
     const { reports, state } = play(s, [
       { 0: [{ type: 'MoveUnit', unit: attacker.id, to: enemy.pos }] },
@@ -436,7 +436,7 @@ describe.skipIf(!available)('WASM purchase behavior', () => {
     // Keep the unit line at Musketman while retaining the Research Lab unlocks.
     s.players[0].techs = TECHS.filter((tech) => tech !== 'Rifling');
     a.population = 8;
-    a.buildings = ['College'];
+    a.buildings = ['University'];
     a.producing = null;
     b.producing = null;
     // The Research Lab uses Oil and the Musketman Niter (and the Pikeman's upgrade into it): one deposit of each inside A's border.
@@ -444,37 +444,37 @@ describe.skipIf(!available)('WASM purchase behavior', () => {
     const [niter, oil] = within(a.pos, 1).filter((h) => !hexEq(h, a.pos));
     s.resource[idxOf(s, niter)] = 'Niter';
     s.resource[idxOf(s, oil)] = 'Oil';
-    const infantry = spawnUnit(s, 0, 'Trooper', b.pos, false);
-    const coreItem = { kind: 'Building', building: 'InferenceCore' } as const;
-    const assault = { kind: 'Unit', unit: 'AssaultTrooper' } as const;
+    const infantry = spawnUnit(s, 0, 'Pikeman', b.pos, false);
+    const coreItem = { kind: 'Building', building: 'ResearchLab' } as const;
+    const assault = { kind: 'Unit', unit: 'Musketman' } as const;
     const { reports, state } = play(s, [{ 0: [
       { type: 'SetProduction', city: a.id, item: coreItem }, { type: 'BuyItem', city: a.id, item: coreItem },
       { type: 'UpgradeUnit', unit: infantry.id },
     ] }, { 0: [{ type: 'SetProduction', city: b.id, item: assault }, { type: 'BuyItem', city: b.id, item: assault }] }]);
     expect(completions(reports[0])).toContainEqual({ type: 'ProductionCompleted', owner: 0, city: a.id, item: coreItem });
-    expect(state.cities.find((c) => c.id === a.id)!.buildings).toEqual(['InferenceCore']);
-    expect(state.units.find((u) => u.id === infantry.id)!.kind).toBe('AssaultTrooper');
+    expect(state.cities.find((c) => c.id === a.id)!.buildings).toEqual(['ResearchLab']);
+    expect(state.units.find((u) => u.id === infantry.id)!.kind).toBe('Musketman');
     expect(completions(reports[1])).toContainEqual({ type: 'ProductionCompleted', owner: 0, city: b.id, item: assault });
   });
 
   it('Inference Core rechecks the population gate for purchases', () => {
     const { s, a } = fixture(); s.players[0].techs = [...TECHS];
-    a.population = 7; a.buildings = ['College'];
-    a.producing = { kind: 'Building', building: 'InferenceCore' }; // legal earlier commitment
+    a.population = 7; a.buildings = ['University'];
+    a.producing = { kind: 'Building', building: 'ResearchLab' }; // legal earlier commitment
     const core = makeCore(); core.load(coreFixture(s));
     const fixtureClient = new FixtureClient(); fixtureClient.load(JSON.stringify(s));
     for (const client of [core, fixtureClient]) {
       expect(client.view(0).cities.find((c) => c.id === a.id)!.detail!.buy_cost).toBeNull();
-      expect(client.validate(0, [{ type: 'BuyItem', city: a.id, item: { kind: 'Building', building: 'InferenceCore' } }])).toHaveLength(1);
+      expect(client.validate(0, [{ type: 'BuyItem', city: a.id, item: { kind: 'Building', building: 'ResearchLab' } }])).toHaveLength(1);
     }
     a.prod = productionCost(s, 0, a.producing);
     const { state } = play(s, [{}]);
-    expect(state.cities.find((c) => c.id === a.id)!.buildings).toEqual(['InferenceCore']);
+    expect(state.cities.find((c) => c.id === a.id)!.buildings).toEqual(['ResearchLab']);
   });
 
   it('growth retains overflow and grows once, with identical forecasts', () => {
     const { s, a, b } = fixture(); s.players[0].techs = [...TECHS];
-    a.population = 2; a.food = 1000; a.buildings = ['Hydroponics']; a.producing = null; b.producing = null;
+    a.population = 2; a.food = 1000; a.buildings = ['Mill']; a.producing = null; b.producing = null;
     const threshold = growthThreshold(2);
     const food = cityYields(s, a).total.food - 4;
     const { state } = play(s, [{}]);
@@ -486,8 +486,8 @@ describe.skipIf(!available)('WASM purchase behavior', () => {
   it.each(FACTIONS.filter((f) => f !== 'Egypt'))('Full-tree quotes and faction effects match WASM for %s', (faction) => {
     const { s, a, b } = fixture(); s.players[0].faction = faction;
     a.population = 8; a.producing = null; b.producing = null;
-    a.buildings = ['Hydroponics', 'Autoworks', 'Clearinghouse', 'InferenceCore', 'Laboratory', 'RelayUplink'];
-    spawnUnit(s, 0, 'Trooper', b.pos, false);
+    a.buildings = ['Mill', 'Factory', 'Bank', 'ResearchLab', 'Library', 'GreatLibrary'];
+    spawnUnit(s, 0, 'Pikeman', b.pos, false);
     for (let i = 0; i < 6; i++) spawnUnit(s, 0, 'Scout', fromOffset(5 + i, 7), false);
     const snapshot = () => {
       const core = makeCore(); core.load(coreFixture(s));
@@ -529,7 +529,7 @@ describe.skipIf(!available)('WASM purchase behavior', () => {
     const positions = within(a.pos, 3).filter((h) => !hexEq(h, a.pos));
     for (let military = 0; military <= 3; military++) {
       s.units = s.units.filter((u) => u.owner !== 0);
-      for (let i = 0; i < military; i++) spawnUnit(s, 0, 'Soldier', positions[i], false);
+      for (let i = 0; i < military; i++) spawnUnit(s, 0, 'Spearman', positions[i], false);
       const core = makeCore(); core.load(coreFixture(s));
       const fixtureClient = new FixtureClient(); fixtureClient.load(JSON.stringify(s));
       const demo = fixtureClient.view(0).cities.find((c) => c.id === a.id)!.detail!;
@@ -550,7 +550,7 @@ describe.skipIf(!available)('WASM purchase behavior', () => {
     const positions = within(a.pos, 3).filter((h) => !hexEq(h, a.pos));
     for (let military = 0; military <= 3; military++) {
       s.units = s.units.filter((u) => u.owner !== 0);
-      for (let i = 0; i < military; i++) spawnUnit(s, 0, 'Soldier', positions[i], false);
+      for (let i = 0; i < military; i++) spawnUnit(s, 0, 'Spearman', positions[i], false);
       for (let i = 0; i < 2; i++) spawnUnit(s, 0, 'Scout', positions[3 + i], false);
       const core = makeCore(); core.load(coreFixture(s));
       const fixtureClient = new FixtureClient(); fixtureClient.load(JSON.stringify(s));
@@ -644,7 +644,7 @@ describe.skipIf(!available)('WASM purchase behavior', () => {
     // has two turns of Production.
     expect(state.cities[0].productionBanked).toEqual([{ item: soldier, progress: 15 }]);
     expect(state.cities[0].prod).toBe(2 * cityYields(state, state.cities[0]).total.production);
-    expect(state.units.filter((u) => u.owner === 0 && u.kind === 'Soldier')).toHaveLength(1);
+    expect(state.units.filter((u) => u.owner === 0 && u.kind === 'Spearman')).toHaveLength(1);
   });
 
   it('does not charge a blocked purchase, including after save/load', () => {
@@ -707,12 +707,12 @@ describe.skipIf(!available)('WASM purchase behavior', () => {
     expect(completions(events)).toEqual([]);
   });
 
-  it.each(['RelayUplink', 'WorldExchange', 'PlanetaryFoundry'] as const)('%s loses support without adding production and banks its earned progress', (building) => {
+  it.each(['GreatLibrary', 'GrandBazaar', 'RoyalArsenal'] as const)('%s loses support without adding production and banks its earned progress', (building) => {
     const { s, a, b, item } = greatWorkFixture(building);
     a.producing = item;
     a.prod = 100;
     expect(canProduce(s, a, item)).toBe(true);
-    if (building === 'WorldExchange') b.owner = 1;
+    if (building === 'GrandBazaar') b.owner = 1;
     else a.buildings = [];
     const reason = buildingBlocker(s, a, building, false);
     expect(reason).toBeTruthy();
@@ -788,7 +788,7 @@ describe.skipIf(!available)('WASM purchase behavior', () => {
     const { s, a } = fixture();
     a.population = 4;
     a.buildings = ['Granary'];
-    const hydro = { kind: 'Building', building: 'Hydroponics' } as const;
+    const hydro = { kind: 'Building', building: 'Mill' } as const;
     a.food = growthThreshold(a.population) - (cityYields(s, a).total.food - 2 * a.population) - 1;
     const { reports } = play(s, [{ 0: [{ type: 'BuyItem', city: a.id, item: hydro }] }]);
     expect(completions(reports[0])).toContainEqual({ type: 'ProductionCompleted', city: a.id, owner: 0, item: hydro });
@@ -797,7 +797,7 @@ describe.skipIf(!available)('WASM purchase behavior', () => {
 
   it('upgrades spend before purchases even when listed after BuyItem', () => {
     const { s, a } = fixture();
-    const u = spawnUnit(s, 0, 'Soldier', a.pos, false);
+    const u = spawnUnit(s, 0, 'Spearman', a.pos, false);
     s.players[0].gold = upgradeCost(s, u)! + buyCost(s, a)! - 1;
     // Spearman→Pikeman also uses 1 Iron supply: an Iron deposit inside A's border.
     (s.resource ??= s.terrain.map(() => null))[idxOf(s, fromOffset(5, 4))] = 'Iron';
@@ -828,8 +828,8 @@ describe.skipIf(!available)('WASM purchase behavior', () => {
     // The Forge uses 1 Iron and the Factory 1 Coal: a deposit of each inside the border.
     (s.resource ??= s.terrain.map(() => null))[idxOf(s, neighbors(a.pos)[0])] = 'Iron';
     s.resource[idxOf(s, neighbors(a.pos)[1])] = 'Coal';
-    const machine = { kind: 'Building', building: 'MachineShop' } as const;
-    const auto = { kind: 'Building', building: 'Autoworks' } as const;
+    const machine = { kind: 'Building', building: 'Forge' } as const;
+    const auto = { kind: 'Building', building: 'Factory' } as const;
     const { reports: [events], state } = play(s, [{ 0: [{ type: 'BuyItem', city: a.id, item: machine }, { type: 'SetProduction', city: a.id, item: auto }] }]);
     expect(failures(events)).toEqual([]);
     expect(completions(events)[0].item).toEqual(machine);
@@ -839,8 +839,8 @@ describe.skipIf(!available)('WASM purchase behavior', () => {
   it('Swiss full-price purchases and upkeep match', () => {
     const { s, a } = fixture();
     s.players[0].faction = s.setup.players[0].faction = 'Switzerland';
-    spawnUnit(s, 0, 'Soldier', a.pos, false);
-    spawnUnit(s, 0, 'Soldier', fromOffset(5, 4), false);
+    spawnUnit(s, 0, 'Spearman', a.pos, false);
+    spawnUnit(s, 0, 'Spearman', fromOffset(5, 4), false);
     const { reports: [events] } = play(s, [{ 0: [{ type: 'BuyItem', city: a.id, item: soldier }] }]);
     expect(purchases(events)[0].gold).toBe(Math.floor(productionCost(s, 0, soldier) * 1.75));
     expect(completions(events)).toHaveLength(1);
@@ -855,7 +855,7 @@ describe.skipIf(!available)('WASM purchase behavior', () => {
     city.prod = 0;
     city.population = 1;
     city.food = 0;
-    if (blocker === 'spawn') for (const h of within(city.pos, 1)) spawnUnit(s, city.owner, 'Soldier', h, false);
+    if (blocker === 'spawn') for (const h of within(city.pos, 1)) spawnUnit(s, city.owner, 'Spearman', h, false);
     const { fixtureClient, core, reports } = play(s, [{}]);
     if (blocker === 'population') expect(failures(reports[0]).map((e) => e.reason)).toEqual(['A can no longer produce Settler: Settler needs population 2 (currently 1)']);
     for (const client of [fixtureClient, core]) {

@@ -1,5 +1,5 @@
 //! Sam's game, 2026-11-21. Turn 67, Geneva: five Keshig volleys hit the empty, fallen city and
-//! did nothing, then a Swiss Soldier slipped in as its garrison and only met the Keshig charge.
+//! did nothing, then a Swiss Spearman slipped in as its garrison and only met the Keshig charge.
 //! His rule: "the order of events should be 1) slip into garrison (with support) 2) ranged
 //! attack 3) melee attack". A shot at a fallen, empty city now waits for whoever comes in.
 //! Turn 75: a Keshig ordered onto a Horseman and Settler lost its order when another Keshig's
@@ -33,8 +33,8 @@ fn shots_on(events: &[Event], unit: UnitId) -> usize {
         .count()
 }
 
-/// P1's fallen, empty city at (5,4); P0 has two Rangers in range, a Soldier west of the city;
-/// P1's Soldier waits east of it.
+/// P1's fallen, empty city at (5,4); P0 has two Archers in range, a Spearman west of the city;
+/// P1's Spearman waits east of it.
 struct Fallen {
     s: GameState,
     city: CityId,
@@ -50,11 +50,11 @@ fn fallen() -> Fallen {
     let c = city(&mut s, 1, city_at, 3);
     s.cities.get_mut(&c).unwrap().hp = 0;
     let rangers = [
-        unit(&mut s, 0, UnitKind::Ranger, city_at.neighbor(2)),
-        unit(&mut s, 0, UnitKind::Ranger, city_at.neighbor(4)),
+        unit(&mut s, 0, UnitKind::Archer, city_at.neighbor(2)),
+        unit(&mut s, 0, UnitKind::Archer, city_at.neighbor(4)),
     ];
-    let attacker = unit(&mut s, 0, UnitKind::Soldier, city_at.neighbor(3));
-    let defender = unit(&mut s, 1, UnitKind::Soldier, city_at.neighbor(0));
+    let attacker = unit(&mut s, 0, UnitKind::Spearman, city_at.neighbor(3));
+    let defender = unit(&mut s, 1, UnitKind::Spearman, city_at.neighbor(0));
     Fallen {
         s,
         city: c,
@@ -231,7 +231,7 @@ fn bibracte_t75_the_charge_goes_on_to_the_settler_when_a_shot_kills_its_escort()
     let horse = unit(&mut s, 1, UnitKind::Horseman, tile);
     let settler = unit(&mut s, 1, UnitKind::Settler, tile);
     s.units.get_mut(&horse).unwrap().hp = 1;
-    let ranger = unit(&mut s, 0, UnitKind::Ranger, tile.neighbor(2));
+    let ranger = unit(&mut s, 0, UnitKind::Archer, tile.neighbor(2));
     let rider = unit(&mut s, 0, UnitKind::Horseman, tile.neighbor(3));
     let away = tile.neighbor(0).neighbor(0);
     let (next, events) = resolve_units(
@@ -265,7 +265,7 @@ fn a_charge_whose_target_died_with_nothing_left_says_so() {
     let tile = hex(5, 4);
     let horse = unit(&mut s, 1, UnitKind::Horseman, tile);
     s.units.get_mut(&horse).unwrap().hp = 1;
-    let ranger = unit(&mut s, 0, UnitKind::Ranger, tile.neighbor(2));
+    let ranger = unit(&mut s, 0, UnitKind::Archer, tile.neighbor(2));
     let rider = unit(&mut s, 0, UnitKind::Horseman, tile.neighbor(3));
     let (_, events) = resolve_units(
         &s,
@@ -291,10 +291,10 @@ fn a_held_shot_whose_city_was_razed_does_not_stop_a_later_relief() {
     } = fallen();
     s.player_mut(PlayerId(0)).faction = crate::Faction::Celts;
     s.cities.get_mut(&city).unwrap().population = 1;
-    // P1's second city three tiles east, and a Soldier two steps from it heading home.
+    // P1's second city three tiles east, and a Spearman two steps from it heading home.
     let home_at = hex(8, 4);
     let home = crate::rules::test_support::city(&mut s, 1, home_at, 3);
-    let walker = unit(&mut s, 1, UnitKind::Soldier, hex(10, 4));
+    let walker = unit(&mut s, 1, UnitKind::Spearman, hex(10, 4));
     let (next, events) = resolve_units(
         &s,
         &two(

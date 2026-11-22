@@ -406,8 +406,8 @@ impl Plan<'_> {
         use UnitKind::*;
         let count = |u| counts.get(&u).copied().unwrap_or(0);
         let cities = self.ctx.own_cities.len();
-        let ranged = count(Ranger) + count(Marksman);
-        let melee = count(Soldier) + count(Trooper) + count(AssaultTrooper);
+        let ranged = count(Archer) + count(Crossbowman);
+        let melee = count(Spearman) + count(Pikeman) + count(Musketman);
         let threatened = self
             .ctx
             .enemy_units
@@ -443,8 +443,8 @@ impl Plan<'_> {
             ProductionItem::Unit { unit } => {
                 if self.goal_pending(Faction::Sparta)
                     && cities >= 4
-                    && count(Trooper) + count(AssaultTrooper) < 3
-                    && matches!(unit, Trooper | AssaultTrooper)
+                    && count(Pikeman) + count(Musketman) < 3
+                    && matches!(unit, Pikeman | Musketman)
                 {
                     return 240;
                 }
@@ -458,14 +458,14 @@ impl Plan<'_> {
                     + i32::from(melee == 0 && unit_stats(unit).ranged == 0) * 420
                     + i32::from(threatened) * 70
                     + match unit {
-                        Marksman | AssaultTrooper => 6,
-                        Trooper => 3,
+                        Crossbowman | Musketman => 6,
+                        Pikeman => 3,
                         _ => 0,
                     }
             }
             ProductionItem::Building { building } | ProductionItem::Wonder { building, .. } => {
                 match building {
-                    RelayUplink | PlanetaryFoundry | WorldExchange => -100,
+                    GreatLibrary | RoyalArsenal | GrandBazaar => -100,
                     Workshop => 350,
                     Granary => {
                         if c.is_capital && self.goal_pending(Faction::Germany) {
@@ -474,18 +474,18 @@ impl Plan<'_> {
                             400
                         }
                     }
-                    Laboratory => 340,
+                    Library => 340,
                     Market => 330,
-                    College => 110,
-                    Hydroponics => {
+                    University => 110,
+                    Mill => {
                         if c.is_capital && self.goal_pending(Faction::Germany) {
                             190
                         } else {
                             70
                         }
                     }
-                    MachineShop => 68,
-                    Clearinghouse => 62,
+                    Forge => 68,
+                    Bank => 62,
                     Walls => {
                         if (c.is_capital && self.goal_pending(Faction::Germany))
                             || (cities >= 4 && self.goal_pending(Faction::Sparta))
@@ -497,7 +497,7 @@ impl Plan<'_> {
                             10
                         }
                     }
-                    BroodHall => {
+                    RiceStorehouse => {
                         if c.is_capital && self.goal_pending(Faction::Germany) {
                             170
                         } else {

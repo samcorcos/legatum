@@ -6,7 +6,7 @@ import { fromOffset } from '../hex';
 /** Two units, an idle city and no research, with rivals safely on a separate island. */
 export function turnFlowFixture() {
   const s = explorationFixture();
-  s.units[0].kind = 'Soldier';
+  s.units[0].kind = 'Spearman';
   s.players[1].isHuman = true;
   s.setup.players[1].is_human = true;
   spawnUnit(s, 0, 'Scout', fromOffset(4, 4), false);

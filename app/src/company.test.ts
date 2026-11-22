@@ -4,7 +4,7 @@ import { describeOrder, hasBuy, toggleBuy, toggleHire } from './orders';
 import { RULES } from './data';
 import type { Order, PlayerView, UnitView } from './types';
 
-const unit = (over: Partial<UnitView>): UnitView => ({ id: 7, kind: 'Soldier', owner: 0, pos: { q: 1, r: 1 }, hp: 100, strength: 20, military: true, ...over } as UnitView);
+const unit = (over: Partial<UnitView>): UnitView => ({ id: 7, kind: 'Spearman', owner: 0, pos: { q: 1, r: 1 }, hp: 100, strength: 20, military: true, ...over } as UnitView);
 const view = (over: Partial<PlayerView> = {}): PlayerView => ({
   me: 0, team: 0, turn: 20,
   players: [
@@ -14,7 +14,7 @@ const view = (over: Partial<PlayerView> = {}): PlayerView => ({
   ],
   units: [unit({ id: 7, contract_until: 27, origin: 'Sparta' }), unit({ id: 8, contract_until: 22, origin: 'India' })],
   company_offers: [
-    { seller: 2, unit: 'Knight', price: 204 }, { seller: 1, unit: 'Soldier', price: 80 },
+    { seller: 2, unit: 'Knight', price: 204 }, { seller: 1, unit: 'Spearman', price: 80 },
   ],
   cities: [{ id: 3, name: 'Constantinople', owner: 0 }],
   ...over,
@@ -42,15 +42,15 @@ it('counts an empire\'s Companies, their upkeep and when the soonest goes home',
 
 it('lists the shop one row per seller in a stable order, each with its seller\'s faction', () => {
   const rows = shopRows(view());
-  expect(rows.map((r) => [r.offer.seller, r.faction, r.offer.unit])).toEqual([[1, 'Sparta', 'Soldier'], [2, 'India', 'Knight']]);
+  expect(rows.map((r) => [r.offer.seller, r.faction, r.offer.unit])).toEqual([[1, 'Sparta', 'Spearman'], [2, 'India', 'Knight']]);
   expect(companyName('India', 'Knight')).toBe('War Elephant');
   expect(companyStats('India', 'Knight')).toContain('3 moves');
 });
 
 it('a hire takes the city\'s one purchase, replacing a Buy and being replaced by one; clicking it again cancels', () => {
-  const hire: Order = { type: 'HireCompany', city: 3, unit: 'Soldier', seller: 1 };
+  const hire: Order = { type: 'HireCompany', city: 3, unit: 'Spearman', seller: 1 };
   const buy: Order = { type: 'BuyItem', city: 3, item: { kind: 'Unit', unit: 'Scout' } };
-  const other: Order = { type: 'HireCompany', city: 3, unit: 'Ranger', seller: 2 };
+  const other: Order = { type: 'HireCompany', city: 3, unit: 'Archer', seller: 2 };
   expect(toggleHire([buy], hire as never)).toEqual([hire]);
   expect(toggleHire([hire], other as never)).toEqual([other]);
   expect(toggleHire([hire], hire as never)).toEqual([]);
@@ -61,5 +61,5 @@ it('a hire takes the city\'s one purchase, replacing a Buy and being replaced by
 
 it('describes a queued hire with the seller and the price from the shop', () => {
   const v = view();
-  expect(describeOrder({ type: 'HireCompany', city: 3, unit: 'Soldier', seller: 1 }, v)).toBe(`Constantinople: hire a Spartan Hoplite Company from Sparta for 80 Gold (${RULES.company.turns} turns)`);
+  expect(describeOrder({ type: 'HireCompany', city: 3, unit: 'Spearman', seller: 1 }, v)).toBe(`Constantinople: hire a Spartan Hoplite Company from Sparta for 80 Gold (${RULES.company.turns} turns)`);
 });

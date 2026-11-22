@@ -341,13 +341,13 @@
   },
   {
    "set": "building-icons",
-   "a": "building-clearinghouse",
+   "a": "building-bank",
    "b": "building-stockexchange",
    "why": "Machine Age placeholder (increment 1, 2026-11-14): a sepia-tinted copy of the neighbouring era's art, replaced by its own in increment 2; the unit's name sits beside it on every card"
   },
   {
    "set": "unlock-art",
-   "a": "building-clearinghouse",
+   "a": "building-bank",
    "b": "building-stockexchange",
    "why": "Machine Age placeholder (increment 1, 2026-11-14): a sepia-tinted copy of the neighbouring era's art, replaced by its own in increment 2; the unit's name sits beside it on every card"
   },
@@ -423,11 +423,11 @@
    {
     "why": "works",
     "members": [
-     "building-autoworks-germany",
-     "building-machineshop",
+     "building-factory-germany",
+     "building-forge",
      "building-engine",
-     "building-autoworks",
-     "building-planetaryfoundry"
+     "building-factory",
+     "building-royalarsenal"
     ]
    },
    {
@@ -436,15 +436,15 @@
      "building-walls-switzerland",
      "building-castle",
      "building-starfort",
-     "building-warshrine"
+     "building-agoge"
     ]
    },
    {
     "why": "libraries and archives",
     "members": [
      "building-archive",
-     "building-college",
-     "building-laboratory-athens",
+     "building-university",
+     "building-library-athens",
      "building-embassy"
     ]
    }

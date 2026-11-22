@@ -27,7 +27,7 @@ it.skipIf(!available).each([false, true])('the real Sparta AI declares war on ou
     // A surprise war at plain Peace: in effect in the turn it was declared.
     expect(war.relation.effective_turn).toBe(1);
     // The viewer can see where the threat is: their army and their city.
-    expect(client.view(me).units.filter((u) => u.owner === (teammate ? 2 : 1) && u.kind === 'Trooper').length).toBeGreaterThan(0);
+    expect(client.view(me).units.filter((u) => u.owner === (teammate ? 2 : 1) && u.kind === 'Pikeman').length).toBeGreaterThan(0);
     expect(client.view(me).cities.some((c) => c.name === 'Oathhold')).toBe(true);
     expect(client.view(me).diplomacy.relations.find((r) => [r.a, r.b].includes(1) && [r.a, r.b].includes(0))?.state).toBe('War');
   }

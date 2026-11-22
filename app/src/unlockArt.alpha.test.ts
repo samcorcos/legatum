@@ -5,7 +5,7 @@ import { alphaOf } from './test/pngAlpha';
 
 const dir = new URL('./assets/construction/', import.meta.url).pathname;
 const sources = [
-  ...['building-relayuplink', 'building-worldexchange', 'building-planetaryfoundry', 'building-pyramids', 'building-hagiasophia', 'building-eiffeltower', 'building-iterreactor', 'building-courierhall'].map(stem => ({ stem, base: 1254, sizes: [null, 256, 128] })),
+  ...['building-greatlibrary', 'building-grandbazaar', 'building-royalarsenal', 'building-pyramids', 'building-hagiasophia', 'building-eiffeltower', 'building-iterfusionreactor', 'building-yamrelaystation'].map(stem => ({ stem, base: 1254, sizes: [null, 256, 128] })),
   ...['ancient', 'classical', 'medieval', 'renaissance', 'industrial', 'modern', 'future'].map(era => ({ stem: `${era}-hamlet`, base: 512, sizes: [null, 128, 64] })),
   ...['ancient', 'classical', 'medieval', 'renaissance', 'industrial'].map(era => ({ stem: `${era}-walls`, base: 512, sizes: [null, 128, 64] })),
 ];

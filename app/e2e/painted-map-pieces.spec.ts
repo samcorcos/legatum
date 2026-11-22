@@ -14,7 +14,7 @@ import type { UnitKind } from '../src/types';
 type MapWindow = GameWindow & { legatumMap: { camera: { x: number; y: number; zoom: number }; redraw(): void } };
 
 /** Every kind a barbarian camp fields (crates/core/src/rules/barbarians.rs), around the own city at (3, 5). */
-const RAIDERS: [UnitKind, number, number][] = [['Soldier', 5, 4], ['Trooper', 5, 5], ['AssaultTrooper', 5, 6], ['Ranger', 6, 4], ['Marksman', 6, 5], ['Scout', 6, 6]];
+const RAIDERS: [UnitKind, number, number][] = [['Spearman', 5, 4], ['Pikeman', 5, 5], ['Musketman', 5, 6], ['Archer', 6, 4], ['Crossbowman', 6, 5], ['Scout', 6, 6]];
 
 async function open(page: Page, opts: { raiders?: boolean; planes?: boolean; walls?: number } = {}) {
   const setup = wallsFixture(), f = setup.fixture;

@@ -75,7 +75,7 @@ it.each(['Athens', 'Byzantium'] as const)("a %s Science hover breaks down Capita
   // must still pick it up, since it classifies by the faction's own display name.
   const f = researchFixture(faction);
   const capital = f.cities.find((c) => c.owner === 0 && c.isCapital)!;
-  capital.buildings = ['Laboratory'];
+  capital.buildings = ['Library'];
   const client = new FixtureClient();
   client.load(JSON.stringify(f));
   const view = client.view(0);

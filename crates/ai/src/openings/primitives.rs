@@ -678,7 +678,7 @@ impl<'a> Planner<'a> {
             .iter()
             .filter_map(|c| c.detail.as_ref())
             .flat_map(|d| &d.options)
-            .filter(|o| o.item == unit(UnitKind::Ranger))
+            .filter(|o| o.item == unit(UnitKind::Archer))
             .filter_map(|o| o.buy_cost)
             .min()
             .unwrap_or(0);
@@ -777,9 +777,9 @@ impl<'a> Planner<'a> {
             let item = unit(if expand {
                 UnitKind::Settler
             } else if need_melee {
-                UnitKind::Soldier
+                UnitKind::Spearman
             } else {
-                UnitKind::Ranger
+                UnitKind::Archer
             });
             if !self.opening_allows_optional_military(item)
                 || expand && !self.opening_admits_settler()

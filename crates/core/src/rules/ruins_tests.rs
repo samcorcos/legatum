@@ -292,7 +292,7 @@ fn free_scout_uses_a_free_passable_neighbour_or_falls_back_to_gold() {
                         city(&mut s, 2, h, 2);
                     }
                     _ => {
-                        unit(&mut s, 0, UnitKind::Soldier, h);
+                        unit(&mut s, 0, UnitKind::Spearman, h);
                     }
                 }
             }

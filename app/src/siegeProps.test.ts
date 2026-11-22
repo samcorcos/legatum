@@ -23,25 +23,25 @@ const all: TechId[] = ['Mathematics', 'Machinery', 'Metallurgy'];
 
 describe('siege gear belongs to the unit\'s own era (user, 2026-10-28)', () => {
   it('ancient and medieval units wear the gear of the siege tier', () => {
-    expect(siegePropFor(view('Mathematics'), unit('Ranger'))).toBe('catapult');
-    expect(siegePropFor(view('Mathematics', 'Machinery'), unit('Marksman'))).toBe('trebuchet');
-    expect(siegePropFor(view(...all), unit('Marksman'))).toBe('trebuchet');
-    expect(siegePropFor(view('Mathematics'), unit('Marksman'))).toBe('catapult');
-    expect(siegePropFor(view('Mathematics'), unit('Soldier'))).toBe('ladders');
+    expect(siegePropFor(view('Mathematics'), unit('Archer'))).toBe('catapult');
+    expect(siegePropFor(view('Mathematics', 'Machinery'), unit('Crossbowman'))).toBe('trebuchet');
+    expect(siegePropFor(view(...all), unit('Crossbowman'))).toBe('trebuchet');
+    expect(siegePropFor(view('Mathematics'), unit('Crossbowman'))).toBe('catapult');
+    expect(siegePropFor(view('Mathematics'), unit('Spearman'))).toBe('ladders');
     expect(siegePropFor(view(...all), unit('Knight'))).toBe('siege-tower');
     expect(siegePropFor(view(...all), unit('Knight', false))).toBeNull();
   });
   it('the prop is capped by the unit\'s own era, whatever the tier (designer, 2026-10-28)', () => {
-    for (const kind of ['Ranger', 'CompositeArcher'] as const) {
+    for (const kind of ['Archer', 'CompositeArcher'] as const) {
       for (const known of [['Mathematics'], ['Mathematics', 'Machinery'], all] as TechId[][]) expect(siegePropFor(view(...known), unit(kind)), `${kind} ${known.length}`).toBe('catapult');
     }
-    expect(siegePropFor(view(...all), unit('Soldier'))).toBe('siege-tower');
-    expect(siegePropFor(view('Mathematics'), unit('Soldier'))).toBe('ladders');
+    expect(siegePropFor(view(...all), unit('Spearman'))).toBe('siege-tower');
+    expect(siegePropFor(view('Mathematics'), unit('Spearman'))).toBe('ladders');
   });
   it('Renaissance units get the bombard or ladders, never a catapult or siege tower', () => {
     expect(siegePropFor(view('Mathematics'), unit('Arquebusier'))).toBe('bombard');
     expect(siegePropFor(view(...all), unit('Arquebusier'))).toBe('bombard');
-    expect(siegePropFor(view(...all), unit('AssaultTrooper'))).toBe('ladders');
+    expect(siegePropFor(view(...all), unit('Musketman'))).toBe('ladders');
   });
   it('Industrial and later units have Siege built in and wear no gear (designer, 2026-10-28)', () => {
     for (const kind of ['Rifleman', 'FieldCannon', 'Cavalry', 'Infantry', 'Artillery', 'Tank'] as const) {

@@ -10,7 +10,7 @@
 //! The order, from most to least decisive:
 //! 1. **Threat tier.** When the empire is threatened, has an aggressive rival within reach of
 //!    a city (at war, or massing units) or a neighbour an era ahead of it, the era's unit and defence technologies (Walls' Masonry,
-//!    Mathematics' siege, Feudalism's Trooper and Castle, Machinery, Gunpowder, Military
+//!    Mathematics' siege, Feudalism's Pikeman and Castle, Machinery, Gunpowder, Military
 //!    Engineering's Star Fort and the later unit lineage) come first, whatever the strategy.
 //! 2. **Value per Science.** A technology's value (knobs, faction priorities, the strategy
 //!    bundle's weight, the goal and Great Work it unlocks, a war or peace plan's lean) divided
@@ -694,8 +694,8 @@ mod tests {
         let mut view = view_in_era(2);
         view = ViewBuilder { view }
             .city(2, ENEMY, off(9, 5), 3)
-            .unit(20, ENEMY, UnitKind::Soldier, off(7, 5))
-            .unit(21, ENEMY, UnitKind::Soldier, off(7, 6))
+            .unit(20, ENEMY, UnitKind::Spearman, off(7, 5))
+            .unit(21, ENEMY, UnitKind::Spearman, off(7, 6))
             .build();
         view.turn_limit = None;
         let mut p = planner(&view);
@@ -727,7 +727,7 @@ mod tests {
         let mut view = ViewBuilder {
             view: view_in_era(1),
         }
-        .unit(20, ME, UnitKind::Soldier, off(6, 5))
+        .unit(20, ME, UnitKind::Spearman, off(6, 5))
         .build();
         let without = planner(&view).tech_value(TechId::IronWorking);
         view.units

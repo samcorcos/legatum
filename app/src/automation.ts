@@ -116,7 +116,7 @@ const isFocusBuilding = (focus: CityBuildFocus, item: ProductionItem, faction: F
   const yields = buildingStatsFor(faction, item.building).yields;
   return focus === 'Science' ? (yields.science ?? 0) > 0 : focus === 'Gold' && (yields.gold ?? 0) > 0;
 };
-const isArmyUnit = (item: ProductionItem): boolean => item.kind === 'Unit' && item.unit !== 'Scout' && item.unit !== 'Settler' && item.unit !== 'Heir';
+const isArmyUnit = (item: ProductionItem): boolean => item.kind === 'Unit' && item.unit !== 'Scout' && item.unit !== 'Settler' && item.unit !== 'HeirToTheThrone';
 
 /** Why automation chose `pick` for `city`: the real reason, never a stock phrase. */
 export function autoPickReason(pick: ProductionItem, focus: CityBuildFocus, city: CityView, view: PlayerView): string {

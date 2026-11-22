@@ -57,10 +57,10 @@ it('explains population as territory and the way cities claim land', () => {
 
 it('uses the generated Library, Agoge and resource-specific Deep Mine rules', () => {
   const cities = renderToStaticMarkup(<GuideContent section="cities" />);
-  expect(RULES.factionBuildingStats.Athens.Laboratory.yields.production).toBe(0);
-  expect(RULES.factionBuildingStats.Athens.Laboratory.yields.science).toBeGreaterThan(0);
-  expect(cities).toContain(`Writing (${RULES.buildingNames.Laboratory} for Science)`);
-  expect(cities).toContain(`Sparta’s ${RULES.buildingNames.WarShrine}`);
+  expect(RULES.factionBuildingStats.Athens.Library.yields.production).toBe(0);
+  expect(RULES.factionBuildingStats.Athens.Library.yields.science).toBeGreaterThan(0);
+  expect(cities).toContain(`Writing (${RULES.buildingNames.Library} for Science)`);
+  expect(cities).toContain(`Sparta’s ${RULES.buildingNames.Agoge}`);
   const mine = RULES.improvements.forResource;
   expect(cities).toContain(`+${mine.Copper.upgradeYields.gold} Gold on Copper`);
   expect(cities).toContain(`+${mine.Iron.upgradeYields.production} Production on Iron`);

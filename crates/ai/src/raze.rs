@@ -33,7 +33,7 @@ const REACH_LATER: i32 = 40;
 /// VP that would be restored to a former holder if this captured city were retaken.
 pub(crate) fn held_vp_at_city(city: &CityView) -> i32 {
     let goals = city.detail.as_ref().map_or(0, |detail| {
-        i32::from(detail.buildings.contains(&BuildingKind::CourierHall))
+        i32::from(detail.buildings.contains(&BuildingKind::YamRelayStation))
     });
     (city.great_works.len() as i32 + goals) * 2
 }
@@ -225,7 +225,7 @@ mod tests {
             .city(1, ME, Hex::new(8, 8), 3)
             .city(2, ME, Hex::new(16, 8), 4);
         for (id, at) in enemies {
-            b = b.unit(*id, ENEMY, UnitKind::Soldier, *at);
+            b = b.unit(*id, ENEMY, UnitKind::Spearman, *at);
         }
         let mut view = b.build();
         view.cities[0].is_capital = false;
@@ -261,7 +261,7 @@ mod tests {
 
     #[test]
     fn pressure_that_cannot_take_the_city_this_turn_no_longer_burns_it() {
-        // Three Soldiers three hexes out: the old pressure gate razes, the value keeps it.
+        // Three Spearmen three hexes out: the old pressure gate razes, the value keeps it.
         let v = view(&[
             (20, Hex::new(11, 8)),
             (21, Hex::new(11, 7)),
@@ -285,7 +285,7 @@ mod tests {
         let mut v = view(&[]);
         v.cities[0]
             .great_works
-            .push(legatum_core::BuildingKind::RelayUplink);
+            .push(legatum_core::BuildingKind::GreatLibrary);
         assert_eq!(super::held_vp_at_city(&v.cities[0]), 2);
         assert!(!razes(&v, 1), "a safe held Great Work is worth keeping");
         let mut threatened = view(&[

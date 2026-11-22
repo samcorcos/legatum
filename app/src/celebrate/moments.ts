@@ -154,7 +154,7 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
           title: 'Heir born', kicker: 'Byzantium’s Heir',
           effect: `Born in ${e.city_name} · be at War, then capture him to score ${vp} VP`, lore: 'An imperial claim walks the land. Whoever holds him scores.',
           details: ['His position is public every turn, on the map and the minimap. Move a military unit onto his tile to capture him: you must be at War with his holder.'],
-          deltas: [], unit: { kind: 'Heir', faction: 'Byzantium' } }); break;
+          deltas: [], unit: { kind: 'HeirToTheThrone', faction: 'Byzantium' } }); break;
       }
       case 'RuinExplored': {
         const text = ruinText(e.reward, cityName, faction(e.owner));
@@ -303,7 +303,7 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
             push(i, e.player, { tier: 'legendary', at: born?.at ?? capital(e.player), title: OWN_HEIR_BIRTH_TITLE, kicker: born ? `Your Heir is born in ${born.city_name}` : undefined, effect: `+${e.vp} VP while you hold him`,
               lore: 'The promise has a face. Keep him.',
               details: born ? ['Every empire was told where he was born, and his position is public every turn: keep him safe.', 'A rival that captures him scores the points instead.'] : ['A rival that captures him scores the points instead.'],
-              deltas: [{ counter: 'vp', amount: e.vp }], unit: { kind: 'Heir', faction: 'Byzantium' } });
+              deltas: [{ counter: 'vp', amount: e.vp }], unit: { kind: 'HeirToTheThrone', faction: 'Byzantium' } });
           }
           break;
         }

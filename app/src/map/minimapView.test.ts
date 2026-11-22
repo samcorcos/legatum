@@ -17,7 +17,7 @@ const fixture = () => ({
 } as unknown as PlayerView);
 
 const at = (col: number, row: number) => fromOffset(col, row);
-const unit = (id: number, owner: number, col: number, row: number, kind = 'Soldier', extra: Partial<UnitView> = {}) =>
+const unit = (id: number, owner: number, col: number, row: number, kind = 'Spearman', extra: Partial<UnitView> = {}) =>
   ({ id, owner, kind, pos: at(col, row), automation: null, ...extra }) as unknown as UnitView;
 const city = (id: number, owner: number, col: number, row: number, capital = false) =>
   ({ id, owner, name: `City ${id}`, pos: at(col, row), is_capital: capital, original_capital: capital, original_capital_of: capital ? owner : null }) as unknown as CityView;
@@ -83,7 +83,7 @@ describe('minimap knowledge filtering', () => {
     v.units = [
       unit(1, 0, 6, 3), // own, in fog: shown
       unit(2, 0, 1, 1, 'Scout'),
-      unit(3, 0, 2, 2, 'Soldier', { automation: 'Explore' }),
+      unit(3, 0, 2, 2, 'Spearman', { automation: 'Explore' }),
       unit(4, 1, 5, 5), // foreign, in sight: shown
       unit(5, 1, 6, 3), // foreign, remembered tile: hidden
       unit(6, 1, 7, 3), // foreign, unexplored tile: hidden

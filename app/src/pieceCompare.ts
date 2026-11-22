@@ -37,12 +37,12 @@ const building = (b: BuildingKind): ProductionItem => ({ kind: 'Building', build
 
 /** The faction pieces that stand against a standard item, keyed by the piece's `itemKey`. Names come from core's replacement names; a rename with the same stats is listed too, so it reads as the rename it is. */
 const PIECES: Partial<Record<Faction, Record<string, PieceSpec>>> = {
-  Egypt: { 'b:Granary': { against: building('Granary') }, 'u:Soldier': { against: unit('Soldier'), rules: [{ text: '+1 sight.', tone: 'good' }] } },
+  Egypt: { 'b:Granary': { against: building('Granary') }, 'u:Spearman': { against: unit('Spearman'), rules: [{ text: '+1 sight.', tone: 'good' }] } },
   Rome: {
     'u:Phalangite': { against: unit('Phalangite'), rules: [{ text: 'A city founded by this Legionary starts at population 2 instead of 1.', tone: 'good' }] },
     'b:Walls': { against: building('Walls'), rules: [{ text: 'Upgrading a melee unit in this city restores 50 HP, up to full health, once per order.', tone: 'good' }] },
   },
-  Aztecs: { 'u:Soldier': { against: unit('Soldier') } },
+  Aztecs: { 'u:Spearman': { against: unit('Spearman') } },
   Celts: {
     'u:Phalangite': {
       against: unit('Phalangite'),
@@ -54,30 +54,30 @@ const PIECES: Partial<Record<Faction, Record<string, PieceSpec>>> = {
   },
   Switzerland: {
     'b:Walls': { against: building('Walls') },
-    'u:Trooper': { against: unit('Trooper'), rules: [{ text: `+${RULES.specialUnitNumbers.reislauferMountedPercent}% of its strength against mounted units, on top of the usual bonus.`, tone: 'good' }] },
+    'u:Pikeman': { against: unit('Pikeman'), rules: [{ text: `+${RULES.specialUnitNumbers.reislauferMountedPercent}% of its strength against mounted units, on top of the usual bonus.`, tone: 'good' }] },
   },
   India: {
     'b:Market': { against: building('Market'), rules: [{ text: 'In a non-capital city, this office starts sending half the Gold the city makes to your treasury.', tone: 'good' }] },
     'u:Knight': { against: unit('Knight'), rules: [{ text: 'No strength penalty charging a city.', tone: 'good' }] },
   },
   Byzantium: {
-    'u:Trooper': { against: unit('Trooper') },
+    'u:Pikeman': { against: unit('Pikeman') },
   },
   Germany: {
-    'b:MachineShop': { against: building('MachineShop') },
+    'b:Forge': { against: building('Forge') },
     'u:Tank': { against: unit('Tank') },
   },
   Mongols: { 'u:Cataphract': { against: unit('Cataphract'), rules: [{ text: KESHIG_CHOICE, tone: 'good' }] } },
   Sparta: {
-    'u:Soldier': {
-      against: unit('Soldier'),
+    'u:Spearman': {
+      against: unit('Spearman'),
       rules: [
         { text: `+${HOPLITE_PHALANX_STRENGTH} strength next to another Hoplite (the phalanx).`, tone: 'good' },
         { text: 'It is lost on upgrade.', tone: 'bad' },
       ],
     },
   },
-  Athens: { 'b:Laboratory': { against: building('Laboratory') }, 'u:CompositeArcher': { against: unit('CompositeArcher') } },
+  Athens: { 'b:Library': { against: building('Library') }, 'u:CompositeArcher': { against: unit('CompositeArcher') } },
 };
 
 /** The item keys that have a comparison for `faction`. */

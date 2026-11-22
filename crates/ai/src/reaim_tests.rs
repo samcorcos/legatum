@@ -48,7 +48,7 @@ fn standings(v: &mut PlayerView) {
 }
 
 /// At war with the enemy (two cities) and with a third empire. Our army of six has fallen back
-/// from the enemy's walled first city, which a Trooper holds, and stands about four turns'
+/// from the enemy's walled first city, which a Pikeman holds, and stands about four turns'
 /// march from its second, empty one.
 fn reaim_view() -> PlayerView {
     let mut v = ViewBuilder::new(40, 24)
@@ -57,13 +57,13 @@ fn reaim_view() -> PlayerView {
         .walled(9)
         .city(10, ENEMY, SOFT, 3)
         .city(20, THIRD, Hex::new(36, 2), 3)
-        .unit(50, ENEMY, UnitKind::Trooper, FIRST)
-        .unit(1, ME, UnitKind::Soldier, Hex::new(11, 9))
-        .unit(2, ME, UnitKind::Soldier, Hex::new(10, 10))
-        .unit(3, ME, UnitKind::Soldier, Hex::new(12, 8))
-        .unit(4, ME, UnitKind::Ranger, Hex::new(11, 8))
-        .unit(5, ME, UnitKind::Ranger, Hex::new(12, 7))
-        .unit(6, ME, UnitKind::Soldier, Hex::new(13, 7))
+        .unit(50, ENEMY, UnitKind::Pikeman, FIRST)
+        .unit(1, ME, UnitKind::Spearman, Hex::new(11, 9))
+        .unit(2, ME, UnitKind::Spearman, Hex::new(10, 10))
+        .unit(3, ME, UnitKind::Spearman, Hex::new(12, 8))
+        .unit(4, ME, UnitKind::Archer, Hex::new(11, 8))
+        .unit(5, ME, UnitKind::Archer, Hex::new(12, 7))
+        .unit(6, ME, UnitKind::Spearman, Hex::new(13, 7))
         .build();
     v.diplomacy.legacy = false;
     v.players[ME.0 as usize].cities = 1;
@@ -202,7 +202,7 @@ fn war_reaim_two_prices_an_empty_city_as_holding_one_bought_defender() {
     assert_eq!(bought[0].owner, ENEMY);
     assert_eq!(
         bought[0].kind,
-        UnitKind::Trooper,
+        UnitKind::Pikeman,
         "the strongest kind its owner is seen fielding"
     );
     let first = v.cities.iter().find(|c| c.id == CityId(9)).unwrap();
@@ -218,16 +218,16 @@ fn peace_view(enemy_near: bool) -> PlayerView {
         .city(1, ME, HOME, 4)
         .city(9, ENEMY, Hex::new(20, 8), 3)
         .city(20, THIRD, Hex::new(3, 14), 3)
-        .unit(1, ME, UnitKind::Soldier, Hex::new(12, 8))
-        .unit(2, ME, UnitKind::Soldier, Hex::new(12, 9))
-        .unit(60, THIRD, UnitKind::Soldier, Hex::new(3, 10))
-        .unit(61, THIRD, UnitKind::Soldier, Hex::new(4, 10))
-        .unit(62, THIRD, UnitKind::Ranger, Hex::new(4, 11));
+        .unit(1, ME, UnitKind::Spearman, Hex::new(12, 8))
+        .unit(2, ME, UnitKind::Spearman, Hex::new(12, 9))
+        .unit(60, THIRD, UnitKind::Spearman, Hex::new(3, 10))
+        .unit(61, THIRD, UnitKind::Spearman, Hex::new(4, 10))
+        .unit(62, THIRD, UnitKind::Archer, Hex::new(4, 11));
     if enemy_near {
         b = b
-            .unit(70, ENEMY, UnitKind::Soldier, Hex::new(5, 8))
-            .unit(71, ENEMY, UnitKind::Soldier, Hex::new(5, 9))
-            .unit(72, ENEMY, UnitKind::Ranger, Hex::new(6, 8));
+            .unit(70, ENEMY, UnitKind::Spearman, Hex::new(5, 8))
+            .unit(71, ENEMY, UnitKind::Spearman, Hex::new(5, 9))
+            .unit(72, ENEMY, UnitKind::Archer, Hex::new(6, 8));
     }
     let mut v = b.build();
     v.diplomacy.legacy = false;
@@ -310,10 +310,10 @@ fn level_two_counts_our_whole_army_beside_the_town() {
         .city(1, ME, HOME, 4)
         .city(9, ENEMY, Hex::new(20, 8), 3)
         .city(20, THIRD, Hex::new(3, 14), 3)
-        .unit(1, ME, UnitKind::Soldier, Hex::new(6, 8))
-        .unit(2, ME, UnitKind::Soldier, Hex::new(6, 7))
-        .unit(3, ME, UnitKind::Ranger, Hex::new(7, 7))
-        .unit(70, ENEMY, UnitKind::Ranger, Hex::new(7, 8))
+        .unit(1, ME, UnitKind::Spearman, Hex::new(6, 8))
+        .unit(2, ME, UnitKind::Spearman, Hex::new(6, 7))
+        .unit(3, ME, UnitKind::Archer, Hex::new(7, 7))
+        .unit(70, ENEMY, UnitKind::Archer, Hex::new(7, 8))
         .build();
     v.diplomacy.legacy = false;
     let (enemy, third) = (v.team_of(ENEMY), v.team_of(THIRD));
@@ -338,17 +338,17 @@ fn level_two_counts_our_whole_army_beside_the_town() {
 
 #[test]
 fn a_city_we_wore_down_is_endangered_only_by_an_enemy_that_outweighs_its_garrison() {
-    // Our city just taken from the enemy, at 0 HP from our own siege. One enemy Soldier stands
-    // beside it. Held by two Soldiers it is safe: its low HP is no danger by itself. Empty, the
+    // Our city just taken from the enemy, at 0 HP from our own siege. One enemy Spearman stands
+    // beside it. Held by two Spearmen it is safe: its low HP is no danger by itself. Empty, the
     // same enemy would take it.
     let build = |garrison: u32| {
         let mut b = ViewBuilder::new(30, 16)
             .city(1, ME, HOME, 4)
             .city(2, ME, Hex::new(12, 8), 3)
             .city(9, ENEMY, Hex::new(20, 8), 3)
-            .unit(70, ENEMY, UnitKind::Soldier, Hex::new(13, 8));
+            .unit(70, ENEMY, UnitKind::Spearman, Hex::new(13, 8));
         for i in 0..garrison {
-            b = b.unit(1 + i, ME, UnitKind::Soldier, Hex::new(12, 8));
+            b = b.unit(1 + i, ME, UnitKind::Spearman, Hex::new(12, 8));
         }
         let mut v = b.build();
         v.diplomacy.legacy = false;

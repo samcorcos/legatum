@@ -47,11 +47,11 @@ it.skipIf(!available)('WASM reports an empty or finishing delegated city when ev
   city.detail!.build_automation = 'Science';
   city.detail!.producing = null;
   city.detail!.production_queue = [];
-  city.detail!.options = city.detail!.options.filter((o) => o.item.kind === 'Unit' && o.item.unit === 'Soldier');
+  city.detail!.options = city.detail!.options.filter((o) => o.item.kind === 'Unit' && o.item.unit === 'Spearman');
   expect(city.detail!.options).toHaveLength(1);
   const plan = (orders: Order[]) => JSON.parse(wasm.city_automation_orders(JSON.stringify(view), JSON.stringify(orders))) as CityAutomationPlan;
   expect(plan([])).toEqual({ orders: [], unchosen_cities: [city.id] });
-  expect(plan([{ type: 'SetProduction', city: city.id, item: { kind: 'Unit', unit: 'Soldier' } }])).toEqual({ orders: [], unchosen_cities: [] });
+  expect(plan([{ type: 'SetProduction', city: city.id, item: { kind: 'Unit', unit: 'Spearman' } }])).toEqual({ orders: [], unchosen_cities: [] });
   city.detail!.producing = { kind: 'Unit', unit: 'Scout' };
   city.detail!.turns_to_complete = 1;
   expect(plan([]).unchosen_cities).toEqual([city.id]);

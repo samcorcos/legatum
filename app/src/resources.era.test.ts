@@ -30,12 +30,12 @@ it('the supply tiers are the buildings with a need, lowest era first, and a Fact
 });
 
 it('turn-1 units and civilians are free, a Classical unit uses Iron, and an upgrade across eras switches resource', () => {
-  for (const u of ['Soldier', 'Ranger', 'Horseman', 'Settler', 'Scout'] as const) expect(unitNeed(u), u).toBeNull();
+  for (const u of ['Spearman', 'Archer', 'Horseman', 'Settler', 'Scout'] as const) expect(unitNeed(u), u).toBeNull();
   expect(unitNeed('Phalangite')).toBe('Iron');
-  expect(unitNeed('AssaultTrooper')).toBe('Niter');
-  expect(upgradeNeed('Soldier', 'Phalangite')).toBe('Iron');
-  expect(upgradeNeed('Phalangite', 'Trooper')).toBeNull(); // Iron to Iron: nothing new is needed
-  expect(upgradeNeed('Trooper', 'AssaultTrooper')).toBe('Niter');
+  expect(unitNeed('Musketman')).toBe('Niter');
+  expect(upgradeNeed('Spearman', 'Phalangite')).toBe('Iron');
+  expect(upgradeNeed('Phalangite', 'Pikeman')).toBeNull(); // Iron to Iron: nothing new is needed
+  expect(upgradeNeed('Pikeman', 'Musketman')).toBe('Niter');
 });
 
 it('German deposit, tile, and improvement copy uses doubled supply', () => {

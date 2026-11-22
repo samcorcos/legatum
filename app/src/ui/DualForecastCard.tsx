@@ -36,7 +36,7 @@ function Option({ kind, f, m, view, unit }: { kind: 'shot' | 'charge'; f: Battle
   return (
     <section className={`dual-option ${shot ? 'shot' : 'charge'}`} data-testid={`forecast-${kind}`} data-verdict={m.verdict} aria-label={shot ? 'Shoot' : 'Charge'}>
       <header className={`dual-head ${m.tone}`}>
-        <span className="dual-what"><Icon name={shot ? 'unit-ranger' : 'unit-horseman'} size={15} /> {shot ? 'Shoot' : 'Charge'}</span>
+        <span className="dual-what"><Icon name={shot ? 'unit-archer' : 'unit-horseman'} size={15} /> {shot ? 'Shoot' : 'Charge'}</span>
         <span className="dual-key">{shot ? 'R, then click' : 'Right-click'}</span>
         <span className="dual-verdict">{m.verdict}</span>
       </header>

@@ -4,7 +4,7 @@ use crate::new_game;
 use crate::rules::cities::found_city;
 use crate::state::{GameSetup, Map};
 
-/// Two empires on open grassland, each with one city and a Soldier beside it.
+/// Two empires on open grassland, each with one city and a Spearman beside it.
 fn duel() -> GameState {
     let mut setup = GameSetup::all_ai(7);
     setup.players.truncate(2);
@@ -25,7 +25,7 @@ fn duel() -> GameState {
         spawn_unit(
             &mut state,
             owner,
-            UnitKind::Soldier,
+            UnitKind::Spearman,
             Hex::from_offset(col, 6),
         );
     }
@@ -401,17 +401,17 @@ fn illegal_edits_are_reported() {
             "expected {needle:?} in {errors:?}"
         );
     };
-    // Two Soldiers on one tile.
+    // Two Spearmen on one tile.
     check(
         &|s| {
-            spawn_unit(s, PlayerId(0), UnitKind::Soldier, Hex::from_offset(4, 6));
+            spawn_unit(s, PlayerId(0), UnitKind::Spearman, Hex::from_offset(4, 6));
         },
         "stack",
     );
-    // A Soldier inside a peaceful neighbour's borders.
+    // A Spearman inside a peaceful neighbour's borders.
     check(
         &|s| {
-            spawn_unit(s, PlayerId(0), UnitKind::Soldier, Hex::from_offset(13, 5));
+            spawn_unit(s, PlayerId(0), UnitKind::Spearman, Hex::from_offset(13, 5));
         },
         "territory without being at war",
     );

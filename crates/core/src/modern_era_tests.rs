@@ -111,7 +111,7 @@ fn each_modern_unit_upgrades_from_its_world_war_unit_and_on_to_the_future_or_ste
         (
             U::Artillery,
             U::RocketArtillery,
-            U::Drone,
+            U::CombatDrone,
             TechId::GuidedMissiles,
         ),
         (
@@ -222,8 +222,8 @@ fn rocket_artillery_shoots_three_tiles_and_artillery_two() {
     let mut s = game(&[0, 1]);
     let rocket = unit(&mut s, 0, UnitKind::RocketArtillery, hex(4, 4));
     let gun = unit(&mut s, 0, UnitKind::Artillery, hex(4, 6));
-    let near = unit(&mut s, 1, UnitKind::Soldier, hex(7, 4));
-    unit(&mut s, 1, UnitKind::Soldier, hex(4, 9));
+    let near = unit(&mut s, 1, UnitKind::Spearman, hex(7, 4));
+    unit(&mut s, 1, UnitKind::Spearman, hex(4, 9));
     // Scouts so that both targets are seen: only the range is in question.
     unit(&mut s, 0, UnitKind::Scout, hex(5, 4));
     unit(&mut s, 0, UnitKind::Scout, hex(4, 8));
@@ -271,8 +271,8 @@ fn rocket_artillery_shoots_three_tiles_and_artillery_two() {
 
 #[test]
 fn the_supermarket_is_the_third_food_building_and_adds_four_food() {
-    use BuildingKind::{Granary, Hydroponics, Supermarket};
-    assert_eq!(data::building_predecessor(Supermarket), Some(Hydroponics));
+    use BuildingKind::{Granary, Mill, Supermarket};
+    assert_eq!(data::building_predecessor(Supermarket), Some(Mill));
     assert_eq!(data::building_family(Supermarket), Granary);
     assert_eq!(
         data::building_stats(Supermarket).requires,
@@ -289,7 +289,7 @@ fn the_supermarket_is_the_third_food_building_and_adds_four_food() {
     let food = |s: &GameState| economy::city_yields(s, &s.cities[&id]).total.food;
     economy::install_building(s.cities.get_mut(&id).unwrap(), Granary);
     let granary = food(&s);
-    economy::install_building(s.cities.get_mut(&id).unwrap(), Hydroponics);
+    economy::install_building(s.cities.get_mut(&id).unwrap(), Mill);
     let mill = food(&s);
     economy::install_building(s.cities.get_mut(&id).unwrap(), Supermarket);
     let supermarket = food(&s);

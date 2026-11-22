@@ -30,8 +30,8 @@ export function wallsFixture() {
   for (const c of [own, walled, open, bastion]) c.population = 3;
   for (const r of f.diplomacy!.relations) r.state = 'War';
   // Your army: one Soldier beside each enemy city, so all four are in sight.
-  const nearWalled = spawnUnit(f, 0, 'Soldier', fromOffset(8, 5), false);
-  const nearOpen = spawnUnit(f, 0, 'Soldier', fromOffset(12, 7), false);
+  const nearWalled = spawnUnit(f, 0, 'Spearman', fromOffset(8, 5), false);
+  const nearOpen = spawnUnit(f, 0, 'Spearman', fromOffset(12, 7), false);
   spawnUnit(f, 0, 'Scout', fromOffset(16, 5), false);
   refreshVision(f);
   return { fixture: f, own: own.id, walled: walled.id, open: open.id, bastion: bastion.id, nearWalled: nearWalled.id, nearOpen: nearOpen.id };

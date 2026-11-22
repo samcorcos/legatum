@@ -1366,13 +1366,13 @@ fn complete_item(
 ) -> bool {
     let c = &state.cities[&id];
     let owner = c.owner;
-    let war_shrine = c.buildings.contains(&BuildingKind::WarShrine);
+    let war_shrine = c.buildings.contains(&BuildingKind::Agoge);
     match item {
         ProductionItem::Unit { unit } => {
             if unit == UnitKind::Settler && c.population < SETTLER_MIN_POP {
                 return false;
             }
-            if unit == UnitKind::Heir && crate::goals::heir(state, owner).is_some() {
+            if unit == UnitKind::HeirToTheThrone && crate::goals::heir(state, owner).is_some() {
                 return false;
             }
             if data::is_aircraft(unit) {
@@ -1391,7 +1391,7 @@ fn complete_item(
                 return false;
             };
             let uid = game::spawn_unit(state, owner, unit, tile);
-            if unit == UnitKind::Heir {
+            if unit == UnitKind::HeirToTheThrone {
                 state.units.get_mut(&uid).expect("just spawned").heir_of = Some(owner);
                 events.push(Event::HeirBorn {
                     city: id,
@@ -1427,7 +1427,7 @@ fn complete_item(
             if let ProductionItem::Wonder { tile, .. } = item {
                 crate::landmarks::complete(state, id, building, tile);
             }
-            if building == BuildingKind::CourierHall {
+            if building == BuildingKind::YamRelayStation {
                 state.player_mut(owner).hall_city = Some(id);
             }
             if building == BuildingKind::ImperialDiwan {

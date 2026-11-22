@@ -2,12 +2,12 @@
 use super::*;
 use legatum_core::diplomacy::TreatyKind;
 
-/// Soldiers that take a lightly held city, and the Rangers a walled one needs outside it.
+/// Spearmen that take a lightly held city, and the Archers a walled one needs outside it.
 const ASSAULT_SOLDIERS: usize = 3;
 const WALL_SIEGE_RANGERS: usize = 2;
 
 impl Plan<'_> {
-    /// Healthy Soldiers within a march of the city: the ones that take it.
+    /// Healthy Spearmen within a march of the city: the ones that take it.
     pub(super) fn assault_force(&self, at: Hex) -> usize {
         self.ctx
             .own_units
@@ -47,7 +47,7 @@ impl Plan<'_> {
                 >= 1
     }
 
-    /// Three or more Soldiers beat a defended city: the human took cities against two or three
+    /// Three or more Spearmen beat a defended city: the human took cities against two or three
     /// defenders with no ranged support. Defenders count by their melee strength, the city by
     /// double its own, and our wounded count for less.
     pub(super) fn assault_ready(&self, city: &CityView) -> bool {
@@ -62,13 +62,13 @@ impl Plan<'_> {
                     && u.pos.distance(city.pos) <= 3
             })
             .collect();
-        // Every defender in reach is another Soldier needed: a garrison behind a broken wall
+        // Every defender in reach is another Spearman needed: a garrison behind a broken wall
         // still has to be killed.
         let need = (ASSAULT_SOLDIERS + defenders.len().saturating_sub(1)).min(6);
         if self.assault_force(city.pos) < need {
             return false;
         }
-        // A five-Soldier stack can take late Walls at a cost; a smaller force
+        // A five-Spearman stack can take late Walls at a cost; a smaller force
         // needs covering fire before accepting city fire.
         if city.walls
             && self.assault_force(city.pos) < 5
@@ -139,7 +139,7 @@ impl Plan<'_> {
                                 (tile.explored
                                     && (v.passage_allowed(
                                         v.me,
-                                        legatum_core::UnitKind::Soldier,
+                                        legatum_core::UnitKind::Spearman,
                                         tile.owner,
                                     ) || tile
                                         .owner
@@ -234,7 +234,7 @@ impl Plan<'_> {
             }
         }
         // A Settler without an escort is the cheapest city there is: declare war the turn a
-        // Soldier stands beside it and take it.
+        // Spearman stands beside it and take it.
         if v.turn >= 24
             && !self.ctx.own_cities.is_empty()
             && let Some(settler) =
@@ -257,7 +257,7 @@ impl Plan<'_> {
                                     v.same_team(owner, e.owner)
                                         || v.passage_allowed(
                                             v.me,
-                                            legatum_core::UnitKind::Soldier,
+                                            legatum_core::UnitKind::Spearman,
                                             Some(owner),
                                         )
                                 })
@@ -412,7 +412,7 @@ impl Plan<'_> {
                 .own_units
                 .iter()
                 .any(|v| v.military && v.kind != UnitKind::Scout && v.pos.distance(c.pos) <= 2);
-            // At war, close on the city once enough Soldiers are in reach; otherwise gather
+            // At war, close on the city once enough Spearmen are in reach; otherwise gather
             // 2-3 hexes out (at Peace, outside its borders) and wait for them.
             let radius = if c.walls && !self.assault_ready(c) {
                 4

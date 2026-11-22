@@ -307,7 +307,7 @@ impl Planner<'_> {
                 .iter()
                 .filter(|u| {
                     u.military
-                        && u.kind == UnitKind::Soldier
+                        && u.kind == UnitKind::Spearman
                         && u.hp >= self.decisions.sparta_expedition_min_hp
                         && u.pos != home.pos
                         && u.pos.distance(city.pos) <= 5
@@ -344,7 +344,7 @@ impl Planner<'_> {
                 .iter()
                 .filter(|u| {
                     u.military
-                        && u.kind == UnitKind::Soldier
+                        && u.kind == UnitKind::Spearman
                         && u.hp >= self.decisions.sparta_expedition_min_hp
                 })
                 .count()
@@ -355,7 +355,7 @@ impl Planner<'_> {
                 .iter()
                 .filter(|u| {
                     u.military
-                        && u.kind == UnitKind::Soldier
+                        && u.kind == UnitKind::Spearman
                         && u.hp >= self.decisions.sparta_expedition_min_hp
                         && u.pos.distance(city.pos) <= 6
                 })

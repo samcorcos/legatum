@@ -524,7 +524,7 @@ mod tests {
         let bow = legatum_core::game::spawn_unit(
             &mut session.state,
             me,
-            legatum_core::UnitKind::Ranger,
+            legatum_core::UnitKind::Archer,
             city_pos,
         );
         let mut session = Session::from_state(session.state, |_| BrainKind::Scripted);
@@ -550,7 +550,7 @@ mod tests {
             .unwrap();
         state.map.get_mut(target).unwrap().terrain = legatum_core::Terrain::Grassland;
         let enemy = PlayerId(2);
-        legatum_core::game::spawn_unit(&mut state, enemy, legatum_core::UnitKind::Soldier, target);
+        legatum_core::game::spawn_unit(&mut state, enemy, legatum_core::UnitKind::Spearman, target);
         let mine = state.team_of(me);
         let theirs = state.team_of(enemy);
         state
@@ -697,7 +697,7 @@ mod tests {
             found_city(&mut state, settler, &mut Vec::new()).unwrap();
         }
         game::spawn_unit(&mut state, PlayerId(0), UnitKind::Scout, Hex::new(5, 5));
-        game::spawn_unit(&mut state, PlayerId(1), UnitKind::Soldier, Hex::new(6, 5));
+        game::spawn_unit(&mut state, PlayerId(1), UnitKind::Spearman, Hex::new(6, 5));
         let mut session = Session::from_state(state, |_| BrainKind::Scripted);
         // Hand-built state has no generated-map archive; this tests the actual session save path.
         session.history = None;

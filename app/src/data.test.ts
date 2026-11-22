@@ -4,8 +4,8 @@ import {
 } from './data';
 
 it('derives German Industry cost eligibility from each building stat line', () => {
-  expect(BUILDING_KINDS.filter(isProductionBuilding)).toEqual(['Workshop', 'Pyramids', 'MachineShop', 'Autoworks']);
-  expect(BUILDING_STATS.MachineShop.yields.food).toBeUndefined();
+  expect(BUILDING_KINDS.filter(isProductionBuilding)).toEqual(['Workshop', 'Pyramids', 'Forge', 'Factory']);
+  expect(BUILDING_STATS.Forge.yields.food).toBeUndefined();
 });
 
 it('mirrors the core decadence rate: L * c / 100 to the nearest percent, nothing at or below the average', () => {

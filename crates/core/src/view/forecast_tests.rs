@@ -154,13 +154,13 @@ fn stored_food_growth_forecast_respects_consumption_and_resistance() {
 #[test]
 fn bankruptcy_forecast_matches_disband_and_report_without_mutating_state() {
     let mut s = test_state(16, 12);
-    for kind in [UnitKind::Soldier, UnitKind::Trooper, UnitKind::Trooper] {
+    for kind in [UnitKind::Spearman, UnitKind::Pikeman, UnitKind::Pikeman] {
         spawn_unit(&mut s, P0, kind, at(2, 2));
     }
     let victim = UnitId(s.next_unit_id);
     spawn_unit(&mut s, P0, UnitKind::Settler, at(2, 2));
-    spawn_unit(&mut s, P1, UnitKind::Trooper, at(3, 2));
-    spawn_unit(&mut s, P2, UnitKind::Trooper, at(4, 2));
+    spawn_unit(&mut s, P1, UnitKind::Pikeman, at(3, 2));
+    spawn_unit(&mut s, P2, UnitKind::Pikeman, at(4, 2));
     s.player_mut(P0).gold = 1;
     let hash = s.hash();
     let view = player_view(&s, P0);
@@ -177,7 +177,7 @@ fn bankruptcy_forecast_matches_disband_and_report_without_mutating_state() {
         Some(victim),
         "highest id breaks equal-cost ties"
     );
-    assert_eq!(disband.kind, UnitKind::Trooper);
+    assert_eq!(disband.kind, UnitKind::Pikeman);
     assert_eq!(disband.city, None);
 
     let mut events = Vec::new();
@@ -194,7 +194,7 @@ fn bankruptcy_forecast_matches_disband_and_report_without_mutating_state() {
 fn bankruptcy_requires_negative_treasury_not_just_negative_income() {
     let mut s = test_state(16, 12);
     for _ in 0..3 {
-        spawn_unit(&mut s, P0, UnitKind::Soldier, at(2, 2));
+        spawn_unit(&mut s, P0, UnitKind::Spearman, at(2, 2));
     }
     for gold in [3, 4, 100] {
         s.player_mut(P0).gold = gold;
@@ -214,9 +214,9 @@ fn bankruptcy_includes_completing_units_and_identifies_their_city() {
     let mut s = test_state(16, 12);
     let id = add_city(&mut s, P0, at(5, 5), 2);
     for _ in 0..4 {
-        spawn_unit(&mut s, P0, UnitKind::Soldier, at(2, 2));
+        spawn_unit(&mut s, P0, UnitKind::Spearman, at(2, 2));
     }
-    queue(&mut s, id, UnitKind::Trooper);
+    queue(&mut s, id, UnitKind::Pikeman);
     s.player_mut(P0).gold = -economy::player_income(&s, P0).gold.total;
     assert!(s.player(P0).gold >= 0);
     let hash = s.hash();
@@ -238,7 +238,7 @@ fn bankruptcy_includes_completing_units_and_identifies_their_city() {
     let disband = forecast.disband.unwrap();
     assert_eq!(disband.unit, None, "never promise a future global id");
     assert_eq!(disband.city, Some(id));
-    assert_eq!(disband.kind, UnitKind::Trooper);
+    assert_eq!(disband.kind, UnitKind::Pikeman);
     let produced_id = UnitId(s.next_unit_id + 1);
     let mut events = Vec::new();
     process_cities(&mut s, &mut events);
@@ -271,7 +271,7 @@ fn idle_waste_uses_the_idle_cap_and_preserves_existing_overflow() {
     s.cities.get_mut(&id).unwrap().resistance = 1;
     assert_eq!(detail(&s, id).idle_production_waste, 0);
     s.cities.get_mut(&id).unwrap().resistance = 0;
-    queue(&mut s, id, UnitKind::Soldier);
+    queue(&mut s, id, UnitKind::Spearman);
     assert_eq!(detail(&s, id).idle_production_waste, 0);
 }
 
@@ -332,9 +332,9 @@ fn heal_forecast_counts_turns_at_twenty_a_turn_and_flags_an_adjacent_enemy() {
     }
     s.cities.get_mut(&id).unwrap().hp = 100;
     assert!(!detail(&s, id).heal_blocked);
-    spawn_unit(&mut s, P1, UnitKind::Soldier, at(6, 5));
+    spawn_unit(&mut s, P1, UnitKind::Spearman, at(6, 5));
     assert!(!detail(&s, id).heal_blocked, "a teammate is no threat");
-    spawn_unit(&mut s, P2, UnitKind::Soldier, at(4, 5));
+    spawn_unit(&mut s, P2, UnitKind::Spearman, at(4, 5));
     assert!(detail(&s, id).heal_blocked);
 }
 
@@ -380,12 +380,12 @@ fn population_unlocks_name_the_settler_and_gated_upgrades() {
         .get_mut(&id)
         .unwrap()
         .buildings
-        .insert(BuildingKind::Laboratory);
+        .insert(BuildingKind::Library);
     let unlocks = detail(&s, id).population_unlocks;
     assert!(unlocks.contains(&PopulationUnlock {
         population: 5,
         item: ProductionItem::Building {
-            building: BuildingKind::College
+            building: BuildingKind::University
         }
     }));
     assert!(
@@ -436,9 +436,9 @@ fn spawn_stall_matches_tile_rules_and_does_not_charge_future_upkeep() {
     let mut s = test_state(16, 12);
     let pos = at(5, 5);
     let id = add_city(&mut s, P0, pos, 2);
-    queue(&mut s, id, UnitKind::Trooper);
+    queue(&mut s, id, UnitKind::Pikeman);
     for h in pos.within(1) {
-        spawn_unit(&mut s, P0, UnitKind::Soldier, h);
+        spawn_unit(&mut s, P0, UnitKind::Spearman, h);
     }
     s.player_mut(P0).gold = -economy::player_income(&s, P0).gold.total;
     let d = detail(&s, id);
@@ -487,7 +487,7 @@ fn forecasts_serialize_and_do_not_expose_other_empires_private_queues() {
     queue(&mut s, own, UnitKind::Settler);
     let before = player_view(&s, P0);
     s.cities.get_mut(&ally).unwrap().producing = Some(ProductionItem::Unit {
-        unit: UnitKind::Trooper,
+        unit: UnitKind::Pikeman,
     });
     s.cities.get_mut(&ally).unwrap().production_stored = 1_000;
     let after = player_view(&s, P0);

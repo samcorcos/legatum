@@ -43,7 +43,7 @@ afterEach(() => {
 const render = (ui: ReactElement) => act(() => root.render(ui));
 const byTestId = (id: string) => container.querySelector(`[data-testid="${id}"]`) as HTMLElement;
 
-async function scene(targetKind: UnitKind = 'Soldier') {
+async function scene(targetKind: UnitKind = 'Spearman') {
   const v = await arenaView('Mongols');
   const keshig = addUnit(v, 0, 'Cataphract', at(8, 5));
   const target = addUnit(v, 2, targetKind, at(9, 5));
@@ -65,11 +65,11 @@ describe('the shoot-or-charge forecast', () => {
   });
 
   it('gives a spear line no class bonus against the shot, and the bonus against the charge', async () => {
-    const { v, keshig, target } = await scene('Soldier');
+    const { v, keshig, target } = await scene('Spearman');
     const shot = forecast(keshig, target, true), charge = forecast(keshig, target, false);
     render(<DualForecastCard shot={shot} charge={charge} view={v} unit={keshig} target={target.pos} />);
     expect(byTestId('forecast-shot-class').textContent).toBe('No class bonus for either side.');
-    const spear = classBonusStrength(unitStatsFor('Byzantium', 'Soldier').strength);
+    const spear = classBonusStrength(unitStatsFor('Byzantium', 'Spearman').strength);
     expect(byTestId('forecast-charge-class').textContent).toContain(`${MELEE_VS_MOUNTED_LABEL}: +${spear} for the Spearman`);
     expect(classLines(shot, 'Keshig', 'Spearman')).toEqual([]);
     // So the shot is the stronger fight against the spear line.
@@ -77,7 +77,7 @@ describe('the shoot-or-charge forecast', () => {
   });
 
   it('gives the Keshig the mounted bonus against an archer only when it charges', async () => {
-    const { v, keshig, target } = await scene('Ranger');
+    const { v, keshig, target } = await scene('Archer');
     const shot = forecast(keshig, target, true), charge = forecast(keshig, target, false);
     render(<DualForecastCard shot={shot} charge={charge} view={v} unit={keshig} target={target.pos} />);
     const rider = classBonusStrength(unitStatsFor('Mongols', keshig.kind).strength);
@@ -88,7 +88,7 @@ describe('the shoot-or-charge forecast', () => {
   it('says a shot cannot take a city and a charge can', async () => {
     const { v, keshig } = await scene();
     const city = addCity(v, 2, 'Nara', at(9, 6), false);
-    const target = addUnit(v, 2, 'Soldier', city.pos);
+    const target = addUnit(v, 2, 'Spearman', city.pos);
     render(<DualForecastCard shot={forecast(keshig, target, true)} charge={forecast(keshig, target, false)} view={v} unit={keshig} target={city.pos} />);
     expect(byTestId('forecast-shot').textContent).toContain("A shot can't take a city");
     expect(byTestId('forecast-charge').textContent).not.toContain("A shot can't take a city");

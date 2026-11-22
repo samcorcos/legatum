@@ -39,9 +39,9 @@ export function keshigFixture() {
   const put = (owner: number, kind: UnitKind, h: Hex) => { if (!free(h)) throw new Error(`occupied ${h.q},${h.r}`); return spawnUnit(f, owner, kind, h, false); };
   const keshig = put(0, 'Cataphract', at(13, 6));
   const east = neighbors(keshig.pos).filter(free).sort((a, b) => b.q - a.q)[0];
-  const spearman = put(1, 'Soldier', east);
+  const spearman = put(1, 'Spearman', east);
   const far = [at(16, 5), at(16, 6), at(16, 7), at(16, 4)].find(free)!;
-  const archer = put(1, 'Ranger', far);
+  const archer = put(1, 'Archer', far);
   // A Scout beside the Archer so your side can see it: three hexes is beyond the Keshig's own sight.
   put(0, 'Scout', neighbors(far).filter(free).sort((a, b) => a.q - b.q)[0]);
   refreshVision(f);

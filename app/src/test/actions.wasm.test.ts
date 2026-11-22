@@ -206,11 +206,11 @@ describe.skipIf(!available)('one-time actions core behavior', () => {
   function sparta(levels: number[]) {
     const s = fixture(['Sparta', 'Mongols']);
     const shrine = city(s, 0, 4, 4, 3), plain = city(s, 0, 12, 4, 3);
-    shrine.buildings.push('WarShrine');
+    shrine.buildings.push('Agoge');
     city(s, 1, 20, 20, 3);
     const xp = (level: number) => (level ? thresholdsFor('Sparta')[level - 1] : 0);
-    const ids = levels.map((level) => { const u = spawnUnit(s, 0, 'Soldier', shrine.pos, false); u.xp = xp(level); return u.id; });
-    const away = spawnUnit(s, 0, 'Soldier', plain.pos, false); away.xp = xp(5);
+    const ids = levels.map((level) => { const u = spawnUnit(s, 0, 'Spearman', shrine.pos, false); u.xp = xp(level); return u.id; });
+    const away = spawnUnit(s, 0, 'Spearman', plain.pos, false); away.xp = xp(5);
     const scout = spawnUnit(s, 0, 'Scout', shrine.pos, false);
     return { s, shrine, plain, ids, away: away.id, scout: scout.id };
   }
@@ -315,12 +315,12 @@ describe.skipIf(!available)('one-time actions core behavior', () => {
   it('resolves rite camps and natural barbarians with the same unit rules', () => {
     const { s, cities } = celts(true);
     const campAt = fromOffset(5, 8);
-    const guard = spawnUnit(s, BARBARIAN, 'Soldier', campAt, false);
-    const raider = spawnUnit(s, BARBARIAN, 'Soldier', fromOffset(6, 7), false);
+    const guard = spawnUnit(s, BARBARIAN, 'Spearman', campAt, false);
+    const raider = spawnUnit(s, BARBARIAN, 'Spearman', fromOffset(6, 7), false);
     s.barbarians!.camps.push({ id: 0, pos: campAt, founded_turn: 1, guard: guard.id, scout: null, raiders: [raider.id], scout_report: null, raid: null, next_raid_turn: 0, next_spawn_turn: 99, rite: 0 });
     s.barbarians!.next_camp_id = 1;
-    const natural = spawnUnit(s, BARBARIAN, 'Soldier', fromOffset(3, 5), false);
-    const rival = spawnUnit(s, 1, 'Soldier', fromOffset(4, 6), false);
+    const natural = spawnUnit(s, BARBARIAN, 'Spearman', fromOffset(3, 5), false);
+    const rival = spawnUnit(s, 1, 'Spearman', fromOffset(4, 6), false);
     expect(s.tileCity[idxOf(s, campAt)]).toBe(cities[0].id);
     const core = pair(s);
     const b = core.endTurn({});
@@ -338,8 +338,8 @@ describe.skipIf(!available)('one-time actions core behavior', () => {
       expect(s.tileCity[idxOf(s, at)]).toBe(cities[i].id);
     }
     s.barbarians!.next_camp_id = 2;
-    spawnUnit(s, 0, 'Soldier', spots[0], false);
-    spawnUnit(s, 1, 'Soldier', spots[1], false);
+    spawnUnit(s, 0, 'Spearman', spots[0], false);
+    spawnUnit(s, 1, 'Spearman', spots[1], false);
     const core = pair(s);
     expect(core.view(0).faction_goal).toMatchObject({ value: 2, target: 2 });
     const goldBefore = core.view(0).economy.gold, rivalBefore = core.view(1).economy.gold;

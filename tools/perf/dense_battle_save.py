@@ -49,7 +49,7 @@ def main() -> None:
             if t["terrain"] in ("Ocean", "Coast", "Lake", "Mountains") or t.get("city") is not None:
                 continue
             ours = dist((q, r), a) < dist((q, r), b)
-            kinds = ["Soldier", "Arquebusier", "Ranger", "CompositeArcher", "Horseman"] if ours else ["Soldier", "Cuirassier", "CompositeArcher", "Arquebusier"]
+            kinds = ["Spearman", "Arquebusier", "Archer", "CompositeArcher", "Horseman"] if ours else ["Spearman", "Cuirassier", "CompositeArcher", "Arquebusier"]
             s["units"][str(nid)] = {
                 "acted": False, "created_turn": 120, "fortify": random.choice([0, 6]), "goto": None,
                 "hp": random.choice([100, 100, 80, 55, 30]), "id": nid, "kind": random.choice(kinds), "moves_left": 3,

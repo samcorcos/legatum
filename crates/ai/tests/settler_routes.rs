@@ -34,16 +34,20 @@ fn cases() -> Vec<Case> {
         &include_bytes!("fixtures/settler-cleared-goto.json.gz")[..],
     ))
     .unwrap();
-    // Pin the decoded current-state hashes for these three recorded starts.
+    // Pin the decoded current-state hashes for these three recorded starts. Moved at rules 52
+    // (2026-11-22) by the identifier rename alone: the hash is taken over the JSON text, which
+    // names every unit and building.
     let repinned = [
-        "9944627897978336795",
-        "10636368559488355015",
-        "5302166457566693392",
+        "17734549094857122416",
+        "5373536465314247322",
+        "14395295407278243096",
     ];
-    assert_eq!(fixture.cases.len(), repinned.len());
-    for (case, pinned) in fixture.cases.iter().zip(repinned) {
-        assert_eq!(case.state.hash().to_string(), pinned);
-    }
+    let hashes: Vec<String> = fixture
+        .cases
+        .iter()
+        .map(|case| case.state.hash().to_string())
+        .collect();
+    assert_eq!(hashes, repinned);
     fixture.cases
 }
 
@@ -320,7 +324,7 @@ fn blocked_safe_detour_stops_without_losing_its_destination() {
         found_city(&mut state, unit, &mut Vec::new()).unwrap();
     }
     let settler = spawn_unit(&mut state, ME, UnitKind::Settler, Hex::new(5, 6));
-    let defender = spawn_unit(&mut state, OTHER, UnitKind::Soldier, Hex::new(8, 6));
+    let defender = spawn_unit(&mut state, OTHER, UnitKind::Spearman, Hex::new(8, 6));
     let blocker = spawn_unit(&mut state, ally, UnitKind::Settler, Hex::new(4, 8));
     state.turn = 20;
     state.units.get_mut(&settler).unwrap().goto = Some(GOAL);
@@ -338,7 +342,7 @@ fn blocked_safe_detour_stops_without_losing_its_destination() {
         .push(legatum_core::state::ThreatObservation {
             unit: defender,
             owner: OTHER,
-            kind: UnitKind::Soldier,
+            kind: UnitKind::Spearman,
             pos: Hex::new(8, 6),
             seen_turn: state.turn,
         });

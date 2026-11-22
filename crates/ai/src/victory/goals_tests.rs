@@ -37,8 +37,8 @@ fn india_commits_a_safe_city_to_the_diwan_after_all_offices() {
         .faction(Faction::India)
         .city(1, ME, off(4, 4), 3)
         .city(2, ME, off(9, 4), 3)
-        .unit(1, ME, UnitKind::Soldier, off(4, 4))
-        .unit(2, ME, UnitKind::Soldier, off(9, 4))
+        .unit(1, ME, UnitKind::Spearman, off(4, 4))
+        .unit(2, ME, UnitKind::Spearman, off(9, 4))
         .build();
     view.turn = 100;
     view.players[0].faction_goal_done = false;

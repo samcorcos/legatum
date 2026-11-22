@@ -630,8 +630,8 @@ pub const PEACE_BLOCK_PREFIX: &str = "at Peace: ";
 /// MoveBlocked reason for a unit refused by its city's capture rule.
 const RANGED_CAPTURE: &str = "Ranged units can't capture cities; move a melee unit in";
 
-/// Why a step into a friend's tile failed, naming the friend ("P0's Soldier"); the client
-/// says "your Soldier" to its owner. A friend that stays is crossed in a hop (`path::hop`),
+/// Why a step into a friend's tile failed, naming the friend ("P0's Spearman"); the client
+/// says "your Spearman" to its owner. A friend that stays is crossed in a hop (`path::hop`),
 /// so this reports a move that would end on one (the goto is its tile) and a friend that
 /// failed to move out of a chain.
 fn stayed_reason(state: &GameState, friend: UnitId, fought: bool) -> String {
@@ -650,7 +650,7 @@ fn stayed_reason(state: &GameState, friend: UnitId, fought: bool) -> String {
 }
 
 /// Reason prefix of a MoveBlocked event for a step into a friend's tile that the friend did
-/// not leave; the rest names it ("P0's Soldier, which stayed to attack").
+/// not leave; the rest names it ("P0's Spearman, which stayed to attack").
 pub const FRIEND_BLOCK_PREFIX: &str = "blocked by ";
 
 /// Reason prefix of the MoveBlocked event that stops a move (the client headlines it).
@@ -2391,7 +2391,7 @@ mod tests {
     #[test]
     fn outrider_allows_a_distant_spear_to_hit_a_stationary_horse() {
         let mut s = game(&[0, 1]);
-        let spear = unit(&mut s, 0, UnitKind::Soldier, hex(3, 4));
+        let spear = unit(&mut s, 0, UnitKind::Spearman, hex(3, 4));
         let horse = unit(&mut s, 1, UnitKind::Horseman, hex(5, 4));
         let order = Order::MoveUnit {
             unit: spear,
@@ -2432,8 +2432,8 @@ mod tests {
     fn mongols_route_around_a_foreign_soldier() {
         let mut s = game(&[0, 1]);
         s.players[0].faction = Faction::Mongols;
-        let courier = unit(&mut s, 0, UnitKind::Soldier, hex(3, 4));
-        let guard = unit(&mut s, 1, UnitKind::Soldier, hex(4, 4));
+        let courier = unit(&mut s, 0, UnitKind::Spearman, hex(3, 4));
+        let guard = unit(&mut s, 1, UnitKind::Spearman, hex(4, 4));
         goto(&mut s, courier, hex(6, 4));
         let (next, events) = resolve_units(&s, &no_orders());
         assert_eq!(pos(&next, guard), hex(4, 4));
@@ -2445,8 +2445,8 @@ mod tests {
     #[test]
     fn movement_costs_follow_terrain() {
         let mut s = game(&[0, 1]);
-        // Soldier (2 moves): grass (1) then forest (2) is not affordable with 1 left.
-        let u = unit(&mut s, 0, UnitKind::Soldier, hex(2, 2));
+        // Spearman (2 moves): grass (1) then forest (2) is not affordable with 1 left.
+        let u = unit(&mut s, 0, UnitKind::Spearman, hex(2, 2));
         set_terrain(&mut s, hex(4, 2), Terrain::Forest);
         goto(&mut s, u, hex(5, 2));
         // Force the route through the forest by walling the rows around it.
@@ -2469,7 +2469,7 @@ mod tests {
     #[test]
     fn multi_turn_goto() {
         let mut s = game(&[0, 1]);
-        let u = unit(&mut s, 0, UnitKind::Soldier, hex(1, 4));
+        let u = unit(&mut s, 0, UnitKind::Spearman, hex(1, 4));
         let mut st = resolve_units(
             &s,
             &orders(
@@ -2495,8 +2495,8 @@ mod tests {
     #[test]
     fn friendly_units_contesting_a_tile_bounce() {
         let mut s = game(&[0, 0, 1]);
-        let a = unit(&mut s, 0, UnitKind::Soldier, hex(3, 4));
-        let b = unit(&mut s, 1, UnitKind::Soldier, hex(5, 4));
+        let a = unit(&mut s, 0, UnitKind::Spearman, hex(3, 4));
+        let b = unit(&mut s, 1, UnitKind::Spearman, hex(5, 4));
         goto(&mut s, a, hex(4, 4));
         goto(&mut s, b, hex(4, 4));
         let (next, events) = resolve_units(&s, &no_orders());
@@ -2513,7 +2513,7 @@ mod tests {
     #[test]
     fn military_and_civilian_share_a_tile() {
         let mut s = game(&[0, 1]);
-        let a = unit(&mut s, 0, UnitKind::Soldier, hex(3, 4));
+        let a = unit(&mut s, 0, UnitKind::Spearman, hex(3, 4));
         let b = unit(&mut s, 0, UnitKind::Settler, hex(5, 4));
         goto(&mut s, a, hex(4, 4));
         goto(&mut s, b, hex(4, 4));
@@ -2525,8 +2525,8 @@ mod tests {
     #[test]
     fn friendly_chain_moves_together_and_blocked_link_blocks_it() {
         let mut s = game(&[0, 1]);
-        let a = unit(&mut s, 0, UnitKind::Soldier, hex(2, 4));
-        let b = unit(&mut s, 0, UnitKind::Soldier, hex(3, 4));
+        let a = unit(&mut s, 0, UnitKind::Spearman, hex(2, 4));
+        let b = unit(&mut s, 0, UnitKind::Spearman, hex(3, 4));
         goto(&mut s, a, hex(3, 4));
         goto(&mut s, b, hex(4, 4));
         let (next, _) = resolve_units(&s, &no_orders());
@@ -2534,7 +2534,7 @@ mod tests {
         assert_eq!(pos(&next, b), hex(4, 4));
 
         // A parked unit at the head blocks the whole chain.
-        let c = unit(&mut s, 0, UnitKind::Soldier, hex(4, 4));
+        let c = unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
         let (next, events) = resolve_units(&s, &no_orders());
         assert_eq!(pos(&next, a), hex(2, 4));
         assert_eq!(pos(&next, b), hex(3, 4));
@@ -2553,9 +2553,9 @@ mod tests {
         let h0 = hex(4, 4);
         let h1 = h0.neighbor(0);
         let h2 = h0.neighbor(1);
-        let a = unit(&mut s, 0, UnitKind::Soldier, h0);
-        let b = unit(&mut s, 0, UnitKind::Soldier, h1);
-        let c = unit(&mut s, 0, UnitKind::Soldier, h2);
+        let a = unit(&mut s, 0, UnitKind::Spearman, h0);
+        let b = unit(&mut s, 0, UnitKind::Spearman, h1);
+        let c = unit(&mut s, 0, UnitKind::Spearman, h2);
         goto(&mut s, a, h1);
         goto(&mut s, b, h2);
         goto(&mut s, c, h0);
@@ -2564,8 +2564,8 @@ mod tests {
 
         // A friendly swap is a two-cycle.
         let mut s = game(&[0, 1]);
-        let a = unit(&mut s, 0, UnitKind::Soldier, h0);
-        let b = unit(&mut s, 0, UnitKind::Soldier, h1);
+        let a = unit(&mut s, 0, UnitKind::Spearman, h0);
+        let b = unit(&mut s, 0, UnitKind::Spearman, h1);
         goto(&mut s, a, h1);
         goto(&mut s, b, h0);
         let (next, _) = resolve_units(&s, &no_orders());
@@ -2576,8 +2576,8 @@ mod tests {
     fn hostile_units_meeting_on_an_empty_tile_fight_without_bonuses() {
         let mut s = game(&[0, 1]);
         set_terrain(&mut s, hex(4, 4), Terrain::Hills);
-        let a = unit(&mut s, 0, UnitKind::Soldier, hex(3, 4));
-        let b = unit(&mut s, 1, UnitKind::Soldier, hex(5, 4));
+        let a = unit(&mut s, 0, UnitKind::Spearman, hex(3, 4));
+        let b = unit(&mut s, 1, UnitKind::Spearman, hex(5, 4));
         s.units.get_mut(&b).unwrap().fortify = 6;
         goto(&mut s, a, hex(4, 4));
         goto(&mut s, b, hex(4, 4));
@@ -2614,8 +2614,8 @@ mod tests {
             let mut s = game(&[0, 1, 2]);
             let target = hex(5, 4);
             let settler = unit(&mut s, 2, UnitKind::Settler, target);
-            let a = unit(&mut s, 0, UnitKind::Soldier, hex(4, 4));
-            let b = unit(&mut s, rival, UnitKind::Soldier, hex(6, 4));
+            let a = unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
+            let b = unit(&mut s, rival, UnitKind::Spearman, hex(6, 4));
             s.units.get_mut(&b).unwrap().hp = 1;
             goto(&mut s, a, target);
             goto(&mut s, b, target);
@@ -2650,12 +2650,12 @@ mod tests {
             let target = hex(5, 4);
             let c = city(&mut s, 1, target, 3);
             s.cities.get_mut(&c).unwrap().hp = 0;
-            let g = unit(&mut s, 1, UnitKind::Soldier, target);
+            let g = unit(&mut s, 1, UnitKind::Spearman, target);
             s.units.get_mut(&g).unwrap().hp = garrison_hp;
             goto(&mut s, g, hex(6, 4));
             let claimants: Vec<_> = [2, 3, 4]
                 .map(|dir| {
-                    let u = unit(&mut s, 0, UnitKind::Soldier, target.neighbor(dir));
+                    let u = unit(&mut s, 0, UnitKind::Spearman, target.neighbor(dir));
                     goto(&mut s, u, target);
                     u
                 })
@@ -2691,9 +2691,9 @@ mod tests {
     fn blocked_reserve_does_not_fight_through_an_occupied_tile() {
         let mut s = game(&[0, 1]);
         let target = hex(4, 4);
-        let garrison = unit(&mut s, 0, UnitKind::Soldier, target);
-        let reserve = unit(&mut s, 0, UnitKind::Soldier, hex(5, 4));
-        let attacker = unit(&mut s, 1, UnitKind::Soldier, hex(3, 4));
+        let garrison = unit(&mut s, 0, UnitKind::Spearman, target);
+        let reserve = unit(&mut s, 0, UnitKind::Spearman, hex(5, 4));
+        let attacker = unit(&mut s, 1, UnitKind::Spearman, hex(3, 4));
         goto(&mut s, reserve, target);
         goto(&mut s, attacker, target);
 
@@ -2718,8 +2718,8 @@ mod tests {
     #[test]
     fn hostile_swap_is_one_meeting_and_survivor_advances() {
         let mut s = game(&[0, 1]);
-        let a = unit(&mut s, 0, UnitKind::Soldier, hex(3, 4));
-        let b = unit(&mut s, 1, UnitKind::Soldier, hex(4, 4));
+        let a = unit(&mut s, 0, UnitKind::Spearman, hex(3, 4));
+        let b = unit(&mut s, 1, UnitKind::Spearman, hex(4, 4));
         s.units.get_mut(&b).unwrap().hp = 10;
         goto(&mut s, a, hex(4, 4));
         goto(&mut s, b, hex(3, 4));
@@ -2736,8 +2736,8 @@ mod tests {
     fn g21_a_unit_attacked_while_leaving_takes_a_parting_hit_then_completes_its_step() {
         let mut s = game(&[0, 1]);
         set_terrain(&mut s, hex(4, 4), Terrain::Hills);
-        let a = unit(&mut s, 0, UnitKind::Soldier, hex(3, 4));
-        let b = unit(&mut s, 1, UnitKind::Soldier, hex(4, 4));
+        let a = unit(&mut s, 0, UnitKind::Spearman, hex(3, 4));
+        let b = unit(&mut s, 1, UnitKind::Spearman, hex(4, 4));
         s.units.get_mut(&b).unwrap().fortify = 6;
         goto(&mut s, a, hex(4, 4));
         goto(&mut s, b, hex(6, 4));
@@ -2775,8 +2775,8 @@ mod tests {
     #[test]
     fn g21_a_parting_hit_that_kills_lets_the_attacker_overrun_the_tile() {
         let mut s = game(&[0, 1]);
-        let a = unit(&mut s, 0, UnitKind::Soldier, hex(3, 4));
-        let b = unit(&mut s, 1, UnitKind::Ranger, hex(4, 4));
+        let a = unit(&mut s, 0, UnitKind::Spearman, hex(3, 4));
+        let b = unit(&mut s, 1, UnitKind::Archer, hex(4, 4));
         s.units.get_mut(&b).unwrap().hp = 5;
         goto(&mut s, a, hex(4, 4));
         goto(&mut s, b, hex(6, 4));
@@ -2789,8 +2789,8 @@ mod tests {
     fn g21_a_stationary_defender_keeps_fortification() {
         let mut s = game(&[0, 1]);
         set_terrain(&mut s, hex(4, 4), Terrain::Hills);
-        let a = unit(&mut s, 0, UnitKind::Soldier, hex(3, 4));
-        let b = unit(&mut s, 1, UnitKind::Soldier, hex(4, 4));
+        let a = unit(&mut s, 0, UnitKind::Spearman, hex(3, 4));
+        let b = unit(&mut s, 1, UnitKind::Spearman, hex(4, 4));
         s.units.get_mut(&b).unwrap().fortify = 6;
         goto(&mut s, a, hex(4, 4));
         let (next, events) = resolve_units(&s, &no_orders());
@@ -2815,9 +2815,9 @@ mod tests {
     fn three_way_contest_every_hostile_pair_fights_once() {
         let mut s = game(&[0, 1, 2]);
         let t = hex(5, 5);
-        let a = unit(&mut s, 0, UnitKind::Soldier, t.neighbor(0));
-        let b = unit(&mut s, 1, UnitKind::Soldier, t.neighbor(2));
-        let c = unit(&mut s, 2, UnitKind::Soldier, t.neighbor(4));
+        let a = unit(&mut s, 0, UnitKind::Spearman, t.neighbor(0));
+        let b = unit(&mut s, 1, UnitKind::Spearman, t.neighbor(2));
+        let c = unit(&mut s, 2, UnitKind::Spearman, t.neighbor(4));
         for u in [a, b, c] {
             goto(&mut s, u, t);
         }
@@ -2836,7 +2836,7 @@ mod tests {
     #[test]
     fn attack_kills_defender_and_attacker_advances() {
         let mut s = game(&[0, 1]);
-        let a = unit(&mut s, 0, UnitKind::Soldier, hex(3, 4));
+        let a = unit(&mut s, 0, UnitKind::Spearman, hex(3, 4));
         let b = unit(&mut s, 1, UnitKind::Scout, hex(4, 4));
         s.units.get_mut(&b).unwrap().hp = 5;
         goto(&mut s, a, hex(4, 4));
@@ -2854,8 +2854,8 @@ mod tests {
     #[test]
     fn simultaneous_mutual_kill() {
         let mut s = game(&[0, 1]);
-        let a = unit(&mut s, 0, UnitKind::Soldier, hex(3, 4));
-        let b = unit(&mut s, 1, UnitKind::Soldier, hex(4, 4));
+        let a = unit(&mut s, 0, UnitKind::Spearman, hex(3, 4));
+        let b = unit(&mut s, 1, UnitKind::Spearman, hex(4, 4));
         s.units.get_mut(&a).unwrap().hp = 1;
         s.units.get_mut(&b).unwrap().hp = 1;
         goto(&mut s, a, hex(4, 4));
@@ -2879,10 +2879,10 @@ mod tests {
         // if the overflow does not kill it.
         let mut s = game(&[0, 1]);
         let c = city(&mut s, 1, hex(5, 4), 3);
-        let g = unit(&mut s, 1, UnitKind::Soldier, hex(5, 4));
+        let g = unit(&mut s, 1, UnitKind::Spearman, hex(5, 4));
         s.units.get_mut(&g).unwrap().fortify = 6;
         s.cities.get_mut(&c).unwrap().hp = 5;
-        let a = unit(&mut s, 0, UnitKind::Soldier, hex(4, 4));
+        let a = unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
         goto(&mut s, a, hex(5, 4));
         let (next, events) = resolve_units(&s, &no_orders());
         // An unwalled city does not fire (city strike needs Walls): only the melee happens.
@@ -2918,9 +2918,9 @@ mod tests {
         let mut s = game(&[0, 1]);
         let c = city(&mut s, 1, hex(5, 4), 3);
         s.cities.get_mut(&c).unwrap().hp = 0;
-        let g = unit(&mut s, 1, UnitKind::Soldier, hex(5, 4));
+        let g = unit(&mut s, 1, UnitKind::Spearman, hex(5, 4));
         let civ = unit(&mut s, 1, UnitKind::Settler, hex(5, 4));
-        let a = unit(&mut s, 0, UnitKind::Soldier, hex(4, 4));
+        let a = unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
         goto(&mut s, a, hex(5, 4));
         // A healthy garrison survives one attack: no capture.
         let (next, events) = resolve_units(&s, &no_orders());
@@ -2969,10 +2969,10 @@ mod tests {
         let mut s = game(&[0, 1]);
         let c = city(&mut s, 1, hex(5, 4), 3);
         s.cities.get_mut(&c).unwrap().hp = 10;
-        let g = unit(&mut s, 1, UnitKind::Soldier, hex(5, 4));
+        let g = unit(&mut s, 1, UnitKind::Spearman, hex(5, 4));
         s.units.get_mut(&g).unwrap().hp = 1;
-        let r = unit(&mut s, 0, UnitKind::Ranger, hex(3, 4));
-        let a = unit(&mut s, 0, UnitKind::Soldier, hex(4, 4));
+        let r = unit(&mut s, 0, UnitKind::Archer, hex(3, 4));
+        let a = unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
         goto(&mut s, a, hex(5, 4));
         let os = orders(
             0,
@@ -2994,8 +2994,8 @@ mod tests {
     fn a_garrison_leaving_a_city_with_hp_is_not_hit_on_the_way_out() {
         let mut s = game(&[0, 1]);
         let c = city(&mut s, 1, hex(5, 4), 3);
-        let g = unit(&mut s, 1, UnitKind::Soldier, hex(5, 4));
-        let a = unit(&mut s, 0, UnitKind::Soldier, hex(4, 4));
+        let g = unit(&mut s, 1, UnitKind::Spearman, hex(5, 4));
+        let a = unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
         goto(&mut s, g, hex(6, 4));
         goto(&mut s, a, hex(5, 4));
         let (next, events) = resolve_units(&s, &no_orders());
@@ -3016,8 +3016,8 @@ mod tests {
         let mut s = game(&[0, 1]);
         let c = city(&mut s, 1, hex(5, 4), 3);
         s.cities.get_mut(&c).unwrap().hp = 1;
-        let g = unit(&mut s, 1, UnitKind::Soldier, hex(5, 4));
-        let a = unit(&mut s, 0, UnitKind::Soldier, hex(4, 4));
+        let g = unit(&mut s, 1, UnitKind::Spearman, hex(5, 4));
+        let a = unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
         goto(&mut s, g, hex(6, 4));
         goto(&mut s, a, hex(5, 4));
         let (next, _) = resolve_units(&s, &no_orders());
@@ -3037,8 +3037,8 @@ mod tests {
     fn a_pursuer_stops_beside_a_city_that_shields_its_quarry() {
         let mut s = game(&[0, 1]);
         city(&mut s, 1, hex(5, 4), 3);
-        let g = unit(&mut s, 1, UnitKind::Soldier, hex(5, 4));
-        let a = unit(&mut s, 0, UnitKind::Soldier, hex(4, 4));
+        let g = unit(&mut s, 1, UnitKind::Spearman, hex(5, 4));
+        let a = unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
         goto(&mut s, a, hex(5, 4));
         s.units.get_mut(&a).unwrap().attack_target = Some(g);
         let (next, events) = resolve_units(&s, &no_orders());
@@ -3052,7 +3052,7 @@ mod tests {
         let mut s = game(&[0, 1]);
         let c = city(&mut s, 1, hex(5, 4), 3);
         s.cities.get_mut(&c).unwrap().hp = 0;
-        for kind in [UnitKind::Soldier, UnitKind::Trooper] {
+        for kind in [UnitKind::Spearman, UnitKind::Pikeman] {
             let mut s = s.clone();
             let b = unit(&mut s, PlayerId::BARBARIAN.0, kind, hex(4, 4));
             goto(&mut s, b, hex(5, 4));
@@ -3079,7 +3079,7 @@ mod tests {
         let c = city(&mut s, 1, hex(5, 4), 3);
         s.cities.get_mut(&c).unwrap().hp = 5;
         let civ = unit(&mut s, 1, UnitKind::Settler, hex(5, 4));
-        let a = unit(&mut s, 0, UnitKind::Soldier, hex(4, 4));
+        let a = unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
         goto(&mut s, a, hex(5, 4));
         let (next, events) = resolve_units(&s, &no_orders());
         let city = &next.cities[&c];
@@ -3120,7 +3120,7 @@ mod tests {
     fn city_not_at_zero_is_not_entered() {
         let mut s = game(&[0, 1]);
         let c = city(&mut s, 1, hex(5, 4), 3);
-        let a = unit(&mut s, 0, UnitKind::Soldier, hex(4, 4));
+        let a = unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
         goto(&mut s, a, hex(5, 4));
         let (next, _) = resolve_units(&s, &no_orders());
         assert!(next.cities[&c].hp < data::CITY_HP);
@@ -3196,7 +3196,7 @@ mod tests {
     fn civilians_are_blocked_by_enemies() {
         let mut s = game(&[0, 1]);
         let st = unit(&mut s, 0, UnitKind::Settler, hex(3, 4));
-        let _e = unit(&mut s, 1, UnitKind::Soldier, hex(4, 4));
+        let _e = unit(&mut s, 1, UnitKind::Spearman, hex(4, 4));
         goto(&mut s, st, hex(4, 4));
         let (next, events) = resolve_units(&s, &no_orders());
         assert_eq!(pos(&next, st), hex(3, 4));
@@ -3210,8 +3210,8 @@ mod tests {
     #[test]
     fn pathing_routes_around_parked_friends() {
         let mut s = game(&[0, 1]);
-        let a = unit(&mut s, 0, UnitKind::Soldier, hex(2, 4));
-        let _parked = unit(&mut s, 0, UnitKind::Soldier, hex(3, 4));
+        let a = unit(&mut s, 0, UnitKind::Spearman, hex(2, 4));
+        let _parked = unit(&mut s, 0, UnitKind::Spearman, hex(3, 4));
         goto(&mut s, a, hex(4, 4));
         let (next, _) = resolve_units(&s, &no_orders());
         assert_ne!(pos(&next, a), hex(2, 4));
@@ -3222,7 +3222,7 @@ mod tests {
     fn a_move_blocked_two_turns_by_a_peaceful_unit_stops_and_asks_for_orders() {
         let mut s = game(&[0, 1]);
         s.diplomacy.as_mut().unwrap().relations[0].state = crate::diplomacy::RelationState::Peace;
-        let a = unit(&mut s, 0, UnitKind::Trooper, hex(2, 4));
+        let a = unit(&mut s, 0, UnitKind::Pikeman, hex(2, 4));
         let _scout = unit(&mut s, 1, UnitKind::Scout, hex(3, 4));
         goto(&mut s, a, hex(3, 4));
         let (s1, e1) = resolve_units(&s, &no_orders());
@@ -3251,7 +3251,7 @@ mod tests {
         );
         // A unit that makes progress never accumulates blocked turns.
         let mut t = game(&[0, 1]);
-        let b = unit(&mut t, 0, UnitKind::Trooper, hex(1, 4));
+        let b = unit(&mut t, 0, UnitKind::Pikeman, hex(1, 4));
         goto(&mut t, b, hex(8, 4));
         let (t1, _) = resolve_units(&t, &no_orders());
         assert_eq!(

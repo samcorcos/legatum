@@ -15,7 +15,7 @@ export interface HeirLine { text: string; tone: 'good' | 'bad' | 'neutral' }
 
 /** What the panel says about an Heir, from the viewer's side. */
 export function heirLines(unit: UnitView, view: PlayerView): HeirLine[] {
-  if (unit.kind !== 'Heir') return [];
+  if (unit.kind !== 'HeirToTheThrone') return [];
   const vp = factionGoalVp('Byzantium');
   const of = unit.heir_of ?? unit.owner;
   const team = new Set(view.players.filter((p) => p.team === view.team).map((p) => p.id));
@@ -37,7 +37,7 @@ export function HeirNote({ unit, view }: { unit: UnitView; view: PlayerView }) {
   const lines = heirLines(unit, view);
   if (!lines.length) return null;
   return <div className="up-heir" data-testid="heir-note">
-    <Icon name="unit-heir" size={18} className="up-heir-mark" />
+    <Icon name="unit-heirtothethrone" size={18} className="up-heir-mark" />
     <div>
       {lines.map((l) => <p key={l.text} className={`up-heir-line ${l.tone}`}><Amounts text={l.text} /></p>)}
     </div>

@@ -222,7 +222,7 @@ fn play(which: &str, mirror: bool, validate: bool, legacy_v7: bool, salt: u64) -
                     if building == BuildingKind::Walls {
                         walls[owner.0 as usize].get_or_insert(turn);
                     }
-                    if building == BuildingKind::CourierHall {
+                    if building == BuildingKind::YamRelayStation {
                         hall[owner.0 as usize].get_or_insert(turn);
                     }
                 }

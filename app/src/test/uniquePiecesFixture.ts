@@ -37,12 +37,12 @@ export function phalanxFixture() {
   for (const r of f.diplomacy!.relations) r.state = 'War';
   const free = (h: { q: number; r: number }) => f.terrain[tileIndex(h, f.width, f.height)] !== 'Ocean' && !f.units.some((u) => hexEq(u.pos, h)) && !f.cities.some((c) => hexEq(c.pos, h));
   const put = (owner: number, kind: UnitKind, h: Hex) => { if (!free(h)) throw new Error(`occupied ${h.q},${h.r}`); return spawnUnit(f, owner, kind, h, false); };
-  const first = put(0, 'Soldier', fromOffset(9, 6));
+  const first = put(0, 'Spearman', fromOffset(9, 6));
   const east = neighbors(first.pos).filter(free).sort((a, b) => b.q - a.q)[0];
-  const enemy = put(1, 'Soldier', east);
+  const enemy = put(1, 'Spearman', east);
   // The second Hoplite stands beside the first, away from the enemy.
   const side = neighbors(first.pos).filter(free).sort((a, b) => a.q - b.q)[0];
-  const second = put(0, 'Soldier', side);
+  const second = put(0, 'Spearman', side);
   refreshVision(f);
   f.players[0].explored.fill(1);
   return { fixture: f, hoplite: first.id, partner: second.id, enemy: enemy.id, enemyAt: enemy.pos, centre: first.pos };

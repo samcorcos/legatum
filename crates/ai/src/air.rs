@@ -428,7 +428,7 @@ mod tests {
             .city(1, ME, off(5, 8), 3)
             .city(2, RIVAL, off(14, 8), 3)
             .unit(1, ME, UnitKind::Scout, off(8, 8))
-            .unit(2, RIVAL, UnitKind::Soldier, off(9, 8))
+            .unit(2, RIVAL, UnitKind::Spearman, off(9, 8))
             .aircraft(30, UnitKind::Bomber, 1)
             .build()
     }
@@ -489,7 +489,7 @@ mod tests {
             .city(1, ME, off(5, 8), 3)
             .city(2, RIVAL, off(14, 8), 3)
             .unit(2, RIVAL, UnitKind::Tank, off(9, 8))
-            .unit(3, RIVAL, UnitKind::Soldier, off(9, 9))
+            .unit(3, RIVAL, UnitKind::Spearman, off(9, 9))
             .aircraft(30, UnitKind::Bomber, 1)
             .aircraft(31, UnitKind::Bomber, 1)
             .build();
@@ -513,9 +513,9 @@ mod tests {
             .faction(Faction::India)
             .city(1, ME, off(5, 8), 3)
             .city(2, RIVAL, off(14, 8), 3)
-            .unit(1, ME, UnitKind::Ranger, off(7, 8))
+            .unit(1, ME, UnitKind::Archer, off(7, 8))
             .unit(2, RIVAL, UnitKind::Tank, off(9, 8))
-            .unit(3, RIVAL, UnitKind::Soldier, off(9, 9))
+            .unit(3, RIVAL, UnitKind::Spearman, off(9, 9))
             .aircraft(30, UnitKind::Bomber, 1)
             .build();
         v.units.iter_mut().find(|u| u.id == UnitId(2)).unwrap().hp = 1;
@@ -535,7 +535,7 @@ mod tests {
 
     #[test]
     fn a_fighter_strikes_a_near_target_unless_enemy_bombers_are_likely() {
-        // The rival's Soldier stands `soldier_x - 5` hexes from the Fighter's city (a Fighter
+        // The rival's Spearman stands `soldier_x - 5` hexes from the Fighter's city (a Fighter
         // strikes 3), its city `city_x - 5` (Bombers strike 5, a Fighter intercepts 4).
         let build = |soldier_x: i32, city_x: i32, rival_era: u8| {
             ViewBuilder::new(24, 16)
@@ -543,7 +543,7 @@ mod tests {
                 .city(1, ME, off(5, 8), 3)
                 .city(2, RIVAL, off(city_x, 8), 3)
                 .unit(1, ME, UnitKind::Scout, off(7, 8))
-                .unit(2, RIVAL, UnitKind::Soldier, off(soldier_x, 8))
+                .unit(2, RIVAL, UnitKind::Spearman, off(soldier_x, 8))
                 .aircraft(30, UnitKind::Fighter, 1)
                 .era_of(2, rival_era)
                 .build()

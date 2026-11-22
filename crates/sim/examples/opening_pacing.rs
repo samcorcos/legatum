@@ -7,7 +7,7 @@
 //! Setup matches legatum-sim's default run (one seat per faction, shuffled from the seed,
 //! scripted brains, no turn limit, safety cap 4x expected length). Writes one JSON line per
 //! game and prints a summary: first Settler completed, second city founded, cities per empire
-//! at fixed turns, capital Production, turns for the capital to build a Soldier at turn 2,
+//! at fixed turns, capital Production, turns for the capital to build a Spearman at turn 2,
 //! game length and faction win rates (best/worst ratio, pillar 8).
 use legatum_core::economy::{city_yields, production_cost};
 use legatum_core::experiments::RuleExperiments;
@@ -92,7 +92,7 @@ fn play(seed: u64, rules: RuleExperiments, d: AiDifficulty) -> Game {
         .map(|p| s.state.cities_of(p.id).count() as u32)
         .collect();
     let soldier = ProductionItem::Unit {
-        unit: UnitKind::Soldier,
+        unit: UnitKind::Spearman,
     };
     let settler = ProductionItem::Unit {
         unit: UnitKind::Settler,

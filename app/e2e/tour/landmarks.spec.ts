@@ -19,7 +19,7 @@ for (const size of SIZES) test.describe(`landmarks on the map ${size.name}`, () 
       const views = [...state.views!];
       const v = views[state.seat];
       const tiles = [...v.tiles];
-      for (const [i, building] of (['RelayUplink', 'WorldExchange', 'PlanetaryFoundry', 'CourierHall'] as const).entries()) {
+      for (const [i, building] of (['GreatLibrary', 'GrandBazaar', 'RoyalArsenal', 'YamRelayStation'] as const).entries()) {
         const n = indices[i];
         tiles[n] = { ...tiles[n], terrain: 'Plains', resource: null, landmark: { building, city: cityId, of: v.me } };
       }

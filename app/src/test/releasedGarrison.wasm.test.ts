@@ -42,7 +42,7 @@ function captureFixture(): MState {
   s.cities.push(capital, { ...city, isCapital: false }); s.nextCityId = 2;
   s.owner[idxOf(s, home)] = 1; s.tileCity[idxOf(s, home)] = capital.id;
   s.owner[idxOf(s, middle)] = 1; s.tileCity[idxOf(s, middle)] = city.id;
-  const soldier = spawnUnit(s, 0, 'Soldier', neighbors(middle)[0], false); soldier.goto = middle;
+  const soldier = spawnUnit(s, 0, 'Spearman', neighbors(middle)[0], false); soldier.goto = middle;
   refreshVision(s);
   return s;
 }
@@ -51,7 +51,7 @@ it.skipIf(!available)('wasm: Peace releases a captured city\'s garrison and it a
   const s = captureFixture();
   const client = makeCore(); client.load(coreFixture(s));
   client.endTurn({});
-  const held = client.view(0).units.find((u) => u.kind === 'Soldier')!;
+  const held = client.view(0).units.find((u) => u.kind === 'Spearman')!;
   const city = client.view(0).cities.find((c) => c.id === 1)!;
   expect(city.owner).toBe(0);
   // Held: locked in the city, fortified for him, and out of the queue.

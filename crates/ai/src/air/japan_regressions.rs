@@ -130,7 +130,7 @@ fn bomber_rebases_from_an_idle_rear_hangar_then_strikes() {
         .city(1, ME, off(2, 8), 3)
         .city(2, ME, off(11, 8), 3)
         .city(3, ENEMY, off(17, 8), 3)
-        .unit(2, ENEMY, UnitKind::Soldier, off(16, 8))
+        .unit(2, ENEMY, UnitKind::Spearman, off(16, 8))
         .aircraft(30, UnitKind::Bomber, 1)
         .build();
     assert!(air_orders_with_policy(&v, true, true, &[], 0, false).is_empty());

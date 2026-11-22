@@ -10,7 +10,7 @@ fn base(v: &PlayerView) -> ScriptedBrain {
 fn quiet_view() -> PlayerView {
     ViewBuilder::new(40, 24)
         .city(0, ME, off(5, 5), 2)
-        .unit(0, ME, UnitKind::Soldier, off(5, 5))
+        .unit(0, ME, UnitKind::Spearman, off(5, 5))
         .build()
 }
 
@@ -111,7 +111,7 @@ fn economic_core_counts_completed_units_once_excluding_starting_units_and_queues
     d.buildings = vec![
         BuildingKind::Market,
         BuildingKind::Workshop,
-        BuildingKind::Laboratory,
+        BuildingKind::Library,
     ];
     d.production_queue = vec![
         ProductionItem::Unit {
@@ -160,7 +160,7 @@ fn economic_handoff_also_waits_for_the_last_core_building() {
         .as_mut()
         .unwrap()
         .buildings
-        .push(BuildingKind::Laboratory);
+        .push(BuildingKind::Library);
     assert_handoff(&mut b, &v, HandoffReason::CoreBuild);
 }
 
@@ -219,7 +219,7 @@ fn temporary_defense_never_completes_an_opening() {
         let mut v = quiet_view();
         for id in 10..14 {
             v = ViewBuilder { view: v }
-                .unit(id, ENEMY, UnitKind::Trooper, off(6, 5))
+                .unit(id, ENEMY, UnitKind::Pikeman, off(6, 5))
                 .build();
         }
         let mut b = OpeningBrain::new(base(&v), policy(opening)).with_handoff();
@@ -245,7 +245,7 @@ fn rush_keeps_starting_soldier_and_ready_army_until_its_first_capture() {
     v = ViewBuilder { view: v }
         .city(0, ME, off(5, 5), 2)
         .city(1, ENEMY, off(15, 5), 2)
-        .unit(99, ME, UnitKind::Soldier, off(5, 5))
+        .unit(99, ME, UnitKind::Spearman, off(5, 5))
         .build();
     // This hand-off fixture requires a viable target: known land and an attackable,
     // non-attrition rival. Unknown routes and Celts now intentionally abandon a rush.
@@ -290,9 +290,9 @@ fn rush_handoff_uses_its_standard_abandonment_clock() {
 fn rush_handoff_uses_its_casualty_failure_without_waiting_for_cap() {
     let mut v = quiet_view();
     v = ViewBuilder { view: v }
-        .unit(1, ME, UnitKind::Soldier, off(6, 5))
-        .unit(2, ME, UnitKind::Soldier, off(7, 5))
-        .unit(3, ME, UnitKind::Ranger, off(8, 5))
+        .unit(1, ME, UnitKind::Spearman, off(6, 5))
+        .unit(2, ME, UnitKind::Spearman, off(7, 5))
+        .unit(3, ME, UnitKind::Archer, off(8, 5))
         .build();
     let mut p = policy(Opening::Rush);
     p.numbers.war_army = 4;

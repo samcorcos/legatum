@@ -50,7 +50,7 @@ pub fn triangle_applies(own: UnitKind, other: UnitKind) -> bool {
 }
 
 /// A horse can escape a melee attack begun from beyond adjacency by moving away. Armour (the
-/// Landship, the Tank, the Autonomous Armour) cannot. This identifies that case; it does not
+/// EarlyTank, the Tank, the Autonomous Armour) cannot. This identifies that case; it does not
 /// prohibit the attack order or a hit on a horse that stays.
 pub fn outrider_blocks(attacker: UnitKind, defender: UnitKind, start_distance: i32) -> bool {
     data::unit_class(attacker) == Some(UnitClass::Melee)
@@ -224,7 +224,7 @@ pub fn mounted_city_penalty(faction: Faction, kind: UnitKind, shot: bool) -> i32
 
 /// The strength a unit of `faction` and `kind` loses charging a city (`MOUNTED_CITY_PENALTY_PERCENT`
 /// of its base strength, rounded down), 0 for a shot or anything but a horse (armour, from the
-/// Landship on, pays nothing, and neither does the Indian War Elephant).
+/// EarlyTank on, pays nothing, and neither does the Indian War Elephant).
 pub fn mounted_city_penalty_rules(
     off: FactionRuleSet,
     faction: Faction,
@@ -991,10 +991,10 @@ mod tests {
 
     #[test]
     fn outrider_applies_to_horses_but_not_vehicles_or_non_melee_attacks() {
-        assert!(outrider_blocks(UnitKind::Soldier, UnitKind::Horseman, 2));
-        assert!(outrider_blocks(UnitKind::Trooper, UnitKind::Knight, 2));
-        assert!(!outrider_blocks(UnitKind::Trooper, UnitKind::Knight, 1));
-        assert!(!outrider_blocks(UnitKind::Ranger, UnitKind::Horseman, 2));
+        assert!(outrider_blocks(UnitKind::Spearman, UnitKind::Horseman, 2));
+        assert!(outrider_blocks(UnitKind::Pikeman, UnitKind::Knight, 2));
+        assert!(!outrider_blocks(UnitKind::Pikeman, UnitKind::Knight, 1));
+        assert!(!outrider_blocks(UnitKind::Archer, UnitKind::Horseman, 2));
         assert!(!outrider_blocks(UnitKind::Horseman, UnitKind::Horseman, 2));
         assert!(!outrider_blocks(UnitKind::Infantry, UnitKind::Tank, 2));
     }
@@ -1062,7 +1062,7 @@ mod tests {
 
     #[test]
     fn wounds_reduce_strength() {
-        assert_eq!(unit_attack_strength(UnitKind::Soldier, 100).total, 20);
-        assert_eq!(unit_attack_strength(UnitKind::Soldier, 55).total, 16);
+        assert_eq!(unit_attack_strength(UnitKind::Spearman, 100).total, 20);
+        assert_eq!(unit_attack_strength(UnitKind::Spearman, 55).total, 16);
     }
 }

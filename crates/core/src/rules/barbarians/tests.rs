@@ -29,7 +29,7 @@ fn add_camp(s: &mut GameState, pos: Hex) -> u32 {
     let id = barb.next_camp_id;
     barb.next_camp_id += 1;
     barb.last_camp_turn = s.turn;
-    let guard = spawn(s, UnitKind::Soldier, pos);
+    let guard = spawn(s, UnitKind::Spearman, pos);
     let scout = place_near(s, pos, true).map(|h| spawn(s, UnitKind::Scout, h));
     barb.camps.push(Camp {
         id,
@@ -67,8 +67,8 @@ fn barbarian_units(s: &GameState) -> Vec<&crate::state::Unit> {
 #[test]
 fn barbarian_ranger_skips_a_visible_target_behind_a_mountain() {
     let mut s = peaceful();
-    let ranger = spawn(&mut s, UnitKind::Ranger, hex(4, 4));
-    unit(&mut s, 0, UnitKind::Soldier, hex(6, 4));
+    let ranger = spawn(&mut s, UnitKind::Archer, hex(4, 4));
+    unit(&mut s, 0, UnitKind::Spearman, hex(6, 4));
     let mut sight = BitSet::new(s.map.tiles.len());
     sight.set(s.map.index(hex(6, 4)).unwrap());
     s.map.get_mut(hex(5, 4)).unwrap().terrain = Terrain::Mountains;
@@ -98,7 +98,7 @@ fn barbarians_are_hostile_to_every_team_even_at_peace_and_never_an_empire() {
     for p in [PlayerId(0), PlayerId(1)] {
         assert!(hostile(&s, p, PlayerId::BARBARIAN));
         assert!(hostile(&s, PlayerId::BARBARIAN, p));
-        assert!(s.passage_allowed(PlayerId::BARBARIAN, crate::UnitKind::Soldier, Some(p)));
+        assert!(s.passage_allowed(PlayerId::BARBARIAN, crate::UnitKind::Spearman, Some(p)));
     }
     assert!(!hostile(&s, PlayerId::BARBARIAN, PlayerId::BARBARIAN));
     assert_eq!(s.team_of(PlayerId::BARBARIAN), TeamId::BARBARIAN);
@@ -171,7 +171,7 @@ fn first_camps_appear_at_the_grace_turn_in_fog_away_from_cities_and_units() {
                 // Guard on the camp, scout beside it.
                 let here: Vec<_> = next.units_at(at).collect();
                 assert_eq!(here.len(), 1);
-                assert!(here[0].owner.is_barbarian() && here[0].kind == UnitKind::Soldier);
+                assert!(here[0].owner.is_barbarian() && here[0].kind == UnitKind::Spearman);
             }
         }
         s = next;
@@ -263,7 +263,7 @@ fn a_scout_that_sees_a_city_and_gets_home_launches_a_raid() {
     kinds.sort();
     assert_eq!(
         kinds,
-        [UnitKind::Soldier, UnitKind::Soldier, UnitKind::Ranger]
+        [UnitKind::Spearman, UnitKind::Spearman, UnitKind::Archer]
     );
     // The raid is visible to the city's owner only.
     let before = crate::player_view(&s, PlayerId(0));
@@ -291,7 +291,7 @@ fn killing_the_scout_before_it_gets_home_prevents_the_raid() {
     let (mut s, _) = run(&s, &no_orders());
     assert!(camp(&s, camp_id).unwrap().scout_report.is_some());
     let at = s.units[&scout].pos;
-    let hunter = unit(&mut s, 0, UnitKind::Soldier, at.neighbors()[0]);
+    let hunter = unit(&mut s, 0, UnitKind::Spearman, at.neighbors()[0]);
     s.units.get_mut(&scout).unwrap().hp = 1;
     let (mut s, _) = run(
         &s,
@@ -324,7 +324,7 @@ fn entering_an_undefended_camp_clears_it_for_standard_gold() {
     let scout = camp(&s, camp_id).unwrap().scout.unwrap();
     s.units.remove(&guard);
     s.units.remove(&scout);
-    let soldier = unit(&mut s, 1, UnitKind::Soldier, hex(4, 5));
+    let soldier = unit(&mut s, 1, UnitKind::Spearman, hex(4, 5));
     let gold = s.players[1].gold;
     let (next, events) = run(
         &s,
@@ -367,7 +367,7 @@ fn entering_an_undefended_camp_clears_it_for_standard_gold() {
 fn a_guarded_camp_must_be_fought_for() {
     let mut s = peaceful();
     let camp_id = add_camp(&mut s, hex(6, 5));
-    let soldier = unit(&mut s, 1, UnitKind::Soldier, hex(5, 5));
+    let soldier = unit(&mut s, 1, UnitKind::Spearman, hex(5, 5));
     let (next, events) = run(
         &s,
         &orders(
@@ -412,7 +412,7 @@ fn raiders_prowl_but_never_assault_or_capture_a_city() {
     let c = city(&mut s, 0, hex(5, 5), 1);
     s.cities.get_mut(&c).unwrap().hp = 0;
     let camp_id = add_camp(&mut s, hex(10, 8));
-    let raider = spawn(&mut s, UnitKind::Soldier, hex(6, 5));
+    let raider = spawn(&mut s, UnitKind::Spearman, hex(6, 5));
     let mut barb = s.barbarians.take().unwrap();
     barb.camps[0].raiders.push(raider);
     barb.camps[0].raid = Some(Raid {
@@ -454,7 +454,7 @@ fn a_raider_does_not_choose_its_own_guard_as_a_prowl_destination() {
     let target = city(&mut s, 0, hex(5, 5), 1);
     let camp_id = add_camp(&mut s, hex(7, 5));
     let guard = camp(&s, camp_id).unwrap().guard.unwrap();
-    let raider = spawn(&mut s, UnitKind::Soldier, hex(8, 5));
+    let raider = spawn(&mut s, UnitKind::Spearman, hex(8, 5));
     let c = &mut s.barbarians.as_mut().unwrap().camps[0];
     c.raiders.push(raider);
     c.raid = Some(Raid {
@@ -491,7 +491,7 @@ fn barbarians_goto(s: &mut GameState, id: UnitId, to: Hex) {
 fn raiders_capture_lone_settlers_and_clearing_the_camp_frees_them() {
     let mut s = peaceful();
     let camp_id = add_camp(&mut s, hex(8, 5));
-    let raider = spawn(&mut s, UnitKind::Soldier, hex(5, 5));
+    let raider = spawn(&mut s, UnitKind::Spearman, hex(5, 5));
     s.barbarians.as_mut().unwrap().camps[0].raiders.push(raider);
     let settler = unit(&mut s, 0, UnitKind::Settler, hex(4, 5));
     let (mut s, events) = run(&s, &no_orders());
@@ -509,14 +509,14 @@ fn raiders_capture_lone_settlers_and_clearing_the_camp_frees_them() {
         s = run(&s, &no_orders()).0;
     }
     assert_eq!(s.units[&settler].pos, hex(8, 5));
-    // Clear the camp: the guard is gone and a Soldier walks in, freeing the captive.
+    // Clear the camp: the guard is gone and a Spearman walks in, freeing the captive.
     if let Some(g) = camp(&s, camp_id).unwrap().guard {
         s.units.remove(&g);
     }
     for id in camp(&s, camp_id).unwrap().raiders.clone() {
         s.units.remove(&id);
     }
-    let rescuer = unit(&mut s, 1, UnitKind::Soldier, hex(7, 5));
+    let rescuer = unit(&mut s, 1, UnitKind::Spearman, hex(7, 5));
     let (next, events) = run(
         &s,
         &orders(
@@ -598,7 +598,7 @@ fn barbarians_never_heal_or_explore_ruins() {
     let guard = camp(&s, id).unwrap().guard.unwrap();
     s.units.get_mut(&guard).unwrap().hp = 40;
     s.map.get_mut(hex(3, 3)).unwrap().ruin = true;
-    let roamer = spawn(&mut s, UnitKind::Soldier, hex(3, 4));
+    let roamer = spawn(&mut s, UnitKind::Spearman, hex(3, 4));
     barbarians_goto(&mut s, roamer, hex(3, 3));
     let mut events = Vec::new();
     crate::rules::movement::resolve_movement(&mut s, &mut events);
@@ -613,16 +613,16 @@ fn barbarians_never_heal_or_explore_ruins() {
 #[test]
 fn units_by_era_follow_half_the_living_empires() {
     let mut s = peaceful();
-    assert_eq!(unit_kinds(&s), (UnitKind::Soldier, UnitKind::Ranger));
+    assert_eq!(unit_kinds(&s), (UnitKind::Spearman, UnitKind::Archer));
     s.players[0].techs.insert(TechId::Feudalism);
     assert_eq!(
         unit_kinds(&s).0,
-        UnitKind::Trooper,
+        UnitKind::Pikeman,
         "one of two empires is half"
     );
     s.players[1].alive = false;
     s.players[0].techs.insert(TechId::Machinery);
-    assert_eq!(unit_kinds(&s), (UnitKind::Trooper, UnitKind::Marksman));
+    assert_eq!(unit_kinds(&s), (UnitKind::Pikeman, UnitKind::Crossbowman));
 }
 
 #[test]
@@ -694,9 +694,9 @@ fn fighting_barbarians_earns_xp_only_up_to_the_first_promotion() {
     for (xp_before, expect_gain) in [(0, true), (first, false)] {
         let mut s = peaceful();
         add_camp(&mut s, hex(10, 2));
-        let soldier = unit(&mut s, 0, UnitKind::Soldier, hex(4, 5));
+        let soldier = unit(&mut s, 0, UnitKind::Spearman, hex(4, 5));
         s.units.get_mut(&soldier).unwrap().xp = xp_before;
-        let raider = spawn(&mut s, UnitKind::Soldier, hex(5, 5));
+        let raider = spawn(&mut s, UnitKind::Spearman, hex(5, 5));
         s.units.get_mut(&raider).unwrap().hp = 30;
         let (next, events) = run(
             &s,
@@ -747,7 +747,7 @@ fn raiders_leave_a_celtic_settler_alone_but_the_rule_is_the_celtic_empire_only()
         let mut s = peaceful();
         s.players[0].faction = faction;
         add_camp(&mut s, hex(8, 5));
-        let raider = spawn(&mut s, UnitKind::Soldier, hex(5, 5));
+        let raider = spawn(&mut s, UnitKind::Spearman, hex(5, 5));
         s.barbarians.as_mut().unwrap().camps[0].raiders.push(raider);
         let settler = unit(&mut s, 0, UnitKind::Settler, hex(4, 5));
         let (next, events) = run(&s, &no_orders());
@@ -769,10 +769,10 @@ fn raiders_leave_a_celtic_settler_alone_but_the_rule_is_the_celtic_empire_only()
 fn barbarian_units_never_step_onto_or_shoot_celtic_units() {
     let mut s = celtic();
     add_camp(&mut s, hex(9, 8));
-    let raider = spawn(&mut s, UnitKind::Soldier, hex(5, 5));
-    let ranger = spawn(&mut s, UnitKind::Ranger, hex(5, 3));
-    let soldier = unit(&mut s, 0, UnitKind::Soldier, hex(6, 5));
-    let archer = unit(&mut s, 0, UnitKind::Ranger, hex(5, 2));
+    let raider = spawn(&mut s, UnitKind::Spearman, hex(5, 5));
+    let ranger = spawn(&mut s, UnitKind::Archer, hex(5, 3));
+    let soldier = unit(&mut s, 0, UnitKind::Spearman, hex(6, 5));
+    let archer = unit(&mut s, 0, UnitKind::Archer, hex(5, 2));
     let mut sight = BitSet::new(s.map.tiles.len());
     for h in [hex(6, 5), hex(5, 2)] {
         sight.set(s.map.index(h).unwrap());
@@ -838,7 +838,7 @@ fn the_celts_still_fight_camps_and_collect_the_gold() {
     let mut s = celtic();
     let camp_id = add_camp(&mut s, hex(6, 5));
     let guard = camp(&s, camp_id).unwrap().guard.unwrap();
-    let soldier = unit(&mut s, 0, UnitKind::Soldier, hex(5, 5));
+    let soldier = unit(&mut s, 0, UnitKind::Spearman, hex(5, 5));
     let go = orders(
         0,
         vec![Order::MoveUnit {
@@ -923,7 +923,7 @@ fn barbarians_are_hostile_to_the_celts_but_no_threat_to_them() {
 fn a_celtic_walled_city_does_not_fire_at_barbarians_but_other_cities_do() {
     for (faction, fires) in [(Faction::Celts, false), (Faction::Switzerland, true)] {
         let (mut s, c) = walled(faction);
-        let guard = spawn(&mut s, UnitKind::Soldier, hex(6, 5));
+        let guard = spawn(&mut s, UnitKind::Spearman, hex(6, 5));
         let (_, events) = run(&s, &no_orders());
         assert_eq!(city_fired(&events), fires, "{faction:?}");
         // The shot's forecast (what the UI and AI read) agrees with resolution.
@@ -943,8 +943,8 @@ fn a_celtic_walled_city_still_fires_at_a_rival_beside_a_barbarian() {
     for r in &mut s.diplomacy.as_mut().unwrap().relations {
         r.state = crate::diplomacy::RelationState::War;
     }
-    spawn(&mut s, UnitKind::Soldier, hex(6, 5));
-    let rival = unit(&mut s, 1, UnitKind::Soldier, hex(4, 5));
+    spawn(&mut s, UnitKind::Spearman, hex(6, 5));
+    let rival = unit(&mut s, 1, UnitKind::Spearman, hex(4, 5));
     let (next, events) = run(&s, &no_orders());
     assert!(city_fired(&events));
     assert!(next.units.get(&rival).is_none_or(|u| u.hp < 100));
@@ -955,11 +955,11 @@ fn barbarians_do_not_wake_a_celtic_sleeper_but_do_wake_everyone_else() {
     for (faction, wakes) in [(Faction::Celts, false), (Faction::Switzerland, true)] {
         let mut s = peaceful();
         s.players[0].faction = faction;
-        let sleeper = unit(&mut s, 0, UnitKind::Soldier, hex(5, 5));
+        let sleeper = unit(&mut s, 0, UnitKind::Spearman, hex(5, 5));
         s.units.get_mut(&sleeper).unwrap().standing_order = Some(crate::StandingOrder::Sleep);
         let before = crate::rules::units::sleeping_threats(&s);
         assert!(before[&sleeper].is_empty());
-        spawn(&mut s, UnitKind::Soldier, hex(7, 5));
+        spawn(&mut s, UnitKind::Spearman, hex(7, 5));
         let mut now = crate::rules::units::sleeping_threats(&s);
         assert_eq!(!now[&sleeper].is_empty(), wakes, "{faction:?}");
         let mut events = Vec::new();
@@ -982,10 +982,10 @@ fn a_celtic_sleeper_still_wakes_for_a_rival_at_war() {
     for r in &mut s.diplomacy.as_mut().unwrap().relations {
         r.state = crate::diplomacy::RelationState::War;
     }
-    let sleeper = unit(&mut s, 0, UnitKind::Soldier, hex(5, 5));
+    let sleeper = unit(&mut s, 0, UnitKind::Spearman, hex(5, 5));
     s.units.get_mut(&sleeper).unwrap().standing_order = Some(crate::StandingOrder::Sleep);
     let mut previous = crate::rules::units::sleeping_threats(&s);
-    unit(&mut s, 1, UnitKind::Soldier, hex(7, 5));
+    unit(&mut s, 1, UnitKind::Spearman, hex(7, 5));
     let mut events = Vec::new();
     crate::rules::units::wake_threatened_sleepers(&mut s, &mut previous, &mut events);
     assert!(
@@ -998,8 +998,8 @@ fn a_celtic_sleeper_still_wakes_for_a_rival_at_war() {
 #[test]
 fn a_manual_celtic_ranged_strike_on_a_barbarian_still_resolves() {
     let mut s = celtic();
-    let archer = unit(&mut s, 0, UnitKind::Ranger, hex(5, 5));
-    let guard = spawn(&mut s, UnitKind::Soldier, hex(6, 5));
+    let archer = unit(&mut s, 0, UnitKind::Archer, hex(5, 5));
+    let guard = spawn(&mut s, UnitKind::Spearman, hex(6, 5));
     let (next, events) = run(
         &s,
         &orders(
@@ -1019,8 +1019,8 @@ fn known_threats_leave_out_barbarians_for_the_celts() {
     for (faction, marked) in [(Faction::Celts, false), (Faction::Switzerland, true)] {
         let mut s = peaceful();
         s.players[0].faction = faction;
-        unit(&mut s, 0, UnitKind::Soldier, hex(4, 5));
-        spawn(&mut s, UnitKind::Soldier, hex(6, 5));
+        unit(&mut s, 0, UnitKind::Spearman, hex(4, 5));
+        spawn(&mut s, UnitKind::Spearman, hex(6, 5));
         let view = crate::view::player_view(&s, PlayerId(0));
         let threats = crate::settlement::known_threats(&view);
         assert_eq!(threats.iter().any(|n| *n > 0), marked, "{faction:?}");
@@ -1034,7 +1034,7 @@ fn a_barbarian_beside_a_celtic_city_does_not_stop_it_healing() {
         s.players[0].faction = faction;
         let c = city(&mut s, 0, hex(5, 5), 2);
         s.cities.get_mut(&c).unwrap().hp = 100;
-        spawn(&mut s, UnitKind::Soldier, hex(6, 5));
+        spawn(&mut s, UnitKind::Spearman, hex(6, 5));
         let view = crate::view::player_view(&s, PlayerId(0));
         let detail = view
             .cities

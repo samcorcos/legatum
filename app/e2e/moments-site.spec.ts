@@ -17,7 +17,7 @@ for (const size of SIZES) test.describe(`construction site ${size.name}`, () => 
     for (const stored of [0, 90, 270, 480, 596]) {
       const setup = wallsFixture(), f = setup.fixture;
       const own = f.cities.find(c => c.id === setup.own)!;
-      own.producing = { kind: 'Wonder', building: 'RelayUplink', tile: chosen };
+      own.producing = { kind: 'Wonder', building: 'GreatLibrary', tile: chosen };
       own.prod = stored; own.productionQueue = [];
       const stagePage = await page.context().newPage();
       await loadFixture(stagePage, coreFixture(f), 2);

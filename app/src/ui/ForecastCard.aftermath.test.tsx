@@ -30,10 +30,10 @@ function charge(horse: UnitView, archer: UnitView): BattleForecast {
 async function scene() {
   const v = await arenaView('Sparta');
   const horse = addUnit(v, 0, 'Horseman', at(8, 5));
-  const archer = addUnit(v, 2, 'Ranger', at(10, 5), { fortify: 6 });
+  const archer = addUnit(v, 2, 'Archer', at(10, 5), { fortify: 6 });
   addCity(v, 2, 'Nara', at(12, 5));
-  addUnit(v, 2, 'Soldier', at(10, 7));
-  addUnit(v, 2, 'Soldier', at(11, 6));
+  addUnit(v, 2, 'Spearman', at(10, 7));
+  addUnit(v, 2, 'Spearman', at(11, 6));
   return { v, horse, archer, target: archer.pos };
 }
 
@@ -88,7 +88,7 @@ describe('ForecastCard', () => {
     const city = addCity(v, 2, 'Nara', target);
     city.original_capital = true;
     city.original_capital_of = 2;
-    const forecast = charge(horse, addUnit(v, 2, 'Soldier', at(target.q + 1, target.r)));
+    const forecast = charge(horse, addUnit(v, 2, 'Spearman', at(target.q + 1, target.r)));
     render(<ForecastCard forecast={forecast} ranged={false} view={v} unit={horse} target={city.pos} />);
     expect(byTestId('forecast-capital-vp').querySelector(':scope > span:last-child')!.textContent).toBe('+1 VP while you hold Nara');
     expect(byTestId('forecast-capital-vp').querySelector('.vh-seal')).not.toBeNull();
@@ -102,7 +102,7 @@ describe('ForecastCard', () => {
     const { v, horse, target } = await scene();
     v.players.find((p) => p.id === v.me)!.faction = 'Celts';
     const city = addCity(v, 2, 'Nara', target);
-    const forecast = { ...charge(horse, addUnit(v, 2, 'Soldier', at(target.q + 1, target.r))), sack_gold: 180 };
+    const forecast = { ...charge(horse, addUnit(v, 2, 'Spearman', at(target.q + 1, target.r))), sack_gold: 180 };
     render(<ForecastCard forecast={forecast} ranged={false} view={v} unit={horse} target={city.pos} />);
     expect(byTestId('forecast-sack').textContent).toBe('Sack: +180 Gold (60 per population)');
   });
@@ -112,7 +112,7 @@ describe('ForecastCard', () => {
     const line = byTestId('forecast-aftermath');
     expect(line.getAttribute('data-risk')).toBe('Likely lost');
     expect(line.textContent).toMatch(/Nara's walls \(about −\d+\) and 2 Spearmen \(about −\d+ each, \+\d+ vs mounted\) can reach it\. Likely lost\.$/);
-    expect(line.textContent).toContain(`+${classBonusStrength(unitStatsFor('India', 'Soldier').strength)} vs mounted`);
+    expect(line.textContent).toContain(`+${classBonusStrength(unitStatsFor('India', 'Spearman').strength)} vs mounted`);
     const card = container.querySelector('.forecast')!;
     // Header, then the aftermath, before the sides.
     expect(card.children[0].className).toContain('forecast-head');
@@ -122,7 +122,7 @@ describe('ForecastCard', () => {
 
   it('shows a Safe aftermath below the sides, quietly', async () => {
     const { v, horse, archer, target } = await scene();
-    v.units = v.units.filter((u) => u.kind !== 'Soldier');
+    v.units = v.units.filter((u) => u.kind !== 'Spearman');
     v.cities = [];
     render(<ForecastCard forecast={charge(horse, archer)} ranged={false} view={v} unit={horse} target={target} />);
     const line = byTestId('forecast-aftermath');

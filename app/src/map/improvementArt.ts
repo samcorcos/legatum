@@ -20,7 +20,7 @@ export function improvementStem(kind: ImprovementKind, upgraded: boolean): strin
     case 'Pasture': return upgraded ? 'ranch' : 'pasture';
     case 'Quarry': return upgraded ? 'deep-quarry' : 'quarry';
     case 'Mine': return upgraded ? 'deep-mine' : 'mine';
-    case 'SaltpeterWorks': return 'saltpetre-works';
+    case 'SaltpetreWorks': return 'saltpetre-works';
     case 'OilWell': return 'oil-well';
     case 'QuartzMine': return 'quartz-mine';
   }

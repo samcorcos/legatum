@@ -70,7 +70,7 @@ export interface EmpireLocation {
   /** Where "Show on map" centers. */
   at: Hex;
   kind: 'city' | 'unit';
-  /** Their city's name, or their unit's name ("Soldier"). */
+  /** Their city's name, or their unit's name ("Spearman"). */
   name: string;
   /** Hex distance to the nearest place of ours. */
   tiles: number;

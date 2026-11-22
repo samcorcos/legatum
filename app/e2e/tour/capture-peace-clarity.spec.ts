@@ -36,9 +36,9 @@ for (const size of SIZES) test.describe(`capture and Peace clarity ${size.name}`
 
   test('a two-step civilian capture names the adjacent barbarian', async ({ page }) => {
     const save = JSON.parse(warPromptCoreSave(true));
-    const mover = Object.values(save.units).find((u: any) => u.owner === 0 && u.kind === 'Soldier') as any;
+    const mover = Object.values(save.units).find((u: any) => u.owner === 0 && u.kind === 'Spearman') as any;
     const civilian = Object.values(save.units).find((u: any) => u.owner === 1 && u.kind === 'Scout') as any;
-    const rival = Object.values(save.units).find((u: any) => u.owner === 1 && u.kind === 'Soldier') as any;
+    const rival = Object.values(save.units).find((u: any) => u.owner === 1 && u.kind === 'Spearman') as any;
     civilian.kind = 'Settler'; civilian.pos = PURSUIT.scout;
     rival.owner = 255;
     rival.pos = neighbors(civilian.pos).find((h) => distance(h, mover.pos) === 2)!;

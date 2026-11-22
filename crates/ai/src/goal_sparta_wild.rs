@@ -29,7 +29,7 @@ impl Planner<'_> {
     fn city_has_shrine(c: &CityView) -> bool {
         c.detail
             .as_ref()
-            .is_some_and(|d| data::has_building(&d.buildings, BuildingKind::WarShrine))
+            .is_some_and(|d| data::has_building(&d.buildings, BuildingKind::Agoge))
     }
 
     /// Own cities with a War Shrine standing.
@@ -68,7 +68,7 @@ impl Planner<'_> {
     /// A War Shrine stands or is being built anywhere in the empire.
     fn shrine_planned(&self) -> bool {
         let shrine = legatum_core::ProductionItem::Building {
-            building: BuildingKind::WarShrine,
+            building: BuildingKind::Agoge,
         };
         self.ctx.own_cities.iter().any(|c| {
             Self::city_has_shrine(c)

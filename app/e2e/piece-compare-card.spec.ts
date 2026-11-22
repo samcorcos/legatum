@@ -21,9 +21,9 @@ const test = base.extend<{}, { devURL: string }>({
 
 const CASES = [
   { faction: 'Switzerland', item: 'b:Walls', says: 'vs Walls: +5 city strength costs 20 more Production' },
-  { faction: 'Byzantium', item: 'u:Trooper', says: 'vs Pikeman: +4 strength costs 10 more Production' },
-  { faction: 'Athens', item: 'b:Laboratory', says: 'vs Library: +3 Science costs 10 less Production' },
-  { faction: 'Sparta', item: 'u:Soldier', says: 'vs Spearman: +5 strength next to another Hoplite (the phalanx) it is lost on upgrade' },
+  { faction: 'Byzantium', item: 'u:Pikeman', says: 'vs Pikeman: +4 strength costs 10 more Production' },
+  { faction: 'Athens', item: 'b:Library', says: 'vs Library: +3 Science costs 10 less Production' },
+  { faction: 'Sparta', item: 'u:Spearman', says: 'vs Spearman: +5 strength next to another Hoplite (the phalanx) it is lost on upgrade' },
 ] as const;
 
 for (const size of [{ width: 1000, height: 600 }, { width: 1440, height: 900 }]) {

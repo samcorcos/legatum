@@ -1,6 +1,6 @@
-//! Playtest G2, from the user's own game (playtest 3, engine 0db3a5f): on turn 6 their Soldier
+//! Playtest G2, from the user's own game (playtest 3, engine 0db3a5f): on turn 6 their Spearman
 //! (#3) was ordered onto the adjacent Scout (#14) of AI 5, a team still at Peace. The Scout
-//! walked away and the Soldier stood still with a route to the empty tile and no explanation.
+//! walked away and the Spearman stood still with a route to the empty tile and no explanation.
 use legatum_core::events::PursuitOutcome;
 use legatum_core::rules::movement::PEACE_BLOCK_PREFIX;
 use legatum_core::{Event, GameState, Hex, Order, PlayerId, TeamId, UnitId, resolve_turn};
@@ -63,7 +63,7 @@ fn declaring_war_with_the_attack_never_bounces_silently() {
             .any(|e| matches!(e, Event::MoveBlocked { unit, .. } if *unit == SOLDIER)),
         "{events:?}"
     );
-    // G20: plain Peace, so War starts this turn and the Soldier attacks the Scout now.
+    // G20: plain Peace, so War starts this turn and the Spearman attacks the Scout now.
     assert!(
         events
             .iter()

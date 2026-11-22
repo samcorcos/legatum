@@ -547,7 +547,7 @@ mod tests {
         let mut v = aztecs(70, 18, 20);
         assert!(swarms(&v));
         v = ViewBuilder { view: v }
-            .unit(1, ENEMY, UnitKind::Soldier, off(5, 3))
+            .unit(1, ENEMY, UnitKind::Spearman, off(5, 3))
             .build();
         assert!(!swarms(&v));
         // In the last turns nothing after it matters.
@@ -573,20 +573,20 @@ mod tests {
         swarm.cities[0].lost = 30;
         swarm.cities[1].lost = 0;
         let v = ViewBuilder { view: v }
-            .unit(1, ENEMY, UnitKind::Soldier, off(5, 10))
+            .unit(1, ENEMY, UnitKind::Spearman, off(5, 10))
             .build();
         assert!(!swarms(&v), "the stock rite waits for every city");
         assert!(closer(&v), "the closer starts the hold");
         // An army at a city that shrinks still stops it.
         let v = ViewBuilder { view: v }
-            .unit(2, ENEMY, UnitKind::Soldier, off(5, 3))
+            .unit(2, ENEMY, UnitKind::Spearman, off(5, 3))
             .build();
         assert!(!closer(&v));
         // And it only overrides the wait when the rite starts the hold.
         let mut far = aztecs(70, 11, 20);
         far.actions.swarm.as_mut().unwrap().cities[1].lost = 0;
         let far = ViewBuilder { view: far }
-            .unit(1, ENEMY, UnitKind::Soldier, off(5, 10))
+            .unit(1, ENEMY, UnitKind::Spearman, off(5, 10))
             .build();
         assert!(!closer(&far));
     }

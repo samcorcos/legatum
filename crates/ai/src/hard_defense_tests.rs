@@ -60,8 +60,8 @@ fn threatened_city_keeps_garrison_and_calls_a_melee_supporter() {
         .city(1, ME, city, 3)
         .city(2, ENEMY, Hex::new(16, 7), 3)
         .unit(1, ME, UnitKind::Horseman, city)
-        .unit(2, ME, UnitKind::Soldier, Hex::new(6, 7))
-        .unit(3, ME, UnitKind::Ranger, Hex::new(6, 6))
+        .unit(2, ME, UnitKind::Spearman, Hex::new(6, 7))
+        .unit(3, ME, UnitKind::Archer, Hex::new(6, 6))
         .unit(50, ENEMY, UnitKind::Phalangite, Hex::new(8, 7))
         .unit(51, ENEMY, UnitKind::Phalangite, Hex::new(8, 6))
         .unit(52, ENEMY, UnitKind::Phalangite, Hex::new(7, 8))
@@ -107,12 +107,12 @@ fn athens_t40_visible_line_orders_spearman_46_into_city() {
         .city(11, ME, city, 4)
         .city(6, ME, Hex::new(6, 18), 3)
         .city(4, ENEMY, Hex::new(12, 7), 5)
-        .unit(35, ME, UnitKind::Soldier, city)
-        .unit(46, ME, UnitKind::Soldier, Hex::new(7, 15))
+        .unit(35, ME, UnitKind::Spearman, city)
+        .unit(46, ME, UnitKind::Spearman, Hex::new(7, 15))
         .unit(3, ME, UnitKind::Phalangite, Hex::new(6, 14))
-        .unit(19, ENEMY, UnitKind::Soldier, Hex::new(7, 13))
-        .unit(39, ENEMY, UnitKind::Soldier, Hex::new(8, 13))
-        .unit(42, ENEMY, UnitKind::Soldier, Hex::new(9, 13))
+        .unit(19, ENEMY, UnitKind::Spearman, Hex::new(7, 13))
+        .unit(39, ENEMY, UnitKind::Spearman, Hex::new(8, 13))
+        .unit(42, ENEMY, UnitKind::Spearman, Hex::new(9, 13))
         .build();
     relation(&mut view, RelationState::War);
     view.turn = 40;
@@ -167,11 +167,11 @@ fn athens_t36_garrisons_before_a_legal_spartan_declaration() {
         .city(11, ME, city, 4)
         .city(6, ME, Hex::new(6, 18), 3)
         .city(4, ENEMY, Hex::new(12, 7), 4)
-        .unit(3, ME, UnitKind::Soldier, Hex::new(6, 14))
-        .unit(35, ME, UnitKind::Soldier, Hex::new(8, 17))
-        .unit(19, ENEMY, UnitKind::Soldier, Hex::new(8, 11))
-        .unit(39, ENEMY, UnitKind::Soldier, Hex::new(6, 12))
-        .unit(42, ENEMY, UnitKind::Soldier, Hex::new(9, 9))
+        .unit(3, ME, UnitKind::Spearman, Hex::new(6, 14))
+        .unit(35, ME, UnitKind::Spearman, Hex::new(8, 17))
+        .unit(19, ENEMY, UnitKind::Spearman, Hex::new(8, 11))
+        .unit(39, ENEMY, UnitKind::Spearman, Hex::new(6, 12))
+        .unit(42, ENEMY, UnitKind::Spearman, Hex::new(9, 9))
         .build();
     view.turn = 36;
     view.diplomacy.legacy = false;
@@ -204,7 +204,7 @@ fn scout_can_capture_broken_city_so_a_free_soldier_garrisons_it() {
     let mut view = ViewBuilder::new(20, 14)
         .city(1, ME, city, 3)
         .city(2, ENEMY, Hex::new(16, 6), 3)
-        .unit(1, ME, UnitKind::Soldier, Hex::new(4, 6))
+        .unit(1, ME, UnitKind::Spearman, Hex::new(4, 6))
         .unit(50, ENEMY, UnitKind::Scout, Hex::new(9, 6))
         .build();
     relation(&mut view, RelationState::War);
@@ -247,13 +247,13 @@ fn walled_city_forecast_to_fall_continues_defender_production() {
     let mut view = ViewBuilder::new(24, 16)
         .city(1, ME, city, 3)
         .city(2, ENEMY, Hex::new(18, 6), 3)
-        .unit(1, ME, UnitKind::Ranger, city)
-        .unit(50, ENEMY, UnitKind::Ranger, Hex::new(8, 6))
-        .unit(51, ENEMY, UnitKind::Ranger, Hex::new(8, 5))
-        .unit(52, ENEMY, UnitKind::Ranger, Hex::new(8, 7))
-        .unit(53, ENEMY, UnitKind::Soldier, Hex::new(7, 6))
-        .unit(54, ENEMY, UnitKind::Soldier, Hex::new(7, 5))
-        .unit(55, ENEMY, UnitKind::Soldier, Hex::new(7, 7))
+        .unit(1, ME, UnitKind::Archer, city)
+        .unit(50, ENEMY, UnitKind::Archer, Hex::new(8, 6))
+        .unit(51, ENEMY, UnitKind::Archer, Hex::new(8, 5))
+        .unit(52, ENEMY, UnitKind::Archer, Hex::new(8, 7))
+        .unit(53, ENEMY, UnitKind::Spearman, Hex::new(7, 6))
+        .unit(54, ENEMY, UnitKind::Spearman, Hex::new(7, 5))
+        .unit(55, ENEMY, UnitKind::Spearman, Hex::new(7, 7))
         .gold(300)
         .build();
     relation(&mut view, RelationState::War);
@@ -306,11 +306,11 @@ fn army_at_war_replaces_a_front_city_build_until_its_gap_closes() {
     let mut view = ViewBuilder::new(24, 16)
         .city(1, ME, city, 4)
         .city(2, ENEMY, Hex::new(18, 6), 3)
-        .unit(50, ENEMY, UnitKind::Ranger, Hex::new(8, 6))
-        .unit(51, ENEMY, UnitKind::Ranger, Hex::new(8, 5))
-        .unit(52, ENEMY, UnitKind::Ranger, Hex::new(8, 7))
-        .unit(53, ENEMY, UnitKind::Ranger, Hex::new(9, 6))
-        .unit(54, ENEMY, UnitKind::Ranger, Hex::new(9, 5))
+        .unit(50, ENEMY, UnitKind::Archer, Hex::new(8, 6))
+        .unit(51, ENEMY, UnitKind::Archer, Hex::new(8, 5))
+        .unit(52, ENEMY, UnitKind::Archer, Hex::new(8, 7))
+        .unit(53, ENEMY, UnitKind::Archer, Hex::new(9, 6))
+        .unit(54, ENEMY, UnitKind::Archer, Hex::new(9, 5))
         .build();
     relation(&mut view, RelationState::War);
     view.cities[0].walls = true;
@@ -363,7 +363,7 @@ fn nearest_city_builds_a_second_defender_for_the_same_front() {
     .into_iter()
     .enumerate()
     {
-        builder = builder.unit(50 + id as u32, ENEMY, UnitKind::Ranger, at);
+        builder = builder.unit(50 + id as u32, ENEMY, UnitKind::Archer, at);
     }
     let mut view = builder.build();
     relation(&mut view, RelationState::War);
@@ -420,7 +420,7 @@ fn war_front_trains_the_newest_available_line_tier() {
             Order::SetProduction {
                 city: legatum_core::CityId(1),
                 item: ProductionItem::Unit {
-                    unit: UnitKind::AssaultTrooper
+                    unit: UnitKind::Musketman
                 }
             }
         )),
@@ -443,7 +443,7 @@ fn nearly_finished_defender_completes_before_retooling() {
     relation(&mut view, RelationState::War);
     let detail = view.cities[0].detail.as_mut().unwrap();
     detail.producing = Some(ProductionItem::Unit {
-        unit: UnitKind::Soldier,
+        unit: UnitKind::Spearman,
     });
     detail
         .options
@@ -451,7 +451,7 @@ fn nearly_finished_defender_completes_before_retooling() {
         .find(|o| {
             o.item
                 == ProductionItem::Unit {
-                    unit: UnitKind::Soldier,
+                    unit: UnitKind::Spearman,
                 }
         })
         .unwrap()
@@ -491,9 +491,9 @@ fn action(view: &mut PlayerView, order: Order) {
 fn peaceful_army_at_the_gate_has_tactical_exposure() {
     let mut view = ViewBuilder::new(24, 16)
         .city(1, ME, Hex::new(8, 8), 3)
-        .unit(1, ME, UnitKind::Ranger, Hex::new(7, 8))
-        .unit(50, ENEMY, UnitKind::Soldier, Hex::new(9, 8))
-        .unit(51, ENEMY, UnitKind::Ranger, Hex::new(9, 7))
+        .unit(1, ME, UnitKind::Archer, Hex::new(7, 8))
+        .unit(50, ENEMY, UnitKind::Spearman, Hex::new(9, 8))
+        .unit(51, ENEMY, UnitKind::Archer, Hex::new(9, 7))
         .build();
     relation(&mut view, RelationState::Peace);
     action(
@@ -582,7 +582,7 @@ fn unseen_approach_and_rival_border_call_for_a_settler_escort() {
     let mut view = ViewBuilder::new(30, 14)
         .city(1, ME, Hex::new(2, 6), 3)
         .unit(1, ME, UnitKind::Settler, from)
-        .unit(2, ME, UnitKind::Soldier, Hex::new(3, 6))
+        .unit(2, ME, UnitKind::Spearman, Hex::new(3, 6))
         .owner(Hex::new(10, 9), ENEMY)
         .build();
     relation(&mut view, RelationState::Peace);
@@ -671,10 +671,10 @@ fn dispatch_funds_visible_peacetime_fronts_from_one_treasury_only_when_war_is_le
     let mut view = ViewBuilder::new(36, 20)
         .city(1, ME, Hex::new(6, 6), 3)
         .city(2, ME, Hex::new(16, 6), 3)
-        .unit(50, ENEMY, UnitKind::Soldier, Hex::new(10, 6))
-        .unit(51, ENEMY, UnitKind::Ranger, Hex::new(10, 5))
-        .unit(52, ENEMY, UnitKind::Soldier, Hex::new(20, 6))
-        .unit(53, ENEMY, UnitKind::Ranger, Hex::new(20, 5))
+        .unit(50, ENEMY, UnitKind::Spearman, Hex::new(10, 6))
+        .unit(51, ENEMY, UnitKind::Archer, Hex::new(10, 5))
+        .unit(52, ENEMY, UnitKind::Spearman, Hex::new(20, 6))
+        .unit(53, ENEMY, UnitKind::Archer, Hex::new(20, 5))
         .build();
     relation(&mut view, RelationState::Peace);
     action(
@@ -692,7 +692,7 @@ fn dispatch_funds_visible_peacetime_fronts_from_one_treasury_only_when_war_is_le
         detail.options.retain(|o| {
             o.item
                 == (ProductionItem::Unit {
-                    unit: UnitKind::Soldier,
+                    unit: UnitKind::Spearman,
                 })
         });
         detail.options[0].buy_cost = Some(200);
@@ -710,7 +710,7 @@ fn dispatch_funds_visible_peacetime_fronts_from_one_treasury_only_when_war_is_le
             o,
             Order::BuyItem {
                 item: ProductionItem::Unit {
-                    unit: UnitKind::Soldier
+                    unit: UnitKind::Spearman
                 },
                 ..
             }
@@ -749,12 +749,12 @@ fn dispatch_reserves_upkeep_across_two_readiness_purchases() {
     let mut view = ViewBuilder::new(36, 20)
         .city(1, ME, Hex::new(6, 6), 3)
         .city(2, ME, Hex::new(16, 6), 3)
-        .unit(1, ME, UnitKind::Soldier, Hex::new(3, 14))
-        .unit(2, ME, UnitKind::Soldier, Hex::new(4, 14))
-        .unit(50, ENEMY, UnitKind::Soldier, Hex::new(10, 6))
-        .unit(51, ENEMY, UnitKind::Ranger, Hex::new(10, 5))
-        .unit(52, ENEMY, UnitKind::Soldier, Hex::new(20, 6))
-        .unit(53, ENEMY, UnitKind::Ranger, Hex::new(20, 5))
+        .unit(1, ME, UnitKind::Spearman, Hex::new(3, 14))
+        .unit(2, ME, UnitKind::Spearman, Hex::new(4, 14))
+        .unit(50, ENEMY, UnitKind::Spearman, Hex::new(10, 6))
+        .unit(51, ENEMY, UnitKind::Archer, Hex::new(10, 5))
+        .unit(52, ENEMY, UnitKind::Spearman, Hex::new(20, 6))
+        .unit(53, ENEMY, UnitKind::Archer, Hex::new(20, 5))
         .build();
     relation(&mut view, RelationState::Peace);
     action(
@@ -774,7 +774,7 @@ fn dispatch_reserves_upkeep_across_two_readiness_purchases() {
         detail.options.retain(|o| {
             o.item
                 == ProductionItem::Unit {
-                    unit: UnitKind::Soldier,
+                    unit: UnitKind::Spearman,
                 }
         });
         detail.options[0].buy_cost = Some(200);
@@ -795,10 +795,10 @@ fn dispatch_keeps_a_surviving_melee_garrison_against_an_immediate_capture() {
     let home = Hex::new(6, 6);
     let view = ViewBuilder::new(24, 16)
         .city(1, ME, home, 3)
-        .unit(1, ME, UnitKind::Trooper, home)
-        .unit(2, ME, UnitKind::Trooper, Hex::new(5, 6))
-        .unit(50, ENEMY, UnitKind::Soldier, Hex::new(8, 6))
-        .unit(51, ENEMY, UnitKind::Ranger, Hex::new(9, 6))
+        .unit(1, ME, UnitKind::Pikeman, home)
+        .unit(2, ME, UnitKind::Pikeman, Hex::new(5, 6))
+        .unit(50, ENEMY, UnitKind::Spearman, Hex::new(8, 6))
+        .unit(51, ENEMY, UnitKind::Archer, Hex::new(9, 6))
         .build();
     let orders = plan(&view, AiDifficulty::Hard);
     assert!(
@@ -820,7 +820,7 @@ fn dispatch_does_not_send_a_ranged_unit_to_capture_an_empty_city() {
     let mut view = ViewBuilder::new(26, 18)
         .city(1, ME, Hex::new(5, 8), 3)
         .city(9, ENEMY, target, 3)
-        .unit(1, ME, UnitKind::Ranger, Hex::new(9, 8))
+        .unit(1, ME, UnitKind::Archer, Hex::new(9, 8))
         .build();
     view.cities
         .iter_mut()
@@ -837,9 +837,9 @@ fn settler_takes_a_safe_route_away_from_war_without_an_escort() {
     let view = ViewBuilder::new(28, 20)
         .city(1, ME, home, 3)
         .unit(1, ME, UnitKind::Settler, home)
-        .unit(2, ME, UnitKind::Soldier, home)
-        .unit(3, ME, UnitKind::Soldier, Hex::new(5, 6))
-        .unit(50, ENEMY, UnitKind::Soldier, Hex::new(10, 6))
+        .unit(2, ME, UnitKind::Spearman, home)
+        .unit(3, ME, UnitKind::Spearman, Hex::new(5, 6))
+        .unit(50, ENEMY, UnitKind::Spearman, Hex::new(10, 6))
         .build();
     assert!(view.at_war(ME, ENEMY));
     let mut params = crate::AiParams::builtin();
@@ -864,9 +864,9 @@ fn dispatch_keeps_the_settler_moving_when_a_garrison_blocks_its_escort() {
     let mut view = ViewBuilder::new(28, 20)
         .city(1, ME, Hex::new(4, 4), 3)
         .unit(1, ME, UnitKind::Settler, at)
-        .unit(2, ME, UnitKind::Soldier, at)
-        .unit(3, ME, UnitKind::Soldier, Hex::new(8, 5))
-        .unit(50, ENEMY, UnitKind::Soldier, Hex::new(12, 6))
+        .unit(2, ME, UnitKind::Spearman, at)
+        .unit(3, ME, UnitKind::Spearman, Hex::new(8, 5))
+        .unit(50, ENEMY, UnitKind::Spearman, Hex::new(12, 6))
         .build();
     view.failed_city_sites.insert(at);
     let orders = plan(&view, AiDifficulty::Hard);
@@ -891,8 +891,8 @@ fn dispatch_preserves_the_escorted_settlers_founding_destination() {
     let mut view = ViewBuilder::new(28, 20)
         .city(1, ME, Hex::new(4, 4), 3)
         .unit(1, ME, UnitKind::Settler, at)
-        .unit(2, ME, UnitKind::Soldier, at)
-        .unit(50, ENEMY, UnitKind::Soldier, Hex::new(12, 6))
+        .unit(2, ME, UnitKind::Spearman, at)
+        .unit(50, ENEMY, UnitKind::Spearman, Hex::new(12, 6))
         .build();
     view.failed_city_sites.insert(at);
     let orders = plan(&view, AiDifficulty::Hard);
@@ -931,7 +931,7 @@ fn dispatch_preserves_the_escorted_settlers_founding_destination() {
 fn dispatch_maintains_containment_but_allows_peace_when_home_is_overrun() {
     let mut view = ViewBuilder::new(28, 20)
         .city(1, ME, off(4, 6), 3)
-        .unit(1, ME, UnitKind::Soldier, off(4, 6))
+        .unit(1, ME, UnitKind::Spearman, off(4, 6))
         .build();
     relation(&mut view, RelationState::War);
     view.standings = vec![
@@ -968,9 +968,9 @@ fn dispatch_maintains_containment_but_allows_peace_when_home_is_overrun() {
     assert!(normal.contains(&peace), "{normal:?}");
     assert!(!plan_without_runaway(&view, AiDifficulty::Hard).contains(&peace));
     let overrun = ViewBuilder { view }
-        .unit(50, ENEMY, UnitKind::Trooper, off(7, 6))
-        .unit(51, ENEMY, UnitKind::Trooper, off(7, 5))
-        .unit(52, ENEMY, UnitKind::Trooper, off(7, 7))
+        .unit(50, ENEMY, UnitKind::Pikeman, off(7, 6))
+        .unit(51, ENEMY, UnitKind::Pikeman, off(7, 5))
+        .unit(52, ENEMY, UnitKind::Pikeman, off(7, 7))
         .build();
     let orders = plan_without_runaway(&overrun, AiDifficulty::Hard);
     assert!(orders.contains(&peace), "{orders:?}");
@@ -1007,11 +1007,11 @@ fn dispatch_requires_ranged_support_before_declaring_an_optional_siege() {
     assert!(declares(&view, AiDifficulty::Normal));
     assert!(!declares(&view, AiDifficulty::Hard));
     let supported = ViewBuilder { view }
-        .unit(5, ME, UnitKind::Ranger, off(8, 7))
-        .unit(6, ME, UnitKind::Ranger, off(9, 7))
-        .unit(7, ME, UnitKind::Ranger, off(9, 6))
-        .unit(8, ME, UnitKind::Ranger, off(9, 5))
-        .unit(9, ME, UnitKind::Ranger, off(8, 8))
+        .unit(5, ME, UnitKind::Archer, off(8, 7))
+        .unit(6, ME, UnitKind::Archer, off(9, 7))
+        .unit(7, ME, UnitKind::Archer, off(9, 6))
+        .unit(8, ME, UnitKind::Archer, off(9, 5))
+        .unit(9, ME, UnitKind::Archer, off(8, 8))
         .build();
     assert!(declares(&supported, AiDifficulty::Hard));
 }

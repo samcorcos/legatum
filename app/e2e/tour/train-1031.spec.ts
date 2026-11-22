@@ -95,12 +95,12 @@ for (const size of SIZES) test.describe(`train-1031 ${size.name}`, () => {
       const g = citiesFixture('Germany');
       g.players[0].techs = [...TECHS];
       const bern = g.cities.filter((c) => c.owner === 0).sort((a, b) => a.id - b.id)[0];
-      bern.population = 8; bern.buildings = ['Laboratory', 'Workshop'];
+      bern.population = 8; bern.buildings = ['Library', 'Workshop'];
       const art = spawnUnit(g, 0, 'Artillery', fromOffset(5, 5), false);
       refreshVision(g);
       await loadFixture(p, coreFixture(g), 2);
       await selectThing(p, 'city', bern.id);
-      for (const [key, name] of [['b:MachineShop', '12-germany-ruhr-foundry'], ['u:Fighter', '13-aircraft-oil'], ['u:Artillery', '14-artillery-card']] as const) {
+      for (const [key, name] of [['b:Forge', '12-germany-ruhr-foundry'], ['u:Fighter', '13-aircraft-oil'], ['u:Artillery', '14-artillery-card']] as const) {
         const card = p.locator(`.city-panel .production-choice[data-item="${key}"]`).first();
         if (!await card.count()) { test.info().annotations.push({ type: 'missing', description: key }); continue; }
         await card.scrollIntoViewIfNeeded();
@@ -118,7 +118,7 @@ for (const size of SIZES) test.describe(`train-1031 ${size.name}`, () => {
     test.setTimeout(180_000);
     const m = citiesFixture('Mongols');
     m.players[0].techs.push('Mathematics');
-    const soldier = spawnUnit(m, 0, 'Soldier', fromOffset(5, 5), false);
+    const soldier = spawnUnit(m, 0, 'Spearman', fromOffset(5, 5), false);
     refreshVision(m);
     await loadFixture(page, coreFixture(m), 2);
     await selectThing(page, 'unit', soldier.id);

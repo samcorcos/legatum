@@ -52,7 +52,7 @@ function play(s: MState, turns: Record<number, Order[]>[] = [{}]) {
 }
 
 it('fixtureClient route views copy both the array and its hexes', () => {
-  const s = fixture(); const u = mover(s, 0, 'Soldier', neighbors(middle)[0], neighbors(middle)[3]); u.path = [middle, u.goto!];
+  const s = fixture(); const u = mover(s, 0, 'Spearman', neighbors(middle)[0], neighbors(middle)[3]); u.path = [middle, u.goto!];
   refreshVision(s); const view = buildView(s, 0), shown = view.units.find((v) => v.id === u.id)!;
   shown.path![0].q += 1; shown.path!.pop();
   expect(u.path).toEqual([middle, u.goto]);
@@ -70,7 +70,7 @@ describe.skipIf(!available)('movement WASM behavior', () => {
     for (const p of s.players) p.explored.fill(1);
     for (let row = 0; row < 12; row++) for (let col = 5; col <= 8; col++) s.owner[idxOf(s, fromOffset(col, row))] = 1;
     const goal = (row: number) => fromOffset(6, row);
-    const soldier = spawnUnit(s, 0, 'Soldier', fromOffset(3, 2), false);
+    const soldier = spawnUnit(s, 0, 'Spearman', fromOffset(3, 2), false);
     const scout = spawnUnit(s, 0, 'Scout', fromOffset(3, 4), false);
     const settler = spawnUnit(s, 0, 'Settler', fromOffset(3, 6), false);
     const orders: Order[] = [
@@ -153,9 +153,9 @@ describe.skipIf(!available)('movement WASM behavior', () => {
   it.each(['border', 'civilian', 'soldier'] as const)('confirmed routes respect Peace %s through save/load', (blocker) => {
     const s = fixture(); for (const r of s.diplomacy!.relations) r.state = 'Peace';
     const start = fromOffset(3, 4), goal = fromOffset(7, 4), blocked = fromOffset(4, 4);
-    const u = mover(s, 0, 'Soldier', start, goal); u.path = [4, 5, 6, 7].map((col) => fromOffset(col, 4));
+    const u = mover(s, 0, 'Spearman', start, goal); u.path = [4, 5, 6, 7].map((col) => fromOffset(col, 4));
     if (blocker === 'border') s.owner[idxOf(s, blocked)] = 1;
-    else spawnUnit(s, 1, blocker === 'civilian' ? 'Settler' : 'Soldier', blocked, false);
+    else spawnUnit(s, 1, blocker === 'civilian' ? 'Settler' : 'Spearman', blocked, false);
     const { core, reports } = play(s, [{}, {}, {}, {}]);
     expect(core.view(0).units.find((v) => v.id === u.id)!.pos).toEqual(goal);
     expect(reports.flat().some((e) => e.type === 'Battle' || e.type === 'SettlerCaptured')).toBe(false);
@@ -164,7 +164,7 @@ describe.skipIf(!available)('movement WASM behavior', () => {
   it('a move blocked two turns by a peaceful unit stops, names the blocker and asks for orders', () => {
     const s = fixture(); for (const r of s.diplomacy!.relations) r.state = 'Peace';
     const scout = spawnUnit(s, 1, 'Scout', middle, false);
-    const u = mover(s, 0, 'Trooper', neighbors(middle)[0], middle);
+    const u = mover(s, 0, 'Pikeman', neighbors(middle)[0], middle);
     const { fixtureClient, core, reports } = play(s, [{}, {}, {}]);
     const stop = (es: Event[]) => es.filter((e) => e.type === 'MoveBlocked' && e.unit === u.id && e.reason.startsWith('move stopped'));
     expect(stop(reports[0])).toEqual([]);
@@ -180,14 +180,14 @@ describe.skipIf(!available)('movement WASM behavior', () => {
   });
   it('rejects a newly confirmed route across known closed territory', () => {
     const s = fixture(); for (const r of s.diplomacy!.relations) r.state = 'Peace';
-    const u = mover(s, 0, 'Soldier', neighbors(middle)[0], neighbors(middle)[3]); u.goto = null;
+    const u = mover(s, 0, 'Spearman', neighbors(middle)[0], neighbors(middle)[3]); u.goto = null;
     s.owner[idxOf(s, middle)] = 1;
     const { reports } = play(s, [{ 0: [{ type: 'MoveUnitPath', unit: u.id, to: neighbors(middle)[3], path: [middle, neighbors(middle)[3]] }] }]);
     expect(reports[0]).toContainEqual(expect.objectContaining({ type: 'OrderFailed', player: 0 }));
   });
   it('neutral arrivals never stack or fight: the stronger side moves in (rules 51)', () => {
     const s = fixture(); for (const r of s.diplomacy!.relations) r.state = 'Peace';
-    const a = mover(s, 0, 'Soldier', neighbors(middle)[0], middle);
+    const a = mover(s, 0, 'Spearman', neighbors(middle)[0], middle);
     const b = mover(s, 1, 'Settler', neighbors(middle)[3], middle);
     const { core, reports } = play(s);
     expect(reports[0].some((e) => e.type === 'Bounce' || e.type === 'Battle' || e.type === 'SettlerCaptured')).toBe(false);
@@ -195,52 +195,52 @@ describe.skipIf(!available)('movement WASM behavior', () => {
     expect(core.view(1).units.find((u) => u.id === b.id)!.pos).toEqual(b.pos);
   });
   it.each(['enemy', 'city', 'civilian', 'friend', 'settler'] as const)('repaths confirmed routes around %s through save/load', (blocker) => {
-    const s = fixture(); const u = mover(s, 0, blocker === 'settler' ? 'Settler' : 'Soldier', fromOffset(3, 4), fromOffset(7, 4));
+    const s = fixture(); const u = mover(s, 0, blocker === 'settler' ? 'Settler' : 'Spearman', fromOffset(3, 4), fromOffset(7, 4));
     u.path = [4, 5, 6, 7].map((col) => fromOffset(col, 4));
     if (blocker === 'city') addCity(s, 1, 200, u.path[0]);
-    else spawnUnit(s, blocker === 'friend' ? 0 : 1, blocker === 'civilian' ? 'Settler' : 'Soldier', u.path[0], false);
+    else spawnUnit(s, blocker === 'friend' ? 0 : 1, blocker === 'civilian' ? 'Settler' : 'Spearman', u.path[0], false);
     const { core, reports } = play(s, [{}, {}, {}, {}]);
     expect(core.view(0).units.find((v) => v.id === u.id)!.pos).toEqual(u.goto);
     // Passing an enemy city at War draws its fire (cities fire back); the route never attacks.
     expect(reports.flat().some((e) => (e.type === 'Battle' && typeof e.attacker === 'number') || e.type === 'SettlerCaptured')).toBe(false);
   });
   it.each(['city', 'unit', 'civilian'] as const)('rejects known intermediate hostile %s', (blocker) => {
-    const s = fixture(); const u = mover(s, 0, 'Soldier', neighbors(middle)[0], neighbors(middle)[3]);
+    const s = fixture(); const u = mover(s, 0, 'Spearman', neighbors(middle)[0], neighbors(middle)[3]);
     u.goto = null;
-    if (blocker === 'city') addCity(s, 1, 200); else spawnUnit(s, 1, blocker === 'unit' ? 'Soldier' : 'Settler', middle, false);
+    if (blocker === 'city') addCity(s, 1, 200); else spawnUnit(s, 1, blocker === 'unit' ? 'Spearman' : 'Settler', middle, false);
     const { reports } = play(s, [{ 0: [{ type: 'MoveUnitPath', unit: u.id, to: neighbors(middle)[3], path: [middle, neighbors(middle)[3]] }] }]);
     expect(reports[0].some((e) => e.type === 'OrderFailed')).toBe(true);
   });
   it.each([false, true])('sequences own traffic, including a single-hex choke (%s)', (choke) => {
     const s = fixture(); const starts = [neighbors(middle)[0], neighbors(middle)[5]], goals = [neighbors(middle)[2], neighbors(middle)[3]];
-    const a = mover(s, 0, 'Ranger', starts[0], goals[0]), b = mover(s, 0, 'Ranger', starts[1], goals[1]);
+    const a = mover(s, 0, 'Archer', starts[0], goals[0]), b = mover(s, 0, 'Archer', starts[1], goals[1]);
     if (choke) { s.terrain.fill('Mountains'); for (const h of [...starts, ...goals, middle, ...s.units.filter((u) => u.kind === 'Settler').map((u) => u.pos)]) s.terrain[idxOf(s, h)] = 'Grassland'; }
     const { core } = play(s);
     expect([a, b].map((u) => core.view(0).units.find((v) => v.id === u.id)!.pos)).toEqual(goals);
   });
   it('preserves simultaneous friendly cycles', () => {
     const s = fixture(); const tiles = [middle, neighbors(middle)[0], neighbors(middle)[1]];
-    const us = tiles.map((h, i) => mover(s, 0, 'Soldier', h, tiles[(i + 1) % 3]));
+    const us = tiles.map((h, i) => mover(s, 0, 'Spearman', h, tiles[(i + 1) % 3]));
     const { core } = play(s);
     expect(us.map((u) => core.view(0).units.find((v) => v.id === u.id)!.pos)).toEqual(us.map((u) => u.goto));
   });
-  for (const kind of ['Soldier', 'Ranger', 'Marksman', 'CompositeArcher'] as const) {
+  for (const kind of ['Spearman', 'Archer', 'Crossbowman', 'CompositeArcher'] as const) {
     it.each(['none', 'incoming', 'garrison'] as const)(`${kind} city entry against %s`, (defender) => {
       const s = fixture(); addCity(s, 1);
       const a = mover(s, 0, kind, neighbors(middle)[0], middle);
       if (defender !== 'none') {
-        const b = spawnUnit(s, 1, 'Soldier', defender === 'incoming' ? neighbors(middle)[3] : middle, false); b.hp = 1;
+        const b = spawnUnit(s, 1, 'Spearman', defender === 'incoming' ? neighbors(middle)[3] : middle, false); b.hp = 1;
         if (defender === 'incoming') b.goto = middle;
       }
       const { core, reports } = play(s);
-      expect(core.view(0).cities.find((c) => c.id === 1)!.owner).toBe(kind === 'Soldier' ? 0 : 1);
-      if (kind !== 'Soldier') expect(reports[0]).toContainEqual(expect.objectContaining({ type: 'MoveBlocked', unit: a.id, reason: "Ranged units can't capture cities; move a melee unit in" }));
+      expect(core.view(0).cities.find((c) => c.id === 1)!.owner).toBe(kind === 'Spearman' ? 0 : 1);
+      if (kind !== 'Spearman') expect(reports[0]).toContainEqual(expect.objectContaining({ type: 'MoveBlocked', unit: a.id, reason: "Ranged units can't capture cities; move a melee unit in" }));
     });
   }
   it.each([1, 7, 42, '18446744073709551615'])('teammate HP and seeded capture arbitration, seed %s', (seed) => {
     for (const hp of [[100, 100], [100, 60], [60, 100]]) {
       const s = fixture([0, 0, 1], String(seed)); addCity(s, 2);
-      const a = mover(s, 0, 'Soldier', neighbors(middle)[0], middle, hp[0]), b = mover(s, 1, 'Soldier', neighbors(middle)[3], middle, hp[1]);
+      const a = mover(s, 0, 'Spearman', neighbors(middle)[0], middle, hp[0]), b = mover(s, 1, 'Spearman', neighbors(middle)[3], middle, hp[1]);
       const { core, reports } = play(s);
       const owner = core.view(0).cities.find((c) => c.id === 1)!.owner;
       expect(owner).not.toBe(2);
@@ -250,13 +250,13 @@ describe.skipIf(!available)('movement WASM behavior', () => {
   });
   it('three-way meetings apply every fight from the same snapshot', () => {
     const s = fixture();
-    for (let owner = 0; owner < 3; owner++) mover(s, owner, 'Soldier', neighbors(middle)[owner * 2], middle);
+    for (let owner = 0; owner < 3; owner++) mover(s, owner, 'Spearman', neighbors(middle)[owner * 2], middle);
     const { reports } = play(s);
     expect(reports[0].filter((e) => e.type === 'Battle')).toHaveLength(3);
   });
   it('updates a captured city out of sight without exposing private details', () => {
     const s = fixture(); addCity(s, 1);
-    mover(s, 0, 'Soldier', neighbors(middle)[0], middle);
+    mover(s, 0, 'Spearman', neighbors(middle)[0], middle);
     const { fixtureClient, core } = play(s);
     for (const client of [fixtureClient, core]) {
       expect(client.view(0).cities.find((c) => c.id === 1)).toMatchObject({ owner: 0, visible: true });
@@ -265,8 +265,8 @@ describe.skipIf(!available)('movement WASM behavior', () => {
   });
   it('p84: five attackers take the city and the four that stayed outside are ready for orders', () => {
     const s = fixture(); addCity(s, 1);
-    spawnUnit(s, 1, 'Soldier', middle, false).hp = 1;
-    const attackers = neighbors(middle).slice(0, 5).map((h) => mover(s, 0, 'Soldier', h, middle));
+    spawnUnit(s, 1, 'Spearman', middle, false).hp = 1;
+    const attackers = neighbors(middle).slice(0, 5).map((h) => mover(s, 0, 'Spearman', h, middle));
     const { fixtureClient, core } = play(s);
     for (const client of [fixtureClient, core]) {
       expect(client.view(0).cities.find((c) => c.id === 1)!.owner).toBe(0);
@@ -285,9 +285,9 @@ describe.skipIf(!available)('movement WASM behavior', () => {
     const s = fixture(who === 'teammate' ? [0, 0, 1] : [0, 1, 2]);
     if (who === 'ally') s.diplomacy!.relations.find((r) => r.a === 0 && r.b === 1)!.state = 'Alliance';
     const victim = 2;
-    addCity(s, victim); spawnUnit(s, victim, 'Soldier', middle, false).hp = 1;
-    mover(s, 1, 'Soldier', neighbors(middle)[0], middle);
-    const far = mover(s, 0, 'Soldier', fromOffset(1, 5), middle);
+    addCity(s, victim); spawnUnit(s, victim, 'Spearman', middle, false).hp = 1;
+    mover(s, 1, 'Spearman', neighbors(middle)[0], middle);
+    const far = mover(s, 0, 'Spearman', fromOffset(1, 5), middle);
     far.path = [fromOffset(2, 5), fromOffset(3, 5), middle]; far.path_stop_on_block = true;
     // A rival (not allied, not a teammate) keeps its own war order at the city.
     const { fixtureClient, core } = play(s);
@@ -301,7 +301,7 @@ describe.skipIf(!available)('movement WASM behavior', () => {
   it('p84: an attack order on a unit that died before movement ends with needs_orders', () => {
     const s = fixture(); const [a, b] = [neighbors(middle)[0], neighbors(neighbors(middle)[3])[3]];
     const scout = spawnUnit(s, 1, 'Scout', b, false);
-    const u = mover(s, 0, 'Soldier', a, b); u.attack_target = scout.id;
+    const u = mover(s, 0, 'Spearman', a, b); u.attack_target = scout.id;
     s.units.splice(s.units.indexOf(scout), 1);
     const { fixtureClient, core } = play(s);
     for (const client of [fixtureClient, core]) {
@@ -310,15 +310,15 @@ describe.skipIf(!available)('movement WASM behavior', () => {
     }
   });
   it('swaps are one meeting and the survivor advances', () => {
-    const s = fixture(); const a = mover(s, 0, 'Trooper', middle, neighbors(middle)[0]); mover(s, 1, 'Soldier', a.goto!, middle, 1);
+    const s = fixture(); const a = mover(s, 0, 'Pikeman', middle, neighbors(middle)[0]); mover(s, 1, 'Spearman', a.goto!, middle, 1);
     const { reports, core } = play(s);
     expect(reports[0].filter((e) => e.type === 'Battle')).toHaveLength(1);
     expect(core.view(0).units.find((u) => u.id === a.id)!.pos).toEqual(a.goto);
   });
   it('a blocked owner does not retry on an unrelated player advance', () => {
-    const s = fixture(); spawnUnit(s, 0, 'Soldier', middle, false);
-    mover(s, 0, 'Soldier', neighbors(middle)[0], middle); mover(s, 0, 'Soldier', neighbors(middle)[3], middle);
-    mover(s, 1, 'Soldier', fromOffset(14, 4), fromOffset(16, 4)); play(s);
+    const s = fixture(); spawnUnit(s, 0, 'Spearman', middle, false);
+    mover(s, 0, 'Spearman', neighbors(middle)[0], middle); mover(s, 0, 'Spearman', neighbors(middle)[3], middle);
+    mover(s, 1, 'Spearman', fromOffset(14, 4), fromOffset(16, 4)); play(s);
   });
   // Playtest-6.2 "The Last Bridge": city c, a friend m beside it, a free tile f beside it, and
   // a soldier r touching both. Every rotation, so the hex-order tie-break meets the friend.
@@ -330,7 +330,7 @@ describe.skipIf(!available)('movement WASM behavior', () => {
     const { c, m, f, r } = lastBridge(d);
     const s = fixture(); addCity(s, 1, 200, c);
     for (const p of s.players) p.explored.fill(1);
-    const friend = spawnUnit(s, 0, 'Soldier', m, false), right = spawnUnit(s, 0, 'Soldier', r, false);
+    const friend = spawnUnit(s, 0, 'Spearman', m, false), right = spawnUnit(s, 0, 'Spearman', r, false);
     refreshVision(s);
     const friendOrder: Order = { type: 'MoveUnit', unit: friend.id, to: c };
     const preview = previewRoute(buildView(s, 0), r, c, [friendOrder], right.id);
@@ -346,7 +346,7 @@ describe.skipIf(!available)('movement WASM behavior', () => {
     const { c, m, f, r } = lastBridge(d);
     const s = fixture(); addCity(s, 1, 200, c);
     for (const p of s.players) p.explored.fill(1);
-    const friend = spawnUnit(s, 0, 'Soldier', m, false), right = spawnUnit(s, 0, 'Soldier', r, false);
+    const friend = spawnUnit(s, 0, 'Spearman', m, false), right = spawnUnit(s, 0, 'Spearman', r, false);
     const { core, reports } = play(s, [{ 0: [{ type: 'MoveUnit', unit: friend.id, to: c }, { type: 'MoveUnitPath', unit: right.id, to: c, path: [m, c] }] }]);
     expect(reports[0].some((e) => e.type === 'Battle' && e.attacker === right.id)).toBe(true);
     expect(core.view(0).units.find((u) => u.id === right.id)!.pos).toEqual(f);
@@ -355,7 +355,7 @@ describe.skipIf(!available)('movement WASM behavior', () => {
     const { c, m, f, r } = lastBridge(d);
     const s = fixture(); addCity(s, 1, 200, c);
     for (const p of s.players) p.explored.fill(1);
-    const friend = mover(s, 0, 'Soldier', m, neighbors(m)[d]), right = mover(s, 0, 'Soldier', r, c);
+    const friend = mover(s, 0, 'Spearman', m, neighbors(m)[d]), right = mover(s, 0, 'Spearman', r, c);
     const { core } = play(s);
     expect(core.view(0).units.find((u) => u.id === right.id)!.pos).toEqual(f);
     expect(core.view(0).units.find((u) => u.id === friend.id)!.pos).toEqual(neighbors(m)[d]);
@@ -363,7 +363,7 @@ describe.skipIf(!available)('movement WASM behavior', () => {
   it('a row ordered onto one city takes distinct approach tiles and nobody bounces', () => {
     const s = fixture(); addCity(s, 1, 200, middle);
     const row = [-1, 0, 1].map((k) => ({ q: middle.q - 1 + k, r: middle.r + 2 }));
-    const ids = row.map((h) => mover(s, 0, 'Soldier', h, middle).id);
+    const ids = row.map((h) => mover(s, 0, 'Spearman', h, middle).id);
     const { core, reports } = play(s, [{}, {}]);
     expect(reports.flat().some((e) => (e.type === 'MoveBlocked' && ids.includes(e.unit)) || e.type === 'Bounce')).toBe(false);
     expect(reports[0].filter((e) => e.type === 'Battle' && ids.includes(e.attacker as number))).toHaveLength(2);
@@ -379,47 +379,47 @@ describe.skipIf(!available)('movement WASM behavior', () => {
   };
   it('two parked friends in a row cannot be crossed on one move: the unit waits beside them and names the first', () => {
     const s = corridor();
-    const a = mover(s, 0, 'Soldier', fromOffset(2, 4), fromOffset(8, 4));
-    spawnUnit(s, 0, 'Soldier', fromOffset(3, 4), false);
-    spawnUnit(s, 0, 'Soldier', fromOffset(4, 4), false);
+    const a = mover(s, 0, 'Spearman', fromOffset(2, 4), fromOffset(8, 4));
+    spawnUnit(s, 0, 'Spearman', fromOffset(3, 4), false);
+    spawnUnit(s, 0, 'Spearman', fromOffset(4, 4), false);
     const { core, reports } = play(s);
     expect(reports[0]).toContainEqual(expect.objectContaining({ type: 'MoveBlocked', unit: a.id, reason: expect.stringMatching(/^blocked by .+'s Spearman, which did not move$/) }));
     expect(core.view(0).units.find((u) => u.id === a.id)!.goto).toEqual(fromOffset(8, 4));
   });
   it('a unit passes through a parked friend in one hop and never ends on it (Civ 6, user 2026-10-21)', () => {
     const s = corridor();
-    const a = mover(s, 0, 'Soldier', fromOffset(2, 4), fromOffset(9, 4));
-    spawnUnit(s, 0, 'Soldier', fromOffset(3, 4), false);
+    const a = mover(s, 0, 'Spearman', fromOffset(2, 4), fromOffset(9, 4));
+    spawnUnit(s, 0, 'Spearman', fromOffset(3, 4), false);
     const { core, reports } = play(s, [{}, {}]);
     expect(reports[0]).toContainEqual(expect.objectContaining({ type: 'UnitMoved', unit: a.id, from: fromOffset(2, 4), to: fromOffset(4, 4) }));
     expect(core.view(0).units.find((u) => u.id === a.id)!.pos).toEqual(fromOffset(6, 4));
   });
   it('a unit passes through its own garrisoned city', () => {
     const s = corridor(); addCity(s, 0, 200, fromOffset(4, 4));
-    spawnUnit(s, 0, 'Soldier', fromOffset(4, 4), false);
-    const a = mover(s, 0, 'Soldier', fromOffset(3, 4), fromOffset(9, 4));
+    spawnUnit(s, 0, 'Spearman', fromOffset(4, 4), false);
+    const a = mover(s, 0, 'Spearman', fromOffset(3, 4), fromOffset(9, 4));
     const { core } = play(s);
     expect(core.view(0).units.find((u) => u.id === a.id)!.pos).toEqual(fromOffset(5, 4));
   });
   it('a hop that does not fit the moves left waits on the last free tile it passed', () => {
     const s = corridor();
-    const a = mover(s, 0, 'Soldier', fromOffset(0, 4), fromOffset(9, 4));
-    spawnUnit(s, 0, 'Soldier', fromOffset(2, 4), false);
+    const a = mover(s, 0, 'Spearman', fromOffset(0, 4), fromOffset(9, 4));
+    spawnUnit(s, 0, 'Spearman', fromOffset(2, 4), false);
     const { core } = play(s, [{}, {}]);
     expect(core.view(0).units.find((u) => u.id === a.id)!.pos).toEqual(fromOffset(3, 4));
   });
   it('a move that would end on a parked friend stops beside it', () => {
     const s = corridor();
-    const a = mover(s, 0, 'Soldier', fromOffset(2, 4), fromOffset(3, 4));
-    spawnUnit(s, 0, 'Soldier', fromOffset(3, 4), false);
+    const a = mover(s, 0, 'Spearman', fromOffset(2, 4), fromOffset(3, 4));
+    spawnUnit(s, 0, 'Spearman', fromOffset(3, 4), false);
     const { core, reports } = play(s);
     expect(reports[0]).toContainEqual(expect.objectContaining({ type: 'MoveBlocked', unit: a.id }));
     expect(core.view(0).units.find((u) => u.id === a.id)!.pos).toEqual(fromOffset(2, 4));
   });
   it('the preview crosses a parked friend and the order resolves as previewed', () => {
     const s = corridor();
-    const a = spawnUnit(s, 0, 'Soldier', fromOffset(2, 4), false);
-    spawnUnit(s, 0, 'Soldier', fromOffset(3, 4), false);
+    const a = spawnUnit(s, 0, 'Spearman', fromOffset(2, 4), false);
+    spawnUnit(s, 0, 'Spearman', fromOffset(3, 4), false);
     for (const p of s.players) p.explored.fill(1);
     refreshVision(s);
     const goal = fromOffset(8, 4), preview = previewRoute(buildView(s, 0), a.pos, goal, [], a.id);
@@ -429,7 +429,7 @@ describe.skipIf(!available)('movement WASM behavior', () => {
     expect(core.view(0).units.find((u) => u.id === a.id)!.pos).toEqual(fromOffset(4, 4));
   });
   it('forecasts zero damage from an ungarrisoned defeated city', () => {
-    const s = fixture(); addCity(s, 1); const a = mover(s, 0, 'Soldier', neighbors(middle)[0], middle);
+    const s = fixture(); addCity(s, 1); const a = mover(s, 0, 'Spearman', neighbors(middle)[0], middle);
     refreshVision(s); const fixtureClient = new FixtureClient(); fixtureClient.load(JSON.stringify(s)); const core = makeCore(); core.load(coreFixture(s));
     (expect(fixtureClient.forecast(0, a.id, middle, 'Melee')).toMatchSnapshot(), void (core.forecast(0, a.id, middle, 'Melee')));
     expect(core.forecast(0, a.id, middle, 'Melee')!.expected_damage_to_attacker).toBe(0);

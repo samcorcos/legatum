@@ -83,3 +83,67 @@ fn a_rules_49_state_upgrades_and_plays_ten_turns() {
     );
     legatum_core::validation::check_state(&state).unwrap();
 }
+
+/// The fixture predates the 2026-11-22 identifier rename (rules 52): its units and buildings
+/// carry the old names (`Soldier`, `Laboratory`, ...). They load through the serde aliases
+/// on `UnitKind` and `BuildingKind`, and the engine writes only the new names back.
+#[test]
+fn a_rules_49_state_names_the_old_identifiers_and_loads_as_the_renamed_kinds() {
+    use legatum_core::{BuildingKind, UnitKind};
+    let json = rules_49_json();
+    let raw: serde_json::Value = serde_json::from_str(&json).unwrap();
+    let state = upgrade_from_49(&json).expect("upgrade");
+    let units = raw["units"].as_object().unwrap();
+    let cities = raw["cities"].as_object().unwrap();
+    for (old, kind, new) in [
+        ("Soldier", UnitKind::Spearman, "Spearman"),
+        ("Ranger", UnitKind::Archer, "Archer"),
+        ("Marksman", UnitKind::Crossbowman, "Crossbowman"),
+        ("AssaultTrooper", UnitKind::Musketman, "Musketman"),
+        ("Heir", UnitKind::HeirToTheThrone, "HeirToTheThrone"),
+    ] {
+        let recorded = units.values().filter(|u| u["kind"] == old).count();
+        assert!(recorded > 0, "the fixture has no {old}");
+        assert_eq!(units.values().filter(|u| u["kind"] == new).count(), 0);
+        let loaded = state.units.values().filter(|u| u.kind == kind).count();
+        assert_eq!(loaded, recorded, "{old} loads as {kind:?}");
+    }
+    for (old, kind) in [
+        ("Laboratory", BuildingKind::Library),
+        ("College", BuildingKind::University),
+        ("Clearinghouse", BuildingKind::Bank),
+        ("Hydroponics", BuildingKind::Mill),
+        ("MachineShop", BuildingKind::Forge),
+        ("RelayUplink", BuildingKind::GreatLibrary),
+        ("WarShrine", BuildingKind::Agoge),
+    ] {
+        let holds =
+            |c: &serde_json::Value| c["buildings"].as_array().unwrap().iter().any(|b| b == old);
+        let recorded = cities.values().filter(|c| holds(c)).count();
+        assert!(recorded > 0, "the fixture has no {old}");
+        let loaded = state
+            .cities
+            .values()
+            .filter(|c| c.buildings.contains(&kind))
+            .count();
+        assert_eq!(loaded, recorded, "{old} loads as {kind:?}");
+    }
+    // Written back, no unit or building keeps an old name.
+    let saved = serde_json::to_value(&state).unwrap();
+    let old_units = ["Soldier", "Ranger", "Marksman", "AssaultTrooper", "Heir"];
+    assert!(
+        saved["units"]
+            .as_object()
+            .unwrap()
+            .values()
+            .all(|u| !old_units.contains(&u["kind"].as_str().unwrap()))
+    );
+    let old_buildings = ["Laboratory", "College", "Clearinghouse", "Hydroponics"];
+    assert!(saved["cities"].as_object().unwrap().values().all(|c| {
+        c["buildings"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|b| !old_buildings.contains(&b.as_str().unwrap()))
+    }));
+}

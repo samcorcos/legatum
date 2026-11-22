@@ -40,7 +40,7 @@ it.skipIf(!available)('WASM agree on fog-safe decisions, moves, ruin finds, and 
 });
 it.skipIf(!available).each([100, 80, 59])('fixtureClient planner matches WASM for threats and damage (%i HP)', (hp) => {
   const s = explorationFixture(); s.units[0].hp = hp;
-  s.units.push({ ...s.units[0], id: 9, owner: 1, kind: 'Ranger', pos: { q: 3, r: 4 } });
+  s.units.push({ ...s.units[0], id: 9, owner: 1, kind: 'Archer', pos: { q: 3, r: 4 } });
   s.nextUnitId = 9;
   core.load(explorationCoreSave(s));
   const view = core.view(0);
@@ -50,7 +50,7 @@ it.skipIf(!available).each([100, 80, 59])('fixtureClient planner matches WASM fo
 it.skipIf(!available)('both planners retreat out of adjacent enemy range before stopping', () => {
   const s = explorationFixture(); s.units[0].hp = 59;
   s.terrain.fill('Plains');
-  s.units.push({ ...s.units[0], id: 9, owner: 1, kind: 'Soldier', pos: fromOffset(4, 4) });
+  s.units.push({ ...s.units[0], id: 9, owner: 1, kind: 'Spearman', pos: fromOffset(4, 4) });
   s.nextUnitId = 9;
   core.load(explorationCoreSave(s));
   const view = core.view(0); const order = plan(view, 0);
@@ -82,7 +82,7 @@ it.skipIf(!available).each(['complete', 'manual', 'blocked'] as const)('%s auto-
   const scout = s.units[0];
   scout.hp = 70; scout.fortify = 3; scout.automation = 'Explore';
   const target = fromOffset(4, 4);
-  if (stop === 'blocked') s.units.push({ ...scout, id: 3, kind: 'Soldier', pos: target, automation: null });
+  if (stop === 'blocked') s.units.push({ ...scout, id: 3, kind: 'Spearman', pos: target, automation: null });
   const fixtureClient = new FixtureClient(); fixtureClient.load(JSON.stringify(s)); core.load(explorationCoreSave(s));
   const order: Order = stop === 'blocked'
     ? { type: 'SetAutomation', unit: 0, automation: 'Explore', path: [target] }

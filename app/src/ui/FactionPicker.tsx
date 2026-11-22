@@ -191,7 +191,7 @@ export function FactionPicker({
   );
 }
 
-const FACT_ICONS = { lose: 'ui-trend-down', counter: 'unit-soldier' } as const;
+const FACT_ICONS = { lose: 'ui-trend-down', counter: 'unit-spearman' } as const;
 
 /** Where in the game a goal is acted on (only goals with an action of their own). */
 const goalWhere = (faction: Exclude<FactionChoice, 'Random'>, goal: FactionGoal): string | null => {

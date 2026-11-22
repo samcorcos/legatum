@@ -146,7 +146,7 @@ fn arena(scenario: Scenario, seed: u64) -> (GameState, Vec<UnitId>, Hex) {
     let escort_ids = (0..scenario.escorts)
         .map(|i| {
             let h = HOME.neighbor((i + 1) % 6);
-            spawn_unit(&mut state, PlayerId(0), UnitKind::Soldier, h)
+            spawn_unit(&mut state, PlayerId(0), UnitKind::Spearman, h)
         })
         .collect();
     let camp = Hex::new(
@@ -166,7 +166,7 @@ fn arena(scenario: Scenario, seed: u64) -> (GameState, Vec<UnitId>, Hex) {
     let threats: Vec<_> = (0..count)
         .map(|i| {
             let pos = if i == 0 { camp } else { camp.neighbor(i) };
-            spawn_unit(&mut state, PlayerId::BARBARIAN, UnitKind::Soldier, pos)
+            spawn_unit(&mut state, PlayerId::BARBARIAN, UnitKind::Spearman, pos)
         })
         .collect();
     state
