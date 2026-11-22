@@ -185,7 +185,7 @@ it('clicking anywhere on a card researches it now; Shift+click queues it at the 
   clickCard(card(a).querySelector('.era-card-name')!);
   expect(queued()).toEqual([a]);
   clickCard(card(b), { shiftKey: true });
-  clickCard(card(c).querySelector('.era-unlocks, .era-stepping')!, { shiftKey: true });
+  clickCard(card(c).querySelector('.era-unlocks')!, { shiftKey: true });
   expect(queued()).toEqual([a, b, c]);
   // A plain click on a queued card moves it to the front, exactly like "Research now".
   clickCard(card(c));

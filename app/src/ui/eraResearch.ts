@@ -20,11 +20,17 @@ export interface EraRow {
   techs: TechId[];
 }
 
+/** The techs this empire's research screens show: every tech but those its faction skips (they give it nothing). */
+export function researchCatalog(r: ResearchView): TechOption[] {
+  const skipped = new Set(r.skipped ?? []);
+  return r.catalog.filter((t) => !skipped.has(t.tech));
+}
+
 /** One row per era: Ancient first. The current era is the first that still has an unknown tech. */
 export function eraRows(r: ResearchView): EraRow[] {
   const known = new Set(r.known);
   const byEra = new Map<number, TechOption[]>();
-  for (const t of r.catalog) byEra.set(t.era, [...(byEra.get(t.era) ?? []), t]);
+  for (const t of researchCatalog(r)) byEra.set(t.era, [...(byEra.get(t.era) ?? []), t]);
   const eras = [...new Set([...byEra.keys(), r.era])].sort((a, b) => a - b);
   return eras.map((era): EraRow => {
     const techs = (byEra.get(era) ?? []).map((t) => t.tech);
@@ -40,7 +46,7 @@ export function eraRows(r: ResearchView): EraRow[] {
 
 /** The current era's cards: every tech of the era, known ones included, in research order. */
 export function currentEraTechs(r: ResearchView): TechOption[] {
-  return r.catalog.filter((t) => t.era === r.era);
+  return researchCatalog(r).filter((t) => t.era === r.era);
 }
 
 /** Who entered each era first, as the empire's id: `era_firsts` is public. */

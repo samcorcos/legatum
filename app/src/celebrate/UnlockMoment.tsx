@@ -6,7 +6,7 @@ import type { Moment } from './moments';
 import type { UnlockCard, UnlockTile } from './unlockCard';
 import { itemArtUrl, slugUrl, unlockEntryArt } from '../unlockArt';
 import { resourceArtUrl } from '../icons';
-import { isGreatWork } from '../data';
+import { costInFactionYield, costYield, isGreatWork } from '../data';
 import { parseUpgradeEffect } from '../ui/unlockCardModel';
 
 /** A tile's painted miniature (null while unpainted: the tile keeps its icon). */
@@ -61,17 +61,14 @@ export function UnlockMomentCard({ moment, dismiss }: { moment: Moment; dismiss(
   const soleItem = items.length === 1 && card.tiles.every((tile) => tile === items[0] || tile.icon.startsWith('resource-'));
   return <>
     <div className="unlock-scrim" aria-hidden="true" />
-    <article key={moment.id} className={`moment-card unlock${card.steppingStone ? ' quiet' : ''}`} data-primary={card.primary} data-dense={card.tiles.length > 2 ? 'true' : undefined} data-tier={moment.tier} data-tech={card.tech} aria-label={`${moment.title}: technology discovered`}>
-      {!card.steppingStone && <div className="unlock-crest"><span className="unlock-rays" aria-hidden="true" />
-        <span className="unlock-seal"><Icon name={card.icon} size={30} /></span></div>}
+    <article key={moment.id} className="moment-card unlock" data-primary={card.primary} data-dense={card.tiles.length > 2 ? 'true' : undefined} data-tier={moment.tier} data-tech={card.tech} aria-label={`${moment.title}: technology discovered`}>
+      <div className="unlock-crest"><span className="unlock-rays" aria-hidden="true" />
+        <span className="unlock-seal"><Icon name={card.icon} size={30} /></span></div>
       <div className="unlock-kicker">{card.kicker}</div>
       <h2 className="unlock-title">{moment.title}</h2>
       <p className="unlock-quote">“{card.quote}”</p>
       <div className="unlock-rule" aria-hidden="true"><svg width="10" height="10" viewBox="-5.5 -5.5 11 11"><path d="M0 -5L.95 -.95L5 0L.95 .95L0 5L-.95 .95L-5 0L-.95 -.95Z" fill="var(--accent)" /></svg></div>
       <div className="unlock-body">
-      {card.steppingStone ? <div className="unlock-stone" data-testid="unlock-stepping-stone">
-        <b>{card.steppingStone.headline}</b>{card.steppingStone.leadsTo && <span>{card.steppingStone.leadsTo}</span>}
-      </div> : <>
         <div className="unlock-label">Unlocks</div>
         <ul className="unlock-tiles" data-count={card.tiles.length} data-hero={soleItem ? 'true' : undefined} aria-label="Unlocks">
           {card.tiles.map((t, i) => <li key={`${t.key ?? t.name}-${i}`} className={`unlock-tile ${t.kind.toLowerCase()}${t.icon.startsWith('unit-') ? ' unit-art' : ''}`}>
@@ -79,13 +76,12 @@ export function UnlockMomentCard({ moment, dismiss }: { moment: Moment; dismiss(
             <TileIllustration tile={t} multiple={card.tiles.length > 1} />
             <span className="unlock-text">
               <span className="unlock-name" title={t.name}>{t.name}</span>
-              {t.kind !== 'Effect' && (t.cost !== null || t.turns !== null || t.upgradeFrom) && <span className="unlock-cost">{t.cost !== null && <Amount n={t.cost} unit="Production" />}{t.turns !== null && t.inCity && ` · ${turnsText(t.turns)} in ${t.inCity}`}{t.upgradeFrom && `${t.cost !== null || t.turns !== null ? ' · ' : ''}From ${t.upgradeFrom}`}</span>}
+              {t.kind !== 'Effect' && (t.cost !== null || t.turns !== null || t.upgradeFrom) && <span className="unlock-cost">{t.cost !== null && <Amount n={costInFactionYield(t.faction, t.cost)} unit={costYield(t.faction)} />}{t.turns !== null && t.inCity && ` · ${turnsText(t.turns)} in ${t.inCity}`}{t.upgradeFrom && `${t.cost !== null || t.turns !== null ? ' · ' : ''}From ${t.upgradeFrom}`}</span>}
               {t.sentence && <span className="unlock-sentence" title={t.sentence}><Amounts text={t.sentence} /></span>}
               {t.notes.length > 0 && <span className="unlock-cost unlock-notes">{t.notes.join(' · ').replace(/^./, (c) => c.toUpperCase())}</span>}
             </span>
           </li>)}
         </ul>
-      </>}
       {card.next && <p className="unlock-next">Research continues: <b>{card.next.name}</b>{card.next.turns !== null && ` · ${turnsText(card.next.turns)}`}{card.next.unlocks && ` · unlocks ${card.next.unlocks}`}</p>}
       {card.chooseNext && <p className="unlock-next" data-testid="unlock-choose-next"><b>No research is set.</b> Choose the next one under Technologies.</p>}
       </div>

@@ -1,6 +1,7 @@
 import { isTauri, invoke } from '@tauri-apps/api/core';
 import { rememberedSeat } from '../remote';
 import { HOSTED } from './hosted';
+import { uploadGameHistory, uploadsGames } from './gameUpload';
 
 interface History {
   metadata: { game_id: string; turn_count: number; finished_at: string | null; outcome: string };
@@ -53,7 +54,8 @@ async function deliver(json: string): Promise<boolean> {
     await invoke('archive_commit', { ticket: staged.ticket });
     return true;
   }
-  // The hosted web build has no archive server: histories stay on this device (Export game history).
+  // The hosted web build uploads each game (gameUpload.ts); a build without an upload address keeps histories on this device (Export game history).
+  if (uploadsGames()) return uploadGameHistory(json);
   if (HOSTED) return false;
   const status = await fetch('/api/status', { signal: AbortSignal.timeout(5000), cache: 'no-store' });
   if (status.status === 404) return false;
