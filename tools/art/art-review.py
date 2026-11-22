@@ -3,7 +3,8 @@
 art the branch's other changes imply should have changed too.
 
   tools/art/art-review.py changed BASE TIP           # art files added, modified, renamed or deleted
-  tools/art/art-review.py sheet BASE TIP OUT_DIR     # one PNG per changed set: old | new | set neighbours, colour + grey
+  tools/art/art-review.py sheet BASE TIP OUT_DIR [--with=slug,...]  # one PNG per changed set: old | new | neighbours
+                                                     # (--with adds named neighbours: predecessor, class siblings)
   tools/art/art-review.py impact BASE TIP            # code changes that should have come with art changes
 
 `sheet` draws each changed file at the sizes the game shows that set (see SIZES), beside the old version (from BASE)
@@ -16,7 +17,10 @@ Chromium (SVG and raster alike), using app/node_modules of the main checkout.
   - a new enum variant of a kind that carries art (UnitKind, BuildingKind, Faction, Resource, Improvement);
   - an art slug wired in app/src (unitArt.ts, unlockArt.ts, ...) with no file behind it;
   - an art file deleted while tools/art/distinctness.json, a README or a prompt still names it;
-  - an art file changed with no prompt, README or PROVENANCE line touched beside it.
+  - an art file changed with no prompt, README or PROVENANCE line touched beside it;
+  - a raster with detached opaque islands (a floating shrub, pouch or speck the key cut loose);
+  - a repainted unit whose roundel, icon or older sibling prompts did not change;
+  - art changed with no PROVENANCE.md change.
 """
 import base64
 import json
@@ -34,8 +38,10 @@ SIZES = {
     "units": [48, 96], "unlocks": [64, 128], "cities": [64, 128], "construction": [64, 128], "icons": [16, 24, 48],
     "heraldry": [24, 56, 96], "resources": [18, 32, 64], "improvements": [64, 128], "map-features": [64, 128],
     "art": [128, 256], "eras": [320], "rewards": [26, 56], "siege-props": [48, 96], "wonders": [64, 128],
-    "terrain": [64, 128],
+    "terrain": [64, 128], "landmarks": [64, 128],
 }
+# The file judged for each changed piece, by suffix preference: one sheet per set, not one per size.
+MAIN = ("256", "512", "128", ".svg", "64", ".png", ".jpg")
 ART_KINDS = ("UnitKind", "BuildingKind", "Faction", "Resource", "Improvement")
 NAME_FILES = ("crates/core/src/data.rs", "crates/core/src/eras.rs")
 WIRING = re.compile(r"^app/src/(unitArt|unlockArt|resourceIcons|landmarks|portraits|siegeProps|icons|wonders)\.ts$"
@@ -53,10 +59,10 @@ def git(*args, check=True):
 def changes(base, tip):
     """[(status, path, old_path)] for every file BASE..TIP (renames detected)."""
     out = []
-    for line in git("diff", "--name-status", "-M", f"{base}...{tip}").decode().splitlines():
+    for line in git("diff", "--name-status", "-M", "-C", f"{base}...{tip}").decode().splitlines():
         parts = line.split("\t")
         st = parts[0][0]
-        if st == "R":
+        if st in "RC":
             out.append(("R", parts[2], parts[1]))
         else:
             out.append((st, parts[1], parts[1]))
@@ -97,22 +103,46 @@ def neighbours(tip, path, changed, n=8):
     return same[::step][:n]
 
 
-def sheet(base, tip, out_dir):
+def stem(path):
+    return re.sub(r"-(\d+|card|panel|source|roundel|map)$", "", Path(path).stem)
+
+
+def main_files(items):
+    """One file per changed piece: its judged size (MAIN order), so a repaint written at five sizes is shown once."""
+    by = {}
+    for st, path, old in items:
+        by.setdefault(stem(path), []).append((st, path, old))
+    out = []
+    for files in by.values():
+        files.sort(key=lambda f: next((i for i, k in enumerate(MAIN) if f[1].endswith(k + ".png") or f[1].endswith(k)),
+                                      len(MAIN)))
+        out.append(files[0])
+    return out
+
+
+def sheet(base, tip, out_dir, extra=()):
+    """EXTRA: slugs to show as neighbours too (the piece's predecessor, its class siblings), found in the same folder."""
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     groups = {}
     for st, path, old in art_changes(base, tip):
         if st == "D":
             continue
-        groups.setdefault((str(Path(path).parent), set_of(path)[1]), []).append((st, path, old))
+        groups.setdefault(str(Path(path).parent), []).append((st, path, old))
     if not groups:
         print("no art changed")
         return 0
     changed = {p for g in groups.values() for _, p, _ in g}
     pages = []
-    for (folder, key), items in sorted(groups.items()):
+    for folder, items in sorted(groups.items()):
+        items = main_files(items)
+        key = set_of(items[0][1])[1]
         sizes = SIZES.get(set_of(items[0][1])[0], [64, 128])
         nb = neighbours(tip, items[0][1], changed)
+        listing = (git("ls-tree", "--name-only", f"{tip}:{folder}", check=False) or b"").decode().splitlines()
+        for slug in extra:
+            hit = [f"{folder}/{x}" for x in listing if stem(x) == slug and set_of(f"{folder}/{x}")[1] == key]
+            nb = hit[:1] + [n for n in nb if n not in hit]
         rows = []
         for st, path, old in items:
             cells = [("new", path, blob(tip, path))]
@@ -163,6 +193,41 @@ def render(pages, out):
     sys.stdout.write(r.stdout)
     sys.stderr.write(r.stderr)
     return r.returncode
+
+
+def fragments(tip, path):
+    """Opaque islands of a raster at TIP that are at least 2% of the largest one but not it (a floating piece), and the
+    count of tiny specks; None for SVG or opaque art."""
+    data = blob(tip, path)
+    if not data or path.endswith(".svg"):
+        return None
+    from io import BytesIO
+    from PIL import Image
+    im = Image.open(BytesIO(data))
+    if im.mode != "RGBA":
+        return None
+    a = im.getchannel("A").resize((256, 256)) if max(im.size) > 256 else im.getchannel("A")
+    w, h = a.size
+    px = a.load()
+    seen, sizes = set(), []
+    for y in range(h):
+        for x in range(w):
+            if px[x, y] > 40 and (x, y) not in seen:
+                stack, n = [(x, y)], 0
+                seen.add((x, y))
+                while stack:
+                    cx, cy = stack.pop()
+                    n += 1
+                    for nx, ny in ((cx + 1, cy), (cx - 1, cy), (cx, cy + 1), (cx, cy - 1)):
+                        if 0 <= nx < w and 0 <= ny < h and (nx, ny) not in seen and px[nx, ny] > 40:
+                            seen.add((nx, ny))
+                            stack.append((nx, ny))
+                sizes.append(n)
+    if len(sizes) <= 1:
+        return None
+    sizes.sort(reverse=True)
+    real = [n for n in sizes[1:] if n >= max(4, sizes[0] * 0.003)]  # ignore dust a downscale leaves
+    return len(real) or None
 
 
 def added_removed(base, tip, path):
@@ -235,9 +300,31 @@ def impact(base, tip):
         stem = re.sub(r"-(\d+|card|panel|source|roundel)$", "", Path(old).stem)
         if st == "D" and stem in dj:
             lines.append(f"deleted {old} but tools/art/distinctness.json still names '{stem}'")
-        if st in "AMR" and str(Path(path).parent) not in notes_touched and not path.endswith(".svg"):
+        if st in "AMRC" and str(Path(path).parent) not in notes_touched and not path.endswith(".svg"):
             lines.append(f"{path} changed with no prompt, README or PROVENANCE change in its folder: is its prompt "
                          "and record current?")
+        if st in "AMRC":
+            n = fragments(tip, path)
+            if n:
+                lines.append(f"{path}: {n} detached opaque island(s) besides the main painting (a floating shrub, pouch "
+                             "or speck?): look at a crop")
+    # 6. A repainted unit whose icon or roundel did not change; sibling prompts the repaint left behind.
+    for st, path, old in all_changes:
+        m = re.match(r"^app/src/assets/units/([a-z0-9-]+)-256\.png$", path)
+        if m and st == "M":
+            slug = m.group(1)
+            if f"app/src/assets/units/{slug}-roundel.svg" not in paths:
+                lines.append(f"unit {slug} repainted but its roundel is unchanged: does the roundel's class mark still "
+                             "fit the new painting?")
+            icon = "app/src/assets/icons/unit-" + slug.replace("-", "") + ".svg"
+            if icon not in paths:
+                lines.append(f"unit {slug} repainted but {icon} is unchanged: does the icon still show the same thing?")
+            prompts = (git("ls-tree", "--name-only", f"{tip}:app/src/assets/units", check=False) or b"").decode()
+            for pr in prompts.splitlines():
+                if pr.startswith(slug + ".") and pr.endswith(".prompt.txt") and f"app/src/assets/units/{pr}" not in paths:
+                    lines.append(f"unit {slug} repainted; app/src/assets/units/{pr} is unchanged: still true, or stale?")
+    if any(ART.match(c[1]) for c in all_changes) and "app/src/assets/PROVENANCE.md" not in paths:
+        lines.append("art changed but app/src/assets/PROVENANCE.md did not: are the class rows and date ranges current?")
     print("\n".join(dict.fromkeys(lines)) if lines else "no art implied by the other changes")
     return 0
 
@@ -248,7 +335,8 @@ def main(argv):
             print(f"{st}\t{path}" + (f"\t(from {old})" if old != path else ""))
         return 0
     if len(argv) >= 4 and argv[0] == "sheet":
-        return sheet(argv[1], argv[2], argv[3])
+        extra = [a.split("=", 1)[1] for a in argv[4:] if a.startswith("--with=")]
+        return sheet(argv[1], argv[2], argv[3], [x for e in extra for x in e.split(",")])
     if len(argv) >= 3 and argv[0] == "impact":
         return impact(argv[1], argv[2])
     print(__doc__)

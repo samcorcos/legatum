@@ -17,10 +17,12 @@ The branch you are given, against `origin/master` (the merge base). Get the inpu
 
 ```
 tools/art/art-review.py changed origin/master <branch>          # art files the branch changed
-tools/art/art-review.py sheet origin/master <branch> <out dir>  # old | new | set neighbours, at display size, colour + grey
+tools/art/art-review.py sheet origin/master <branch> <out dir> [--with=slug,...]  # old | new | neighbours, display size, colour + grey
 tools/art/art-review.py impact origin/master <branch>           # candidates for art that should have changed
 python3 tools/art/distinctness.py --render --check              # the lookalike check (also runs in app tests)
 ```
+
+The tool picks neighbours from the same folder; it does not know classes or lineages, so pass `--with=` the piece's predecessor, successor and class siblings (for a tank: `tank,panzer,autonomous-armour`; for a building: the other buildings of its era). If the reviewed branch predates the tool, run master's copy against the branch (it reads the branch through git). The e2e map specs place a fixed set of units, so for an in-map shot of a new unit kind, add it to the fixture in a scratch copy rather than skipping the check.
 
 ## Job 1: changed art
 Look at every sheet (Read the PNG) and, for anything doubtful, the full-size file. For each changed piece:
@@ -29,7 +31,7 @@ Look at every sheet (Read the PNG) and, for anything doubtful, the full-size fil
 - **Subject is right:** for each thing a figure holds or wears, name it and its real form for that people and period, and find it in a crop (legatum-art "Review unit paintings for whether the figure makes sense"). Hands, grips, repeated props at the same size, nothing passing through anything. Proportions heroic, not cartoonish. A special unit beside the plain unit it replaces, for era. Portraits: exactly one man and one woman, faces distinct from the other peoples' portraits.
 - **No forbidden content:** no text or lettering, no real-world national insignia or modern state emblems, no real maker's product or design copied, no loaded symbols, nothing from another game.
 - **Not a recolour:** a changed piece that is an earlier piece in a new tint is a placeholder (`tools/art/unit-audit.py` for units).
-- **Technical:** real alpha with transparent corners for anything drawn over the map or as a plain `<img>`, every size derivative present, prompt saved beside it, PROVENANCE row current, `distinctness.json` entries added only with a written reason and removed with the art.
+- **Technical:** no detached islands (`impact` lists them: a shrub crown or sling pouch the key cut loose floats at card size), real alpha with transparent corners for anything drawn over the map or as a plain `<img>`, every size derivative present, prompt saved beside it, PROVENANCE row current, `distinctness.json` entries added only with a written reason and removed with the art.
 - **Map pieces:** if the change is drawn on the map (cities, units, improvements, landmarks, terrain, resources), also shoot it in context beside a city and on grass, desert and forest at normal and far zoom (see `app/e2e/art-map.spec.ts`, `terrain-units.spec.ts`, `landmarks-art.spec.ts`).
 
 ## Job 2: art that should have changed
