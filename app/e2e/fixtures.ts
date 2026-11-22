@@ -13,7 +13,9 @@ const root = fileURLToPath(new URL('../../', import.meta.url));
  * `relay` fixture for the tests that play online. Build the app for it with
  *   LEGATUM_RELAY_URL=http://127.0.0.1:8787 scripts/build-web.sh
  */
-export const E2E_RELAY = 'http://127.0.0.1:8787';
+// LEGATUM_E2E_RELAY points the online tests at a deployed relay instead (a live check before a release):
+//   LEGATUM_E2E_RELAY=https://legatum-relay.sam-1e7.workers.dev, with app/dist built for that relay.
+export const E2E_RELAY = process.env.LEGATUM_E2E_RELAY ?? 'http://127.0.0.1:8787';
 const BUILD_HINT = `Build first: LEGATUM_RELAY_URL=${E2E_RELAY} scripts/build-web.sh (needs the WASM engine; add --skip-wasm to reuse it).`;
 
 type Fixtures = {
@@ -44,6 +46,7 @@ export const testWithFailingRequests = base.extend<{}, { serverURL: string; rela
 
   // The real relay (infra/relay) under wrangler dev, on the port the e2e build expects.
   relay: [async ({}, use) => {
+    if (process.env.LEGATUM_E2E_RELAY) return use(E2E_RELAY);
     const dir = join(root, 'infra/relay');
     try {
       await access(join(dir, 'node_modules/.bin/wrangler'));
