@@ -51,6 +51,8 @@ scripts/build-web.sh
 cd app && npm run e2e:hosted
 ```
 
+When the build has `LEGATUM_GAMES_URL`, the hosted test answers requests to that Worker itself (no test game reaches the real bucket) and fails if no upload was sent. To check that path locally, build with any URL, for example `LEGATUM_GAMES_URL=https://legatum-games.example.workers.dev scripts/build-web.sh`, then run `npm run e2e:hosted`.
+
 ## The Mac app (signed and notarized)
 
 `.github/workflows/release-mac.yml` builds a universal app (Apple Silicon and Intel), signs it with a Developer
