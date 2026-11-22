@@ -132,8 +132,8 @@ export function AirWing({ city, view, planeId }: { city: CityView; view: PlayerV
     : refused ? describeOrder(refused, view).replace(/^[^:]*: /, '').replace(/^./, (c) => c.toUpperCase()) : '';
   const headline = airHeadline(plane, city, state, view);
   const status = why.length ? `${refusedText} · won’t resolve`
-    : state.kind === 'guard' && unanswered ? `Awaiting orders · on guard over ${guardRange(plane.kind)} tiles around ${city.name}`
-    : state.kind === 'idle' && unanswered ? `Awaiting orders · ${state.peaceful.length ? headline : `no targets within ${range} tiles`}`
+    : state.kind === 'guard' && unanswered ? `Needs orders · on guard over ${guardRange(plane.kind)} tiles around ${city.name}`
+    : state.kind === 'idle' && unanswered ? `Needs orders · ${state.peaceful.length ? headline : `no targets within ${range} tiles`}`
     : headline;
   const stats = unitStatsFor(view.players.find((p) => p.id === plane.owner)!.faction, plane.kind);
   const beforeUpgrade = pendingSpend(view, orders, errors).available({ type: 'UpgradeAircraft', plane: plane.id });

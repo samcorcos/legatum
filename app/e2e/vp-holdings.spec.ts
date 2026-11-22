@@ -35,7 +35,7 @@ async function eightEmpires(page: Page) {
 }
 
 async function openLedger(page: Page) {
-  await page.getByRole('button', { name: /^Every way to score/ }).click();
+  await page.locator('button.vh-chip').click();
   const sheet = page.getByTestId('objective-sheet');
   await expect(sheet.locator('.sl-table')).toBeVisible();
   return sheet;
@@ -65,7 +65,7 @@ for (const size of [{ width: 1000, height: 600 }, { width: 1440, height: 900 }])
         await scenario.start(page);
         await stageHoldings(page);
         await stageHold(page, { mine: true });
-        const chip = page.getByRole('button', { name: /^Every way to score/ });
+        const chip = page.locator('button.vh-chip');
         await expect(chip).toContainText('Score ledger');
         await expect(page.locator('.race-headline')).toContainText(/win(s)? in 1/);
         const sheet = await openLedger(page);

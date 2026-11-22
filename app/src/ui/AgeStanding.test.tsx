@@ -30,7 +30,7 @@ describe('the standing line of the oldest open Age', () => {
     const view = twoAges();
     act(() => root.render(<SidebarObjective view={view} model={buildVpModel(view)} />));
     const el = host.querySelector('[data-testid=era-hud]')!;
-    expect(el.querySelector('.sidebar-section-link')?.textContent).toContain('Age of Classical · 1 VP');
+    expect(el.querySelector('.sidebar-section-link')?.textContent).toContain('Classical Age · 1 VP');
     expect(el.querySelectorAll('[data-testid=era-objective]')).toHaveLength(1);
     expect(el.querySelector('.eo-text')?.textContent).toBe('Veterans');
     expect(el.querySelector('.eo-num')?.textContent).toBe('2/4');
@@ -40,7 +40,7 @@ describe('the standing line of the oldest open Age', () => {
     const view = twoAges();
     view.eras = view.eras.map((e) => (e.era === 2 ? { ...e, scored_by: [...e.scored_by, { player: view.me, slot: 0, turn: 50 }] } : e));
     act(() => root.render(<SidebarObjective view={view} model={buildVpModel(view)} />));
-    expect(host.querySelector('.sidebar-section-link')?.textContent).toContain('Age of Medieval · 1 VP');
+    expect(host.querySelector('.sidebar-section-link')?.textContent).toContain('Medieval Age · 1 VP');
     expect(host.querySelector('.eo-num')?.textContent).toBe('1/4');
   });
 });

@@ -30,7 +30,7 @@ const ALARM_ARM_MS = 600;
 
 const KICKER: Record<Exclude<Alarm['kind'], 'victoryHold' | 'victoryNear'>, string> = {
   war: 'Declaration of war', warByYou: 'Declaration of war', peace: 'Peace signed', alliance: 'Alliance formed',
-  allianceEnded: 'Diplomacy', callJoined: 'Call to arms answered',
+  allianceEnded: 'Alliance ended', callJoined: 'Call to arms answered',
   callDeclined: 'Call to arms declined', breach: 'A treaty broken', cityLost: 'A city is lost', allyWar: 'Your ally is attacked',
 };
 const NEAR_KICKER = { self: 'You are close to victory', ally: 'An ally is close to victory', rival: 'A rival is close to victory' } as const;
@@ -196,7 +196,8 @@ export function AlarmScreen() {
         {single && !isRace && <p className="alarm-motto">“{FACTION_INFO[single.faction].motto}”</p>}
       </div>
       <div className="alarm-actions">
-        <button ref={primary} className="btn primary alarm-primary" onClick={toArms}>
+        {/* Ink for a routine step; red only when the button itself is hostile (Declare war). */}
+        <button ref={primary} className={`btn primary alarm-primary${canDeclare ? ' hostile' : ''}`} onClick={toArms}>
           {primaryLabel}{!touch && <Kbd>Return</Kbd>}
         </button>
         {nearCity && <button className="btn alarm-diplomacy" onClick={() => close(nearCity.pos)}>Show on map</button>}
@@ -205,7 +206,6 @@ export function AlarmScreen() {
           close();
           useGame.getState().set({ diplomacyOpen: true, diplomacyTeam, reportOpen: false });
         }}>Open diplomacy</button>}
-        {!touch && <span className="alarm-esc"><Kbd>Esc</Kbd> {pending.length > 1 ? 'closes all moments' : 'closes'}</span>}
       </div>
       <div className="alarm-body">
         {isNear ? <NearDetail alarm={top} view={view} />

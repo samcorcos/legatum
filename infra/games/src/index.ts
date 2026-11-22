@@ -2,11 +2,21 @@
  * Legatum game uploads. The hosted web build posts each game's record (gzipped JSON, every seat under its
  * default name) to `PUT /v1/games/<game id>`, at least every five turns and when the game ends. The Worker
  * checks the shape and stores it in R2 as `games/<YYYY-MM>/<game id>.json.gz`, replacing the previous
- * checkpoint of the same game. It keeps nothing about the sender: no IP address, no headers, no logs.
+ * checkpoint of the same game. A client address may start at most MAX_NEW_GAMES_PER_DAY new games per UTC day
+ * (the `Quota` Durable Object). The only thing kept about a sender is a salted hash of that address (cut to
+ * the /64 for IPv6), for the current UTC day, inside the Durable Object: no raw IP address, no headers, no logs.
  */
+
+import { Quota, capFrom, clientIp } from "./quota";
+
+export { Quota };
 
 export interface Env {
   GAMES: R2Bucket;
+  /** Counts new games per client address and UTC day. */
+  QUOTA: DurableObjectNamespace<Quota>;
+  /** New games one client address may store per UTC day (default 50). A bad value falls back to the default. */
+  MAX_NEW_GAMES_PER_DAY?: string;
   ALLOWED_ORIGINS: string;
   /** Secret (`wrangler secret put READ_TOKEN`) for the private read API the analysis job on the developer's Mac uses. Unset = no read API. */
   READ_TOKEN?: string;
@@ -126,6 +136,16 @@ async function putGame(request: Request, env: Env, id: string): Promise<Response
   const m = checkRecord(id, record);
   if (typeof m === "string") return json({ error: m }, 422);
   const key = `games/${m.created_at.slice(0, 7)}/${id}.json.gz`;
+  // A later checkpoint of a stored game replaces it and is never counted. A new game spends the address's daily quota.
+  if (!(await env.GAMES.head(key))) {
+    const taken = await env.QUOTA.getByName("quota").take(clientIp(request), capFrom(env.MAX_NEW_GAMES_PER_DAY));
+    if (!taken.ok) {
+      return new Response(JSON.stringify({ error: "too many new games today" }), {
+        status: 429,
+        headers: { "content-type": "application/json", "Retry-After": String(taken.retryAfter) },
+      });
+    }
+  }
   await env.GAMES.put(key, bytes, {
     httpMetadata: { contentType: "application/json", contentEncoding: "gzip" },
     // For listing without downloading: who played what, how it ended.

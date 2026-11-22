@@ -144,6 +144,11 @@ export function Bar({ value, max, color, className }: { value: number; max: numb
   );
 }
 
+/** A requirement not met: an empty ring (the × is only for close and remove). */
+export function NotMetMark({ size = 11, className = '' }: { size?: number; className?: string }) {
+  return <span className={`not-met-mark ${className}`} role="img" aria-label="missing" style={{ width: size - 2, height: size - 2 }} />;
+}
+
 export function Kbd({ children }: { children: ReactNode }) {
   return <kbd className="kbd">{children}</kbd>;
 }

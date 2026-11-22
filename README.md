@@ -84,7 +84,7 @@ These clips are recorded from the running game.
 
 <table align="center">
   <tr>
-    <td width="50%"><img src="docs/media/loop-race.webp" alt="The race panel opens into the score ledger: every way to score, and which of eight empires holds each point." width="100%"></td>
+    <td width="50%"><img src="docs/media/loop-race.webp" alt="The Victory race opens into the Score ledger: every way to score, and which of eight empires holds each point." width="100%"></td>
     <td width="50%"><img src="docs/media/loop-research.webp" alt="The research screen with illustrated unlock cards and a unit hovercard." width="100%"></td>
   </tr>
   <tr>
@@ -92,7 +92,7 @@ These clips are recorded from the running game.
     <td valign="top"><sub><b>Technologies worth wanting.</b> Every unlock is illustrated, and a hover shows what it beats, what it loses to and how it compares with what it replaces.</sub></td>
   </tr>
   <tr>
-    <td width="50%"><img src="docs/media/loop-diplomacy.webp" alt="The Diplomacy inbox: an empire declined an Alliance, with every factor in its decision listed." width="100%"></td>
+    <td width="50%"><img src="docs/media/loop-diplomacy.webp" alt="Diplomacy, Inbox tab: an empire declined an Alliance, with every factor in its decision listed." width="100%"></td>
     <td width="50%"><img src="docs/media/loop-factions.webp" alt="The faction picker: the peoples, each with a sheet of strengths and the price that pays for them." width="100%"></td>
   </tr>
   <tr>
@@ -124,7 +124,7 @@ Every game played in the browser version is uploaded to us, so we can measure ho
 
 - **What is sent:** the game's record: the setup, every turn's orders, the score each turn and how long turns took. Player names are replaced with "Player 1", "AI 2" and so on before anything leaves your browser, and the server refuses a record with any other name.
 - **Coach questions:** if coach questions are on, your typed answers are uploaded with the game.
-- **What is not sent:** no account, no email, no cookies and no tracking. Legatum keeps no IP addresses or request logs.
+- **What is not sent:** no account, no email, no cookies and no tracking. Legatum keeps no request logs. To limit abuse, the upload server remembers a scrambled form of your internet address until the end of the day (UTC), which cannot be turned back into the address, and nothing else about you.
 - **Who can read it:** the records are stored privately and only the maintainer can read them. They may be used to train and test the game's AI.
 - **Turning it off:** uploads cannot be turned off in the browser version. Builds from source upload nothing.
 

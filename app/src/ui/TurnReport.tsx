@@ -52,8 +52,8 @@ export function LastTurnButton({ className = '' }: { className?: string }) {
   return (
     <button className={`btn quiet last-turn ${className}`} disabled={!report} aria-expanded={open}
       onClick={toggleLastTurnReport}
-      title={report ? `${open ? 'Close' : 'Open'} the turn ${report.turn} report (L)` : 'No report yet: one appears when the next turn resolves'}>
-      <span className="last-turn-label">Last turn{report ? ` · T${report.turn}` : ''}</span>
+      title={report ? `${open ? 'Close' : 'Open'} the turn report (L)` : 'No report yet: one appears when the next turn resolves'}>
+      <span className="last-turn-label">Turn report{report ? ` · T${report.turn}` : ''}</span>
       {counts && (counts.bad > 0 || counts.good > 0) && <span className="last-turn-counts">
         {counts.bad > 0 && <span className="chip-count bad"><ToneIcon tone="bad" />{counts.bad}<span className="sr-only"> bad</span></span>}
         {counts.good > 0 && <span className="chip-count good"><ToneIcon tone="good" />{counts.good}<span className="sr-only"> good</span></span>}
@@ -142,7 +142,7 @@ export function TurnReport({ embedded = false }: { embedded?: boolean }) {
   const newer = index >= 0 && index < history.length - 1 ? history[index + 1] : null;
   const isLatest = report === latest;
   const close = () => set({ reportOpen: false });
-  const kicker = <div className="report-kicker">{isLatest ? 'Last turn' : `${(latest?.turn ?? report.turn) - report.turn} turn${(latest?.turn ?? report.turn) - report.turn === 1 ? '' : 's'} ago`}</div>;
+  const kicker = <div className="report-kicker">{isLatest ? 'Latest' : `${(latest?.turn ?? report.turn) - report.turn} turn${(latest?.turn ?? report.turn) - report.turn === 1 ? '' : 's'} ago`}</div>;
   const show = (l: ReportLine) => {
     if (!l.at) return;
     jumpTo(l.at, true);
@@ -156,7 +156,7 @@ export function TurnReport({ embedded = false }: { embedded?: boolean }) {
       <div className={`report-head${embedded ? ' compact' : ''}`}>
         <div className="report-head-main">
           {!embedded && kicker}
-          {!embedded && <h3>What happened</h3>}
+          {!embedded && <h3>Turn report</h3>}
           <div className="report-stepper" role="group" aria-label="Turn">
             <button className="icon-btn report-step" disabled={!older} onClick={() => stepReport(-1)}
               aria-label={older ? `Previous turn: turn ${older.turn}` : 'No earlier report'} title={older ? `Turn ${older.turn} ([)` : `Reports are kept for the last ${history.length} turns`}>◀</button>
@@ -259,7 +259,7 @@ export function TurnReport({ embedded = false }: { embedded?: boolean }) {
                     {l.reopenHold && <button className="link rline-show-card" onClick={() => set({ holdReopen: l.reopenHold! })}>Show card</button>}
                     {l.openInboxTeam !== undefined && <button className="btn primary" onClick={() => set({
                       diplomacyOpen: true, diplomacyTeam: l.openInboxTeam!, reportOpen: false,
-                    })}>Open inbox</button>}
+                    })}>Open Diplomacy</button>}
                     {l.details.length > 0 && (
                       <div id={detailsId} className="rline-details" hidden={!isOpen}>
                         {l.details.map((d, k) => (
@@ -273,7 +273,7 @@ export function TurnReport({ embedded = false }: { embedded?: boolean }) {
             </div>
           ))}
       </div>
-      {!touch && <div className="report-foot muted">Reopen any time: <b>Last turn</b> in This Turn, or <Kbd>L</Kbd></div>}
+      {!touch && <div className="report-foot muted">Reopen any time: <b>Turn report</b> in This Turn, or <Kbd>L</Kbd></div>}
     </aside>
   );
 }

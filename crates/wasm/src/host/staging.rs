@@ -181,12 +181,36 @@ impl RoomError {
     };
 }
 
+/// A guest's display name as stored everywhere (seat, staging, saved history): control and
+/// format characters (bidi overrides, zero-width marks) removed, whitespace collapsed, trimmed
+/// and cut to 80 characters. May be empty; callers choose their own fallback.
+pub(crate) fn clean_name(value: &str) -> String {
+    fn hidden(c: char) -> bool {
+        c.is_control()
+            || matches!(c, '\u{AD}' | '\u{61C}' | '\u{200B}'..='\u{200F}' | '\u{202A}'..='\u{202E}'
+                | '\u{2060}'..='\u{2064}' | '\u{2066}'..='\u{206F}' | '\u{FEFF}')
+    }
+    // Whitespace controls (tab, newline) separate words, so they become spaces before stripping.
+    let spaced: String = value
+        .chars()
+        .map(|c| if c.is_whitespace() { ' ' } else { c })
+        .filter(|c| !hidden(*c))
+        .collect();
+    let joined = spaced.split_whitespace().collect::<Vec<_>>().join(" ");
+    joined
+        .chars()
+        .take(80)
+        .collect::<String>()
+        .trim()
+        .to_string()
+}
+
 fn name(value: &str) -> String {
-    let value = value.trim();
+    let value = clean_name(value);
     if value.is_empty() {
         "Player".into()
     } else {
-        value.chars().take(80).collect()
+        value
     }
 }
 

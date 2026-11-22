@@ -40,7 +40,8 @@ export async function expectSidebarReachable(page: Page) {
   const groups = ['.sidebar-alerts', '.sidebar-standings', '.sidebar-goal', '.sidebar-turn-more'];
   for (const selector of groups) {
     const detail = sidebar.locator(selector);
-    if (!await detail.count()) continue;
+    // An empty This Turn (no report, orders or alerts) is hidden beside the race.
+    if (!await detail.count() || !await detail.isVisible()) continue;
     const summary = detail.locator(':scope > summary');
     if (!await summary.count()) {
       await detail.locator('button.goal-action-btn').evaluate(el => el.scrollIntoView({ block: 'center' }));
@@ -67,12 +68,13 @@ export async function expectSidebarReachable(page: Page) {
   await scroll.hover({ position: { x: 25, y: 120 } });
   await page.mouse.wheel(0, 2000);
   await expect.poll(() => scroll.evaluate(el => el.scrollTop)).toBeGreaterThan(0);
-  const last = sidebar.locator('.sidebar-turn-more');
+  const turnMore = sidebar.locator('.sidebar-turn-more');
+  const last = await turnMore.isVisible() ? turnMore : sidebar.locator('.sidebar-standings');
   await last.evaluate(el => el.scrollIntoView({ block: 'end' }));
   await whole(sidebar.locator('.cta'));
   await whole(sidebar.locator('.race-headline'));
   // Keyboard also reaches the expanded content without being captured by the map.
-  await sidebar.locator('.sidebar-turn-more > summary').focus();
+  await last.locator(':scope > summary').focus();
   await page.keyboard.press('Tab');
   expect(await sidebar.evaluate(el => el.contains(document.activeElement))).toBe(true);
 }

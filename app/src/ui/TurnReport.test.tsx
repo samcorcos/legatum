@@ -61,7 +61,7 @@ it('Last turn in This Turn shows how the turn went and reopens the report', () =
   render();
   expect($('.report')).toBeNull();
   const button = $<HTMLButtonElement>('.seatbar .last-turn')!;
-  expect(button.textContent).toContain('Last turn · T2');
+  expect(button.textContent).toContain('Turn report · T2');
   expect(button.querySelector('.chip-count.bad')?.textContent).toBe('1 bad');
   expect(button.querySelector('.chip-count.bad .mask-icon')).not.toBeNull();
   act(() => button.click());
@@ -84,7 +84,7 @@ it('the L key toggles the latest report and [ ] step through turns', () => {
   render();
   key('l');
   expect($('.report')?.dataset.reportTurn).toBe('2');
-  expect($('.report-kicker')?.textContent).toBe('Last turn');
+  expect($('.report-kicker')?.textContent).toBe('Latest');
   key('[');
   expect($('.report')?.dataset.reportTurn).toBe('1');
   expect($('.report-kicker')?.textContent).toBe('1 turn ago');

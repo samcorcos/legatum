@@ -49,21 +49,24 @@ it('shows the armed-unit count: top bar, city panel note, and a rival\'s row; a 
   const l = view().players.find((p) => p.id === 0)!.levy!;
   expect(l.cap).toBe(view().cities.filter((c) => c.owner === 0).length + 1);
   const counter = container.querySelector('.levy-counter')!;
-  expect(counter.textContent).toContain(`Units ${l.units}/${l.cap}`);
-  expect(counter.querySelector('[aria-label]')!.getAttribute('aria-label')).toBe(`Military units: ${l.units} of ${l.cap}`);
-  expect(container.querySelector('.levy-note')!.textContent).toContain(`Military units: ${l.units} of ${l.cap}`);
+  expect(counter.textContent).toContain(`Military units ${l.units} / ${l.cap}`);
+  expect(counter.querySelector('[aria-label]')!.getAttribute('aria-label')).toBe(`Military units ${l.units} / ${l.cap}`);
+  expect(container.querySelector('.levy-note')!.textContent).toContain(`Military units ${l.units} / ${l.cap}`);
   // Fill the levy.
   for (let i = l.units; i < l.cap; i++) spawnUnit(st, 0, 'Soldier', fromOffset(1 + i, 2), false);
   show(view(), { diplomacyOpen: false });
   act(() => root.render(<><TopBar /><LevyNote /></>));
-  expect(container.querySelector('.levy-counter.full')!.textContent).toContain('full');
+  // The top-bar chip stays short ("3 / 3" in red with the alert mark); the state word is in its tooltip and label.
+  const full = container.querySelector('.levy-counter.full')!;
+  expect(full.textContent).not.toContain('full');
+  expect(full.querySelector('[aria-label]')!.getAttribute('aria-label')).toBe(`Military units ${l.cap} / ${l.cap} · full`);
   expect(container.querySelector('.levy-counter .ui-mark, .levy-counter svg, .levy-counter .mask-icon')).not.toBeNull();
-  expect(container.querySelector('.levy-note.full')!.textContent).toContain('levies full');
+  expect(container.querySelector('.levy-note.full')!.textContent).toContain('full: the military units below cannot be started or bought');
   // A rival sees it on Byzantium's diplomacy row.
   const rival = client.view(3);
   show(rival, { seat: 0, humans: [3], diplomacyOpen: true, diplomacyTeam: 0 });
   act(() => root.render(<DiplomacyPanel />));
-  expect(container.querySelector('[data-testid="rival-levy"]')!.textContent).toBe(`Thin levies: ${l.cap} of ${l.cap} military units (full: it cannot raise another)`);
+  expect(container.querySelector('[data-testid="rival-levy"]')!.textContent).toBe(`Thin levies: ${l.cap} / ${l.cap} military units (it cannot raise another)`);
 });
 
 it('shows nothing about levies for any other faction, and states the rule once in plain words', async () => {

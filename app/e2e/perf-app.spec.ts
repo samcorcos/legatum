@@ -188,7 +188,7 @@ test('late-game pan, zoom and heavy panels', async ({ page }) => {
   const panels = [
     { name: 'cities', click: () => page.getByTestId('cities-button').click(), visible: '[data-testid="cities-overview"][open]', close: () => page.getByRole('button', { name: 'Close cities' }).click() },
     { name: 'research', click: () => page.locator('.research-chip').click(), visible: '.tech-modal[open]', close: () => page.getByRole('button', { name: 'Close research' }).click() },
-    { name: 'diplomacy', click: async () => { await revealSidebar(page, 'standings'); await page.getByRole('button', { name: /^Diplomacy inbox/ }).click(); }, visible: '.diplomacy-panel', close: () => page.getByRole('button', { name: 'Close diplomacy' }).click() },
+    { name: 'diplomacy', click: async () => { await revealSidebar(page, 'standings'); await page.getByRole('button', { name: /^Diplomacy( \(\d+\))?$/ }).click(); }, visible: '.diplomacy-panel', close: () => page.getByRole('button', { name: 'Close diplomacy' }).click() },
   ];
   const panelRows = [];
   for (const panel of panels) {

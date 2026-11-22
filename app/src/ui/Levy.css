@@ -1,4 +1,4 @@
-/* Thin levies: the top-bar figure and the city panel's note. A full levy is red with a mark and a word, never colour alone. */
+/* Thin levies: the top-bar figure and the city panel's note. A full levy is red with the alert mark (never colour alone); in the top bar "full" and "N over the cap" live in the tooltip, so the chip never grows a sentence at 1000x600. */
 .levy-counter { font-size: 13px; color: var(--ink-2); white-space: nowrap; }
 .levy-counter b { color: var(--ink); font-variant-numeric: tabular-nums; }
 .levy-counter.full, .levy-counter.full b { color: var(--bad); }

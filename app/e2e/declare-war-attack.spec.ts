@@ -95,8 +95,8 @@ async function afterConfirm(page: Page, soldier: number) {
   // The report says what the Spearman is doing instead of a silent bounce.
   const report = page.getByRole('complementary', { name: 'Turn report' });
   await expect.poll(async () => {
-    const open = page.getByTestId('moment-lane').getByRole('button', { name: 'Turn report', exact: true });
-    if (await open.isVisible()) await open.click();
+    // A moment card holds the report back; L opens it (the card has no Turn report button).
+    if (await page.getByTestId('moment-lane').locator('.moment-card').isVisible()) await page.keyboard.press('l');
     return report.isVisible();
   }).toBe(true);
   // War started this turn and the attack resolved now: the Scout was hit (standing or pulling
@@ -171,8 +171,8 @@ test('G2 at War: an attack on a unit follows it, and the report says what happen
   await expect(page.getByTestId('turn-number')).toHaveText('2');
   const report = page.getByRole('complementary', { name: 'Turn report' });
   await expect.poll(async () => {
-    const open = page.getByTestId('moment-lane').getByRole('button', { name: 'Turn report', exact: true });
-    if (await open.isVisible()) await open.click();
+    // A moment card holds the report back; L opens it (the card has no Turn report button).
+    if (await page.getByTestId('moment-lane').locator('.moment-card').isVisible()) await page.keyboard.press('l');
     return report.isVisible();
   }).toBe(true);
   // Either the Scout was hit (standing or pulling back), or it slipped away and the report says so.

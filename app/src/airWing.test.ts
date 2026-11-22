@@ -94,7 +94,7 @@ describe('what an aircraft is doing, in plain words', () => {
     });
     expect(airState(v, city, fighter, [], undefined)).toMatchObject({ kind: 'guard', targets: 0 });
     expect(airState(v, city, bomber, [], undefined)).toMatchObject({ kind: 'idle', targets: 0 });
-    expect(noTargetReason(v, city, 'Fighter')).toBe('Only barbarians are within 5 tiles of Bern, and they never attack you. You can still strike them.');
+    expect(noTargetReason(v, city, 'Fighter')).toBe("Only barbarians are within 5 tiles of Bern, and they don't attack you. You can still strike them.");
   });
 
   it('the headline never says "No targets" over a list of at-Peace targets (8.9.6 UI review)', () => {

@@ -113,11 +113,9 @@
   border: 1px solid var(--rule-2);
   background: var(--panel);
 }
-.research-queue li.first { border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
+.research-queue li.first { border-color: var(--ink); box-shadow: inset 3px 0 0 var(--ink); }
 .rq-ghost { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 4px 8px; border: 1px dashed var(--rule-2); overflow: hidden; color: var(--muted); font: 400 12px/1.25 var(--sans); }
 .rq-ghost .rq-number { border-color: var(--rule-2); color: var(--muted); }
-.rq-ghost.hint { border-color: var(--accent); color: var(--ink); font-weight: 600; }
-.rq-ghost.hint .rq-number { border-color: var(--accent); color: var(--accent); }
 .rq-number {
   display: inline-grid;
   place-items: center;
@@ -125,7 +123,7 @@
   width: 20px;
   height: 20px;
   border: 1px solid var(--accent);
-  border-radius: 50%;
+  border-radius: 2px; /* square: a round numbered disc is a seat (player) number */
   color: var(--accent);
   font: 700 11px/1 var(--sans);
 }
@@ -175,12 +173,12 @@
 .era-card:is(.available, .queued, .researching) { cursor: pointer; }
 .era-card:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 55%, transparent); outline-offset: 2px; }
 @media (hover: hover) { .era-card:is(.available, .queued):hover { background: color-mix(in srgb, var(--accent) 7%, var(--field)); border-color: var(--accent); } }
-.era-card.queued { border-color: var(--accent); }
+.era-card.queued { border-color: var(--ink); }
 .era-card.researching {
   padding: 7px 8px 6px;
-  border: 2px solid var(--accent);
+  border: 2px solid var(--ink);
   border-left-width: 4px;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent), 0 6px 16px -6px color-mix(in srgb, var(--accent) 70%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 18%, transparent), 0 6px 16px -6px color-mix(in srgb, var(--ink) 60%, transparent);
 }
 .era-card.known { border: 3px double var(--rule-2); background: var(--panel-2); box-shadow: none; padding: 6px 8px 5px; }
 .era-card.chosen { outline: 2px solid var(--ink); outline-offset: 2px; }
@@ -198,7 +196,7 @@
   box-shadow: inset 0 0 0 2px var(--field), inset 0 0 0 3px currentColor;
 }
 .era-card.known .era-seal { background: var(--good); border-color: var(--good); color: var(--panel); box-shadow: none; }
-.era-card.researching .era-seal { background: var(--accent); color: var(--panel); }
+.era-card.researching .era-seal { background: var(--ink); color: var(--panel); }
 .era-card-name { flex: 1 1 auto; min-width: 0; margin: 0; font: var(--display-weight) 17px/1.1 var(--display); overflow-wrap: normal; word-break: normal; hyphens: none; }
 /* A name with a very long word (Industrialization) steps down a size so it wraps between words, never inside one. */
 /* The state tag is pinned to the card's top-right corner, out of the layout flow: it takes no room from the card. */
@@ -210,8 +208,8 @@
   align-items: center;
   height: 24px;
   padding-left: 8px;
-  background: var(--accent);
-  color: var(--panel);
+  background: var(--primary-bg);
+  color: var(--primary-ink);
   box-shadow: 1px 1px 0 var(--rule-2);
 }
 .era-queue-tag b { font: 700 11px/1 var(--sans); letter-spacing: .06em; text-transform: uppercase; }
@@ -223,7 +221,7 @@
 .era-cost-main { display: inline-flex; align-items: baseline; gap: 6px; font: 700 15px/1.2 var(--sans); font-variant-numeric: tabular-nums; }
 .era-cost-base { color: var(--ink-2); font-weight: 400; font-size: 12px; text-decoration-thickness: 1px; }
 .era-when { min-width: 0; overflow: hidden; color: var(--ink-2); font: 600 11.5px/1.2 var(--sans); font-variant-numeric: tabular-nums; text-overflow: ellipsis; white-space: nowrap; }
-.era-card.researching .era-when, .era-card.queued .era-when { color: var(--accent); }
+.era-card.researching .era-when, .era-card.queued .era-when { color: var(--ink); }
 .era-cost-note { color: var(--good); font: 600 11.5px/1.25 var(--sans); }
 /* No discount is not good news: neutral ink, not the green of a real discount. */
 .era-cost-note.none { color: var(--muted); font-weight: 500; }
@@ -366,13 +364,13 @@
   .research-queue { gap: 3px; margin-bottom: 5px; padding: 4px 10px 5px; }
   .research-queue-head { height: auto; min-height: 26px; }
   .research-queue-head .btn:not(.primary) { height: 24px; font-size: 12px; }
-  .research-queue-cta .btn.primary { min-height: 34px; padding: 4px 14px; }
-  /* A slot is one row: number, name over arrival, then the three 24 px controls (the audit's minimum target). */
+  .research-queue-cta .btn.primary { min-height: 30px; padding: 3px 14px; }
+  /* A slot is two short lines (name over arrival) beside its three 24 px controls (the audit's minimum target). */
   .research-queue-slots { grid-auto-columns: minmax(258px, 1fr); grid-template-rows: 38px; }
-  .research-queue li { grid-template-columns: 20px minmax(0, 1fr) 24px auto; grid-template-rows: 18px 16px; align-content: center; gap: 0 6px; padding-block: 2px; }
+  .research-queue li { grid-template-columns: 20px minmax(0, 1fr) 24px auto; grid-template-rows: 17px 15px; align-content: center; gap: 0 6px; padding-block: 2px; }
   .research-queue li .rq-number { grid-column: 1; grid-row: 1 / 3; align-self: center; }
-  .research-queue li .rq-name { grid-column: 2; grid-row: 1; font-size: 14px; }
-  .research-queue li .rq-arrival { grid-column: 2; grid-row: 2; padding-left: 0; font-size: 12px; }
+  .research-queue li .rq-name { grid-column: 2; grid-row: 1; font-size: 14px; line-height: 17px; }
+  .research-queue li .rq-arrival { grid-column: 2; grid-row: 2; padding-left: 0; font-size: 11.5px; line-height: 15px; }
   .research-queue li .rq-remove { grid-column: 3; grid-row: 1 / 3; align-self: center; }
   .research-queue li .research-queue-controls { grid-column: 4; grid-row: 1 / 3; align-self: center; }
   .research-scroll { gap: 6px; padding-bottom: 4px; scroll-padding-block: 6px; }
@@ -397,7 +395,7 @@
   .research-queue-head {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
-    grid-template-rows: minmax(24px, auto) minmax(20px, auto);
+    grid-template-rows: minmax(24px, auto) auto;
     align-items: center;
     gap: 2px 10px;
   }
@@ -457,3 +455,27 @@
 .era-unlock-art.pair,
 .benefit-ledger[data-benefits='4'] .era-unlock-art.pair,
 .era-card:has(.era-unlock.has-notes) .era-unlock-art.pair { width: 52px; min-height: 26px; }
+
+/* A short window (the 1000x600 laptop): the queue is one band, its label at the left, the slots in the middle and
+   its buttons at the right, so the technology cards keep their names in view with a card's details open.
+   The band keeps one height whatever is queued (nothing moves under the pointer). */
+@media (max-height: 700px) {
+  /* One fixed height whether idle (one button) or queued (two stacked buttons), so picking moves no card. */
+  .research-queue { display: grid; grid-template-columns: minmax(160px, auto) minmax(0, 1fr) auto; grid-template-rows: 1fr 1fr; align-items: center; gap: 0 10px; box-sizing: border-box; height: 54px; padding-block: 2px; }
+  .research-queue .research-queue-head { display: contents; }
+  .research-queue-title { grid-column: 1; grid-row: 1; align-self: end; }
+  .research-queue-hint, .research-queue-total { grid-column: 1; grid-row: 2; align-self: start; justify-self: start; font-size: 11.5px; }
+  .research-queue-pending { grid-column: 1; grid-row: 2; justify-self: end; align-self: start; margin-left: 0; }
+  /* Queued, the numbered slots already say the order: the sentence steps aside for the finish turn. */
+  .research-queue:not(.idle) .research-queue-hint { display: none; }
+  /* Every slot stays in view, idle or queued: an empty slot ("3 Empty") needs far less room than a queued one,
+     so the idle band's wide "Queue all 3" button still leaves all three slots on screen (1000x600). */
+  .research-queue-slots { grid-column: 2; grid-row: 1 / -1; grid-auto-columns: minmax(min-content, 1fr); }
+  .research-queue li { min-width: 244px; }
+  .rq-ghost { min-width: 88px; }
+  .research-queue-cta, .research-queue-actions { grid-column: 3; grid-row: 1 / -1; margin-left: 0; justify-self: end; }
+  .research-queue-actions { flex-direction: column; align-items: stretch; gap: 2px; }
+  .research-queue-head .research-queue-actions .btn:not(.primary) { height: 24px; padding: 0 8px; font-size: 11px; }
+  .research-queue-actions:empty { display: none; }
+  .research-queue-cta .btn.primary { min-height: 32px; padding-inline: 10px; letter-spacing: .04em; }
+}

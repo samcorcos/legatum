@@ -1,9 +1,9 @@
 import { useId } from 'react';
 import type { ReactNode } from 'react';
 import type { Breakdown, Faction, PlayerView, Resource, UnitKind, UnitView } from '../types';
-import { builtInSiege, FACTION_INFO, MONGOL_SIEGE_REASON, itemName, SIEGE_RULE, SIEGE_USES_IRON, TECH_NAME, UNIT_STATS, unitClass, unitStatsFor } from '../data';
+import { builtInSiege, MONGOL_SIEGE_REASON, itemName, SIEGE_RULE, SIEGE_USES_IRON, TECH_NAME, UNIT_STATS, unitClass, unitStatsFor } from '../data';
 import { siegeTier } from '../combat';
-import { aWorks, fixClause, supplyPerMine } from '../resources';
+import { aWorks, fixClause, supplyPerMine, withArticle } from '../resources';
 import { strengthBonus } from '../promotion';
 import { siegeSelected, upgradeSelected } from '../commands';
 import { isCompany } from '../company';
@@ -11,6 +11,7 @@ import { tileIndex } from '../hex';
 import { Amounts } from './Amounts';
 import { goldOnHand } from './productionPurchases';
 import { BreakdownTable, Icon, Kbd, Tip } from './index';
+import { NotMetMark } from './bits';
 import { ResourceReason } from './ResourceReason';
 import { RingMedallion } from './ringMedallion';
 import { Star } from '../brand/ornaments';
@@ -26,11 +27,13 @@ export function improvementReason(reason: string | null, resource: Resource | nu
   const occupied = `No ${resource} to spare: all ${s.supplied.total} of your ${resource} are in use.`;
   const siegePrefix = (text: string) => `Siege: ${text[0].toLowerCase()}${text.slice(1)}`;
   if (reason !== noSupply && reason !== siegePrefix(noSupply) && !reason.startsWith(occupied) && !reason.startsWith(siegePrefix(occupied))) return reason;
-  const state = !s.supplied.total ? 'none supplied'
-    : (s.idle?.length ?? 0) ? `needs ${s.used.total}, supplies ${s.supplied.total}`
-    : (s.held?.length ?? 0) ? `${s.supplied.total} supplied, none spare; ${(s.held?.length ?? 0)} reserved for construction`
-    : `all ${s.supplied.total} in use`;
-  return `${resource} supply: needs 1; ${state}. Get another deposit or build ${aWorks(resource)} (+${supplyPerMine(faction)}).`;
+  const subject = reason.startsWith('Siege: ') ? 'Siege' : 'Upgrade';
+  const fix = `claim ${s.supplied.total ? `another ${resource}` : withArticle(resource)} deposit or build ${aWorks(resource)} (+${supplyPerMine(faction)})`;
+  const state = !s.supplied.total ? `You have no ${resource}`
+    : (s.idle?.length ?? 0) ? `You are already ${Math.max(s.used.total - s.supplied.total, s.idle?.length ?? 0)} ${resource} short`
+    : (s.held?.length ?? 0) ? `You have ${s.supplied.total} ${resource}, none spare (${s.held?.length ?? 0} reserved for construction)`
+    : `Your ${s.supplied.total} ${resource} are all in use`;
+  return `${subject} needs 1 ${resource}. ${state}: ${fix}.`;
 }
 
 export function upgradeGain(unit: UnitView, faction: Faction, to: UpgradeCheck['to']): string {
@@ -54,10 +57,14 @@ export function UnitImprovements({ unit, view, check, primary, pending, gold, si
     && view.cities.some((c) => c.owner === unit.owner && c.pos.q === unit.pos.q && c.pos.r === unit.pos.r && c.detail?.buildings.includes('Walls'))
     && unitClass(unit.kind) === 'Melee' ? Math.min(50, 100 - unit.hp) : 0;
   const offer = unit.siege_offer;
-  const upgradeWhy = improvementReason(check?.blocker ?? null, check?.need, view);
+  let upgradeWhy = improvementReason(check?.blocker ?? null, check?.need, view);
   // The Mongol era gate is a closed door, not a price you can't pay: it replaces the price, and the reason line steps aside.
   const siegeClosed = siegeBlocker === MONGOL_SIEGE_REASON ? `${faction} can buy Siege from the Medieval era.` : null;
-  const siegeWhy = siegeClosed ? null : improvementReason(siegeBlocker ?? null, SIEGE_USES_IRON ? 'Iron' : null, view);
+  let siegeWhy = siegeClosed ? null : improvementReason(siegeBlocker ?? null, SIEGE_USES_IRON ? 'Iron' : null, view);
+  // The same shortage blocks both: one line for both, not two.
+  if (upgradeWhy?.startsWith('Upgrade needs ') && siegeWhy?.startsWith('Siege needs ') && upgradeWhy.slice('Upgrade'.length) === siegeWhy.slice('Siege'.length)) {
+    upgradeWhy = siegeWhy = `Upgrade and Siege need ${upgradeWhy.slice('Upgrade needs '.length)}`;
+  }
   const upgradeChecklist = !!check && check.needs.filter((n) => !n.met).length > 1;
   const reasons = [...new Set([upgradeChecklist ? null : upgradeWhy, siegeWhy].filter((r): r is string => !!r))];
   const upgradeReasonId = upgradeChecklist ? `${id}-upgrade-needs` : upgradeWhy ? `${id}-${reasons.indexOf(upgradeWhy)}` : undefined;
@@ -69,14 +76,11 @@ export function UnitImprovements({ unit, view, check, primary, pending, gold, si
       effect={`${upgradeGain(unit, faction, check.to)}${castrumHeal ? ` · +${castrumHeal} HP from Castrum` : ''}`} icon="ui-trend-up" hotkey="U" cost={check.cost} resource={check.need}
       primary={primary === 'upgrade'} active={pending === 'UpgradeUnit'} blocked={!!check.blocker} reasonId={upgradeReasonId} onClick={upgradeSelected}
       tip={<>
-        <p>{unitStatsFor(faction, check.to).moves} moves · {unitStatsFor(faction, check.to).strength} Strength before promotions{unitStatsFor(faction, check.to).ranged > 0 && ` · ${unitStatsFor(faction, check.to).ranged} ranged, range ${unitStatsFor(faction, check.to).range}`}.</p>
+        <p>{unitStatsFor(faction, check.to).moves} moves · {unitStatsFor(faction, check.to).strength} strength before promotions{unitStatsFor(faction, check.to).ranged > 0 && ` · ${unitStatsFor(faction, check.to).ranged} ranged · range ${unitStatsFor(faction, check.to).range}`}.</p>
         <p>{castrumHeal ? `Castrum restores ${castrumHeal} HP, to ${unit.hp + castrumHeal}/100, once for this upgrade order.` : 'Keeps its HP and promotions.'} Can act again next turn.</p>
-        {!!unit.upgrade_steps?.length && <p>Upgrade path: {unit.upgrade_steps.map((step) => itemName({ kind: 'Unit', unit: step }, faction)).join(' → ')}. Each step’s Gold price is included.</p>}
         {unit.siege && builtInSiege(check.to) && <p>Its Siege is built in from then on, so the Iron the bought Siege used is freed.</p>}
-        <p>Inside your territory. {check.need && `Uses 1 ${check.need} supply while it exists.`}</p>
         <p>Treasury: <Amounts text={`${gold} Gold → ${gold - (check.cost ?? 0)} Gold`} />.</p>
-        {check.needs.some((n) => !n.met) && <ul>{check.needs.filter((n) => !n.met).map((n) => <li key={n.label}>{n.label.includes(' supply: ') ? '' : 'Needs '}<Amounts text={n.label} /></li>)}</ul>}
-        {unit.upgrade_breakdown && <BreakdownTable b={plainUpgradeBreakdown(unit.upgrade_breakdown, faction)} title="Upgrade cost" unit="Gold" />}
+        {unit.upgrade_breakdown && <BreakdownTable b={upgradeStepBreakdown(unit.upgrade_breakdown, unit.kind as UnitKind, unit.upgrade_steps?.length ? unit.upgrade_steps : [check.to], faction)} title="Upgrade cost" unit="Gold" plain />}
       </>} />}
     {offer && <ImproveRow label="Siege" effect={`Ignores ${['Walls', 'Walls', 'Walls and Castles', 'Walls, Castles and Star Forts'][siegeTier(view.research.known)]}`}
       icon="ui-siege" cost={offer.price.total} resource={SIEGE_USES_IRON ? 'Iron' : null}
@@ -90,11 +94,11 @@ export function UnitImprovements({ unit, view, check, primary, pending, gold, si
           {check.need && n.label.includes(check.need)
             ? <ResourceReason text={n.label} resource={check.need} />
             : <Amounts text={n.label} />}{' '}
-          <Icon name={n.met ? 'ui-check' : 'ui-cross'} size={11} className="ui-mark" label={n.met ? 'done' : 'missing'} />
+          {n.met ? <Icon name="ui-check" size={11} className="ui-mark" label="done" /> : <NotMetMark />}
         </span>)}</span>
     </p>}
     {reasons.map((reason, i) => <p className="act-reason improve-reason" id={`${id}-${i}`} key={reason}>
-      {reasons.length > 1 || (upgradeChecklist && reason === siegeWhy) || (!!upgradeWhy !== !!siegeWhy && !!check && !!offer) ? <b>{reason === upgradeWhy && !upgradeChecklist ? 'Upgrade' : 'Siege'}: </b> : null}
+      {reasons.length > 1 || (upgradeChecklist && reason === siegeWhy) || (!!upgradeWhy !== !!siegeWhy && !!check && !!offer) ? !/^(Siege|Upgrade)( and Siege)? needs? /.test(reason) && <b>{reason === upgradeWhy && !upgradeChecklist ? 'Upgrade' : 'Siege'}: </b> : null}
       {((reason === upgradeWhy && check?.need && reason.includes(check.need)) || (reason === siegeWhy && SIEGE_USES_IRON && reason.includes('Iron')))
         ? <ResourceReason text={reason} resource={reason === upgradeWhy && check?.need ? check.need : 'Iron'} />
         : <Amounts text={reason} />}
@@ -162,18 +166,27 @@ export function upgradeCheck(unit: UnitView, view: PlayerView, gold: number, res
     ...(cost !== null ? [{ label: `${cost} Gold`, met: affordable }] : []),
     ...(need ? [{ label: `${need} supply: needs 1 spare, you have ${spare > 0 ? spare : 'none'}`, met: hasSupply }] : []),
   ];
-  const blocker = !hasTech ? `Research ${TECH_NAME[tech!]} first`
+  const blocker = !hasTech ? `Needs ${TECH_NAME[tech!]}`
     : !inTerritory ? 'Move into your territory'
     : cost !== null && !affordable ? `Needs ${cost} Gold (${goldOnHand(gold, view)})`
     : supplyBlocker;
   return { to, cost, needs, blocker, need };
 }
 
-/** The engine's upgrade breakdown with plain labels. */
-export function plainUpgradeBreakdown(b: Breakdown, faction?: Faction): Breakdown {
-  const label = (l: string) =>
-    l === 'Base upgrade Gold' ? 'Twice the Production difference'
-    : l === 'Faction' ? `${faction ? FACTION_INFO[faction].name : 'Faction'} price`
-    : l;
-  return { ...b, parts: b.parts.map(([l, v]) => [label(l), v] as [string, number]) };
+/**
+ * The engine's upgrade price as one line per step ("Spearman → Phalangite 80"), each step's faction
+ * and Military Engineering parts folded into it. Every step opens with its base part (core
+ * `rules::units::step_price`); a step whose base is 0 has none, so then the whole path is one line.
+ */
+export function upgradeStepBreakdown(b: Breakdown, from: UnitKind, steps: UnitKind[], faction?: Faction): Breakdown {
+  const name = (kind: UnitKind) => itemName({ kind: 'Unit', unit: kind }, faction);
+  const groups: number[] = [];
+  b.parts.forEach(([label, value], i) => {
+    if (label === 'Base upgrade Gold' || i === 0) groups.push(value);
+    else groups[groups.length - 1] += value;
+  });
+  if (!steps.length || groups.length !== steps.length || b.parts[0]?.[0] !== 'Base upgrade Gold') {
+    return { total: b.total, parts: [[`${name(from)} → ${name(steps.at(-1) ?? from)}`, b.total]] };
+  }
+  return { total: b.total, parts: steps.map((to, i) => [`${name(i ? steps[i - 1] : from)} → ${name(to)}`, groups[i]] as [string, number]) };
 }

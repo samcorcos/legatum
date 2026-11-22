@@ -146,7 +146,7 @@ const COLS: { key: keyof Omit<StatRow, 'empire'>; label: string; icon: string; t
   { key: 'vp', label: 'VP', icon: 'vp', title: 'VP at the end' },
   { key: 'peakVp', label: 'Peak VP', icon: 'vp', title: 'Most VP held at any point' },
   { key: 'cities', label: 'Cities', icon: 'city', title: 'Cities at the end (most at any point below)' },
-  { key: 'population', label: 'Pop.', icon: 'emblem-growth', title: 'Population at the end' },
+  { key: 'population', label: 'Population', icon: 'title-most-populous', title: 'Population at the end' },
   { key: 'science', label: 'Science', icon: 'yield-science', title: 'Science produced over the whole game' },
   { key: 'techs', label: 'Techs', icon: 'emblem-tech', title: 'Technologies known at the end' },
   { key: 'peakArmy', label: 'Army', icon: 'unit-soldier', title: `Army: ${POSTGAME_ARMY_TEXT}` },

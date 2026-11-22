@@ -103,7 +103,7 @@ for (const size of SIZES) test.describe(`occupation lock ${size.name}`, () => {
     await expect(card.getByTestId('occupation-lock-note')).toContainText('people will not accept your rule while');
     await expect(card.locator('.up-status')).toHaveText('Fortified until woken');
     for (const name of [/^Move/, /^Disband/, /^Fortify/, /^Skip/]) await expect(card.getByRole('button', { name })).toHaveCount(0);
-    await expect(card).not.toContainText('Awaiting orders');
+    await expect(card).not.toContainText('Needs orders');
     // It is never in the queue, and nothing it could be asked is pending.
     expect(await page.evaluate((id) => { const s = (window as unknown as GameWindow).legatum.getState(), v = s.views![s.seat]; const u = v.units.find((x) => x.id === id)!; return [u.standing_order, !!u.needs_orders]; }, held.unit)).toEqual(['Sleep', false]);
     // The card fits the window: nothing scrolls.
@@ -112,8 +112,10 @@ for (const size of SIZES) test.describe(`occupation lock ${size.name}`, () => {
     await shot(page, size, 'b1-locked-unit-panel');
 
     // A right-click move is refused at the click, with the reason, and nothing is queued.
+    // Right of the hex's centre: the city's banner (drawn above units, and taking their clicks) reaches the centre itself.
     const away = await hexPoint(page, { q: CAPTURE_AT.q + 1, r: CAPTURE_AT.r });
-    await page.mouse.click(away.x, away.y, { button: 'right' });
+    const home = await hexPoint(page, CAPTURE_AT);
+    await page.mouse.click(Math.round(away.x + (away.x - home.x) * 0.3), away.y, { button: 'right' });
     await expect(page.locator('.order-error, [role="alert"]').filter({ hasText: 'is holding Vestige down and cannot leave until Peace with' }).first()).toBeVisible();
     expect(await page.evaluate(() => { const s = (window as unknown as GameWindow).legatum.getState(); return s.orders[s.seat].length; })).toBe(0);
     await page.mouse.move(5, size.height / 2);

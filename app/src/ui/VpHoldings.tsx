@@ -7,7 +7,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type HTMLAtt
 import { CrestMedallion, Star, roman } from '../brand/ornaments';
 import { DECADENCE_FOOD_RULE, POWER_RULE, decadenceCurveText, decadenceRules, type DecadenceRules } from '../data';
 import { Icon } from './bits';
-import { RingMedallion } from './ringMedallion';
+import { RingMedallion, TreatyEmblem } from './ringMedallion';
 import { Amount } from './Amounts';
 import { sakokuChip, sakokuLine } from '../sakoku';
 import { useGame } from '../store';
@@ -139,7 +139,7 @@ export function TokenCard({ model, active, panel }: { model: VpModel | null; act
   return createPortal(
     <div ref={ref} id={CARD_ID} className="vhc-pop" role="tooltip" style={pos ? { top: pos.top, left: pos.left } : { top: 0, left: 0, visibility: 'hidden' }}>
       <SourceCard model={model} s={s} />
-      <div className="vhc-pop-hint"><kbd className="kbd">←</kbd><kbd className="kbd">→</kbd> every way to score <kbd className="kbd">Esc</kbd></div>
+      <div className="vhc-pop-hint"><kbd className="kbd">←</kbd><kbd className="kbd">→</kbd> next way to score <kbd className="kbd">Esc</kbd> <span>Rules: Guide <kbd className="kbd">?</kbd></span></div>
     </div>,
     document.body,
   );
@@ -259,10 +259,10 @@ export function DecadenceChip({ members, rules = decadenceRules() }: { members: 
 /** What a race row says about the relation with its empire: a pin on the roundel, the words in its tooltip and name. */
 export interface RowRelation { kind: 'war' | 'peace' | 'alliance'; declared?: boolean; isNew?: boolean; text: string; title: string }
 
-/** The pin on a roundel: war a red cross, peace a green check, an alliance the house star in gilt. Never colour alone. */
+/** The pin on a roundel: the treaty emblem (War red, Peace and Alliance ink; an Alliance is two rings). */
 function RelationPin({ r }: { r: RowRelation }) {
   return <span className={`vhc-rel ${r.kind}${r.declared ? ' declared' : ''}${r.isNew ? ' new' : ''}`} title={r.title} data-relation={r.text} aria-hidden="true">
-    {r.kind === 'alliance' ? <Star size={8} /> : <Icon name={r.kind === 'war' ? 'ui-cross' : 'ui-check'} size={8} />}
+    <TreatyEmblem kind={r.kind === 'war' ? 'War' : r.kind === 'alliance' ? 'Alliance' : 'Peace'} size={15} />
   </span>;
 }
 

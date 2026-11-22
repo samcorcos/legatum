@@ -35,7 +35,9 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
       const card = p.locator(`dialog.tech-modal .era-card[data-tech="${tech}"]`);
       await card.scrollIntoViewIfNeeded();
       await card.locator('.era-details-chevron').click();
-      await p.locator(`dialog.tech-modal .research-detail[data-tech="${tech}"]`).scrollIntoViewIfNeeded();
+      // The panel scrolls the details in itself, keeping the card's name in view on a short window.
+      await expect(p.locator(`dialog.tech-modal .research-detail[data-tech="${tech}"]`)).toBeVisible();
+      await p.mouse.move(2, 2); // off the card, so its art's hover card stays shut
     };
     const byzantiumResearch = researchFixture('Byzantium');
     await loadFixture(page, coreFixture(byzantiumResearch), 2);
@@ -149,14 +151,17 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
       await expect(era).toContainText('5 to go');
       await p.waitForTimeout(3200);
       await shot(p, size, '91-era-up-card');
-      // A rival's era-up is a banner over the map, with the first-in highlighted.
+      // A rival's era-up is a banner over the map. The first empire into an era is told by the World Age banner
+      // instead (EraNotice skips first-in events since rules 50), so the notice shot is a rival following in.
       await p.keyboard.press('Escape');
       await expect(era).toHaveCount(0);
       await p.evaluate(() => {
         const s = (window as unknown as GameWindow).legatum.getState();
-        s.set({ report: { turn: s.views![s.seat].turn, hash: 'era', lines: [[], []], events: [[{ type: 'EraEntered', player: 1, era: 3, first: true }], []] }, reportOpen: false });
+        s.set({ report: { turn: s.views![s.seat].turn, hash: 'era', lines: [[], []], events: [[{ type: 'EraEntered', player: 1, era: 3, first: false }], []] }, reportOpen: false });
       });
-      await expect(p.getByTestId('era-notice')).toContainText('first');
+      const notice = p.getByTestId('era-notice');
+      await expect(notice).toContainText(/entered the \w+ era$/);
+      await expect(notice).not.toHaveClass(/\bfirst\b/);
       await shot(p, size, '92-era-notice');
     } finally { await context.close(); }
   });

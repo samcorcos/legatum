@@ -17,7 +17,7 @@ describe('what a faction piece does differently from the item it replaces', () =
   });
 
   it('Byzantium: the Tagmatic Soldier hits harder and costs more than a Pikeman, and moves alike', () => {
-    expect(lines('Byzantium')).toEqual(['162 Production (Pikeman: 152)', '36 melee (Pikeman: 32)']);
+    expect(lines('Byzantium')).toEqual(['162 Production (Pikeman: 152)', '36 strength (Pikeman: 32)']);
     expect(compare('Byzantium').diffs.map((d) => d.id)).not.toContain('moves');
   });
 

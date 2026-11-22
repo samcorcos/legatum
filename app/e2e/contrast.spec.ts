@@ -60,7 +60,6 @@ const GALLERY = `
     <button class="btn big">Big<span class="btn-sub">Sub line</span></button><button class="btn big" disabled>Big<span class="btn-sub">Sub line</span></button>
     <button class="btn big primary">Big primary<span class="btn-sub">Sub line</span></button><button class="btn big primary" disabled>Big primary<span class="btn-sub">Sub line</span></button>
     <button class="link">Link</button><button class="link" disabled>Link</button>
-    <button class="moment-link">Turn report</button>
   </div>
   <div class="actions" style="width:420px">
     <span><button class="act primary">Found City <span class="kbd">B</span></button></span>
@@ -180,7 +179,7 @@ test(`${look}: game screen controls keep AA label contrast in every state`, asyn
   await endPlanning(page);
   await expect(page.getByTestId('turn-number')).toHaveText('2');
   await page.getByRole('button', { name: 'Menu', exact: true }).click();
-  await page.getByRole('button', { name: 'Last turn report (L)', exact: true }).click();
+  await page.getByRole('button', { name: 'Turn report (L)', exact: true }).click();
   await expect(page.getByRole('complementary', { name: 'Turn report' })).toBeVisible();
   readings.push(...await auditContrast(page, 'turn report'));
   await page.getByRole('button', { name: 'Close report', exact: true }).click();
@@ -192,8 +191,8 @@ test(`${look}: game screen controls keep AA label contrast in every state`, asyn
   await page.getByRole('button', { name: 'Close research', exact: true }).click();
   // The diplomacy inbox (no AI offers alliances this early; its actions still show).
   await revealSidebar(page, 'standings');
-  await page.getByRole('button', { name: /^Diplomacy inbox/ }).click();
-  const inbox = page.getByRole('complementary', { name: 'Diplomacy inbox' });
+  await page.getByRole('button', { name: /^Diplomacy( \(\d+\))?$/ }).click();
+  const inbox = page.getByRole('complementary', { name: 'Diplomacy', exact: true });
   await expect(inbox).toBeVisible();
   // Audit only what the player sees once it settles: no story card over the inbox and no
   // layout still moving.

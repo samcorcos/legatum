@@ -12,10 +12,10 @@ for (const size of SIZES) {
     await page.setViewportSize({ width: size.width, height: size.height });
     await loadFixture(page, allianceCoreSave(), 50);
     await revealSidebar(page, 'standings');
-    await page.getByRole('button', { name: /^Diplomacy inbox/ }).click();
-    const panel = page.getByRole('complementary', { name: 'Diplomacy inbox' });
+    await page.getByRole('button', { name: /^Diplomacy( \(\d+\))?$/ }).click();
+    const panel = page.getByRole('complementary', { name: 'Diplomacy', exact: true });
     await panel.getByRole('tab', { name: 'Relations' }).click();
-    const tableRegion = panel.getByRole('region', { name: 'Empire relations table' });
+    const tableRegion = panel.getByRole('region', { name: 'Relations table' });
     await expect(tableRegion).toBeVisible();
     await expect(panel.locator('.relations-table tbody tr')).toHaveCount(4);
     expect(await tableRegion.evaluate((el) => el.scrollWidth <= el.clientWidth + 1)).toBe(true);

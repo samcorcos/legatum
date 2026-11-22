@@ -16,9 +16,9 @@
 .sc-track { padding: 10px 14px 8px; }
 .sc-track ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; align-items: end; }
 .sc-track li { display: grid; justify-items: center; gap: 4px; min-width: 0; }
-.sc-pieces { display: flex; flex-wrap: wrap-reverse; justify-content: center; align-content: flex-start; gap: 2px; min-height: 52px; max-width: 64px; }
-.sc-piece { display: inline-flex; border-radius: 50%; }
-.sc-piece.mine { box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--gilt, #8f6f1c); }
+.sc-pieces { display: flex; flex-wrap: wrap-reverse; justify-content: center; align-content: flex-start; gap: 2px; min-height: 36px; max-width: 104px; }
+.sc-piece { display: inline-flex; border-radius: 50%; filter: drop-shadow(0 2px 2px rgb(0 0 0 / .35)); }
+.sc-piece.mine { position: relative; z-index: 2; box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--gilt, #8f6f1c); }
 .sc-space { width: 100%; padding: 5px 0; text-align: center; font: 700 14px/1 var(--num-font); font-variant-numeric: lining-nums; background: var(--panel-3); white-space: nowrap; }
 .sc-track li.mine .sc-space { background: var(--panel-2); box-shadow: inset 0 -3px 0 var(--gilt, #8f6f1c); }
 .sc-track li.win .sc-space { background: var(--ink); color: var(--panel); font-size: 12px; }
@@ -27,7 +27,7 @@
 .sc-hold { margin: 6px 0 0; padding: 4px 8px; font: 700 12.5px/1.35 var(--sans); color: var(--panel); background: var(--bad); }
 
 .sc-sheet { display: flex; flex-direction: column; min-height: 0; outline-color: rgb(230 195 110 / .7); box-shadow: 0 0 0 4px rgb(143 111 28 / .3), 0 8px 26px rgb(0 0 0 / .45); }
-.sc-row { display: grid; grid-template-columns: 128px 214px minmax(0, 1fr) 44px; gap: 12px; align-items: center; padding: 7px 16px; border-bottom: 1px solid var(--rule); }
+.sc-row { display: grid; grid-template-columns: 128px 232px minmax(0, 1fr) 44px; gap: 12px; align-items: center; padding: 7px 16px; border-bottom: 1px solid var(--rule); }
 .sc-row.fresh { background: var(--panel-2); box-shadow: inset 3px 0 0 var(--gilt, #8f6f1c); }
 .sc-cols { padding-block: 7px 5px; border-bottom: 2px solid var(--ink); font: 700 11px/1.2 var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); }
 .sc-cols span:last-child, .sc-open { text-align: right; }
@@ -40,22 +40,30 @@
 .sc-boxes { display: flex; flex-wrap: wrap; gap: 4px; }
 
 /* The boxes: solid ink is kept for good, a thick outline is held, gilt is this Age's card, a thin rule is still to win, dashed is still to come. */
-.sc-box { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; font: 700 9px/1 var(--sans); letter-spacing: .02em; }
+.sc-box { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; font: 700 9.5px/1 var(--sans); letter-spacing: .02em; }
 .sc-box.kept { background: var(--ink); color: var(--panel); border: 1px solid var(--ink); }
 /* A held point is a point you have: filled like a kept one, hatched to say it can be lost (UI review 2026-11-22). */
 .sc-box.held { background: repeating-linear-gradient(135deg, var(--ink) 0 3px, #5b4a36 3px 5px); color: var(--panel); border: 1px solid var(--ink); }
 .sc-box.new { background: var(--field); color: #7a5a12; border: 2px solid var(--gilt, #8f6f1c); box-shadow: 0 0 6px rgb(236 196 108 / .8); }
 .sc-box.open { background: var(--field); color: var(--rule-2); border: 1px solid var(--rule-2); }
+/* An icon still to win is drawn faint in ink, so you can tell the Pyramids from the Colosseum before you build them. */
+/* Only the mask icon takes a background colour: on an inline svg (the capital star) it would paint a box behind the shape. */
+.sc-box.open .mask-icon { background-color: var(--ink-2) !important; opacity: .5; }
+.sc-box.open svg { color: var(--ink-2); opacity: .5; }
+/* A held icon sits on a solid ink pad, so the hatching never runs through it (UI review, 2026-11-22). */
+.sc-box.held:has(.mask-icon), .sc-box.held:has(svg) { background: radial-gradient(circle, var(--ink) 0 8.5px, transparent 9.5px), repeating-linear-gradient(135deg, var(--ink) 0 3px, #5b4a36 3px 5px); }
+.sc-box .mask-icon, .sc-box svg { flex: none; }
 .sc-box.later { background: transparent; color: var(--rule); border: 1px dashed var(--rule); }
 
 .sc-foot { margin-top: auto; padding-inline: 0; }
 .sc-legend { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 0; padding: 6px 16px 7px; list-style: none; border-top: 1px solid var(--rule); font: 400 12px/1.3 var(--sans); color: var(--ink-2); }
 .sc-legend li { display: inline-flex; align-items: center; gap: 6px; }
 .sc-legend .sc-box { width: 14px; height: 14px; }
+.score-check.reduced .sc-body { animation: none; }
 
 @media (max-height: 640px) {
   .sc-body { gap: 9px; }
-  .sc-pieces { min-height: 50px; }
+  .sc-pieces { min-height: 34px; }
   .sc-row { padding-block: 5px; }
 }
 

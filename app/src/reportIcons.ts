@@ -1,7 +1,8 @@
 // Icons for the turn report: one per category (the header medallion) and one per event (the line's
 // own medallion), all from the existing sets. A line without a specific icon falls back to its
 // category's, so every line has one.
-import { buildingIconName, itemIcon, unitIconName } from './data';
+import { buildingIconName, FACTION_GOAL, itemIcon, SWARM_GOAL, unitIconName } from './data';
+import { eraNumeral } from './ui/eraResearch';
 import type { Faction, Event } from './types';
 import type { EventCategory } from './format';
 
@@ -23,21 +24,23 @@ export function eventIcon(e: Event, faction?: (player: number) => Faction | unde
     case 'CityGrew': return 'emblem-growth';
     case 'CityStarved': return 'yield-food';
     case 'ProductionCompleted': return itemIcon(e.item, faction?.(e.owner));
-    case 'ItemBought': case 'TileBought': case 'TreatyPayment': case 'WonderRaceLost': return 'yield-gold';
+    case 'ItemBought': case 'TileBought': case 'TreatyPayment': return 'yield-gold';
+    case 'WonderRaceLost': return buildingIconName(e.building);
     case 'AircraftRebased': return unitIconName(e.kind, faction?.(e.owner));
-    case 'SiegeBought': return 'ui-siege';
     case 'UnitUpgraded': return unitIconName(e.to, faction?.(e.owner));
     case 'MegaprojectStarted': return 'emblem-greatwork';
-    case 'TechResearched': case 'EraEntered': return 'emblem-tech';
+    case 'TechResearched': return 'emblem-tech';
     case 'GreatWorkCompleted': case 'GreatWorkLost': return buildingIconName(e.building);
-    case 'EraEntered': case 'AgeBegan': case 'EraObjectiveScored': return 'emblem-milestone';
+    // The era's numeral seal, as on the era banner and the takeover.
+    case 'EraEntered': case 'AgeBegan': return `era-numeral:${eraNumeral(e.era - 1)}`;
+    case 'EraObjectiveScored': return 'emblem-milestone';
     case 'CapitalTaken': return 'vp';
     case 'CapitalSacked': return 'vp';
     case 'GoldGiven': return 'yield-gold';
     case 'CapitalLost': return 'vp';
-    case 'FactionGoalCompleted': return e.faction === 'Byzantium' ? 'unit-heir' : e.faction === 'Mongols' ? 'building-courierhall' : 'emblem-milestone';
+    case 'FactionGoalCompleted': return FACTION_GOAL[e.faction]?.icon ?? 'emblem-milestone';
     case 'FactionGoalLost': return e.faction === 'Byzantium' ? 'unit-heir' : e.faction === 'Mongols' ? 'building-courierhall' : 'ui-trend-down';
-    case 'SwarmUnleashed': return 'emblem-milestone';
+    case 'SwarmUnleashed': return SWARM_GOAL.icon;
     case 'SakokuClosed': case 'SakokuReopened': return 'ui-sakoku';
     case 'SignalBroadcast': return 'building-listeninghouse';
     case 'RoadsLaid': return 'building-courierhall';
@@ -45,7 +48,7 @@ export function eventIcon(e: Event, faction?: (player: number) => Faction | unde
     case 'WildCalled': return 'ui-camp';
     case 'FreeTechsChosen': return 'emblem-tech';
     case 'RuinExplored': return 'emblem-ruin';
-    case 'WonderDiscovered': return 'emblem-ruin';
+    case 'WonderDiscovered': return `wonder:${e.wonder}`;
     case 'BarbarianCampCleared': return 'emblem-camp';
     case 'ResourcesRevealed': case 'SupplyShortage': return `resource-${e.resource.toLowerCase()}`;
     case 'HeirBorn': return 'unit-heir';
@@ -58,7 +61,7 @@ export function eventIcon(e: Event, faction?: (player: number) => Faction | unde
       return 'treaty-offer';
     case 'PlayerEliminated': return 'ui-cross';
     case 'GameWon': case 'GameDrawn': case 'VictoryHoldStarted': return 'emblem-milestone';
-    case 'VictoryHoldBroken': return 'vp';
+    case 'VictoryHoldBroken': return 'ui-alert';
     default: return undefined;
   }
 }

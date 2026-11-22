@@ -52,6 +52,10 @@ export interface Moment {
   frame?: Faction;
   /** A VP seal on the picture: the points this card scores (signed by `loss`). */
   seal?: number;
+  /** The city a wonder card is about, shown under its title (the kicker names the event). */
+  place?: string;
+  /** The event leaves this city without a build: the card's primary is Choose production there. */
+  choose?: number;
 }
 
 export function ruinText(reward: RuinReward, cityName: (id: number) => string, faction?: Faction): { title: string; effect: string; lore: string; details: string[]; tier: Tier; deltas: Moment['deltas']; gains: Gain[]; emblem: Emblem } {
@@ -254,7 +258,7 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
           const built = e.item.building;
           const vp = events.find((x): x is Extract<Event, { type: 'GreatWorkCompleted' }> => x.type === 'GreatWorkCompleted' && !x.again && x.player === e.owner && x.building === built)?.vp;
           const gives = wonderYieldLine(built, cityName(e.city));
-          push(i, e.owner, { tier: 'legendary', at: e.item.tile, kicker: `Completed in ${cityName(e.city)}`,
+          push(i, e.owner, { tier: 'legendary', at: e.item.tile, kicker: 'World wonder built', place: cityName(e.city),
             title: itemName(e.item, faction(e.owner)), effect: [vp === undefined ? null : `${signedVp(vp)} while you hold it`, gives, 'only one in the world'].filter(Boolean).join(' · '),
             lore: 'Let those who follow know what these hands have made.', details: [WONDER_ONLY_ONE],
             deltas: vp === undefined ? [] : [{ counter: 'vp', amount: vp }], emblem: 'greatwork' });
@@ -399,7 +403,7 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
           const names = works.map((w) => BUILDING_NAME[w.building]);
           const vp = works.reduce((sum, w) => sum + w.vp, 0);
           const who = gain ? e.to : e.from;
-          push(i, who, { tier: gain ? 'legendary' : 'major', at: city?.pos ?? null, title: names.join(' and '), kicker: gain ? `Taken with ${cityName(e.city)}` : `Lost with ${cityName(e.city)}`,
+          push(i, who, { tier: gain ? 'legendary' : 'major', at: city?.pos ?? null, title: names.join(' and '), kicker: gain ? 'World wonder taken' : 'World wonder lost', place: cityName(e.city),
             effect: gain ? `${signedVp(vp)} · captured from ${nameOf(e.from)}` : `${signedVp(-vp)} · taken by ${nameOf(e.to)}`,
             lore: gain ? 'The banners changed. The wonder remains.' : 'What was built there answers to another now.',
             details: [WONDER_ONLY_ONE, gain ? `Hold ${cityName(e.city)} to keep the points: a rival that retakes it takes them back.` : `Retake ${cityName(e.city)} and the points return with it.`],
@@ -429,7 +433,7 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
         const rival = empireOfPlayer(after, e.winner);
         const detail = after.cities.find((c) => c.id === e.city)?.detail;
         const blocked = detail?.wonder_lost ? blockedQueueHead(detail, faction(e.owner)) : '';
-        push(i, e.owner, { tier: 'major', at: cities.get(e.city)?.pos ?? null, title: BUILDING_NAME[e.building], kicker: 'A wonder race lost',
+        push(i, e.owner, { tier: 'major', at: cities.get(e.city)?.pos ?? null, title: BUILDING_NAME[e.building], kicker: 'Wonder race lost', place: cityName(e.city), choose: detail?.wonder_lost ? e.city : undefined,
           effect: `${rival} completed it first`,
           lore: 'Another empire raised it before you.',
           details: [wonderLostLine(rival, e.building, cityName(e.city), e.production, e.gold, e.active ?? true),
@@ -446,8 +450,11 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
         const sitedAt = after.tiles.find((t) => t.landmark?.building === e.building)?.landmark?.city;
         if (events.some((x) => x.type === 'CityCaptured' && x.city === sitedAt && (gain ? x.to === e.player : x.from === e.player))) break;
         const razed = events.find((x): x is Extract<Event, { type: 'CityRazed' }> => x.type === 'CityRazed' && x.from === e.player);
+        // The city the wonder stands in, as the built and race-lost cards name it: its tile, else the city that changed hands with it.
+        const moved = events.find((x): x is Extract<Event, { type: 'CityCaptured' }> => x.type === 'CityCaptured' && (gain ? x.to === e.player : x.from === e.player));
+        const site = sitedAt !== undefined && cities.has(sitedAt) ? sitedAt : moved && cities.has(moved.city) ? moved.city : undefined;
         push(i, e.player, { tier: gain ? 'legendary' : 'major', at: razed ? cities.get(razed.city)?.pos ?? razed.at : capital(e.player), title: BUILDING_NAME[e.building],
-          kicker: gain ? 'A world wonder retaken' : razed ? 'A world wonder destroyed' : 'A world wonder lost',
+          kicker: gain ? 'World wonder taken' : razed ? 'World wonder destroyed' : 'World wonder lost', place: razed ? cityName(razed.city) : site !== undefined ? cityName(site) : undefined,
           effect: `${signedVp(gain ? e.vp : -e.vp)}${razed && !gain ? ' · destroyed with its city' : ''}`,
           lore: gain ? 'The wonder is yours again.' : 'What was built there is gone from your hands.',
           details: [WONDER_ONLY_ONE, ...(razed && !gain ? ['It can never be built again.'] : [])],

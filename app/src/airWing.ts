@@ -124,7 +124,7 @@ export function noTargetReason(view: PlayerView, city: CityView, kind: UnitKind,
     return `${names.join(' and ')} ${names.length === 1 && !/s$/.test(names[0]) ? 'is' : 'are'} in range but not at War with you: declare War to strike. The strike can go in the same turn.`;
   }
   // Spared barbarians are in reach but never attack you, so the card asks for no answer over them (`airState`).
-  if (hostile.length && barbariansSpareMe(view) && hostile.every((s) => isBarbarian(s.owner))) return `Only barbarians are within ${range} tiles of ${city.name}, and they never attack you. You can still strike them.`;
+  if (hostile.length && barbariansSpareMe(view) && hostile.every((s) => isBarbarian(s.owner))) return `Only barbarians are within ${range} tiles of ${city.name}, and they don't attack you. You can still strike them.`;
   return `No enemy unit or city is visible within ${range} tiles of ${city.name}.`;
 }
 

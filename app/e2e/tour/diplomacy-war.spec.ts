@@ -26,8 +26,8 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     test.setTimeout(120_000);
     await loadFixture(page, diplomacyCoreSave(16, { met: true }), 16);
     await revealSidebar(page, 'standings');
-    await page.getByRole('button', { name: /^Diplomacy inbox/ }).click();
-    const inbox = page.getByRole('complementary', { name: 'Diplomacy inbox' });
+    await page.getByRole('button', { name: /^Diplomacy( \(\d+\))?$/ }).click();
+    const inbox = page.getByRole('complementary', { name: 'Diplomacy', exact: true });
     await expect(inbox).toBeVisible();
     await expect(inbox.getByRole('button', { name: 'Declare War', exact: true })).toBeVisible();
     await shot(page, size, '16-diplomacy-inbox');
@@ -92,8 +92,8 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     // First contact: a freshly met empire's row opens with its leader, quote and relation emblem.
     await loadFixture(page, diplomacyCoreSave(3, { met: true }), 3);
     await revealSidebar(page, 'standings');
-    await page.getByRole('button', { name: /^Diplomacy inbox/ }).click();
-    await expect(page.getByRole('complementary', { name: 'Diplomacy inbox' }).locator('.relation-head')).toBeVisible();
+    await page.getByRole('button', { name: /^Diplomacy( \(\d+\))?$/ }).click();
+    await expect(page.getByRole('complementary', { name: 'Diplomacy', exact: true }).locator('.relation-head')).toBeVisible();
     await shot(page, size, '16b-first-contact-inbox');
 
     // An accepted Alliance and a Peace, as one turn's report (the real formatting, fed synthetic events).

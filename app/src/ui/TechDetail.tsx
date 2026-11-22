@@ -11,7 +11,7 @@ export function UnlockDetail({ view, unlock, turns }: { view: PlayerView; unlock
   const build = firstBuildForecast(view, unlock, turns);
   const benefits = YIELD_KEYS.filter((k) => unlock.yields[k]).map((k) => `${unlock.yields[k] > 0 ? "+" : ""}${unlock.yields[k]} ${YIELD_LABEL[k]}`);
   if (unlock.city_strength) benefits.push(`+${unlock.city_strength} city strength`);
-  if (unlock.unit_strength) benefits.push(`${unlock.unit_strength} melee strength`);
+  if (unlock.unit_strength) benefits.push(`${unlock.unit_strength} strength`);
   if (unlock.unit_ranged) benefits.push(`${unlock.unit_ranged} ranged, range ${unlock.unit_range}, ${unlock.unit_moves} moves`);
   if (unlock.siege_bonus) benefits.push(`+${unlock.siege_bonus} ranged against city HP`);
   if (unlock.item.kind === 'Building' && isGreatWork(unlock.item.building)) benefits.push('+2 VP while its tile is held');

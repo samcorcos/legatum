@@ -11,7 +11,7 @@ import { SIZES, loadFixture, shot, type GameWindow } from './helpers';
 test.describe.configure({ mode: 'parallel' });
 
 async function openLedger(page: Page) {
-  await page.getByRole('button', { name: /^Every way to score/ }).click();
+  await page.locator('button.vh-chip').click();
   const sheet = page.getByTestId('objective-sheet');
   await expect(sheet.locator('.sl-table')).toBeVisible();
   await expect(sheet.locator('.vh-card')).toHaveCount(0);

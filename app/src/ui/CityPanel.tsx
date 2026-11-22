@@ -41,7 +41,7 @@ import { ForeignCityActions } from './ForeignCityActions';
 import { CityBorders } from './CityBorders';
 import { ProgressBar } from './ProgressBar';
 import { claimSummary, growthProgress, territoryCounts, yieldsText } from '../cityProgress';
-import { revealIdleProductionPicker } from './cityPanelScroll';
+import { revealBelowStickyHead, revealIdleProductionPicker } from './cityPanelScroll';
 import { LevyNote } from './Levy';
 import { CompanyShop } from './CompanyShop';
 import { canHire } from '../company';
@@ -193,6 +193,16 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     if (orders.some((o) => (o.type === 'SetProduction' || o.type === 'SetProductionQueue') && o.city === city.id)) return;
     revealIdleProductionPicker(scroller);
   }, [city.id, city.owner, view.me]);
+  // A production warning that appears while the panel is scrolled to the build list (Ready with an automated
+  // city that has nothing to pick) would sit half under the sticky head: scroll it whole into view once.
+  const shownWarning = useRef<string | null>(null);
+  useLayoutEffect(() => {
+    const scroller = panel.current, warning = scroller?.querySelector<HTMLElement>('.production-warning') ?? null;
+    const key = warning ? `${city.id}:${warning.textContent}` : null;
+    if (key === shownWarning.current) return;
+    shownWarning.current = key;
+    if (scroller && warning) revealBelowStickyHead(scroller, warning);
+  });
   // The star marks the original capital for the whole game (the scoring rule), not the current capital. In the common case, your own
   // founding city, the line is a tooltip so it costs the build list no room; any other original capital prints it under the head.
   const capMark = capitalMark(view, city);
@@ -202,7 +212,9 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
   const replacedLine = replacementKickerLine(view, city);
   const kickerLabel = city.owner === view.me ? <>Your {city.visible && city.is_capital ? 'capital' : 'city'} <PlayerBadge id={city.owner} /></>
     : <>{city.visible && city.is_capital ? 'Capital' : 'City'} of <PlayerBadge id={city.owner} /> {owner ? empireOfPlayer(view, owner.id) : 'the unknown'}</>;
-  const head = (
+  // The sticky head: name, three numbers and, for a city you can see into, its yields row, so scrolling to the build
+  // cards never hides what the city makes (the 1000x600 laptop opened an idle city with the yields scrolled away).
+  const headWith = (yieldsRow?: ReactNode) => (
     <div className="cp-head">
       <div className="cp-kicker">
         {capKicker('right')}
@@ -218,14 +230,16 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
           <span className="lbl">Strength</span>
           <b>{city.strength}</b>
         </Tip>
-        <Tip content={`City health. ${CITY_HEAL_RULE}`}>
-          <span className="lbl">Health</span>
+        <Tip content={`City HP. ${CITY_HEAL_RULE}`}>
+          <span className="lbl">HP</span>
           <b>{city.hp}</b>
-          <span className="muted">/{city.max_hp}</span>
+          <span className="muted"> / {city.max_hp}</span>
         </Tip>
       </div>}
+      {yieldsRow}
     </div>
   );
+  const head = headWith();
 
   // Healing, fire and bounty scroll with the list instead of riding in the sticky head: the head stays a name and three numbers, so the build cards keep the room.
   const status = (
@@ -373,7 +387,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     : growth?.state === 'resisting' ? 'Paused'
     : growth?.state === 'starving' ? `−1 population in ${growth.turns}`
     : growth?.state === 'growing' ? `${growth.turns} turn${growth.turns === 1 ? '' : 's'}`
-    : growth?.state === 'shortage' ? 'Short of Food' : 'Stagnant';
+    : growth?.state === 'shortage' ? 'Short of Food' : 'Not growing';
   const growthDecadence = d.growth_breakdown?.parts.find(([label]) => isDecadenceLine(label));
   const growthTip = (
     <div className="bd">
@@ -744,7 +758,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
 
   /** Idle with nothing queued: the control sits on the "Choose what ... builds" line, so it never scrolls out of view above the cards and costs no extra row. */
   const idleChoice = city.owner === view.me && !producing && queue.length === 0;
-  const autoSelect = <select id={`city-automation-${city.id}`} aria-label={`Build automatically in ${city.name}`} title={buildFocus ? FOCUS_TIP[buildFocus] : 'Pick a focus and the city chooses its builds. Spends no Gold.'} value={buildFocus ?? ''}
+  const autoSelect = <select id={`city-automation-${city.id}`} aria-label={`Automate ${city.name}`} title={buildFocus ? FOCUS_TIP[buildFocus] : 'Pick a focus and the city chooses its builds. Spends no Gold.'} value={buildFocus ?? ''}
     disabled={view.finished} onChange={(e) => editOrders((list) => setCityAutomation(list, city.id, (e.target.value || null) as CityBuildFocus | null))}>
     <option value="">Off</option><option value="Balanced">Balanced</option><option value="Science">Science</option><option value="Gold">Gold</option><option value="Military">Military</option>
   </select>;
@@ -752,7 +766,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     ? autoPickReason(autoPick, buildFocus, city, view)
     : `Your queue goes first. When it empties, the city picks a ${buildFocus} build.`}</p> : null;
   const automationRow = city.owner === view.me ? <section className="cp-automation" aria-label="City building automation">
-    <label htmlFor={`city-automation-${city.id}`}>Build automatically <kbd className="kbd">I</kbd> <kbd className="kbd" title="Shift+I: next focus">⇧I</kbd></label>
+    <label htmlFor={`city-automation-${city.id}`}>Automate <kbd className="kbd" title="I: on or off with your last focus. Shift+I: next focus.">I</kbd></label>
     {autoSelect}
     {autoReason}
   </section> : null;
@@ -764,7 +778,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     const other = view.cities.find((c) => c.owner === view.me && c.id !== city.id && c.detail && [c.detail.producing, ...(c.detail.production_queue ?? [])].some((item) => item?.kind === 'Wonder'));
     if (other) return `A world wonder is already being built or queued in ${other.name}.`;
     const tech = BUILDING_STATS[building].requires;
-    if (tech && !view.research.known.includes(tech)) return `Research ${TECH_NAME[tech]} first.`;
+    if (tech && !view.research.known.includes(tech)) return `Needs ${TECH_NAME[tech]}.`;
     const required = greatWorkRequirement(building);
     if (required) {
       if (!d.buildings.includes(required[0])) return `Build ${baseItemName({ kind: 'Building', building: required[0] })} in this city first.`;
@@ -802,7 +816,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
 
   return (
     <div ref={panel} className="panel city-panel" style={{ ['--pc' as string]: col }}>
-      {head}
+      {headWith(<>
       <div className="cp-yields" aria-label="City yields per turn" data-testid="city-yields">
         {YIELD_KEYS.map((k) => owner?.faction === 'Egypt' && k === 'production' ? (
           // The Nile: Egypt has no Production, so this cell says what its surplus Food builds instead.
@@ -818,6 +832,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
           </Tip>
         ))}
       </div>
+      </>)}
       {status}
       {!idleChoice && automationRow}
       {city.owner === view.me && (view.aircraft ?? []).some((a) => a.city === city.id) && <div className="city-hangar" aria-label="City hangar">
@@ -966,7 +981,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
           <Tip content="Gold available for purchases this turn."><span><Amount n={purchases.gold} unit="Gold" /> ({signed(view.economy.gold_per_turn.total)}/turn) to spend</span></Tip>
         </div>
         {idleChoice && <div className="cp-automation-inline" role="group" aria-label="City building automation">
-          <label htmlFor={`city-automation-${city.id}`}>Auto <kbd className="kbd" title="I: on or off with your last focus. Shift+I: next focus.">I</kbd></label>{autoSelect}
+          <label htmlFor={`city-automation-${city.id}`}>Automate <kbd className="kbd" title="I: on or off with your last focus. Shift+I: next focus.">I</kbd></label>{autoSelect}
         </div>}
       </div>
       {idleChoice && buyTile('row')}

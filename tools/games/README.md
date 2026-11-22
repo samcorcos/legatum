@@ -32,7 +32,10 @@ Engine builds are heavy, so analysis waits while the Mac is on battery (`--force
 Anyone can upload a game, so everything in an upload is treated as hostile:
 
 - Only engine commits already on `master` are built: GitHub serves pull-request commits from the same
-  repository, and building whatever commit a game names would run a stranger's code.
+  repository, and building whatever commit a game names would run a stranger's code. The one exception is a
+  ref the owner pins by hand under `refs/trusted/` in the job's clone (`engine/repo`), such as master before the
+  2026-11-22 squash to one root commit: `git -C ~/LegatumData/game-analysis/engine/repo update-ref
+  refs/trusted/pre-public <old master sha>`.
 - The macOS notification gets the text as an argument, never inside AppleScript source. The Worker accepts
   only plain-word faction and difficulty names.
 - At most 3 analyses per run and 12 per day (`LEGATUM_ANALYSE_PER_RUN`, `LEGATUM_ANALYSE_PER_DAY`), and only

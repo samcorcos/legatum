@@ -35,6 +35,20 @@ function vignetteFor(card: Moment): string | null {
   return name ? vignetteFiles[`../assets/art/celebrations/${name}-104.png`] ?? null : null;
 }
 
+/**
+ * A moment card's one primary (Return): the decision the event leaves (a lost wonder race: choose
+ * what the city builds), else the place it happened, else Continue. The turn report is one key away (L).
+ */
+export function momentPrimary(card: Moment): { label: string; act(): void } {
+  const s = useGame.getState();
+  if (card.choose !== undefined) {
+    const city = card.choose;
+    return { label: 'Choose production', act: () => { s.set({ reportOpen: false }); s.select({ kind: 'city', id: city }, true); } };
+  }
+  if (card.at) { const at = card.at; return { label: 'Show on map', act: () => s.jumpTo(at) }; }
+  return { label: 'Continue', act: () => {} };
+}
+
 interface Playback { active: Moment | null; /** An unlock card waits behind an open dialog, then returns. */ deferred: boolean; started: number; reduced: boolean; collapsed: number; holding: boolean; dismiss(): void; interrupt(): void; more(): void }
 const idle: Playback = { active: null, deferred: false, started: 0, reduced: false, collapsed: 0, holding: false, dismiss() {}, interrupt() {}, more() {} };
 const CelebrationContext = createContext<Playback>(idle);
@@ -155,8 +169,17 @@ export function CelebrationProvider({ children }: { children: ReactNode }) {
     // Escape peels one layer: skipping the story must not also cancel the report it was holding.
     const key = (e: KeyboardEvent) => {
       // A deferred moment must leave Escape to the open dialog; it resumes afterward.
-      if (e.key === 'Escape' && !e.defaultPrevented && !document.querySelector('dialog[open]')) {
-        e.preventDefault(); interrupt();
+      if (e.defaultPrevented || document.querySelector('dialog[open]')) return;
+      if (e.key === 'Escape') { e.preventDefault(); interrupt(); return; }
+      // A shown card owns Return (its primary) and L (the turn report it was holding) until it ends.
+      if (active.tier === 'minor') return;
+      const target = e.target instanceof Element ? e.target : null;
+      const plain = !e.repeat && !e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey && !e.isComposing;
+      if (!plain || target?.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"]')) return;
+      if (e.key === 'Enter' && !(target?.closest('button, a[href], summary') && !target.closest('.moment-lane'))) {
+        e.preventDefault(); e.stopPropagation(); feel.select(); momentPrimary(active).act(); dismiss();
+      } else if (e.key === 'l' || e.key === 'L') {
+        e.preventDefault(); e.stopPropagation(); useGame.getState().set({ reportOpen: true }); interrupt();
       }
     };
     // Observe the gesture; never cancel it or swallow the order/End Turn underneath.
@@ -184,7 +207,7 @@ export function CounterDelta({ counter }: { counter: Counter }) {
 }
 
 export function MomentLane() {
-  const { active, deferred, reduced, collapsed, dismiss, interrupt, more } = useCelebration();
+  const { active, deferred, reduced, collapsed, dismiss, more } = useCelebration();
   const lane = useRef<HTMLDivElement>(null);
   const card = active && active.tier !== 'minor' ? active : null;
   const picture = card ? card.art ?? (card.resource ? resourceArtUrl(card.resource, 256) : null) ?? (card.unit ? unitMiniatureUrl(card.unit.kind, card.unit.faction) : null) : null;
@@ -217,6 +240,7 @@ export function MomentLane() {
               {card.emblem ? <RewardEmblem kind={card.emblem} color={playerColor(card.owner)} size={card.tier === 'legendary' ? 88 : 68} />
                 : <CrestMedallion faction={card.faction} color={playerColor(card.owner)} size={card.tier === 'legendary' ? 64 : 40} />}</span>}
           <h2>{card.title}</h2>
+          {card.place && <p className="moment-place">{card.place}</p>}
         </div>
         {card.gains?.length ? <ul className="moment-effect moment-gains" aria-label="You gained">
           {card.gains.map((g) => <li key={g.text}>{!g.icon.startsWith('yield-') && <Icon name={g.icon} size={24} />}<b><Amounts text={g.text} /></b></li>)}
@@ -225,8 +249,8 @@ export function MomentLane() {
         {card.details.length > 0 && <div className="moment-details">{card.details.map((text) => <p key={text}><Amounts text={text} /></p>)}</div>}
         </div>
         <footer>
-          {card.at && <button className="moment-link moment-show-map" onClick={() => { feel.select(); useGame.getState().jumpTo(card.at!); }}>Show on map</button>}
-          <button className="moment-link" onClick={() => { useGame.getState().set({ reportOpen: true }); interrupt(); }}>Turn report</button>
+          <button className="btn primary moment-primary" data-primary-action onClick={() => { feel.select(); momentPrimary(card).act(); dismiss(); }}>
+            {momentPrimary(card).label} <span className="kbd">Return</span></button>
         </footer>
       </article>}
       {collapsed > 0 && <button className="moment-more" onClick={more}>+{collapsed} more <span>in the turn report</span></button>}

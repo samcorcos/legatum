@@ -18,8 +18,15 @@ promise to players).
   month): uploads are written by strangers and read on the analysis Mac.
 - Only pages listed in `ALLOWED_ORIGINS` (`wrangler.jsonc`) may upload: the site, its preview deploys and
   local dev. Bodies are capped at 4 MiB gzipped and 64 MiB unpacked.
-- It keeps nothing about the sender. Observability (request logs) is off on purpose: logs would hold IP
-  addresses.
+- One client address (`CF-Connecting-IP`, an IPv6 address cut to its /64) may store at most 50 new games per
+  UTC day: the Worker var `MAX_NEW_GAMES_PER_DAY` in `wrangler.jsonc` (a bad value means 50). A new game is a
+  `PUT` whose R2 key does not exist yet; one more is answered `429` with `{"error":"too many new games today"}`
+  and a `Retry-After` (seconds until 00:00 UTC), and nothing is stored. A later checkpoint of a stored game is
+  never counted or refused. The page keeps such a record queued and retries later.
+- What is kept about a sender: a salted SHA-256 of the address (cut to /64 for IPv6) and its count, for the
+  current UTC day only, inside the `Quota` Durable Object (SQLite-backed; the salt is made once and never
+  leaves it; older rows are deleted on every call). The raw address is never stored or logged.
+  Observability (request logs) is off on purpose: logs would hold IP addresses.
 
 ## Run locally
 

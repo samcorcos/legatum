@@ -52,7 +52,7 @@ for (const size of SIZES) test.describe(`ui fix 1103 ${size.name}`, () => {
         { era: 3, slot: 0, current: 2, target: 4, entered: true, era_scored: false, ready: false },
       ];
     });
-    await page.getByRole('region', { name: 'Victory race', exact: true }).getByRole('button', { name: 'All objectives', exact: true }).click();
+    await page.getByRole('region', { name: 'Victory race', exact: true }).getByRole('button', { name: 'Score ledger', exact: true }).click();
     const sheet = page.getByTestId('objective-sheet');
     const open = async (era: number) => {
       const row = sheet.locator(`.sl-row[data-row="era-${era}"] button`);
@@ -83,7 +83,7 @@ for (const size of SIZES) test.describe(`ui fix 1103 ${size.name}`, () => {
       v.eras[0].objectives[0] = { slot: 0, family: 'Build', text: 'Add a Factory to 3 more cities', target: 3, objective: { kind: 'Buildings', building: 'Autoworks', cities: 3 } };
       v.objective_progress = [{ era: 2, slot: 0, current: 1, target: 3, entered: true, era_scored: false }];
     });
-    await page.getByRole('region', { name: 'Victory race', exact: true }).getByRole('button', { name: 'All objectives', exact: true }).click();
+    await page.getByRole('region', { name: 'Victory race', exact: true }).getByRole('button', { name: 'Score ledger', exact: true }).click();
     const sheet = page.getByTestId('objective-sheet');
     const era = sheet.locator('.sl-row[data-row="era-2"] button');
     if (await era.getAttribute('aria-expanded') === 'false') await era.click();

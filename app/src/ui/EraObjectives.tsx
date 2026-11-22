@@ -48,7 +48,7 @@ export function ObjectiveRows({ lines, preview = false, big = false, inline = fa
     {lines.map((l) => {
       const family = FAMILY_LABEL[l.family];
       const idle = done && !l.scoredHere;
-      const label = `${family}: ${l.text}, ${l.scoredHere ? 'scored' : idle ? 'not needed: the era is scored' : preview ? 'revealed when you enter the era' : `${l.shown} of ${l.target}`}`;
+      const label = `${family}: ${l.text}, ${l.scoredHere ? 'scored' : idle ? `not needed: the Age is scored` : preview ? 'revealed when you enter the era' : `${l.shown} of ${l.target}`}`;
       return <li key={l.slot} className={`eo-line fam-${l.family.toLowerCase()}${l.met && !preview && !idle ? ' met' : ''}${l.scoredHere ? ' scored' : ''}${idle ? ' idle' : ''}${l === nearest ? ' nearest' : ''}`} data-testid="era-objective" data-slot={l.slot} data-family={l.family}>
         <span className="eo-fam" title={compact ? family : undefined}>
           {compact ? <><Icon name={FAMILY_ICON[l.family]} size={14} /><span className="sr-only">{family}</span></> : family}

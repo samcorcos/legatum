@@ -155,7 +155,7 @@ function parts(d: PieceDiff): { value: string; label: string; was: string } {
   switch (d.id) {
     case 'cost': return { value: String(d.now), label: 'Production', was: String(d.was) };
     case 'moves': return { value: String(d.now), label: d.now === 1 ? 'move' : 'moves', was: String(d.was) };
-    case 'strength': return { value: String(d.now), label: 'melee', was: String(d.was) };
+    case 'strength': return { value: String(d.now), label: 'strength', was: String(d.was) };
     case 'ranged': return { value: String(d.now), label: 'ranged', was: String(d.was) };
     case 'range': return { value: String(d.now), label: 'range', was: String(d.was) };
     case 'cityStrength': return { value: `+${d.now}`, label: 'city strength', was: `+${d.was}` };
@@ -220,7 +220,7 @@ export function standardText(c: PieceComparison): string {
   for (const d of c.diffs) {
     if (d.id === 'cost') bits.push(`${costs} ${d.was} Production`);
     else if (d.id === 'moves') bits.push(`${has} ${d.was} ${d.was === 1 ? 'move' : 'moves'}`);
-    else if (d.id === 'strength') bits.push(`${has} ${d.was} melee`);
+    else if (d.id === 'strength') bits.push(`${has} ${d.was} strength`);
     else if (d.id === 'ranged') { if (d.was > 0) bits.push(`${has} ${d.was} ranged`); }
     else if (d.id === 'range') continue;
     else if (d.id === 'cityStrength') { if (d.was > 0) bits.push(`${gives} +${d.was} city strength`); }

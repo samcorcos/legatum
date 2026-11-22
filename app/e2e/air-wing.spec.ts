@@ -140,7 +140,7 @@ for (const size of SIZES) {
       for (let i = 0; i < 8 && (await store(page, (s) => s.selection?.id)) !== 901; i++) { await page.keyboard.press('Enter'); await page.waitForTimeout(150); }
       const fighter = plane(page, 901);
       await expect(fighter).toHaveAttribute('data-air-state', 'guard');
-      await expect(fighter).toContainText('Awaiting orders · on guard over 4 tiles around Waypost Seven');
+      await expect(fighter).toContainText('Needs orders · on guard over 4 tiles around Waypost Seven');
       await expect(fighter.getByRole('button')).toHaveText(['Stay on guardF', 'Skip this turnSpace', 'Rebase…R']);
       await expect(fighter.getByRole('button', { name: /Rebase/ })).toBeDisabled();
       // The map rings what they cover: the Bomber's 8, the Fighter's strike 5 and guard 4, widest first, each labelled.
@@ -339,7 +339,7 @@ for (const size of SIZES) {
       // pinned and on screen at every window size (8.9.4 review: the 1000x600 card hid them).
       await expect(card.locator('h2')).toHaveText('Fighter ready');
       const area = (await card.boundingBox())!;
-      for (const name of ['Show on map', 'Turn report']) {
+      for (const name of ['Show on map']) {
         const box = (await card.getByRole('button', { name }).boundingBox())!;
         expect(box.y + box.height, `${name} is inside the card`).toBeLessThanOrEqual(area.y + area.height + 0.5);
         expect(box.y + box.height, `${name} is on screen`).toBeLessThanOrEqual(size.height);

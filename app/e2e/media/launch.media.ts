@@ -165,7 +165,7 @@ clip('race', async (page) => {
   await film.frames(30);
   const all = page.getByRole('button', { name: /All empires/ }).first();
   if (await all.count()) { await film.glide(await centre(page, all), 30, { x: 760, y: 420 }); await press(page, film); await film.frames(110); await film.still('race-panel'); }
-  const link = page.getByRole('button', { name: 'All objectives', exact: true }).first();
+  const link = page.getByRole('button', { name: 'Score ledger', exact: true }).first();
   await film.glide(await centre(page, link), 30);
   await press(page, film);
   await film.frames(60);
@@ -304,7 +304,7 @@ clip('diplomacy', async (page) => {
   await load(page, save(LATE));
   const film = await Film.start(page, 'diplomacy');
   await film.frames(30);
-  const inbox = page.getByRole('button', { name: /Diplomacy inbox/ }).first();
+  const inbox = page.getByRole('button', { name: /^Diplomacy( \(\d+\))?$/ }).first();
   if (!(await inbox.count())) {
     // The link sits in the opened race panel.
     await film.glide(await centre(page, page.locator('summary', { hasText: 'All empires' }).first()), 30, { x: 700, y: 420 });
@@ -364,7 +364,7 @@ test.describe('stills', () => {
   });
   clip('stills-race', async (page) => {
     await load(page, save(LATE));
-    await page.getByRole('button', { name: 'All objectives', exact: true }).first().click();
+    await page.getByRole('button', { name: 'Score ledger', exact: true }).first().click();
     await park(page);
     await run(page, 1500);
     await snap(page, 'victory-race', 2);

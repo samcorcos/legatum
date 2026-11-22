@@ -28,7 +28,7 @@ export function hintCopy(id: HintId, view: PlayerView): { title: string; body: s
     .flatMap((owner) => view.players.filter((p) => p.id === owner && p.team !== view.team && p.alive));
   if (sighted.some((p) => atWar(view, p.id))) return hint;
   const name = sighted[0] && empireTitle(view, sighted[0].team);
-  return { ...hint, body: `You are at Peace${name ? ` with ${name}` : ''}. A rival can declare War and attack in the same turn. Diplomacy is in the victory race panel.`, section: 'turns' };
+  return { ...hint, body: `You are at Peace${name ? ` with ${name}` : ''}. A rival can declare War and attack in the same turn. Diplomacy is in the Victory race.`, section: 'turns' };
 }
 
 interface HintPreferences { enabled: boolean; seen: HintId[] }
