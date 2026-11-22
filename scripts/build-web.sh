@@ -5,6 +5,8 @@
 #   2. the third-party licence notices (app/public/THIRD_PARTY_LICENSES.txt, web scope)
 #   3. the web UI with VITE_LEGATUM_HOSTED=1 (app/src/platform/hosted.ts: no server probes, network play explained)
 #   4. the host files from app/hosted/ (_headers, 404.html)
+# LEGATUM_GAMES_URL (optional) is the game-upload Worker (infra/games): every game played on the build is sent
+# there (app/src/platform/gameUpload.ts), and _headers lets the page connect to it. Unset, nothing is uploaded.
 # Usage: scripts/build-web.sh [--skip-wasm]     --skip-wasm reuses an engine already in app/src/wasm-pkg
 # LEGATUM_SITE_URL overrides the public address used in the link-preview tags (default: app/package.json homepage).
 # Needs: Rust (cargo + wasm-pack), Node/npm. Check the result with: cd app && npm run e2e:hosted
@@ -23,9 +25,16 @@ node ../tools/release/third-party-licenses.mjs --scope web
 version="$(node -p "require('./package.json').version")"
 commit="$(git rev-parse --short=7 HEAD 2>/dev/null || true)"
 export LEGATUM_BUILD_LABEL="${LEGATUM_BUILD_LABEL:-Version $version${commit:+ · web $commit}}"
-VITE_LEGATUM_HOSTED=1 npm run build
+games_url="${LEGATUM_GAMES_URL:-}"
+games_url="${games_url%/}"
+if [ -n "$games_url" ] && ! [[ "$games_url" =~ ^https://[A-Za-z0-9.-]+$ ]]; then
+  echo "LEGATUM_GAMES_URL must be an https origin such as https://legatum-games.example.workers.dev" >&2; exit 1
+fi
+VITE_LEGATUM_HOSTED=1 VITE_LEGATUM_GAMES_URL="$games_url" npm run build
 
 cp hosted/_headers hosted/404.html dist/
+# The page may connect to the upload Worker, and to nothing else off its own site.
+if [ -n "$games_url" ]; then sed -i.bak "s#connect-src 'self'#connect-src 'self' $games_url#" dist/_headers && rm dist/_headers.bak; fi
 # A hosted build must not ship source maps or a file over Cloudflare Pages' 25 MiB limit.
 if find dist -name '*.map' | grep -q .; then echo "dist contains source maps" >&2; exit 1; fi
 big="$(find dist -type f -size +25M)"
