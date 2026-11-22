@@ -202,6 +202,8 @@ jobs:
       - name: Build app
         run: npm run build
         working-directory: app
+      - name: Every file the build points to is in it
+        run: node tools/release/check-dist-refs.mjs app/dist
 
   ci-ok:
     # One check to require in branch protection: green when every job passed or was skipped for a docs-only change.
