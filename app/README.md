@@ -1,6 +1,6 @@
 # Legatum app
 
-The React/Vite web UI. The Rust engine runs inside it as WASM (`crates/wasm`, built into `src/wasm-pkg`), so the same UI runs in a browser for testing and in the Tauri desktop app.
+The React/Vite web UI. The Rust engine runs inside it as WASM (`crates/wasm`, built into `src/wasm-pkg`), so the same UI runs in a browser for testing and in the Tauri desktop app. Online games are hosted from a browser tab through the relay (`src/net/`).
 
 ## Web (development)
 
@@ -63,10 +63,6 @@ It builds the WASM engine, generates the Xcode project with `npx tauri ios init 
 - The same bundle identifier (`com.legatum.game`), CSP and capabilities as desktop. Save and Load use the iOS Files pickers, the autosave copy goes to the app's `Library/Application Support/com.legatum.game/`, and Quit is hidden (iOS apps don't quit themselves).
 - Screenshot a running simulator with `xcrun simctl io <udid> screenshot out.png` (landscape iPad screenshots come out rotated; fix with `sips -r 270 out.png`).
 
-## LAN play
-
-LAN hosting is currently a separate `legatum-server` binary that serves `app/dist` and runs the authoritative game; players join in a browser. Embedding that server in the desktop app is a later step and not part of this build.
-
 ## Browser end-to-end tests
 
 From the repository root (Rust, `wasm-pack`, Node/npm and `python3` required):
@@ -74,7 +70,6 @@ From the repository root (Rust, `wasm-pack`, Node/npm and `python3` required):
 ```sh
 export PATH="$HOME/.cargo/bin:$PATH"
 scripts/build-wasm.sh
-cargo build --release -p legatum-server
 cd app
 npm ci
 npx playwright install chromium
@@ -93,19 +88,17 @@ working run the files your change touches, for example
 `npx playwright test e2e/game.spec.ts`. `e2e/game.spec.ts` holds the core flows:
 Single Player (Small map, Hard AI, production, more turns, and the VP track),
 localStorage autosave/reload/Continue with an exact game-state comparison,
-two-human Hot Seat, and LAN host/join in separate browser contexts. Every spec
+and two-human Hot Seat; `e2e/online-lobby.spec.ts` covers the online lobby. Every spec
 fails on any browser console error or uncaught exception, including errors from
-a second LAN context.
+a second page.
 
 The suite uses Chromium, fixed planet seeds, one worker, and no retries. Local
-games explicitly use the real WASM client. The fixture starts
-`target/release/legatum-server --port 0 --static app/dist --saves <temp-dir>`
-(or `LEGATUM_SERVER_BIN`); the OS chooses a free port. This real server serves
-the built UI for every test and resolves the LAN games. It is stopped and its
-temporary saves removed at teardown. No existing host, user saves, or mock
-server is used.
+games explicitly use the real WASM client. The fixture serves the
+built UI (`app/dist`) on a plain static server and, for online games, uses the relay
+named by `LEGATUM_E2E_RELAY` (see `playwright.config.ts`). No existing host, user
+saves, or mock server is used.
 
-Use `npm run e2e -- --headed` to watch, or `npm run e2e -- --grep LAN` to run just
+Use `npm run e2e -- --headed` to watch, or `npm run e2e -- --grep online` to run just
 the network flows. Failure screenshots and traces are under `test-results/`;
 open a trace with `npx playwright show-trace <path-to-trace.zip>`.
 
