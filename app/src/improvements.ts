@@ -68,8 +68,11 @@ export function improvementShortTitle(item: Extract<ProductionItem, { kind: 'Imp
  * comes from one shared check). Strategic deposits count too: their supply works as soon as they are inside the borders, but the
  * tile's own yield waits for the Mine.
  */
-export const isDormant = (tile: Pick<TileView, 'resource' | 'owner' | 'improvement'>, me: number): boolean =>
-  !!tile.resource && tile.owner === me && !tile.improvement;
+export const isDormant = (tile: Pick<TileView, 'resource' | 'owner' | 'improvement'>, me: number, faction?: string): boolean =>
+  !!tile.resource && tile.owner === me && !tile.improvement && offersImprovement(faction, improvementKindFor(tile.resource));
+
+/** The Nile: Egypt has no Production, so it isn't offered the Quarry (core `view.rs::city_detail`). */
+export const offersImprovement = (faction: string | undefined, kind: ImprovementKind): boolean => !(faction === 'Egypt' && kind === 'Quarry');
 
 /** The technology note for an improvement: "Irrigated Farm with Intensive Cultivation". */
 export const improvementUpgradeNote = (kind: ImprovementKind): string =>
