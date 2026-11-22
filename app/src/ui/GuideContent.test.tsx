@@ -84,8 +84,8 @@ it('teaches the exported era curve, pre-Modern class bonus, Keshig upgrade and b
 it('names every scoring category and the current-era research queue controls', () => {
   const victory = renderToStaticMarkup(<GuideContent section="victory" />);
   const controls = renderToStaticMarkup(<GuideContent section="controls" />);
-  expect(victory).toContain('members’ faction goals, scored era objectives, captured rival original capitals, and held world wonders');
-  expect(victory).toContain('You lose points when you lose a held goal or wonder');
+  expect(victory).toContain('members’ faction goals, scored era objectives, held rival original capitals, and held world wonders');
+  expect(victory).toContain('You lose points when you lose a held goal, capital or wonder');
   expect(controls).toContain('Click a current-era technology to research it now, moving it to the front while keeping the rest of the queue in order');
   expect(controls).toContain('Shift+click adds a technology to the end of the queue');
   expect(controls).not.toMatch(/missing prerequisites first|drops the rest/);

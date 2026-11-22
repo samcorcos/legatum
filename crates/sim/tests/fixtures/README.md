@@ -10,6 +10,16 @@ determinism tests. The runner pin tests read that file and name the command when
 a digest differs. Keep `pins.json` outside this directory: replay import and the
 WASM checker treat every JSON file here as a tape.
 
+## Fable review batch, rules 50 (2026-11-22)
+
+`LEGATUM_REPIN_THREADS=4 tools/sim/repin.sh` regenerated the mixed-AI tapes. Only
+`game-00002-seed-18446744073709551615.json` changed. Every fixed-order replay hash stayed the same.
+In `pins.json`, the first two 80-turn mixed digests moved (`8858327448064776127` to
+`6795863348978152354`, `16340034733011875483` to `5356065880517054856`), and so did the 160-turn
+scripted-Hard city-fire digest (`3483322890443682319` to `9439788634490833228`). These moves come
+from held capital VP, the Alliance upkeep waiver and the seeded same-turn ties. The pin tests and
+all 12 determinism tests passed after regeneration.
+
 ## Neighbour warning on the rules-43 calendar line (2026-11-16)
 
 `tools/sim/repin.sh` kept all three mixed-AI tapes and all fixed-order replay

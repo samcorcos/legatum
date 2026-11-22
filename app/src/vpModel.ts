@@ -309,7 +309,7 @@ export function buildVpModel(view: PlayerView): VpModel {
     const goal = byId.get(goalId(p.id))!;
     // A held goal sits with its holder, not its faction: any goal the empire's colours score for counts as its own token.
     const kept = [...works, ...capitalSources, ...eras, ...goals].filter((s) => s.owners.includes(p.id) && !s.live);
-    const live = [...works, ...goals].filter((s) => s.owners.includes(p.id) && s.live);
+    const live = [...works, ...capitalSources, ...goals].filter((s) => s.owners.includes(p.id) && s.live);
     return {
       id: p.id, team: p.team, name: nameOf(p.id), faction: p.faction, aiLevel: aiLevel(p), color: playerColor(p.id), ink: playerInk(p.id),
       isMe: p.id === me, isMine: team.has(p.id), power: p.power ?? 0, lead: p.lead_percent ?? 0, decadence: p.decadence_percent ?? 0, gold: p.gold ?? 0, capitalStands: p.capital_stands ?? true, sakoku: sakokuStatus(p), held: [...kept, ...live], goal,
