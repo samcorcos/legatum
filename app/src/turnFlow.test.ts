@@ -53,11 +53,11 @@ it('cycles every pending unit, then idle cities, then research, and wraps withou
 });
 
 it('names a unit whose Heal just finished in the queue, from the last resolution\'s notice', () => {
-  const unit = view.units.find((u) => u.owner === view.me && u.kind === 'Soldier')!;
+  const unit = view.units.find((u) => u.owner === view.me && u.kind === 'Spearman')!;
   unit.hp = 100; unit.needs_orders = true;
   const unitLabel = (local?: Parameters<typeof pendingDecisions>[3]) => pendingDecisions(view, [], [], local).find((d) => d.kind === 'unit' && d.id === unit.id)!.label;
   expect(unitLabel()).toMatch(/: needs orders$/);
-  const healed: Event = { type: 'UnitHealed', unit: unit.id, owner: view.me, unit_kind: 'Soldier', at: unit.pos };
+  const healed: Event = { type: 'UnitHealed', unit: unit.id, owner: view.me, unit_kind: 'Spearman', at: unit.pos };
   const local = { humans: [0], orders: [[]], errors: [[]], seat: 0, report: { events: [[healed]] } };
   expect(unitLabel(local)).toMatch(/: healed to full, needs orders$/);
   // Another unit's notice, another seat's notice and a missing report never rename it.
@@ -74,7 +74,7 @@ it('names a unit whose Heal just finished in the queue, from the last resolution
 
 it('returns a garrison the occupation lock held to the queue once, when its city is secure', () => {
   const city = view.cities.find((c) => c.owner === view.me)!;
-  const held = view.units.find((u) => u.owner === view.me && u.kind === 'Soldier')!;
+  const held = view.units.find((u) => u.owner === view.me && u.kind === 'Spearman')!;
   const other = view.units.find((u) => u.owner === view.me && u.id !== held.id)!;
   // Before: held in the city under the lock (the core fortified it). After: the lock lifted, still fortified.
   const before = structuredClone(view); const after = structuredClone(view);
@@ -116,7 +116,7 @@ it('keeps an auto-firing garrison out of the Return queue', () => {
 it('decision navigation alone does nothing with no remaining decisions and never readies', () => {
   const orders: Order[] = [
     ...view.units.filter((u) => u.owner === 0).map((u): Order => ({ type: 'SkipUnit', unit: u.id })),
-    { type: 'SetProduction', city: view.cities[0].id, item: { kind: 'Unit', unit: 'Soldier' } },
+    { type: 'SetProduction', city: view.cities[0].id, item: { kind: 'Unit', unit: 'Spearman' } },
     { type: 'SetResearchQueue', techs: ['BronzeWorking'] },
   ];
   useGame.setState({ orders: [orders] });
@@ -229,12 +229,12 @@ it('treats a blocked-only queue as a pending city decision until a valid build i
   // Say what the queue waits for; it isn't empty, and "choose a build" would be wrong.
   const decision = { kind: 'city', id: city.id, label: `${city.name}: queue waiting (Settler needs population 2)` };
   expect(pendingDecisions(view, [])).toContainEqual(decision);
-  const orders: Order[] = [{ type: 'SetProductionQueue', city: city.id, queue: [{ kind: 'Unit', unit: 'Soldier' }, ...city.detail!.production_queue] }];
+  const orders: Order[] = [{ type: 'SetProductionQueue', city: city.id, queue: [{ kind: 'Unit', unit: 'Spearman' }, ...city.detail!.production_queue] }];
   expect(pendingDecisions(view, orders)).not.toContainEqual(decision);
   expect(pendingDecisions(view, orders, [{ index: 0, message: 'Invalid' }])).toContainEqual(decision);
   expect(pendingDecisions(view, [])).toContainEqual(decision);
   city.population = 2;
-  city.detail!.production_queue = [{ kind: 'Unit', unit: 'Soldier' }];
+  city.detail!.production_queue = [{ kind: 'Unit', unit: 'Spearman' }];
   expect(pendingDecisions(view, [])).toContainEqual({ ...decision, label: `${city.name}: queue waiting (Spearman has no free spawn tile)` });
   city.detail!.production_queue = [];
   expect(pendingDecisions(view, [])).toContainEqual({ ...decision, label: `Choose what ${city.name} builds` });
@@ -243,7 +243,7 @@ it('treats a blocked-only queue as a pending city decision until a valid build i
 it('invalid production, research and unit orders cannot hide decisions; a cleared queue needs attention', () => {
   const orders: Order[] = [
     { type: 'SleepUnit', unit: 0 },
-    { type: 'SetProduction', city: view.cities[0].id, item: { kind: 'Unit', unit: 'Trooper' } },
+    { type: 'SetProduction', city: view.cities[0].id, item: { kind: 'Unit', unit: 'Pikeman' } },
     { type: 'SetResearchQueue', techs: ['Feudalism'] },
   ];
   expect(pendingDecisions(view, orders, orders.map((_, index) => ({ index, message: 'Invalid' })))).toHaveLength(4);
@@ -289,8 +289,8 @@ it('a forecast disband is a pending decision until production or upkeep changes'
   const city = view.cities.find((c) => c.owner === view.me && c.detail)!;
   const v = structuredClone(view);
   const c = v.cities.find((x) => x.id === city.id)!;
-  c.detail!.producing = { kind: 'Unit', unit: 'Soldier' }; c.detail!.production_queue = [];
-  v.economy.bankruptcy = { gold: { total: -12, parts: [['Unit upkeep', -12]] }, disband: { unit: null, kind: 'Soldier', pos: c.pos, city: c.id } };
+  c.detail!.producing = { kind: 'Unit', unit: 'Spearman' }; c.detail!.production_queue = [];
+  v.economy.bankruptcy = { gold: { total: -12, parts: [['Unit upkeep', -12]] }, disband: { unit: null, kind: 'Spearman', pos: c.pos, city: c.id } };
   const treasury = pendingDecisions(v, []).find((d) => d.kind === 'treasury');
   expect(treasury).toMatchObject({ target: { kind: 'city', id: c.id } });
   expect(treasury!.label).toBe(`Treasury -12 next turn: Spearman (completing in ${c.name}) will be disbanded; change production or upkeep`);

@@ -110,10 +110,7 @@ fn demand(view: &PlayerView, resource: Resource) -> Option<Demand> {
             .research
             .known
             .contains(&legatum_core::TechId::FusionPower)
-            || !matches!(
-                building,
-                BuildingKind::Autoworks | BuildingKind::InferenceCore
-            )
+            || !matches!(building, BuildingKind::Factory | BuildingKind::ResearchLab)
     }) {
         let tech = data::building_stats(building).requires;
         let known = tech.is_none_or(|t| view.research.known.contains(&t));
@@ -535,11 +532,7 @@ mod tests {
     fn iron_is_worth_the_forges_it_would_put_to_work() {
         let mut v = ready_view(3);
         v.supply = vec![supply(Resource::Iron, 0, 0), supply(Resource::Coal, 0, 0)];
-        let forge = building_worth(
-            v.rule_experiments,
-            v.faction_of(ME),
-            BuildingKind::MachineShop,
-        );
+        let forge = building_worth(v.rule_experiments, v.faction_of(ME), BuildingKind::Forge);
         assert_eq!(unmet(&v, Resource::Iron), 3);
         assert_eq!(own_gain(&v, Resource::Iron, 2), 2 * forge);
         // Spare supply already covers one city.
@@ -566,7 +559,7 @@ mod tests {
             unit_outbids_industry(
                 v,
                 UnitKind::Phalangite,
-                UnitKind::Trooper,
+                UnitKind::Pikeman,
                 Resource::Iron,
                 pct,
                 false,
@@ -575,7 +568,7 @@ mod tests {
         // Two spare Iron and two Forge-ready cities: every spare Iron is wanted.
         assert!(contested(&v, Resource::Iron));
         assert!(
-            strength_premium_milli(faction, UnitKind::Phalangite, UnitKind::Trooper)
+            strength_premium_milli(faction, UnitKind::Phalangite, UnitKind::Pikeman)
                 < per_user_production(v.rule_experiments, faction, Resource::Iron) * 1000
         );
         assert!(!outbids(&v, 800));
@@ -619,7 +612,7 @@ mod tests {
     fn an_aircraft_prices_the_lab_it_would_displace() {
         let mut v = ready_view(1);
         v.cities[0].population = 8;
-        v.cities[0].detail.as_mut().unwrap().buildings = vec![BuildingKind::College];
+        v.cities[0].detail.as_mut().unwrap().buildings = vec![BuildingKind::University];
         v.research.known.push(TechId::Electronics);
         v.supply = vec![supply(Resource::Oil, 1, 0)];
         assert_eq!(
@@ -627,7 +620,7 @@ mod tests {
             building_worth(
                 v.rule_experiments,
                 v.faction_of(ME),
-                BuildingKind::InferenceCore,
+                BuildingKind::ResearchLab,
             )
         );
         v.supply[0] = supply(Resource::Oil, 2, 0);
@@ -661,21 +654,13 @@ mod tests {
         let (gain, _) = capture_value(&v, &enemy);
         assert_eq!(
             gain,
-            2 * building_worth(
-                v.rule_experiments,
-                v.faction_of(ME),
-                BuildingKind::MachineShop,
-            )
+            2 * building_worth(v.rule_experiments, v.faction_of(ME), BuildingKind::Forge,)
         );
         v.players.iter_mut().find(|p| p.id == ME).unwrap().faction = Faction::Germany;
         let (german_gain, _) = capture_value(&v, &enemy);
         assert_eq!(
             german_gain,
-            4 * building_worth(
-                v.rule_experiments,
-                Faction::Germany,
-                BuildingKind::MachineShop
-            )
+            4 * building_worth(v.rule_experiments, Faction::Germany, BuildingKind::Forge)
         );
     }
 }

@@ -22,7 +22,7 @@ fn found(s: &mut GameState, col: i32, row: i32) -> CityId {
 
 fn soldier() -> ProductionItem {
     ProductionItem::Unit {
-        unit: UnitKind::Soldier,
+        unit: UnitKind::Spearman,
     }
 }
 
@@ -32,13 +32,13 @@ fn the_cap_is_one_armed_unit_per_city_plus_one_and_scouts_do_not_count() {
     let home = found(&mut s, 4, 4);
     assert_eq!(economy::levy(&s, P), Some((0, 2)));
     spawn_unit(&mut s, P, UnitKind::Scout, Hex::from_offset(6, 6));
-    spawn_unit(&mut s, P, UnitKind::Soldier, Hex::from_offset(5, 4));
+    spawn_unit(&mut s, P, UnitKind::Spearman, Hex::from_offset(5, 4));
     assert_eq!(economy::levy(&s, P), Some((1, 2)), "the Scout is free");
     assert_eq!(
         economy::production_blocker(&s, &s.cities[&home], soldier(), true),
         None
     );
-    spawn_unit(&mut s, P, UnitKind::Ranger, Hex::from_offset(3, 4));
+    spawn_unit(&mut s, P, UnitKind::Archer, Hex::from_offset(3, 4));
     let blocker = economy::production_blocker(&s, &s.cities[&home], soldier(), true);
     assert_eq!(blocker.as_deref(), Some("Levies full: 2 of 2"));
     // Civilians and Scouts are never blocked.
@@ -62,7 +62,7 @@ fn losing_a_city_never_disbands_units_it_only_blocks_new_ones() {
     let home = found(&mut s, 4, 4);
     let second = found(&mut s, 12, 8);
     for i in 0..3 {
-        spawn_unit(&mut s, P, UnitKind::Soldier, Hex::from_offset(5 + i, 4));
+        spawn_unit(&mut s, P, UnitKind::Spearman, Hex::from_offset(5 + i, 4));
     }
     assert_eq!(economy::levy(&s, P), Some((3, 3)));
     s.cities.remove(&second);
@@ -76,8 +76,8 @@ fn losing_a_city_never_disbands_units_it_only_blocks_new_ones() {
 fn a_full_levy_blocks_buying_and_finishing_but_other_factions_are_uncapped() {
     let mut s = state(Faction::Byzantium);
     let home = found(&mut s, 4, 4);
-    spawn_unit(&mut s, P, UnitKind::Soldier, Hex::from_offset(5, 4));
-    spawn_unit(&mut s, P, UnitKind::Soldier, Hex::from_offset(3, 4));
+    spawn_unit(&mut s, P, UnitKind::Spearman, Hex::from_offset(5, 4));
+    spawn_unit(&mut s, P, UnitKind::Spearman, Hex::from_offset(3, 4));
     let errors = validate_orders(
         &s,
         P,
@@ -98,7 +98,7 @@ fn a_full_levy_blocks_buying_and_finishing_but_other_factions_are_uncapped() {
     let mut t = state(Faction::Switzerland);
     let home = found(&mut t, 4, 4);
     for i in 0..5 {
-        spawn_unit(&mut t, P, UnitKind::Soldier, Hex::from_offset(5 + i, 5));
+        spawn_unit(&mut t, P, UnitKind::Spearman, Hex::from_offset(5 + i, 5));
     }
     assert_eq!(economy::levy(&t, P), None);
     assert_eq!(
@@ -111,7 +111,7 @@ fn a_full_levy_blocks_buying_and_finishing_but_other_factions_are_uncapped() {
 fn aircraft_count_toward_thin_levies_and_cannot_be_built_at_the_cap() {
     let mut s = state(Faction::Byzantium);
     let home = found(&mut s, 4, 4);
-    spawn_unit(&mut s, P, UnitKind::Soldier, Hex::from_offset(5, 4));
+    spawn_unit(&mut s, P, UnitKind::Spearman, Hex::from_offset(5, 4));
     s.aircraft.push(Aircraft {
         id: UnitId(s.next_unit_id + 1),
         kind: UnitKind::Fighter,

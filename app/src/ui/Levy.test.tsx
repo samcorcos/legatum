@@ -43,7 +43,7 @@ it('shows the armed-unit count: top bar, city panel note, and a rival\'s row; a 
   }
   const st = client.debugState();
   for (const u of st.units.filter((u) => u.owner === 0 && u.kind !== 'Settler')) st.units.splice(st.units.indexOf(u), 1);
-  spawnUnit(st, 0, 'Soldier', fromOffset(1, 1), false);
+  spawnUnit(st, 0, 'Spearman', fromOffset(1, 1), false);
   show(view(), { diplomacyOpen: false });
   act(() => root.render(<><TopBar /><LevyNote /></>));
   const l = view().players.find((p) => p.id === 0)!.levy!;
@@ -53,7 +53,7 @@ it('shows the armed-unit count: top bar, city panel note, and a rival\'s row; a 
   expect(counter.querySelector('[aria-label]')!.getAttribute('aria-label')).toBe(`Military units ${l.units} / ${l.cap}`);
   expect(container.querySelector('.levy-note')!.textContent).toContain(`Military units ${l.units} / ${l.cap}`);
   // Fill the levy.
-  for (let i = l.units; i < l.cap; i++) spawnUnit(st, 0, 'Soldier', fromOffset(1 + i, 2), false);
+  for (let i = l.units; i < l.cap; i++) spawnUnit(st, 0, 'Spearman', fromOffset(1 + i, 2), false);
   show(view(), { diplomacyOpen: false });
   act(() => root.render(<><TopBar /><LevyNote /></>));
   // The top-bar chip stays short ("3 / 3" in red with the alert mark); the state word is in its tooltip and label.

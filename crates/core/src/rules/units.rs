@@ -1250,9 +1250,9 @@ mod tests {
     #[test]
     fn resting_defense_never_creates_a_standing_order_but_sleep_persists() {
         let mut s = game(&[0, 1]);
-        let idle = unit(&mut s, 0, UnitKind::Soldier, hex(3, 4));
-        let skip = unit(&mut s, 0, UnitKind::Soldier, hex(4, 4));
-        let sleep_soldier = unit(&mut s, 0, UnitKind::Soldier, hex(5, 4));
+        let idle = unit(&mut s, 0, UnitKind::Spearman, hex(3, 4));
+        let skip = unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
+        let sleep_soldier = unit(&mut s, 0, UnitKind::Spearman, hex(5, 4));
         let sleep = unit(&mut s, 0, UnitKind::Settler, hex(6, 4));
         let (s, _) = resolve_units(
             &s,
@@ -1304,10 +1304,10 @@ mod tests {
 
     #[test]
     fn sleep_wakes_when_enemy_moves_into_range_once_even_after_load() {
-        for kind in [UnitKind::Settler, UnitKind::Soldier] {
+        for kind in [UnitKind::Settler, UnitKind::Spearman] {
             let mut s = game(&[0, 1]);
             let sleeper = unit(&mut s, 0, kind, hex(4, 4));
-            let enemy = unit(&mut s, 1, UnitKind::Soldier, hex(7, 4));
+            let enemy = unit(&mut s, 1, UnitKind::Spearman, hex(7, 4));
             let (s, _) = resolve_units(
                 &s,
                 &orders(
@@ -1350,11 +1350,11 @@ mod tests {
 
     #[test]
     fn re_sleep_accepts_visible_enemies_until_a_new_enemy_arrives() {
-        for kind in [UnitKind::Settler, UnitKind::Soldier] {
+        for kind in [UnitKind::Settler, UnitKind::Spearman] {
             let mut s = game(&[0, 1]);
             let sleeper = unit(&mut s, 0, kind, hex(4, 4));
-            let enemy = unit(&mut s, 1, UnitKind::Soldier, hex(7, 4));
-            let new_enemy = unit(&mut s, 1, UnitKind::Soldier, hex(4, 7));
+            let enemy = unit(&mut s, 1, UnitKind::Spearman, hex(7, 4));
+            let new_enemy = unit(&mut s, 1, UnitKind::Spearman, hex(4, 7));
             let mut plan = orders(
                 0,
                 vec![Order::SleepUnit {
@@ -1427,9 +1427,9 @@ mod tests {
     #[test]
     fn a_visible_enemy_approaching_into_range_wakes_sleep_once() {
         let mut s = game(&[0, 0, 1]);
-        let sleeper = unit(&mut s, 0, UnitKind::Soldier, hex(4, 4));
+        let sleeper = unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
         unit(&mut s, 1, UnitKind::Scout, hex(8, 4));
-        let enemy = unit(&mut s, 2, UnitKind::Soldier, hex(7, 4));
+        let enemy = unit(&mut s, 2, UnitKind::Spearman, hex(7, 4));
         assert!(
             player_view(&s, PlayerId(0))
                 .units
@@ -1497,8 +1497,8 @@ mod tests {
     #[test]
     fn sleeping_with_a_visible_enemy_waits_for_it_to_leave_and_reenter_sight() {
         let mut s = game(&[0, 1]);
-        let sleeper = unit(&mut s, 0, UnitKind::Soldier, hex(4, 4));
-        let enemy = unit(&mut s, 1, UnitKind::Soldier, hex(6, 4));
+        let sleeper = unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
+        let enemy = unit(&mut s, 1, UnitKind::Spearman, hex(6, 4));
         let (s, events) = resolve_units(
             &s,
             &orders(
@@ -1554,7 +1554,7 @@ mod tests {
     fn waking_uses_current_shared_sight_and_the_sleepers_movement_radius() {
         let mut s = game(&[0, 0, 1]);
         let sleeper = unit(&mut s, 0, UnitKind::Scout, hex(4, 4));
-        let enemy = unit(&mut s, 2, UnitKind::Soldier, hex(7, 4));
+        let enemy = unit(&mut s, 2, UnitKind::Spearman, hex(7, 4));
         s.units.get_mut(&sleeper).unwrap().standing_order = Some(StandingOrder::Sleep);
         // Scout movement is 3, but its sight is 2. Explored fog is not live sight.
         for i in 0..s.map.len() {
@@ -1564,14 +1564,14 @@ mod tests {
         let mut previous = sleeping_threats(&s);
         wake_threatened_sleepers(&mut s, &mut previous, &mut events);
         assert!(events.is_empty());
-        let ally = unit(&mut s, 1, UnitKind::Soldier, hex(8, 4));
+        let ally = unit(&mut s, 1, UnitKind::Spearman, hex(8, 4));
         // Shared sight now reveals the enemy exactly three hexes away.
         wake_threatened_sleepers(&mut s, &mut previous, &mut events);
         assert_eq!(events.len(), 1);
         assert!(s.units[&sleeper].needs_orders);
-        // A Soldier's radius is only 2 even though the same enemy remains visible.
+        // A Spearman's radius is only 2 even though the same enemy remains visible.
         let u = s.units.get_mut(&sleeper).unwrap();
-        u.kind = UnitKind::Soldier;
+        u.kind = UnitKind::Spearman;
         u.standing_order = Some(StandingOrder::Sleep);
         events.clear();
         wake_threatened_sleepers(&mut s, &mut previous, &mut events);
@@ -1589,8 +1589,8 @@ mod tests {
     #[test]
     fn only_armies_of_teams_at_war_wake_sleepers() {
         let mut s = game(&[0, 1]);
-        let sleeper = unit(&mut s, 0, UnitKind::Soldier, hex(4, 4));
-        let army = unit(&mut s, 1, UnitKind::Soldier, hex(8, 4));
+        let sleeper = unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
+        let army = unit(&mut s, 1, UnitKind::Spearman, hex(8, 4));
         s.units.get_mut(&sleeper).unwrap().standing_order = Some(StandingOrder::Sleep);
         s.diplomacy.as_mut().unwrap().relations[0].state = crate::diplomacy::RelationState::Peace;
         let mut previous = sleeping_threats(&s);
@@ -1610,7 +1610,7 @@ mod tests {
     fn passing_enemy_wakes_a_sleeper_even_if_it_ends_out_of_sight() {
         let mut s = game(&[0, 1]);
         let at = Hex::new(4, 4);
-        let sleeper = unit(&mut s, 0, UnitKind::Soldier, at);
+        let sleeper = unit(&mut s, 0, UnitKind::Spearman, at);
         let enemy = unit(&mut s, 1, UnitKind::Scout, Hex::new(7, 1));
         s.units.get_mut(&sleeper).unwrap().standing_order = Some(StandingOrder::Sleep);
         let path = vec![Hex::new(6, 2), Hex::new(7, 2), Hex::new(8, 2)];
@@ -1643,7 +1643,7 @@ mod tests {
     fn sparta_regiments_and_scouts_rest_heal_at_the_normal_rate() {
         let mut s = game(&[0, 1]);
         s.player_mut(PlayerId(0)).faction = Faction::Sparta;
-        let soldier = unit(&mut s, 0, UnitKind::Soldier, hex(4, 4));
+        let soldier = unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
         let scout = unit(&mut s, 0, UnitKind::Scout, hex(4, 5));
         for id in [soldier, scout] {
             s.units.get_mut(&id).unwrap().hp = 75;
@@ -1680,7 +1680,7 @@ mod tests {
     #[test]
     fn sleep_heals_through_saves_and_stays_asleep_at_full_hp() {
         let mut s = game(&[0, 1]);
-        let id = unit(&mut s, 0, UnitKind::Soldier, hex(4, 4));
+        let id = unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
         s.units.get_mut(&id).unwrap().hp = 75;
         goto(&mut s, id, hex(8, 4));
         let (s, events) = resolve_units(
@@ -1723,7 +1723,7 @@ mod tests {
     #[test]
     fn combat_delays_the_healing_of_a_sleeper() {
         let mut s = game(&[0, 1]);
-        let id = unit(&mut s, 0, UnitKind::Soldier, hex(4, 4));
+        let id = unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
         let u = s.units.get_mut(&id).unwrap();
         u.hp = 95;
         u.acted = true;
@@ -1743,7 +1743,7 @@ mod tests {
     #[test]
     fn a_heal_order_rests_then_wakes_once_at_full_hp_with_a_notice() {
         let mut s = game(&[0, 1]);
-        let id = unit(&mut s, 0, UnitKind::Soldier, hex(4, 4));
+        let id = unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
         s.units.get_mut(&id).unwrap().hp = 75;
         goto(&mut s, id, hex(8, 4));
         let (s, events) = resolve_units(&s, &orders(0, vec![heal_order(id)]));
@@ -1776,7 +1776,7 @@ mod tests {
             vec![&Event::UnitHealed {
                 unit: id,
                 owner: PlayerId(0),
-                unit_kind: UnitKind::Soldier,
+                unit_kind: UnitKind::Spearman,
                 at: hex(4, 4),
             }]
         );
@@ -1788,9 +1788,9 @@ mod tests {
     #[test]
     fn a_healing_unit_wakes_early_for_a_new_enemy_like_a_sleeper() {
         let mut s = game(&[0, 1]);
-        let id = unit(&mut s, 0, UnitKind::Soldier, hex(4, 4));
+        let id = unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
         s.units.get_mut(&id).unwrap().hp = 40;
-        let enemy = unit(&mut s, 1, UnitKind::Soldier, hex(7, 4));
+        let enemy = unit(&mut s, 1, UnitKind::Spearman, hex(7, 4));
         let (s, _) = resolve_units(&s, &orders(0, vec![heal_order(id)]));
         assert_eq!(s.units[&id].standing_order, Some(StandingOrder::Heal));
         let (s, events) = resolve_units(
@@ -1809,7 +1809,7 @@ mod tests {
         assert!(events.contains(&Event::UnitAwakened {
             unit: id,
             owner: PlayerId(0),
-            unit_kind: UnitKind::Soldier,
+            unit_kind: UnitKind::Spearman,
             at: hex(4, 4),
         }));
         assert!(!events.iter().any(|e| matches!(e, Event::UnitHealed { .. })));
@@ -1818,8 +1818,8 @@ mod tests {
     #[test]
     fn a_heal_order_at_full_hp_is_refused_with_a_reason() {
         let mut s = game(&[0, 1]);
-        let full = unit(&mut s, 0, UnitKind::Soldier, hex(4, 4));
-        let hurt = unit(&mut s, 0, UnitKind::Soldier, hex(6, 4));
+        let full = unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
+        let hurt = unit(&mut s, 0, UnitKind::Spearman, hex(6, 4));
         s.units.get_mut(&hurt).unwrap().hp = UNIT_HP - 1;
         let errs =
             super::super::validate_orders(&s, PlayerId(0), &[heal_order(full), heal_order(hurt)]);
@@ -1862,7 +1862,7 @@ mod tests {
         assert_eq!(old, sleep);
         // A unit on Sleep or Heal round-trips through the state's JSON.
         let mut s = game(&[0, 1]);
-        let id = unit(&mut s, 0, UnitKind::Soldier, hex(4, 4));
+        let id = unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
         s.units.get_mut(&id).unwrap().standing_order = Some(StandingOrder::Heal);
         let restored: GameState =
             serde_json::from_str(&serde_json::to_string(&s).unwrap()).unwrap();
@@ -1875,8 +1875,8 @@ mod tests {
     #[test]
     fn a_sleeping_ranged_unit_holds_fire() {
         let mut s = game(&[0, 1]);
-        let archer = unit(&mut s, 0, UnitKind::Ranger, hex(4, 4));
-        let enemy = unit(&mut s, 1, UnitKind::Soldier, hex(5, 4));
+        let archer = unit(&mut s, 0, UnitKind::Archer, hex(4, 4));
+        let enemy = unit(&mut s, 1, UnitKind::Spearman, hex(5, 4));
         let (s, events) = resolve_units(
             &s,
             &orders(
@@ -2010,7 +2010,7 @@ mod tests {
             assert_eq!(data::can_auto_explore(kind), accepts, "{kind:?}");
         }
         let mut s = game(&[0, 1]);
-        let soldier = unit(&mut s, 0, UnitKind::Soldier, hex(4, 4));
+        let soldier = unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
         crate::visibility::update_explored(&mut s);
         let to = hex(5, 4);
         let (s, _) = resolve_units(&s, &orders(0, vec![auto(soldier, vec![to])]));
@@ -2156,7 +2156,7 @@ mod tests {
     fn blocked_automated_route_stops_instead_of_becoming_a_persistent_goto() {
         let mut s = game(&[0, 1]);
         let u = unit(&mut s, 0, UnitKind::Scout, hex(4, 4));
-        unit(&mut s, 0, UnitKind::Soldier, hex(5, 4));
+        unit(&mut s, 0, UnitKind::Spearman, hex(5, 4));
         crate::visibility::update_explored(&mut s);
         let (s, events) = resolve_units(&s, &orders(0, vec![auto(u, vec![hex(5, 4)])]));
         assert_eq!(s.units[&u].automation, None);
@@ -2195,9 +2195,9 @@ mod tests {
         }
         let pos = hex(4, 4);
         city(&mut s, 0, pos, 2);
-        let bow = unit(&mut s, 0, UnitKind::Ranger, pos);
+        let bow = unit(&mut s, 0, UnitKind::Archer, pos);
         let target = hex(5, 4);
-        unit(&mut s, 1, UnitKind::Soldier, target);
+        unit(&mut s, 1, UnitKind::Spearman, target);
         s.player_mut(PlayerId(0)).gold = 100;
         let order = Order::SetAutoFire {
             unit: bow,
@@ -2238,7 +2238,7 @@ mod tests {
         s.map.get_mut(hex(4, 4).neighbors()[0]).unwrap().resource = Some(crate::Resource::Iron);
         let (next, events) = resolve_units(&s, &orders(0, vec![Order::UpgradeUnit { unit: u }]));
         let up = &next.units[&u];
-        assert_eq!(up.kind, UnitKind::Trooper);
+        assert_eq!(up.kind, UnitKind::Pikeman);
         assert_eq!(up.pos, hex(4, 5), "acts next turn: no movement");
         assert_eq!(next.player(PlayerId(0)).gold, 120 - 84);
         assert_eq!(
@@ -2250,12 +2250,12 @@ mod tests {
             e,
             Event::UnitUpgraded {
                 gold: 84,
-                to: UnitKind::Trooper,
+                to: UnitKind::Pikeman,
                 ..
             }
         )));
         assert_eq!(upgrade_cost(UnitKind::Phalangite), Some(84));
-        assert_eq!(upgrade_cost(UnitKind::Soldier), Some(60));
+        assert_eq!(upgrade_cost(UnitKind::Spearman), Some(60));
         assert_eq!(upgrade_cost(UnitKind::Scout), None);
     }
 
@@ -2263,7 +2263,7 @@ mod tests {
     fn one_upgrade_reaches_newest_researched_form_for_sum_of_step_costs() {
         let mut s = game(&[0, 1]);
         city(&mut s, 0, hex(4, 4), 2);
-        let u = unit(&mut s, 0, UnitKind::Soldier, hex(4, 5));
+        let u = unit(&mut s, 0, UnitKind::Spearman, hex(4, 5));
         s.player_mut(PlayerId(0)).techs.extend([
             TechId::Mathematics,
             TechId::Feudalism,
@@ -2271,21 +2271,21 @@ mod tests {
         ]);
         s.player_mut(PlayerId(0)).gold = 200;
         s.map.get_mut(hex(4, 4).neighbors()[0]).unwrap().resource = Some(crate::Resource::Iron);
-        let (to, steps, price) = upgrade_plan(&s, PlayerId(0), UnitKind::Soldier).unwrap();
-        assert_eq!(to, UnitKind::Trooper);
-        assert_eq!(steps, [UnitKind::Phalangite, UnitKind::Trooper]);
+        let (to, steps, price) = upgrade_plan(&s, PlayerId(0), UnitKind::Spearman).unwrap();
+        assert_eq!(to, UnitKind::Pikeman);
+        assert_eq!(steps, [UnitKind::Phalangite, UnitKind::Pikeman]);
         assert_eq!(price.total, 60 + 84);
         assert_eq!(
             check_upgrade(&s, PlayerId(0), u, 200),
             Ok((to, price.total))
         );
         let (next, events) = resolve_units(&s, &orders(0, vec![Order::UpgradeUnit { unit: u }]));
-        assert_eq!(next.units[&u].kind, UnitKind::Trooper);
+        assert_eq!(next.units[&u].kind, UnitKind::Pikeman);
         assert_eq!(next.player(PlayerId(0)).gold, 200 - 144);
         assert!(events.iter().any(|e| matches!(
             e,
             Event::UnitUpgraded {
-                to: UnitKind::Trooper,
+                to: UnitKind::Pikeman,
                 gold: 144,
                 ..
             }
@@ -2310,7 +2310,7 @@ mod tests {
     #[test]
     fn sleep_disband_and_duplicate_orders() {
         let mut s = game(&[0, 1]);
-        let a = unit(&mut s, 0, UnitKind::Soldier, hex(2, 2));
+        let a = unit(&mut s, 0, UnitKind::Spearman, hex(2, 2));
         let b = unit(&mut s, 0, UnitKind::Scout, hex(5, 5));
         let foreign = unit(&mut s, 1, UnitKind::Scout, hex(9, 9));
         goto(&mut s, a, hex(8, 2));
@@ -2460,7 +2460,7 @@ mod tests {
         let a = unit(&mut s, 0, UnitKind::Settler, hex(2, 2));
         let b = unit(&mut s, 1, UnitKind::Settler, hex(4, 3));
         let c = unit(&mut s, 2, UnitKind::Settler, hex(10, 8));
-        let d = unit(&mut s, 2, UnitKind::Soldier, hex(10, 2));
+        let d = unit(&mut s, 2, UnitKind::Spearman, hex(10, 2));
         let mut events = Vec::new();
         let found = [
             (PlayerId(0), a),
@@ -2489,7 +2489,7 @@ mod tests {
         let mut s = game(&[0, 1, 2]);
         city(&mut s, 0, hex(2, 2), 1);
         unit(&mut s, 1, UnitKind::Settler, hex(6, 6));
-        let doomed = unit(&mut s, 2, UnitKind::Soldier, hex(9, 9));
+        let doomed = unit(&mut s, 2, UnitKind::Spearman, hex(9, 9));
         let mut events = Vec::new();
         check_elimination(&mut s, &mut events);
         assert!(s.player(PlayerId(0)).alive && s.player(PlayerId(1)).alive);
@@ -2507,8 +2507,8 @@ mod tests {
     fn healing_depends_on_territory_and_activity() {
         let mut s = game(&[0, 1]);
         city(&mut s, 0, hex(2, 2), 1);
-        let home = unit(&mut s, 0, UnitKind::Soldier, hex(2, 3));
-        let field = unit(&mut s, 0, UnitKind::Soldier, hex(8, 8));
+        let home = unit(&mut s, 0, UnitKind::Spearman, hex(2, 3));
+        let field = unit(&mut s, 0, UnitKind::Spearman, hex(8, 8));
         let full = unit(&mut s, 0, UnitKind::Scout, hex(6, 6));
         let mover = unit(&mut s, 0, UnitKind::Scout, hex(9, 2));
         for u in [home, field, mover] {
@@ -2526,7 +2526,7 @@ mod tests {
     #[test]
     fn fortify_accrues_caps_and_clears_on_move() {
         let mut s = game(&[0, 1]);
-        let u = unit(&mut s, 0, UnitKind::Soldier, hex(2, 2));
+        let u = unit(&mut s, 0, UnitKind::Spearman, hex(2, 2));
         let civ = unit(&mut s, 0, UnitKind::Settler, hex(5, 5));
         let (s1, _) = resolve_units(&s, &no_orders());
         assert_eq!(s1.units[&u].fortify, 3);

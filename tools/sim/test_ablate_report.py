@@ -22,7 +22,7 @@ def games_for(faction):
             "research_turns": {"0": {"IronWorking": 40 + seed}},
             "faction_goal_turns": {"0": goal} if goal else {},
             "germany_project_city_turns": {"Gold": seed},
-            "company_hires": [{"buyer": 0, "turn": 70 + seed, "gold": 80, "seller": 1, "unit": "Soldier", "until": 100}],
+            "company_hires": [{"buyer": 0, "turn": 70 + seed, "gold": 80, "seller": 1, "unit": "Spearman", "until": 100}],
             "celts_razes": {"0": seed},
             "era_entries": {"0": {"2": 60 + seed}},
         }

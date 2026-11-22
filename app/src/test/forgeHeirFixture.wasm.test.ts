@@ -11,17 +11,17 @@ describe('forgeHeirFixture', () => {
     expect(fixture.turn).toBeGreaterThanOrEqual(100);
     expect(fixture.players[0].techs).toContain('IronWorking');
     expect(own.every((c) => c.population >= 6)).toBe(true);
-    expect(own.filter((c) => c.buildings.includes('MachineShop'))).toHaveLength(4);
+    expect(own.filter((c) => c.buildings.includes('Forge'))).toHaveLength(4);
     expect(own.find((c) => c.id === capital)!.buildings).toEqual([]);
-    expect(coreFixture(fixture)).toContain('"MachineShop"');
+    expect(coreFixture(fixture)).toContain('"Forge"');
   });
   it('puts the Heir at home or in a rival’s hands, always as Byzantium’s', () => {
     for (const [state, owner] of [['own', 0], ['captured', 1]] as const) {
       const { fixture } = forgeHeirFixture('Byzantium', state);
-      const heir = fixture.units.find((u) => u.kind === 'Heir')!;
+      const heir = fixture.units.find((u) => u.kind === 'HeirToTheThrone')!;
       expect([heir.owner, heir.heir_of]).toEqual([owner, 0]);
       expect(JSON.parse(coreFixture(fixture)).units[heir.id].heir_of).toBe(0);
     }
-    expect(forgeHeirFixture('Byzantium', 'none').fixture.units.some((u) => u.kind === 'Heir')).toBe(false);
+    expect(forgeHeirFixture('Byzantium', 'none').fixture.units.some((u) => u.kind === 'HeirToTheThrone')).toBe(false);
   });
 });

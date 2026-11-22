@@ -96,7 +96,7 @@ describe('faction content and setup', () => {
     expect(FACTION_INFO.Celts.ability).toContain("Barbarians don't attack the Celts");
     expect(FACTION_INFO.Mongols.ability).toContain('at least 8 tiles from your capital');
     expect(FACTION_INFO.Mongols.ability).toContain('+2 Gold');
-    for (const building of ['Market', 'Clearinghouse'] as const) {
+    for (const building of ['Market', 'Bank'] as const) {
       const description = itemDescription({ kind: 'Building', building }, 'Mongols');
       expect(description).toContain('at least 8 tiles from your capital');
       expect(description).toContain('also earns +2 Gold');
@@ -124,20 +124,20 @@ describe('faction-accurate items', () => {
     expect(availableToPlayer('Mongols', walls, 1)).toBe(false);
     expect(factionUnavailableReason(walls, 'Mongols', 1)).toBe('The Mongols raise Walls from the Medieval era');
     expect(availableToPlayer('Mongols', walls, 2)).toBe(true);
-    expect((['Workshop', 'MachineShop', 'Autoworks'] as const).every(isWorkshopLineBuilding)).toBe(true);
+    expect((['Workshop', 'Forge', 'Factory'] as const).every(isWorkshopLineBuilding)).toBe(true);
   });
 
   it('names and describes the Byzantium buildings as ordinary ones, with city Science', async () => {
     const { availableToFaction, buildingStatsFor } = await import('./data');
-    const lab = { kind: 'Building', building: 'Laboratory' } as const;
+    const lab = { kind: 'Building', building: 'Library' } as const;
     expect(itemName(lab, 'Byzantium')).toBe('Library');
     expect(itemName(lab, 'Athens')).toBe('Lyceum');
     expect(itemName(lab, 'India')).toBe('Library');
     expect(itemName({ kind: 'Building', building: 'Walls' }, 'Switzerland')).toBe('Alpine Redoubt');
-    expect(itemName({ kind: 'Unit', unit: 'Ranger' }, 'Celts')).toBe('Archer');
+    expect(itemName({ kind: 'Unit', unit: 'Archer' }, 'Celts')).toBe('Archer');
     expect(itemDescription(lab, 'Byzantium')).toBe(itemDescription(lab, 'India'));
-    expect(itemDescription({ kind: 'Building', building: 'College' }, 'Byzantium')).toBe('+4 Science. Upgrades your Library. Needs 5 population.');
-  expect(buildingStatsFor('Byzantium', 'Laboratory').yields.science).toBeGreaterThan(0);
+    expect(itemDescription({ kind: 'Building', building: 'University' }, 'Byzantium')).toBe('+4 Science. Upgrades your Library. Needs 5 population.');
+  expect(buildingStatsFor('Byzantium', 'Library').yields.science).toBeGreaterThan(0);
     expect(availableToFaction('India', { kind: 'Project', project: 'Gold' })).toBe(true);
     expect(availableToFaction('India', { kind: 'Project', project: 'Grow' })).toBe(false);
     expect(availableToFaction('Germany', { kind: 'Project', project: 'Science' })).toBe(true);
@@ -147,10 +147,10 @@ describe('faction-accurate items', () => {
 
   it('gives the Byzantium a Library like everyone, and its Relay Uplink needs one', async () => {
     const { availableToFaction, greatWorkRequirement } = await import('./data');
-    const library = { kind: 'Building', building: 'Laboratory' } as const;
+    const library = { kind: 'Building', building: 'Library' } as const;
     expect(availableToFaction('Byzantium', library)).toBe(true);
-    expect(greatWorkRequirement('RelayUplink')).toEqual(['Laboratory', 1]);
-    expect(greatWorkRequirement('PlanetaryFoundry')).toEqual(['Autoworks', 1]);
+    expect(greatWorkRequirement('GreatLibrary')).toEqual(['Library', 1]);
+    expect(greatWorkRequirement('RoyalArsenal')).toEqual(['Factory', 1]);
   });
 
   it('states the Byzantium Company rule from the generated numbers, in plain words', () => {

@@ -10,7 +10,7 @@ Moved verbatim from `game-rules.md` on 2026-11-22, in the original order; the or
   India links inform targets and border defense. Army changes are sighting deltas, and fogged
   garrisons remain unknown. A remote scout does not make a rival a homeland neighbor.
   A rush-capable neighbour within 10 hexes raises the military knob (`DefendedExpand`); only
-  observed aggression (2+ Soldiers' strength at our border, a visible buildup or any war it
+  observed aggression (2+ Spearmen's strength at our border, a visible buildup or any war it
   declared: `OpponentAssessment::observed_aggression`) makes exposed cities research legal Walls
   prerequisites and build a garrisoned shooter, then Walls (`production.rs::choose_item`,
   `adaptation.rs::assessed_border_threat`); a faction prior alone never walls (units counter
@@ -288,7 +288,7 @@ Moved verbatim from `game-rules.md` on 2026-11-22, in the original order; the or
   rounds of enemy fire (from round 1, including the approach) and then the volleys and melee
   of units already in position (4 rounds after the slowest arrives), through the engine's own
   attack forecasts; a
-  fogged city is assumed to hold one fortified Soldier (PlayerView only). Gain = city value
+  fogged city is assumed to hold one fortified Spearman (PlayerView only). Gain = city value
   (`city_keep_value`) plus a second city's worth for a rival's last city, up to one more as
   the target, the public VP leader, goes from 30% to 55% of its target, bounty, title flips and conquest
   VP, times eagerness (60 + aggression knob + identity: Sparta +30, Mongols +25,
@@ -306,7 +306,7 @@ Moved verbatim from `game-rules.md` on 2026-11-22, in the original order; the or
   enough on its own for an optional (non-breach) declaration, alongside the older campaign score and
   `conquest_ready`'s two-ranged-two-melee recipe (`diplomacy.rs`), keeps peace and treaties
   with the target off the table unless we're endangered, and `military.rs::press_strike` moves the force the turn
-  war is declared (Rangers shoot the city tile, melee attacks through the city-assault
+  war is declared (Archers shoot the city tile, melee attacks through the city-assault
   forecast; where cities don't fire, a melee unit that can hit the city this turn with under 25%
   loss chance attacks, except a Mongols courier against a garrisoned city far from home). `dedupe_first_steps` treats borders as open after a same-turn declaration, as
   resolution does. The strike forecast gives a newly declared enemy no retroactive unit attack
@@ -337,12 +337,12 @@ Moved verbatim from `game-rules.md` on 2026-11-22, in the original order; the or
   conquest. **v5** (forked from frozen v2): 3 cities, funded ranged campaign, then science/defense.
   **v6** (forked from frozen v5): adds economic "consolidation" (reinvest captured-city treasury)
   and a split tactics module. **v7** (forked from frozen v6, `proxy_v7.rs`, `--proxy-version 7`,
-  `--duel-opponent proxy7`): the "conqueror" from playtest 8.2. Soldiers from turn 2 (one Settler
-  wave only after two Soldiers exist; Sparta keep one Ranger, others a Ranger per two Soldiers),
+  `--duel-opponent proxy7`): the "conqueror" from playtest 8.2. Spearmen from turn 2 (one Settler
+  wave only after two Spearmen exist; Sparta keep one Archer, others an Archer per two Spearmen),
   Settler snipes (declare war beside an unescorted Settler and take it the same turn), staging 2-3
   hexes from a city at Peace then declaring war and striking in the same turn (the planner runs a
-  second pass on a view with the war applied), assaults on defended cities with 3+ Soldiers
-  (more per visible defender; walled cities also need Rangers), no consolidation (after a capture
+  second pass on a view with the war applied), assaults on defended cities with 3+ Spearmen
+  (more per visible defender; walled cities also need Archers), no consolidation (after a capture
   the next nearest or weakest city is the target), peace offered only to a rival whose war stalled
   (16 idle turns) so the army can switch fronts, one guard per threatened home city,
   and Sparta fight wounded (kills and captures heal). None is wired into the app's brain selection.
@@ -351,10 +351,10 @@ Moved verbatim from `game-rules.md` on 2026-11-22, in the original order; the or
   an early Scout sweep to find the nearest neighbour, then searches the next corridor after
   committing to that war. From T20–60 it may declare with four
   infantry against an unwalled city within ten hexes of home, even before the assault stack is
-  staged. Its Soldier target is five before T40, then seven plus two per city, and it defers
-  Rangers until T40 and researches Feudalism before Currency and Bronze Working. An early
+  staged. Its Spearman target is five before T40, then seven plus two per city, and it defers
+  Archers until T40 and researches Feudalism before Currency and Bronze Working. An early
   Wall aborts a weak assault; a later seasoned army can gather outside one and attacks only
-  when the local forecast is favorable. Wounded Soldiers rotate home, and forward cities
+  when the local forecast is favorable. Wounded Spearmen rotate home, and forward cities
   favor War Shrines after the first conquests.
   The playtest-8.5 **Mongols** fork (`HumanMongolsBrain`, `--duel-opponent proxy8g`)
   attempts one early mobile campaign or an exposed Settler capture, with one Scout watching a
@@ -377,7 +377,7 @@ Moved verbatim from `game-rules.md` on 2026-11-22, in the original order; the or
   completes the trio is exempt; earlier it takes idle cities from Settlers, Granaries and Walls and
   cost 1.9 points against the proxy), a lower building tier (`data::building_predecessor`),
   then the unlocking technology. Before this, a Mongols city without a Workshop was skipped
-  forever, because the ordinary scorer ranked a Workshop (about 1,295) under a Soldier (2,400):
+  forever, because the ordinary scorer ranked a Workshop (about 1,295) under a Spearman (2,400):
   the AI built no Market in 91 turns of the 8.3 game and lost 10 to 3. A missing technology is
   research's job: `goal_techs` (Mongols: Currency and Bronze Working;
   Athens no longer has a gated item: its goal is the broadcast) get `faction_goal_vp x 150` research value
@@ -416,8 +416,8 @@ Moved verbatim from `game-rules.md` on 2026-11-22, in the original order; the or
   every option's `turns` already counts that item's own bank plus unassigned Production; a
   banked item also scores up to +50% by its banked share, so started work gets finished
   (`production.rs::choose_item`). A population-1 city that wants a Settler builds a short item
-  first: a Soldier when exposed and unguarded, else the quicker of a Granary
-  or (only if it has none) a Scout, with a Soldier only as a last resort, which avoids extra unit
+  first: a Spearman when exposed and unguarded, else the quicker of a Granary
+  or (only if it has none) a Scout, with a Spearman only as a last resort, which avoids extra unit
   upkeep (3 Gold for Switzerland)
   (`production.rs::pre_settler_build`). When such a Scout or Granary has more than a turn left,
   the city reaches population 2 and the planner would choose a Settler there, it switches to the
@@ -718,4 +718,4 @@ Moved verbatim from `game-rules.md` on 2026-11-22, in the original order; the or
 
 **UI note (2026-10-03, claude/attack-at-peace):** ranged targeting of a unit or city at Peace asks "Declare War?" (the declaration and the attack resolve the same turn at plain Peace). Clicking a foreign city opens its card with Declare War, Diplomacy and Attack with <selected unit>. Core's error for a real target at Peace reads "you are not at War with its owner; declare War first" (`rules/battle.rs`).
 
-**Goal calibration (2026-10-07).** 1,024 8-player Standard Hard games per setting (cloud, seeds 5300001+, checked on 5400001+): Swarm 50 -> 30 population, Heir 200 -> 400 Production (half-points under the old opening ramp; today's prices are doubled, `data::HEIR_COST` 800), Sparta AI retire window 70% -> 55% (the level was 4 in this calibration; it became 3 on 2026-11-06 after the user reported rarely reaching level 4) of the game (`goal_actions.rs::RETIRE_LATE_PERCENT`); Courier Hall 300 (today `data::COURIER_HALL_COST` 600) and the 45%/55%/70% Hall, forge and Wild cutoffs unchanged. AI: veterans retire one at a time as they reach a War Shrine city once enough exist to finish (one unit per tile made all-at-once almost impossible), and with no turn limit `goal_actions::last_turn` keeps a tenth of the expected length ahead once the game runs past it, so goal deadlines don't all close.
+**Goal calibration (2026-10-07).** 1,024 8-player Standard Hard games per setting (cloud, seeds 5300001+, checked on 5400001+): Swarm 50 -> 30 population, Heir 200 -> 400 Production (half-points under the old opening ramp; today's prices are doubled, `data::HEIR_COST` 800), Sparta AI retire window 70% -> 55% (the level was 4 in this calibration; it became 3 on 2026-11-06 after the user reported rarely reaching level 4) of the game (`goal_actions.rs::RETIRE_LATE_PERCENT`); Courier Hall 300 (today `data::YAM_RELAY_STATION_COST` 600) and the 45%/55%/70% Hall, forge and Wild cutoffs unchanged. AI: veterans retire one at a time as they reach a War Shrine city once enough exist to finish (one unit per tile made all-at-once almost impossible), and with no turn limit `goal_actions::last_turn` keeps a tenth of the expected length ahead once the game runs past it, so goal deadlines don't all close.

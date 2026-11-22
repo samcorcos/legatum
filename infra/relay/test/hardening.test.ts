@@ -60,6 +60,13 @@ describe("room names", () => {
     expect(sanitizeName("🎉🎉 $$")).toBe("");
     expect(sanitizeName("   ")).toBe("");
     expect(sanitizeName("a nasty word here", ["nastyword"])).toBe("");
+  });
+
+  it("drops names with a blocked word, however it is spaced or cased, and keeps ordinary ones", () => {
+    for (const bad of ["FUCK you", "f.u.c.k", "sh it happens", "Nazi party", "xXpornXx"]) expect(sanitizeName(bad)).toBe("");
+    for (const fine of ["Assyria rising", "Grapes of Sparta", "Tycoon classics", "Scipio's cockpit", "Dickens vs Hancock", "Saltwater kings", "Turkeys and monkeys"]) {
+      expect(sanitizeName(fine)).toBe(fine);
+    }
     expect(sanitizeName("N.A.S.T.Y", ["nasty"])).toBe("");
     expect(sanitizeName("fine name", ["nasty"])).toBe("fine name");
     expect(sanitizeName("anything", [""])).toBe("anything");

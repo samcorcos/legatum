@@ -26,13 +26,13 @@ export type Terrain =
 
 export type Faction = 'Switzerland' | 'India' | 'Byzantium' | 'Germany' | 'Celts' | 'Mongols' | 'Sparta' | 'Athens' | 'Aztecs' | 'Egypt' | 'Rome';
 export type UnitKind =
-  | 'Scout' | 'Settler' | 'Soldier' | 'Ranger' | 'Trooper' | 'Marksman' | 'AssaultTrooper' | 'Heir'
+  | 'Scout' | 'Settler' | 'Spearman' | 'Archer' | 'Pikeman' | 'Crossbowman' | 'Musketman' | 'HeirToTheThrone'
   | 'Horseman' | 'Knight' | 'Cavalry' | 'Tank' | 'AutonomousArmour'
   | 'Rifleman' | 'Infantry' | 'HunterKiller' | 'StealthFighter' | 'StealthBomber'
-  | 'FieldCannon' | 'Artillery' | 'Drone'
+  | 'FieldCannon' | 'Artillery' | 'CombatDrone'
   | 'Fighter' | 'Bomber'
   | 'Phalangite' | 'CompositeArcher' | 'Cataphract' | 'Arquebusier' | 'Cuirassier'
-  | 'TrenchInfantry' | 'Howitzer' | 'Landship' | 'Biplane'
+  | 'TrenchInfantry' | 'Howitzer' | 'EarlyTank' | 'Biplane'
   | 'MechanisedInfantry' | 'MainBattleTank' | 'RocketArtillery' | 'JetFighter' | 'JetBomber';
 /** A military unit's class (core `UnitClass`): melee beats mounted, ranged beats melee, mounted beats ranged. */
 export type UnitClass = 'Melee' | 'Ranged' | 'Mounted' | 'Air';
@@ -73,29 +73,29 @@ export interface CityAssaultForecast {
   can_capture: boolean;
 }
 export type BuildingKind =
-  | 'BroodHall'
+  | 'RiceStorehouse'
   | 'Granary'
   | 'Workshop'
   | 'Market'
-  | 'Laboratory'
+  | 'Library'
   | 'Walls'
-  | 'Hydroponics'
-  | 'MachineShop'
-  | 'WarShrine'
-  | 'College'
-  | 'Clearinghouse'
-  | 'Autoworks'
+  | 'Mill'
+  | 'Forge'
+  | 'Agoge'
+  | 'University'
+  | 'Bank'
+  | 'Factory'
   | 'Castle'
   | 'StarFort'
-  | 'RelayUplink'
+  | 'GreatLibrary'
   | 'Pyramids'
   | 'HagiaSophia'
   | 'EiffelTower'
-  | 'IterReactor'
-  | 'PlanetaryFoundry'
-  | 'WorldExchange'
-  | 'InferenceCore'
-  | 'CourierHall'
+  | 'IterFusionReactor'
+  | 'RoyalArsenal'
+  | 'GrandBazaar'
+  | 'ResearchLab'
+  | 'YamRelayStation'
   | 'ImperialDiwan'
   | 'Roadworks'
   | 'StockExchange'
@@ -160,7 +160,7 @@ export type ProductionItem =
   | { kind: 'Improvement'; improvement: ImprovementKind; tile: Hex };
 
 /** A tile improvement (core `ImprovementKind`); it upgrades by itself with technology. */
-export type ImprovementKind = 'Farm' | 'Pasture' | 'Quarry' | 'Mine' | 'SaltpeterWorks' | 'OilWell' | 'QuartzMine';
+export type ImprovementKind = 'Farm' | 'Pasture' | 'Quarry' | 'Mine' | 'SaltpetreWorks' | 'OilWell' | 'QuartzMine';
 
 export interface Yields {
   food: number;

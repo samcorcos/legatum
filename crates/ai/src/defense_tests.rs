@@ -16,7 +16,7 @@ fn view(kind: UnitKind, pos: Hex) -> PlayerView {
     view.players[ENEMY.0 as usize].faction = Faction::Mongols;
     // Build after setting the faction so the visible stats include its three moves.
     ViewBuilder { view }
-        .unit(50, ENEMY, UnitKind::Soldier, ENEMY_POS)
+        .unit(50, ENEMY, UnitKind::Spearman, ENEMY_POS)
         .build()
 }
 
@@ -33,8 +33,8 @@ fn planner(view: &PlayerView) -> Planner<'_> {
 fn a_healthy_archer_compares_a_bait_shot_with_survival() {
     let view = ViewBuilder::new(24, 16)
         .city(1, ME, Hex::new(6, 8), 3)
-        .unit(1, ME, UnitKind::Ranger, Hex::new(8, 8))
-        .unit_hp(50, ENEMY, UnitKind::Soldier, Hex::new(10, 8), 1)
+        .unit(1, ME, UnitKind::Archer, Hex::new(8, 8))
+        .unit_hp(50, ENEMY, UnitKind::Spearman, Hex::new(10, 8), 1)
         .unit(51, ENEMY, UnitKind::Horseman, Hex::new(9, 7))
         .unit(52, ENEMY, UnitKind::Horseman, Hex::new(9, 9))
         .build();
@@ -65,8 +65,8 @@ fn a_healthy_archer_compares_a_bait_shot_with_survival() {
 fn wounded_garrison_of_a_breached_city_shoots_the_adjacent_attacker_instead_of_resting() {
     let mut view = ViewBuilder::new(24, 16)
         .city(1, ME, CITY, 3)
-        .unit_hp(1, ME, UnitKind::Ranger, CITY, 20)
-        .unit(50, ENEMY, UnitKind::Soldier, Hex::new(9, 8))
+        .unit_hp(1, ME, UnitKind::Archer, CITY, 20)
+        .unit(50, ENEMY, UnitKind::Spearman, Hex::new(9, 8))
         .build();
     view.cities[0].hp = 0;
     let mut p = planner(&view);
@@ -101,7 +101,7 @@ fn field_retreats_but_garrison_holds(view: &PlayerView, unit: &legatum_core::vie
 
 #[test]
 fn a_healthy_city_shields_a_ranged_garrison_so_defense_sends_it_in() {
-    let view = view(UnitKind::Ranger, SUPPORT);
+    let view = view(UnitKind::Archer, SUPPORT);
     let mut p = planner(&view);
     let u = p.ctx.own_units[0];
     let city = p.ctx.own_cities[0];
@@ -119,11 +119,11 @@ fn a_healthy_city_shields_a_ranged_garrison_so_defense_sends_it_in() {
 
 #[test]
 fn routine_defense_and_fallback_garrison_reject_the_same_bad_assignment() {
-    // A fallen city exposes its garrison: two Soldiers can kill an arriving Ranger.
+    // A fallen city exposes its garrison: two Spearmen can kill an arriving Archer.
     let mut view = ViewBuilder {
-        view: view(UnitKind::Ranger, SUPPORT),
+        view: view(UnitKind::Archer, SUPPORT),
     }
-    .unit(51, ENEMY, UnitKind::Soldier, Hex::new(10, 9))
+    .unit(51, ENEMY, UnitKind::Spearman, Hex::new(10, 9))
     .build();
     view.cities[0].hp = 0;
     let mut p = planner(&view);
@@ -142,9 +142,9 @@ fn routine_defense_and_fallback_garrison_reject_the_same_bad_assignment() {
 #[test]
 fn garrison_selects_a_suitable_defender_over_a_closer_ranger() {
     let mut view = ViewBuilder {
-        view: view(UnitKind::Ranger, SUPPORT),
+        view: view(UnitKind::Archer, SUPPORT),
     }
-    .unit(2, ME, UnitKind::Trooper, Hex::new(6, 8))
+    .unit(2, ME, UnitKind::Pikeman, Hex::new(6, 8))
     .build();
     // A healthy city shields its garrison: the threatened city takes the shooter.
     let mut p = planner(&view);
@@ -156,7 +156,7 @@ fn garrison_selects_a_suitable_defender_over_a_closer_ranger() {
             to: CITY
         }]
     );
-    // A fallen city exposes its garrison to melee: only the Trooper can hold it.
+    // A fallen city exposes its garrison to melee: only the Pikeman can hold it.
     view.cities[0].hp = 0;
     let mut p = planner(&view);
     p.garrison_cities(&p.ctx.own_units.clone());
@@ -171,7 +171,7 @@ fn garrison_selects_a_suitable_defender_over_a_closer_ranger() {
 
 #[test]
 fn healthy_sustainable_city_defense_is_not_an_unanswered_field_exposure() {
-    let view = view(UnitKind::Trooper, CITY);
+    let view = view(UnitKind::Pikeman, CITY);
     let mut p = planner(&view);
     let u = p.ctx.own_units[0];
     assert!(p.exposure_at(CITY) > 0);
@@ -185,13 +185,13 @@ fn healthy_sustainable_city_defense_is_not_an_unanswered_field_exposure() {
 
 #[test]
 fn holding_preserves_fortification_but_arrival_cannot_borrow_it() {
-    // A fallen city exposes its garrison to a Marksman that cannot capture: the exchange
+    // A fallen city exposes its garrison to a Crossbowman that cannot capture: the exchange
     // decides. Fortified (20) the holder trades evenly with its counterfire; moving resets
     // the fortification, leaving only 14 strength at the destination.
-    let mut view = view(UnitKind::Marksman, CITY);
+    let mut view = view(UnitKind::Crossbowman, CITY);
     view.units.retain(|u| u.owner == ME);
     let mut view = ViewBuilder { view }
-        .unit(50, ENEMY, UnitKind::Marksman, Hex::new(10, 8))
+        .unit(50, ENEMY, UnitKind::Crossbowman, Hex::new(10, 8))
         .build();
     view.units[1].fortify = 5;
     view.cities[0].hp = 0;
@@ -204,8 +204,8 @@ fn holding_preserves_fortification_but_arrival_cannot_borrow_it() {
 
 #[test]
 fn an_unreachable_attack_does_not_displace_a_healthy_garrison() {
-    let mut view = view(UnitKind::Ranger, CITY);
-    // Low enough that the Soldier could break the city if it reached it.
+    let mut view = view(UnitKind::Archer, CITY);
+    // Low enough that the Spearman could break the city if it reached it.
     view.cities[0].hp = 30;
     for h in ENEMY_POS.neighbors() {
         let i = view.index(h).unwrap();
@@ -234,7 +234,7 @@ fn an_unreachable_attack_does_not_displace_a_healthy_garrison() {
 
 #[test]
 fn a_surviving_garrison_can_shield_an_immediately_capturable_city() {
-    let mut view = view(UnitKind::Ranger, CITY);
+    let mut view = view(UnitKind::Archer, CITY);
     // With HP left the city takes the attack: its garrison is safe and holds.
     let p = planner(&view);
     assert!(p.exchange_is_sustainable(&view.units[0], CITY));
@@ -254,27 +254,27 @@ fn a_surviving_garrison_can_shield_an_immediately_capturable_city() {
 
 #[test]
 fn a_ruined_city_does_not_justify_unanswered_fire_from_an_enemy_that_cannot_capture() {
-    let mut view = view(UnitKind::Soldier, CITY);
+    let mut view = view(UnitKind::Spearman, CITY);
     view.cities[0].hp = 0;
     view.units.retain(|u| u.owner == ME);
     let view = ViewBuilder { view }
-        .unit(50, ENEMY, UnitKind::Ranger, Hex::new(10, 8))
+        .unit(50, ENEMY, UnitKind::Archer, Hex::new(10, 8))
         .build();
     field_retreats_but_garrison_holds(&view, &view.units[0]);
 }
 
 #[test]
 fn counterfire_is_one_volley_and_must_not_hide_overwhelming_threats() {
-    let mut view = view(UnitKind::Marksman, CITY);
+    let mut view = view(UnitKind::Crossbowman, CITY);
     view.cities[0].hp = 0;
     view.units.retain(|u| u.owner == ME);
     let mut view = ViewBuilder { view }
-        .unit(50, ENEMY, UnitKind::Ranger, Hex::new(10, 8))
+        .unit(50, ENEMY, UnitKind::Archer, Hex::new(10, 8))
         .build();
     assert!(planner(&view).can_defend_at(&view.units[0], CITY));
     view = ViewBuilder { view }
-        .unit(51, ENEMY, UnitKind::Marksman, Hex::new(8, 6))
-        .unit(52, ENEMY, UnitKind::Marksman, Hex::new(6, 10))
+        .unit(51, ENEMY, UnitKind::Crossbowman, Hex::new(8, 6))
+        .unit(52, ENEMY, UnitKind::Crossbowman, Hex::new(6, 10))
         .build();
     // Ranged fire alone cannot capture: the garrison holds even against three shooters.
     field_retreats_but_garrison_holds(&view, &view.units[0]);
@@ -288,12 +288,12 @@ fn cumulative_damage_preserves_survivable_garrisons_and_wound_immunity() {
         (Faction::Switzerland, 3, false),
         (Faction::Sparta, 3, true),
     ] {
-        // Troopers have the same base strength for both factions; only Sparta
+        // Pikemen have the same base strength for both factions; only Sparta
         // ignores wounds, so three equal-strength attacks remain survivable.
         let mut view = ViewBuilder::new(24, 16)
             .faction(faction)
             .city(1, ME, CITY, 2)
-            .unit(1, ME, UnitKind::Trooper, CITY)
+            .unit(1, ME, UnitKind::Pikeman, CITY)
             .build();
         view.players[ENEMY.0 as usize].faction = Faction::Mongols;
         view.units[0].fortify = 3;
@@ -306,7 +306,7 @@ fn cumulative_damage_preserves_survivable_garrisons_and_wound_immunity() {
         .take(count)
         {
             view = ViewBuilder { view }
-                .unit(id, ENEMY, UnitKind::Trooper, pos)
+                .unit(id, ENEMY, UnitKind::Pikeman, pos)
                 .build();
         }
         let p = planner(&view);
@@ -325,16 +325,16 @@ fn enemy_iteration_order_cannot_hide_lethal_ranged_then_melee_damage() {
 
     let mut view = ViewBuilder::new(24, 16)
         .city(1, ME, CITY, 2)
-        .unit_hp(1, ME, UnitKind::Soldier, CITY, 60)
+        .unit_hp(1, ME, UnitKind::Spearman, CITY, 60)
         .unit(50, ENEMY, UnitKind::Scout, Hex::new(10, 8))
-        .unit(51, ENEMY, UnitKind::Ranger, Hex::new(8, 10))
+        .unit(51, ENEMY, UnitKind::Archer, Hex::new(8, 10))
         .build();
     view.cities[0].hp = 0;
     let defender = view.units[0].clone();
     let scout =
         combat::unit_attack_strength_for(view.faction_of(ENEMY), UnitKind::Scout, 100, 0).total;
     let ranger =
-        combat::unit_ranged_strength_for(view.faction_of(ENEMY), UnitKind::Ranger, 100, 0).total;
+        combat::unit_ranged_strength_for(view.faction_of(ENEMY), UnitKind::Archer, 100, 0).total;
     let damage_after = |attacks: [i32; 2]| {
         attacks.into_iter().fold(0, |damage, attack| {
             let defense = combat::unit_defense_strength_for(
@@ -360,13 +360,13 @@ fn enemy_iteration_order_cannot_hide_lethal_ranged_then_melee_damage() {
 
 #[test]
 fn a_new_city_does_not_strip_the_capitals_only_garrison() {
-    // A playtest-style loss: the capital's lone Soldier walked to a fresh colony and the
+    // A playtest-style loss: the capital's lone Spearman walked to a fresh colony and the
     // empty capital was captured. Only a free unit outside every city fills the colony.
     let colony = Hex::new(4, 8);
     let mut view = ViewBuilder::new(24, 16)
         .city(1, ME, CITY, 2)
         .city(2, ME, colony, 1)
-        .unit(1, ME, UnitKind::Soldier, CITY)
+        .unit(1, ME, UnitKind::Spearman, CITY)
         .build();
     // The damaged colony is garrisoned first.
     view.cities.iter_mut().find(|c| c.pos == colony).unwrap().hp = 100;
@@ -382,9 +382,9 @@ fn idle_surplus_defender_takes_cover_even_when_city_power_covers_threat() {
     let cover = Hex::new(7, 8);
     let mut view = ViewBuilder::new(24, 16)
         .city(1, ME, city, 3)
-        .unit(1, ME, UnitKind::Trooper, city)
-        .unit(2, ME, UnitKind::Ranger, Hex::new(6, 8))
-        .unit(50, ENEMY, UnitKind::Trooper, Hex::new(11, 8))
+        .unit(1, ME, UnitKind::Pikeman, city)
+        .unit(2, ME, UnitKind::Archer, Hex::new(6, 8))
+        .unit(50, ENEMY, UnitKind::Pikeman, Hex::new(11, 8))
         .terrain(cover, Terrain::Hills)
         .build();
     view.units[1].fortify = 2 * data::FORTIFY_PER_TURN;
@@ -417,15 +417,15 @@ fn idle_surplus_defender_takes_cover_even_when_city_power_covers_threat() {
 
 #[test]
 fn a_city_that_can_be_broken_this_turn_exposes_its_garrison_to_melee_only() {
-    // Three Troopers can break a pop-2 city this turn: ranged fire still only hits the
+    // Three Pikemen can break a pop-2 city this turn: ranged fire still only hits the
     // city, but melee after it reaches the garrison.
     let mut view = ViewBuilder::new(24, 16)
         .city(1, ME, CITY, 2)
-        .unit(1, ME, UnitKind::Ranger, CITY)
+        .unit(1, ME, UnitKind::Archer, CITY)
         .build();
     view.players[ENEMY.0 as usize].faction = Faction::Mongols;
     let mut view = ViewBuilder { view }
-        .unit(50, ENEMY, UnitKind::Ranger, Hex::new(10, 8))
+        .unit(50, ENEMY, UnitKind::Archer, Hex::new(10, 8))
         .build();
     assert_eq!(planner(&view).city_shield(CITY), CityShield::Full);
     assert!(planner(&view).can_defend_at(&view.units[0], CITY));
@@ -438,7 +438,7 @@ fn a_city_that_can_be_broken_this_turn_exposes_its_garrison_to_melee_only() {
     );
     for (id, pos) in [(51, ENEMY_POS), (52, Hex::new(10, 6))] {
         view = ViewBuilder { view }
-            .unit(id, ENEMY, UnitKind::Trooper, pos)
+            .unit(id, ENEMY, UnitKind::Pikeman, pos)
             .build();
     }
     assert!(!planner(&view).exchange_is_sustainable(&view.units[0], CITY));
@@ -449,9 +449,9 @@ fn rome_keeps_the_last_defender_of_a_threatened_city() {
     let mut view = ViewBuilder::new(24, 16)
         .faction(Faction::Rome)
         .city(1, ME, CITY, 3)
-        .unit(1, ME, UnitKind::Soldier, CITY)
-        .unit(2, ME, UnitKind::Soldier, Hex::new(2, 8))
-        .unit(50, ENEMY, UnitKind::Soldier, Hex::new(9, 8))
+        .unit(1, ME, UnitKind::Spearman, CITY)
+        .unit(2, ME, UnitKind::Spearman, Hex::new(2, 8))
+        .unit(50, ENEMY, UnitKind::Spearman, Hex::new(9, 8))
         .gold(500)
         .build();
     view.units
@@ -475,9 +475,9 @@ fn rome_keeps_a_second_defender_when_local_threat_exceeds_the_remaining_force() 
     let view = ViewBuilder::new(24, 16)
         .faction(Faction::Rome)
         .city(1, ME, CITY, 3)
-        .unit(1, ME, UnitKind::Soldier, SUPPORT)
-        .unit(2, ME, UnitKind::Soldier, CITY)
-        .unit(3, ME, UnitKind::Soldier, Hex::new(2, 8))
+        .unit(1, ME, UnitKind::Spearman, SUPPORT)
+        .unit(2, ME, UnitKind::Spearman, CITY)
+        .unit(3, ME, UnitKind::Spearman, Hex::new(2, 8))
         .unit(50, ENEMY, UnitKind::Horseman, Hex::new(9, 8))
         .unit(51, ENEMY, UnitKind::Horseman, Hex::new(9, 9))
         .unit(52, ENEMY, UnitKind::Horseman, Hex::new(10, 8))
@@ -492,7 +492,7 @@ fn rome_values_a_safe_site_for_a_spare_veteran_below_the_settler_floor() {
     let mut view = ViewBuilder::new(28, 16)
         .faction(Faction::Rome)
         .city(1, ME, Hex::new(6, 8), 3)
-        .unit(1, ME, UnitKind::Soldier, Hex::new(13, 8))
+        .unit(1, ME, UnitKind::Spearman, Hex::new(13, 8))
         .gold(500)
         .build();
     view.units[0].level = 1;
@@ -511,8 +511,8 @@ fn rome_founds_at_once_with_a_spare_veteran_on_a_safe_site() {
     let mut view = ViewBuilder::new(28, 16)
         .faction(Faction::Rome)
         .city(1, ME, Hex::new(6, 8), 3)
-        .unit(1, ME, UnitKind::Soldier, site)
-        .unit(2, ME, UnitKind::Soldier, Hex::new(6, 8))
+        .unit(1, ME, UnitKind::Spearman, site)
+        .unit(2, ME, UnitKind::Spearman, Hex::new(6, 8))
         .gold(0)
         .build();
     view.units[0].level = 1;
@@ -545,10 +545,10 @@ fn rome_prices_the_first_promotions_a_siege_earns() {
     let view = ViewBuilder::new(24, 16)
         .faction(Faction::Rome)
         .city(1, ME, CITY, 3)
-        .unit(1, ME, UnitKind::Soldier, Hex::new(12, 8))
-        .unit(2, ME, UnitKind::Soldier, Hex::new(12, 9))
-        .unit(3, ME, UnitKind::Soldier, Hex::new(12, 10))
-        .unit(4, ME, UnitKind::Ranger, Hex::new(12, 11))
+        .unit(1, ME, UnitKind::Spearman, Hex::new(12, 8))
+        .unit(2, ME, UnitKind::Spearman, Hex::new(12, 9))
+        .unit(3, ME, UnitKind::Spearman, Hex::new(12, 10))
+        .unit(4, ME, UnitKind::Archer, Hex::new(12, 11))
         .build();
     let mut view = view;
     for u in view.units.iter_mut() {
@@ -560,7 +560,7 @@ fn rome_prices_the_first_promotions_a_siege_earns() {
     let force = [UnitId(1), UnitId(2), UnitId(3), UnitId(4)];
     let mut p = rome_planner(&view);
     // Two turns of city attacks pay 6 XP each; the most experienced (10 XP) also takes the
-    // capture: 26 >= 16. The others reach 6. The Ranger is not a founder.
+    // capture: 26 >= 16. The others reach 6. The Archer is not a founder.
     assert_eq!(p.roman_siege_promotions(&force, 2), 1);
     // Four turns pay 12: the 10-XP unit promotes on attacks alone, and the capture falls
     // to it, so the 0-XP units stay at 12.
@@ -577,10 +577,10 @@ fn rome_pulls_a_wounded_veteran_out_of_reach_to_heal() {
     let mut view = ViewBuilder::new(24, 16)
         .faction(Faction::Rome)
         .city(1, ME, Hex::new(4, 8), 3)
-        .unit(2, ME, UnitKind::Soldier, Hex::new(4, 8))
-        .unit(3, ME, UnitKind::Soldier, Hex::new(5, 8))
-        .unit_hp(1, ME, UnitKind::Soldier, vet, 50)
-        .unit(50, ENEMY, UnitKind::Soldier, Hex::new(13, 8))
+        .unit(2, ME, UnitKind::Spearman, Hex::new(4, 8))
+        .unit(3, ME, UnitKind::Spearman, Hex::new(5, 8))
+        .unit_hp(1, ME, UnitKind::Spearman, vet, 50)
+        .unit(50, ENEMY, UnitKind::Spearman, Hex::new(13, 8))
         .build();
     view.units
         .iter_mut()
@@ -616,12 +616,12 @@ fn rome_finishes_a_siege_its_first_promotions_were_earned_in() {
         .faction(Faction::Rome)
         .city(1, ME, Hex::new(4, 8), 3)
         .city(9, ENEMY, target, 1)
-        .unit(4, ME, UnitKind::Soldier, Hex::new(4, 8))
-        .unit_hp(1, ME, UnitKind::Soldier, Hex::new(13, 8), 60)
-        .unit_hp(2, ME, UnitKind::Soldier, Hex::new(13, 9), 60)
-        .unit_hp(3, ME, UnitKind::Soldier, Hex::new(15, 7), 60)
+        .unit(4, ME, UnitKind::Spearman, Hex::new(4, 8))
+        .unit_hp(1, ME, UnitKind::Spearman, Hex::new(13, 8), 60)
+        .unit_hp(2, ME, UnitKind::Spearman, Hex::new(13, 9), 60)
+        .unit_hp(3, ME, UnitKind::Spearman, Hex::new(15, 7), 60)
         // A relief column in reach: what makes the wounded veterans exposed.
-        .unit(50, ENEMY, UnitKind::Soldier, Hex::new(12, 8))
+        .unit(50, ENEMY, UnitKind::Spearman, Hex::new(12, 8))
         .build();
     for u in view.units.iter_mut().filter(|u| u.id.0 <= 3) {
         u.level = 1;
@@ -678,8 +678,8 @@ fn rome_hunts_promotions_only_near_home() {
     let mut view = ViewBuilder::new(28, 16)
         .faction(Faction::Rome)
         .city(1, ME, city, 3)
-        .unit(2, ME, UnitKind::Soldier, city)
-        .unit(1, ME, UnitKind::Soldier, recruit)
+        .unit(2, ME, UnitKind::Spearman, city)
+        .unit(1, ME, UnitKind::Spearman, recruit)
         .build();
     view.barbarian_camps
         .push(legatum_core::view::BarbarianCampView {
@@ -710,8 +710,8 @@ fn rome_routes_a_veteran_founder_as_a_soldier_not_a_settler() {
     let mut view = ViewBuilder::new(28, 16)
         .faction(Faction::Rome)
         .city(1, ME, Hex::new(4, 8), 3)
-        .unit(2, ME, UnitKind::Soldier, Hex::new(4, 8))
-        .unit(1, ME, UnitKind::Soldier, vet)
+        .unit(2, ME, UnitKind::Spearman, Hex::new(4, 8))
+        .unit(1, ME, UnitKind::Spearman, vet)
         .unit(50, ENEMY, UnitKind::Horseman, Hex::new(14, 11))
         .unit(51, ENEMY, UnitKind::Horseman, Hex::new(14, 5))
         .build();

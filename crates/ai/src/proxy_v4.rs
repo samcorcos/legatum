@@ -390,7 +390,7 @@ impl Diplomat<'_> {
                 && legatum_core::path::find_path(&map, home.pos, c.pos, |h| {
                     let t = v.tile(h)?;
                     (t.explored
-                        && (v.passage_allowed(v.me, legatum_core::UnitKind::Soldier, t.owner)
+                        && (v.passage_allowed(v.me, legatum_core::UnitKind::Spearman, t.owner)
                             || t.owner.is_some_and(|o| v.team_of(o) == v.team_of(c.owner))))
                     .then(|| t.terrain?.move_cost())
                     .flatten()

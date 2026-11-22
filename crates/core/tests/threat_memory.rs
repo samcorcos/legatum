@@ -10,7 +10,7 @@ fn sighting() -> (GameState, UnitId, UnitId) {
     setup.players[0].is_human = true;
     let mut state = blank_game(&setup, Map::new(48, 32, Terrain::Grassland));
     let scout = spawn_unit(&mut state, PlayerId(1), UnitKind::Scout, Hex::new(8, 8));
-    let soldier = spawn_unit(&mut state, PlayerId(2), UnitKind::Soldier, Hex::new(10, 8));
+    let soldier = spawn_unit(&mut state, PlayerId(2), UnitKind::Spearman, Hex::new(10, 8));
     state.turn = 20;
     update_explored(&mut state);
     (state, scout, soldier)
@@ -30,7 +30,7 @@ fn observations_are_shared_save_stable_and_never_follow_hidden_units() {
     assert_eq!(before.observed_threats, observed);
     // Neither relocation, changed health/kind, nor death outside vision is evidence.
     state.units.get_mut(&soldier).unwrap().pos = Hex::new(20, 8);
-    state.units.get_mut(&soldier).unwrap().kind = UnitKind::Trooper;
+    state.units.get_mut(&soldier).unwrap().kind = UnitKind::Pikeman;
     update_explored(&mut state);
     assert_eq!(player_view(&state, PlayerId(0)).observed_threats, observed);
     state.units.remove(&soldier);
@@ -73,7 +73,7 @@ fn bounded_memory_keeps_the_newest_observations_deterministically() {
         .map(|i| ThreatObservation {
             unit: UnitId(1000 + i as u32),
             owner: PlayerId(2),
-            kind: UnitKind::Soldier,
+            kind: UnitKind::Spearman,
             pos: Hex::new(20, 8),
             seen_turn: if i < 5 { 19 } else { 20 },
         })

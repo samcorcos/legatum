@@ -37,7 +37,7 @@ fn scenario(faction: Faction) -> (GameState, UnitId) {
         state.player_mut(ME).explored.set(i);
     }
     state.turn = 30;
-    let wounded = spawn_unit(&mut state, ME, UnitKind::Soldier, at(10, 8));
+    let wounded = spawn_unit(&mut state, ME, UnitKind::Spearman, at(10, 8));
     state.units.get_mut(&wounded).unwrap().hp = 40;
     (state, wounded)
 }

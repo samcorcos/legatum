@@ -104,7 +104,7 @@ exports[`Sparta WASM behavior > heals nearby regiments on capture without a Gold
 exports[`Sparta WASM behavior > starts every military type at level one and quotes the 50% home cost 1`] = `
 [
   [
-    "Soldier",
+    "Spearman",
     1,
     16,
     46,
@@ -116,13 +116,13 @@ exports[`Sparta WASM behavior > starts every military type at level one and quot
     46,
   ],
   [
-    "Ranger",
+    "Archer",
     1,
     16,
     46,
   ],
   [
-    "Trooper",
+    "Pikeman",
     1,
     16,
     46,
@@ -156,7 +156,7 @@ exports[`Sparta WASM behavior > starts every military type at level one and quot
   [
     {
       "kind": "Unit",
-      "unit": "Soldier",
+      "unit": "Spearman",
     },
     80,
     {
@@ -203,7 +203,7 @@ exports[`Sparta WASM behavior > starts every military type at level one and quot
   [
     {
       "kind": "Unit",
-      "unit": "Soldier",
+      "unit": "Spearman",
     },
     80,
     {

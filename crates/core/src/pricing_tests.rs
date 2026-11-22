@@ -240,7 +240,7 @@ fn research_upgrade_preview_matches_gold_charged() {
             .find(|unlock| {
                 unlock.item
                     == (ProductionItem::Unit {
-                        unit: UnitKind::Trooper,
+                        unit: UnitKind::Pikeman,
                     })
             })
             .unwrap()
@@ -254,7 +254,7 @@ fn research_upgrade_preview_matches_gold_charged() {
             &BTreeMap::from([(P0, orders.as_slice())]),
             &mut events,
         );
-        assert_eq!(s.units[&soldier].kind, UnitKind::Trooper);
+        assert_eq!(s.units[&soldier].kind, UnitKind::Pikeman);
         assert_eq!(advertised, before - s.player(P0).gold, "{faction:?}");
         assert!(events.iter().any(|event| matches!(
             event,

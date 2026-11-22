@@ -19,7 +19,7 @@ fn all_eight_personalities_are_distinct_and_difficulty_preserves_determinism() {
         let v = ViewBuilder::new(16, 12)
             .faction(f)
             .city(1, ME, off(4, 4), 3)
-            .unit(1, ME, UnitKind::Soldier, off(4, 4))
+            .unit(1, ME, UnitKind::Spearman, off(4, 4))
             .build();
         for d in [AiDifficulty::Easy, AiDifficulty::Normal, AiDifficulty::Hard] {
             let a = ScriptedBrain::with_difficulty(f, 3, ME, d).orders(&v);
@@ -36,11 +36,11 @@ fn hard_military_personality_keeps_funding_its_field_force() {
         .known_techs(&[TechId::Currency])
         .gold(0)
         .city(1, ME, off(5, 8), 3)
-        .unit(1, ME, UnitKind::Soldier, off(5, 8))
+        .unit(1, ME, UnitKind::Spearman, off(5, 8))
         .build();
     v.turn = 60;
     let soldier = ProductionItem::Unit {
-        unit: UnitKind::Soldier,
+        unit: UnitKind::Spearman,
     };
     let market = ProductionItem::Building {
         building: BuildingKind::Market,
@@ -86,7 +86,7 @@ fn industry_payback_does_not_delay_stalled_growth() {
         matches!(
             o.item,
             ProductionItem::Building {
-                building: BuildingKind::MachineShop | BuildingKind::Hydroponics
+                building: BuildingKind::Forge | BuildingKind::Mill
             }
         )
     });
@@ -101,7 +101,7 @@ fn industry_payback_does_not_delay_stalled_growth() {
     assert!(orders(&v).contains(&Order::SetProduction {
         city: CityId(1),
         item: ProductionItem::Building {
-            building: BuildingKind::Hydroponics
+            building: BuildingKind::Mill
         },
     }));
 }
@@ -115,7 +115,7 @@ fn switzerland_invest_until_the_treasury_goal_wins_then_save_except_to_prevent_a
         .producing(
             1,
             ProductionItem::Unit {
-                unit: UnitKind::Soldier,
+                unit: UnitKind::Spearman,
             },
             300,
         )
@@ -321,7 +321,7 @@ fn every_faction_builds_or_trains_its_unique_piece_when_useful() {
         (
             Faction::Byzantium,
             ProductionItem::Unit {
-                unit: UnitKind::Trooper,
+                unit: UnitKind::Pikeman,
             },
         ),
         (
@@ -333,7 +333,7 @@ fn every_faction_builds_or_trains_its_unique_piece_when_useful() {
         (
             Faction::Celts,
             ProductionItem::Unit {
-                unit: UnitKind::Ranger,
+                unit: UnitKind::Archer,
             },
         ),
         (
@@ -345,13 +345,13 @@ fn every_faction_builds_or_trains_its_unique_piece_when_useful() {
         (
             Faction::Sparta,
             ProductionItem::Unit {
-                unit: UnitKind::Soldier,
+                unit: UnitKind::Spearman,
             },
         ),
         (
             Faction::Athens,
             ProductionItem::Building {
-                building: BuildingKind::Laboratory,
+                building: BuildingKind::Library,
             },
         ),
     ];
@@ -363,7 +363,7 @@ fn every_faction_builds_or_trains_its_unique_piece_when_useful() {
             .known_techs(&if f == Faction::Sparta {
                 Vec::new()
             } else {
-                // The Ancient era and Feudalism (the Trooper).
+                // The Ancient era and Feudalism (the Pikeman).
                 let mut known = TechId::ALL[..5].to_vec();
                 known.push(TechId::Feudalism);
                 known
@@ -377,33 +377,33 @@ fn every_faction_builds_or_trains_its_unique_piece_when_useful() {
         if matches!(
             item,
             ProductionItem::Unit {
-                unit: UnitKind::Trooper | UnitKind::Ranger | UnitKind::Soldier
+                unit: UnitKind::Pikeman | UnitKind::Archer | UnitKind::Spearman
             }
         ) {
-            b = b.unit(9, ENEMY, UnitKind::Soldier, off(6, 4));
+            b = b.unit(9, ENEMY, UnitKind::Spearman, off(6, 4));
             if f == Faction::Celts {
-                // V9 Soldiers have 18 melee: cover the garrison before asking for ranged support.
-                b = b.unit(5, ME, UnitKind::Trooper, off(4, 4));
+                // V9 Spearmen have 18 melee: cover the garrison before asking for ranged support.
+                b = b.unit(5, ME, UnitKind::Pikeman, off(4, 4));
             }
             if f == Faction::Byzantium {
-                b = b.unit(5, ME, UnitKind::Soldier, off(4, 4)).unit(
+                b = b.unit(5, ME, UnitKind::Spearman, off(4, 4)).unit(
                     6,
                     ME,
-                    UnitKind::Ranger,
+                    UnitKind::Archer,
                     off(4, 5),
                 );
             }
         } else if f == Faction::Mongols {
             b = b.unexplored_from_col(6);
             for i in 0..5 {
-                b = b.unit(i + 10, ME, UnitKind::Soldier, off(4, 4));
+                b = b.unit(i + 10, ME, UnitKind::Spearman, off(4, 4));
             }
         } else {
             for i in 0..8 {
                 b = b.unit(
                     i + 10,
                     ME,
-                    UnitKind::Soldier,
+                    UnitKind::Spearman,
                     off(4 + (i as i32) % 2, 4 + (i as i32) / 2),
                 );
             }
@@ -438,7 +438,7 @@ fn every_faction_builds_or_trains_its_unique_piece_when_useful() {
                 .filter(|b| *b != building)
                 .collect();
             d.options.retain(|o| !matches!(o.item, ProductionItem::Building { building: b }
-                if d.buildings.contains(&b) || b == BuildingKind::Hydroponics || (f == Faction::India && b == BuildingKind::ImperialDiwan)));
+                if d.buildings.contains(&b) || b == BuildingKind::Mill || (f == Faction::India && b == BuildingKind::ImperialDiwan)));
         }
         if matches!(item, ProductionItem::Unit { .. }) {
             let d = &mut **v.cities[0].detail.as_mut().unwrap();
@@ -447,7 +447,7 @@ fn every_faction_builds_or_trains_its_unique_piece_when_useful() {
                 !matches!(
                     o.item,
                     ProductionItem::Building {
-                        building: BuildingKind::Hydroponics
+                        building: BuildingKind::Mill
                     }
                 )
             });
@@ -475,15 +475,15 @@ fn india_does_not_queue_an_army_that_its_remitted_gold_cannot_fund() {
     let mut v = ViewBuilder::new(16, 12)
         .faction(Faction::India)
         .city_with_detail(1, ME, off(4, 4), 4)
-        .unit(1, ME, UnitKind::Soldier, off(4, 4))
-        .unit(2, ME, UnitKind::Soldier, off(5, 4))
+        .unit(1, ME, UnitKind::Spearman, off(4, 4))
+        .unit(2, ME, UnitKind::Spearman, off(5, 4))
         .build();
     v.economy.gold = 0;
     v.economy.gold_per_turn.total = -1;
     v.players[0].faction_goal_done = false;
     let p =
         crate::scripted::Planner::new(&v, Knobs::for_faction(Faction::India), Faction::India, 7);
-    assert!(p.troop_unfunded(0, p.ctx.own_cities[0], UnitKind::Soldier));
+    assert!(p.troop_unfunded(0, p.ctx.own_cities[0], UnitKind::Spearman));
     let planned = orders(&v);
     assert!(
         planned.iter().any(|order| matches!(
@@ -503,6 +503,6 @@ fn india_does_not_queue_an_army_that_its_remitted_gold_cannot_fund() {
     v.economy.gold_per_turn.total = 3;
     let funded =
         crate::scripted::Planner::new(&v, Knobs::for_faction(Faction::India), Faction::India, 7);
-    assert!(!funded.troop_unfunded(0, funded.ctx.own_cities[0], UnitKind::Soldier));
+    assert!(!funded.troop_unfunded(0, funded.ctx.own_cities[0], UnitKind::Spearman));
     assert!(funded.goal_techs().contains(&TechId::Currency));
 }

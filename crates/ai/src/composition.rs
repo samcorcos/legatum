@@ -16,22 +16,22 @@ pub const MELEE_LADDER: [UnitKind; 9] = [
     UnitKind::Infantry,
     UnitKind::TrenchInfantry,
     UnitKind::Rifleman,
-    UnitKind::AssaultTrooper,
-    UnitKind::Trooper,
+    UnitKind::Musketman,
+    UnitKind::Pikeman,
     UnitKind::Phalangite,
-    UnitKind::Soldier,
+    UnitKind::Spearman,
 ];
 /// Ranged line, best first.
 pub const RANGED_LADDER: [UnitKind; 9] = [
-    UnitKind::Drone,
+    UnitKind::CombatDrone,
     UnitKind::RocketArtillery,
     UnitKind::Artillery,
     UnitKind::Howitzer,
     UnitKind::FieldCannon,
     UnitKind::Arquebusier,
-    UnitKind::Marksman,
+    UnitKind::Crossbowman,
     UnitKind::CompositeArcher,
-    UnitKind::Ranger,
+    UnitKind::Archer,
 ];
 
 /// Mounted line, best first.
@@ -39,7 +39,7 @@ pub const MOUNTED_LADDER: [UnitKind; 9] = [
     UnitKind::AutonomousArmour,
     UnitKind::MainBattleTank,
     UnitKind::Tank,
-    UnitKind::Landship,
+    UnitKind::EarlyTank,
     UnitKind::Cavalry,
     UnitKind::Cuirassier,
     UnitKind::Knight,
@@ -112,7 +112,7 @@ pub fn ranged_first() -> Vec<UnitKind> {
 pub fn ranged_then_soldier() -> Vec<UnitKind> {
     RANGED_LADDER
         .into_iter()
-        .chain([UnitKind::Soldier])
+        .chain([UnitKind::Spearman])
         .collect()
 }
 
@@ -189,17 +189,17 @@ mod tests {
         use UnitKind::*;
         let only = |set: &'static [UnitKind]| move |u: UnitKind| set.contains(&u);
         // Iron in hand: Pikemen replace Spearmen, from either end of the line.
-        let iron = only(&[Soldier, Trooper, Ranger, Horseman]);
-        assert_eq!(best_buildable_in_line(Soldier, iron), Some(Trooper));
-        assert_eq!(best_buildable_in_line(MechanisedInfantry, iron), Some(Trooper));
-        assert!(outdated_by_buildable(Soldier, iron));
-        assert!(!outdated_by_buildable(Trooper, iron));
+        let iron = only(&[Spearman, Pikeman, Archer, Horseman]);
+        assert_eq!(best_buildable_in_line(Spearman, iron), Some(Pikeman));
+        assert_eq!(best_buildable_in_line(MechanisedInfantry, iron), Some(Pikeman));
+        assert!(outdated_by_buildable(Spearman, iron));
+        assert!(!outdated_by_buildable(Pikeman, iron));
         // No Iron: the Spearman is the best melee unit left, so it is not outdated.
-        let no_iron = only(&[Soldier, Ranger, Horseman]);
-        assert_eq!(best_buildable_in_line(Trooper, no_iron), Some(Soldier));
-        assert!(!outdated_by_buildable(Soldier, no_iron));
+        let no_iron = only(&[Spearman, Archer, Horseman]);
+        assert_eq!(best_buildable_in_line(Pikeman, no_iron), Some(Spearman));
+        assert!(!outdated_by_buildable(Spearman, no_iron));
         // Lines don't mix, and units outside a line have none.
-        assert_eq!(best_buildable_in_line(Ranger, iron), Some(Ranger));
+        assert_eq!(best_buildable_in_line(Archer, iron), Some(Archer));
         assert_eq!(best_buildable_in_line(Scout, |_| true), None);
         assert_eq!(best_buildable_in_line(Knight, |_| false), None);
         // Aircraft follow their own upgrade chain.

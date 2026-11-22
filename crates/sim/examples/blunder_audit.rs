@@ -489,17 +489,17 @@ mod tests {
     fn exposed_settler_flags_unsafe_move_and_ignores_escort_or_safety() {
         let mut s = state();
         spawn_unit(&mut s, PlayerId(0), UnitKind::Settler, at(5, 5));
-        spawn_unit(&mut s, PlayerId(1), UnitKind::Soldier, at(7, 5));
+        spawn_unit(&mut s, PlayerId(1), UnitKind::Spearman, at(7, 5));
         assert_eq!(exposed_settlers(&s).len(), 1);
-        spawn_unit(&mut s, PlayerId(0), UnitKind::Soldier, at(5, 4));
+        spawn_unit(&mut s, PlayerId(0), UnitKind::Spearman, at(5, 4));
         assert!(exposed_settlers(&s).is_empty());
     }
 
     #[test]
     fn low_chance_loss_requires_dead_attacker_and_sub_thirty_forecast() {
         let mut s = state();
-        let a = spawn_unit(&mut s, PlayerId(0), UnitKind::Soldier, at(4, 5));
-        spawn_unit(&mut s, PlayerId(1), UnitKind::Soldier, at(5, 5));
+        let a = spawn_unit(&mut s, PlayerId(0), UnitKind::Spearman, at(4, 5));
+        spawn_unit(&mut s, PlayerId(1), UnitKind::Spearman, at(5, 5));
         s.units.get_mut(&a).unwrap().hp = 1;
         let mut lost = s.clone();
         lost.units.remove(&a);
@@ -512,10 +512,10 @@ mod tests {
         let mut s = state();
         let mut idle = BTreeMap::new();
         for col in 3..6 {
-            let u = spawn_unit(&mut s, PlayerId(0), UnitKind::Soldier, at(col, 5));
+            let u = spawn_unit(&mut s, PlayerId(0), UnitKind::Spearman, at(col, 5));
             idle.insert(u, 3);
         }
-        spawn_unit(&mut s, PlayerId(1), UnitKind::Soldier, at(7, 5));
+        spawn_unit(&mut s, PlayerId(1), UnitKind::Spearman, at(7, 5));
         assert!(idle_army_qualifies(&s, PlayerId(0), &idle));
         idle.pop_first();
         assert!(!idle_army_qualifies(&s, PlayerId(0), &idle));
@@ -562,7 +562,7 @@ mod tests {
         );
         let from = at(6, 5);
         let to = at(5, 5);
-        spawn_unit(&mut s, PlayerId(0), UnitKind::Soldier, from);
+        spawn_unit(&mut s, PlayerId(0), UnitKind::Spearman, from);
         assert!(abandoned_siege(&s, PlayerId(0), from, to));
         s.cities.get_mut(&id).unwrap().hp = data::CITY_HP;
         assert!(!abandoned_siege(&s, PlayerId(0), from, to));
@@ -572,7 +572,7 @@ mod tests {
     fn unguarded_city_loss_needs_reachable_owner_combat_unit() {
         let mut s = state();
         let pos = at(7, 5);
-        let unit = spawn_unit(&mut s, PlayerId(0), UnitKind::Soldier, at(6, 5));
+        let unit = spawn_unit(&mut s, PlayerId(0), UnitKind::Spearman, at(6, 5));
         assert!(unguarded_city_lost(&s, PlayerId(0), pos));
         let far = at(2, 2);
         s.units.get_mut(&unit).unwrap().pos = far;

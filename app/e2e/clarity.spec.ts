@@ -76,7 +76,7 @@ for (const viewport of VIEWPORTS) {
           expect(intersects(notes[i], notes[j]), `"${notes[i].text}" overlaps "${notes[j].text}"`).toBe(false);
         }
       };
-      for (const kind of ['Scout', 'Soldier']) await assertNotes(kind);
+      for (const kind of ['Scout', 'Spearman']) await assertNotes(kind);
       // A saved expansion position still exercises Settler notes, even though new games have no Settler.
       await page.addInitScript((game) => localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 1, names: ['Ada'], savedAt: new Date().toISOString(), game })), coreFixture(explorationFixture()));
       await page.goto('/?client=wasm');
@@ -86,7 +86,7 @@ for (const viewport of VIEWPORTS) {
 
     test('every disabled action shows its reason beside the button (A15, F10)', async ({ page }) => {
       await startSolo(page);
-      await selectOwn(page, 'Soldier');
+      await selectOwn(page, 'Spearman');
       const disabled = page.locator('.unit-panel button.act:disabled');
       expect(await disabled.count(), 'the Spearman cannot upgrade on turn 1').toBeGreaterThan(0);
       const reasons: string[] = [];

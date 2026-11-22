@@ -223,10 +223,9 @@ impl Planner<'_> {
                 own += goal_vp(Faction::India);
             }
         }
-        if v.units
-            .iter()
-            .any(|u| u.kind == UnitKind::Heir && u.pos == city.pos && u.owner == city.owner)
-        {
+        if v.units.iter().any(|u| {
+            u.kind == UnitKind::HeirToTheThrone && u.pos == city.pos && u.owner == city.owner
+        }) {
             denied += goal_vp(Faction::Byzantium);
             own += if self.sacks_city(city) {
                 0

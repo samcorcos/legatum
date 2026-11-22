@@ -98,11 +98,11 @@ export function warLines(action: DiplomaticAction, view: PlayerView, withJoin = 
   const you = wars.filter((w) => w.team === view.team).map((w) => w.enemy);
   const againstYou = wars.filter((w) => w.enemy === view.team).map((w) => w.team);
   const helpers = wars.filter((w) => w.team !== view.team && w.enemy !== view.team);
-  if (you.length && withJoin) lines.push({ tone: 'cost', icon: 'unit-soldier', text: `You would join the war against ${names(view, you)}, which attacked your new ally` });
-  if (againstYou.length) lines.push({ tone: 'cost', icon: 'unit-soldier', text: o.type === 'DeclareWar'
+  if (you.length && withJoin) lines.push({ tone: 'cost', icon: 'unit-spearman', text: `You would join the war against ${names(view, you)}, which attacked your new ally` });
+  if (againstYou.length) lines.push({ tone: 'cost', icon: 'unit-spearman', text: o.type === 'DeclareWar'
     ? `${names(view, againstYou)}, ${againstYou.length > 1 ? 'allies' : 'an ally'} of ${target === null ? 'them' : empireTitle(view, target)}, would defend them and be at War with you at once`
     : `${names(view, againstYou)}, ${againstYou.length > 1 ? 'allies' : 'an ally'} of ${target === null ? 'them' : empireTitle(view, target)}, would also be at War with you at once` });
-  if (helpers.length) lines.push({ tone: 'gain', icon: 'unit-soldier', text: `${names(view, helpers.map((w) => w.team))} would join your war against ${names(view, helpers.map((w) => w.enemy))}` });
+  if (helpers.length) lines.push({ tone: 'gain', icon: 'unit-spearman', text: `${names(view, helpers.map((w) => w.team))} would join your war against ${names(view, helpers.map((w) => w.enemy))}` });
   const askedMe = calls.filter((c) => c.team === view.team), asked = calls.filter((c) => c.team !== view.team);
   if (askedMe.length) lines.push({ tone: 'note', text: `You would be asked to join the war on ${names(view, askedMe.map((c) => c.enemy))}. You may decline` });
   if (asked.length) lines.push({ tone: 'note', text: o.type === 'DeclareWar'
@@ -174,7 +174,7 @@ function Action({ action, view, orders, compact = false }: { action: DiplomaticA
   return <div className="diplomacy-action">
     {definition && <p className="treaty-definition"><strong>{action.order.type === 'ProposeTreaty' && action.order.kind}:</strong> {definition}</p>}
     {button}
-    {join && <p className="diplomacy-join-war" data-testid="join-war"><Icon name="unit-soldier" size={13} className="ui-mark" /> {join}</p>}
+    {join && <p className="diplomacy-join-war" data-testid="join-war"><Icon name="unit-spearman" size={13} className="ui-mark" /> {join}</p>}
     {/* A blocked action's reason is stated once for its empire row, not under each button. */}
     {!action.blocked_reason && <span>{spends.length || (allianceOffer && (action.cost > 0 || (action.upkeep ?? 0) > 0)) ? '' : 'Free · '}{action.effective_turn === view.turn ? 'Takes effect this turn'
       : `${action.order.type === 'ProposeTreaty' ? 'Earliest activation' : 'Takes effect'} turn ${action.effective_turn}`}</span>}
@@ -260,7 +260,7 @@ function offerForecast(p: PeaceProposal, view: PlayerView, accept: DiplomaticAct
   const other = proposalCounterparty(view, p, view.team);
   if (relationWith(view, other)?.state !== 'Alliance') {
     const near = unitsNearOurs(view, other);
-    if (near.length) lines.push({ tone: 'cost', text: `You can’t attack their ${near[0].unit} ${near[0].tiles <= 1 ? 'next to' : `${near[0].tiles} tiles from`} ${near[0].near}${near.length > 1 ? ` (or their ${near.length - 1} other unit${near.length > 2 ? 's' : ''} nearby)` : ''}`, icon: 'unit-soldier' });
+    if (near.length) lines.push({ tone: 'cost', text: `You can’t attack their ${near[0].unit} ${near[0].tiles <= 1 ? 'next to' : `${near[0].tiles} tiles from`} ${near[0].near}${near.length > 1 ? ` (or their ${near.length - 1} other unit${near.length > 2 ? 's' : ''} nearby)` : ''}`, icon: 'unit-spearman' });
   }
   lines.push({ tone: 'note', text: 'Costs no Gold' });
   lines.push({ tone: 'gain', text: `Peace guaranteed through turn ${view.turn + TREATY_TERMS.guaranteeTurns}; after that either side may declare war`, icon: 'fortify' });
@@ -480,15 +480,15 @@ function CallCard({ call, view, forecastView, orders, current }: { call: WarCall
   const ally = empireTitle(view, call.ally), target = empireTitle(view, call.target);
   const defenders = (join?.new_wars ?? []).map((w) => w.team);
   const lines: ForYou[] = [
-    { tone: 'cost', icon: 'unit-soldier', text: `Joining puts you at War with ${target} from turn ${join?.effective_turn ?? view.turn + 1}` },
-    ...(defenders.length ? [{ tone: 'cost' as const, icon: 'unit-soldier', text: `${names(view, defenders)}, ${defenders.length > 1 ? 'allies' : 'an ally'} of ${target}, would be at War with you too` }] : []),
+    { tone: 'cost', icon: 'unit-spearman', text: `Joining puts you at War with ${target} from turn ${join?.effective_turn ?? view.turn + 1}` },
+    ...(defenders.length ? [{ tone: 'cost' as const, icon: 'unit-spearman', text: `${names(view, defenders)}, ${defenders.length > 1 ? 'allies' : 'an ally'} of ${target}, would be at War with you too` }] : []),
     { tone: 'gain', icon: 'ui-check', text: `Declining keeps your Alliance with ${ally} and your Peace with ${target}` },
     { tone: 'note', text: 'Declining costs nothing.' },
   ];
   return <article className="diplomacy-item offer-card call-card" style={{ ['--empire' as string]: playerInk(leader?.id) }} aria-labelledby={`offer-${call.id}`}>
     <div className="offer-top">
-      {leader ? <PortraitFrame faction={leader.faction} crest={false} className="offer-portrait"><span className="offer-emblem"><Icon name="unit-soldier" size={30} /></span></PortraitFrame>
-        : <Icon name="unit-soldier" size={44} />}
+      {leader ? <PortraitFrame faction={leader.faction} crest={false} className="offer-portrait"><span className="offer-emblem"><Icon name="unit-spearman" size={30} /></span></PortraitFrame>
+        : <Icon name="unit-spearman" size={44} />}
       <div className="offer-top-text">
         <h4 className="offer-headline" id={`offer-${call.id}`}>
           <EmpireMark view={view} team={call.ally} size={26} />

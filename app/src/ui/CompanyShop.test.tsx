@@ -116,7 +116,7 @@ it('shows the hired Company\'s net Gold and first unpaid turn from the treasury 
 
 it('a seller that cannot field its unit yet is one muted line saying why, with nothing to press', async () => {
   await renderShop('Byzantium', 500, [
-    { seller: 2, unit: 'Soldier', price: 40 },
+    { seller: 2, unit: 'Spearman', price: 40 },
     { seller: 3, unit: 'Tank', price: 300, unavailable: 'Panzer needs Armoured Warfare' },
   ]);
   const shop = container.querySelector('[data-testid="company-shop"]')!;
@@ -138,7 +138,7 @@ it('says why the shop is empty before first contact', async () => {
 it('a hired Company says whose it was, its countdown and its upkeep in the unit panel and tile card; the last turn says so', async () => {
   const { client, view } = await renderShop();
   const soldier = view.units.find((u) => u.owner === 0 && u.kind !== 'Settler') ?? client.view(0).units.find((u) => u.owner === 0)!;
-  const hired = { ...soldier, kind: 'Soldier' as const, military: true, contract_until: view.turn + 7, origin: 'Sparta' as const };
+  const hired = { ...soldier, kind: 'Spearman' as const, military: true, contract_until: view.turn + 7, origin: 'Sparta' as const };
   const v = { ...view, units: [hired, ...view.units.filter((u) => u.id !== soldier.id)] };
   useGame.setState({ views: [v], selection: { kind: 'unit', id: hired.id } });
   act(() => root.render(<UnitPanel unit={hired} view={v} />));

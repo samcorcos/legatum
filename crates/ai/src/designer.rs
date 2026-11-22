@@ -167,7 +167,7 @@ mod tests {
             Order::BuyItem {
                 city,
                 item: ProductionItem::Unit {
-                    unit: legatum_core::UnitKind::Soldier,
+                    unit: legatum_core::UnitKind::Spearman,
                 },
             },
             Order::BuyItem {

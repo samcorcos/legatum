@@ -129,12 +129,12 @@ export function rnd(seed: number, i: number): number {
 export function shotKindFor(kind: UnitKind | null, era: number, siege: string | null, atCity: boolean): ShotKind {
   if (atCity && siege) return siege === 'bombard' ? 'ball' : 'stone';
   switch (kind) {
-    case 'Ranger': case 'CompositeArcher': case 'Cataphract': return 'arrows';
-    case 'Marksman': return 'bolts';
+    case 'Archer': case 'CompositeArcher': case 'Cataphract': return 'arrows';
+    case 'Crossbowman': return 'bolts';
     case 'Arquebusier': return 'shot';
     case 'FieldCannon': return 'ball';
     case 'Howitzer': case 'Artillery': case 'RocketArtillery': return 'shell';
-    case 'Drone': return 'drone';
+    case 'CombatDrone': return 'drone';
     case 'Biplane': case 'Bomber': case 'JetBomber': case 'Fighter': case 'JetFighter': return 'bombs';
     default: return cityShotKind(era);
   }

@@ -10,7 +10,7 @@ import { configFromLobby } from './staging';
 import { playerColor, FACTION_PALETTE } from './theme';
 
 const unit = (id: number, owner: number, q: number, r: number, military = true) =>
-  ({ id, owner, pos: { q, r }, military, kind: military ? 'Soldier' : 'Settler' }) as unknown as UnitView;
+  ({ id, owner, pos: { q, r }, military, kind: military ? 'Spearman' : 'Settler' }) as unknown as UnitView;
 // Two empires at Peace, a barbarian Soldier and a remembered camp.
 const view = {
   me: 0,
@@ -47,7 +47,7 @@ const ctx: ReportContext = {
   me: 0,
   team: [0],
   playerName: (id) => (id === null ? 'nobody' : id === BARBARIAN ? 'Barbarians' : ['Ana', 'Ben'][id] ?? `E${id}`),
-  unitKind: (id) => (id === 7 ? 'Soldier' : null),
+  unitKind: (id) => (id === 7 ? 'Spearman' : null),
   cityName: (id) => (id === 1 ? 'Tithe Station' : 'a city'),
   cityPos: (id) => (id === 1 ? { q: 2, r: 2 } : null),
 };
@@ -72,10 +72,10 @@ it('reports camps, scouts, raids and clearing in the turn report', () => {
   expect(formatEvent({ type: 'SettlerCaptured', unit: 4, from: BARBARIAN, to: 0, at: { q: 1, r: 1 } }, ctx).text)
     .toBe('You freed a captive Settler from the barbarians at this tile');
   const battle = formatEvent({
-    type: 'Battle', attacker: 11, attacker_owner: BARBARIAN, defender: { kind: 'Unit', unit: 7, owner: 0, unit_kind: 'Soldier' }, at: { q: 1, r: 0 },
-    attacker_strength: { total: 20, parts: [['Soldier', 20]] }, defender_strength: { total: 20, parts: [['Soldier', 20]] },
+    type: 'Battle', attacker: 11, attacker_owner: BARBARIAN, defender: { kind: 'Unit', unit: 7, owner: 0, unit_kind: 'Spearman' }, at: { q: 1, r: 0 },
+    attacker_strength: { total: 20, parts: [['Spearman', 20]] }, defender_strength: { total: 20, parts: [['Spearman', 20]] },
     damage_to_attacker: 30, damage_to_defender: 30, attacker_roll: 100, defender_roll: 100, attacker_hp_after: 70, defender_hp_after: 70, ranged: false, meeting: false,
-  }, { ...ctx, unitKind: (id) => (id === 11 ? 'Soldier' : id === 7 ? 'Soldier' : null) });
+  }, { ...ctx, unitKind: (id) => (id === 11 ? 'Spearman' : id === 7 ? 'Spearman' : null) });
   expect(battle.text.startsWith('Barbarian Spearman attacked your Spearman')).toBe(true);
   expect(battle.tone).toBe('bad');
 });

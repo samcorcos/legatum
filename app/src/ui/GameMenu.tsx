@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { hostedSaveText, saveFile, useGame, type SaveFile } from '../store';
+import { currentCampaign, hostedSaveText, saveFile, useGame, type SaveFile } from '../store';
+import { EarlierTurnDialog } from './EarlierTurnDialog';
 import { openGuide } from './guideState';
 import { HintSettings } from './FirstGameHints';
 import { HapticsSettings } from './HapticsSettings';
@@ -51,6 +52,8 @@ export async function pickSaveFile(onLoad: (s: SaveFile) => void | Promise<void>
 
 export function GameMenu() {
   const [open, setOpen] = useState(false);
+  const [earlier, setEarlier] = useState(false);
+  const scenario = useGame((s) => !!s.scenario);
   const [activeSeconds, setActiveSeconds] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -108,6 +111,7 @@ export function GameMenu() {
           <path d="M3 5h12M3 9h12M3 13h12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
         </svg>
       </button>
+      {earlier && turn !== undefined && <EarlierTurnDialog campaign={currentCampaign()} current={turn} onClose={() => { setEarlier(false); trigger.current?.focus(); }} />}
       {open && (
         <div className="menu-pop" id="game-menu">
           {kind !== 'remote' && <p className="menu-foot" aria-label="Active play time">Active play: {formatPlayDuration(archivedSeconds + activeSeconds)}</p>}
@@ -122,6 +126,9 @@ export function GameMenu() {
               >
                 Load from file…
               </button>
+              {/* Going back is for games on this screen only: an online game's host would rewind everyone. */}
+              {kind === 'wasm' && !scenario && turn !== undefined && turn > 1 &&
+                <button onClick={() => (setOpen(false), setEarlier(true))}>Load an earlier turn…</button>}
               <hr />
             </>
           )}

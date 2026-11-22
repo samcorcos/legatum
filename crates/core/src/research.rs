@@ -266,10 +266,7 @@ pub(crate) fn tech_unlocks_for(
                     // Decision views work out after-yields only where a brain reads them:
                     // the industry buildings' Production gain (`legatum_ai::production`).
                     let read = full
-                        || matches!(
-                            installed,
-                            Some(BuildingKind::MachineShop | BuildingKind::Autoworks)
-                        );
+                        || matches!(installed, Some(BuildingKind::Forge | BuildingKind::Factory));
                     let (yields_after, food_surplus_after) = if read {
                         let yields = base.cached.yields(state, city, installed, full);
                         let food = yields.total.food - data::FOOD_PER_POP * city.population;

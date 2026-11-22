@@ -77,35 +77,35 @@ describe.skipIf(!available)('Celtic archers in plain sight, core behavior', () =
 
   it('shows a Celtic archer on a visible tile to a rival, like any unit', () => {
     const s = fixture();
-    const h = unit(s, 0, 'Ranger', at(5, 5));
-    unit(s, 1, 'Soldier', at(4, 5));
+    const h = unit(s, 0, 'Archer', at(5, 5));
+    unit(s, 1, 'Spearman', at(4, 5));
     const { fixtureClient, core } = play(s);
     for (const c of [fixtureClient, core]) expect(sees(c.view(1), h.id)).toBe(true);
   });
 
   it('fights a unit that walks into a Celtic archer: a battle, no halt', () => {
     const s = fixture();
-    const h = unit(s, 0, 'Ranger', at(5, 5));
-    unit(s, 1, 'Soldier', at(4, 5), at(5, 5));
+    const h = unit(s, 0, 'Archer', at(5, 5));
+    unit(s, 1, 'Spearman', at(4, 5), at(5, 5));
     const { reports } = play(s);
     expect(reports[0].some((e) => e.type === 'Battle' && e.defender.kind === 'Unit' && e.defender.unit === h.id)).toBe(true);
   });
 
   it('turns a swap or a shared destination into a meeting engagement', () => {
     const s = fixture();
-    unit(s, 0, 'Ranger', at(5, 5), at(4, 5));
-    unit(s, 1, 'Soldier', at(4, 5), at(5, 5));
+    unit(s, 0, 'Archer', at(5, 5), at(4, 5));
+    unit(s, 1, 'Spearman', at(4, 5), at(5, 5));
     const tile = neighbors(at(12, 5))[0], start = neighbors(tile)[0];
-    unit(s, 0, 'Ranger', at(12, 5), tile);
-    unit(s, 1, 'Soldier', start, tile);
+    unit(s, 0, 'Archer', at(12, 5), tile);
+    unit(s, 1, 'Spearman', start, tile);
     const { reports } = play(s);
     expect(reports[0].filter((e) => e.type === 'Battle' && e.meeting)).toHaveLength(2);
   });
 
   it('accepts a ranged order on a visible Celtic archer exactly like one on any enemy unit', () => {
     const s = fixture();
-    unit(s, 0, 'Ranger', at(5, 5));
-    const archer = unit(s, 1, 'Ranger', at(7, 5));
+    unit(s, 0, 'Archer', at(5, 5));
+    const archer = unit(s, 1, 'Archer', at(7, 5));
     refreshVision(s);
     const fixtureClient = new FixtureClient(); fixtureClient.load(JSON.stringify(s));
     const core = makeCore(); core.load(coreFixture(s));
@@ -120,8 +120,8 @@ describe.skipIf(!available)('Celtic archers in plain sight, core behavior', () =
   it('a melee attack on a city a Celtic archer garrisons hits the city while it has HP', () => {
     const s = fixture();
     city(s, 0, at(6, 5));
-    const h = unit(s, 0, 'Ranger', at(6, 5));
-    const soldier = unit(s, 1, 'Soldier', at(5, 5));
+    const h = unit(s, 0, 'Archer', at(6, 5));
+    const soldier = unit(s, 1, 'Spearman', at(5, 5));
     const { reports } = play(s, [{ 1: [{ type: 'MoveUnit', unit: soldier.id, to: at(6, 5) }] }]);
     // The city shields its garrison (Civ 6): the archer is not fought.
     expect(reports[0].some((e) => e.type === 'Battle' && e.defender.kind === 'City')).toBe(true);
@@ -131,8 +131,8 @@ describe.skipIf(!available)('Celtic archers in plain sight, core behavior', () =
   it('a melee attack on a fallen city fights its Celtic archer garrison', () => {
     const s = fixture();
     city(s, 0, at(6, 5)).hp = 0;
-    const h = unit(s, 0, 'Ranger', at(6, 5));
-    const soldier = unit(s, 1, 'Soldier', at(5, 5));
+    const h = unit(s, 0, 'Archer', at(6, 5));
+    const soldier = unit(s, 1, 'Spearman', at(5, 5));
     const { reports } = play(s, [{ 1: [{ type: 'MoveUnit', unit: soldier.id, to: at(6, 5) }] }]);
     expect(reports[0].some((e) => e.type === 'Battle' && e.defender.kind === 'Unit' && e.defender.unit === h.id)).toBe(true);
   });

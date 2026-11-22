@@ -3,12 +3,12 @@
 //! risk of retaliation.
 //!
 //! The user's rush scenarios (2026-10-04) found the gap: four Sparta units next to an
-//! unwalled one-city neighbour at Peace waited six turns for a second Ranger, because
+//! unwalled one-city neighbour at Peace waited six turns for a second Archer, because
 //! readiness was a fixed recipe (two ranged and two melee units). Here readiness is a
 //! forecast: the same combat forecasts the engine shows a player, played out over a few
 //! rounds of fire and assault from the assault tiles the force can reach. Value decides,
 //! never a recipe, and the evidence is the PlayerView only (a fogged city is assumed to hold
-//! one fortified Soldier).
+//! one fortified Spearman).
 
 use crate::analysis::{city_power, defense_power, threat_power};
 use crate::production::city_keep_value;
@@ -517,7 +517,7 @@ impl Planner<'_> {
             .collect();
         units.sort_by_key(|u| (u.pos.distance(city.pos), u.id));
         // Own units (one owner) on one view: one entry rule for every route.
-        let entry = prospective.entry_table(v.me, legatum_core::UnitKind::Soldier);
+        let entry = prospective.entry_table(v.me, legatum_core::UnitKind::Spearman);
         let mut force = Vec::new();
         for u in units {
             let rings: Vec<i32> = if crate::composition::shooter_only(u.kind, u.ranged) {
@@ -652,12 +652,12 @@ impl Planner<'_> {
         let planned_cost = cover.gold / 2;
         let build_delay = i32::from(self.decisions.siege_timeline > 0 && cover.planned > 0);
         if !city.visible && garrison_at(&sim, city.pos).is_none() {
-            // Fog hides the garrison: assume one fortified Soldier holds the city.
+            // Fog hides the garrison: assume one fortified Spearman holds the city.
             let mut phantom = force[0].0.clone();
-            let stats = data::unit_stats_for(sim.faction_of(city.owner), UnitKind::Soldier);
+            let stats = data::unit_stats_for(sim.faction_of(city.owner), UnitKind::Spearman);
             phantom.id = PHANTOM;
             phantom.owner = city.owner;
-            phantom.kind = UnitKind::Soldier;
+            phantom.kind = UnitKind::Spearman;
             phantom.pos = city.pos;
             phantom.hp = data::UNIT_HP;
             phantom.strength = stats.strength;
@@ -672,7 +672,7 @@ impl Planner<'_> {
         let approach = force.iter().map(|(_, _, t)| *t).max().unwrap_or(0);
         // A unit that needs `t` turns to reach its tile acts from round t + 1; the enemy
         // shoots at every unit of the force from round 1, approach included (rush-offense
-        // replays: a Ranger two turns out was shot to 15 HP before it could fire).
+        // replays: an Archer two turns out was shot to 15 HP before it could fire).
         let arrives: BTreeMap<UnitId, i32> = force.iter().map(|(u, _, t)| (u.id, *t)).collect();
         let ready = |id: &UnitId, round: i32| arrives.get(id).is_some_and(|t| *t < round);
         let start_hp: BTreeMap<UnitId, i32> = force.iter().map(|(u, _, _)| (u.id, u.hp)).collect();
@@ -1023,9 +1023,9 @@ mod sparta_wound_tests {
             .faction(Faction::India)
             .city(1, ME, off(3, 5), 3)
             .city(2, crate::fixture::ENEMY, off(10, 5), 3)
-            .unit(1, ME, UnitKind::Soldier, off(9, 5))
-            .unit(2, ME, UnitKind::Soldier, off(10, 4))
-            .unit(3, ME, UnitKind::Soldier, off(11, 5))
+            .unit(1, ME, UnitKind::Spearman, off(9, 5))
+            .unit(2, ME, UnitKind::Spearman, off(10, 4))
+            .unit(3, ME, UnitKind::Spearman, off(11, 5))
             .build();
         let city = v.cities.iter().find(|c| c.owner != ME).unwrap();
         let force: Vec<_> = v.units.iter().map(|u| (u, u.pos, 0)).collect();
@@ -1048,7 +1048,7 @@ mod sparta_wound_tests {
         let v = ViewBuilder::new(20, 12)
             .faction(Faction::Sparta)
             .city(1, ME, off(3, 5), 3)
-            .unit(1, ME, UnitKind::Soldier, off(6, 5))
+            .unit(1, ME, UnitKind::Spearman, off(6, 5))
             .build();
         let mut wounded = v.units[0].clone();
         wounded.hp = 35;
@@ -1067,7 +1067,7 @@ mod sparta_wound_tests {
         let v = ViewBuilder::new(20, 12)
             .faction(Faction::Sparta)
             .city(1, ME, off(3, 5), 3)
-            .unit(1, ME, UnitKind::Soldier, off(8, 5))
+            .unit(1, ME, UnitKind::Spearman, off(8, 5))
             .build();
         let mut after = v.clone();
         after.units.iter_mut().next().unwrap().hp = 60;

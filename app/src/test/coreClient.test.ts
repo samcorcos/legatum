@@ -50,7 +50,7 @@ describe('FixtureClient setup and view', () => {
     expect(v.turn).toBe(1);
     expect(v.me).toBe(0);
     const own = v.units.filter((u) => u.owner === 0).map((u) => u.kind).sort();
-    expect(own).toEqual(['Scout', 'Soldier']);
+    expect(own).toEqual(['Scout', 'Spearman']);
     expect(v.cities.find((city) => city.owner === 0)).toMatchObject({ is_capital: true, population: 1 });
     expect(v.standings.find((s) => s.team === 0)).toMatchObject({ members: [0, 1] });
     expect(v.standings.every((s) => s.target > 0)).toBe(true);
@@ -105,7 +105,7 @@ describe('research upgrade previews', () => {
   it('matches the gold charged', async () => {
     const c = await newClient();
     const s = c.debugState();
-    const soldier = s.units.find((u) => u.owner === 0 && u.kind === 'Soldier')!;
+    const soldier = s.units.find((u) => u.owner === 0 && u.kind === 'Spearman')!;
     s.owner[tileIndex(soldier.pos, s.width, s.height)] = 0;
     // The Phalangite uses 1 Iron: an Iron deposit under the Spearman, inside the border, with the technology that reveals it.
     (s.resource ??= s.terrain.map(() => null))[tileIndex(soldier.pos, s.width, s.height)] = 'Iron';
@@ -114,7 +114,7 @@ describe('research upgrade previews', () => {
     const advertised = c.view(0).research.unlocks.find((unlock) =>
       unlock.item.kind === 'Unit' && unlock.item.unit === 'Phalangite')!.upgrade_cost;
     expect(advertised).not.toBeNull();
-    expect(ownUnit(c, 0, 'Soldier').upgrade_cost).toBe(advertised);
+    expect(ownUnit(c, 0, 'Spearman').upgrade_cost).toBe(advertised);
     const result = c.endTurn({ 0: [{ type: 'UpgradeUnit', unit: soldier.id }] });
     expect(result.events).toContainEqual({ type: 'UnitUpgraded', unit: soldier.id, owner: 0, to: 'Phalangite', gold: advertised });
     expect(ownUnit(c, 0, 'Phalangite').id).toBe(soldier.id);
@@ -149,13 +149,13 @@ describe('founding a city', () => {
     expect(seen.detail).toBeNull();
 
     // Production, buying and a new unit.
-    const soldier = { kind: 'Unit' as const, unit: 'Soldier' as const };
+    const soldier = { kind: 'Unit' as const, unit: 'Spearman' as const };
     const orders: Order[] = [{ type: 'SetProduction', city: city.id, item: soldier }];
     expect(c.validate(0, orders)).toEqual([]);
     c.endTurn({ 0: orders });
     const d2 = c.view(0).cities.find((x) => x.id === city.id)!.detail!;
     expect(d2.producing).toEqual(soldier);
-    const soldierCost = d2.options.find((option) => option.item.kind === 'Unit' && option.item.unit === 'Soldier')?.cost;
+    const soldierCost = d2.options.find((option) => option.item.kind === 'Unit' && option.item.unit === 'Spearman')?.cost;
     expect(d2.buy_cost).toBe(Math.trunc(((soldierCost ?? 0) * 175) / 100));
   });
 });
@@ -164,7 +164,7 @@ describe('validate', () => {
   it('rejects bad orders with the right indices', async () => {
     const c = await newClient();
     const scout = ownUnit(c, 0, 'Scout');
-    const soldier = ownUnit(c, 0, 'Soldier');
+    const soldier = ownUnit(c, 0, 'Spearman');
     const dest = within(scout.pos, 2).find((h) => {
       const t = c.view(0).tiles[tileIndex(h, 48, 32)];
       return t.explored && moveCost(t.terrain) !== null && !hexEq(h, scout.pos);
@@ -190,7 +190,7 @@ describe('validate', () => {
     expect(c.validate(0, [{ type: 'UpgradeUnit', unit: soldier.id }])).toHaveLength(1);
     expect(c.validate(0, [{ type: 'SetResearch', tech: 'Mathematics' }])[0].message).toBe('Mathematics is in the Classical era: finish the Ancient era first');
     expect(c.validate(0, [{ type: 'SetResearch', tech: 'BronzeWorking' }])).toEqual([]);
-    expect(c.validate(0, [{ type: 'BuyItem', city: 999, item: { kind: 'Unit', unit: 'Soldier' } }])).toHaveLength(1);
+    expect(c.validate(0, [{ type: 'BuyItem', city: 999, item: { kind: 'Unit', unit: 'Spearman' } }])).toHaveLength(1);
   });
 
   it('rejects founding next to an existing city', async () => {
@@ -250,8 +250,8 @@ describe('forecast', () => {
   it('returns odds and breakdowns for an adjacent enemy, null otherwise', async () => {
     const c = await newClient();
     const s = c.debugState();
-    const soldier = s.units.find((u) => u.owner === 0 && u.kind === 'Soldier')!;
-    const enemy = s.units.find((u) => u.owner === 2 && u.kind === 'Soldier')!;
+    const soldier = s.units.find((u) => u.owner === 0 && u.kind === 'Spearman')!;
+    const enemy = s.units.find((u) => u.owner === 2 && u.kind === 'Spearman')!;
     const spot = neighbors(soldier.pos).find(
       (h) => moveCost(s.terrain[tileIndex(h, 48, 32)]) !== null && !s.units.some((u) => hexEq(u.pos, h)),
     )!;

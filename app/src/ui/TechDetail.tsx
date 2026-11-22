@@ -16,11 +16,11 @@ export function UnlockDetail({ view, unlock, turns }: { view: PlayerView; unlock
   if (unlock.siege_bonus) benefits.push(`+${unlock.siege_bonus} ranged against city HP`);
   if (unlock.item.kind === 'Building' && isGreatWork(unlock.item.building)) benefits.push('+2 VP while its tile is held');
   const faction = view.players.find((p) => p.id === view.me)?.faction;
-  if (unlock.item.kind === 'Building' && unlock.item.building === 'WarShrine') benefits.push(itemDescription(unlock.item, faction));
+  if (unlock.item.kind === 'Building' && unlock.item.building === 'Agoge') benefits.push(itemDescription(unlock.item, faction));
   if (unlock.item.kind === 'Building' && unlock.item.building === 'Roadworks') benefits.push('roads to every city within 8 tiles');
   // Faction rules that change an ordinary item (Mongol commerce, Byzantine Science, Germany's Markets);
   // replacements already show their own name and numbers.
-  const factionNote = faction && unlock.item.kind === 'Building' && unlock.item.building !== 'WarShrine' && !factionItemName(faction, unlock.item.building)
+  const factionNote = faction && unlock.item.kind === 'Building' && unlock.item.building !== 'Agoge' && !factionItemName(faction, unlock.item.building)
     && itemDescription(unlock.item, faction) !== itemDescription(unlock.item, undefined) ? itemDescription(unlock.item, faction) : null;
   return <div className="research-unlock">
     <p><strong>{unlock.name}</strong>{benefits.length > 0 && <> · <Amounts text={benefits.join(', ')} /></>}</p>

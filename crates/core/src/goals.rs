@@ -317,7 +317,7 @@ pub fn swarm_plan(state: &GameState, p: PlayerId) -> Vec<(CityId, i32)> {
 pub fn factory_cities(state: &GameState, p: PlayerId) -> i32 {
     state
         .cities_of(p)
-        .filter(|c| data::has_building(&c.buildings, BuildingKind::MachineShop))
+        .filter(|c| data::has_building(&c.buildings, BuildingKind::Forge))
         .count() as i32
 }
 
@@ -327,7 +327,7 @@ pub fn heir(state: &GameState, of: PlayerId) -> Option<&Unit> {
     state
         .units
         .values()
-        .find(|u| u.kind == UnitKind::Heir && u.heir_of == Some(of))
+        .find(|u| u.kind == UnitKind::HeirToTheThrone && u.heir_of == Some(of))
 }
 
 /// Who holds `of`'s Heir and so scores the Byzantium goal: his owner, unless barbarians took him
@@ -346,12 +346,12 @@ pub fn hall_city(state: &GameState, of: PlayerId) -> Option<&crate::state::City>
         .player(of)
         .hall_city
         .and_then(|id| state.cities.get(&id))
-        .filter(|c| data::has_building(&c.buildings, BuildingKind::CourierHall))
+        .filter(|c| data::has_building(&c.buildings, BuildingKind::YamRelayStation))
 }
 
 /// Who holds `of`'s Courier Hall and so scores the Mongols goal: the owner of its tile.
 pub fn hall_holder(state: &GameState, of: PlayerId) -> Option<PlayerId> {
-    if let Some((_, holder)) = crate::landmarks::site(state, of, BuildingKind::CourierHall) {
+    if let Some((_, holder)) = crate::landmarks::site(state, of, BuildingKind::YamRelayStation) {
         return holder.filter(|o| !o.is_barbarian());
     }
     hall_city(state, of)
@@ -404,7 +404,7 @@ pub fn courier_halls(state: &GameState) -> Vec<crate::view::CourierHallView> {
                 of: p.id,
                 holder: hall_holder(state, p.id)?,
                 city: city.id,
-                tile: crate::landmarks::find(state, p.id, BuildingKind::CourierHall)
+                tile: crate::landmarks::find(state, p.id, BuildingKind::YamRelayStation)
                     .map(|(h, _)| h),
             })
         })

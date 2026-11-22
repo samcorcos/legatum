@@ -163,6 +163,23 @@ export interface SaveFile {
   online?: true;
   /** Coach questions: the toggle and what was already asked (app-side; never part of the game state). */
   why?: WhyMemory;
+  /** Every time the player went back to an earlier turn ("Load an earlier turn"), oldest first. Absent when never. */
+  rewinds?: Rewind[];
+}
+
+/**
+ * One "Load an earlier turn": the player left turn `from_turn` and played on from the start of `to_turn`. The uploaded
+ * record carries the list as the top-level `rewinds` key (gameUpload.ts), so analysis knows the turns in between
+ * were played and discarded; the tape itself holds only the line the player kept.
+ */
+export interface Rewind { at: string; from_turn: number; to_turn: number }
+/** The most rewinds a game keeps (and the game server accepts): the oldest go first. */
+export const MAX_REWINDS = 1000;
+
+/** The rewinds a save carries, if they read as rewinds. */
+export function saveRewinds(save: Pick<SaveFile, 'rewinds'>): Rewind[] {
+  const list = Array.isArray(save.rewinds) ? save.rewinds : [];
+  return list.filter((r) => !!r && typeof r.at === 'string' && Number.isInteger(r.from_turn) && Number.isInteger(r.to_turn)).slice(-MAX_REWINDS);
 }
 
 interface State {
@@ -308,6 +325,8 @@ interface State {
   scenario: ActiveScenario | null;
   /** The browser would not keep the latest autosave: the notice offering Save to file shows (once per game). */
   autosaveNotice: boolean;
+  /** This game's rewinds ("Load an earlier turn"), saved with it and sent with its uploaded record. */
+  rewinds: Rewind[];
 
   goto(screen: Screen): void;
   openSetup(mode: SetupMode): void;
@@ -350,6 +369,11 @@ interface State {
   loadSave(save: SaveFile, forkHistory?: boolean): Promise<void>;
   /** Continue from a stored autosave: the same game keeps its slots, and this turn's unsent orders come back. */
   continueAutosave(record: AutosaveRecord, save: SaveFile): Promise<void>;
+  /**
+   * "Load an earlier turn": open an earlier autosave of a local game, recorded as a rewind. Its later turns are
+   * dropped once the earlier turn is saved again.
+   */
+  rewindTo(campaign: string, save: SaveFile): Promise<void>;
   /** Start a scenario: its state with the seat as the only human, scored by the engine. */
   startScenario(entry: ScenarioEntry): Promise<void>;
   /** Attach the player's feedback to the finished run and save the run again. */
@@ -433,6 +457,7 @@ export function saveFile(client: GameClient, views: PlayerView[]): SaveFile {
     playtest: buildLabel,
     ...(BUILD_ID ? { build: BUILD_ID } : {}),
     ...(useGame.getState().why.enabled ? { why: useGame.getState().why } : {}),
+    ...(useGame.getState().rewinds.length ? { rewinds: useGame.getState().rewinds } : {}),
   };
 }
 
@@ -488,6 +513,10 @@ export async function readAutosave(): Promise<SaveFile | null> {
 
 /** The game now on screen: its autosaves share this id (autosaveStore.ts). Changes only when a new game or a file replaces it. */
 let campaign = newCampaignId();
+/** The id of the game on screen, for "Load an earlier turn". */
+export const currentCampaign = () => campaign;
+/** Set for one loadSave by rewindTo: the rewind to record once the earlier turn is open. */
+let pendingRewind: { from: number; prior: Rewind[] } | null = null;
 let resumeCampaign: string | null = null;
 let noticedCampaign: string | null = null;
 
@@ -511,11 +540,15 @@ async function openInOwnBuild(save: SaveFile, campaign: string | null): Promise<
   return true;
 }
 
-/** Writes the autosave. Returns the engine save it holds (null if it could not be made), so the caller need not ask the engine again. */
-function writeAutosave(client: GameClient, views: PlayerView[]): string | null {
-  if (client.archive && (views[0].finished || (views[0].turn - 1) % 5 === 0)) {
+/**
+ * Writes the autosave. Returns the engine save it holds (null if it could not be made), so the caller need not ask the
+ * engine again. `uploadNow` sends the game record now rather than at the next five-turn checkpoint (after a rewind).
+ */
+function writeAutosave(client: GameClient, views: PlayerView[], uploadNow = false): string | null {
+  if (client.archive && (uploadNow || views[0].finished || (views[0].turn - 1) % 5 === 0)) {
     try {
-      void recordGameHistory(historyToRecord(client as { archive(): string }, useGame.getState().why.answers)).catch((error) => useGame.getState().set({ error: String(error) }));
+      const { why, rewinds } = useGame.getState();
+      void recordGameHistory(historyToRecord(client as { archive(): string }, why.answers, rewinds)).catch((error) => useGame.getState().set({ error: String(error) }));
     } catch (error) { useGame.getState().set({ error: `Could not record game history: ${String(error)}` }); }
   }
   const game = campaign;
@@ -629,7 +662,7 @@ export const useGame = create<State>((set, get) => {
     // A scenario's history is saved with its run, never in the game archive.
     if (previous !== client && previous?.archive && !get().scenario) {
       try {
-        const history = historyToRecord(previous as { archive(): string }, get().why.answers);
+        const history = historyToRecord(previous as { archive(): string }, get().why.answers, get().rewinds);
         const replacingSameGame = client.archive && JSON.parse(client.archive()).metadata.game_id === JSON.parse(history).metadata.game_id;
         if (!replacingSameGame) void abandonGameHistory(history).catch((error) => set({ error: String(error) }));
       }
@@ -1259,6 +1292,7 @@ export const useGame = create<State>((set, get) => {
     forecastTick: 0,
     scenario: null,
     autosaveNotice: false,
+    rewinds: [],
 
     goto: (screen) => {
       if (screen !== 'game') stopResolving();
@@ -1550,6 +1584,7 @@ export const useGame = create<State>((set, get) => {
         const capital = first?.cities.find((city) => city.owner === first.me && city.is_capital);
         if (capital) get().select({ kind: 'city', id: capital.id }, true);
         if (options?.training) set({ why: { ...NO_WHY, enabled: true } });
+        set({ rewinds: [] });
         const views = get().views;
         campaign = newCampaignId();
         if (views) writeAutosave(client, views);
@@ -1562,6 +1597,8 @@ export const useGame = create<State>((set, get) => {
     loadSave: async (save, forkHistory = false) => {
       stopResolving();
       set({ busy: 'Loading…', error: null });
+      const rewind = pendingRewind;
+      pendingRewind = null;
       try {
         checkSaveText(save.game);
         if (!saveHasCurrentRules(save.game)) {
@@ -1578,9 +1615,12 @@ export const useGame = create<State>((set, get) => {
         if (forkHistory) client.forkArchive?.();
         measureTurn('afterLoad', () => afterLoad(client));
         if (save.why?.enabled) set({ why: { enabled: true, asked: save.why.asked ?? [], last: save.why.last ?? null, skipped: save.why.skipped ?? [], answers: Array.isArray(save.why.answers) ? save.why.answers.slice(-MAX_SAVED_ANSWERS) : [] } });
+        const views = get().views;
+        set({ rewinds: rewind && views ? [...rewind.prior, { at: new Date().toISOString(), from_turn: rewind.from, to_turn: views[0].turn }].slice(-MAX_REWINDS) : saveRewinds(save) });
         campaign = resumeCampaign ?? newCampaignId();
         resumeCampaign = null;
-        if (get().views) measureTurn('loadAutosave', () => writeAutosave(client, get().views!));
+        // After a rewind the record goes up at once, so the stored copy loses the turns the player went back from.
+        if (views) measureTurn('loadAutosave', () => writeAutosave(client, views, !!rewind));
       } catch (e) {
         resumeCampaign = null;
         const message = e instanceof Error ? e.message : String(e);
@@ -1597,6 +1637,18 @@ export const useGame = create<State>((set, get) => {
       const turn = get().views![0].turn;
       const kept = await readPendingOrders(record.campaign, turn);
       if (kept !== null && get().views?.[0].turn === turn) restorePendingOrders(kept);
+    },
+
+    rewindTo: async (target, save) => {
+      // Left from the open game, or (from the title) from this game's newest kept turn.
+      const live = target === campaign && get().views && !get().scenario && get().client?.kind !== 'remote';
+      const newest = live ? null : parseAutosave((await listAutosaves()).find((r) => r.campaign === target)?.text ?? null);
+      const from = live ? get().views![0].turn : newest?.turn ?? save.turn;
+      pendingRewind = { from, prior: live ? get().rewinds : newest ? saveRewinds(newest) : saveRewinds(save) };
+      resumeCampaign = target;
+      await get().loadSave(save);
+      resumeCampaign = null;
+      pendingRewind = null;
     },
 
     startScenario: async (entry) => {

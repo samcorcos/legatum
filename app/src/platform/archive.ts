@@ -112,8 +112,12 @@ export function retryGameHistory(): Promise<void> {
 
 /** Static-host fallback: gzip when available, plain portable JSON on older browsers. */
 export async function exportGameHistory(json: string): Promise<void> {
-  const recording = JSON.parse(json) as History & { coach_answers?: unknown };
-  if (recording.coach_answers !== undefined) { delete recording.coach_answers; json = JSON.stringify(recording); }
+  const recording = JSON.parse(json) as History & { coach_answers?: unknown; rewinds?: unknown };
+  if (recording.coach_answers !== undefined || recording.rewinds !== undefined) {
+    delete recording.coach_answers;
+    delete recording.rewinds;
+    json = JSON.stringify(recording);
+  }
   let blob = new Blob([json], { type: 'application/json' });
   let extension = 'json';
   if (typeof CompressionStream !== 'undefined') {

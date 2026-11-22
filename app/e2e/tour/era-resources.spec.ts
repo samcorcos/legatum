@@ -37,7 +37,7 @@ function niterScene() {
   c.buildings.push('Workshop', 'Market');
   // One Pikeman, so the levy has room and the Musketman card is on offer (blocked by Niter, not by the levy).
   s.units = s.units.filter((u) => u.owner !== 0 || u.kind === 'Scout');
-  spawnUnit(s, 0, 'Trooper', ring(c.pos, 1)[1], false);
+  spawnUnit(s, 0, 'Pikeman', ring(c.pos, 1)[1], false);
   const foreign = fromOffset(20, 8), free = ring(c.pos, 4)[1];
   put(s, foreign, 'Plains', 'Niter');
   put(s, free, 'Grassland', 'Niter');
@@ -134,7 +134,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
       views[state.seat] = {
         ...view,
         research: { ...view.research, era: 4, known: [] },
-        units: view.units.slice(0, 2).map((u, i) => ({ ...u, kind: i ? 'Cavalry' as const : 'Trooper' as const, upgrade_need: i ? 'Oil' as const : 'Niter' as const, upgrade_supply_blocker: `No ${i ? 'Oil' : 'Niter'} to spare` })),
+        units: view.units.slice(0, 2).map((u, i) => ({ ...u, kind: i ? 'Cavalry' as const : 'Pikeman' as const, upgrade_need: i ? 'Oil' as const : 'Niter' as const, upgrade_supply_blocker: `No ${i ? 'Oil' : 'Niter'} to spare` })),
         cities: view.cities.map((c) => ({ ...c, detail: c.detail ? { ...c.detail, options: [] } : c.detail })),
         supply: (view.supply ?? []).map((resource) => ['Niter', 'Oil'].includes(resource.resource)
           ? { ...resource, revealed: true, supplied: { total: 0, parts: [] }, used: { total: 0, parts: [] }, idle: [], held: [], spare: 0 }
@@ -212,7 +212,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     }
 
     // A Pikeman whose upgrade to Musketman needs Niter.
-    const pike = await page.evaluate(() => { const st = (window as unknown as GameWindow).legatum.getState(), v = st.views![st.seat]; return v.units.find((u) => u.owner === v.me && u.kind === 'Trooper')!.id; });
+    const pike = await page.evaluate(() => { const st = (window as unknown as GameWindow).legatum.getState(), v = st.views![st.seat]; return v.units.find((u) => u.owner === v.me && u.kind === 'Pikeman')!.id; });
     await selectThing(page, 'unit', pike);
     await expectReasonsFit(page);
     await page.getByRole('button', { name: 'Open Niter supply' }).click();

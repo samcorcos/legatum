@@ -8,7 +8,7 @@ fn is_hall(item: ProductionItem) -> bool {
     matches!(
         item,
         ProductionItem::Wonder {
-            building: BuildingKind::CourierHall,
+            building: BuildingKind::YamRelayStation,
             ..
         }
     )
@@ -71,8 +71,8 @@ fn mongols(turn: u32, vp: u32, target: u32) -> PlayerView {
         .city(9, ENEMY, off(40, 22), 4);
     for (i, (c, r)) in [(4, 4), (12, 4), (4, 12)].into_iter().enumerate() {
         b = b
-            .unit(10 + i as u32, ME, UnitKind::Soldier, off(c, r))
-            .unit(20 + i as u32, ME, UnitKind::Soldier, off(c + 1, r));
+            .unit(10 + i as u32, ME, UnitKind::Spearman, off(c, r))
+            .unit(20 + i as u32, ME, UnitKind::Spearman, off(c + 1, r));
     }
     let mut v = b.build();
     v.turn = turn * 2;
@@ -83,11 +83,11 @@ fn mongols(turn: u32, vp: u32, target: u32) -> PlayerView {
             for o in &mut d.options {
                 if o.item
                     == (ProductionItem::Building {
-                        building: BuildingKind::CourierHall,
+                        building: BuildingKind::YamRelayStation,
                     })
                 {
                     o.item = ProductionItem::Wonder {
-                        building: BuildingKind::CourierHall,
+                        building: BuildingKind::YamRelayStation,
                         tile: c.pos.neighbors()[0],
                     };
                     o.wonder = Some(legatum_core::view::WonderPreview {
@@ -181,9 +181,9 @@ fn the_hall_is_started_only_where_the_land_can_be_defended() {
     let mut siege = mongols(70, 12, 16);
     siege.units.extend(
         ViewBuilder::new(48, 28)
-            .unit(70, ENEMY, UnitKind::Trooper, off(6, 4))
-            .unit(71, ENEMY, UnitKind::Trooper, off(6, 5))
-            .unit(72, ENEMY, UnitKind::Trooper, off(5, 3))
+            .unit(70, ENEMY, UnitKind::Pikeman, off(6, 4))
+            .unit(71, ENEMY, UnitKind::Pikeman, off(6, 5))
+            .unit(72, ENEMY, UnitKind::Pikeman, off(5, 3))
             .build()
             .units,
     );
@@ -363,10 +363,10 @@ fn a_threatened_hall_city_is_answered_before_a_busier_one() {
         .faction(Faction::Mongols)
         .city(1, ME, off(4, 4), 4)
         .city(2, ME, off(4, 14), 4)
-        .unit(1, ME, UnitKind::Soldier, off(4, 9))
-        .unit(2, ENEMY, UnitKind::Trooper, off(6, 4))
-        .unit(3, ENEMY, UnitKind::Trooper, off(7, 4))
-        .unit(4, ENEMY, UnitKind::Soldier, off(6, 14))
+        .unit(1, ME, UnitKind::Spearman, off(4, 9))
+        .unit(2, ENEMY, UnitKind::Pikeman, off(6, 4))
+        .unit(3, ENEMY, UnitKind::Pikeman, off(7, 4))
+        .unit(4, ENEMY, UnitKind::Spearman, off(6, 14))
         .build();
     v.turn = 40;
     v.players[0].faction_goal_done = false;
@@ -538,10 +538,10 @@ fn staging_view(with_hall: bool) -> PlayerView {
         .city(1, ME, off(4, 8), 4)
         .city(2, ME, off(4, 14), 4)
         .city(4, ENEMY, hall_city, 3)
-        .unit(1, ME, UnitKind::Soldier, off(9, 8))
-        .unit(2, ME, UnitKind::Soldier, off(9, 9))
-        .unit(3, ME, UnitKind::Trooper, off(8, 8))
-        .unit(4, ME, UnitKind::Ranger, off(8, 9))
+        .unit(1, ME, UnitKind::Spearman, off(9, 8))
+        .unit(2, ME, UnitKind::Spearman, off(9, 9))
+        .unit(3, ME, UnitKind::Pikeman, off(8, 8))
+        .unit(4, ME, UnitKind::Archer, off(8, 9))
         .build();
     v.players[2].faction = Faction::Mongols;
     v.players[0].faction_goal_done = false;
@@ -633,7 +633,7 @@ fn an_army_staged_beside_the_hall_city_declares_war_and_strikes_the_same_turn() 
     {
         closed.units[i].pos = pos;
     }
-    assert!(!closed.passage_allowed(ME, UnitKind::Soldier, Some(ENEMY)));
+    assert!(!closed.passage_allowed(ME, UnitKind::Spearman, Some(ENEMY)));
 }
 
 #[test]
@@ -646,10 +646,10 @@ fn the_holder_counts_a_rival_army_at_its_border_as_a_threat() {
         .city(1, ME, off(18, 8), 4)
         .city(2, ME, off(24, 8), 4)
         .city(3, ENEMY, off(4, 8), 4)
-        .unit(1, ME, UnitKind::Soldier, off(18, 8))
-        .unit(2, ME, UnitKind::Soldier, off(24, 8))
-        .unit(3, ENEMY, UnitKind::Trooper, off(14, 8))
-        .unit(4, ENEMY, UnitKind::Trooper, off(14, 9))
+        .unit(1, ME, UnitKind::Spearman, off(18, 8))
+        .unit(2, ME, UnitKind::Spearman, off(24, 8))
+        .unit(3, ENEMY, UnitKind::Pikeman, off(14, 8))
+        .unit(4, ENEMY, UnitKind::Pikeman, off(14, 9))
         .build();
     v.turn = 60;
     v.players[0].faction_goal_done = false;
@@ -729,7 +729,7 @@ fn a_hall_that_wins_the_game_replaces_the_unit_its_city_keeps_building() {
     // 8 of 10 VP; every city repeats a Drone (cities keep a unit in production for good), so none
     // is ever idle for the goal pass to give the Hall to.
     let drone = ProductionItem::Unit {
-        unit: UnitKind::Soldier,
+        unit: UnitKind::Spearman,
     };
     let mut v = mongols(100, 8, 10);
     for c in &mut v.cities {

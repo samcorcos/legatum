@@ -28,12 +28,12 @@ Moved verbatim from `game-rules.md` on 2026-11-22, in the original order; the or
 | Classical | Iron Working | 56 | Reveals Iron; Forge; Mine upgrade (Deep Mine); Cataphract (Horsemen upgrade to it) |
 | Classical | Code of Laws (`CodeOfLaws`) | 62 | **Every existing city claims its best available ring-2 tile on research; later cities do so on founding** |
 | Classical | Philosophy | 68 | Great Library (world wonder); +1 Science in every city |
-| Medieval | Feudalism | 120 | Pikeman (`Trooper`; Phalangites upgrade to it); Mill |
-| Medieval | Machinery | 126 | Crossbowman (`Marksman`; Composite Archers upgrade to it); Hagia Sophia (world wonder); Star Fort (Walls tier 3, Production only; rules 50, was Military Engineering); +1 Production per Workshop family |
+| Medieval | Feudalism | 120 | Pikeman (`Pikeman`; Phalangites upgrade to it); Mill |
+| Medieval | Machinery | 126 | Crossbowman (`Crossbowman`; Composite Archers upgrade to it); Hagia Sophia (world wonder); Star Fort (Walls tier 3, Production only; rules 50, was Military Engineering); +1 Production per Workshop family |
 | Medieval | Chivalry | 132 | Knight (Cataphracts upgrade to it); Castle (Walls tier 2, Production only); War Shrine (Sparta) |
 | Medieval | Education | 136 | University |
 | Medieval | Crop Rotation | 140 | Farm/Pasture upgrade (Irrigated Farm, Ranch); +1 Food per Granary family |
-| Renaissance | Gunpowder | 216 | Musketman (`AssaultTrooper`; Pikemen upgrade to it); Arquebusier (Crossbowmen upgrade to it); Niter visible |
+| Renaissance | Gunpowder | 216 | Musketman (`Musketman`; Pikemen upgrade to it); Arquebusier (Crossbowmen upgrade to it); Niter visible |
 | Renaissance | Metallurgy | 224 | Cuirassier (Knights upgrade to it); Siege reaches Star Forts (tier 3). Machinery (Medieval) is tier 2 (Castles) |
 | Renaissance | Military Engineering | 230 | **unit upgrades cost half** (the Star Fort moved to Machinery in rules 50) |
 | Renaissance | Banking | 238 | Bank; Grand Bazaar (world wonder) |
@@ -44,7 +44,7 @@ Moved verbatim from `game-rules.md` on 2026-11-22, in the original order; the or
 | Industrial | Industrialization | 368 | Factory; Coal visible |
 | Industrial | Railways | 376 | **A unit that starts its turn on a road gets +2 moves (was +1)**; Roadworks link cities within 12 hexes (was 8); Mines +1 Production |
 | Machine Age | Replaceable Parts | 388 | Trench Infantry (Riflemen upgrade to it); Factories +2 Production |
-| Machine Age | Combustion | 394 | Early Tank (`Landship`; Cavalry upgrade to it); Oil Wells +1 Gold; Oil visible |
+| Machine Age | Combustion | 394 | Early Tank (`EarlyTank`; Cavalry upgrade to it); Oil Wells +1 Gold; Oil visible |
 | Machine Age | Steel | 402 | Howitzer (Field Cannons upgrade to it); Eiffel Tower (world wonder); Howitzers, Artillery and Combat Drones fire indirectly over terrain at targets their team sees (`data::indirect_fire`, `los::ranged_clear_with_tech`) |
 | Machine Age | Flight | 414 | Biplane (aircraft, based in cities) |
 | Machine Age | Electricity | 422 | Stock Exchange |

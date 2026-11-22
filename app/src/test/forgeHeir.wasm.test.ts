@@ -18,7 +18,7 @@ describe.skipIf(!available)('Germany Foundry and Byzantium Heir goals in the cor
 
   it('exports a live two-point Germany goal and the Ruhr Foundry yield', () => {
     expect(RULES.factionGoals.Germany).toMatchObject({ kind: 'Live', target: 5, label: 'Ruhr Foundries', vp: 2 });
-    expect(buildingStatsFor('Germany', 'MachineShop').yields.production).toBe(6);
+    expect(buildingStatsFor('Germany', 'Forge').yields.production).toBe(6);
   });
 
   it('counts five German Foundries', () => {
@@ -26,7 +26,7 @@ describe.skipIf(!available)('Germany Foundry and Byzantium Heir goals in the cor
     const core = makeCore();
     core.load(coreFixture(fixture));
     expect(core.view(0).faction_goal).toMatchObject({ value: 4, target: 5, done: false, label: '4 of 5 Ruhr Foundries' });
-    fixture.cities.find((c) => c.id === capital)!.buildings = ['MachineShop'];
+    fixture.cities.find((c) => c.id === capital)!.buildings = ['Forge'];
     core.load(coreFixture(fixture));
     expect(core.view(0).faction_goal).toMatchObject({ value: 5, target: 5 });
   });

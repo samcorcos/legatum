@@ -1,6 +1,6 @@
 // Injected visual fixture only; not imported by the production app. Your archer and your spearman each have Siege
 // (the WASM engine), a spearman without it beside them, and a walled rival city a few tiles east. One unit per era band:
-// a Renaissance Arquebusier and AssaultTrooper with Siege (they wear a bombard and ladders), and an Industrial Rifleman and
+// a Renaissance Arquebusier and Musketman with Siege (they wear a bombard and ladders), and an Industrial Rifleman and
 // Field Cannon with none (Siege is built in from the Industrial era, so they wear no gear).
 import { fromOffset, hexEq, neighbors, tileIndex } from '../hex';
 import type { Hex, TechId, UnitKind } from '../types';
@@ -39,15 +39,15 @@ export function siegeUnitsFixture(tier: 'Mathematics' | 'Machinery' | 'Metallurg
   const free = (h: Hex) => f.terrain[tileIndex(h, f.width, f.height)] !== 'Ocean' && !f.units.some((u) => hexEq(u.pos, h)) && !f.cities.some((c) => hexEq(c.pos, h));
   const put = (owner: number, kind: UnitKind, h: Hex) => { if (!free(h)) throw new Error(`occupied ${h.q},${h.r}`); return spawnUnit(f, owner, kind, h, false); };
   const archerAt = at(14, 4), spearAt = at(18, 6), bareAt = at(15, 6);
-  const archer = put(0, 'Ranger', archerAt);
+  const archer = put(0, 'Archer', archerAt);
   archer.siege = true;
-  const spear = put(0, 'Soldier', spearAt);
+  const spear = put(0, 'Spearman', spearAt);
   spear.siege = true;
-  const bare = put(0, 'Soldier', bareAt);
+  const bare = put(0, 'Spearman', bareAt);
   put(0, 'Scout', neighbors(at(17, 6)).filter(free)[0]);
   const arquebusier = put(0, 'Arquebusier', at(14, 7));
   arquebusier.siege = true;
-  const trooper = put(0, 'AssaultTrooper', at(16, 8));
+  const trooper = put(0, 'Musketman', at(16, 8));
   trooper.siege = true;
   const rifleman = put(0, 'Rifleman', neighbors(at(19, 6)).filter(free).sort((a, b) => b.r - a.r)[0]);
   const cannon = put(0, 'FieldCannon', at(16, 9));

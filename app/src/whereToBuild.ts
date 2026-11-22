@@ -51,7 +51,7 @@ export interface WhereToBuild {
 }
 
 /** One per empire: a world wonder, or the Yam Relay Station. Another city already building one is the answer, not a city to compare. */
-const oncePerEmpire = (item: ProductionItem): boolean => (item.kind === 'Building' || item.kind === 'Wonder') && (isGreatWork(item.building) || item.building === 'CourierHall');
+const oncePerEmpire = (item: ProductionItem): boolean => (item.kind === 'Building' || item.kind === 'Wonder') && (isGreatWork(item.building) || item.building === 'YamRelayStation');
 const sameBuild = (choice: ProductionItem | null, item: ProductionItem): boolean => !!choice && (sameItem(choice, item)
   || ((item.kind === 'Wonder' || item.kind === 'Building') && oncePerEmpire(item)
     && (choice.kind === 'Wonder' || choice.kind === 'Building') && choice.building === item.building));

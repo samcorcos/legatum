@@ -11,7 +11,7 @@ fn view(hp: i32) -> PlayerView {
         .city(1, ME, Hex::new(3, 8), 2)
         .city(9, ENEMY, CITY, 3)
         .walled(9)
-        .unit_hp(1, ME, UnitKind::Soldier, EDGE, hp)
+        .unit_hp(1, ME, UnitKind::Spearman, EDGE, hp)
         .build()
 }
 
@@ -78,7 +78,7 @@ fn city_fire_exposure_ignores_forest_and_hills_between_city_and_unit() {
 #[test]
 fn city_shot_is_charged_once_to_lowest_hp_then_id_and_forecasts_recompute_wounded_melee() {
     let view = ViewBuilder { view: view(65) }
-        .unit_hp(2, ME, UnitKind::Soldier, Hex::new(9, 7), 65)
+        .unit_hp(2, ME, UnitKind::Spearman, Hex::new(9, 7), 65)
         .build();
     let p = planner(&view);
     let first = p.ctx.own_units[0];
@@ -106,8 +106,8 @@ fn staging_pays_one_shot_per_city_and_uses_arrival_terrain_without_fortification
     let mut view = ViewBuilder::new(26, 18)
         .city(9, ENEMY, CITY, 1)
         .walled(9)
-        .unit(1, ME, UnitKind::Soldier, Hex::new(7, 8))
-        .unit(2, ME, UnitKind::Soldier, Hex::new(7, 9))
+        .unit(1, ME, UnitKind::Spearman, Hex::new(7, 8))
+        .unit(2, ME, UnitKind::Spearman, Hex::new(7, 9))
         .build();
     view.units[0].fortify = 6;
     let p = planner(&view);
@@ -159,8 +159,8 @@ fn proxy_geography_stays_frozen_for_the_paired_benchmark() {
 #[test]
 fn default_credits_committed_volley_but_a_defeated_city_still_fires_in_that_phase() {
     let mut view = ViewBuilder { view: view(80) }
-        .unit(2, ME, UnitKind::Ranger, Hex::new(9, 7))
-        .unit(3, ME, UnitKind::Ranger, Hex::new(10, 6))
+        .unit(2, ME, UnitKind::Archer, Hex::new(9, 7))
+        .unit(3, ME, UnitKind::Archer, Hex::new(10, 6))
         .build();
     // Walls add strength against the volley and halve its damage: leave less HP for it to finish.
     view.cities[1].hp = 12;
@@ -196,13 +196,13 @@ fn default_credits_committed_volley_but_a_defeated_city_still_fires_in_that_phas
 
 #[test]
 fn rangers_wear_down_a_garrisoned_city_and_shoot_its_garrison_once_it_falls() {
-    // Unwalled, so the city cannot fire back. Two Rangers in range of a garrisoned city.
+    // Unwalled, so the city cannot fire back. Two Archers in range of a garrisoned city.
     let mut view = ViewBuilder::new(26, 18)
         .city(1, ME, Hex::new(3, 8), 2)
         .city(9, ENEMY, CITY, 3)
-        .unit(1, ME, UnitKind::Ranger, EDGE)
-        .unit(2, ME, UnitKind::Ranger, Hex::new(9, 7))
-        .unit(50, ENEMY, UnitKind::Soldier, CITY)
+        .unit(1, ME, UnitKind::Archer, EDGE)
+        .unit(2, ME, UnitKind::Archer, Hex::new(9, 7))
+        .unit(50, ENEMY, UnitKind::Spearman, CITY)
         .build();
     let shots = |view: &PlayerView| {
         let mut p = planner(view);
@@ -227,8 +227,8 @@ fn rangers_wear_down_a_garrisoned_city_and_shoot_its_garrison_once_it_falls() {
 #[test]
 fn committed_fire_hits_the_city_first_then_spills_into_its_garrison() {
     let mut view = ViewBuilder { view: view(100) }
-        .unit(2, ME, UnitKind::Marksman, Hex::new(9, 7))
-        .unit_hp(50, ENEMY, UnitKind::Soldier, CITY, 1)
+        .unit(2, ME, UnitKind::Crossbowman, Hex::new(9, 7))
+        .unit_hp(50, ENEMY, UnitKind::Spearman, CITY, 1)
         .build();
     let volley = |view: &PlayerView| {
         let shot = forecast_attack_mode(view, UnitId(2), CITY, AttackMode::Ranged).unwrap();
@@ -262,7 +262,7 @@ fn committed_fire_hits_the_city_first_then_spills_into_its_garrison() {
 #[test]
 fn queued_melee_ally_reduces_projected_counterattack_cost() {
     let view = ViewBuilder { view: view(100) }
-        .unit(2, ME, UnitKind::Soldier, Hex::new(9, 7))
+        .unit(2, ME, UnitKind::Spearman, Hex::new(9, 7))
         .build();
     let mut p = planner(&view);
     let attacker = p.ctx.own_units[0];

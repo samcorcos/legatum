@@ -96,11 +96,11 @@ fn the_coalition_target_is_the_holder_even_on_a_vp_tie() {
 fn rival_next_door(state: RelationState) -> PlayerView {
     let mut v = ViewBuilder::new(28, 16)
         .city(1, ME, off(3, 8), 3)
-        .unit(1, ME, UnitKind::Soldier, off(3, 8))
-        .unit(2, ME, UnitKind::Soldier, off(4, 8))
-        .unit(3, ME, UnitKind::Ranger, off(4, 9))
+        .unit(1, ME, UnitKind::Spearman, off(3, 8))
+        .unit(2, ME, UnitKind::Spearman, off(4, 8))
+        .unit(3, ME, UnitKind::Archer, off(4, 9))
         .city(9, ENEMY, off(11, 8), 3)
-        .unit(50, ENEMY, UnitKind::Soldier, off(11, 8))
+        .unit(50, ENEMY, UnitKind::Spearman, off(11, 8))
         .build();
     v.diplomacy.legacy = false;
     v.diplomacy.relations.push(relation(2, state));
@@ -167,9 +167,9 @@ fn every_ai_declares_on_a_holder_and_prices_peace_against_survival() {
     let mut war = ViewBuilder {
         view: rival_next_door(RelationState::War),
     }
-    .unit(60, ENEMY, UnitKind::Trooper, off(5, 8))
-    .unit(61, ENEMY, UnitKind::Trooper, off(5, 7))
-    .unit(62, ENEMY, UnitKind::Trooper, off(5, 9))
+    .unit(60, ENEMY, UnitKind::Pikeman, off(5, 8))
+    .unit(61, ENEMY, UnitKind::Pikeman, off(5, 7))
+    .unit(62, ENEMY, UnitKind::Pikeman, off(5, 9))
     .build();
     let wants = |v: &PlayerView, d| {
         let mut p = Planner::new(

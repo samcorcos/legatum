@@ -20,7 +20,7 @@ const fixture = (): PlayerView => {
   const client = new FixtureClient();
   client.load(coreFixture(createState(setup)));
   const view = client.view(0);
-  unitTemplate = view.units.find((u) => u.owner === 0 && u.kind === 'Soldier')!;
+  unitTemplate = view.units.find((u) => u.owner === 0 && u.kind === 'Spearman')!;
   view.tiles = Array.from({ length: 120 }, () => ({ explored: true, visible: true, terrain: 'Grassland', ruin: false, owner: null }));
   view.units = []; view.cities = []; view.city_gap_blocked = [];
   return view;
@@ -48,7 +48,7 @@ it('marks only explored frontier edges and known ruins', () => {
 });
 it('shares threat reach with scoring and never extends ranged fire from move endpoints', () => {
   const v = fixture(), u = settler(v);
-  const enemy = { ...u, id: 2, owner: 1, kind: 'Ranger', military: true, ranged: 15, range: 2 } as UnitView;
+  const enemy = { ...u, id: 2, owner: 1, kind: 'Archer', military: true, ranged: 15, range: 2 } as UnitView;
   v.units = [enemy];
   const threats = knownThreats(v);
   expect(buildLensTiles(v, 'threat').map((t) => t.index)).toEqual(threats.flatMap((n, i) => n ? [i] : []));
@@ -61,7 +61,7 @@ it('Threat lens counts a visible barbarian raider (no listed player) instead of 
   // Barbarians threaten everyone but the Celts, whom they never attack (the fixture's viewer is the Celts).
   v.players[0].faction = 'Switzerland';
   v.tiles.forEach((t, i) => { if (i % 12 < 5) (t as { owner: number | null }).owner = 1; });
-  const raider = { ...u, id: 3, owner: 255, kind: 'Soldier', military: true, ranged: 0, max_moves: 2 } as UnitView;
+  const raider = { ...u, id: 3, owner: 255, kind: 'Spearman', military: true, ranged: 0, max_moves: 2 } as UnitView;
   v.units = [raider];
   const threats = knownThreats(v);
   expect(threats[tileIndex(raider.pos, v.width, v.height)]).toBe(1);
@@ -71,7 +71,7 @@ it('Threat lens counts a visible barbarian raider (no listed player) instead of 
 });
 it('Threat lens leaves a barbarian raider out for the Celts, who it never attacks', () => {
   const v = fixture(), u = settler(v);
-  const raider = { ...u, id: 3, owner: 255, kind: 'Soldier', military: true, ranged: 0, max_moves: 2 } as UnitView;
+  const raider = { ...u, id: 3, owner: 255, kind: 'Spearman', military: true, ranged: 0, max_moves: 2 } as UnitView;
   v.units = [raider];
   expect(v.players[0].faction).toBe('Celts');
   expect(knownThreats(v).every((n) => n === 0)).toBe(true);

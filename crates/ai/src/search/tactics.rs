@@ -295,11 +295,11 @@ mod tests {
         let city = Hex::new(10, 8);
         let mut v = ViewBuilder::new(24, 16)
             .city(9, ENEMY, city, 3)
-            .unit(20, ENEMY, UnitKind::Soldier, city)
-            .unit(21, ENEMY, UnitKind::Soldier, Hex::new(12, 8))
-            .unit(1, ME, UnitKind::Ranger, Hex::new(9, 7))
-            .unit(2, ME, UnitKind::Trooper, Hex::new(9, 8))
-            .unit(3, ME, UnitKind::Soldier, Hex::new(2, 2))
+            .unit(20, ENEMY, UnitKind::Spearman, city)
+            .unit(21, ENEMY, UnitKind::Spearman, Hex::new(12, 8))
+            .unit(1, ME, UnitKind::Archer, Hex::new(9, 7))
+            .unit(2, ME, UnitKind::Pikeman, Hex::new(9, 8))
+            .unit(3, ME, UnitKind::Spearman, Hex::new(2, 2))
             .build();
         v.diplomacy.legacy = true; // every rival at war
         let (at, units) = engagement(&v).expect("engagement");

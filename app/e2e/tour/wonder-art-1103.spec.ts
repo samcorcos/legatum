@@ -13,8 +13,8 @@ import type { BuildingKind, TechId } from '../../src/types';
 import { SIZES, frameHall, loadFixture, shot, type GameWindow } from './helpers';
 
 const WORKS: [BuildingKind, string][] = [
-  ['Pyramids', 'pyramids'], ['RelayUplink', 'great-library'], ['HagiaSophia', 'hagia-sophia'], ['WorldExchange', 'grand-bazaar'],
-  ['PlanetaryFoundry', 'royal-arsenal'], ['EiffelTower', 'eiffel-tower'], ['IterReactor', 'iter-reactor'],
+  ['Pyramids', 'pyramids'], ['GreatLibrary', 'great-library'], ['HagiaSophia', 'hagia-sophia'], ['GrandBazaar', 'grand-bazaar'],
+  ['RoyalArsenal', 'royal-arsenal'], ['EiffelTower', 'eiffel-tower'], ['IterFusionReactor', 'iter-reactor'],
 ];
 
 for (const size of SIZES) test.describe(`wonder art ${size.name}`, () => {
@@ -41,8 +41,8 @@ for (const size of SIZES) test.describe(`wonder art ${size.name}`, () => {
       game.setState({ views, techOpen: false });
     }, { indices: sites.map((h) => tileIndex(h, s.width, s.height)), cityId: city.id, works });
     const groups: BuildingKind[][] = [
-      ['Pyramids', 'RelayUplink', 'HagiaSophia', 'WorldExchange', 'PlanetaryFoundry', 'EiffelTower'],
-      ['IterReactor', 'PlanetaryFoundry', 'Pyramids', 'EiffelTower', 'RelayUplink', 'HagiaSophia'],
+      ['Pyramids', 'GreatLibrary', 'HagiaSophia', 'GrandBazaar', 'RoyalArsenal', 'EiffelTower'],
+      ['IterFusionReactor', 'RoyalArsenal', 'Pyramids', 'EiffelTower', 'GreatLibrary', 'HagiaSophia'],
     ];
     for (const [g, works] of groups.entries()) {
       await place(works);
@@ -68,7 +68,7 @@ for (const size of SIZES) test.describe(`wonder art ${size.name}`, () => {
       }
       for (const [i, building] of works.entries()) {
         const name = WORKS.find(([b]) => b === building)![1];
-        if (g === 1 && building !== 'IterReactor') continue;
+        if (g === 1 && building !== 'IterFusionReactor') continue;
         await frameHall(page, sites[i], 1.15);
         await page.mouse.move(5, size.height / 2);
         await shot(page, size, `b-close-${name}`);
@@ -82,7 +82,7 @@ for (const size of SIZES) test.describe(`wonder art ${size.name}`, () => {
     const city = s.cities[0];
     await loadFixture(page, coreFixture(s), 12);
     const site = ring(city.pos, 2)[4];
-    for (const [building, name] of [['Pyramids', 'pyramids'], ['HagiaSophia', 'hagia-sophia'], ['EiffelTower', 'eiffel-tower'], ['IterReactor', 'iter-reactor'], ['RelayUplink', 'great-library']] as const) {
+    for (const [building, name] of [['Pyramids', 'pyramids'], ['HagiaSophia', 'hagia-sophia'], ['EiffelTower', 'eiffel-tower'], ['IterFusionReactor', 'iter-reactor'], ['GreatLibrary', 'great-library']] as const) {
       for (const [stage, progress] of [[1, 200], [2, 550], [3, 850], [4, 1000]] as const) {
         await page.evaluate(({ cityId, building, tile, hex, progress, stage }) => {
           const game = (window as unknown as GameWindow).legatum;

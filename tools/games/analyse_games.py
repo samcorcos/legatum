@@ -14,6 +14,7 @@ Every run (launchd, every 15 minutes; tools/games/install-mac.sh):
 Heavy work (engine builds) waits for mains power, the Mac's battery rule. Standard library only.
 
 Usage: analyse_games.py poll [--home DIR] [--force] [--only KEY] [--no-review] [--dry-run]
+       analyse_games.py telemetry [--hours N] [--limit N]  (numbers only, for agents; see telemetry_numbers)
        analyse_games.py facts RECORD.json[.gz] [--events events.jsonl] [--narrative n.md]  (facts.md to stdout)
 """
 from __future__ import annotations
@@ -72,6 +73,8 @@ def merge_listing(ledger: dict, listing: list[dict]) -> None:
 
 def due(entry: dict, now: dt.datetime, force: bool = False) -> str | None:
     """Why this game should be analysed now ("final" or "checkpoint"), or None."""
+    if entry.get("excluded"):
+        return None  # the owner said this game teaches nothing (e.g. misclicks); `include` undoes it
     if entry.get("analysed_etag") == entry.get("etag") and not force:
         return None
     if entry.get("failed_etag") == entry.get("etag") and entry.get("attempts", 0) >= MAX_ATTEMPTS and not force:
@@ -241,9 +244,17 @@ def relation_pair(rel) -> str:
     return str(rel)
 
 
+FRAME_FIELDS = ("turn", "frames", "slow_frames", "frame_p95_ms10", "input_p95_ms", "long_task_ms", "map_draws",
+                "map_draw_mean_ms10", "units")
+
+
 def frame_summary(frames: list[dict]) -> str | None:
     """One line on how smoothly the browser ran (archive `frame_times`, one row per turn; the perf supervisor reads it)."""
-    frames = [f for f in frames if f.get("frames")]
+    # Uploaded data: keep only rows whose fields are all whole numbers in a sane range, so a crafted upload can
+    # neither crash facts.md (missing key) nor put text into the reviewer's prompt.
+    frames = [f for f in frames if isinstance(f, dict) and f.get("frames")
+              and all(isinstance(f.get(k), int) and not isinstance(f.get(k), bool) and 0 <= f[k] <= 10**9
+                      for k in FRAME_FIELDS)]
     if not frames:
         return None
     worst = max(frames, key=lambda f: f["frame_p95_ms10"])
@@ -257,6 +268,84 @@ def frame_summary(frames: list[dict]) -> str | None:
             f"(frame p95 {worst['frame_p95_ms10'] / 10:.0f} ms, {worst['units']} units in view); input lag p95 worst "
             f"{laggy['input_p95_ms']} ms on turn {laggy['turn']}; long tasks {long_ms / 1000:.1f} s; "
             f"map draw mean {draw_mean:.1f} ms")
+
+
+GAME_KEY_RE = re.compile(r"^games/\d{4}-\d{2}/web-\d{13}-[0-9a-f]{16}-[0-9a-f]{16}\.json\.gz$")
+
+
+def whole(value, top: int = 10**9) -> int | None:
+    """An uploaded field as a whole number in range, or None. Text never passes."""
+    return value if isinstance(value, int) and not isinstance(value, bool) and 0 <= value <= top else None
+
+
+def telemetry_numbers(record) -> dict:
+    """What an agent with tools may see of an uploaded record: numbers only.
+
+    A record is written by a stranger. Every value returned here is a whole number that was checked, or a
+    number computed from such; no string from the record is copied, so nothing in an upload can reach the
+    agent as text. Rows with any bad field are dropped."""
+    out: dict = {}
+    if not isinstance(record, dict):
+        return out
+    meta = record.get("metadata") if isinstance(record.get("metadata"), dict) else {}
+    out["turns"] = whole(meta.get("turn_count"), 10_000) or 0
+    times = [t for t in (record.get("turn_times") or []) if isinstance(t, dict)
+             and whole(t.get("turn"), 10_000) is not None and whole(t.get("active_seconds"), 10**6) is not None]
+    if times:
+        secs = sorted(t["active_seconds"] for t in times)
+        slowest = max(times, key=lambda t: t["active_seconds"])
+        out.update(timed_turns=len(times), play_seconds=sum(secs), turn_seconds_p50=secs[len(secs) // 2],
+                   turn_seconds_p95=secs[min(len(secs) - 1, len(secs) * 95 // 100)],
+                   turn_seconds_max=slowest["active_seconds"], turn_seconds_max_turn=slowest["turn"])
+    frames = [f for f in (record.get("frame_times") or []) if isinstance(f, dict) and f.get("frames")
+              and all(whole(f.get(k)) is not None for k in FRAME_FIELDS)]
+    if frames:
+        worst = sorted(frames, key=lambda f: f["frame_p95_ms10"], reverse=True)[:3]
+        laggy = max(frames, key=lambda f: f["input_p95_ms"])
+        draws = sum(f["map_draws"] for f in frames)
+        out.update(frame_turns=len(frames), frames=sum(f["frames"] for f in frames),
+                   slow_frames=sum(f["slow_frames"] for f in frames),
+                   long_task_ms=sum(f["long_task_ms"] for f in frames),
+                   map_draw_mean_ms10=sum(f["map_draw_mean_ms10"] * f["map_draws"] for f in frames) // max(1, draws),
+                   input_p95_ms_max=laggy["input_p95_ms"], input_p95_ms_max_turn=laggy["turn"],
+                   # What was on screen on the worst turns, to read a slope from; extra fields only when checked.
+                   worst_turns=[{**{k: f[k] for k in ("turn", "frame_p95_ms10", "slow_frames", "input_p95_ms",
+                                                      "map_draw_mean_ms10", "units")},
+                                 **{k: f[k] for k in ("cities", "zoom100", "canvas_mp10") if whole(f.get(k)) is not None}}
+                                for f in worst])
+    return out
+
+
+def telemetry(args) -> int:
+    """Print one JSON line of checked numbers per recently uploaded game. This is the only way an agent with
+    tools reads players' games (`.claude/agents/legatum-perf-supervisor.md`)."""
+    base = os.environ.get("LEGATUM_GAMES_URL", DEFAULT_URL).rstrip("/")
+    token = read_token()
+    since = dt.datetime.now(dt.timezone.utc) - dt.timedelta(hours=args.hours)
+    shown = 0
+    for g in list_games(base, token):
+        key = g.get("key")
+        try:
+            uploaded = parse_iso(g.get("uploaded"))
+        except (TypeError, ValueError):
+            uploaded = None
+        if not isinstance(key, str) or not GAME_KEY_RE.match(key) or not uploaded or uploaded < since:
+            continue
+        if shown >= args.limit:
+            break
+        try:
+            numbers = telemetry_numbers(download(base, token, key))
+        except (OSError, ValueError, EOFError):
+            numbers = {"unreadable": 1}
+        # The key passed GAME_KEY_RE: digits, hex and fixed words only.
+        print(json.dumps({"game": key, **numbers}, sort_keys=True))
+        shown += 1
+    return 0
+
+
+# Keys the website adds to the uploaded copy only; the engine's Recording denies unknown fields, so they are
+# stripped before any record goes back to the engine.
+UPLOAD_ONLY_KEYS = ("coach_answers", "rewinds")
 
 
 def build_facts(record: dict, events: list[dict] | None = None, narrative: str | None = None,
@@ -386,6 +475,18 @@ def build_facts(record: dict, events: list[dict] | None = None, narrative: str |
             L.append("Other rare events: " + ", ".join(f"{k} ×{n}" for k, n in rare))
         L.append("")
 
+    rewinds = [r for r in (record.get("rewinds") or []) if isinstance(r, dict)]
+    if rewinds:
+        L.append("## Rewinds")
+        L.append("")
+        L.append("The player went back to an earlier turn; the abandoned turns are not in the tape or these numbers.")
+        L.append("")
+        for r in rewinds[:50]:
+            L.append(f"- {clip(r.get('at'), 25)}: from T{clip(r.get('from_turn'), 6)} back to T{clip(r.get('to_turn'), 6)}")
+        if len(rewinds) > 50:
+            L.append(f"- … and {len(rewinds) - 50} more")
+        L.append("")
+
     answers = record.get("coach_answers") or []
     L.append("## Coach questions and the player's answers")
     L.append("")
@@ -491,7 +592,7 @@ def analyse_game(home: Path, base: str, token: str, key: str, entry: dict, kind:
                 events = [json.loads(line) for line in (dump_dir / "events.jsonl").open()]
                 (dump_dir / "events.jsonl").replace(game_dir / "events.jsonl")
                 shutil.rmtree(dump_dir, ignore_errors=True)  # snaps are large; re-run game_dump to get them back
-            engine_record = {k: v for k, v in record.items() if k != "coach_answers"}
+            engine_record = {k: v for k, v in record.items() if k not in UPLOAD_ONLY_KEYS}
             archive = game_dir / "archive.json"
             archive.write_text(json.dumps(engine_record))
             a = run([str(bins["analyze"]), str(archive), "--out", str(game_dir / "ai-analysis")], log, check=False, timeout=600)
@@ -518,8 +619,16 @@ def write_index(home: Path, ledger: dict) -> None:
          "| Analysed | Game | Kind | Outcome | Turns | Seats | Reviewer |", "|---|---|---|---|---|---|---|"]
     for at, key, e in rows:
         gid = Path(key).name.removesuffix(".json.gz")
+        if e.get("excluded"):
+            continue
         L.append(f"| {at} | [{gid}]({gid}/) | {e.get('analysed_kind', '')} | {e.get('outcome', '')} | {e.get('turns', '')} | "
                  f"{e.get('seats', '')} | {e.get('reviewer', '')} |")
+    excluded = sorted((k, e) for k, e in ledger["games"].items() if e.get("excluded"))
+    if excluded:
+        L += ["", "## Excluded (not evidence for AI work)", "", "| Game | Seats | Turns | Why |", "|---|---|---|---|"]
+        for key, e in excluded:
+            gid = Path(key).name.removesuffix(".json.gz")
+            L.append(f"| {gid} | {e.get('seats', '')} | {e.get('turns', '')} | {e['excluded']} |")
     (home / "reports").mkdir(parents=True, exist_ok=True)
     (home / "reports" / "INDEX.md").write_text("\n".join(L) + "\n")
 
@@ -531,6 +640,33 @@ def notify(text: str) -> None:
         subprocess.run(["osascript", "-e", "on run argv", "-e",
                         'display notification (item 1 of argv) with title "Legatum game analysis"', "-e", "end run",
                         text], capture_output=True)
+
+
+def set_excluded(ledger: dict, match: str, reason: str | None) -> list[str]:
+    """Mark the games whose key contains `match` as excluded (reason given) or included again (None)."""
+    keys = [k for k in ledger["games"] if match in k]
+    for k in keys:
+        if reason:
+            ledger["games"][k]["excluded"] = f"{reason} ({now_iso()[:10]})"
+        else:
+            ledger["games"][k].pop("excluded", None)
+    return keys
+
+
+def exclude(args) -> int:
+    home = Path(args.home).expanduser()
+    if (home / ".lock").exists():
+        print("an analysis run holds the ledger; try again in a few minutes", file=sys.stderr)
+        return 1
+    ledger = load_ledger(home)
+    keys = set_excluded(ledger, args.game, None if args.cmd == "include" else args.reason)
+    if len(keys) != 1:
+        print(f"{len(keys)} games match {args.game!r}; give a longer part of the game id", file=sys.stderr)
+        return 1
+    save_ledger(home, ledger)
+    write_index(home, ledger)
+    print(f"{args.cmd}d {keys[0]}")
+    return 0
 
 
 def poll(args) -> int:
@@ -629,6 +765,16 @@ def main() -> int:
     p.add_argument("--only", help="only games whose key contains this")
     p.add_argument("--no-review", action="store_true", help="facts only, no model review")
     p.add_argument("--dry-run", action="store_true", help="list what is due and stop")
+    for name, text in (("exclude", "leave a game out of analysis and the index (e.g. a game abandoned after misclicks)"),
+                       ("include", "undo exclude")):
+        x = sub.add_parser(name, help=text)
+        x.add_argument("game", help="the game id, or a unique part of it")
+        x.add_argument("--home", default="~/LegatumData/game-analysis")
+        if name == "exclude":
+            x.add_argument("--reason", required=True, help="one line, kept in the ledger and the index")
+    t = sub.add_parser("telemetry", help="checked numbers only, one JSON line per recently uploaded game")
+    t.add_argument("--hours", type=int, default=26, help="games uploaded in the last N hours")
+    t.add_argument("--limit", type=int, default=200, help="at most this many games")
     f = sub.add_parser("facts")
     f.add_argument("record")
     f.add_argument("--events")
@@ -636,6 +782,10 @@ def main() -> int:
     args = ap.parse_args()
     if args.cmd == "poll":
         return poll(args)
+    if args.cmd in ("exclude", "include"):
+        return exclude(args)
+    if args.cmd == "telemetry":
+        return telemetry(args)
     raw = Path(args.record).read_bytes()
     record = json.loads(gzip.decompress(raw) if raw[:2] == b"\x1f\x8b" else raw)
     events = [json.loads(line) for line in open(args.events)] if args.events else None

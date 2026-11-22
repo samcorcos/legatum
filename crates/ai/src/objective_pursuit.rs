@@ -871,7 +871,7 @@ mod tests {
         v.great_works = vec![GreatWorkView {
             player: ENEMY,
             completed: None,
-            building: Some(legatum_core::BuildingKind::RelayUplink),
+            building: Some(legatum_core::BuildingKind::GreatLibrary),
             city: Some(v.cities[1].id),
             progress: 50,
             cost: 100,

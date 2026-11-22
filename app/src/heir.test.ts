@@ -10,7 +10,7 @@ const view = {
   ],
   tiles: Array.from({ length: 16 }, () => ({ visible: false, explored: false })),
 } as unknown as PlayerView;
-const heir = (owner: number, heir_of = 1): UnitView => ({ id: 9, kind: 'Heir', owner, heir_of, pos: { q: 1, r: 1 } } as unknown as UnitView);
+const heir = (owner: number, heir_of = 1): UnitView => ({ id: 9, kind: 'HeirToTheThrone', owner, heir_of, pos: { q: 1, r: 1 } } as unknown as UnitView);
 
 it('names whose Heir he is and who holds him, from the viewer\'s side', () => {
   expect(heirTag(view, heir(1))).toBe('Heir to the Throne');
@@ -29,7 +29,7 @@ it('says what capturing him scores in the tile card line', () => {
 });
 
 it('the minimap shows every Heir, in fog too, and no other foreign unit out of sight', () => {
-  const soldier = { id: 3, kind: 'Soldier', owner: 2, pos: { q: 2, r: 2 } } as unknown as UnitView;
+  const soldier = { id: 3, kind: 'Spearman', owner: 2, pos: { q: 2, r: 2 } } as unknown as UnitView;
   const units = minimapUnits({ ...view, units: [heir(1), soldier] } as PlayerView);
   expect(units.map((u) => [u.owner, u.heir])).toEqual([[1, true]]);
 });

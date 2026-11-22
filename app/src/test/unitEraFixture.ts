@@ -40,11 +40,11 @@ export function unitEraFixture() {
   const put = (owner: number, kind: UnitKind, h: Hex) => { if (!free(h)) throw new Error(`occupied ${h.q},${h.r}`); return spawnUnit(f, owner, kind, h, false); };
 
   // Your Spartan line on columns 10-11; Athens fills columns 12-13, every unit within your units' sight.
-  const hoplite = put(0, 'Soldier', at(11, 5));
+  const hoplite = put(0, 'Spearman', at(11, 5));
   const mine = [
     put(0, 'Phalangite', at(11, 3)),
-    put(0, 'Trooper', at(11, 7)),
-    put(0, 'Ranger', at(10, 4)),
+    put(0, 'Pikeman', at(11, 7)),
+    put(0, 'Archer', at(10, 4)),
     put(0, 'Horseman', at(10, 8)),
   ];
   const own = [hoplite, ...mine];
@@ -56,7 +56,7 @@ export function unitEraFixture() {
     const h = at(col, row);
     if (free(h) && own.some((u) => distance(u.pos, h) <= 2)) slots.push(h);
   }
-  const kinds: UnitKind[] = ['Soldier', 'Trooper', 'AssaultTrooper', 'Ranger', 'CompositeArcher', 'Marksman', 'Arquebusier', 'Horseman', 'Cataphract', 'Knight', 'Cuirassier'];
+  const kinds: UnitKind[] = ['Spearman', 'Pikeman', 'Musketman', 'Archer', 'CompositeArcher', 'Crossbowman', 'Arquebusier', 'Horseman', 'Cataphract', 'Knight', 'Cuirassier'];
   if (slots.length < kinds.length) throw new Error(`only ${slots.length} slots`);
   const theirs = kinds.map((k, i) => put(1, k, slots[i]));
   refreshVision(f);

@@ -844,7 +844,7 @@ fn shadow_spend(view: &PlayerView, order: &Order) -> Option<ShadowBuy> {
             Some(ShadowBuy {
                 label: format!("{} in {}", item_label(view, item), c.name),
                 cost,
-                military: matches!(item, ProductionItem::Unit { unit } if *unit != legatum_core::UnitKind::Settler && *unit != legatum_core::UnitKind::Scout && *unit != legatum_core::UnitKind::Heir),
+                military: matches!(item, ProductionItem::Unit { unit } if *unit != legatum_core::UnitKind::Settler && *unit != legatum_core::UnitKind::Scout && *unit != legatum_core::UnitKind::HeirToTheThrone),
             })
         }
         Order::HireCompany { city, unit, seller } => Some(ShadowBuy {

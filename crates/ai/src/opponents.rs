@@ -14,14 +14,14 @@ pub const ASSESSMENT_INTERVAL: u32 = 5;
 const BORDER_RADIUS: i32 = 5;
 pub(crate) const NEIGHBOR_RADIUS: i32 = 10;
 
-/// A faction built to rush, by its public unit rules: Soldiers with more moves, more strength
+/// A faction built to rush, by its public unit rules: Spearmen with more moves, more strength
 /// per Production, or infantry that ignore wounds.
 pub fn rush_capable(faction: Faction) -> bool {
-    let soldier = data::unit_stats_for(faction, UnitKind::Soldier);
-    let baseline = data::unit_stats(UnitKind::Soldier);
+    let soldier = data::unit_stats_for(faction, UnitKind::Spearman);
+    let baseline = data::unit_stats(UnitKind::Spearman);
     soldier.moves > baseline.moves
         || soldier.strength * baseline.cost > baseline.strength * soldier.cost
-        || data::ignores_wounds(faction, UnitKind::Soldier)
+        || data::ignores_wounds(faction, UnitKind::Spearman)
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -83,8 +83,8 @@ impl OpponentAssessment {
     pub fn aggressive_neighbor(&self) -> bool {
         self.nearest_distance.is_some_and(|d| d <= NEIGHBOR_RADIUS)
             && (self.rush_capable
-                || self.border_strength >= 2 * data::unit_stats(UnitKind::Soldier).strength
-                || self.border_strength_change >= data::unit_stats(UnitKind::Soldier).strength / 2
+                || self.border_strength >= 2 * data::unit_stats(UnitKind::Spearman).strength
+                || self.border_strength_change >= data::unit_stats(UnitKind::Spearman).strength / 2
                 || self.declared_wars > 0)
     }
 
@@ -93,8 +93,8 @@ impl OpponentAssessment {
     /// rush-capable neighbour at peace earns more units (`DefendedExpand`), not Walls.
     pub fn observed_aggression(&self) -> bool {
         self.nearest_distance.is_some_and(|d| d <= NEIGHBOR_RADIUS)
-            && (self.border_strength >= 2 * data::unit_stats(UnitKind::Soldier).strength
-                || self.border_strength_change >= data::unit_stats(UnitKind::Soldier).strength / 2
+            && (self.border_strength >= 2 * data::unit_stats(UnitKind::Spearman).strength
+                || self.border_strength_change >= data::unit_stats(UnitKind::Spearman).strength / 2
                 || self.declared_wars > 0)
     }
 
@@ -105,10 +105,10 @@ impl OpponentAssessment {
                 && (!early || !city.walls)
                 && city.garrison_strength.is_some_and(|s| {
                     s <= if early {
-                        data::unit_stats(UnitKind::Soldier).strength
+                        data::unit_stats(UnitKind::Spearman).strength
                     } else {
                         (self.own_army_strength / 2)
-                            .max(data::unit_stats(UnitKind::Soldier).strength * 2)
+                            .max(data::unit_stats(UnitKind::Spearman).strength * 2)
                     }
                 })
         })
@@ -368,7 +368,7 @@ fn known_distances(view: &PlayerView, rival: PlayerId) -> Vec<Option<i32>> {
                 && tile.explored
                 && tile.terrain.is_some_and(|t| t.move_cost().is_some())
                 && (tile.owner == Some(rival)
-                    || view.passage_allowed(view.me, legatum_core::UnitKind::Soldier, tile.owner))
+                    || view.passage_allowed(view.me, legatum_core::UnitKind::Spearman, tile.owner))
             {
                 distances[i] = Some(distance + 1);
                 queue.push_back(next);
@@ -468,13 +468,13 @@ mod tests {
         let view = ViewBuilder {
             view: view(Faction::Athens),
         }
-        .unit(1, ENEMY, UnitKind::Soldier, off(6, 3))
+        .unit(1, ENEMY, UnitKind::Spearman, off(6, 3))
         .build();
         let mut model = OpponentAssessments::default();
         model.update(&view);
         assert!(model.threatening_neighbor().is_none());
         let mut buildup = ViewBuilder { view }
-            .unit(2, ENEMY, UnitKind::Soldier, off(7, 3))
+            .unit(2, ENEMY, UnitKind::Spearman, off(7, 3))
             .build();
         buildup.turn += ASSESSMENT_INTERVAL;
         model.update(&buildup);
@@ -502,7 +502,7 @@ mod tests {
             .city(0, ME, off(2, 3), 3)
             .city(1, ENEMY, off(9, 3), 3)
             .city(2, ENEMY, off(13, 3), 3)
-            .unit(1, ENEMY, UnitKind::Soldier, off(5, 3))
+            .unit(1, ENEMY, UnitKind::Spearman, off(5, 3))
             .build();
         view.players
             .iter_mut()

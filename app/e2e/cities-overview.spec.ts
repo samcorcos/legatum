@@ -36,7 +36,7 @@ const facts = (page: Page) => page.evaluate((): CityFacts[] => {
   const v = s.views![s.seat];
   return v.cities.filter((c) => c.owner === v.me && c.detail).map((c) => ({
     id: c.id, name: c.name, pos: c.pos, population: c.population, production: c.detail!.yields.total.production,
-    gl: c.detail!.options.find((o) => o.item.kind === 'Wonder' && o.item.building === 'RelayUplink')?.turns ?? null,
+    gl: c.detail!.options.find((o) => o.item.kind === 'Wonder' && o.item.building === 'GreatLibrary')?.turns ?? null,
   }));
 });
 const orders = (page: Page) => page.evaluate(() => { const s = (window as unknown as GameWindow).legatum.getState(); return s.orders[s.seat]; });
@@ -174,7 +174,7 @@ for (const size of SIZES) test.describe(`Cities overview ${size.width}x${size.he
     expect(ready.map((c) => c.name).sort()).toEqual(['Bern', 'Zurich']);
     const zurich = data.find((c) => c.name === 'Zurich')!;
     await select(page, zurich.id);
-    const sites = page.locator('.cp-great-works .production-choice[data-item^="w:RelayUplink:"]');
+    const sites = page.locator('.cp-great-works .production-choice[data-item^="w:GreatLibrary:"]');
     await expect(sites).toHaveCount(1);
     const chosen = sites.first();
     await expect(chosen).toContainText('one in the world');
@@ -183,7 +183,7 @@ for (const size of SIZES) test.describe(`Cities overview ${size.width}x${size.he
     await expect(page.getByTestId('city-placement')).toBeVisible();
     await shot(page, size, '05-great-library-tile-picker');
     await pickFirstLit(page);
-    expect(await orders(page)).toEqual([{ type: 'SetProductionQueue', city: zurich.id, queue: [{ kind: 'Wonder', building: 'RelayUplink', tile: expect.objectContaining({ q: expect.any(Number), r: expect.any(Number) }) }] }]);
+    expect(await orders(page)).toEqual([{ type: 'SetProductionQueue', city: zurich.id, queue: [{ kind: 'Wonder', building: 'GreatLibrary', tile: expect.objectContaining({ q: expect.any(Number), r: expect.any(Number) }) }] }]);
     await select(page, zurich.id);
     await expect(chosen).toContainText('Chosen');
     await expect(chosen).toContainText('gives up');
@@ -195,15 +195,15 @@ for (const size of SIZES) test.describe(`Cities overview ${size.width}x${size.he
     const data = await facts(page);
     const bern = data.find((c) => c.name === 'Bern')!;
     await select(page, bern.id);
-    const site = page.locator('.cp-great-works .production-choice[data-item^="w:RelayUplink:"]').first();
+    const site = page.locator('.cp-great-works .production-choice[data-item^="w:GreatLibrary:"]').first();
     await site.locator('button.queue-add').click();
     await pickFirstLit(page);
     const queue = (await orders(page)).find((o) => o.type === 'SetProductionQueue' && o.city === bern.id);
-    expect(queue && queue.type === 'SetProductionQueue' ? queue.queue.map((i) => i.kind === 'Building' || i.kind === 'Wonder' ? i.building : i.kind) : []).toEqual(['Market', 'RelayUplink']);
+    expect(queue && queue.type === 'SetProductionQueue' ? queue.queue.map((i) => i.kind === 'Building' || i.kind === 'Wonder' ? i.building : i.kind) : []).toEqual(['Market', 'GreatLibrary']);
     await expect(site).toContainText('Queued');
 
     // The Forge costs more than 150 Production: its own card says where it is fastest.
-    const card = page.locator('.production-choice[data-item="b:MachineShop"]');
+    const card = page.locator('.production-choice[data-item="b:Forge"]');
     await card.scrollIntoViewIfNeeded();
     const line = card.getByTestId('where-line');
     await expect(line).toHaveText(/^Best city for this: (here|\w+), done in \d+ turns?\./);
@@ -230,7 +230,7 @@ for (const size of SIZES) test.describe(`Cities overview ${size.width}x${size.he
     await shot(page, size, '08-unlock-hovercard', false);
     await page.mouse.move(size.width / 2, 4);
     await card.getByRole('button', { name: /^Show details of Philosophy/ }).click();
-    const where = d.locator('.research-detail [data-testid="where-to-build"][data-item="b:RelayUplink"]');
+    const where = d.locator('.research-detail [data-testid="where-to-build"][data-item="b:GreatLibrary"]');
     await where.scrollIntoViewIfNeeded();
     await expect(where.getByTestId('where-line')).toHaveText(/^Best city for this once researched: \w+, done in \d+ turns?\./);
     await where.locator('summary').click();

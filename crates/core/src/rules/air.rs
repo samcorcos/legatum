@@ -662,7 +662,7 @@ mod tests {
     #[test]
     fn a_bomber_strikes_an_enemy_unit_in_range_with_no_retaliation() {
         let (mut s, a, _b) = arena();
-        let victim = unit(&mut s, 1, UnitKind::Soldier, hex(6, 4));
+        let victim = unit(&mut s, 1, UnitKind::Spearman, hex(6, 4));
         unit(&mut s, 0, UnitKind::Scout, hex(5, 4));
         base_new(&mut s, a, UnitKind::Bomber);
         let plane = s.aircraft[0].id;
@@ -689,7 +689,7 @@ mod tests {
     #[test]
     fn an_oil_short_bomber_has_the_same_visible_strength_penalty_in_forecast_and_combat() {
         let (mut s, a, _) = arena();
-        unit(&mut s, 1, UnitKind::Soldier, hex(6, 4));
+        unit(&mut s, 1, UnitKind::Spearman, hex(6, 4));
         unit(&mut s, 0, UnitKind::Scout, hex(5, 4));
         base_new(&mut s, a, UnitKind::Bomber);
         base_new(&mut s, a, UnitKind::Fighter);
@@ -716,8 +716,8 @@ mod tests {
     #[test]
     fn a_strike_needs_range_sight_war_and_a_bomber_and_each_plane_acts_once() {
         let (mut s, a, _b) = arena();
-        unit(&mut s, 1, UnitKind::Soldier, hex(6, 4));
-        unit(&mut s, 1, UnitKind::Soldier, hex(13, 4));
+        unit(&mut s, 1, UnitKind::Spearman, hex(6, 4));
+        unit(&mut s, 1, UnitKind::Spearman, hex(13, 4));
         unit(&mut s, 0, UnitKind::Scout, hex(5, 4));
         base_new(&mut s, a, UnitKind::Bomber);
         base_new(&mut s, a, UnitKind::Fighter);
@@ -958,13 +958,13 @@ mod tests {
                 .any(|e| matches!(e, Event::Battle { ranged: false, .. }))
         );
         // A strike on a tile beside the city is not met: the Air Defence guards its own city only.
-        unit(&mut s, 1, UnitKind::Soldier, hex(6, 4));
+        unit(&mut s, 1, UnitKind::Spearman, hex(6, 4));
         let (beside, _) = resolve_tactical_turn(&s, &strike(first, hex(6, 4)));
         assert!(
             !beside
                 .units
                 .values()
-                .any(|u| u.kind == UnitKind::Soldier && u.hp == 100),
+                .any(|u| u.kind == UnitKind::Spearman && u.hp == 100),
             "the strike on the tile beside the city landed"
         );
         assert_eq!(plane_hp(&beside, first), Some(100));
@@ -1001,7 +1001,7 @@ mod tests {
     #[test]
     fn the_forecast_of_a_strike_is_the_ranged_math_from_the_hangar() {
         let (mut s, a, b) = arena();
-        unit(&mut s, 1, UnitKind::Soldier, hex(6, 4));
+        unit(&mut s, 1, UnitKind::Spearman, hex(6, 4));
         unit(&mut s, 0, UnitKind::Scout, hex(5, 4));
         base_new(&mut s, a, UnitKind::Bomber);
         let plane = s.aircraft[0].id;
@@ -1043,8 +1043,8 @@ mod tests {
     fn a_fighter_hits_units_without_a_city_bonus_and_a_striking_fighter_does_not_intercept() {
         let (mut s, a, b) = arena();
         unit(&mut s, 0, UnitKind::Scout, hex(5, 4));
-        let victim = unit(&mut s, 1, UnitKind::Soldier, hex(5, 5));
-        unit(&mut s, 0, UnitKind::Soldier, hex(6, 4));
+        let victim = unit(&mut s, 1, UnitKind::Spearman, hex(5, 5));
+        unit(&mut s, 0, UnitKind::Spearman, hex(6, 4));
         base_new(&mut s, a, UnitKind::Fighter);
         base_new(&mut s, a, UnitKind::Bomber);
         base_new(&mut s, b, UnitKind::Fighter);
@@ -1092,7 +1092,7 @@ mod tests {
     #[test]
     fn aircraft_ignore_line_of_sight_but_ground_shooters_do_not() {
         let (mut s, a, _b) = arena();
-        let victim = unit(&mut s, 1, UnitKind::Soldier, hex(6, 4));
+        let victim = unit(&mut s, 1, UnitKind::Spearman, hex(6, 4));
         unit(&mut s, 0, UnitKind::Scout, hex(6, 5));
         for h in [hex(4, 4), hex(5, 4)] {
             set_terrain(&mut s, h, Terrain::Forest);
@@ -1100,7 +1100,7 @@ mod tests {
         set_terrain(&mut s, hex(5, 5), Terrain::Hills);
         let terrain = |h: Hex| s.map.get(h).map(|t| t.terrain);
         assert!(
-            !crate::los::ranged_clear(UnitKind::Ranger, hex(3, 4), hex(6, 4), terrain),
+            !crate::los::ranged_clear(UnitKind::Archer, hex(3, 4), hex(6, 4), terrain),
             "the forest blocks a ground shooter"
         );
         base_new(&mut s, a, UnitKind::Bomber);
@@ -1144,7 +1144,7 @@ mod tests {
     fn a_strike_on_the_turn_war_is_declared_resolves_like_a_ground_attack() {
         let (mut s, a, _b) = arena();
         at_peace(&mut s);
-        let victim = unit(&mut s, 1, UnitKind::Soldier, hex(6, 4));
+        let victim = unit(&mut s, 1, UnitKind::Spearman, hex(6, 4));
         unit(&mut s, 0, UnitKind::Scout, hex(5, 4));
         base_new(&mut s, a, UnitKind::Bomber);
         let plane = s.aircraft[0].id;
@@ -1333,8 +1333,8 @@ mod tests {
     #[test]
     fn aircraft_are_not_a_garrison_or_upkeep() {
         let (mut s, a, _b) = arena();
-        unit(&mut s, 0, UnitKind::Soldier, hex(4, 4));
-        unit(&mut s, 0, UnitKind::Soldier, hex(4, 5));
+        unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
+        unit(&mut s, 0, UnitKind::Spearman, hex(4, 5));
         assert_eq!(crate::economy::upkeep(&s, P0), 0, "two free land units");
         base_new(&mut s, a, UnitKind::Fighter);
         assert!(!crate::rules::is_military(UnitKind::Fighter));
@@ -1352,7 +1352,7 @@ mod tests {
             crate::player_view(&s, P1).aircraft.is_empty(),
             "rivals never see them"
         );
-        unit(&mut s, 0, UnitKind::Soldier, hex(5, 4));
+        unit(&mut s, 0, UnitKind::Spearman, hex(5, 4));
         assert_eq!(
             crate::economy::upkeep(&s, P0),
             data::military_upkeep(s.player(P0).faction),
@@ -1371,7 +1371,7 @@ mod tests {
     #[test]
     fn a_strike_on_a_unit_or_a_city_earns_the_ground_unit_xp() {
         let (mut s, a, b) = arena();
-        let victim = unit(&mut s, 1, UnitKind::Soldier, hex(6, 4));
+        let victim = unit(&mut s, 1, UnitKind::Spearman, hex(6, 4));
         unit(&mut s, 0, UnitKind::Scout, hex(5, 4));
         base_new(&mut s, a, UnitKind::Bomber);
         let plane = s.aircraft[0].id;
@@ -1381,7 +1381,7 @@ mod tests {
             xp_of(&next, plane),
             promotion::unit_fight_xp(
                 stats(&s, UnitKind::Bomber).ranged,
-                stats(&s, UnitKind::Soldier).strength,
+                stats(&s, UnitKind::Spearman).strength,
                 died,
                 true,
                 true
@@ -1402,7 +1402,7 @@ mod tests {
     fn a_garrison_killed_by_a_strikes_overflow_earns_the_city_attack_xp() {
         let (mut s, a, b) = arena();
         s.cities.get_mut(&b).unwrap().hp = 1;
-        let garrison = unit(&mut s, 1, UnitKind::Soldier, hex(7, 4));
+        let garrison = unit(&mut s, 1, UnitKind::Spearman, hex(7, 4));
         s.units.get_mut(&garrison).unwrap().hp = 1;
         unit(&mut s, 0, UnitKind::Scout, hex(5, 4));
         base_new(&mut s, a, UnitKind::Bomber);
@@ -1423,7 +1423,7 @@ mod tests {
     fn an_interception_gives_both_aircraft_xp() {
         let (mut s, a, b) = arena();
         unit(&mut s, 0, UnitKind::Scout, hex(5, 4));
-        unit(&mut s, 1, UnitKind::Soldier, hex(6, 4));
+        unit(&mut s, 1, UnitKind::Spearman, hex(6, 4));
         base_new(&mut s, a, UnitKind::Fighter);
         base_new(&mut s, b, UnitKind::Fighter);
         let (striker, guard) = (s.aircraft[0].id, s.aircraft[1].id);
@@ -1475,7 +1475,7 @@ mod tests {
     #[test]
     fn the_level_bonus_is_in_the_forecast_and_the_resolved_strike_alike() {
         let (mut s, a, _b) = arena();
-        unit(&mut s, 1, UnitKind::Soldier, hex(6, 4));
+        unit(&mut s, 1, UnitKind::Spearman, hex(6, 4));
         unit(&mut s, 0, UnitKind::Scout, hex(5, 4));
         base_new(&mut s, a, UnitKind::Bomber);
         let plane = s.aircraft[0].id;

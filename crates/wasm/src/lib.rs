@@ -1273,7 +1273,7 @@ mod tests {
             .production_queue
             .clear();
         let current = ProductionItem::Unit {
-            unit: UnitKind::Soldier,
+            unit: UnitKind::Spearman,
         };
         let cost = legatum_core::economy::city_production_cost(
             &game.session.state,
@@ -1346,7 +1346,7 @@ mod tests {
             matches!(
                 o.item,
                 legatum_core::ProductionItem::Unit {
-                    unit: UnitKind::Soldier
+                    unit: UnitKind::Spearman
                 }
             )
         });
@@ -1359,7 +1359,7 @@ mod tests {
         let manual = vec![Order::SetProduction {
             city: id,
             item: legatum_core::ProductionItem::Unit {
-                unit: UnitKind::Soldier,
+                unit: UnitKind::Spearman,
             },
         }];
         let manual_plan: CityAutomationPlan = serde_json::from_str(
@@ -1386,7 +1386,7 @@ mod tests {
             matches!(
                 o.item,
                 legatum_core::ProductionItem::Unit {
-                    unit: UnitKind::Soldier
+                    unit: UnitKind::Spearman
                 }
             )
         });
@@ -1701,24 +1701,24 @@ mod tests {
         let unlocks = view["research"]["unlocks"].as_array().unwrap();
         let core = unlocks
             .iter()
-            .find(|u| u["item"]["building"] == "InferenceCore")
+            .find(|u| u["item"]["building"] == "ResearchLab")
             .unwrap();
-        assert_eq!(core["predecessor"], "College");
+        assert_eq!(core["predecessor"], "University");
         assert_eq!(core["min_population"], 8);
         assert_eq!(core["cost"], 360);
         assert_eq!(core["yields"]["science"], 6);
         let armor = unlocks
             .iter()
-            .find(|u| u["item"]["unit"] == "AssaultTrooper")
+            .find(|u| u["item"]["unit"] == "Musketman")
             .unwrap();
-        assert_eq!(armor["upgrade_from"], "Trooper");
+        assert_eq!(armor["upgrade_from"], "Pikeman");
         assert_eq!(armor["upgrade_cost"], 116);
         assert_eq!(armor["unit_strength"], 44);
         let college = unlocks
             .iter()
-            .find(|u| u["item"]["building"] == "College")
+            .find(|u| u["item"]["building"] == "University")
             .unwrap();
-        assert_eq!(college["predecessor"], "Laboratory");
+        assert_eq!(college["predecessor"], "Library");
         assert_eq!(college["min_population"], 5);
         assert_eq!(college["cost"], 240);
         // The Military Engineer retired with the Siege upgrade: it is no unit unlock.
@@ -1819,8 +1819,8 @@ mod tests {
                 tile.ruin = false;
             }
             let target = Hex::new(6, 5);
-            let attacker = spawn_unit(state, PlayerId(0), UnitKind::Ranger, Hex::new(5, 5));
-            spawn_unit(state, PlayerId(1), UnitKind::Soldier, target);
+            let attacker = spawn_unit(state, PlayerId(0), UnitKind::Archer, Hex::new(5, 5));
+            spawn_unit(state, PlayerId(1), UnitKind::Spearman, target);
             state.units.get_mut(&attacker).unwrap().hp = 20;
             legatum_core::visibility::update_explored(state);
 
@@ -1970,7 +1970,7 @@ mod bicycle_two_tests {
                 ids.push(id);
                 let c = s.cities.get_mut(&id).unwrap();
                 c.population = 8;
-                c.buildings.insert(BuildingKind::Hydroponics);
+                c.buildings.insert(BuildingKind::Mill);
                 if let Some((required, _)) = data::great_work_requirement(building) {
                     c.buildings.insert(required);
                 }

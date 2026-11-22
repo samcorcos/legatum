@@ -235,7 +235,7 @@ fn fresh_brains_on_the_turn_45_save_respond_immediately() {
                 ProductionItem::Building {
                     building: BuildingKind::Walls
                 } | ProductionItem::Unit {
-                    unit: UnitKind::Ranger | UnitKind::Marksman
+                    unit: UnitKind::Archer | UnitKind::Crossbowman
                 }
             )
         };

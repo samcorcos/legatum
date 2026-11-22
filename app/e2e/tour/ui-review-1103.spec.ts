@@ -47,7 +47,7 @@ for (const size of SIZES) test.describe(`ui review 1103 ${size.name}`, () => {
       const views = [...state.views!];
       const v = views[state.seat];
       const tiles = [...v.tiles];
-      for (const [i, building] of (['Pyramids', 'HagiaSophia', 'EiffelTower', 'IterReactor', 'RelayUplink'] as const).entries()) {
+      for (const [i, building] of (['Pyramids', 'HagiaSophia', 'EiffelTower', 'IterFusionReactor', 'GreatLibrary'] as const).entries()) {
         const n = indices[i];
         tiles[n] = { ...tiles[n], terrain: 'Plains', resource: null, landmark: { building, city: cityId, of: v.me } };
       }

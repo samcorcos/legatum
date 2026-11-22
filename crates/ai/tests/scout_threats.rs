@@ -58,13 +58,13 @@ fn archived_t58_scouts_do_not_reverse_retreat_after_save_load() {
     .unwrap();
     let original: GameState = serde_json::from_value(fixture["state"].clone()).unwrap();
     let mut original = original;
-    // This pre-LOS tape first spots Soldier 21 through a Forest tile.
+    // This pre-LOS tape first spots Spearman 21 through a Forest tile.
     original.map.get_mut(Hex::new(23, 18)).unwrap().terrain = Terrain::Grassland;
     // Scout 33's archived retreat then leaves its sight radius; Hills would now
-    // extend that radius and keep the Soldier live instead of remembered.
+    // extend that radius and keep the Spearman live instead of remembered.
     original.map.get_mut(Hex::new(6, 25)).unwrap().terrain = Terrain::Plains;
     for (scout, soldier, retreat) in [
-        // The German Soldier's ordinary movement changes the first retreat; terrain sight changes the second.
+        // The German Spearman's ordinary movement changes the first retreat; terrain sight changes the second.
         (UnitId(23), UnitId(21), Hex::new(21, 18)),
         (UnitId(33), UnitId(12), Hex::new(7, 24)),
     ] {
@@ -154,7 +154,7 @@ fn corridor(alternative: bool) -> (GameState, UnitId, UnitId) {
         found_city(&mut state, settler, &mut Vec::new()).unwrap();
     }
     let scout = spawn_unit(&mut state, ME, UnitKind::Scout, Hex::new(7, 8));
-    let soldier = spawn_unit(&mut state, ENEMY, UnitKind::Soldier, Hex::new(9, 8));
+    let soldier = spawn_unit(&mut state, ENEMY, UnitKind::Spearman, Hex::new(9, 8));
     for i in 0..state.map.len() {
         if !alternative || state.map.hex_at(i) != Hex::new(4, 3) {
             state.player_mut(ME).explored.set(i);
@@ -296,7 +296,7 @@ fn unseen_movement_or_death_cannot_clear_avoidance_but_visible_clearance_can() {
 #[test]
 fn distant_ruin_uses_safe_waypoints_around_live_and_remembered_threats() {
     for (kind, faction) in [
-        (UnitKind::Soldier, Faction::Byzantium),
+        (UnitKind::Spearman, Faction::Byzantium),
         (UnitKind::Scout, Faction::Mongols),
     ] {
         for visible in [false, true] {

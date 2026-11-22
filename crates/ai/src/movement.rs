@@ -596,7 +596,7 @@ mod tests {
     use legatum_core::{Faction, PlayerView, UnitKind};
 
     fn corridor() -> PlayerView {
-        let mut builder = ViewBuilder::new(12, 7).unit(1, ME, UnitKind::Soldier, off(3, 3));
+        let mut builder = ViewBuilder::new(12, 7).unit(1, ME, UnitKind::Spearman, off(3, 3));
         for row in 0..7 {
             for col in 0..12 {
                 builder = builder.terrain(
@@ -617,8 +617,8 @@ mod tests {
     #[test]
     fn preflight_accepts_the_same_reserved_pass_as_core_and_preview() {
         let mut builder = ViewBuilder::new(12, 10)
-            .unit(1, ME, UnitKind::Soldier, off(4, 3))
-            .unit(2, ME, UnitKind::Soldier, off(4, 4));
+            .unit(1, ME, UnitKind::Spearman, off(4, 3))
+            .unit(2, ME, UnitKind::Spearman, off(4, 4));
         for row in 0..10 {
             for col in 0..12 {
                 let open = (1..=10).contains(&col) && (row == 4 || row == 8)
@@ -780,12 +780,12 @@ mod tests {
     fn a_move_through_a_parked_friend_is_kept_and_one_that_cannot_land_is_not() {
         // A one-tile corridor with a parked soldier in it: the mover crosses it and lands
         // beyond (the resolver's hop). Two parked soldiers in a row cost more to cross than
-        // a Soldier has moves, and a parked soldier on the goal cannot be ended on: both
+        // a Spearman has moves, and a parked soldier on the goal cannot be ended on: both
         // are conflicts, as they are when the resolver steps into the friend.
         let corridor = |parked: &[i32]| {
-            let mut builder = ViewBuilder::new(12, 7).unit(1, ME, UnitKind::Soldier, off(3, 3));
+            let mut builder = ViewBuilder::new(12, 7).unit(1, ME, UnitKind::Spearman, off(3, 3));
             for (i, col) in parked.iter().enumerate() {
-                builder = builder.unit(10 + i as u32, ME, UnitKind::Soldier, off(*col, 3));
+                builder = builder.unit(10 + i as u32, ME, UnitKind::Spearman, off(*col, 3));
             }
             for row in 0..7 {
                 for col in 0..12 {
@@ -848,8 +848,8 @@ mod tests {
         // with its moves, then both arrive (`rules::movement` step 5), so neither order is
         // cancelled, whichever the planner ranked first.
         let view = ViewBuilder::new(12, 8)
-            .unit(1, ME, UnitKind::Soldier, Hex::new(4, 5))
-            .unit(2, ME, UnitKind::Soldier, Hex::new(5, 4))
+            .unit(1, ME, UnitKind::Spearman, Hex::new(4, 5))
+            .unit(2, ME, UnitKind::Spearman, Hex::new(5, 4))
             .build();
         let east = Order::MoveUnit {
             unit: UnitId(1),

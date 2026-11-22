@@ -52,10 +52,10 @@ fn decide(state: &mut GameState) -> Vec<Order> {
 fn a_wounded_shooter_removes_the_garrison_and_infantry_captures_in_the_same_turn() {
     let (mut state, city) = scenario();
     state.cities.get_mut(&city).unwrap().hp = 15;
-    let ranger = spawn_unit(&mut state, ME, UnitKind::Ranger, at(12, 8));
+    let ranger = spawn_unit(&mut state, ME, UnitKind::Archer, at(12, 8));
     state.units.get_mut(&ranger).unwrap().hp = 45;
-    let infantry = spawn_unit(&mut state, ME, UnitKind::Soldier, at(13, 8));
-    let defender = spawn_unit(&mut state, ENEMY, UnitKind::Soldier, at(14, 8));
+    let infantry = spawn_unit(&mut state, ME, UnitKind::Spearman, at(13, 8));
+    let defender = spawn_unit(&mut state, ENEMY, UnitKind::Spearman, at(14, 8));
     state.units.get_mut(&defender).unwrap().hp = 8;
     let ours = decide(&mut state);
     assert!(ours.contains(&Order::RangedAttack {
@@ -84,8 +84,8 @@ fn a_wounded_shooter_removes_the_garrison_and_infantry_captures_in_the_same_turn
 #[test]
 fn a_doomed_shooter_returns_fire_instead_of_trying_to_outrun_the_ranged_phase() {
     let (mut state, _) = scenario();
-    let ours = spawn_unit(&mut state, ME, UnitKind::Ranger, at(11, 8));
-    let theirs = spawn_unit(&mut state, ENEMY, UnitKind::Ranger, at(13, 8));
+    let ours = spawn_unit(&mut state, ME, UnitKind::Archer, at(11, 8));
+    let theirs = spawn_unit(&mut state, ENEMY, UnitKind::Archer, at(13, 8));
     state.units.get_mut(&ours).unwrap().hp = 15;
     state.units.get_mut(&theirs).unwrap().hp = 10;
     let orders = decide(&mut state);
@@ -113,8 +113,8 @@ fn a_doomed_shooter_returns_fire_instead_of_trying_to_outrun_the_ranged_phase() 
 #[test]
 fn supporting_infantry_join_a_defended_city_assault() {
     let (mut state, city) = scenario();
-    let a = spawn_unit(&mut state, ME, UnitKind::Trooper, at(13, 8));
-    let b = spawn_unit(&mut state, ME, UnitKind::Trooper, at(14, 7));
+    let a = spawn_unit(&mut state, ME, UnitKind::Pikeman, at(13, 8));
+    let b = spawn_unit(&mut state, ME, UnitKind::Pikeman, at(14, 7));
     let ours = decide(&mut state);
     for unit in [a, b] {
         assert!(ours.iter().any(|o| matches!(o, Order::MoveUnitPath { unit: id, to, .. } if *id == unit && *to == at(14, 8))), "{ours:?}");
@@ -139,7 +139,7 @@ fn a_scout_occupies_an_exposed_defeated_city() {
 fn wounded_infantry_capture_before_stopping_to_heal() {
     let (mut state, city) = scenario();
     state.cities.get_mut(&city).unwrap().hp = 5;
-    let infantry = spawn_unit(&mut state, ME, UnitKind::Soldier, at(13, 8));
+    let infantry = spawn_unit(&mut state, ME, UnitKind::Spearman, at(13, 8));
     state.units.get_mut(&infantry).unwrap().hp = 40;
     let ours = decide(&mut state);
     let (next, events) = resolve_turn(&state, &BTreeMap::from([(ME, ours)]));
@@ -175,16 +175,16 @@ fn an_affordable_defender_interrupts_construction_under_bombardment() {
     state.map.get_mut(deposit).unwrap().resource = Some(Resource::Iron);
     state.map.get_mut(deposit).unwrap().improved = true;
     state.cities.get_mut(&home).unwrap().producing = Some(ProductionItem::Building {
-        building: BuildingKind::Laboratory,
+        building: BuildingKind::Library,
     });
     state.cities.get_mut(&home).unwrap().production_stored = 40;
-    let enemy = spawn_unit(&mut state, ENEMY, UnitKind::Ranger, at(6, 8));
+    let enemy = spawn_unit(&mut state, ENEMY, UnitKind::Archer, at(6, 8));
     let ours = decide(&mut state);
     assert!(
         ours.contains(&Order::SetProduction {
             city: home,
             item: ProductionItem::Unit {
-                unit: UnitKind::Trooper
+                unit: UnitKind::Pikeman
             }
         }),
         "{ours:?}"
@@ -192,7 +192,7 @@ fn an_affordable_defender_interrupts_construction_under_bombardment() {
     assert!(ours.contains(&Order::BuyItem {
         city: home,
         item: ProductionItem::Unit {
-            unit: UnitKind::Trooper
+            unit: UnitKind::Pikeman
         }
     }));
     let (next, events) = resolve_turn(
@@ -210,7 +210,7 @@ fn an_affordable_defender_interrupts_construction_under_bombardment() {
     );
     assert_eq!(next.cities[&home].owner, ME);
     assert!(
-        next.units_of(ME).any(|u| u.kind == UnitKind::Trooper),
+        next.units_of(ME).any(|u| u.kind == UnitKind::Pikeman),
         "{events:?}"
     );
 }
@@ -218,9 +218,9 @@ fn an_affordable_defender_interrupts_construction_under_bombardment() {
 #[test]
 fn a_local_reinforcement_intercepts_a_threat_to_home() {
     let (mut state, _) = scenario();
-    let guard = spawn_unit(&mut state, ME, UnitKind::Soldier, at(4, 11));
-    spawn_unit(&mut state, ME, UnitKind::Ranger, at(12, 8));
-    spawn_unit(&mut state, ENEMY, UnitKind::Soldier, at(6, 8));
+    let guard = spawn_unit(&mut state, ME, UnitKind::Spearman, at(4, 11));
+    spawn_unit(&mut state, ME, UnitKind::Archer, at(12, 8));
+    spawn_unit(&mut state, ENEMY, UnitKind::Spearman, at(6, 8));
     let ours = decide(&mut state);
     let (next, _) = resolve_turn(&state, &BTreeMap::from([(ME, ours)]));
     assert!(next.units[&guard].pos.distance(at(4, 8)) <= 2);
@@ -229,10 +229,10 @@ fn a_local_reinforcement_intercepts_a_threat_to_home() {
 #[test]
 fn unseen_enemy_positions_cannot_change_proxy_orders() {
     let (mut state, _) = scenario();
-    spawn_unit(&mut state, ME, UnitKind::Ranger, at(12, 8));
-    spawn_unit(&mut state, ME, UnitKind::Soldier, at(13, 8));
+    spawn_unit(&mut state, ME, UnitKind::Archer, at(12, 8));
+    spawn_unit(&mut state, ME, UnitKind::Spearman, at(13, 8));
     let hidden = at(22, 1);
-    let unit = spawn_unit(&mut state, ENEMY, UnitKind::AssaultTrooper, hidden);
+    let unit = spawn_unit(&mut state, ENEMY, UnitKind::Musketman, hidden);
     update_explored(&mut state);
     let before = player_view(&state, ME);
     assert!(!before.tile(hidden).unwrap().visible);
@@ -271,13 +271,13 @@ fn a_great_work_uses_the_fast_city_even_when_it_is_busy() {
             .get_mut(&id)
             .unwrap()
             .buildings
-            .insert(BuildingKind::Laboratory);
+            .insert(BuildingKind::Library);
     }
     let city = state.cities.get_mut(&fast).unwrap();
     city.buildings.insert(BuildingKind::Workshop);
     // Busy with a valid Settler (it needs population 2). The 40 stays banked with the
     // Settler, so its Machine Shop (not transferable progress) makes this city faster.
-    city.buildings.insert(BuildingKind::MachineShop);
+    city.buildings.insert(BuildingKind::Forge);
     city.population = 4;
     city.production_stored = 40;
     city.producing = Some(ProductionItem::Unit {
@@ -289,7 +289,7 @@ fn a_great_work_uses_the_fast_city_even_when_it_is_busy() {
             city,
             item:
                 item @ ProductionItem::Wonder {
-                    building: BuildingKind::RelayUplink,
+                    building: BuildingKind::GreatLibrary,
                     ..
                 },
         } if *city == fast => Some(*item),
@@ -297,7 +297,7 @@ fn a_great_work_uses_the_fast_city_even_when_it_is_busy() {
     });
     assert!(work.is_some(), "{ours:?}");
     assert!(!ours.iter().any(|order| matches!(order,
-        Order::SetProduction { city, item: ProductionItem::Wonder { building: BuildingKind::RelayUplink, .. } }
+        Order::SetProduction { city, item: ProductionItem::Wonder { building: BuildingKind::GreatLibrary, .. } }
         if *city == slow
     )));
     let (next, events) = resolve_turn(&state, &BTreeMap::from([(ME, ours)]));

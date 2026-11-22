@@ -5,6 +5,8 @@
  * checkpoint of the same game. A client address may start at most MAX_NEW_GAMES_PER_DAY new games per UTC day
  * (the `Quota` Durable Object). The only thing kept about a sender is a salted hash of that address (cut to
  * the /64 for IPv6), for the current UTC day, inside the Durable Object: no raw IP address, no headers, no logs.
+ * A game uploaded with an `X-Upload-Key` header is locked to that key: its SHA-256 is stored with the object,
+ * and a later checkpoint under another key, or none, is refused with 409.
  */
 
 import { Quota, capFrom, clientIp } from "./quota";
@@ -98,10 +100,23 @@ function answerOk(x: unknown): boolean {
   return o.evidence === undefined || JSON.stringify(o.evidence).length <= 32_000;
 }
 
+const MAX_REWINDS = 1000;
+const REWIND_KEYS = new Set(["at", "from_turn", "to_turn"]);
+const turnOk = (t: unknown) => Number.isInteger(t) && (t as number) >= 0 && (t as number) <= 10_000;
+
+/** One rewind: known keys only, an ISO time, and a later turn left for an earlier one. */
+function rewindOk(x: unknown): boolean {
+  if (!x || typeof x !== "object" || Array.isArray(x)) return false;
+  const o = x as Record<string, unknown>;
+  if (!Object.keys(o).every((k) => REWIND_KEYS.has(k))) return false;
+  if (typeof o.at !== "string" || !CREATED_AT_RE.test(o.at) || Number.isNaN(Date.parse(o.at))) return false;
+  return turnOk(o.from_turn) && turnOk(o.to_turn) && (o.to_turn as number) < (o.from_turn as number);
+}
+
 /** The record's shape, and the rule that matters most: no seat carries a name a player typed. */
 export function checkRecord(id: string, record: unknown): Metadata | string {
   if (!record || typeof record !== "object") return "not a game record";
-  const r = record as { metadata?: Metadata; tape?: unknown; coach_answers?: unknown };
+  const r = record as { metadata?: Metadata; tape?: unknown; coach_answers?: unknown; rewinds?: unknown };
   const m = r.metadata;
   if (!m || typeof m !== "object" || !r.tape || typeof r.tape !== "object") return "not a game record";
   if (m.schema_version !== 1) return "unknown schema version";
@@ -121,10 +136,33 @@ export function checkRecord(id: string, record: unknown): Metadata | string {
     const a = r.coach_answers;
     if (!Array.isArray(a) || a.length > 2000 || !a.every(answerOk)) return "bad coach answers";
   }
+  // The times the player went back to an earlier turn (app/src/store.ts Rewind): the tape holds only the line kept.
+  if (r.rewinds !== undefined) {
+    const w = r.rewinds;
+    if (!Array.isArray(w) || w.length > MAX_REWINDS || !w.every(rewindOk)) return "bad rewinds";
+  }
   return m;
 }
 
+/** The page's per-game secret (app/src/platform/gameUpload.ts): 32 to 64 hex digits. */
+const UPLOAD_KEY_RE = /^[0-9a-f]{32,64}$/;
+
+async function sha256Hex(text: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+/** Both are SHA-256 hex of the same length; compared without an early exit. */
+function sameHash(a: string, b: string): boolean {
+  let diff = a.length ^ b.length;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ (b.charCodeAt(i) || 0);
+  return diff === 0;
+}
+
 async function putGame(request: Request, env: Env, id: string): Promise<Response> {
+  const presented = request.headers.get("X-Upload-Key");
+  if (presented !== null && !UPLOAD_KEY_RE.test(presented)) return json({ error: "bad upload key" }, 400);
+  const keyHash = presented === null ? "" : await sha256Hex(presented);
   const declared = Number(request.headers.get("content-length") ?? "0");
   if (declared > MAX_GZIP_BYTES) return json({ error: "too large" }, 413);
   const bytes = await request.arrayBuffer();
@@ -137,7 +175,12 @@ async function putGame(request: Request, env: Env, id: string): Promise<Response
   if (typeof m === "string") return json({ error: m }, 422);
   const key = `games/${m.created_at.slice(0, 7)}/${id}.json.gz`;
   // A later checkpoint of a stored game replaces it and is never counted. A new game spends the address's daily quota.
-  if (!(await env.GAMES.head(key))) {
+  // A game first stored with a key takes checkpoints only under that key. A game stored without one (an older
+  // build) is open as before, and the first keyed checkpoint locks it.
+  const existing = await env.GAMES.head(key);
+  const lockedTo = existing?.customMetadata?.key ?? "";
+  if (lockedTo && !sameHash(lockedTo, keyHash)) return json({ error: "this game belongs to another upload key" }, 409);
+  if (!existing) {
     const taken = await env.QUOTA.getByName("quota").take(clientIp(request), capFrom(env.MAX_NEW_GAMES_PER_DAY));
     if (!taken.ok) {
       return new Response(JSON.stringify({ error: "too many new games today" }), {
@@ -155,6 +198,7 @@ async function putGame(request: Request, env: Env, id: string): Promise<Response
       engine: String(m.engine_commit ?? "").slice(0, 40),
       winner: m.winner == null ? "" : String(m.winner),
       seats: m.seats.map((s) => `${s.faction}${s.human ? "*" : ""}:${s.difficulty}`).join(" ").slice(0, 512),
+      ...(keyHash || lockedTo ? { key: keyHash || lockedTo } : {}),
     },
   });
   return json({ stored: key });
@@ -184,7 +228,8 @@ async function readApi(request: Request, env: Env, path: string): Promise<Respon
     const cursor = new URL(request.url).searchParams.get("cursor") ?? undefined;
     const page = await env.GAMES.list({ prefix: "games/", cursor, limit: 1000, include: ["customMetadata"] });
     return json({
-      games: page.objects.map((o) => ({ key: o.key, size: o.size, etag: o.etag, uploaded: o.uploaded.toISOString(), ...o.customMetadata })),
+      // `key` in the custom metadata is the upload key's hash; the listing's `key` is the object's name.
+      games: page.objects.map((o) => ({ ...o.customMetadata, key: o.key, size: o.size, etag: o.etag, uploaded: o.uploaded.toISOString() })),
       cursor: page.truncated ? page.cursor : null,
     });
   }
@@ -212,7 +257,7 @@ export default {
     if (request.method === "OPTIONS") {
       return cors(allowedOrigin, new Response(null, {
         status: 204,
-        headers: { "Access-Control-Allow-Methods": "PUT, OPTIONS", "Access-Control-Allow-Headers": "Content-Type", "Access-Control-Max-Age": "86400" },
+        headers: { "Access-Control-Allow-Methods": "PUT, OPTIONS", "Access-Control-Allow-Headers": "Content-Type, X-Upload-Key", "Access-Control-Max-Age": "86400" },
       }));
     }
     if (!match || !GAME_ID_RE.test(match[1] ?? "")) return cors(allowedOrigin, json({ error: "not found" }, 404));

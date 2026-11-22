@@ -26,7 +26,7 @@ exports[`WASM diplomacy behavior > auto-explore avoids a peaceful foreign Settle
 }
 `;
 
-exports[`WASM diplomacy behavior > auto-explore avoids a peaceful foreign Soldier without treating it as a threat 1`] = `
+exports[`WASM diplomacy behavior > auto-explore avoids a peaceful foreign Spearman without treating it as a threat 1`] = `
 {
   "q": 0,
   "r": 5,
@@ -4560,7 +4560,7 @@ exports[`WASM diplomacy behavior > population is territory: growth claims a tile
       "cost": 80,
       "item": {
         "kind": "Unit",
-        "unit": "Soldier",
+        "unit": "Spearman",
       },
       "production_banked": 0,
       "production_stored": 0,
@@ -4665,7 +4665,7 @@ exports[`WASM diplomacy behavior > population is territory: growth claims a tile
       "cost": 132,
       "item": {
         "kind": "Unit",
-        "unit": "Ranger",
+        "unit": "Archer",
       },
       "production_banked": 0,
       "production_stored": 0,
@@ -5986,7 +5986,7 @@ exports[`WASM diplomacy behavior > population is territory: growth claims a tile
       "cost": 80,
       "item": {
         "kind": "Unit",
-        "unit": "Soldier",
+        "unit": "Spearman",
       },
       "production_banked": 0,
       "production_stored": 5,
@@ -6126,7 +6126,7 @@ exports[`WASM diplomacy behavior > population is territory: growth claims a tile
       "cost": 132,
       "item": {
         "kind": "Unit",
-        "unit": "Ranger",
+        "unit": "Archer",
       },
       "production_banked": 0,
       "production_stored": 5,

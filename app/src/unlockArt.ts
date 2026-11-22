@@ -32,8 +32,8 @@ export function slugUrl(slug: string, size: UnlockArtSize): string | null {
 /** Faction buildings painted as their own piece (core `data::building_name_for`). */
 const REPLACEMENTS: Partial<Record<Faction, Partial<Record<BuildingKind, true>>>> = {
   Switzerland: { Walls: true },
-  Germany: { MachineShop: true },
-  Athens: { Laboratory: true },
+  Germany: { Forge: true },
+  Athens: { Library: true },
   India: { Market: true },
   Egypt: { Granary: true },
   Rome: { Walls: true },
@@ -44,8 +44,8 @@ export function buildingArtSlug(building: BuildingKind, faction?: Faction): stri
   return faction && REPLACEMENTS[faction]?.[building] ? `${base}-${faction.toLowerCase()}` : base;
 }
 
-const UPGRADED: Record<ImprovementKind, string> = { Farm: 'irrigated-farm', Pasture: 'ranch', Quarry: 'deep-quarry', Mine: 'deep-mine', SaltpeterWorks: 'saltpetre-works', OilWell: 'oil-well', QuartzMine: 'quartz-mine' };
-const LATER = new Set<ImprovementKind>(['SaltpeterWorks', 'OilWell', 'QuartzMine']);
+const UPGRADED: Record<ImprovementKind, string> = { Farm: 'irrigated-farm', Pasture: 'ranch', Quarry: 'deep-quarry', Mine: 'deep-mine', SaltpetreWorks: 'saltpetre-works', OilWell: 'oil-well', QuartzMine: 'quartz-mine' };
+const LATER = new Set<ImprovementKind>(['SaltpetreWorks', 'OilWell', 'QuartzMine']);
 export function improvementArtSlug(improvement: ImprovementKind, upgraded = false): string {
   return `improvement-${upgraded || LATER.has(improvement) ? UPGRADED[improvement] : improvement.toLowerCase()}`;
 }
@@ -97,16 +97,16 @@ export function effectArtSlugOrUnit(tech: TechId, label: string): { slug: string
   // One painting per rule: a row names its own building or improvement, so two rows of a card never share an image.
   if (/\bGranary\b/.test(label)) return { slug: buildingArtSlug('Granary') };
   if (/\bWorkshop\b/.test(label)) return { slug: buildingArtSlug('Workshop') };
-  if (/\bLibrary\b/.test(label)) return { slug: buildingArtSlug('Laboratory') };
+  if (/\bLibrary\b/.test(label)) return { slug: buildingArtSlug('Library') };
   if (/\bMarket\b/.test(label)) return { slug: buildingArtSlug('Market') };
   if (/^Roadworks link/.test(label)) return { slug: buildingArtSlug('Roadworks') };
   if (/^Mines \+1/.test(label)) return { slug: improvementArtSlug('Mine', true) };
-  if (/^Factories\b/.test(label)) return { slug: buildingArtSlug('Autoworks') };
+  if (/^Factories\b/.test(label)) return { slug: buildingArtSlug('Factory') };
   if (tech === 'CropRotation') return { slug: buildingArtSlug('Granary') };
   if (tech === 'Combustion') return { slug: improvementArtSlug('OilWell') };
   if (tech === 'MilitaryScience') return { slug: 'effect-militaryengineering' };
-  if (tech === 'Philosophy') return { slug: buildingArtSlug('RelayUplink') };
-  if (tech === 'ReplaceableParts') return { slug: buildingArtSlug('Autoworks') };
+  if (tech === 'Philosophy') return { slug: buildingArtSlug('GreatLibrary') };
+  if (tech === 'ReplaceableParts') return { slug: buildingArtSlug('Factory') };
   if (tech === 'CodeOfLaws') return { slug: 'effect-codeoflaws-claim' };
   return { slug: `effect-${tech.toLowerCase()}` };
 }

@@ -21,9 +21,9 @@ function save() {
   s.owner.fill(-1); s.tileCity.fill(-1); s.ruin.fill(0);
   s.units = []; s.cities = []; s.nextUnitId = 0; s.nextCityId = 0;
   for (const p of s.players) spawnUnit(s, p.id, 'Settler', { q: 1 + 12 * p.id, r: 10 }, false);
-  const shooter = spawnUnit(s, 0, 'Ranger', ranger, false);
+  const shooter = spawnUnit(s, 0, 'Archer', ranger, false);
   spawnUnit(s, 0, 'Scout', { q: 8, r: 4 }, false); // The rival remains visible from another source.
-  spawnUnit(s, 1, 'Soldier', target, false);
+  spawnUnit(s, 1, 'Spearman', target, false);
   refreshVision(s);
   return { game: coreFixture(s), shooter: shooter.id };
 }

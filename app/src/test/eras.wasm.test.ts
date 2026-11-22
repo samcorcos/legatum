@@ -58,12 +58,12 @@ describe.skipIf(!available)('eras: core behavior', () => {
 
   it('the research view, catalog and schedule agree', () => {
     const s = fixture();
-    city(s, 0, 5, 5, 4, ['Workshop', 'Laboratory'], true);
+    city(s, 0, 5, 5, 4, ['Workshop', 'Library'], true);
     city(s, 0, 12, 5, 2, ['Granary']);
     city(s, 1, 22, 22, 3, [], true);
-    spawnUnit(s, 0, 'Soldier', fromOffset(6, 7), false);
-    spawnUnit(s, 0, 'Soldier', fromOffset(7, 7), false);
-    spawnUnit(s, 0, 'Soldier', fromOffset(8, 7), false);
+    spawnUnit(s, 0, 'Spearman', fromOffset(6, 7), false);
+    spawnUnit(s, 0, 'Spearman', fromOffset(7, 7), false);
+    spawnUnit(s, 0, 'Spearman', fromOffset(8, 7), false);
     s.players[0].techs = ['Irrigation', 'BronzeWorking'];
     s.players[0].science = 17;
     s.players[0].research = 'Currency'; s.players[0].research_queue = ['Currency', 'Writing'];
@@ -98,7 +98,7 @@ describe.skipIf(!available)('eras: core behavior', () => {
 
   it('entering the next era and the first-into-era mark happen in the same turn', () => {
     const s = fixture();
-    city(s, 0, 5, 5, 4, ['Laboratory', 'Laboratory'].slice(0, 1) as BuildingKind[], true);
+    city(s, 0, 5, 5, 4, ['Library', 'Library'].slice(0, 1) as BuildingKind[], true);
     city(s, 0, 12, 5, 2, []);
     city(s, 1, 22, 22, 3, [], true);
     city(s, 2, 22, 5, 3, [], true);
@@ -125,9 +125,9 @@ describe.skipIf(!available)('eras: core behavior', () => {
 
   it('Railways, Code of Laws, Printing Press and the Castle tiers resolve the same', () => {
     const s = fixture();
-    const c = city(s, 0, 5, 5, 5, ['Laboratory', 'Walls', 'Castle', 'StarFort', 'InferenceCore'], true);
+    const c = city(s, 0, 5, 5, 5, ['Library', 'Walls', 'Castle', 'StarFort', 'ResearchLab'], true);
     city(s, 1, 22, 22, 3, [], true);
-    const soldier = spawnUnit(s, 0, 'Soldier', c.pos, false);
+    const soldier = spawnUnit(s, 0, 'Spearman', c.pos, false);
     s.road = new Array(s.terrain.length).fill(0); s.road[idxOf(s, c.pos)] = 64; s.roaded = true;
     s.players[0].techs = ['Irrigation', 'CodeOfLaws', 'PrintingPress', 'Railways', 'FusionPower', 'StealthTechnology', 'RecursiveAi'];
     const { fixtureClient, core } = pair(s);

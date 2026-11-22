@@ -35,7 +35,7 @@ fn new_capitals_have_playable_turn_one_production_and_build_estimates() {
             } else {
                 5..=14
             };
-            for (unit, target) in [(UnitKind::Soldier, 6..=16), (UnitKind::Settler, settler)] {
+            for (unit, target) in [(UnitKind::Spearman, 6..=16), (UnitKind::Settler, settler)] {
                 let item = ProductionItem::Unit { unit };
                 state.cities.get_mut(&id).unwrap().producing = Some(item);
                 let city = &state.cities[&id];
@@ -104,7 +104,7 @@ fn first_units_finish_on_time_with_automatic_tile_priorities() {
         let state = capitals(seed);
         for id in state.cities.keys().copied() {
             // The capital bonus and Standard opening prices shorten initial builds.
-            for (unit, target) in [(UnitKind::Soldier, 6..=18), (UnitKind::Settler, 10..=28)] {
+            for (unit, target) in [(UnitKind::Spearman, 6..=18), (UnitKind::Settler, 10..=28)] {
                 let turns = build_turns(state.clone(), id, unit);
                 if !target.contains(&turns) {
                     outside_target.push(format!("seed {seed}, {id:?}: first {unit:?} completed in {turns} turns (expected {target:?})"));

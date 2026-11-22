@@ -95,7 +95,7 @@ fn heads_to_camp(orders: &[Order], id: u32) -> bool {
 #[test]
 fn a_free_unit_walks_into_an_empty_goal_camp_during_the_hold() {
     let v = holding_celts(10, Some(4))
-        .unit(70, ME, UnitKind::Soldier, off(8, 6))
+        .unit(70, ME, UnitKind::Spearman, off(8, 6))
         .build();
     let orders = run(&v, 100);
     assert!(
@@ -110,12 +110,12 @@ fn a_free_unit_walks_into_an_empty_goal_camp_during_the_hold() {
 fn a_camp_that_would_not_break_the_hold_is_left_alone() {
     // Two VP of margin: losing the goal's 2 VP still leaves the Celts on target.
     let v = holding_celts(12, Some(4))
-        .unit(70, ME, UnitKind::Soldier, off(8, 6))
+        .unit(70, ME, UnitKind::Spearman, off(8, 6))
         .build();
     assert!(run(&v, 100).is_empty());
     // Below the target and not holding: the Celts would call again before it matters.
     let v = holding_celts(8, None)
-        .unit(70, ME, UnitKind::Soldier, off(8, 6))
+        .unit(70, ME, UnitKind::Spearman, off(8, 6))
         .build();
     assert!(run(&v, 100).is_empty());
 }
@@ -123,7 +123,7 @@ fn a_camp_that_would_not_break_the_hold_is_left_alone() {
 #[test]
 fn at_peace_or_against_a_teammate_nothing_is_sent() {
     let mut v = holding_celts(10, Some(4))
-        .unit(70, ME, UnitKind::Soldier, off(8, 6))
+        .unit(70, ME, UnitKind::Spearman, off(8, 6))
         .build();
     v.players[2].team = TeamId(0);
     assert!(run(&v, 100).is_empty());
@@ -132,10 +132,10 @@ fn at_peace_or_against_a_teammate_nothing_is_sent() {
 #[test]
 fn the_gain_grows_as_the_countdown_runs_and_is_zero_past_it() {
     let early = holding_celts(10, Some(1))
-        .unit(70, ME, UnitKind::Soldier, off(8, 6))
+        .unit(70, ME, UnitKind::Spearman, off(8, 6))
         .build();
     let late = holding_celts(10, Some(8))
-        .unit(70, ME, UnitKind::Soldier, off(8, 6))
+        .unit(70, ME, UnitKind::Spearman, off(8, 6))
         .build();
     let s = |v: &PlayerView| planner(v, 100).denial_sources()[0].clone();
     let g_early = planner(&early, 100).denial_gain(&s(&early), 1);
@@ -147,16 +147,16 @@ fn the_gain_grows_as_the_countdown_runs_and_is_zero_past_it() {
 
 #[test]
 fn a_guarded_camp_gets_a_force_that_can_kill_the_guard() {
-    // A barbarian Soldier holds the camp. One Soldier alone is a coin flip it may lose; with a
-    // Ranger and a second Soldier the guard dies and a melee unit steps in.
+    // A barbarian Spearman holds the camp. One Spearman alone is a coin flip it may lose; with a
+    // Archer and a second Spearman the guard dies and a melee unit steps in.
     let v = holding_celts(10, Some(4))
-        .unit(70, ME, UnitKind::Soldier, off(9, 6))
-        .unit(71, ME, UnitKind::Soldier, off(9, 7))
-        .unit(72, ME, UnitKind::Ranger, off(9, 5))
+        .unit(70, ME, UnitKind::Spearman, off(9, 6))
+        .unit(71, ME, UnitKind::Spearman, off(9, 7))
+        .unit(72, ME, UnitKind::Archer, off(9, 5))
         .unit(
             90,
             PlayerId::BARBARIAN,
-            UnitKind::Soldier,
+            UnitKind::Spearman,
             off(CAMP.0, CAMP.1),
         )
         .build();
@@ -171,11 +171,11 @@ fn a_guarded_camp_gets_a_force_that_can_kill_the_guard() {
 
 #[test]
 fn the_holder_of_a_city_about_to_fall_stays_home() {
-    // Our only unit holds our broken city (0 HP) with a wounded Celtic Soldier beside it:
+    // Our only unit holds our broken city (0 HP) with a wounded Celtic Spearman beside it:
     // empty, the city falls to it; held, it does not.
     let mut v = holding_celts(10, Some(4))
-        .unit(70, ME, UnitKind::Soldier, off(3, 6))
-        .unit_hp(80, ENEMY, UnitKind::Soldier, off(4, 6), 40)
+        .unit(70, ME, UnitKind::Spearman, off(3, 6))
+        .unit_hp(80, ENEMY, UnitKind::Spearman, off(4, 6), 40)
         .build();
     v.cities[0].hp = 0;
     v.barbarian_camps[0].pos = off(6, 6);
@@ -200,8 +200,8 @@ fn the_holder_of_a_city_about_to_fall_stays_home() {
 #[test]
 fn the_brain_orders_stay_valid_with_the_gene() {
     let v = holding_celts(10, Some(4))
-        .unit(70, ME, UnitKind::Soldier, off(8, 6))
-        .unit(71, ME, UnitKind::Ranger, off(4, 6))
+        .unit(70, ME, UnitKind::Spearman, off(8, 6))
+        .unit(71, ME, UnitKind::Archer, off(4, 6))
         .build();
     let mut params = crate::AiParams::default();
     params.decisions.contest_hold = 100;
@@ -213,25 +213,25 @@ fn the_brain_orders_stay_valid_with_the_gene() {
 
 #[test]
 fn a_guard_that_cannot_die_before_the_hold_completes_is_not_attacked() {
-    // One turn left and a lone Soldier against a strong guard: the fight outlasts the hold.
+    // One turn left and a lone Spearman against a strong guard: the fight outlasts the hold.
     let v = holding_celts(10, Some(9))
-        .unit(70, ME, UnitKind::Soldier, off(11, 6))
+        .unit(70, ME, UnitKind::Spearman, off(11, 6))
         .unit(
             90,
             PlayerId::BARBARIAN,
-            UnitKind::AssaultTrooper,
+            UnitKind::Musketman,
             off(CAMP.0, CAMP.1),
         )
         .build();
     assert!(run(&v, 100).is_empty(), "{:?}", run(&v, 100));
-    // Early in the countdown a Ranger alone still goes: the guard never heals or replies to a
-    // shot, so it wears down over several turns and the Ranger walks in.
+    // Early in the countdown an Archer alone still goes: the guard never heals or replies to a
+    // shot, so it wears down over several turns and the Archer walks in.
     let v = holding_celts(10, Some(1))
-        .unit(71, ME, UnitKind::Ranger, off(10, 6))
+        .unit(71, ME, UnitKind::Archer, off(10, 6))
         .unit(
             90,
             PlayerId::BARBARIAN,
-            UnitKind::AssaultTrooper,
+            UnitKind::Musketman,
             off(CAMP.0, CAMP.1),
         )
         .build();

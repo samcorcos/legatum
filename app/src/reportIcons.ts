@@ -7,7 +7,7 @@ import type { Faction, Event } from './types';
 import type { EventCategory } from './format';
 
 export const CATEGORY_ICON: Record<EventCategory, string> = {
-  attack: 'ui-siege', diplomacy: 'treaty-offer', victory: 'vp', discoveries: 'ruin', combat: 'unit-soldier', cities: 'city',
+  attack: 'ui-siege', diplomacy: 'treaty-offer', victory: 'vp', discoveries: 'ruin', combat: 'unit-spearman', cities: 'city',
   science: 'yield-science', economy: 'yield-gold', movement: 'mark-move', orders: 'mark-skip',
 };
 
@@ -16,7 +16,7 @@ export function eventIcon(e: Event, faction?: (player: number) => Faction | unde
   switch (e.type) {
     case 'CityCaptured': return 'emblem-captured';
     case 'CityRazed': return mine?.(e.by) ? 'emblem-captured' : 'ui-alert';
-    case 'Battle': return e.ranged ? 'unit-ranger' : 'unit-soldier';
+    case 'Battle': return e.ranged ? 'unit-archer' : 'unit-spearman';
     case 'UnitDestroyed': return unitIconName(e.unit_kind, faction?.(e.owner));
     case 'UnitPromoted': return unitIconName(e.unit_kind, faction?.(e.owner));
     case 'CityFounded': return 'emblem-founded';
@@ -39,22 +39,22 @@ export function eventIcon(e: Event, faction?: (player: number) => Faction | unde
     case 'GoldGiven': return 'yield-gold';
     case 'CapitalLost': return 'vp';
     case 'FactionGoalCompleted': return FACTION_GOAL[e.faction]?.icon ?? 'emblem-milestone';
-    case 'FactionGoalLost': return e.faction === 'Byzantium' ? 'unit-heir' : e.faction === 'Mongols' ? 'building-courierhall' : 'ui-trend-down';
+    case 'FactionGoalLost': return e.faction === 'Byzantium' ? 'unit-heirtothethrone' : e.faction === 'Mongols' ? 'building-yamrelaystation' : 'ui-trend-down';
     case 'SwarmUnleashed': return SWARM_GOAL.icon;
     case 'SakokuClosed': case 'SakokuReopened': return 'ui-sakoku';
     case 'SignalBroadcast': return 'building-listeninghouse';
-    case 'RoadsLaid': return 'building-courierhall';
-    case 'VeteranRetired': return 'building-warshrine';
+    case 'RoadsLaid': return 'building-yamrelaystation';
+    case 'VeteranRetired': return 'building-agoge';
     case 'WildCalled': return 'ui-camp';
     case 'FreeTechsChosen': return 'emblem-tech';
     case 'RuinExplored': return 'emblem-ruin';
     case 'WonderDiscovered': return `wonder:${e.wonder}`;
     case 'BarbarianCampCleared': return 'emblem-camp';
     case 'ResourcesRevealed': case 'SupplyShortage': return `resource-${e.resource.toLowerCase()}`;
-    case 'HeirBorn': return 'unit-heir';
+    case 'HeirBorn': return 'unit-heirtothethrone';
     case 'CompanyHired': return 'yield-gold';
     case 'CompanyDeparted': case 'CompanyTurned': return unitIconName(e.unit, faction?.(e.owner));
-    case 'WarDeclared': case 'WarJoined': case 'CallToArms': case 'CallAnswered': case 'CallLapsed': return 'unit-soldier';
+    case 'WarDeclared': case 'WarJoined': case 'CallToArms': case 'CallAnswered': case 'CallLapsed': return 'unit-spearman';
     case 'PeaceEstablished': case 'TreatyActivated': return 'treaty-peace';
     case 'TreatyEnded': case 'TreatyBreached': case 'AllianceBetrayed': return 'ui-alert';
     case 'ProposalCreated': case 'ProposalAccepted': case 'ProposalRejected': case 'ProposalWithdrawn': case 'ProposalExpired': case 'ProposalInvalidated':

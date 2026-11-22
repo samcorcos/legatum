@@ -110,7 +110,7 @@ describe.skipIf(!available)('faction goal WASM behavior', () => {
       const before = pair(s);
       const baseline = before.core.view(0).cities.find((x) => x.id === c.id)!.detail!.yields;
       (expect(before.fixtureClient.view(0).cities.find((x) => x.id === c.id)!.detail!.yields).toMatchSnapshot(), void (baseline));
-      if (kind === 'unit') spawnUnit(s, BARBARIAN, 'Soldier', tile, false);
+      if (kind === 'unit') spawnUnit(s, BARBARIAN, 'Spearman', tile, false);
       else {
         s.barbarians = newBarbarians();
         s.barbarians.camps.push({ id: 1, pos: tile, founded_turn: 1, guard: null, scout: null, raiders: [], scout_report: null, raid: null, next_raid_turn: 0, next_spawn_turn: 99 });

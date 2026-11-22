@@ -95,7 +95,7 @@ function plainSentence(item: ProductionItem, faction: Faction): string {
   let gain = firstSentence(plain);
   // A faction with no use for a yield keeps the rest of what the building does.
   if (!gain) gain = firstSentence(plain.replace(/^\.\s*/, '')).replace(/^No Science:/, 'no Science:');
-  if (upgrade && faction === 'Germany' && item.building === 'Autoworks') {
+  if (upgrade && faction === 'Germany' && item.building === 'Factory') {
     return `Add a Factory to a Ruhr Foundry city of ${stats.minPopulation} or more: ${gain}. ${GERMANY_FACTORY_NOTE.replace(/\.$/, '')}`;
   }
   if (upgrade) {

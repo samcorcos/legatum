@@ -10,7 +10,7 @@ import { techCardUnlocks } from './ui/techCardUnlocks';
 import type { PlayerView, SupplyView } from './types';
 
 it('the Factory card says it upgrades the Ruhr Foundry, and what stays standing', () => {
-  const factory = { kind: 'Building', building: 'Autoworks' } as const;
+  const factory = { kind: 'Building', building: 'Factory' } as const;
   expect(itemSummary(factory, 'Germany')).toBe('+5 Production; upgrades your Ruhr Foundry');
   expect(itemSummary(factory, 'India')).toBe('+5 Production; upgrades your Forge');
   expect(itemDescription(factory, 'Germany')).toContain('Upgrades your Ruhr Foundry.');

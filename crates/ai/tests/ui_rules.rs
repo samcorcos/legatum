@@ -355,7 +355,7 @@ fn ui_rules_match_core() {
         // What each special unit changes against the unit it replaces, as the stats and the
         // breakdown lines carry it (era-scaled), so the app never mirrors the arithmetic.
         "specialUnitNumbers": {
-            "eagleWarriorStrength": data::unit_stats_for(Faction::Aztecs, UnitKind::Soldier).strength - data::unit_stats(UnitKind::Soldier).strength,
+            "eagleWarriorStrength": data::unit_stats_for(Faction::Aztecs, UnitKind::Spearman).strength - data::unit_stats(UnitKind::Spearman).strength,
             "eagleWarriorCost": data::EAGLE_WARRIOR_COST,
             "gaesataeAttack": legatum_core::combat::gaesatae_attack(Default::default(), Faction::Celts, UnitKind::Phalangite),
             "gaesataeDefense": legatum_core::combat::gaesatae_defense(Default::default(), Faction::Celts, UnitKind::Phalangite),
@@ -442,7 +442,7 @@ fn ui_rules_match_core() {
         "mongolWallsReason": data::MONGOL_WALLS_REASON,
         "mongolSiegeReason": data::MONGOL_SIEGE_REASON,
         "tankMoves": data::TANK_MOVES,
-        "landshipMoves": data::LANDSHIP_MOVES,
+        "earlyTankMoves": data::EARLY_TANK_MOVES,
         "indirectFire": UnitKind::ALL
             .into_iter()
             .filter(|kind| data::indirect_fire(*kind, true))

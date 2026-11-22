@@ -396,7 +396,7 @@ it('Return ends planning when all decisions are handled, but never unreadies a w
   const view = useGame.getState().views![0];
   useGame.getState().editOrders(() => [
     ...view.units.filter((u) => u.owner === view.me).map((u) => ({ type: 'SkipUnit' as const, unit: u.id })),
-    { type: 'SetProduction', city: view.cities[0].id, item: { kind: 'Unit', unit: 'Soldier' } },
+    { type: 'SetProduction', city: view.cities[0].id, item: { kind: 'Unit', unit: 'Spearman' } },
     { type: 'SetResearch', tech: 'BronzeWorking' },
   ]);
   press(map, 'Enter');
@@ -411,7 +411,7 @@ it('invalid orders keep Return on pending decisions', () => {
   const view = useGame.getState().views![0];
   useGame.setState({ orders: [[
     { type: 'SkipUnit', unit: 0 }, { type: 'SkipUnit', unit: 4 },
-    { type: 'SetProduction', city: view.cities[0].id, item: { kind: 'Unit', unit: 'Soldier' } },
+    { type: 'SetProduction', city: view.cities[0].id, item: { kind: 'Unit', unit: 'Spearman' } },
     { type: 'SetResearch', tech: 'BronzeWorking' },
   ]], errors: [[{ index: 0, message: 'Invalid unit order' }]] });
   press(map, 'Enter');

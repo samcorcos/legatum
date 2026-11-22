@@ -19,8 +19,8 @@ async function openCity(page: Page, size: { width: number; height: number }, bus
   const own = setup.fixture.cities.find((c) => c.id === setup.own)!;
   setup.fixture.players[0].techs = TECHS.filter((t) => ['Irrigation', 'BronzeWorking', 'Masonry', 'Writing', 'Currency'].includes(t));
   Object.assign(own, busy
-    ? { population: 4, hp: 140, producing: { kind: 'Unit', unit: 'Soldier' }, prod: 12, productionBanked: [],
-      productionQueue: [{ kind: 'Building', building: 'Granary' }, { kind: 'Building', building: 'Workshop' }, { kind: 'Building', building: 'Laboratory' }, { kind: 'Unit', unit: 'Settler' }] }
+    ? { population: 4, hp: 140, producing: { kind: 'Unit', unit: 'Spearman' }, prod: 12, productionBanked: [],
+      productionQueue: [{ kind: 'Building', building: 'Granary' }, { kind: 'Building', building: 'Workshop' }, { kind: 'Building', building: 'Library' }, { kind: 'Unit', unit: 'Settler' }] }
     : { population: 4, producing: null, prod: 0, productionQueue: [], productionBanked: [] });
   if (hp !== undefined) own.hp = hp;
   setup.fixture.turn = 2;

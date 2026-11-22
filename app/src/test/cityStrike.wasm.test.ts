@@ -36,7 +36,7 @@ function addCity(s: MState, owner: number, pos: Hex, hp = 200, walls = true) {
   s.cities.push(c); s.nextCityId += 1; s.owner[idxOf(s, pos)] = owner; s.tileCity[idxOf(s, pos)] = c.id;
   return c;
 }
-function unit(s: MState, owner: number, kind: 'Soldier' | 'Ranger' | 'Settler' | 'Trooper' | 'Scout', at: Hex, hp = 100) {
+function unit(s: MState, owner: number, kind: 'Spearman' | 'Archer' | 'Settler' | 'Pikeman' | 'Scout', at: Hex, hp = 100) {
   const u = spawnUnit(s, owner, kind, at, false); u.hp = hp; return u;
 }
 /** A hex exactly `d` tiles from `from`, walking in direction `dir`. */
@@ -75,8 +75,8 @@ describe.skipIf(!available)('city strike core behavior', () => {
   it('fires once at the lowest-HP unit in range, with the city and terrain breakdowns', () => {
     const s = fixture(); const c = addCity(s, 0, middle);
     s.terrain[idxOf(s, away(middle, 1, 2))] = 'Hills';
-    const healthy = unit(s, 1, 'Soldier', away(middle, 0, 1));
-    const weak = unit(s, 1, 'Soldier', away(middle, 1, 2), 60);
+    const healthy = unit(s, 1, 'Spearman', away(middle, 0, 1));
+    const weak = unit(s, 1, 'Spearman', away(middle, 1, 2), 60);
     weak.fortify = 3;
     const shots = cityShots(play(s));
     expect(shots).toHaveLength(1);
@@ -91,8 +91,8 @@ describe.skipIf(!available)('city strike core behavior', () => {
 
   it('breaks an HP tie by the lowest unit id', () => {
     const s = fixture(); addCity(s, 0, middle);
-    const first = unit(s, 1, 'Soldier', away(middle, 2, 2), 70);
-    unit(s, 1, 'Soldier', away(middle, 5, 1), 70);
+    const first = unit(s, 1, 'Spearman', away(middle, 2, 2), 70);
+    unit(s, 1, 'Spearman', away(middle, 5, 1), 70);
     expect(cityShots(play(s)).map(shotAt)).toEqual([first.id]);
   });
 
@@ -100,17 +100,17 @@ describe.skipIf(!available)('city strike core behavior', () => {
     const s = fixture([0, 1, 2]); addCity(s, 0, middle);
     for (const r of s.diplomacy!.relations) if ([r.a, r.b].includes(2)) r.state = 'Peace';
     unit(s, 1, 'Settler', away(middle, 0, 1), 10);
-    unit(s, 1, 'Soldier', away(middle, 3, 3), 10);
-    unit(s, 2, 'Soldier', away(middle, 1, 1), 10);
+    unit(s, 1, 'Spearman', away(middle, 3, 3), 10);
+    unit(s, 2, 'Spearman', away(middle, 1, 1), 10);
     expect(cityShots(play(s))).toEqual([]);
   });
 
   it('a fallen city\'s 1-HP garrison splits one retaliation between both Soldiers', () => {
     const s = fixture(), target = { q: 10, r: 8 };
     addCity(s, 1, target, 0, false); // at 0 HP the garrison defends (core combat::city_tile_defender)
-    const a = unit(s, 0, 'Soldier', { q: 9, r: 8 }, 40);
-    const b = unit(s, 0, 'Soldier', { q: 10, r: 7 }, 40);
-    const garrison = unit(s, 1, 'Trooper', target, 1); garrison.fortify = 6;
+    const a = unit(s, 0, 'Spearman', { q: 9, r: 8 }, 40);
+    const b = unit(s, 0, 'Spearman', { q: 10, r: 7 }, 40);
+    const garrison = unit(s, 1, 'Pikeman', target, 1); garrison.fortify = 6;
     const events = play(s, { 0: [a, b].map((u) => ({ type: 'MoveUnit', unit: u.id, to: target })) });
     const melee = events.filter((e) => e.type === 'Battle' && !e.ranged);
     expect(melee).toHaveLength(2);
@@ -140,9 +140,9 @@ describe.skipIf(!available)('city strike core behavior', () => {
   it('a Soldier arriving one movement round later can capture after the garrison dies', () => {
     const s = fixture(), target = { q: 10, r: 8 };
     addCity(s, 1, target, 0, false);
-    const a = unit(s, 0, 'Soldier', { q: 9, r: 8 }, 40);
-    const b = unit(s, 0, 'Soldier', { q: 10, r: 6 }, 40);
-    const garrison = unit(s, 1, 'Trooper', target, 1); garrison.fortify = 6;
+    const a = unit(s, 0, 'Spearman', { q: 9, r: 8 }, 40);
+    const b = unit(s, 0, 'Spearman', { q: 10, r: 6 }, 40);
+    const garrison = unit(s, 1, 'Pikeman', target, 1); garrison.fortify = 6;
     const events = play(s, { 0: [a, b].map((u) => ({ type: 'MoveUnit', unit: u.id, to: target })) });
     expect(events).toEqual(expect.arrayContaining([expect.objectContaining({ type: 'UnitDestroyed', unit: a.id })]));
     expect(events.some((e) => e.type === 'UnitDestroyed' && e.unit === b.id)).toBe(false);
@@ -152,10 +152,10 @@ describe.skipIf(!available)('city strike core behavior', () => {
   it('supporting melee attacks take retaliation and do not preempt simultaneous city attacks', () => {
     const s = fixture(), target = { q: 10, r: 8 };
     addCity(s, 1, target);
-    const a = unit(s, 0, 'Soldier', { q: 9, r: 8 });
-    const b = unit(s, 0, 'Soldier', { q: 10, r: 7 });
-    const rangers = [unit(s, 0, 'Ranger', { q: 9, r: 7 }), unit(s, 0, 'Ranger', { q: 10, r: 6 })];
-    const support = unit(s, 1, 'Trooper', { q: 8, r: 8 }, 1);
+    const a = unit(s, 0, 'Spearman', { q: 9, r: 8 });
+    const b = unit(s, 0, 'Spearman', { q: 10, r: 7 });
+    const rangers = [unit(s, 0, 'Archer', { q: 9, r: 7 }), unit(s, 0, 'Archer', { q: 10, r: 6 })];
+    const support = unit(s, 1, 'Pikeman', { q: 8, r: 8 }, 1);
     const orders: Order[] = [a, b].map((u) => ({ type: 'MoveUnit', unit: u.id, to: target }));
     orders.push(...rangers.map((u): Order => ({ type: 'RangedAttack', unit: u.id, target })));
     const events = play(s, { 0: orders, 1: [{ type: 'MoveUnit', unit: support.id, to: a.pos }] });
@@ -169,15 +169,15 @@ describe.skipIf(!available)('city strike core behavior', () => {
   it('a city with HP takes melee and ranged attacks; its garrison is safe and forecast as safe', () => {
     const s = fixture(), target = { q: 10, r: 8 };
     const c = addCity(s, 1, target, 200, false);
-    const garrison = unit(s, 1, 'Ranger', target); garrison.fortify = 6;
-    const a = unit(s, 0, 'Soldier', { q: 9, r: 8 });
-    const r = unit(s, 0, 'Ranger', { q: 8, r: 8 });
+    const garrison = unit(s, 1, 'Archer', target); garrison.fortify = 6;
+    const a = unit(s, 0, 'Spearman', { q: 9, r: 8 });
+    const r = unit(s, 0, 'Archer', { q: 8, r: 8 });
     refreshVision(s);
     const fixtureClient = new FixtureClient(); fixtureClient.load(JSON.stringify(s));
     const core = makeCore(); core.load(coreFixture(s));
     for (const [id, mode] of [[a.id, 'Melee'], [r.id, 'Ranged']] as const) {
       const f = core.forecast(0, id, target, mode);
-      expect(f?.garrison).toEqual({ unit: garrison.id, owner: 1, kind: 'Ranger', hp: 100, shielded: true });
+      expect(f?.garrison).toEqual({ unit: garrison.id, owner: 1, kind: 'Archer', hp: 100, shielded: true });
       expect(f?.defender_hp).toBe(200);
       (expect(fixtureClient.forecast(0, id, target, mode)).toMatchSnapshot(), void (f));
     }
@@ -191,9 +191,9 @@ describe.skipIf(!available)('city strike core behavior', () => {
   it('the whole fight at a garrisoned city pools the queued attacks (core forecast_city_assault)', () => {
     const s = fixture(), target = { q: 10, r: 8 };
     addCity(s, 1, target, 40, false);
-    const garrison = unit(s, 1, 'Ranger', target);
-    const a = unit(s, 0, 'Soldier', { q: 9, r: 8 });
-    const r = unit(s, 0, 'Ranger', { q: 8, r: 8 });
+    const garrison = unit(s, 1, 'Archer', target);
+    const a = unit(s, 0, 'Spearman', { q: 9, r: 8 });
+    const r = unit(s, 0, 'Archer', { q: 8, r: 8 });
     refreshVision(s);
     const core = makeCore(); core.load(coreFixture(s));
     const alone = core.assault!(0, a.id, target, 'Melee', [])!;
@@ -211,9 +211,9 @@ describe.skipIf(!available)('city strike core behavior', () => {
   it('a volley that breaks the city spills into the garrison; melee captures it the same turn', () => {
     const s = fixture(), target = { q: 10, r: 8 };
     const c = addCity(s, 1, target, 10, false);
-    const garrison = unit(s, 1, 'Soldier', target, 1);
-    const rangers = [unit(s, 0, 'Ranger', { q: 8, r: 8 }), unit(s, 0, 'Ranger', { q: 10, r: 6 })];
-    const a = unit(s, 0, 'Soldier', { q: 9, r: 8 });
+    const garrison = unit(s, 1, 'Spearman', target, 1);
+    const rangers = [unit(s, 0, 'Archer', { q: 8, r: 8 }), unit(s, 0, 'Archer', { q: 10, r: 6 })];
+    const a = unit(s, 0, 'Spearman', { q: 9, r: 8 });
     const orders: Order[] = rangers.map((u): Order => ({ type: 'RangedAttack', unit: u.id, target }));
     orders.push({ type: 'MoveUnit', unit: a.id, to: target });
     const events = play(s, { 0: orders });
@@ -229,8 +229,8 @@ describe.skipIf(!available)('city strike core behavior', () => {
 
   it('three Soldiers split one counterattack from a field unit (split counterattack)', () => {
     const s = fixture(), target = { q: 10, r: 8 };
-    const d = unit(s, 1, 'Soldier', target, 6);
-    const attackers = [{ q: 9, r: 8 }, { q: 10, r: 7 }, { q: 11, r: 8 }].map((h) => unit(s, 0, 'Soldier', h));
+    const d = unit(s, 1, 'Spearman', target, 6);
+    const attackers = [{ q: 9, r: 8 }, { q: 10, r: 7 }, { q: 11, r: 8 }].map((h) => unit(s, 0, 'Spearman', h));
     const events = play(s, { 0: attackers.map((u): Order => ({ type: 'MoveUnit', unit: u.id, to: target })) });
     const melee = events.filter((e): e is Battle => e.type === 'Battle' && !e.ranged);
     expect(melee).toHaveLength(3);
@@ -242,8 +242,8 @@ describe.skipIf(!available)('city strike core behavior', () => {
   it('a combined melee round breaks the city, kills the garrison by overflow and captures', () => {
     const s = fixture(), target = { q: 10, r: 8 };
     const c = addCity(s, 1, target, 8, false);
-    const garrison = unit(s, 1, 'Soldier', target, 10); garrison.fortify = 6;
-    const attackers = [{ q: 9, r: 8 }, { q: 10, r: 7 }, { q: 11, r: 8 }].map((h) => unit(s, 0, 'Soldier', h));
+    const garrison = unit(s, 1, 'Spearman', target, 10); garrison.fortify = 6;
+    const attackers = [{ q: 9, r: 8 }, { q: 10, r: 7 }, { q: 11, r: 8 }].map((h) => unit(s, 0, 'Spearman', h));
     const events = play(s, { 0: attackers.map((u): Order => ({ type: 'MoveUnit', unit: u.id, to: target })) });
     expect(events.filter((e): e is Battle => e.type === 'Battle' && !e.ranged).every((b) => b.defender.kind === 'City')).toBe(true);
     expect(events).toEqual(expect.arrayContaining([
@@ -255,8 +255,8 @@ describe.skipIf(!available)('city strike core behavior', () => {
   it('a garrison stepping out of a breaking city takes no overflow', () => {
     const s = fixture(), target = { q: 10, r: 8 };
     const city = addCity(s, 1, target, 1, false);
-    const garrison = unit(s, 1, 'Soldier', target);
-    const a = unit(s, 0, 'Soldier', { q: 9, r: 8 });
+    const garrison = unit(s, 1, 'Spearman', target);
+    const a = unit(s, 0, 'Spearman', { q: 9, r: 8 });
     const events = play(s, { 0: [{ type: 'MoveUnit', unit: a.id, to: target }], 1: [{ type: 'MoveUnit', unit: garrison.id, to: { q: 11, r: 8 } }] });
     expect(events.some((e) => e.type === 'UnitDestroyed' && e.unit === garrison.id)).toBe(false);
     expect(events).toEqual(expect.arrayContaining([
@@ -267,15 +267,15 @@ describe.skipIf(!available)('city strike core behavior', () => {
   it('at 0 HP the garrison is the forecast defender and the ranged target', () => {
     const s = fixture(), target = { q: 10, r: 8 };
     addCity(s, 1, target, 0, false);
-    const garrison = unit(s, 1, 'Soldier', target);
-    const r = unit(s, 0, 'Ranger', { q: 8, r: 8 });
-    const a = unit(s, 0, 'Soldier', { q: 9, r: 8 });
+    const garrison = unit(s, 1, 'Spearman', target);
+    const r = unit(s, 0, 'Archer', { q: 8, r: 8 });
+    const a = unit(s, 0, 'Spearman', { q: 9, r: 8 });
     refreshVision(s);
     const fixtureClient = new FixtureClient(); fixtureClient.load(JSON.stringify(s));
     const core = makeCore(); core.load(coreFixture(s));
     for (const [id, mode] of [[a.id, 'Melee'], [r.id, 'Ranged']] as const) {
       const f = core.forecast(0, id, target, mode);
-      expect(f?.garrison).toEqual({ unit: garrison.id, owner: 1, kind: 'Soldier', hp: 100, shielded: false });
+      expect(f?.garrison).toEqual({ unit: garrison.id, owner: 1, kind: 'Spearman', hp: 100, shielded: false });
       expect(f?.defender_hp).toBe(100);
       (expect(fixtureClient.forecast(0, id, target, mode)).toMatchSnapshot(), void (f));
     }
@@ -286,13 +286,13 @@ describe.skipIf(!available)('city strike core behavior', () => {
 
   it.each([[0, 0], [1, 1]])('a city at %s HP fires %s times', (hp, times) => {
     const s = fixture(); addCity(s, 0, middle, hp);
-    unit(s, 1, 'Soldier', away(middle, 0, 1));
+    unit(s, 1, 'Spearman', away(middle, 0, 1));
     expect(cityShots(play(s))).toHaveLength(times);
   });
 
   it('an unwalled city never fires, and its attack forecast has no city shot', () => {
     const s = fixture(); addCity(s, 0, middle, 200, false);
-    const near = unit(s, 1, 'Soldier', away(middle, 0, 1), 30);
+    const near = unit(s, 1, 'Spearman', away(middle, 0, 1), 30);
     expect(cityShots(play(s))).toEqual([]);
     refreshVision(s);
     const fixtureClient = new FixtureClient(); fixtureClient.load(JSON.stringify(s));
@@ -305,8 +305,8 @@ describe.skipIf(!available)('city strike core behavior', () => {
 
   it('a unit shot by a Ranger and the city together dies once; the kill XP goes to the Ranger', () => {
     const s = fixture(); addCity(s, 0, middle, 20).population = 1; // a worn, small Bastion: neither shot alone kills
-    const target = unit(s, 1, 'Soldier', away(middle, 0, 1), 45);
-    const ranger = unit(s, 0, 'Ranger', away(target.pos, 0, 2));
+    const target = unit(s, 1, 'Spearman', away(middle, 0, 1), 45);
+    const ranger = unit(s, 0, 'Archer', away(target.pos, 0, 2));
     const events = play(s, { 0: [{ type: 'RangedAttack', unit: ranger.id, target: target.pos }] });
     const hits = events.filter((e): e is Battle => e.type === 'Battle' && shotAt(e) === target.id);
     expect(hits.map((e) => typeof e.attacker)).toEqual(['number', 'object']);
@@ -318,8 +318,8 @@ describe.skipIf(!available)('city strike core behavior', () => {
 
   it('several cities hit one unit, and a unit killed by a city still gets its shot', () => {
     const s = fixture(); const a = addCity(s, 0, middle), b = addCity(s, 0, away(middle, 0, 3));
-    const target = unit(s, 1, 'Soldier', away(middle, 0, 1));
-    const doomed = unit(s, 1, 'Ranger', away(middle, 3, 1), 5);
+    const target = unit(s, 1, 'Spearman', away(middle, 0, 1));
+    const doomed = unit(s, 1, 'Archer', away(middle, 3, 1), 5);
     const events = play(s, { 1: [{ type: 'RangedAttack', unit: doomed.id, target: middle }] });
     const shots = cityShots(events);
     // City a shoots the weaker Ranger, city b (out of the Ranger's reach) the Soldier.
@@ -328,7 +328,7 @@ describe.skipIf(!available)('city strike core behavior', () => {
     expect(events.some((e) => e.type === 'UnitDestroyed' && e.unit === doomed.id)).toBe(true);
     // Now only the Soldier is in range of both cities: both fire at it and the damage sums.
     const t = fixture(); addCity(t, 0, middle); addCity(t, 0, away(middle, 0, 3));
-    const lone = unit(t, 1, 'Soldier', away(middle, 0, 1));
+    const lone = unit(t, 1, 'Spearman', away(middle, 0, 1));
     const both = cityShots(play(t));
     expect(both.map(shotAt)).toEqual([lone.id, lone.id]);
     const total = both.reduce((n, e) => n + e.damage_to_defender, 0);
@@ -337,8 +337,8 @@ describe.skipIf(!available)('city strike core behavior', () => {
 
   it('forecasts the city firing back when attacking it from within two tiles', () => {
     const s = fixture(); const c = addCity(s, 0, middle);
-    const near = unit(s, 1, 'Soldier', away(middle, 0, 2), 80);
-    const far = unit(s, 1, 'Soldier', away(middle, 3, 3));
+    const near = unit(s, 1, 'Spearman', away(middle, 0, 2), 80);
+    const far = unit(s, 1, 'Spearman', away(middle, 3, 3));
     refreshVision(s);
     const fixtureClient = new FixtureClient(); fixtureClient.load(JSON.stringify(s));
     const core = makeCore(); core.load(coreFixture(s));
@@ -368,8 +368,8 @@ describe.skipIf(!available)('reinforcement core behavior', () => {
   /** P1 owns a city at `target`; P0's soldier stands west of it, P1's soldier east. */
   function siege(hp: number, defenderHp = 100, defenderAt: Hex = { q: 11, r: 8 }) {
     const s = fixture(); const city = addCity(s, 1, target, hp, false);
-    const attacker = unit(s, 0, 'Soldier', { q: 9, r: 8 });
-    const defender = unit(s, 1, 'Soldier', defenderAt, defenderHp);
+    const attacker = unit(s, 0, 'Spearman', { q: 9, r: 8 });
+    const defender = unit(s, 1, 'Spearman', defenderAt, defenderHp);
     return { s, city, attacker, defender };
   }
   const orders = (a: number, d: number): Record<number, Order[]> => ({
@@ -410,10 +410,10 @@ describe.skipIf(!available)('reinforcement core behavior', () => {
 
   it('allies and ranged units get no priority; with nobody attacking it is a plain move', () => {
     const s = fixture([0, 0, 1]); addCity(s, 0, target, 0, false);
-    const enemy = unit(s, 2, 'Soldier', { q: 9, r: 8 }), ally = unit(s, 1, 'Soldier', { q: 11, r: 8 });
+    const enemy = unit(s, 2, 'Spearman', { q: 9, r: 8 }), ally = unit(s, 1, 'Spearman', { q: 11, r: 8 });
     const events = play(s, { 2: [{ type: 'MoveUnit', unit: enemy.id, to: target }], 1: [{ type: 'MoveUnit', unit: ally.id, to: target }] }, reinforceEvents);
     expect(reinforced(events)).toEqual([]);
-    const r = siege(0); r.defender.kind = 'Ranger';
+    const r = siege(0); r.defender.kind = 'Archer';
     expect(reinforced(play(r.s, orders(r.attacker.id, r.defender.id), reinforceEvents))).toEqual([]);
     const calm = siege(0);
     expect(reinforced(play(calm.s, { 1: [{ type: 'MoveUnit', unit: calm.defender.id, to: target }] }, reinforceEvents))).toEqual([]);
@@ -421,7 +421,7 @@ describe.skipIf(!available)('reinforcement core behavior', () => {
 
   it('two equal reinforcers: the lower unit id garrisons and the other does not stack', () => {
     const { s, attacker, defender } = siege(0);
-    const second = unit(s, 1, 'Soldier', { q: 10, r: 9 });
+    const second = unit(s, 1, 'Spearman', { q: 10, r: 9 });
     const events = play(s, { ...orders(attacker.id, defender.id), 1: [second.id, defender.id].map((id) => ({ type: 'MoveUnit' as const, unit: id, to: target })) }, reinforceEvents);
     expect(reinforced(events)).toEqual([expect.objectContaining({ unit: defender.id })]);
   });
@@ -429,8 +429,8 @@ describe.skipIf(!available)('reinforcement core behavior', () => {
   it('a garrison killed by overflow is a Spartan kill: everyone who hit the city tile shares the heal', () => {
     const s = fixture(); s.players[0].faction = 'Sparta';
     addCity(s, 1, target, 1, false);
-    const garrison = unit(s, 1, 'Soldier', target, 1);
-    const attackers = [{ q: 9, r: 8 }, { q: 10, r: 7 }].map((h) => unit(s, 0, 'Soldier', h, 40));
+    const garrison = unit(s, 1, 'Spearman', target, 1);
+    const attackers = [{ q: 9, r: 8 }, { q: 10, r: 7 }].map((h) => unit(s, 0, 'Spearman', h, 40));
     const events = play(s, { 0: attackers.map((u) => ({ type: 'MoveUnit' as const, unit: u.id, to: target })) }, reinforceEvents);
     expect(events.some((e) => e.type === 'UnitDestroyed' && e.unit === garrison.id)).toBe(true);
     expect(events).toEqual(expect.arrayContaining([expect.objectContaining({ type: 'SpartaKillHeal', player: 0, unit: garrison.id })]));

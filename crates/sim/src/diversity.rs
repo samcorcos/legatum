@@ -211,7 +211,7 @@ impl Collector {
                     }
                     ProductionItem::Building { building } => {
                         match data::building_family(*building) {
-                            BuildingKind::Laboratory => e.science_cost += cost,
+                            BuildingKind::Library => e.science_cost += cost,
                             BuildingKind::Market => e.market_cost += cost,
                             BuildingKind::Walls => e.defense_cost += cost,
                             _ => {}
@@ -249,10 +249,8 @@ impl Collector {
                 e.production += y.production;
                 e.science += y.science;
                 e.gold += y.gold;
-                e.laboratories += u32::from(data::has_building(
-                    &city.buildings,
-                    BuildingKind::Laboratory,
-                ));
+                e.laboratories +=
+                    u32::from(data::has_building(&city.buildings, BuildingKind::Library));
                 e.markets += u32::from(data::has_building(&city.buildings, BuildingKind::Market));
                 e.walls += u32::from(data::has_building(&city.buildings, BuildingKind::Walls));
             }

@@ -33,13 +33,13 @@ pub fn ranger_repro() -> Recording {
     let guard = spawn_unit(
         &mut state,
         PlayerId(0),
-        UnitKind::Soldier,
+        UnitKind::Spearman,
         Hex::from_offset(5, 5),
     );
     let victim = spawn_unit(
         &mut state,
         PlayerId(0),
-        UnitKind::Soldier,
+        UnitKind::Spearman,
         Hex::from_offset(10, 3),
     );
     let scout = spawn_unit(
@@ -51,19 +51,19 @@ pub fn ranger_repro() -> Recording {
     let archer = spawn_unit(
         &mut state,
         PlayerId(1),
-        UnitKind::Ranger,
+        UnitKind::Archer,
         Hex::from_offset(7, 5),
     );
     let hunter = spawn_unit(
         &mut state,
         PlayerId(1),
-        UnitKind::Ranger,
+        UnitKind::Archer,
         Hex::from_offset(12, 3),
     );
     spawn_unit(
         &mut state,
         PlayerId(1),
-        UnitKind::Soldier,
+        UnitKind::Spearman,
         Hex::from_offset(4, 8),
     );
     legatum_core::visibility::update_explored(&mut state);

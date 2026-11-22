@@ -11,7 +11,7 @@ import { createState, makeStandardSetup, spawnUnit } from './fixtureEngine';
 import type { MCity, MState } from './fixtureState';
 
 const available = existsSync(fileURLToPath(new URL('../wasm-pkg/legatum.js', import.meta.url)));
-const soldier: ProductionItem = { kind: 'Unit', unit: 'Soldier' };
+const soldier: ProductionItem = { kind: 'Unit', unit: 'Spearman' };
 const scout: ProductionItem = { kind: 'Unit', unit: 'Scout' };
 const settler: ProductionItem = { kind: 'Unit', unit: 'Settler' };
 const monument: ProductionItem = { kind: 'Building', building: 'Granary' };
@@ -151,7 +151,7 @@ describe.skipIf(!available)('WASM production banking', () => {
 
   it('a Great Work bank goes stale once the empire completes its Great Work', () => {
     const { s, a, b } = fixture();
-    const building: BuildingKind = 'WorldExchange';
+    const building: BuildingKind = 'GrandBazaar';
     const [required] = greatWorkRequirement(building)!;
     for (const c of [a, b]) {
       c.population = 8;
@@ -199,7 +199,7 @@ describe.skipIf(!available)('WASM production banking', () => {
     expect(city.producing).toEqual(soldier);
     expect(city.prod).toBe(15 + perTurn);
     expect(city.productionBanked).toEqual([{ item: scout, progress: 7 }]);
-    expect(state.units.filter((u) => u.owner === 0 && u.kind === 'Soldier')).toHaveLength(1);
+    expect(state.units.filter((u) => u.owner === 0 && u.kind === 'Spearman')).toHaveLength(1);
   });
 
   it('capture clears the captured city bank', () => {
@@ -207,7 +207,7 @@ describe.skipIf(!available)('WASM production banking', () => {
     enemy.hp = 0;
     enemy.producing = soldier;
     enemy.productionBanked = [{ item: scout, progress: 12 }, { item: monument, progress: 9 }];
-    const attacker = spawnUnit(s, 0, 'Soldier', { q: enemy.pos.q - 1, r: enemy.pos.r }, false);
+    const attacker = spawnUnit(s, 0, 'Spearman', { q: enemy.pos.q - 1, r: enemy.pos.r }, false);
     const { reports, state } = play(s, [{ 0: [{ type: 'MoveUnit', unit: attacker.id, to: enemy.pos }] }]);
     expect(reports[0]).toContainEqual({ type: 'CityCaptured', city: enemy.id, from: 2, to: 0 });
     expect(state.cities.find((c) => c.id === enemy.id)!.productionBanked).toBeUndefined();

@@ -17,7 +17,7 @@ pub struct Landmark {
 }
 
 pub fn is_landmark(building: BuildingKind) -> bool {
-    data::is_great_work(building) || building == BuildingKind::CourierHall
+    data::is_great_work(building) || building == BuildingKind::YamRelayStation
 }
 
 pub fn check<R: economy::Reason>(
@@ -86,7 +86,7 @@ pub fn attach_city(state: &mut GameState, tile: Hex, city: CityId) {
     if let Some(new) = state.cities.get_mut(&city) {
         new.buildings.insert(site.building);
     }
-    if site.building == BuildingKind::CourierHall {
+    if site.building == BuildingKind::YamRelayStation {
         state.player_mut(site.of).hall_city = Some(city);
     }
     state
@@ -124,24 +124,24 @@ mod tests {
         let mut s = two_players();
         let id = found(&mut s, P0, at(5, 5));
         assert!(
-            check::<economy::Blocked>(&s, &s.cities[&id], BuildingKind::RelayUplink, at(5, 5))
+            check::<economy::Blocked>(&s, &s.cities[&id], BuildingKind::GreatLibrary, at(5, 5))
                 .is_some()
         );
         assert!(
-            check::<economy::Blocked>(&s, &s.cities[&id], BuildingKind::RelayUplink, at(6, 5))
+            check::<economy::Blocked>(&s, &s.cities[&id], BuildingKind::GreatLibrary, at(6, 5))
                 .is_none()
         );
         assert!(
-            check::<economy::Blocked>(&s, &s.cities[&id], BuildingKind::RelayUplink, at(9, 5))
+            check::<economy::Blocked>(&s, &s.cities[&id], BuildingKind::GreatLibrary, at(9, 5))
                 .is_some()
         );
         s.map.get_mut(at(6, 5)).unwrap().landmark = Some(Landmark {
-            building: BuildingKind::CourierHall,
+            building: BuildingKind::YamRelayStation,
             city: id,
             of: P0,
         });
         assert!(
-            check::<economy::Blocked>(&s, &s.cities[&id], BuildingKind::RelayUplink, at(6, 5))
+            check::<economy::Blocked>(&s, &s.cities[&id], BuildingKind::GreatLibrary, at(6, 5))
                 .is_some()
         );
     }
@@ -155,7 +155,7 @@ mod tests {
             crate::resources::tile_yields(Faction::Athens, s.map.get(tile).unwrap(), |_| false);
         assert_ne!(before, Yields::ZERO);
         s.map.get_mut(tile).unwrap().improved = true;
-        complete(&mut s, id, BuildingKind::RelayUplink, tile);
+        complete(&mut s, id, BuildingKind::GreatLibrary, tile);
         assert!(!s.map.get(tile).unwrap().improved);
         assert_eq!(
             crate::resources::tile_yields(Faction::Athens, s.map.get(tile).unwrap(), |_| false),
@@ -168,7 +168,7 @@ mod tests {
         let mut s = two_players();
         let id = found(&mut s, P0, at(5, 5));
         let item = ProductionItem::Wonder {
-            building: BuildingKind::RelayUplink,
+            building: BuildingKind::GreatLibrary,
             tile: at(6, 5),
         };
         let city = s.cities.get_mut(&id).unwrap();
@@ -189,9 +189,9 @@ mod tests {
             .get_mut(&id)
             .unwrap()
             .buildings
-            .insert(BuildingKind::RelayUplink);
-        complete(&mut s, id, BuildingKind::RelayUplink, at(6, 5));
-        s.player_mut(P0).great_work_completed = Some(BuildingKind::RelayUplink);
+            .insert(BuildingKind::GreatLibrary);
+        complete(&mut s, id, BuildingKind::GreatLibrary, at(6, 5));
+        s.player_mut(P0).great_work_completed = Some(BuildingKind::GreatLibrary);
         assert!(
             crate::scoring::vp(&s, P0)
                 .iter()
@@ -220,9 +220,9 @@ mod tests {
             .get_mut(&first)
             .unwrap()
             .buildings
-            .insert(BuildingKind::RelayUplink);
-        complete(&mut s, first, BuildingKind::RelayUplink, tile);
-        s.player_mut(P0).great_work_completed = Some(BuildingKind::RelayUplink);
+            .insert(BuildingKind::GreatLibrary);
+        complete(&mut s, first, BuildingKind::GreatLibrary, tile);
+        s.player_mut(P0).great_work_completed = Some(BuildingKind::GreatLibrary);
         assert!(
             crate::scoring::vp(&s, P0)
                 .iter()
@@ -235,7 +235,7 @@ mod tests {
         assert!(
             s.cities[&first]
                 .buildings
-                .contains(&BuildingKind::RelayUplink)
+                .contains(&BuildingKind::GreatLibrary)
         );
         assert!(
             crate::scoring::vp(&s, P0)
@@ -248,7 +248,7 @@ mod tests {
         assert!(
             s.cities[&first]
                 .buildings
-                .contains(&BuildingKind::RelayUplink)
+                .contains(&BuildingKind::GreatLibrary)
         );
         assert!(
             crate::scoring::vp(&s, P1)

@@ -75,7 +75,7 @@ fn paid_upgrade_requires_exact_predecessor_and_population_but_survives_loss() {
             .filter(|t| crate::eras::era_of_tech(*t) < crate::eras::LAST_ERA),
     );
     supply(&mut s, id);
-    let item = building(BuildingKind::MachineShop);
+    let item = building(BuildingKind::Forge);
     assert!(!economy::can_produce(&s, &s.cities[&id], item));
     s.cities
         .get_mut(&id)
@@ -100,10 +100,10 @@ fn paid_upgrade_requires_exact_predecessor_and_population_but_survives_loss() {
     cities::produce(&mut s, id, 320, &mut Vec::new());
     assert_eq!(
         s.cities[&id].buildings.iter().copied().collect::<Vec<_>>(),
-        [BuildingKind::MachineShop]
+        [BuildingKind::Forge]
     );
     assert_eq!(
-        data::building_family_yields(Faction::Switzerland, BuildingKind::MachineShop).production,
+        data::building_family_yields(Faction::Switzerland, BuildingKind::Forge).production,
         5
     );
     assert!(!economy::can_produce(
@@ -130,8 +130,8 @@ fn relay_forecast_requires_the_full_paid_project() {
             .get_mut(&id)
             .unwrap()
             .buildings
-            .insert(BuildingKind::Laboratory);
-        let item = building(BuildingKind::RelayUplink);
+            .insert(BuildingKind::Library);
+        let item = building(BuildingKind::GreatLibrary);
         let quote = research::tech_unlocks(&s, P)
             .into_iter()
             .find(|u| u.item == item)
@@ -147,7 +147,8 @@ fn relay_forecast_requires_the_full_paid_project() {
             quote.cities[0].build_turns,
             Some((cost + production - 1) / production)
         );
-        let placed = crate::landmarks::candidates(&s, &s.cities[&id], BuildingKind::RelayUplink)[0];
+        let placed =
+            crate::landmarks::candidates(&s, &s.cities[&id], BuildingKind::GreatLibrary)[0];
         cities::apply_city_orders(
             &mut s,
             P,
@@ -159,7 +160,11 @@ fn relay_forecast_requires_the_full_paid_project() {
         );
         assert_eq!(economy::buy_cost(&s, &s.cities[&id]), None);
         cities::produce(&mut s, id, cost - 1, &mut Vec::new());
-        assert!(!s.cities[&id].buildings.contains(&BuildingKind::RelayUplink));
+        assert!(
+            !s.cities[&id]
+                .buildings
+                .contains(&BuildingKind::GreatLibrary)
+        );
         cities::produce(&mut s, id, 1, &mut Vec::new());
         scoring::update(&mut s, &mut Vec::new());
         assert!(
@@ -173,23 +178,23 @@ fn relay_forecast_requires_the_full_paid_project() {
 #[test]
 fn family_inheritance_preserves_faction_identity() {
     assert_eq!(
-        data::building_family_yields(Faction::Germany, BuildingKind::Autoworks).production,
+        data::building_family_yields(Faction::Germany, BuildingKind::Factory).production,
         13
     );
     assert_eq!(
-        data::building_family_yields(Faction::Athens, BuildingKind::College).science,
+        data::building_family_yields(Faction::Athens, BuildingKind::University).science,
         10
     );
     assert_eq!(
-        data::building_family_yields(Faction::Athens, BuildingKind::Clearinghouse).gold,
+        data::building_family_yields(Faction::Athens, BuildingKind::Bank).gold,
         5
     );
     assert_eq!(
-        data::building_family_yields(Faction::India, BuildingKind::Hydroponics).food,
+        data::building_family_yields(Faction::India, BuildingKind::Mill).food,
         5
     );
     assert_eq!(
-        data::building_family_yields(Faction::Celts, BuildingKind::Hydroponics).food,
+        data::building_family_yields(Faction::Celts, BuildingKind::Mill).food,
         5
     );
 }
@@ -198,7 +203,7 @@ fn family_inheritance_preserves_faction_identity() {
 fn building_upgrade_quotes_match_paid_completion() {
     // Egypt's buildings use Food and cannot be bought; its own tests cover that route.
     for faction in Faction::ALL.into_iter().filter(|f| *f != Faction::Egypt) {
-        for tier in [BuildingKind::MachineShop, BuildingKind::Autoworks] {
+        for tier in [BuildingKind::Forge, BuildingKind::Factory] {
             let mut s = fixture(&[0, 1]);
             s.player_mut(P).faction = faction;
             s.player_mut(P).techs.extend(
@@ -214,7 +219,7 @@ fn building_upgrade_quotes_match_paid_completion() {
                 .get_mut(&id)
                 .unwrap()
                 .buildings
-                .insert(BuildingKind::Laboratory);
+                .insert(BuildingKind::Library);
             s.cities
                 .get_mut(&id)
                 .unwrap()
@@ -226,7 +231,7 @@ fn building_upgrade_quotes_match_paid_completion() {
                 .find(|u| u.item == building(tier))
                 .unwrap();
             assert_eq!(s.hash(), hash);
-            let base_cost = if tier == BuildingKind::MachineShop {
+            let base_cost = if tier == BuildingKind::Forge {
                 320
             } else {
                 440
@@ -322,11 +327,11 @@ fn forecasts_gate_upgrades_and_match_research_and_building_yields() {
         .get_mut(&id)
         .unwrap()
         .buildings
-        .insert(BuildingKind::Laboratory);
+        .insert(BuildingKind::Library);
     let unlocks = research::tech_unlocks(&s, P);
     let college = unlocks
         .iter()
-        .find(|u| u.item == building(BuildingKind::College))
+        .find(|u| u.item == building(BuildingKind::University))
         .unwrap();
     assert!(
         college.cities[0]
@@ -345,10 +350,10 @@ fn forecasts_gate_upgrades_and_match_research_and_building_yields() {
     s.player_mut(P).techs.insert(TechId::Education);
     let college = research::tech_unlocks(&s, P)
         .into_iter()
-        .find(|u| u.item == building(BuildingKind::College))
+        .find(|u| u.item == building(BuildingKind::University))
         .unwrap();
     assert_eq!(college.cities[0].blocker, None);
-    economy::install_building(s.cities.get_mut(&id).unwrap(), BuildingKind::College);
+    economy::install_building(s.cities.get_mut(&id).unwrap(), BuildingKind::University);
     assert_eq!(
         college.cities[0].yields_after,
         economy::city_yields_for(&s, &s.cities[&id], None)
@@ -365,8 +370,8 @@ fn siege_forecast_and_resolution_hit_the_city_while_it_shields_its_garrison() {
         .unwrap()
         .buildings
         .insert(BuildingKind::Castle);
-    let a = unit(&mut s, 0, UnitKind::Marksman, hex(3, 3));
-    let g = unit(&mut s, 1, UnitKind::Soldier, target);
+    let a = unit(&mut s, 0, UnitKind::Crossbowman, hex(3, 3));
+    let g = unit(&mut s, 1, UnitKind::Spearman, target);
     visibility::update_explored(&mut s);
     // Civ 6: the city absorbs the shot and its garrison is safe.
     let f = forecast_attack_mode(&player_view(&s, P), a, target, AttackMode::Ranged).unwrap();
@@ -403,7 +408,7 @@ fn marksmen_keep_celts_stats_and_paid_upgrades_do_not_move_or_fire() {
     let mut s = fixture(&[0, 1]);
     s.player_mut(P).faction = Faction::Celts;
     city(&mut s, 0, hex(3, 3), 3);
-    let a = unit(&mut s, 0, UnitKind::Ranger, hex(3, 3));
+    let a = unit(&mut s, 0, UnitKind::Archer, hex(3, 3));
     s.player_mut(P).techs.insert(TechId::Engineering);
     s.player_mut(P).gold = 200;
     // A Composite Archer uses 1 Iron (the Classical era's resource).
@@ -429,7 +434,7 @@ fn marksmen_keep_celts_stats_and_paid_upgrades_do_not_move_or_fire() {
         (168, 14, 22, 2, 2)
     );
     // The Celts use the ordinary archery line.
-    let st = data::unit_stats_for(Faction::Celts, UnitKind::Marksman);
+    let st = data::unit_stats_for(Faction::Celts, UnitKind::Crossbowman);
     assert_eq!(
         (st.cost, st.ranged, st.moves),
         (214, data::era_scaled(31, 2), 2)

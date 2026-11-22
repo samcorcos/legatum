@@ -75,8 +75,8 @@ fn the_keshig_is_a_classical_cataphract_with_a_bow_and_the_mongol_horseman_is_or
         "Scout"
     );
     assert!(data::attacks_in_melee(KESHIG_KIND));
-    assert!(!data::attacks_in_melee(UnitKind::Ranger));
-    assert!(data::attacks_in_melee(UnitKind::Soldier));
+    assert!(!data::attacks_in_melee(UnitKind::Archer));
+    assert!(data::attacks_in_melee(UnitKind::Spearman));
 }
 
 #[test]
@@ -84,7 +84,7 @@ fn a_keshig_shot_fights_as_ranged_and_its_charge_as_mounted() {
     let mut s = game(&[0, 1]);
     mongols(&mut s, 0);
     let keshig = unit(&mut s, 0, KESHIG_KIND, hex(4, 4));
-    let spear = unit(&mut s, 1, UnitKind::Soldier, hex(5, 4));
+    let spear = unit(&mut s, 1, UnitKind::Spearman, hex(5, 4));
     // Arrows: the spear line gets no bonus, and the shot takes no retaliation.
     let (att, def) = parts(&s, keshig, spear, FightKind::Ranged);
     assert!(att.iter().any(|l| l == "Keshig (ranged)"), "{att:?}");
@@ -103,7 +103,7 @@ fn a_keshig_shot_fights_as_ranged_and_its_charge_as_mounted() {
     let mut s = game(&[0, 1]);
     mongols(&mut s, 0);
     let keshig = unit(&mut s, 0, KESHIG_KIND, hex(4, 4));
-    let archer = unit(&mut s, 1, UnitKind::Ranger, hex(5, 4));
+    let archer = unit(&mut s, 1, UnitKind::Archer, hex(5, 4));
     let horse = unit(&mut s, 1, UnitKind::Horseman, hex(4, 5));
     // Charging an Archer it is cavalry; shooting it, archer against archer.
     let (att, _) = parts(&s, keshig, archer, FightKind::Melee);
@@ -125,7 +125,7 @@ fn a_keshig_shoots_from_where_it_stands_or_charges_but_never_both() {
     let mut s = game(&[0, 1]);
     mongols(&mut s, 0);
     let keshig = unit(&mut s, 0, KESHIG_KIND, hex(4, 4));
-    let spear = unit(&mut s, 1, UnitKind::Soldier, hex(5, 4));
+    let spear = unit(&mut s, 1, UnitKind::Spearman, hex(5, 4));
     let shot = vec![Order::RangedAttack {
         unit: keshig,
         target: hex(5, 4),
@@ -155,7 +155,7 @@ fn a_keshig_shoots_from_where_it_stands_or_charges_but_never_both() {
     );
     assert_eq!(next.units[&keshig].pos, hex(4, 4), "no shoot-and-ride-away");
     // Out of range: the shot is refused with the range in the reason.
-    let far = unit(&mut s, 1, UnitKind::Soldier, hex(4, 7));
+    let far = unit(&mut s, 1, UnitKind::Spearman, hex(4, 7));
     let (_, events) = resolve_units(
         &s,
         &orders(
@@ -211,7 +211,7 @@ fn the_forecast_offers_both_attacks_with_their_own_class_lines() {
     let mut s = game(&[0, 1]);
     mongols(&mut s, 0);
     let keshig = unit(&mut s, 0, KESHIG_KIND, hex(4, 4));
-    unit(&mut s, 1, UnitKind::Soldier, hex(5, 4));
+    unit(&mut s, 1, UnitKind::Spearman, hex(5, 4));
     crate::visibility::update_explored(&mut s);
     let v = player_view(&s, PlayerId(0));
     let shot = forecast::forecast_attack_mode(&v, keshig, hex(5, 4), forecast::AttackMode::Ranged)

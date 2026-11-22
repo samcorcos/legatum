@@ -11,7 +11,7 @@ fn movement_will_not_stage_units_inside_an_allied_city() {
     let mut view = ViewBuilder::new(18, 12)
         .city(1, ENEMY, city_pos, 3)
         .unit(1, ME, UnitKind::Scout, off(7, 6))
-        .unit(2, ME, UnitKind::Soldier, off(7, 7))
+        .unit(2, ME, UnitKind::Spearman, off(7, 7))
         .build();
     let ours = view.team_of(ME);
     let theirs = view.team_of(ENEMY);
@@ -46,7 +46,7 @@ fn economy() -> PlayerView {
         .city(3, ME, off(10, 11), 3)
         .city(4, ENEMY, off(11, 5), 2)
         .city(5, ENEMY, off(17, 5), 2)
-        .unit(1, ME, UnitKind::Soldier, off(7, 5))
+        .unit(1, ME, UnitKind::Spearman, off(7, 5))
         .build()
 }
 
@@ -85,7 +85,7 @@ fn soldier_production(city: u32) -> Order {
     Order::SetProduction {
         city: CityId(city),
         item: ProductionItem::Unit {
-            unit: UnitKind::Soldier,
+            unit: UnitKind::Spearman,
         },
     }
 }
@@ -111,7 +111,7 @@ fn is_settler_order(order: &Order) -> bool {
 fn trains_soldiers_and_queues_no_early_settler() {
     let view = ViewBuilder::new(20, 16)
         .city(1, ME, off(4, 5), 2)
-        .unit(1, ME, UnitKind::Soldier, off(5, 5))
+        .unit(1, ME, UnitKind::Spearman, off(5, 5))
         .gold(400)
         .build();
     let orders = HumanPlaybookV7Brain::default().orders(&view);
@@ -123,15 +123,15 @@ fn trains_soldiers_and_queues_no_early_settler() {
 fn a_settler_waits_for_the_first_wave_of_soldiers() {
     let mut view = ViewBuilder::new(20, 16)
         .city(1, ME, off(4, 5), 3)
-        .unit(1, ME, UnitKind::Soldier, off(5, 5))
-        .unit(2, ME, UnitKind::Soldier, off(5, 6))
+        .unit(1, ME, UnitKind::Spearman, off(5, 5))
+        .unit(2, ME, UnitKind::Spearman, off(5, 6))
         .gold(50)
         .build();
     let early = HumanPlaybookV7Brain::default().orders(&view);
     assert!(!early.iter().any(is_settler_order), "{early:?}");
     view.units.extend(
         ViewBuilder::new(20, 16)
-            .unit(3, ME, UnitKind::Soldier, off(6, 5))
+            .unit(3, ME, UnitKind::Spearman, off(6, 5))
             .build()
             .units
             .iter()
@@ -151,7 +151,7 @@ fn buys_soldiers_toward_the_goal_and_not_a_firing_line_first() {
         if matches!(
             o.item,
             ProductionItem::Unit {
-                unit: UnitKind::Ranger | UnitKind::Soldier
+                unit: UnitKind::Archer | UnitKind::Spearman
             }
         ) {
             o.buy_cost = Some(70);
@@ -162,26 +162,26 @@ fn buys_soldiers_toward_the_goal_and_not_a_firing_line_first() {
         orders.contains(&Order::BuyItem {
             city: CityId(1),
             item: ProductionItem::Unit {
-                unit: UnitKind::Soldier
+                unit: UnitKind::Spearman
             },
         }),
         "{orders:?}"
     );
 }
 
-/// Four Soldiers two hexes from a city held by a Soldier and a Ranger, at Peace.
+/// Four Spearmen two hexes from a city held by a Spearman and an Archer, at Peace.
 fn assault_view() -> PlayerView {
     let target = off(10, 5);
     at_peace(
         ViewBuilder::new(24, 16)
             .city(1, ME, off(3, 5), 3)
             .city(2, ENEMY, target, 3)
-            .unit(1, ME, UnitKind::Soldier, off(8, 5))
-            .unit(2, ME, UnitKind::Soldier, off(8, 4))
-            .unit(3, ME, UnitKind::Soldier, off(8, 6))
-            .unit(4, ME, UnitKind::Soldier, off(9, 3))
-            .unit(5, ENEMY, UnitKind::Soldier, target)
-            .unit(6, ENEMY, UnitKind::Ranger, off(11, 5))
+            .unit(1, ME, UnitKind::Spearman, off(8, 5))
+            .unit(2, ME, UnitKind::Spearman, off(8, 4))
+            .unit(3, ME, UnitKind::Spearman, off(8, 6))
+            .unit(4, ME, UnitKind::Spearman, off(9, 3))
+            .unit(5, ENEMY, UnitKind::Spearman, target)
+            .unit(6, ENEMY, UnitKind::Archer, off(11, 5))
             .build(),
     )
 }
@@ -231,7 +231,7 @@ fn takes_exposed_settler_and_declares_war_to_do_it() {
     let view = at_peace(
         ViewBuilder::new(20, 16)
             .city(1, ME, off(3, 5), 3)
-            .unit(1, ME, UnitKind::Soldier, off(6, 5))
+            .unit(1, ME, UnitKind::Spearman, off(6, 5))
             .unit(2, ENEMY, UnitKind::Settler, target)
             .build(),
     );
@@ -257,8 +257,8 @@ fn volley_then_melee_captures_instead_of_attacking_independently() {
     let mut view = ViewBuilder::new(20, 16)
         .city(1, ME, off(3, 5), 3)
         .city(2, ENEMY, target, 2)
-        .unit(1, ME, UnitKind::Ranger, off(6, 5))
-        .unit(2, ME, UnitKind::Soldier, off(7, 5))
+        .unit(1, ME, UnitKind::Archer, off(6, 5))
+        .unit(2, ME, UnitKind::Spearman, off(7, 5))
         .build();
     view.cities
         .iter_mut()
@@ -330,7 +330,7 @@ fn a_stalled_war_asks_for_peace_and_moves_the_army_to_another_front() {
         .city(2, ENEMY, off(10, 5), 2)
         .city(3, ENEMY, off(12, 8), 2)
         .city(4, OTHER, off(10, 12), 2)
-        .unit(1, ME, UnitKind::Soldier, off(7, 5))
+        .unit(1, ME, UnitKind::Spearman, off(7, 5))
         .build();
     let mut view = at_peace(view);
     // War with the first rival only.
@@ -382,7 +382,7 @@ fn only_sparta_fights_on_and_walks_wounded() {
             .faction(faction)
             .city(1, ME, off(4, 5), 3)
             .city(2, ENEMY, off(20, 5), 3)
-            .unit_hp(1, ME, UnitKind::Soldier, off(12, 5), 55)
+            .unit_hp(1, ME, UnitKind::Spearman, off(12, 5), 55)
             .build()
     };
     let moves = |orders: &[Order]| {

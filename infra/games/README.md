@@ -14,8 +14,20 @@ promise to players).
   objects with the answer line's own keys, text up to 2000 characters, evidence up to 32,000; the Worker
   refuses anything else, and the app clips answers to fit). It is not part of the engine's `Recording`, which
   denies unknown keys, so strip it before feeding a record to the engine.
+- The record may also carry `rewinds`, one entry per "Load an earlier turn" in a local game: `{at, from_turn, to_turn}`
+  (known keys only, `at` an ISO time, `to_turn` below `from_turn`, turns 0 to 10,000, at most 1000 entries; the
+  Worker answers 422 "bad rewinds" otherwise; `checkRecord` in `src/index.ts`). The tape holds only the line the
+  player kept, so `rewinds` is how analysis learns that other turns were played and discarded. Like
+  `coach_answers` it is upload-only: strip it before feeding a record to the engine, and exports drop it.
 - Seat factions and difficulties must be plain words, and `created_at` a real ISO time (it names the storage
   month): uploads are written by strangers and read on the analysis Mac.
+- Each game has an upload key: 32 random hex digits the page makes the first time it uploads that game, keeps
+  in the browser's `localStorage` (`legatum.uploadKeys.v1`, the last 200 games) and sends as `X-Upload-Key`.
+  The Worker stores its SHA-256 as the object's `key` metadata and answers `409` to a checkpoint for that game
+  under another key or none, so someone who learns a game id (it is inside every exported save) cannot
+  replace the record. The key names a game, never a player. A game stored without a key (an older build, or a
+  browser with no storage) stays open until a keyed checkpoint locks it. A browser that lost its keys gets
+  `409` for its unfinished games and drops them from its queue; what was stored stays.
 - Only pages listed in `ALLOWED_ORIGINS` (`wrangler.jsonc`) may upload: the site, its preview deploys and
   local dev. Bodies are capped at 4 MiB gzipped and 64 MiB unpacked.
 - One client address (`CF-Connecting-IP`, an IPv6 address cut to its /64) may store at most 50 new games per

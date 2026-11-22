@@ -19,7 +19,7 @@ it.skipIf(!available)('lists legal fogged sites with compact scores and on-deman
   const faction = 'Germany';
   const game = new Game(Game.standard_setup('42', faction, 'India', 'A', 'B'));
   const v: PlayerView = JSON.parse(game.view(0));
-  const u = v.units.find((u) => u.owner === v.me && u.kind === 'Soldier')!;
+  const u = v.units.find((u) => u.owner === v.me && u.kind === 'Spearman')!;
   u.kind = 'Settler'; u.military = false;
   for (const variant of [0, 1, 2]) {
     if (variant) {
@@ -27,7 +27,7 @@ it.skipIf(!available)('lists legal fogged sites with compact scores and on-deman
       const i = v.tiles.findIndex((t) => t.explored && t.owner === null && t.terrain === 'Grassland');
       u.pos = hexAt(i, v.width); u.goto = hexAt(i + 2, v.width); u.max_moves = variant;
       v.failed_city_sites = [hexAt(i + 6, v.width)];
-      v.units.push({ ...u, id: 900 + variant, owner: 2, kind: 'Ranger', military: true, ranged: 15, range: 2, pos: hexAt(i + 3, v.width) } as UnitView);
+      v.units.push({ ...u, id: 900 + variant, owner: 2, kind: 'Archer', military: true, ranged: 15, range: 2, pos: hexAt(i + 3, v.width) } as UnitView);
       if (variant === 2) v.cities.push({ owner: v.me, id: 100, name: 'Home', population: 2, hp: 200, max_hp: 200, strength: 20, walls: false, citadel: false, great_works: [], visible: true, detail: null, pos: hexAt(i + 10, v.width), is_capital: true });
     }
     const reserved = variant === 2 ? [hexAt(100, v.width)] : [];
@@ -57,7 +57,7 @@ it.skipIf(!available)('accepts a 3-hex city gap for India and blocks it for othe
     const game = new Game(Game.standard_setup('42', faction, 'Byzantium', 'A', 'B'));
     try {
       const v: PlayerView = JSON.parse(game.view(0));
-      const u = v.units.find((u) => u.owner === v.me && u.kind === 'Soldier')!;
+      const u = v.units.find((u) => u.owner === v.me && u.kind === 'Spearman')!;
       u.kind = 'Settler'; u.military = false;
       const home = { ...u.pos };
       const city = { owner: v.me, id: 100, name: 'Home', population: 2, hp: 200, max_hp: 200, strength: 20, walls: false, citadel: false, great_works: [], visible: true, detail: null, pos: home, is_capital: true };
@@ -75,7 +75,7 @@ it.skipIf(!available)('flags a site near an unseen city inferred from visible bo
   const game = new Game(Game.standard_setup('42', 'Athens', 'Byzantium', 'A', 'B'));
   try {
     const v: PlayerView = JSON.parse(game.view(0));
-    const u = v.units.find((u) => u.owner === v.me && u.kind === 'Soldier')!;
+    const u = v.units.find((u) => u.owner === v.me && u.kind === 'Spearman')!;
     u.kind = 'Settler'; u.military = false;
     u.pos = { q: 5, r: 6 };
     v.units = [u]; v.cities = []; v.failed_city_sites = [];
@@ -98,7 +98,7 @@ it.skipIf(!available)('scores Mongols sites like everyone else: no spaced-networ
   const game = new Game(Game.standard_setup('42', 'Mongols', 'India', 'A', 'B'));
   try {
     const v: PlayerView = JSON.parse(game.view(0));
-    const u = v.units.find((u) => u.owner === v.me && u.kind === 'Soldier')!;
+    const u = v.units.find((u) => u.owner === v.me && u.kind === 'Spearman')!;
     u.kind = 'Settler'; u.military = false;
     for (const t of v.tiles) { t.explored = true; t.visible = true; t.terrain = 'Grassland'; t.owner = null; }
     const positions = [{ q: 4, r: 4 }, { q: 8, r: 4 }, { q: 4, r: 8 }];
@@ -121,7 +121,7 @@ it.skipIf(!available)('matches Peace borders, neutral blockers, War threats and 
   const game = new Game(Game.standard_setup('42', 'India', 'Byzantium', 'A', 'B'));
   try {
     const v: PlayerView = JSON.parse(game.view(0));
-    const u = v.units.find((u) => u.owner === v.me && u.kind === 'Soldier')!;
+    const u = v.units.find((u) => u.owner === v.me && u.kind === 'Spearman')!;
     u.kind = 'Settler'; u.military = false;
     const at = (col: number) => hexAt(4 * v.width + col, v.width);
     const tile = (col: number) => v.tiles[tileIndex(at(col), v.width, v.height)];
@@ -143,13 +143,13 @@ it.skipIf(!available)('matches Peace borders, neutral blockers, War threats and 
       tile(3).owner = rival;
       expect(inspect(4).travel_turns).toBeNull();
       tile(3).owner = null;
-      v.units = [u, { ...u, id: 900, owner: rival, kind: 'Ranger', military: true, ranged: 15, range: 2, pos: at(3) }];
+      v.units = [u, { ...u, id: 900, owner: rival, kind: 'Archer', military: true, ranged: 15, range: 2, pos: at(3) }];
       expect(inspect(4)).toMatchObject({ travel_turns: null, threats: 0 });
       v.units = [u];
     }
     relation.state = 'War'; tile(3).owner = rival;
     expect(inspect(4).travel_turns).toBe(1);
-    v.units.push({ ...u, id: 900, owner: rival, kind: 'Ranger', military: true, ranged: 15, range: 2, pos: at(5) });
+    v.units.push({ ...u, id: 900, owner: rival, kind: 'Archer', military: true, ranged: 15, range: 2, pos: at(5) });
     expect(inspect(4).threats).toBeGreaterThan(0);
     relation.state = 'Peace'; v.units = [u]; u.pos = at(4);
     for (let col = 3; col <= 6; col++) tile(col).owner = rival;

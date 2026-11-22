@@ -2,7 +2,7 @@
 //! Hard AI does not (it waits for a siege it can forecast). From the scenario's data alone:
 //! - it declares war on the listed empires from the listed turns (an ordinary `DeclareWar` order,
 //!   retried each turn until the war is on or the rules refuse it), and never makes peace with them;
-//! - its capital trains Soldiers (Hoplites for Sparta) without a break;
+//! - its capital trains Spearmen (Hoplites for Sparta) without a break;
 //! - every military unit but Scouts marches on the nearest city of an empire it is at war with
 //!   (or of `target`), waits within two tiles of it, and attacks together once `storm` units
 //!   stand that close.
@@ -84,7 +84,7 @@ pub fn apply(orders: &mut OrderMap, state: &GameState, rusher: &Rusher) {
         }
     }
 
-    // Train Soldiers in the capital, and march.
+    // Train Spearmen in the capital, and march.
     let home = state
         .cities_of(me)
         .find(|c| c.is_capital)
@@ -92,7 +92,7 @@ pub fn apply(orders: &mut OrderMap, state: &GameState, rusher: &Rusher) {
         .map(|c| (c.id, c.pos, c.producing));
     if let Some((city, _, producing)) = &home {
         let soldier = ProductionItem::Unit {
-            unit: UnitKind::Soldier,
+            unit: UnitKind::Spearman,
         };
         mine.retain(|o| {
             !matches!(o, Order::SetProduction { city: c, .. } | Order::SetProductionQueue { city: c, .. } | Order::BuyItem { city: c, .. } if c == city)
@@ -184,7 +184,7 @@ mod tests {
             .find(|c| c.is_capital)
             .expect("a capital by turn 7");
         let soldier = ProductionItem::Unit {
-            unit: UnitKind::Soldier,
+            unit: UnitKind::Spearman,
         };
         let sets_soldiers = orders[&PlayerId(1)]
             .iter()

@@ -151,7 +151,7 @@ mod recon {
     #[test]
     fn a_recon_lets_the_next_turns_strike_hit_a_target_that_was_unseen() {
         let (mut s, _, plane) = arena(UnitKind::Bomber);
-        let victim = unit(&mut s, 1, UnitKind::Soldier, hex(10, 4));
+        let victim = unit(&mut s, 1, UnitKind::Spearman, hex(10, 4));
         let strike = Order::AirStrike {
             plane,
             target: hex(10, 4),
@@ -229,7 +229,7 @@ mod recon {
     #[test]
     fn a_recon_uses_the_aircrafts_one_order_so_it_cannot_also_strike() {
         let (mut s, _, plane) = arena(UnitKind::Bomber);
-        let victim = unit(&mut s, 1, UnitKind::Soldier, hex(6, 4));
+        let victim = unit(&mut s, 1, UnitKind::Spearman, hex(6, 4));
         let strike = Order::AirStrike {
             plane,
             target: hex(6, 4),

@@ -184,7 +184,7 @@ describe('RemoteClient', () => {
     const errors = [{ index: 0, message: 'unit 4 does not exist' }];
     sockets[0].push({ type: 'validation', errors });
     const sent = sockets[0].sent.length;
-    expect(client.validate(1, [{ type: 'BuyItem', city: 7, item: { kind: 'Unit', unit: 'Soldier' } }])).toEqual([]);
+    expect(client.validate(1, [{ type: 'BuyItem', city: 7, item: { kind: 'Unit', unit: 'Spearman' } }])).toEqual([]);
     expect(client.pendingOrders()).toEqual(orders);
     expect(client.validate(1, orders)).toEqual(errors);
     expect(sockets[0].sent).toHaveLength(sent);

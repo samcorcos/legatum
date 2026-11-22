@@ -114,7 +114,7 @@ invented.
 In the browser, the app captures each game's history at setup, every five turns, and at the finish,
 and keeps it in IndexedDB (gzip-compressed where browser compression is available) until it is
 delivered; a newer checkpoint of a game replaces the older one. The complete tape is also in the
-ordinary per-turn autosave. With an upload address, uploads retry after a reload, when the browser
+ordinary per-turn autosave. **Load an earlier turn** (local games only) opens one of the game's last 10 autosaved turns under the same game id; the tape then holds only the line played on, the record is uploaded at once instead of at the next checkpoint, and the times the player went back ride along as the upload-only `rewinds` key (`app/src/store.ts` `rewindTo`, `Rewind`; `infra/games/README.md`). With an upload address, uploads retry after a reload, when the browser
 comes online, and at the next checkpoint; without one, histories stay in the browser.
 **Export game history** in the game menu (Advanced) downloads the current game and every retained
 one, one gzip file per game (plain JSON if CompressionStream is unavailable); the browser may ask to

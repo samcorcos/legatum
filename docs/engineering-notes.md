@@ -53,7 +53,7 @@ Lessons from the development of a deterministic Rust strategy game, selected fro
 ## 2026-10-22: The AI values supply
 
 - **The Forge was not unvalued, it was outbid.** In 64 census games a Forge-ready city offered a Forge scored about 290 and lost to the due-turn ladder (Granary 1,100, Laboratory 1,400, College 800, Market 900) and to Settlers and troops (2,000 and more). A flat `industry_priority` of 300 per Production (a Forge 900, a Factory 1,500) doubles Forges (0.73 to 1.26 at T250) and Factories (0.30 to 0.55); 600 gives 1.55 and 0.64.
-- **The priority must yield to a stalled-growth city** (`faction_tests::industry_payback_does_not_delay_stalled_growth_at_either_speed`, the Hydroponics test): the same food test gates the boost.
+- **The priority must yield to a stalled-growth city** (`faction_tests::industry_payback_does_not_delay_stalled_growth_at_either_speed`, the Mill test): the same food test gates the boost.
 - **A Forge started is often abandoned: 46% of Forge builds at priority 600, 42% at 300 (34% at baseline).** The city's build is replaced by military production (Military Engineers, Drones, Artillery, Soldiers). Progress is banked, so it is not all lost, but the Forge's timing is at the mercy of war production.
 
 ## 2026-10-21: Era objectives count gains from the last era score (R1, R2, `objective_seek`): the old counts cannot be kept, and the calibration is coupled
@@ -362,7 +362,7 @@ Lessons from the development of a deterministic Rust strategy game, selected fro
 
 ## 2026-10-06: Sim speed, increment 15: decision views skip unread unlock previews
 
-- **Tech unlocks worked out every city's yields with every tech-gated building installed** (`UnlockCity::yields_after`), on each view, for buildings already built or long researched. The only brain read is the Machine Shop's and Autoworks' Production gain (`legatum_ai::production`).
+- **Tech unlocks worked out every city's yields with every tech-gated building installed** (`UnlockCity::yields_after`), on each view, for buildings already built or long researched. The only brain read is the Machine Shop's and Factory' Production gain (`legatum_ai::production`).
 
 ## 2026-10-06: Playtest 8.3: the Mongols AI never started its goal, and search played exactly like plain Hard
 

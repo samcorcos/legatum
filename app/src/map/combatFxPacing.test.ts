@@ -6,14 +6,14 @@ type Case = { shots: number; clashes: number; movers: number; rounds: number; de
 const hex = (q: number, r: number): Hex => ({ q, r });
 
 function warTurn({ shots, clashes, movers, rounds, deaths, captures }: Case) {
-  const shotUnits = Array.from({ length: shots }, (_, i) => ({ id: i + 1, owner: 0, kind: 'Ranger', pos: hex(2, i) }));
-  const movingUnits = Array.from({ length: movers }, (_, i) => ({ id: i + 101, owner: 0, kind: 'Soldier', pos: hex(5, i) }));
-  const defenders = Array.from({ length: clashes }, (_, i) => ({ id: i + 201, owner: 2, kind: 'Soldier', pos: hex(12, i) }));
+  const shotUnits = Array.from({ length: shots }, (_, i) => ({ id: i + 1, owner: 0, kind: 'Archer', pos: hex(2, i) }));
+  const movingUnits = Array.from({ length: movers }, (_, i) => ({ id: i + 101, owner: 0, kind: 'Spearman', pos: hex(5, i) }));
+  const defenders = Array.from({ length: clashes }, (_, i) => ({ id: i + 201, owner: 2, kind: 'Spearman', pos: hex(12, i) }));
   const cities = Array.from({ length: captures }, (_, i) => ({ id: i + 1, owner: 2, pos: hex(5 + rounds, i) }));
   const view = {
     me: 0, team: 0, width: 40, height: 40,
     players: [{ id: 0, team: 0, era: 3 }, { id: 2, team: 1, era: 3 }],
-    units: [...shotUnits, ...movingUnits, ...defenders, { id: 999, owner: 2, kind: 'Soldier', pos: hex(9, 3) }]
+    units: [...shotUnits, ...movingUnits, ...defenders, { id: 999, owner: 2, kind: 'Spearman', pos: hex(9, 3) }]
       .map((u) => ({ hp: 100, military: true, ranged: 0, ...u })),
     cities: cities.map((c) => ({ hp: 100, max_hp: 100, walls: true, name: 'City', ...c })),
     aircraft: [],
@@ -21,7 +21,7 @@ function warTurn({ shots, clashes, movers, rounds, deaths, captures }: Case) {
   const events: Event[] = [];
   for (const u of shotUnits) events.push({
     type: 'Battle', attacker: u.id, attacker_owner: 0,
-    defender: { kind: 'Unit', unit: 999, owner: 2, unit_kind: 'Soldier' },
+    defender: { kind: 'Unit', unit: 999, owner: 2, unit_kind: 'Spearman' },
     at: hex(9, 3), attacker_at: u.pos, damage_to_attacker: 0, damage_to_defender: 10,
     ranged: true, meeting: false,
   } as Event);
@@ -36,13 +36,13 @@ function warTurn({ shots, clashes, movers, rounds, deaths, captures }: Case) {
       const defender = defenders[clash];
       events.push({
         type: 'Battle', attacker: movingUnits[clash % movers].id, attacker_owner: 0,
-        defender: { kind: 'Unit', unit: defender.id, owner: 2, unit_kind: 'Soldier' },
+        defender: { kind: 'Unit', unit: defender.id, owner: 2, unit_kind: 'Spearman' },
         at: defender.pos, attacker_at: hex(6 + round, clash % movers),
         damage_to_attacker: 0, damage_to_defender: 30, ranged: false, meeting: false,
       } as Event);
       // Ordinary turns lose units early; the huge case also loses units in its final round.
       if ((clashes < 10 && clash < deaths) || (clashes >= 10 && clash >= clashes - deaths)) events.push({
-        type: 'UnitDestroyed', unit: defender.id, owner: 2, unit_kind: 'Soldier', at: defender.pos,
+        type: 'UnitDestroyed', unit: defender.id, owner: 2, unit_kind: 'Spearman', at: defender.pos,
       } as Event);
       clash++;
     }

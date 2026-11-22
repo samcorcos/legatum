@@ -15,9 +15,9 @@ function scene(options: ProductionItem[]) {
 const reason = (pick: ProductionItem, focus: CityBuildFocus, s: ReturnType<typeof scene>) => autoPickReason(pick, focus, s.city, s.view);
 
 it('names what each focus picked and why', () => {
-  const s = scene([building('Laboratory'), unit('Horseman')]);
+  const s = scene([building('Library'), unit('Horseman')]);
   expect(reason(unit('Horseman'), 'Military', s)).toBe('Horseman: the best unit your resources allow.');
-  expect(reason(building('Laboratory'), 'Economy', s)).toBe('Library: the most useful build for Geneva.');
+  expect(reason(building('Library'), 'Economy', s)).toBe('Library: the most useful build for Geneva.');
   expect(reason({ kind: 'Project', project: 'Food' }, 'Food', s)).toBe('Food project: runs until you change the focus.');
   expect(reason({ kind: 'Project', project: 'Gold' }, 'Economy', s)).toBe('Gold project: nothing useful is left to build.');
 });
@@ -30,6 +30,6 @@ it('explains a Military fallback without inventing a defence exception', () => {
 it('never falls back to a stock phrase', () => {
   const s = scene([building('Granary')]);
   for (const focus of ['Military', 'Economy', 'Gold', 'Science', 'Food'] as const) {
-    for (const pick of [building('Granary'), unit('Soldier'), { kind: 'Project', project: 'Science' } as ProductionItem]) expect(reason(pick, focus, s)).not.toMatch(/best available choice|will choose/);
+    for (const pick of [building('Granary'), unit('Spearman'), { kind: 'Project', project: 'Science' } as ProductionItem]) expect(reason(pick, focus, s)).not.toMatch(/best available choice|will choose/);
   }
 });

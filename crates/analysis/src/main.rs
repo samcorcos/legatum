@@ -18,7 +18,7 @@ struct Cli {
     out: PathBuf,
     #[arg(long, default_value_t = 12, value_parser = clap::value_parser!(u32).range(1..))]
     settler_turns: u32,
-    /// Create the deterministic Ranger/scout/garrison reproduction with the compiled rules.
+    /// Create the deterministic Archer/scout/garrison reproduction with the compiled rules.
     #[arg(long)]
     write_repro: Option<PathBuf>,
     /// Print the compiled engine identity without reading or replaying an archive.

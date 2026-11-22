@@ -12,7 +12,7 @@ const V2_ERAS: EraView[] = [
     era: 2, name: 'Classical', entered_by: [], scored_by: [],
     objectives: [
       { slot: 0, family: 'Expand', text: 'Prosperity: grow your population by 9', target: 9, objective: { kind: 'Population', n: 9 } },
-      { slot: 1, family: 'Expand', text: 'Gain 4 cities', target: 4, objective: { kind: 'Cities', n: 4 } },
+      { slot: 1, family: 'Expand', text: 'Dominion: gain 4 cities', target: 4, objective: { kind: 'Cities', n: 4 } },
       { slot: 2, family: 'Fight', text: 'Breach: capture a walled city', target: 1, objective: { kind: 'Breach' } },
     ],
   },
@@ -20,23 +20,23 @@ const V2_ERAS: EraView[] = [
     era: 3, name: 'Medieval', entered_by: [], scored_by: [],
     objectives: [
       { slot: 0, family: 'Expand', text: 'Frontier: gain 14 tiles of territory', target: 14, objective: { kind: 'Territory', n: 14 } },
-      { slot: 1, family: 'Expand', text: 'Grow your population by 40', target: 40, objective: { kind: 'Population', n: 40 } },
+      { slot: 1, family: 'Expand', text: 'Prosperity: grow your population by 40', target: 40, objective: { kind: 'Population', n: 40 } },
       { slot: 2, family: 'Fight', text: 'Humble the mighty: capture a city from an empire ahead of you on VP', target: 1, objective: { kind: 'HumbleTheMighty' } },
     ],
   },
   {
     era: 4, name: 'Renaissance', entered_by: [], scored_by: [],
     objectives: [
-      { slot: 0, family: 'Build', text: 'Add a Bank to 3 more cities', target: 3, objective: { kind: 'Buildings', building: 'Clearinghouse', cities: 3 } },
-      { slot: 1, family: 'Expand', text: 'Gain 100 tiles of territory', target: 100, objective: { kind: 'Territory', n: 100 } },
+      { slot: 0, family: 'Build', text: 'Patrons: add a Bank to 3 more cities', target: 3, objective: { kind: 'Buildings', building: 'Bank', cities: 3 } },
+      { slot: 1, family: 'Expand', text: 'Frontier: gain 100 tiles of territory', target: 100, objective: { kind: 'Territory', n: 100 } },
       { slot: 2, family: 'Fight', text: 'Veterans: earn 4 promotions in battle', target: 4, objective: { kind: 'Veterans', n: 4 } },
     ],
   },
   {
     era: 5, name: 'Industrial', entered_by: [], scored_by: [],
     objectives: [
-      { slot: 0, family: 'Build', text: 'Add a Forge to 4 more cities', target: 4, objective: { kind: 'Buildings', building: 'MachineShop', cities: 4 } },
-      { slot: 1, family: 'Expand', text: 'Gain 8 cities', target: 8, objective: { kind: 'Cities', n: 8 } },
+      { slot: 0, family: 'Build', text: 'Patrons: add a Forge to 4 more cities', target: 4, objective: { kind: 'Buildings', building: 'Forge', cities: 4 } },
+      { slot: 1, family: 'Expand', text: 'Dominion: gain 8 cities', target: 8, objective: { kind: 'Cities', n: 8 } },
       { slot: 2, family: 'Fight', text: 'Breach: capture a walled city', target: 1, objective: { kind: 'Breach' } },
     ],
   },
@@ -44,15 +44,15 @@ const V2_ERAS: EraView[] = [
     era: 6, name: 'Modern', entered_by: [], scored_by: [],
     objectives: [
       { slot: 0, family: 'Expand', text: 'Frontier: gain 24 tiles of territory', target: 24, objective: { kind: 'Territory', n: 24 } },
-      { slot: 1, family: 'Expand', text: 'Grow your population by 85', target: 85, objective: { kind: 'Population', n: 85 } },
+      { slot: 1, family: 'Expand', text: 'Prosperity: grow your population by 85', target: 85, objective: { kind: 'Population', n: 85 } },
       { slot: 2, family: 'Fight', text: 'Veterans: earn 4 promotions in battle', target: 4, objective: { kind: 'Veterans', n: 4 } },
     ],
   },
   {
     era: 7, name: 'Future', entered_by: [], scored_by: [],
     objectives: [
-      { slot: 0, family: 'Build', text: 'Add a Research Lab to 4 more cities', target: 4, objective: { kind: 'Buildings', building: 'InferenceCore', cities: 4 } },
-      { slot: 1, family: 'Expand', text: 'Gain 160 tiles of territory', target: 160, objective: { kind: 'Territory', n: 160 } },
+      { slot: 0, family: 'Build', text: 'Patrons: add a Research Lab to 4 more cities', target: 4, objective: { kind: 'Buildings', building: 'ResearchLab', cities: 4 } },
+      { slot: 1, family: 'Expand', text: 'Frontier: gain 160 tiles of territory', target: 160, objective: { kind: 'Territory', n: 160 } },
       { slot: 2, family: 'Fight', text: 'Humble the mighty: capture a city from an empire ahead of you on VP', target: 1, objective: { kind: 'HumbleTheMighty' } },
     ],
   },
@@ -167,7 +167,7 @@ export function withScoreCheck(base: PlayerView): PlayerView {
     ...(e.era === 2 ? [{ player: me.id, slot: 0, turn: 60 }, ...live.filter((p) => p.vp_sources.some(([s]) => s.kind === 'EraObjective' && s.era === 2) && p.id !== me.id).map((p) => ({ player: p.id, slot: 0, turn: 70 }))] : []),
     ...(e.era === 3 ? [{ player: rival.id, slot: 0, turn: 88 }] : []),
   ] }));
-  view.great_works = [{ player: me.id, completed: 'RelayUplink', building: null, city: null, progress: 0, cost: 600, production_per_turn: 0, turns: null, blocker: null }];
+  view.great_works = [{ player: me.id, completed: 'GreatLibrary', building: null, city: null, progress: 0, cost: 600, production_per_turn: 0, turns: null, blocker: null }];
   view.turn = 92;
   return view;
 }

@@ -395,8 +395,8 @@ mod tests {
     fn pressed_world(enemy: legatum_core::Hex) -> PlayerView {
         let mut v = ViewBuilder::new(30, 16)
             .city(1, ME, off(6, 6), 3)
-            .unit(1, ME, UnitKind::Soldier, off(9, 6))
-            .unit(50, ENEMY, UnitKind::Soldier, enemy)
+            .unit(1, ME, UnitKind::Spearman, off(9, 6))
+            .unit(50, ENEMY, UnitKind::Spearman, enemy)
             .city(2, ENEMY, off(26, 6), 3)
             .build();
         v.cities[0].original_capital = true;

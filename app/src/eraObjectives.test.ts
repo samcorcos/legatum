@@ -31,7 +31,7 @@ describe('World Ages for the HUD', () => {
     expect(hud.older).toEqual([{ era: 2, name: 'Classical' }]);
     expect(hud.oldest).toMatchObject({ era: 2 });
     expect(hud.oldest!.lines.map((l) => [l.shown, l.target, l.met, l.remaining])).toEqual([[6, 9, false, 3], [4, 4, true, 0], [0, 1, false, 1]]);
-    expect(hud.oldest!.closest?.text).toBe('Gain 4 cities');
+    expect(hud.oldest!.closest?.text).toBe('Dominion: gain 4 cities');
     expect(hud.next).toBeNull();
   });
 
@@ -80,7 +80,7 @@ describe('cards you are close to', () => {
     const was = withV2(base, { era: 2, scored: [], progress: { ...quiet, '2:0': [6, 9], '2:1': [2, 4], '2:2': [0, 1] } });
     const now = withV2(base, { era: 2, scored: [], progress: { ...quiet, '2:0': [6, 9], '2:1': [3, 4], '2:2': [0, 1] } });
     const close = closeObjectives(was, now);
-    expect(close.map((c) => [c.era.name, c.line.text, c.line.remaining])).toEqual([['Classical', 'Gain 4 cities', 1]]);
+    expect(close.map((c) => [c.era.name, c.line.text, c.line.remaining])).toEqual([['Classical', 'Dominion: gain 4 cities', 1]]);
     // Still one away the next turn: nothing new to say.
     expect(closeObjectives(now, now)).toEqual([]);
     // Met, or nothing started: no line (a met one scores through its own event).

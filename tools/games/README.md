@@ -17,8 +17,10 @@ Every 15 minutes (launchd, `io.legatum.game-analysis`), `analyse_games.py poll`:
    - still in progress but idle for 6 hours with new turns since its last report: a checkpoint report;
    - fewer than 10 turns: skipped; a game that fails 3 times on the same upload is left for a person. If the reviewer itself is down (a trivial canary call fails too, e.g. the Claude login expired), the failure does not count against the game: the run stops and you get one notification (`reviewer_down` in the ledger) until a review works again.
 4. For each game, in `reports/<game id>/`:
-   - `facts.md`: standings, wars, expansion, losses, key events, the AI incident detector and the coach
-     questions with the player's answers. The replay uses the engine the game was played on: `game_dump` and
+   - `facts.md`: standings, wars, expansion, losses, key events, the AI incident detector, any rewinds
+     (the player went back to an earlier turn; the upload holds only the kept line) and the coach
+     questions with the player's answers. `coach_answers` and `rewinds` exist only in the upload copy and are
+     stripped before the engine reads a record. The replay uses the engine the game was played on: `game_dump` and
      `legatum-analyze` are built at the game's `engine_commit` and cached in `engine/bin/<commit>`.
    - `review.md`: a short coach-style triage written by Haiku (Claude Code) from `review_prompt.md` with
      `facts.md` pasted in, headed as untrusted model output.
@@ -46,6 +48,11 @@ Anyone can upload a game, so everything in an upload is treated as hostile:
   of 500 characters in `facts.md` (with runs of `=` thinned, so nobody can fake the prompt's end-of-data
   marker), and `review.md` starts with an "untrusted" line for whoever reads it next.
   Codex cannot turn its shell off, so it is opt-in (`LEGATUM_REVIEWER=codex,claude`) and runs `-s read-only`.
+- An agent that has tools (the nightly perf supervisor, the coach) never reads a raw record. The perf supervisor runs
+  `analyse_games.py telemetry [--hours N] [--limit N]`, which prints one JSON line per recently uploaded game
+  holding only whole numbers that passed a range check (`telemetry_numbers`; rows with any bad field are
+  dropped, and no string from a record is copied). The Worker checks a record's metadata and coach answers
+  only, so the tape and telemetry of an upload can hold any text. The coach reads `facts.md`.
 - `install-mac.sh --token` hands the token to `wrangler` and `security` on stdin, never as an argument, so it
   never shows in the process list.
 - Every command has a timeout, so a crafted tape or a stuck model cannot hold the job's lock.
@@ -67,7 +74,13 @@ tools/games/install-mac.sh --remove  # stop it (ledger and reports stay)
 python3 tools/games/analyse_games.py poll --dry-run           # what is due
 python3 tools/games/analyse_games.py poll --only <game id> --force
 python3 tools/games/analyse_games.py facts record.json.gz --events events.jsonl
+python3 tools/games/analyse_games.py exclude <game id> --reason "misclicks, restarted"   # never analyse it
+python3 tools/games/analyse_games.py include <game id>                                 # undo
 ```
+
+An excluded game is never analysed (not even with `--force`) and moves to the "Excluded" table at the bottom
+of `reports/INDEX.md`, so AI work does not learn from it. Use it for games the player abandoned because of
+misclicks rather than decisions. It refuses to run while an analysis run holds the ledger.
 
 Settings: `LEGATUM_GAMES_URL` (the Worker), `LEGATUM_REPO` (where to fetch engine commits),
 `LEGATUM_REVIEWER` (default `claude`; `codex,claude` tries Codex first), `LEGATUM_GAMES_READ_TOKEN` (instead of the keychain).

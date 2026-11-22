@@ -35,8 +35,8 @@ fn halted(events: &[Event], who: UnitId) -> bool {
 fn attack_routes_around_a_friend_attacking_in_place() {
     for dir in 0..6 {
         let (mut s, [c, m, f, r]) = last_bridge(dir);
-        let friend = unit(&mut s, 0, UnitKind::Soldier, m);
-        let rightmost = unit(&mut s, 0, UnitKind::Soldier, r);
+        let friend = unit(&mut s, 0, UnitKind::Spearman, m);
+        let rightmost = unit(&mut s, 0, UnitKind::Spearman, r);
         // The confirmed route the old preview built through the friend, and a plain goto.
         for confirmed in [true, false] {
             let order = if confirmed {
@@ -85,10 +85,10 @@ fn a_parked_friend_is_routed_around_by_tie_and_by_a_slightly_longer_route() {
     for dir in 0..6 {
         let (mut s, [c, m, f, r]) = last_bridge(dir);
         // Free tile `f` is forest: the free route costs one more move but still arrives
-        // this turn for a 2-move Soldier (the step into the city is always allowed at 1 move).
+        // this turn for a 2-move Spearman (the step into the city is always allowed at 1 move).
         set_terrain(&mut s, f, Terrain::Forest);
-        let _parked = unit(&mut s, 0, UnitKind::Soldier, m);
-        let rightmost = unit(&mut s, 0, UnitKind::Soldier, r);
+        let _parked = unit(&mut s, 0, UnitKind::Spearman, m);
+        let rightmost = unit(&mut s, 0, UnitKind::Spearman, r);
         let (next, events) = resolve_units(
             &s,
             &orders(
@@ -110,9 +110,9 @@ fn a_moving_friend_is_a_tie_break_not_a_wall() {
         let (mut s, [c, m, f, r]) = last_bridge(dir);
         // The friend leaves `m` away from the city: following it is legal (chains move
         // together), but on an equal route the free tile is preferred.
-        let friend = unit(&mut s, 0, UnitKind::Soldier, m);
+        let friend = unit(&mut s, 0, UnitKind::Spearman, m);
         let away = m.neighbor(dir);
-        let rightmost = unit(&mut s, 0, UnitKind::Soldier, r);
+        let rightmost = unit(&mut s, 0, UnitKind::Spearman, r);
         let (next, events) = resolve_units(
             &s,
             &orders(
@@ -148,7 +148,7 @@ fn a_row_attacking_one_city_takes_distinct_approach_tiles() {
     assert_eq!(row.len(), 3);
     let ids: Vec<UnitId> = row
         .iter()
-        .map(|h| unit(&mut s, 0, UnitKind::Soldier, *h))
+        .map(|h| unit(&mut s, 0, UnitKind::Spearman, *h))
         .collect();
     let os = ids
         .iter()
@@ -190,8 +190,8 @@ fn a_unit_passes_through_a_friend_that_stays_but_never_ends_on_it() {
     // through my unit". The only route runs through a parked friend: the mover passes it in
     // one move and lands on the tile beyond, paying for both.
     let mut s = corridor();
-    let a = unit(&mut s, 0, UnitKind::Soldier, hex(2, 4));
-    let friend = unit(&mut s, 0, UnitKind::Soldier, hex(3, 4));
+    let a = unit(&mut s, 0, UnitKind::Spearman, hex(2, 4));
+    let friend = unit(&mut s, 0, UnitKind::Spearman, hex(3, 4));
     goto(&mut s, a, hex(8, 4));
     let (next, events) = resolve_units(&s, &no_orders());
     assert_eq!(next.units[&a].pos, hex(4, 4), "{events:?}");
@@ -218,8 +218,8 @@ fn a_unit_passes_through_its_owngarrisoned_city() {
     // The Kanazawa case: a unit routed round its own city instead of through it.
     let mut s = corridor();
     city(&mut s, 0, hex(4, 4), 3);
-    let garrison = unit(&mut s, 0, UnitKind::Soldier, hex(4, 4));
-    let a = unit(&mut s, 0, UnitKind::Soldier, hex(3, 4));
+    let garrison = unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
+    let a = unit(&mut s, 0, UnitKind::Spearman, hex(3, 4));
     goto(&mut s, a, hex(8, 4));
     let (next, events) = resolve_units(&s, &no_orders());
     assert_eq!(next.units[&a].pos, hex(5, 4), "{events:?}");
@@ -231,8 +231,8 @@ fn a_unit_passes_through_its_owngarrisoned_city() {
 fn a_move_that_would_end_on_a_friend_stops_on_the_last_free_tile() {
     // The goal is a friend's tile: the unit comes up beside it and says what blocks it.
     let mut s = corridor();
-    let a = unit(&mut s, 0, UnitKind::Soldier, hex(2, 4));
-    unit(&mut s, 0, UnitKind::Soldier, hex(3, 4));
+    let a = unit(&mut s, 0, UnitKind::Spearman, hex(2, 4));
+    unit(&mut s, 0, UnitKind::Spearman, hex(3, 4));
     goto(&mut s, a, hex(3, 4));
     let (next, events) = resolve_units(&s, &no_orders());
     assert_eq!(next.units[&a].pos, hex(2, 4));
@@ -244,19 +244,19 @@ fn a_move_that_would_end_on_a_friend_stops_on_the_last_free_tile() {
         ),
         "{events:?}"
     );
-    // Two friends in a row cost more to cross than a Soldier has moves: it stops on the
+    // Two friends in a row cost more to cross than a Spearman has moves: it stops on the
     // last free tile it reached rather than on the first friend.
     let mut s = corridor();
-    let a = unit(&mut s, 0, UnitKind::Soldier, hex(1, 4));
-    unit(&mut s, 0, UnitKind::Soldier, hex(3, 4));
-    unit(&mut s, 0, UnitKind::Soldier, hex(4, 4));
+    let a = unit(&mut s, 0, UnitKind::Spearman, hex(1, 4));
+    unit(&mut s, 0, UnitKind::Spearman, hex(3, 4));
+    unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
     goto(&mut s, a, hex(8, 4));
     let (next, _) = resolve_units(&s, &no_orders());
     assert_eq!(next.units[&a].pos, hex(2, 4));
     // Once the first friend walks on down the pass, the follower moves with it as a chain.
     let mut s = corridor();
-    let a = unit(&mut s, 0, UnitKind::Soldier, hex(2, 4));
-    let lead = unit(&mut s, 0, UnitKind::Soldier, hex(3, 4));
+    let a = unit(&mut s, 0, UnitKind::Spearman, hex(2, 4));
+    let lead = unit(&mut s, 0, UnitKind::Spearman, hex(3, 4));
     goto(&mut s, a, hex(6, 4));
     goto(&mut s, lead, hex(8, 4));
     let (next, events) = resolve_units(&s, &no_orders());
@@ -269,8 +269,8 @@ fn a_hop_that_does_not_fit_the_moves_left_waits_for_next_turn() {
     // One move already spent when the friend comes up: crossing it and landing needs two,
     // so the unit waits on the last free tile it passed and hops at the start of next turn.
     let mut s = corridor();
-    let a = unit(&mut s, 0, UnitKind::Soldier, hex(0, 4));
-    unit(&mut s, 0, UnitKind::Soldier, hex(2, 4));
+    let a = unit(&mut s, 0, UnitKind::Spearman, hex(0, 4));
+    unit(&mut s, 0, UnitKind::Spearman, hex(2, 4));
     goto(&mut s, a, hex(8, 4));
     let (next, events) = resolve_units(&s, &no_orders());
     assert_eq!(next.units[&a].pos, hex(1, 4), "{events:?}");
@@ -285,10 +285,10 @@ fn nothing_ends_a_turn_on_a_friend_in_a_crowded_pass() {
     // with one unit per tile, whatever the order they declare in.
     let mut s = corridor();
     let movers: Vec<UnitId> = (0..3)
-        .map(|i| unit(&mut s, 0, UnitKind::Soldier, hex(i, 4)))
+        .map(|i| unit(&mut s, 0, UnitKind::Spearman, hex(i, 4)))
         .collect();
     for col in [4, 5, 6] {
-        unit(&mut s, 0, UnitKind::Soldier, hex(col, 4));
+        unit(&mut s, 0, UnitKind::Spearman, hex(col, 4));
     }
     for (i, &m) in movers.iter().enumerate() {
         goto(&mut s, m, hex(9 + i as i32 - 2, 4));
@@ -342,7 +342,7 @@ fn a_friend_that_moves_on_later_is_waited_for_not_circled() {
         let (mut s, goal) = pass_with_long_way_round();
         let ids: Vec<UnitId> = starts
             .iter()
-            .map(|&col| unit(&mut s, 0, UnitKind::Soldier, hex(col, 4)))
+            .map(|&col| unit(&mut s, 0, UnitKind::Spearman, hex(col, 4)))
             .collect();
         let goals: Vec<Hex> = (0..ids.len() as i32).map(|i| hex(10 - i, 4)).collect();
         for (&id, &to) in ids.iter().zip(&goals) {
@@ -389,8 +389,8 @@ fn two_spearmen_follow_through_a_reserved_pass_without_detouring() {
     // direct first step is the same tile; the alternative goes down to row 8 and back.
     set_terrain(&mut s, hex(4, 3), Terrain::Grassland);
     set_terrain(&mut s, hex(6, 4), Terrain::Grassland);
-    let lead = unit(&mut s, 0, UnitKind::Soldier, hex(4, 3));
-    let follower = unit(&mut s, 0, UnitKind::Soldier, hex(4, 4));
+    let lead = unit(&mut s, 0, UnitKind::Spearman, hex(4, 3));
+    let follower = unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
     goto(&mut s, lead, hex(9, 4));
     goto(&mut s, follower, hex(8, 4));
 
@@ -443,8 +443,8 @@ fn two_spearmen_follow_through_a_reserved_pass_without_detouring() {
 fn a_shared_final_tile_still_has_one_claimant() {
     let mut s = game(&[0, 1]);
     let goal = hex(5, 4);
-    let first = unit(&mut s, 0, UnitKind::Soldier, hex(4, 4));
-    let second = unit(&mut s, 0, UnitKind::Soldier, hex(4, 3));
+    let first = unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
+    let second = unit(&mut s, 0, UnitKind::Spearman, hex(4, 3));
     goto(&mut s, first, goal);
     goto(&mut s, second, goal);
     let (next, _) = resolve_units(&s, &no_orders());

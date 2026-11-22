@@ -18,8 +18,8 @@ beforeAll(async () => {
   client = new WasmClient(mod.Game);
 });
 
-const GL: ProductionItem = { kind: 'Building', building: 'RelayUplink' };
-const FACTORY: ProductionItem = { kind: 'Building', building: 'Autoworks' };
+const GL: ProductionItem = { kind: 'Building', building: 'GreatLibrary' };
+const FACTORY: ProductionItem = { kind: 'Building', building: 'Factory' };
 
 describe.skipIf(!available)('the Great Library across five cities', () => {
   it("uses each city's own turns from the core, counts banked progress, and names the fastest", () => {
@@ -29,7 +29,7 @@ describe.skipIf(!available)('the Great Library across five cities', () => {
     expect(w.sites).toHaveLength(5);
     for (const s of w.sites.filter((x) => x.state === 'ready')) {
       const option = view.cities.find((c) => c.id === s.cityId)!.detail!.options
-        .filter((o) => o.item.kind === 'Wonder' && o.item.building === 'RelayUplink')
+        .filter((o) => o.item.kind === 'Wonder' && o.item.building === 'GreatLibrary')
         .sort((a, b) => a.turns - b.turns || b.production_stored - a.production_stored)[0]!;
       expect(s.turns).toBe(option.turns > 0 ? option.turns : null);
       expect(s.stored).toBe(option.production_stored);
@@ -61,7 +61,7 @@ describe.skipIf(!available)('the Great Library across five cities', () => {
   it('says where the one Great Work is already being built', () => {
     const f = citiesFixture();
     const bern = f.cities.find((c) => c.name === 'Bern')!;
-    bern.producing = { kind: 'Building', building: 'RelayUplink' };
+    bern.producing = { kind: 'Building', building: 'GreatLibrary' };
     client.load(coreFixture(f));
     const w = whereToBuild(client.view(0), GL, []);
     expect(w.sites.find((s) => s.name === 'Bern')).toMatchObject({ state: 'building' });

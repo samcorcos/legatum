@@ -125,7 +125,7 @@ pub struct Ctx<'a> {
     pub(crate) land_region: Vec<Option<usize>>,
     /// `move_cost` per tile (the passability behind `land_region`).
     move_costs: Vec<Option<i32>>,
-    /// `view.passage_allowed(me, Soldier, owner)` for every owner (the view is fixed for this
+    /// `view.passage_allowed(me, Spearman, owner)` for every owner (the view is fixed for this
     /// context): where our armed units may stand.
     entry: legatum_core::view::EntryTable,
 }
@@ -304,7 +304,7 @@ impl<'a> Ctx<'a> {
             site_score: LazySites::new(view),
             land_region: vec![None; n],
             move_costs: Vec::new(),
-            entry: view.entry_table(me, legatum_core::UnitKind::Soldier),
+            entry: view.entry_table(me, legatum_core::UnitKind::Spearman),
         };
         ctx.compute_land_regions(parent);
         // A sighting is an uncertainty to route around, not an omniscient moving threat.
@@ -773,7 +773,7 @@ mod barbarian_peace_tests {
             let v = ViewBuilder::new(14, 10)
                 .faction(faction)
                 .city_with_detail(1, ME, off(4, 5), 3)
-                .unit(2, PlayerId::BARBARIAN, UnitKind::Soldier, off(6, 5))
+                .unit(2, PlayerId::BARBARIAN, UnitKind::Spearman, off(6, 5))
                 .build();
             let ctx = Ctx::new(&v);
             assert_eq!(ctx.enemy_units.len(), 1, "{faction:?}: still a target");

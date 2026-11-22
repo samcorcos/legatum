@@ -93,7 +93,7 @@ impl Planner<'_> {
         }
     }
 
-    /// Rangers shoot the best visible target in range: a likely kill first, then military
+    /// Archers shoot the best visible target in range: a likely kill first, then military
     /// units, then the most damage relative to the target's HP.
     fn ranged_fire(&mut self, army: &[&UnitView]) {
         for u in self.free(army) {

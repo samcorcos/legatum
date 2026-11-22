@@ -18,7 +18,7 @@ it('Steel guns ignore terrain blockers, while earlier ranged units still need a 
   const view = { width: 10, height: 10, tiles, cities: [], research: { known: ['Steel'] } } as unknown as PlayerView;
   const from = { q: 1, r: 1 }, to = { q: 3, r: 1 };
   expect(shotBlockReason(view, from, to, 'Artillery')).toBeNull();
-  expect(shotBlockReason(view, from, to, 'Drone')).toBeNull();
+  expect(shotBlockReason(view, from, to, 'CombatDrone')).toBeNull();
   expect(shotBlockReason(view, from, to, 'FieldCannon')).toContain('No line of sight');
   view.research.known = [];
   expect(shotBlockReason(view, from, to, 'Artillery')).toContain('No line of sight');
@@ -30,16 +30,16 @@ it('walled garrisons bypass Forest, while unwalled cities and field hills keep o
   const from = { q: 1, r: 1 }, to = { q: 3, r: 1 };
   const view = { me: 0, width: 10, height: 10, tiles,
     cities: [{ owner: 0, pos: from, walls: false, name: 'Home' }], research: { known: [] } } as unknown as PlayerView;
-  expect(shotBlockReason(view, from, to, 'Ranger')).toContain('or build Walls');
-  expect(rangedClear('Ranger', from, to, viewTerrain(view))).toBe(false);
+  expect(shotBlockReason(view, from, to, 'Archer')).toContain('or build Walls');
+  expect(rangedClear('Archer', from, to, viewTerrain(view))).toBe(false);
   view.cities[0].walls = true;
   expect(walledGarrisonAt(view, 0, from)).toBe(true);
-  expect(shotBlockReason(view, from, to, 'Ranger')).toBeNull();
-  expect(rangedClear('Ranger', from, to, viewTerrain(view), false, true)).toBe(true);
+  expect(shotBlockReason(view, from, to, 'Archer')).toBeNull();
+  expect(rangedClear('Archer', from, to, viewTerrain(view), false, true)).toBe(true);
   view.tiles[11].terrain = 'Hills';
   view.tiles[12].terrain = 'Mountains';
   const field = { q: 1, r: 1 };
   view.cities[0].pos = { q: 0, r: 0 };
   expect(walledGarrisonAt(view, 0, field)).toBe(false);
-  expect(shotBlockReason(view, field, to, 'Ranger')).toContain('No line of sight');
+  expect(shotBlockReason(view, field, to, 'Archer')).toContain('No line of sight');
 });

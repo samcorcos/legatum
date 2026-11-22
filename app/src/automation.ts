@@ -115,7 +115,7 @@ export async function addCityAutomatedOrders(view: PlayerView, orders: Order[]):
   return { orders: [...keep, ...planned], unchosen_cities };
 }
 
-const isArmyUnit = (item: ProductionItem): boolean => item.kind === 'Unit' && item.unit !== 'Scout' && item.unit !== 'Settler' && item.unit !== 'Heir';
+const isArmyUnit = (item: ProductionItem): boolean => item.kind === 'Unit' && item.unit !== 'Scout' && item.unit !== 'Settler' && item.unit !== 'HeirToTheThrone';
 
 /** Why automation chose `pick` for `city`: the real reason, never a stock phrase. */
 export function autoPickReason(pick: ProductionItem, focus: CityBuildFocus, city: CityView, view: PlayerView): string {

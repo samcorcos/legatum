@@ -143,23 +143,23 @@ export async function companyText(): Promise<TextGroup[]> {
   const base = client.view(0);
   const unit = { ...base.units.find((u) => u.owner === 0)!, contract_until: base.turn + 7, origin: 'Sparta' } as UnitView;
   const view: PlayerView = { ...base, units: [unit, ...base.units.filter((u) => u.id !== unit.id)], players: base.players.map((p) => (p.id === 0 ? { ...p, companies: 1 } : p)), cities: base.cities.map((c, i) => (i === 0 ? { ...c, name: 'Constantinople' } : c)),
-    company_offers: [{ seller: 1, unit: 'Soldier', price: 80 }] };
+    company_offers: [{ seller: 1, unit: 'Spearman', price: 80 }] };
   const city = view.cities[0];
   const events: Event[] = [
     { type: 'HeirBorn', city: city.id, owner: 0, city_name: 'Constantinople', at: unit.pos },
     { type: 'HeirBorn', city: city.id, owner: 2, city_name: 'Pella', at: unit.pos },
-    { type: 'CompanyHired', city: city.id, owner: 0, seller: 1, unit: 'Soldier', gold: 80, until: base.turn + 30 },
-    { type: 'CompanyHired', city: city.id, owner: 2, seller: 0, unit: 'Soldier', gold: 80, until: base.turn + 30 },
-    { type: 'CompanyDeparted', unit: 'Soldier', owner: 0, origin: 'Sparta', pos: unit.pos },
-    { type: 'CompanyDeparted', unit: 'Soldier', owner: 2, origin: 'Sparta', pos: unit.pos },
-    { type: 'CompanyTurned', unit: 'Soldier', owner: 0, origin: 'Sparta', pos: unit.pos },
-    { type: 'CompanyTurned', unit: 'Soldier', owner: 2, origin: 'Sparta', pos: unit.pos },
+    { type: 'CompanyHired', city: city.id, owner: 0, seller: 1, unit: 'Spearman', gold: 80, until: base.turn + 30 },
+    { type: 'CompanyHired', city: city.id, owner: 2, seller: 0, unit: 'Spearman', gold: 80, until: base.turn + 30 },
+    { type: 'CompanyDeparted', unit: 'Spearman', owner: 0, origin: 'Sparta', pos: unit.pos },
+    { type: 'CompanyDeparted', unit: 'Spearman', owner: 2, origin: 'Sparta', pos: unit.pos },
+    { type: 'CompanyTurned', unit: 'Spearman', owner: 0, origin: 'Sparta', pos: unit.pos },
+    { type: 'CompanyTurned', unit: 'Spearman', owner: 2, origin: 'Sparta', pos: unit.pos },
   ];
   const lines = formatEvents(events, contextFromViews(base, view)).flatMap((l) => [l.text, ...(l.details ?? [])]);
   return [{
     label: 'mercenary companies', blocks: [
       companyRule(), COMPANY_UNIT_RULE, contractLine(unit, view), contractLine({ ...unit, contract_until: base.turn }, view), rosterLine(view, 0, 1),
-      describeOrder({ type: 'HireCompany', city: city.id, unit: 'Soldier', seller: 1 }, view),
+      describeOrder({ type: 'HireCompany', city: city.id, unit: 'Spearman', seller: 1 }, view),
       ...lines,
     ],
   }];

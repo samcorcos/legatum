@@ -95,11 +95,11 @@ pub fn era_resource(era: u8) -> Option<Resource> {
 /// The Machine Age's Stock Exchange uses nothing: the era shares the World War era's Oil, and its units and
 /// aircraft already draw on it (lead's call, 2026-11-14).
 pub const SUPPLY_TIERS: [BuildingKind; 5] = [
-    BuildingKind::MachineShop,
-    BuildingKind::College,
-    BuildingKind::Clearinghouse,
-    BuildingKind::Autoworks,
-    BuildingKind::InferenceCore,
+    BuildingKind::Forge,
+    BuildingKind::University,
+    BuildingKind::Bank,
+    BuildingKind::Factory,
+    BuildingKind::ResearchLab,
 ];
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
@@ -387,10 +387,7 @@ pub fn building_need(building: BuildingKind) -> Option<Resource> {
 /// continue to use their historical resources.
 pub fn building_need_for(player: &Player, building: BuildingKind) -> Option<Resource> {
     if player.techs.contains(&TechId::FusionPower)
-        && matches!(
-            building,
-            BuildingKind::Autoworks | BuildingKind::InferenceCore
-        )
+        && matches!(building, BuildingKind::Factory | BuildingKind::ResearchLab)
     {
         None
     } else {
@@ -437,7 +434,7 @@ pub fn upgrade_need(from: UnitKind) -> Option<Resource> {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum SupplyUser {
-    /// A building tier in a city (`MachineShop` for a Forge's Iron, `Autoworks` for a
+    /// A building tier in a city (`Forge` for a Forge's Iron, `Factory` for a
     /// Factory's Coal).
     Building {
         city: CityId,

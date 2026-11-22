@@ -8,8 +8,8 @@ fn proxy_is_stateless_deterministic_and_handles_finished_games() {
     let view = ViewBuilder::new(20, 16)
         .city(1, ME, off(4, 5), 3)
         .city(2, ENEMY, off(10, 5), 2)
-        .unit(1, ME, UnitKind::Ranger, off(8, 5))
-        .unit(2, ME, UnitKind::Soldier, off(9, 4))
+        .unit(1, ME, UnitKind::Archer, off(8, 5))
+        .unit(2, ME, UnitKind::Spearman, off(9, 4))
         .unit(3, ME, UnitKind::Settler, off(4, 5))
         .build();
     let mut proxy = ProxyBrain;
@@ -28,9 +28,9 @@ fn ranged_harasses_garrison_without_melee_suicide() {
     let mut view = ViewBuilder::new(20, 16)
         .city(1, ME, off(3, 5), 3)
         .city(2, ENEMY, city, 2)
-        .unit(1, ME, UnitKind::Ranger, off(6, 5))
-        .unit(2, ME, UnitKind::Soldier, off(7, 5))
-        .unit(3, ENEMY, UnitKind::Soldier, city)
+        .unit(1, ME, UnitKind::Archer, off(6, 5))
+        .unit(2, ME, UnitKind::Spearman, off(7, 5))
+        .unit(3, ENEMY, UnitKind::Spearman, city)
         .build();
     view.units
         .iter_mut()
@@ -55,9 +55,9 @@ fn one_melee_occupies_a_defeated_city_while_rangers_stop_firing() {
     let mut view = ViewBuilder::new(20, 16)
         .city(1, ME, off(3, 5), 3)
         .city(2, ENEMY, city, 2)
-        .unit(1, ME, UnitKind::Ranger, off(6, 5))
-        .unit(2, ME, UnitKind::Soldier, off(7, 5))
-        .unit(3, ME, UnitKind::Soldier, off(8, 4))
+        .unit(1, ME, UnitKind::Archer, off(6, 5))
+        .unit(2, ME, UnitKind::Spearman, off(7, 5))
+        .unit(3, ME, UnitKind::Spearman, off(8, 4))
         .build();
     view.cities
         .iter_mut()
@@ -84,7 +84,7 @@ fn remembered_city_is_scouted_but_never_shot_through_fog() {
     let mut view = ViewBuilder::new(20, 16)
         .city(1, ME, off(3, 5), 3)
         .city(2, ENEMY, off(8, 5), 2)
-        .unit(1, ME, UnitKind::Ranger, off(6, 5))
+        .unit(1, ME, UnitKind::Archer, off(6, 5))
         .build();
     view.cities
         .iter_mut()
@@ -103,7 +103,7 @@ fn remembered_city_is_scouted_but_never_shot_through_fog() {
 fn opening_fields_ranged_support_and_funds_science() {
     let view = ViewBuilder::new(24, 20)
         .city(1, ME, off(8, 8), 3)
-        .unit(90, ME, UnitKind::Soldier, off(9, 8))
+        .unit(90, ME, UnitKind::Spearman, off(9, 8))
         .build();
     let orders = ProxyBrain.orders(&view);
     assert!(orders.contains(&Order::SetResearch {
@@ -112,7 +112,7 @@ fn opening_fields_ranged_support_and_funds_science() {
     assert!(orders.contains(&Order::SetProduction {
         city: CityId(1),
         item: ProductionItem::Unit {
-            unit: UnitKind::Ranger
+            unit: UnitKind::Archer
         }
     }));
     let view = ViewBuilder::new(24, 20)
@@ -123,10 +123,10 @@ fn opening_fields_ranged_support_and_funds_science() {
         .unit(1, ME, UnitKind::Settler, off(4, 8))
         .unit(2, ME, UnitKind::Settler, off(10, 8))
         .unit(3, ME, UnitKind::Settler, off(16, 8))
-        .unit(90, ME, UnitKind::Soldier, off(5, 8))
-        .unit(91, ME, UnitKind::Soldier, off(6, 8))
-        .unit(92, ME, UnitKind::Ranger, off(7, 8))
-        .unit(93, ME, UnitKind::Ranger, off(8, 8))
+        .unit(90, ME, UnitKind::Spearman, off(5, 8))
+        .unit(91, ME, UnitKind::Spearman, off(6, 8))
+        .unit(92, ME, UnitKind::Archer, off(7, 8))
+        .unit(93, ME, UnitKind::Archer, off(8, 8))
         .build();
     // After the opening, replacing losses must not starve every city's science base.
     let mut view = view;
@@ -153,7 +153,7 @@ fn opening_fields_ranged_support_and_funds_science() {
     assert!(orders.contains(&Order::SetProduction {
         city: CityId(1),
         item: ProductionItem::Building {
-            building: BuildingKind::Laboratory
+            building: BuildingKind::Library
         }
     }));
 }

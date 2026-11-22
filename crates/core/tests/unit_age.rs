@@ -11,7 +11,7 @@ fn creation_turn_is_saved_and_visible_only_to_the_owner() {
         .pos;
     state.turn = 37;
     let settler = legatum_core::game::spawn_unit(&mut state, PlayerId(0), UnitKind::Settler, home);
-    let foreign = legatum_core::game::spawn_unit(&mut state, PlayerId(1), UnitKind::Soldier, home);
+    let foreign = legatum_core::game::spawn_unit(&mut state, PlayerId(1), UnitKind::Spearman, home);
     let view = player_view(&state, PlayerId(0));
     assert_eq!(
         view.units

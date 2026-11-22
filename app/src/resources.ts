@@ -64,7 +64,7 @@ export function resourceUsersThisEra(resource: Resource, era: number, faction?: 
 }
 
 /** The building tiers that use supply, lowest era first (core `SUPPLY_TIERS`; also the order of `SupplyUser`). */
-export const SUPPLY_TIERS: BuildingKind[] = (['Market', 'MachineShop', 'College', 'Clearinghouse', 'Autoworks', 'InferenceCore'] as BuildingKind[]).filter((b) => b in BUILDING_NEEDS);
+export const SUPPLY_TIERS: BuildingKind[] = (['Market', 'Forge', 'University', 'Bank', 'Factory', 'ResearchLab'] as BuildingKind[]).filter((b) => b in BUILDING_NEEDS);
 
 export const isStrategic = (r: Resource): boolean => RESOURCE_INFO[r].class === 'Strategic';
 

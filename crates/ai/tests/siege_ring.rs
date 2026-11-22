@@ -10,7 +10,7 @@ use std::collections::BTreeMap;
 
 const INDIA: PlayerId = PlayerId(2);
 const CITY: Hex = Hex { q: 37, r: 7 };
-/// The two healthy melee units that never joined the ring (Cuirassier, Assault Trooper).
+/// The two healthy melee units that never joined the ring (Cuirassier, Assault Pikeman).
 const HEALTHY: [UnitId; 2] = [UnitId(234), UnitId(9)];
 /// Every melee unit on the Strike's roster near the city on T143–T145.
 const MELEE: [UnitId; 5] = [

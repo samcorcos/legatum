@@ -19,7 +19,7 @@ for (const size of SIZES) test.describe(`unit panel ${size.name}`, () => {
     s.players[0].name = 'Sparta'; s.players[1].name = 'Switzerland';
     s.cities[1].hp = 200;
     s.units = s.units.filter((u) => u.owner !== 0);
-    const unit = spawnUnit(s, 0, scenario === 'siege-available' ? 'Phalangite' : 'Soldier', ring(s.cities[0].pos, 1)[1], false);
+    const unit = spawnUnit(s, 0, scenario === 'siege-available' ? 'Phalangite' : 'Spearman', ring(s.cities[0].pos, 1)[1], false);
     if (scenario === 'resource-blocked') {
       spawnUnit(s, 0, 'Phalangite', ring(s.cities[0].pos, 1)[2], false);
       spawnUnit(s, 0, 'Phalangite', ring(s.cities[0].pos, 1)[4], false);
@@ -154,7 +154,7 @@ for (const size of SIZES) test.describe(`unit panel ${size.name}`, () => {
     const s = improvementCity({ techs: ['Mathematics', 'IronWorking', 'Feudalism', 'Electricity', 'AutonomousSystems', 'JetEngines', 'StealthTechnology'] });
     s.units = s.units.filter((u) => u.owner !== 0);
     const siege = spawnUnit(s, 0, 'Phalangite', ring(s.cities[0].pos, 1)[1], false);
-    const next = spawnUnit(s, 0, 'Soldier', ring(s.cities[0].pos, 1)[2], false);
+    const next = spawnUnit(s, 0, 'Spearman', ring(s.cities[0].pos, 1)[2], false);
     const silicon = tileIndex(ring(s.cities[0].pos, 3)[5], s.width, s.height);
     s.terrain[silicon] = 'Hills'; s.resource![silicon] = 'Silicon';
     s.improved![tileIndex(ring(s.cities[0].pos, 3)[2], s.width, s.height)] = 1; // The Iron Mine leaves one slot for the next upgrade.
@@ -187,7 +187,7 @@ for (const size of SIZES) test.describe(`unit panel ${size.name}`, () => {
   });
   test('role actions and a selected unit beside the call to arms', async ({ page }) => {
     if (baseline) return;
-    for (const kind of ['Scout', 'Settler', 'Ranger'] as const) {
+    for (const kind of ['Scout', 'Settler', 'Archer'] as const) {
       const state = improvementCity({ techs: [] });
       state.units = state.units.filter((u) => u.owner !== 0);
       const unit = spawnUnit(state, 0, kind, ring(state.cities[0].pos, 1)[1], false);

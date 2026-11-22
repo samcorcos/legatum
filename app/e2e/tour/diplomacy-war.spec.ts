@@ -198,7 +198,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await loadFixture(page, warPromptCoreSave(false, true), 1);
     const ranger = await page.evaluate(() => {
       const s = (window as unknown as GameWindow).legatum.getState(), v = s.views![s.seat];
-      return v.units.find((u) => u.owner === v.me && u.kind === 'Ranger')!.id;
+      return v.units.find((u) => u.owner === v.me && u.kind === 'Archer')!.id;
     });
     await selectThing(page, 'unit', ranger);
     await centred(page, ranger);
@@ -251,7 +251,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
   test('Great Works placement: Build lights the eligible tiles, hover says what a tile gives up, then the placed card', async ({ page }) => {
     test.setTimeout(120_000);
     const setup = wallsFixture();
-    Object.assign(setup.fixture.cities.find((c) => c.id === setup.own)!, { population: 8, producing: null, prod: 0, food: 0, productionQueue: [], productionBanked: [], buildings: ['Autoworks'] });
+    Object.assign(setup.fixture.cities.find((c) => c.id === setup.own)!, { population: 8, producing: null, prod: 0, food: 0, productionQueue: [], productionBanked: [], buildings: ['Factory'] });
     setup.fixture.players[0].gold = 100_000;
     setup.fixture.players[0].techs = [...TECHS];
     await loadFixture(page, coreFixture(setup.fixture), 2);
@@ -307,7 +307,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
       try {
         const p = await context.newPage();
         const setup = wallsFixture();
-        Object.assign(setup.fixture.cities.find((c) => c.id === setup.own)!, { population: 8, producing: null, prod: 0, food: 0, productionQueue: [], productionBanked: [], buildings: ['Autoworks'] });
+        Object.assign(setup.fixture.cities.find((c) => c.id === setup.own)!, { population: 8, producing: null, prod: 0, food: 0, productionQueue: [], productionBanked: [], buildings: ['Factory'] });
         setup.fixture.players[0].faction = faction;
         setup.fixture.players[0].gold = 100_000;
         setup.fixture.players[0].techs = [...TECHS];

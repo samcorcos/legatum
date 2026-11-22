@@ -56,6 +56,7 @@ Current principles and decisions, one line each with date and who. The user's fu
 - City automation focuses (Sam, 2026-11-22, rules 52): Military (the newest units the empire's strategic resources allow, never outdated ones), Economy (buildings and improvements, never units) and three streams where the player picks the Gold, Science or Food project and the city runs it. Balanced is gone; Settlers and Scouts are never automated. Automation and the AI never fill a queue with Scouts or outdated units (Sam, 2026-11-22: a finished Gold city built Scouts at turn 100; he left rates, Food and Egypt to the lead's judgment, "the game needs to feel premium").
 - Resolution order when a defender slips into a besieged city: slip in, then ranged, then melee (user, 2026-11-21).
 - Saves from other rules versions are refused; no migrations (user, 2026-10-31).
+- Going back a turn is allowed in local games (Sam, 2026-11-22): save-scumming is acceptable, because training should learn only from moves the player meant. Menu → Load an earlier turn opens any of the last 10 autosaved turns; the uploaded record keeps only the line played on and lists each rewind (`rewinds`). Online games cannot go back (the host would rewind everyone).
 - Rules freeze: lifted 2026-11-11 (user). Talk before building tech-tree changes (user, 2026-11-01).
 
 ## How to propose

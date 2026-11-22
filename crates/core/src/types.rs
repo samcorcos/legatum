@@ -193,14 +193,20 @@ impl Faction {
 pub enum UnitKind {
     Scout,
     Settler,
-    Soldier,
-    Ranger,
-    Trooper,
-    Marksman,
-    AssaultTrooper,
+    #[serde(alias = "Soldier")]
+    Spearman,
+    #[serde(alias = "Ranger")]
+    Archer,
+    #[serde(alias = "Trooper")]
+    Pikeman,
+    #[serde(alias = "Marksman")]
+    Crossbowman,
+    #[serde(alias = "AssaultTrooper")]
+    Musketman,
     /// The Byzantium's Heir: an expensive, unbuyable civilian whose holder scores Byzantium's
     /// goal (`goals`). Only the Byzantium can train him.
-    Heir,
+    #[serde(alias = "Heir")]
+    HeirToTheThrone,
     /// Mounted line (era overhaul phase A2): Horseman, Cataphract, Knight, Cuirassier, Cavalry, Tank,
     /// Autonomous Armour. 4 moves.
     Horseman,
@@ -217,7 +223,8 @@ pub enum UnitKind {
     /// Ranged line, Industrial to Future: Field Cannon, Artillery, Combat Drone.
     FieldCannon,
     Artillery,
-    Drone,
+    #[serde(alias = "Drone")]
+    CombatDrone,
     /// The Modern air layer (`UnitClass::Air`, `rules::air`): based in a city's hangar, never
     /// standing on a map tile. The Fighter guards its city's surroundings (it intercepts air
     /// strikes unless it strikes itself, a short-range hit on units); the Bomber strikes far.
@@ -236,10 +243,11 @@ pub enum UnitKind {
     Cuirassier,
     /// The Machine Age (user, 2026-11-14): one unit per class between the Industrial and Modern
     /// eras, and the first aircraft. Trench Infantry (melee), Howitzer (ranged, indirect fire),
-    /// Landship (slow early armour) and Biplane (air: short strikes, a small guard, sight).
+    /// EarlyTank (slow early armour) and Biplane (air: short strikes, a small guard, sight).
     TrenchInfantry,
     Howitzer,
-    Landship,
+    #[serde(alias = "Landship")]
+    EarlyTank,
     Biplane,
     /// The Modern era (1950 to 2010, user, 2026-11-14): one upgrade of the World War unit of
     /// each class, and the jets. Mechanised Infantry (3 moves), Main Battle Tank, Rocket
@@ -255,12 +263,12 @@ impl UnitKind {
     pub const ALL: [UnitKind; 37] = [
         UnitKind::Scout,
         UnitKind::Settler,
-        UnitKind::Soldier,
-        UnitKind::Ranger,
-        UnitKind::Trooper,
-        UnitKind::Marksman,
-        UnitKind::AssaultTrooper,
-        UnitKind::Heir,
+        UnitKind::Spearman,
+        UnitKind::Archer,
+        UnitKind::Pikeman,
+        UnitKind::Crossbowman,
+        UnitKind::Musketman,
+        UnitKind::HeirToTheThrone,
         UnitKind::Horseman,
         UnitKind::Knight,
         UnitKind::Cavalry,
@@ -271,7 +279,7 @@ impl UnitKind {
         UnitKind::HunterKiller,
         UnitKind::FieldCannon,
         UnitKind::Artillery,
-        UnitKind::Drone,
+        UnitKind::CombatDrone,
         UnitKind::Fighter,
         UnitKind::Bomber,
         UnitKind::StealthFighter,
@@ -283,7 +291,7 @@ impl UnitKind {
         UnitKind::Cuirassier,
         UnitKind::TrenchInfantry,
         UnitKind::Howitzer,
-        UnitKind::Landship,
+        UnitKind::EarlyTank,
         UnitKind::Biplane,
         UnitKind::MechanisedInfantry,
         UnitKind::MainBattleTank,
@@ -317,39 +325,51 @@ pub enum ScienceConversion {
 pub enum BuildingKind {
     /// Retired Japan Rice Storehouse, unavailable to India. `Monument` remains in
     /// tracked fixture tests.
-    #[serde(alias = "Monument")]
-    BroodHall,
+    #[serde(alias = "Monument", alias = "BroodHall")]
+    RiceStorehouse,
     Granary,
     Workshop,
     Market,
-    Laboratory,
+    #[serde(alias = "Laboratory")]
+    Library,
     Walls,
-    RelayUplink,
+    #[serde(alias = "RelayUplink")]
+    GreatLibrary,
     Pyramids,
     HagiaSophia,
     EiffelTower,
-    IterReactor,
+    #[serde(alias = "IterReactor")]
+    IterFusionReactor,
     /// Mill (Crop Rotation). `Arcology` remains in tracked fixture tests.
-    #[serde(alias = "Arcology")]
-    Hydroponics,
-    MachineShop,
-    WarShrine,
-    College,
-    Clearinghouse,
-    Autoworks,
+    #[serde(alias = "Arcology", alias = "Hydroponics")]
+    Mill,
+    #[serde(alias = "MachineShop")]
+    Forge,
+    #[serde(alias = "WarShrine")]
+    Agoge,
+    #[serde(alias = "College")]
+    University,
+    #[serde(alias = "Clearinghouse")]
+    Bank,
+    #[serde(alias = "Autoworks")]
+    Factory,
     /// Walls tier 2 (Feudalism). `Citadel` remains in tracked fixture tests.
     #[serde(alias = "Citadel")]
     Castle,
     /// Walls tier 3 (Military Engineering).
     StarFort,
-    PlanetaryFoundry,
-    WorldExchange,
-    InferenceCore,
+    #[serde(alias = "PlanetaryFoundry")]
+    RoyalArsenal,
+    #[serde(alias = "WorldExchange")]
+    GrandBazaar,
+    #[serde(alias = "InferenceCore")]
+    ResearchLab,
     /// Mongols's Courier Hall: a pricey landmark, one per Mongols empire. While it stands,
     /// its holder (whoever owns its city) scores the Mongols goal and every empire crosses
     /// the holder's land at Peace (`goals`, `GameState::passage_allowed`). Only Mongols can
     /// build it.
-    CourierHall,
+    #[serde(alias = "CourierHall")]
+    YamRelayStation,
     /// Akbar's Imperial Diwan; its founding city carries the held goal.
     ImperialDiwan,
     /// Roadworks: any empire's one-time road building. It links its city to every city within
@@ -368,29 +388,29 @@ pub enum BuildingKind {
 
 impl BuildingKind {
     pub const ALL: [BuildingKind; 28] = [
-        BuildingKind::BroodHall,
+        BuildingKind::RiceStorehouse,
         BuildingKind::Granary,
         BuildingKind::Workshop,
         BuildingKind::Market,
-        BuildingKind::Laboratory,
+        BuildingKind::Library,
         BuildingKind::Walls,
-        BuildingKind::RelayUplink,
+        BuildingKind::GreatLibrary,
         BuildingKind::Pyramids,
         BuildingKind::HagiaSophia,
         BuildingKind::EiffelTower,
-        BuildingKind::IterReactor,
-        BuildingKind::Hydroponics,
-        BuildingKind::MachineShop,
-        BuildingKind::WarShrine,
-        BuildingKind::College,
-        BuildingKind::Clearinghouse,
-        BuildingKind::Autoworks,
+        BuildingKind::IterFusionReactor,
+        BuildingKind::Mill,
+        BuildingKind::Forge,
+        BuildingKind::Agoge,
+        BuildingKind::University,
+        BuildingKind::Bank,
+        BuildingKind::Factory,
         BuildingKind::Castle,
         BuildingKind::StarFort,
-        BuildingKind::PlanetaryFoundry,
-        BuildingKind::WorldExchange,
-        BuildingKind::InferenceCore,
-        BuildingKind::CourierHall,
+        BuildingKind::RoyalArsenal,
+        BuildingKind::GrandBazaar,
+        BuildingKind::ResearchLab,
+        BuildingKind::YamRelayStation,
         BuildingKind::ImperialDiwan,
         BuildingKind::Roadworks,
         BuildingKind::StockExchange,
@@ -428,7 +448,7 @@ pub enum TechId {
     PrintingPress,
     Rifling,
     MilitaryScience,
-    /// Displayed as "Ballistics"; the old Trooper technology of that name is `Feudalism` now, so
+    /// Displayed as "Ballistics"; the old Pikeman technology of that name is `Feudalism` now, so
     /// the identifier differs to keep old saves unambiguous.
     Cannonry,
     Industrialization,
@@ -633,7 +653,8 @@ pub enum ImprovementKind {
     /// Oil's improvement (Modern era resource).
     OilWell,
     /// Niter's improvement (Renaissance era resource).
-    SaltpeterWorks,
+    #[serde(alias = "SaltpeterWorks")]
+    SaltpetreWorks,
     /// Silicon's improvement (Future era resource).
     #[serde(alias = "LithiumMine")]
     QuartzMine,
