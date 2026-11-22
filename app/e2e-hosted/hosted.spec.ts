@@ -77,6 +77,39 @@ const empire = (page: Page) => page.evaluate(() => {
   };
 });
 
+const ENGINE = /\/assets\/legatum_bg-[\w-]+\.wasm$/;
+
+test('a slow engine download shows the loading plate, then the title', async ({ page, baseURL }) => {
+  const problems = watch(page, new URL(baseURL!).origin);
+  // Hold the engine until the plate has been seen, so the check never races a fast connection.
+  let release!: () => void;
+  const held = new Promise<void>((resolve) => { release = resolve; });
+  await page.route(ENGINE, async (route) => { await held; await route.continue(); });
+  await page.goto('/');
+  const plate = page.getByTestId('boot-plate');
+  await expect(plate).toBeVisible();
+  await expect(plate).toContainText('LEGATUM');
+  await expect(plate).toContainText('Loading the game…');
+  release();
+  await expect(page.getByRole('heading', { name: 'Legatum', exact: true })).toBeVisible({ timeout: 60_000 });
+  await expect(plate).toHaveCount(0);
+  expect(problems).toEqual([]);
+});
+
+test('an engine that cannot download shows Reload, never a blank page', async ({ page }) => {
+  await page.route(ENGINE, (route) => route.abort());
+  await page.goto('/');
+  const card = page.getByTestId('crash-screen');
+  await expect(card).toBeVisible({ timeout: 60_000 });
+  await expect(card.getByRole('heading', { name: 'The game could not load' })).toBeVisible();
+  const reload = card.getByRole('button', { name: /^Reload/ });
+  await expect(reload).toBeFocused();
+  // With the connection back, Return reloads into the game.
+  await page.unroute(ENGINE);
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('heading', { name: 'Legatum', exact: true })).toBeVisible({ timeout: 60_000 });
+});
+
 test('a visitor plays: title, a people, turns, a second city, save and load, with no server', async ({ page, baseURL, request }) => {
   test.setTimeout(300_000);
   const problems = watch(page, new URL(baseURL!).origin);
