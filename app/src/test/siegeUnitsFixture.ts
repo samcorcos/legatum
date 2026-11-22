@@ -63,6 +63,6 @@ export function showSiegeUnitsFixture(tier: 'Mathematics' | 'Machinery' | 'Metal
   const view = fx.client.view(0);
   useGame.setState({ client: fx.client, humans: [0], views: [view], screen: 'game', booted: true, seat: 0,
     orders: [[]], errors: [[]], ready: [false], selection: { kind: 'unit', id: fx.spear }, mode: 'normal',
-    reportOpen: false, techOpen: false, vpExpanded: false, busy: null, error: null, anim: null, lan: null });
+    reportOpen: false, techOpen: false, vpExpanded: false, busy: null, error: null, anim: null, net: null });
   return fx;
 }

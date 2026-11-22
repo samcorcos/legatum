@@ -79,7 +79,7 @@ type Screen = 'title' | 'setup' | 'join' | 'staging' | 'game' | 'scenarios' | 'o
 type SetupMode = 'solo' | 'hotseat' | 'host';
 
 /** Online play state (plans/game-protocol.md), hosting or joined. Null when playing locally (WASM hot-seat). */
-export interface Lan {
+export interface NetState {
   status: ServerStatus;
   /** Set once this browser has joined a seat. */
   mySeat: Seat | null;
@@ -156,7 +156,7 @@ interface State {
   screen: Screen;
   setupMode: SetupMode;
   client: GameClient | null;
-  /** Player ids of the human seats played in this browser (one in solo and LAN, 2+ in hot-seat). */
+  /** Player ids of the human seats played in this browser (one in solo and online, 2+ in hot-seat). */
   humans: number[];
   /** Per seat (index into `humans`). */
   views: PlayerView[] | null;
@@ -277,7 +277,7 @@ interface State {
   handoff: Seat | null;
   lastHash: string | null;
   /** The online game this tab hosts or has joined. */
-  lan: Lan | null;
+  net: NetState | null;
   /** A build with online play: the relay and version to match; null otherwise. */
   online: OnlineInfo | null;
   /** The online staging room: the room as last broadcast, and this browser's seat in it. */
@@ -301,12 +301,12 @@ interface State {
   joinSeat(seat: Seat, name: string): void;
   /** Online play: join a hosted game from the lobby list as a guest. Resolves to an error message, or null. */
   joinOnline(relay: string, room: string): Promise<string | null>;
-  releaseLanSeat(seat: Seat): void;
+  releaseOnlineSeat(seat: Seat): void;
   /** Take the seat back after another window took it over. */
-  rejoinLan(): void;
-  reclaimLanSeat(): void;
-  leaveLan(): void;
-  /** Back to the main menu; leaving a LAN game disconnects from it. */
+  rejoinOnline(): void;
+  reclaimOnlineSeat(): void;
+  leaveOnline(): void;
+  /** Back to the main menu; leaving an online game disconnects from it. */
   exitToTitle(): void;
   /** Reopen a finished game's report after it was closed to look at the map. */
   openGameReport(): void;
@@ -375,16 +375,16 @@ export function allReady(views: PlayerView[], ready: boolean[]): boolean {
 export const isEliminated = (view: PlayerView): boolean =>
   view.players.find((p) => p.id === view.me)?.alive === false;
 
-/** One connected LAN observer controls pacing; the others acknowledge its turns automatically. */
-export function observerController(lan: Lan): SeatStatus | undefined {
-  return lan.seats.filter((s) => s.connected).sort((a, b) => a.seat - b.seat)[0];
+/** One connected online observer controls pacing; the others acknowledge its turns automatically. */
+export function observerController(net: NetState): SeatStatus | undefined {
+  return net.seats.filter((s) => s.connected).sort((a, b) => a.seat - b.seat)[0];
 }
 
 /** Observers may advance the AI game only after every human empire has fallen. */
-export function canResolveToEnd(view: PlayerView, lan: Lan | null = null): boolean {
+export function canResolveToEnd(view: PlayerView, net: NetState | null = null): boolean {
   if (view.finished || !isEliminated(view) || view.players.some((p) => p.is_human && p.alive)) return false;
-  const controller = lan && observerController(lan);
-  return !controller || controller.seat === lan?.mySeat;
+  const controller = net && observerController(net);
+  return !controller || controller.seat === net?.mySeat;
 }
 
 export function saveFile(client: GameClient, views: PlayerView[]): SaveFile {
@@ -479,8 +479,8 @@ export const useGame = create<State>((set, get) => {
       const s = get();
       const view = s.views?.[s.seat];
       if (!s.resolvingToEnd) return;
-      if (!view || !canResolveToEnd(view, s.client?.kind === 'remote' ? s.lan : null) || s.screen !== 'game' || s.error ||
-        (s.client?.kind === 'remote' && s.lan?.conn !== 'open')) {
+      if (!view || !canResolveToEnd(view, s.client?.kind === 'remote' ? s.net : null) || s.screen !== 'game' || s.error ||
+        (s.client?.kind === 'remote' && s.net?.conn !== 'open')) {
         stopResolving();
         return;
       }
@@ -507,7 +507,7 @@ export const useGame = create<State>((set, get) => {
       catch (error) { set({ error: String(error) }); }
     }
     stopResolving();
-    // A local game replaces any LAN session: its socket must not reinstall itself later.
+    // A local game replaces any online session: its socket must not reinstall itself later.
     dropRemote();
     remember(client);
     const firstView = client.view(0);
@@ -701,13 +701,13 @@ export const useGame = create<State>((set, get) => {
 
   let remote: RemoteClient | null = null;
 
-  /** Disconnect the LAN session; keep its credential available for a manual rejoin. */
+  /** Disconnect the online session; keep its credential available for a manual rejoin. */
   const dropRemote = () => {
     if (!remote) return;
     remote.disconnect(true);
     remote = null;
-    const lan = get().lan;
-    if (lan) set({ lan: { ...lan, mySeat: null, conn: 'closed', credentialRejected: false } });
+    const net = get().net;
+    if (net) set({ net: { ...net, mySeat: null, conn: 'closed', credentialRejected: false } });
   };
   let staging: StagingClient | null = null;
 
@@ -727,7 +727,7 @@ export const useGame = create<State>((set, get) => {
       const base = serverBase();
       if (!base) return stopRelayWatch();
       const s = get();
-      const connected = s.stagingConnected || s.lan?.conn === 'open';
+      const connected = s.stagingConnected || s.net?.conn === 'open';
       if (connected) {
         if (s.error === HOST_AWAY) set({ error: null });
         return;
@@ -763,7 +763,7 @@ export const useGame = create<State>((set, get) => {
     staging = null;
     dropRemote();
     stopHosting();
-    set({ lan: null, staging: null, stagingSeat: null, stagingConnected: false, stagingLeaving: false });
+    set({ net: null, staging: null, stagingSeat: null, stagingConnected: false, stagingLeaving: false });
   };
 
   /** A guest's room on the relay is over: forget it and go back to the app's own state. */
@@ -775,7 +775,7 @@ export const useGame = create<State>((set, get) => {
     dropRemote();
     setServerBase('');
     rememberRoom(null);
-    set({ lan: null, staging: null, stagingSeat: null, stagingConnected: false, stagingLeaving: false });
+    set({ net: null, staging: null, stagingSeat: null, stagingConnected: false, stagingLeaving: false });
   };
 
   const connectRemote = (seat: Seat, name: string, token?: string) => {
@@ -785,24 +785,24 @@ export const useGame = create<State>((set, get) => {
     if (token) rc.token = token;
     // An explicit new/load can create unclaimed seats. An old game's saved credential
     // must not prevent their initial claim; reserved seats always keep requiring it.
-    else if (get().lan?.status.seats.find((s) => s.seat === seat)?.reserved === false) rc.token = null;
+    else if (get().net?.status.seats.find((s) => s.seat === seat)?.reserved === false) rc.token = null;
     remote = rc;
-    const setLan = (p: Partial<Lan>) => {
-      const lan = get().lan;
-      if (lan) set({ lan: { ...lan, ...p } });
+    const setNet = (p: Partial<NetState>) => {
+      const net = get().net;
+      if (net) set({ net: { ...net, ...p } });
     };
-    setLan({ credentialRejected: false });
+    setNet({ credentialRejected: false });
     // Once another session replaces this one (a local game, another seat, leaving), a late
     // message or a reconnect from this socket must change nothing.
     const live = () => remote === rc;
     // Its seat-bound state only applies while it's the game on screen.
     const active = () => live() && get().client === rc;
-    // The current LAN protocol still waits for connected seats, including eliminated ones.
+    // The current online protocol still waits for connected seats, including eliminated ones.
     // Keep this observer Ready while living humans (or the first connected observer) set the pace.
     const readyObserver = () => {
       const view = get().views?.[0];
       if (!active() || rc.state !== 'open' || !view || view.finished || !isEliminated(view) ||
-        canResolveToEnd(view, get().lan) || get().ready[0]) return;
+        canResolveToEnd(view, get().net) || get().ready[0]) return;
       stopResolving();
       rc.syncOrders([]);
       if (rc.setReady(true)) set({ orders: [[]], errors: [[]], ready: [true] });
@@ -812,15 +812,15 @@ export const useGame = create<State>((set, get) => {
         if (!live()) return;
         if (conn !== 'open') pendingPurchase = null;
         if (conn !== 'open') stopResolving();
-        setLan({ conn, ...(conn === 'open' ? { credentialRejected: false } : {}) });
+        setNet({ conn, ...(conn === 'open' ? { credentialRejected: false } : {}) });
         if (conn === 'open') readyObserver();
       },
-      // In LAN play this browser has exactly one local seat (index 0).
+      // In online play this browser has exactly one local seat (index 0).
       seats: (seats) => {
         if (!live()) return;
         const me = seats.find((x) => x.seat === rc.seat);
         if (me && active()) set({ ready: [me.ready] });
-        setLan({ seats });
+        setNet({ seats });
         queueMicrotask(readyObserver);
       },
       validation: (errs, validatedOrders) => {
@@ -838,7 +838,7 @@ export const useGame = create<State>((set, get) => {
         if (!live()) return;
         stopResolving();
         if (code === 'invalid_seat_credential') {
-          setLan({ credentialRejected: true });
+          setNet({ credentialRejected: true });
           if (!active()) set({ screen: 'join' });
         }
         set({ error: message, busy: null });
@@ -853,7 +853,7 @@ export const useGame = create<State>((set, get) => {
         queueMicrotask(readyObserver);
         if (!prev || get().client !== rc) {
           // First view after joining.
-          setLan({ mySeat: rc.seat });
+          setNet({ mySeat: rc.seat });
           const hex = capitalOrUnit(view);
           set({
             client: rc,
@@ -1077,7 +1077,7 @@ export const useGame = create<State>((set, get) => {
     error: null,
     handoff: null,
     lastHash: null,
-    lan: null,
+    net: null,
     online: null,
     staging: null,
     stagingSeat: null,
@@ -1119,7 +1119,7 @@ export const useGame = create<State>((set, get) => {
         setServerBase('');
         rememberRoom(null);
       } else if (room) startRelayWatch();
-      set({ booted: true, online: onlineInfo, lan: status ? { status, mySeat: null, seats: status.seats, conn: 'closed' } : null });
+      set({ booted: true, online: onlineInfo, net: status ? { status, mySeat: null, seats: status.seats, conn: 'closed' } : null });
       // The host goes back to its game room (unless the remembered seat below resumes the game).
       const arrival = !!status?.is_local;
       // A reloaded tab proves ownership with its session credential, even if status still
@@ -1158,15 +1158,15 @@ export const useGame = create<State>((set, get) => {
       }
       startRelayWatch();
       rememberRoom(serverBase());
-      set({ error: null, lan: { status, mySeat: null, seats: status.seats, conn: 'closed' }, screen: status.staging ? 'staging' : 'join' });
+      set({ error: null, net: { status, mySeat: null, seats: status.seats, conn: 'closed' }, screen: status.staging ? 'staging' : 'join' });
 
       return null;
     },
 
     refreshStatus: async () => {
       const status = await fetchStatus();
-      const lan = get().lan;
-      if (status) set({ lan: { ...lan, mySeat: lan?.mySeat ?? null, conn: lan?.conn ?? 'closed', status, seats: status.seats } });
+      const net = get().net;
+      if (status) set({ net: { ...net, mySeat: net?.mySeat ?? null, conn: net?.conn ?? 'closed', status, seats: status.seats } });
       return status;
     },
 
@@ -1186,7 +1186,7 @@ export const useGame = create<State>((set, get) => {
         stopHosting();
         return 'Could not open your game. Try again.';
       }
-      set({ lan: { status, mySeat: null, seats: status.seats, conn: 'closed' }, screen: 'setup', setupMode: 'host' });
+      set({ net: { status, mySeat: null, seats: status.seats, conn: 'closed' }, screen: 'setup', setupMode: 'host' });
       return null;
     },
 
@@ -1194,7 +1194,7 @@ export const useGame = create<State>((set, get) => {
       set({ busy: 'Surveying the map…', error: null });
       try {
         const status = await hostGame(setup);
-        set({ busy: null, lan: { status, mySeat: null, seats: status.seats, conn: 'closed' } });
+        set({ busy: null, net: { status, mySeat: null, seats: status.seats, conn: 'closed' } });
         get().joinSeat(0, setup.players[0].name);
       } catch (e) {
         console.warn('host game', e);
@@ -1207,27 +1207,27 @@ export const useGame = create<State>((set, get) => {
       connectRemote(seat, name);
     },
 
-    releaseLanSeat: (seat) => {
-      const lan = get().lan;
-      const target = lan?.seats.find((s) => s.seat === seat);
-      if (!lan?.status.is_local || seat === lan.mySeat || !target || target.connected || target.reserved === false) return;
+    releaseOnlineSeat: (seat) => {
+      const net = get().net;
+      const target = net?.seats.find((s) => s.seat === seat);
+      if (!net?.status.is_local || seat === net.mySeat || !target || target.connected || target.reserved === false) return;
       set({ error: null });
       if (!remote?.releaseSeat(seat)) set({ error: connectionFirst('open') });
     },
 
-    rejoinLan: () => {
+    rejoinOnline: () => {
       set({ error: null });
       remote?.rejoin();
     },
 
-    reclaimLanSeat: () => {
-      const lan = get().lan;
-      if (!lan?.status.is_local || !lan.credentialRejected || !remote || get().busy) return;
+    reclaimOnlineSeat: () => {
+      const net = get().net;
+      if (!net?.status.is_local || !net.credentialRejected || !remote || get().busy) return;
       set({ busy: 'Reclaiming…', error: null });
       remote.reclaimSeat();
     },
 
-    leaveLan: () => {
+    leaveOnline: () => {
       stopResolving();
       dropRemote();
       endHosting();
@@ -1242,7 +1242,7 @@ export const useGame = create<State>((set, get) => {
       stopResolving();
       saveAbandonedScenario();
       // A join owns a socket before its first view installs the remote client.
-      if (remote || get().client?.kind === 'remote') get().leaveLan();
+      if (remote || get().client?.kind === 'remote') get().leaveOnline();
       else get().goto('title');
     },
 
@@ -1254,7 +1254,7 @@ export const useGame = create<State>((set, get) => {
         left: () => set({ stagingSeat: null, error: null }),
         state: (state) => set((s) => ({
           staging: state, stagingSeat: staging?.seat ?? null,
-          lan: s.lan ? { ...s.lan, status: { ...s.lan.status, staging: state } } : null,
+          net: s.net ? { ...s.net, status: { ...s.net.status, staging: state } } : null,
         })),
         started: (seat, _gameId, token) => {
           const name = staging?.name ?? `Player ${seat + 1}`;
@@ -1265,7 +1265,7 @@ export const useGame = create<State>((set, get) => {
         seatLost: (message) => set({ stagingSeat: null, error: message }),
         closed: () => set((s) => ({
           staging: null, stagingSeat: null, error: 'The host closed the game room.',
-          lan: s.lan ? { ...s.lan, status: { ...s.lan.status, staging: null } } : null,
+          net: s.net ? { ...s.net, status: { ...s.net.status, staging: null } } : null,
         })),
         error: (message) => set({ error: message, stagingSeat: staging?.seat ?? null }),
       }, undefined, undefined, host);
@@ -1287,7 +1287,7 @@ export const useGame = create<State>((set, get) => {
     releaseStagingSeat: (seat) => {
       const state = get();
       const occupant = state.staging?.occupants[seat];
-      if (!state.lan?.status.is_local || seat === state.stagingSeat ||
+      if (!state.net?.status.is_local || seat === state.stagingSeat ||
         state.staging?.config.seats[seat]?.kind !== 'open' || !occupant || occupant.connected) return;
       set({ error: null });
       if (!staging?.release(seat)) set({ error: connectionFirst('open') });
@@ -1386,7 +1386,7 @@ export const useGame = create<State>((set, get) => {
     },
 
     setSeat: (seat) => {
-      if (get().client?.kind === 'remote') return; // one seat per browser in LAN play
+      if (get().client?.kind === 'remote') return; // one seat per browser in online play
       const views = get().views;
       if (!views || seat < 0 || seat >= views.length) return;
       set({ seat, selection: null, mode: 'normal', anim: null, endTurnConfirmation: null, warPrompt: null, attacker: null, notice: null });
@@ -1530,7 +1530,7 @@ export const useGame = create<State>((set, get) => {
       if (scenario && scenario.status.outcome !== 'Playing') return;
       const s = which ?? seat;
       const observer = isEliminated(views[s]);
-      if (observer && !canResolveToEnd(views[s], get().client?.kind === 'remote' ? get().lan : null)) return;
+      if (observer && !canResolveToEnd(views[s], get().client?.kind === 'remote' ? get().net : null)) return;
       const client = get().client;
       let submitted = orders;
       if (!ready[s] && !observer && (automatedUnits(views[s], orders[s]).length || hasAutomatedCities(views[s], orders[s]))) {
@@ -1555,7 +1555,7 @@ export const useGame = create<State>((set, get) => {
       }
       const r = [...ready];
       if (remote && get().client === remote) {
-        // LAN: the server resolves the turn once every human seat is Ready.
+        // Online: the server resolves the turn once every human seat is Ready.
         if (s !== 0 || remote.state !== 'open') return;
         r[s] = !r[s];
         remote.syncOrders(observer ? [] : submitted[s]);
@@ -1573,8 +1573,8 @@ export const useGame = create<State>((set, get) => {
     resolveToEnd: () => {
       const s = get();
       const view = s.views?.[s.seat];
-      if (!view || !canResolveToEnd(view, s.client?.kind === 'remote' ? s.lan : null) || s.busy || s.screen !== 'game' ||
-        (s.client?.kind === 'remote' && s.lan?.conn !== 'open')) return;
+      if (!view || !canResolveToEnd(view, s.client?.kind === 'remote' ? s.net : null) || s.busy || s.screen !== 'game' ||
+        (s.client?.kind === 'remote' && s.net?.conn !== 'open')) return;
       set({ resolvingToEnd: true, reportOpen: false, techOpen: false, citiesOpen: false, error: null,
         defeatDismissed: [...new Set([...s.defeatDismissed, view.me])] });
       queueObserverTurn();

@@ -1026,7 +1026,7 @@ impl Game {
         js(guard(|| Ok(self.save_json())))
     }
 
-    /// Portable full-information archive for the owner. This never includes LAN tokens.
+    /// Portable full-information archive for the owner. This never includes online seat tokens.
     pub fn archive(&self) -> Result<String, JsError> {
         js(guard(|| {
             to_json(self.session.history.as_ref().ok_or("No recorded history")?)
@@ -1964,7 +1964,7 @@ pub fn scenario_targets_json(scenario_json: &str) -> Result<String, String> {
     ))
 }
 
-/// Stateless planning for local and LAN clients. The only input is the seat's fogged view.
+/// Stateless planning for local and online clients. The only input is the seat's fogged view.
 #[wasm_bindgen]
 pub fn explore_step(view_json: &str, unit: u32) -> Result<String, JsError> {
     js(explore_step_json(view_json, unit))

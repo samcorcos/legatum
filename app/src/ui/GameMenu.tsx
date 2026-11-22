@@ -48,8 +48,8 @@ export function GameMenu() {
   const hash = useGame((s) => s.lastHash);
   const hasReport = useGame((s) => !!s.report);
   const kind = useGame((s) => s.client?.kind);
-  const leaveLan = useGame((s) => s.leaveLan);
-  const hostHere = useGame((s) => !!s.lan?.status.is_local);
+  const leaveOnline = useGame((s) => s.leaveOnline);
+  const hostHere = useGame((s) => !!s.net?.status.is_local);
   const client = useGame((s) => s.client);
   const turn = useGame((s) => s.views?.[s.seat]?.turn);
   const archivedSeconds = useMemo(() => archivePlaySeconds(client?.archive?.()), [client, turn]);
@@ -128,10 +128,10 @@ export function GameMenu() {
             hostHere ? (
               <button onClick={() => {
                 setOpen(false);
-                if (window.confirm('End this game for everyone? Other players go back to the title, and the game cannot be resumed.')) leaveLan();
+                if (window.confirm('End this game for everyone? Other players go back to the title, and the game cannot be resumed.')) leaveOnline();
               }}>End the game for everyone</button>
             ) : (
-              <button onClick={() => (leaveLan(), setOpen(false))}>Leave the game (free this seat)</button>
+              <button onClick={() => (leaveOnline(), setOpen(false))}>Leave the game (free this seat)</button>
             )
           ) : (
             <button onClick={() => (goto('title'), setOpen(false))}>Exit to title</button>

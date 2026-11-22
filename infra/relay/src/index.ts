@@ -26,7 +26,7 @@ const MAX_ANNOUNCE_BYTES = 2048;
 function withHeaders(resp: Response): Response {
   if (resp.status === 101) return resp; // a WebSocket upgrade response is immutable and needs neither header
   const out = new Response(resp.body, resp);
-  // Open CORS on purpose: the hosted web build and the desktop app both call the relay, and an origin
+  // Open CORS on purpose: the hosted web build (any origin, including preview deployments) calls the relay, and an origin
   // check stops no one who scripts requests directly. The limits below are what bound abuse.
   out.headers.set("Access-Control-Allow-Origin", "*");
   out.headers.set("Cache-Control", "no-store");

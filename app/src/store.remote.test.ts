@@ -29,14 +29,14 @@ beforeEach(async () => {
   view = mock.view(0);
   useGame.setState({
     screen: 'join', client: null, views: null, orders: [[], []], ready: [false, false],
-    lan: {
+    net: {
       status: { mode: 'server', has_game: true, turn: 1, seats: [], is_local: true },
       mySeat: null, seats: [], conn: 'closed',
     },
   });
 });
 afterEach(() => {
-  useGame.getState().leaveLan();
+  useGame.getState().leaveOnline();
   vi.useRealTimers();
   vi.unstubAllGlobals();
 });
@@ -51,7 +51,7 @@ it('shows retained DisbandUnit after a reload before Ready, and lets the user ca
   expect(socket.sent).toEqual([{ type: 'join', seat: 0, name: 'Ana', token: 'seat-token' }]);
   socket.push({ type: 'view', view });
   expect(useGame.getState().orders[0]).toEqual(orders);
-  expect(useGame.getState().lan?.conn).toBe('open');
+  expect(useGame.getState().net?.conn).toBe('open');
   useGame.getState().editOrders(() => []);
   useGame.getState().toggleReady();
   expect(socket.sent.slice(1)).toEqual([{ type: 'orders', game_id: 'g1', turn: 1, orders: [] }, { type: 'ready', game_id: 'g1', turn: 1, ready: true }]);
@@ -80,7 +80,7 @@ it('replaces the UI orders on reconnect, including a same-turn seat takeover', (
   expect(next.sent.slice(1)).toEqual([{ type: 'ready', game_id: 'g1', turn: 1, ready: true }]);
 });
 
-it('keeps a LAN seat Ready after clearing an idle unit or repeating an unchanged order', () => {
+it('keeps an online seat Ready after clearing an idle unit or repeating an unchanged order', () => {
   useGame.getState().joinSeat(0, 'Ana');
   const socket = Socket.instances[0];
   socket.open();

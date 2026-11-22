@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import './brand/tokens.css';
 import './brand/fonts';
 import './styles.css';
-import './lan.css';
+import './online.css';
 import './touch.css';
 import { App } from './App';
 import { useGame } from './store';
