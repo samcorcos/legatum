@@ -52,7 +52,7 @@ This file holds the current rules, one line each. The user's words, dates, as-bu
 
 - Build lists are dense; no line holds one short item; locked upgrades nest under the building they follow (user, 2026-10-28, 2026-10-18).
 - Faction-accurate everywhere: show only what helps your faction, with its replacements; when a faction loses a yield, hide it (user, 2026-11-22, Egypt).
-- A unit has two idle buttons (Sleep and Skip) plus Heal (H) when damaged; every military unit can auto-explore with E (user, 2026-10-20, 2026-11-01, 2026-11-14).
+- A unit has two idle buttons: Fortify (civilians: Wait; F) and Skip this turn (Space), plus Heal (H) when damaged (the internal order is still named Sleep); every military unit can auto-explore with E (user, 2026-10-20, 2026-11-01, 2026-11-14).
 - A unit a rule holds in place shows it on the map and card before you try to move it; a released garrison returns to the queue (user, 2026-11-11, 2026-11-15).
 - Aircraft are units in the turn rotation (user, 2026-10-18). A unit with two ways to attack shows both and picks nothing silently.
 - A long list of cards has type-to-filter and shows nothing that cannot be used (user, 2026-11-14).
@@ -66,6 +66,7 @@ This file holds the current rules, one line each. The user's words, dates, as-bu
 - Every faction sheet has the same shape: strengths left, costs right, a drawback beside the ability it pays for, the special unit and building painted, each rule once, the goal in one block, ending "Full rules in How to Play" (user, 2026-11-15, 2026-11-21).
 - Finishing a technology feels like an unlock (Civ 6 style); unlock hovers sell the unlock with big art and a comparison (user, 2026-10-05, 2026-10-11).
 - Sound is organic and in-world, never robotic; frequent clicks need a quieter sound (target player, 2026-10-09, 2026-11-20).
+- Small layout rules (details in `references/feedback-rules-2.md`): one glyph, one meaning; an idle city's first build card is whole at scroll 0 at 1000x600; a relation badge is never cut; a status word comes from one shared check; auto-scrolling a panel keeps its identity header in view; pickers start on the map; per-tile action lists go after the main groups.
 - Amounts carry their yield icon and are upright lining figures; text fits its box, wraps rather than truncating meaning, and never sits under a badge.
 
 ## Game text: plain language

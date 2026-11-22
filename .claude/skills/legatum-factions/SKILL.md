@@ -42,6 +42,7 @@ Japan is not a playable faction until Tokugawa lands: its `Faction` slot is Indi
 
 ## Standing rules
 
+- **Special units that exist (rules 34, user 2026-11-14, `legatum-rules` `references/factions.md`):** Aztecs Eagle Warrior (replaces Spearman: +4 strength, +10 Production); Celts Gaesatae (replaces Phalangite: +8 attacking, -5 defending); Athens Peltast (replaces Composite Archer: 3 moves, same shot); India War Elephant (replaces Knight: +8 strength, 3 moves instead of 4, no city-charge penalty); Switzerland Reisläufer (replaces Pikeman: +50% against mounted); Germany Panzer (replaces Tank: +1 move, uses 1 Oil). Sparta, the Mongols (Keshig) and Byzantium (Tagmatic Soldier) are in the table. Treat a faction without a special unit and a special building as incomplete.
 - **Every faction has a cost, a special unit and a special building, all painted** (user, 2026-11-15, symmetry ruling; Civ 6 package, 2026-11-14). A faction or piece is not done with placeholder art.
 - **One unusual cost per rule break;** a second price stacked on top reads as punishment (user, 2026-11-16, Rome).
 - **Every faction goal is worth exactly 2 VP;** tune the threshold or cost, never the VP (user, 2026-10-06). A goal is a cost or a strategic trade-off in theme, never "do your thing more", never a chore of busywork, never map luck, and goals differ in kind across factions (user, 2026-10-06). Every goal has a super-high cost or rivals can take the points away.
