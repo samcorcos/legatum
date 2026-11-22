@@ -2,7 +2,7 @@ import { eraName, eraNumeral } from '../ui/eraResearch';
 import { BUILDING_STATS, FACTION_PIECES, GERMANY_FACTORY_NOTE, TECH_NAME, isGreatWork, itemDescription, itemIcon, itemKey, itemName, sameItem, uniquePieceGain } from '../data';
 import { addsText, pieceComparison, standardText } from '../pieceCompare';
 import { TECH_QUOTE } from '../techQuotes';
-import { steppingStone, techCardUnlocks, techUnlockSummary } from '../ui/techCardUnlocks';
+import { techCardUnlocks, techUnlockSummary } from '../ui/techCardUnlocks';
 import type { CityView, Faction, PlayerView, ProductionItem, TechId, UnitKind } from '../types';
 
 /** One unlock on the card: an item you can now build, or a tech effect with no item behind it. */
@@ -37,8 +37,6 @@ export interface UnlockCard {
   quote: string;
   icon: string;
   tiles: UnlockTile[];
-  /** A tech with nothing for this faction: it only leads on to other technologies. */
-  steppingStone: { headline: string; leadsTo: string | null } | null;
   /** Where "Show ... in ..." goes: the first unlocked item some city can build now. Null: the primary is Continue. */
   show: { item: ProductionItem; itemName: string; city: number; cityName: string } | null;
   /** The research that carries on, with what it unlocks. */
@@ -139,7 +137,6 @@ export function unlockCardFor(view: PlayerView, tech: TechId): UnlockCard {
     tech, quote: TECH_QUOTE[tech], icon: 'yield-science',
     kicker: `Technology discovered · Era ${eraNumeral(era)} · ${eraName(era)}`,
     tiles, keys: tiles.flatMap((t) => t.key ? [t.key] : []),
-    steppingStone: tiles.length ? null : steppingStone(tech, faction),
     show, primary: show ? 'show' : chooseNext ? 'research' : 'continue',
     chooseNext,
     next: current ? { name: TECH_NAME[current], turns: view.research.turns_left, unlocks: nextUnlocks.length ? nextUnlocks.join(', ') : null } : null,

@@ -1,5 +1,5 @@
 import { TECH_NAME, itemIcon, itemKey } from '../data';
-import { eraName, eraNumeral } from '../ui/eraResearch';
+import { eraName, eraNumeral, researchCatalog } from '../ui/eraResearch';
 import { eraObjectivesFor, type ObjectiveLine } from '../eraObjectives';
 import type { Faction, PlayerView, ProductionItem, TechId } from '../types';
 
@@ -50,7 +50,7 @@ export function eraUpCardFor(view: PlayerView, era: number, first: boolean): Era
   const known = new Set(r.known);
   const me = view.players.find((p) => p.id === view.me);
   const faction = me?.faction ?? 'India';
-  const eraTechs = r.catalog.filter((t) => t.era === era);
+  const eraTechs = researchCatalog(r).filter((t) => t.era === era);
   const techs = eraTechs.map((t) => ({
     tech: t.tech, name: TECH_NAME[t.tech], cost: t.cost.total, known: known.has(t.tech),
   }));
