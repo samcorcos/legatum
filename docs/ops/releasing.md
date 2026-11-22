@@ -1,6 +1,6 @@
 # Releasing Legatum
 
-One thing reaches players: the web build ("Play in your browser") at https://legatum-game.pages.dev, with the
+One thing reaches players: the web build ("Play in your browser") at https://playlegatum.com (a custom domain on the Cloudflare Pages project `legatum-game`; https://legatum-game.pages.dev serves the same deploy and stays, because a browser keeps saves per address and games begun there live there), with the
 online lobby's relay (`infra/relay`) beside it. Both are deployed by GitHub Actions from this repository. No secret value is written here or anywhere in the repository; secrets live
 only in the repository's Actions settings (Settings → Secrets and variables → Actions).
 
@@ -21,7 +21,7 @@ a notice and deploys nothing, so forks stay green.
 3. Add the repository secrets and, if needed, the variables below.
 4. Run the workflow (Actions → Deploy web → Run workflow) or push to `master`. The run's summary shows the
    address.
-5. If the address is not `https://legatum-game.pages.dev`, correct it in the two places it is written: `homepage` in
+5. If the address is not `https://playlegatum.com`, correct it in the two places it is written: `homepage` in
    `app/package.json` (the link-preview tags are built from it) and the "Play in your browser" link in
    `README.md`. Then check a preview of the link with a card validator before announcing it.
 

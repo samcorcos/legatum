@@ -3,7 +3,7 @@
   "private": true,
   "license": "MIT",
   "repository": "github:samcorcos/legatum",
-  "homepage": "https://legatum-game.pages.dev",
+  "homepage": "https://playlegatum.com",
   "version": "0.1.0",
   "type": "module",
   "scripts": {

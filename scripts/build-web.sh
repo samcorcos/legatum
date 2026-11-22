@@ -43,6 +43,8 @@ if [ -z "${LEGATUM_BUILD_ID:-}" ]; then
 fi
 [[ "$LEGATUM_BUILD_ID" =~ ^[a-z0-9][a-z0-9-]{0,39}$ ]] || { echo "LEGATUM_BUILD_ID must be lower-case letters, digits and hyphens: $LEGATUM_BUILD_ID" >&2; exit 1; }
 # The live relay, and the origins the page's Content-Security-Policy allows for it (hosted/_headers).
+# hosted/_headers also lists the earlier workers.dev addresses: builds kept at v/<id>/ from before the domain
+# still call them. Drop them there when keep-builds no longer keeps such a build.
 default_relay="https://relay.playlegatum.com"
 relay="${LEGATUM_RELAY_URL:-$default_relay}"
 relay="${relay%/}"

@@ -115,7 +115,7 @@ These clips are recorded from the running game.
 
 ## Play it
 
-**[Play in your browser](https://legatum-game.pages.dev).** Nothing to install. Single player against the AI, hot seat on one computer, the scenarios and online games all work there. It runs on a laptop or desktop and in a phone or tablet browser; it is tested most in Chrome. The first load is about 7 MB. Your game is autosaved in that browser, and Menu → Save to file gives you a copy to keep. The game's record is also uploaded to the project, without player names; see [Privacy](#privacy).
+**[Play in your browser](https://playlegatum.com).** Nothing to install. Single player against the AI, hot seat on one computer, the scenarios and online games all work there. It runs on a laptop or desktop and in a phone or tablet browser; it is tested most in Chrome. The first load is about 7 MB. Your game is autosaved in that browser, and Menu → Save to file gives you a copy to keep. The game's record is also uploaded to the project, without player names; see [Privacy](#privacy).
 
 ### Privacy
 
