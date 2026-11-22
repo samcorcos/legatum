@@ -1,6 +1,8 @@
 import { env as workerEnv, exports } from "cloudflare:workers";
+import { runInDurableObject } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
-import { checkRecord, originAllowed, tokenMatches, type Env } from "../src/index";
+import worker, { checkRecord, originAllowed, tokenMatches, type Env } from "../src/index";
+import { addressKey, capFrom, ipHash } from "../src/quota";
 
 const env = workerEnv as unknown as Env;
 
@@ -76,6 +78,116 @@ describe("game uploads", () => {
     expect(ok.status).toBe(204);
     expect(ok.headers.get("Access-Control-Allow-Methods")).toContain("PUT");
     expect((await call(`/v1/games/${ID}`, { method: "OPTIONS", headers: { Origin: "https://x.example" } })).status).toBe(403);
+  });
+});
+
+describe("new games per address per day", () => {
+  // Distinct game ids: 13-digit time, then two 16-hex parts.
+  const gid = (n: number) => `web-1795310626069-${n.toString(16).padStart(16, "0")}-89f1f0f11637b000`;
+  const rec = (id: string) => { const r = record(); r.metadata.game_id = id; return r; };
+  let lineNo = 0;
+  const line = () => `198.51.100.${++lineNo}`;
+  const base = 0x1000 + Math.floor(Math.random() * 0xfffff) * 100;
+  let next = 0;
+  const fresh = () => gid(base + ++next);
+  const putFrom = async (ip: string, id: string, cap = "2") => {
+    const body = await gzip(JSON.stringify(rec(id)));
+    return worker.fetch(
+      new Request(`${BASE}/v1/games/${id}`, { method: "PUT", headers: { Origin: ORIGIN, "CF-Connecting-IP": ip }, body }),
+      Object.assign({}, env, { MAX_NEW_GAMES_PER_DAY: cap }) as Env,
+    );
+  };
+  const inR2 = async (id: string) => (await env.GAMES.head(`games/2026-11/${id}.json.gz`)) !== null;
+
+  it("refuses the new game past the cap with 429 and Retry-After, and stores nothing", async () => {
+    const ip = line();
+    const a = fresh(), b = fresh(), c = fresh();
+    expect((await putFrom(ip, a)).status).toBe(200);
+    expect((await putFrom(ip, b)).status).toBe(200);
+    const r = await putFrom(ip, c);
+    expect(r.status).toBe(429);
+    expect(await r.json()).toEqual({ error: "too many new games today" });
+    const wait = Number(r.headers.get("Retry-After"));
+    expect(wait).toBeGreaterThanOrEqual(1);
+    expect(wait).toBeLessThanOrEqual(86_400);
+    expect(r.headers.get("Access-Control-Allow-Origin")).toBe(ORIGIN);
+    expect(await inR2(c)).toBe(false);
+  });
+
+  it("lets a stored game keep checkpointing at the cap", async () => {
+    const ip = line();
+    const a = fresh(), b = fresh();
+    expect((await putFrom(ip, a)).status).toBe(200);
+    expect((await putFrom(ip, b)).status).toBe(200);
+    expect((await putFrom(ip, a)).status).toBe(200);
+    expect((await putFrom(ip, b)).status).toBe(200);
+    expect((await putFrom(ip, fresh())).status).toBe(429);
+  });
+
+  it("counts each address on its own, and an IPv6 /64 as one", async () => {
+    const one = line(), two = line();
+    await putFrom(one, fresh());
+    await putFrom(one, fresh());
+    expect((await putFrom(one, fresh())).status).toBe(429);
+    expect((await putFrom(two, fresh())).status).toBe(200);
+    const net = Math.floor(Math.random() * 60000).toString(16);
+    expect((await putFrom(`2001:db8:55:${net}::1`, fresh())).status).toBe(200);
+    expect((await putFrom(`2001:db8:55:${net}:aaaa:bbbb:cccc:dddd`, fresh())).status).toBe(200);
+    expect((await putFrom(`2001:db8:55:${net}::99`, fresh())).status).toBe(429);
+    expect((await putFrom(`2001:db8:55:${net}1::1`, fresh())).status).toBe(200);
+  });
+
+  it("honours the var, and a bad var means 50", async () => {
+    const ip = line();
+    expect((await putFrom(ip, fresh(), "1")).status).toBe(200);
+    expect((await putFrom(ip, fresh(), "1")).status).toBe(429);
+    expect(capFrom(undefined)).toBe(50);
+    for (const bad of ["", "0", "-3", "many", "2.5", "1e3"]) expect(capFrom(bad)).toBe(50);
+    expect(capFrom("7")).toBe(7);
+  });
+
+  it("keeps only a salted hash for today, never the address", async () => {
+    const ip = "203.0.113.77";
+    await putFrom(ip, fresh());
+    const stub = env.QUOTA.getByName("quota");
+    const dump = await runInDurableObject(stub, async (_obj, state) => ({
+      counts: state.storage.sql.exec("SELECT * FROM counts").toArray(),
+      kv: state.storage.sql.exec("SELECT * FROM kv").toArray(),
+    }));
+    expect(JSON.stringify(dump)).not.toContain(ip);
+    expect(JSON.stringify(dump)).not.toContain("203.0.113");
+    const salt = String(dump.kv.find((r) => r.k === "salt")?.v);
+    expect(dump.counts.map((r) => String(r.ip_hash))).toContain(await ipHash(salt, ip));
+    expect(dump.counts.every((r) => /^[0-9a-f]{32}$/.test(String(r.ip_hash)) && r.day === new Date().toISOString().slice(0, 10))).toBe(true);
+  });
+
+  it("drops rows of earlier days and counts the empty address as one", async () => {
+    const stub = env.QUOTA.getByName("quota");
+    const now = Date.UTC(2031, 0, 5, 23, 0, 0);
+    expect(await stub.take("", 1, now)).toEqual({ ok: true });
+    expect(await stub.take("", 1, now)).toEqual({ ok: false, retryAfter: 3600 });
+    expect(await stub.take("", 1, now + 3_600_000)).toEqual({ ok: true });
+    const days = await runInDurableObject(stub, async (_o, state) => state.storage.sql.exec("SELECT DISTINCT day FROM counts").toArray().map((r) => r.day));
+    expect(days).toEqual(["2031-01-06"]);
+  });
+
+  it("cuts addresses as the relay does", () => {
+    expect(addressKey("203.0.113.9")).toBe("203.0.113.9");
+    expect(addressKey("::ffff:203.0.113.9")).toBe("203.0.113.9");
+    expect(addressKey("2001:db8:12:34:aaaa:bbbb:cccc:dddd")).toBe("2001:db8:12:34::/64");
+    expect(addressKey("2001:0DB8:0012:0034::1")).toBe("2001:db8:12:34::/64");
+    expect(addressKey("2001:db8::1")).toBe("2001:db8:0:0::/64");
+    expect(addressKey("2001:db8:12:35::1")).not.toBe(addressKey("2001:db8:12:34::1"));
+    expect(addressKey("::1")).toBe("0:0:0:0::/64");
+  });
+
+  it("hashes with a salt", async () => {
+    const a = await ipHash("salt-1", "203.0.113.9");
+    expect(a).toMatch(/^[0-9a-f]{32}$/);
+    expect(a).not.toContain("203");
+    expect(await ipHash("salt-1", "203.0.113.9")).toBe(a);
+    expect(await ipHash("salt-2", "203.0.113.9")).not.toBe(a);
+    expect(await ipHash("s", "2001:db8:12:34::1")).toBe(await ipHash("s", "2001:db8:12:34:ffff:ffff:ffff:ffff"));
   });
 });
 

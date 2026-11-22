@@ -123,7 +123,7 @@ Every game played in the browser version is uploaded to us, so we can measure ho
 
 - **What is sent:** the game's record: the setup, every turn's orders, the score each turn and how long turns took. Player names are replaced with "Player 1", "AI 2" and so on before anything leaves your browser, and the server refuses a record with any other name.
 - **Coach questions:** if coach questions are on, your typed answers are uploaded with the game.
-- **What is not sent:** no account, no email, no cookies and no tracking. Legatum keeps no IP addresses or request logs.
+- **What is not sent:** no account, no email, no cookies and no tracking. Legatum keeps no request logs. To limit abuse, the upload server remembers a scrambled form of your internet address until the end of the day (UTC), which cannot be turned back into the address, and nothing else about you.
 - **Who can read it:** the records are stored privately and only the maintainer can read them. They may be used to train and test the game's AI.
 - **Turning it off:** uploads cannot be turned off in the browser version. Builds from source upload nothing.
 
