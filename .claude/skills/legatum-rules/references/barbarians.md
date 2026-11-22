@@ -31,7 +31,7 @@ Warbands when it lands in the territory of a Celtic city that has no camp yet.
 `rules::barbarians::spares(state, owner)` (the owner is a Celtic empire; `PlayerView::barbarians_spare_me` for the AI) is checked in
 every barbarian decision: `raider_plan` ignores Celtic units (no melee target, no ranged shot, no captive), `scout_goto` never reports a
 Celtic city (so no raid is launched at one) and clears a report on a city that has become Celtic, and the raid march ignores a Celtic city. At resolution,
-`movement.rs::movement_round` blocks a barbarian step into a tile holding a Celtic unit or city ("barbarians never attack the Celts") and drops
+`movement.rs::movement_round` blocks a barbarian step into a tile holding a Celtic unit or city ("barbarians don't attack the Celts", the refusal text in `movement.rs`) and drops
 a barbarian step onto a tile a Celtic unit also steps onto that round, so no meeting engagement is ever the barbarians' doing. The rule is one-sided:
 the Celts can still attack barbarian units and camps, and clear them (a natural camp pays the usual 50 Gold, a rite camp pays the Celts nothing),
 a camp's tile still yields nothing to whoever works it, and rivals clear camps as before, which breaks Raise the Warbands. Scope: the Celtic empire
