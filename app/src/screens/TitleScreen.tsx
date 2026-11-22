@@ -161,12 +161,16 @@ function MultiplayerMenu({ onBack }: { onBack: () => void }) {
   // Online play: Host Game runs the game in this tab and opens its game room. A build with no relay has
   // no game list, so it offers hot seat only.
   const [hosting, setHosting] = useState<'idle' | 'starting' | 'failed'>('idle');
+  // Host from a save has its own busy and failed state, so a retry stays on the button the player pressed.
+  const [resuming, setResuming] = useState<'idle' | 'starting' | 'failed'>('idle');
+  const busy = hosting === 'starting' || resuming === 'starting';
   const [hostError, setHostError] = useState<string | null>(null);
   const [name, setName] = useState(() => savedPlayerName() ?? DEFAULT_PLAYER_NAME);
   const hostOnline = async () => {
     const who = name.trim().slice(0, MAX_PLAYER_NAME) || DEFAULT_PLAYER_NAME;
     rememberPlayerName(who);
     setHosting('starting');
+    setResuming('idle');
     setHostError(null);
     const failure = await useGame.getState().hostOnline(who);
     if (failure) {
@@ -179,14 +183,15 @@ function MultiplayerMenu({ onBack }: { onBack: () => void }) {
     const who = name.trim().slice(0, MAX_PLAYER_NAME) || DEFAULT_PLAYER_NAME;
     rememberPlayerName(who);
     setHostError(null);
+    setHosting('idle');
     void pickSaveFile(async (save) => {
-      setHosting('starting');
+      setResuming('starting');
       const failure = await useGame.getState().hostOnlineFromSave(who, save);
       if (failure) {
         setHostError(failure);
-        setHosting('failed');
+        setResuming('failed');
       }
-    }, (message) => setHostError(message));
+    }, (message) => { setHostError(message); setResuming('failed'); });
   };
 
   return (
@@ -206,23 +211,26 @@ function MultiplayerMenu({ onBack }: { onBack: () => void }) {
                 className="lobby-input"
                 value={name}
                 maxLength={MAX_PLAYER_NAME}
-                disabled={hosting === 'starting'}
+                disabled={busy}
                 onChange={(e) => setName(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter' && hosting !== 'starting') void hostOnline(); }}
+                onKeyDown={(e) => { if (e.key === 'Enter' && !busy) void hostOnline(); }}
               />
             </label>
-            <button className={`btn big ${hosting === 'failed' && !views ? 'primary' : ''}`} disabled={hosting === 'starting'} onClick={hostOnline}>
+            <button className={`btn big ${hosting === 'failed' && !views ? 'primary' : ''}`} disabled={busy} onClick={hostOnline}>
               Host Game
               <span className="btn-sub">
                 {hosting === 'starting' ? <><span className="spinner" /> Opening your game…</>
                   : hosting === 'failed' ? 'Try again' : 'Open a game that others can find and join'}
               </span>
             </button>
-            <button className="btn big" disabled={hosting === 'starting'} onClick={hostFromSave}>
+            <button className={`btn big ${resuming === 'failed' && !views ? 'primary' : ''}`} disabled={busy} onClick={hostFromSave}>
               Host from a save…
-              <span className="btn-sub">Carry on an online game from its save file</span>
+              <span className="btn-sub">
+                {resuming === 'starting' ? <><span className="spinner" /> Opening your game…</>
+                  : resuming === 'failed' ? 'Try again' : 'Carry on an online game from its save file'}
+              </span>
             </button>
-            <button className={`btn big ${!views && hosting === 'idle' ? 'primary' : ''}`} disabled={hosting === 'starting'} onClick={() => goto('online')}>
+            <button className={`btn big ${!views && hosting === 'idle' && resuming === 'idle' ? 'primary' : ''}`} disabled={busy} onClick={() => goto('online')}>
               Join Game
               <span className="btn-sub">See the games that are open now</span>
             </button>
