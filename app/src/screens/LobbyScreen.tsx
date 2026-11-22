@@ -4,6 +4,8 @@
 // sent to the server, and network players take the open seats and Ready up before the host starts.
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useGame } from '../store';
+import { listAutosaves } from '../platform/autosaveStore';
+import { ReplaceGameDialog } from '../ui/ReplaceGameDialog';
 import { rememberedSeat, rememberSeat } from '../remote';
 import { factionColor } from '../theme';
 import { Tip } from '../ui/Tip';
@@ -54,6 +56,8 @@ export function LobbyScreen() {
   const set = useGame((s) => s.set);
   const busy = useGame((s) => s.busy);
   const error = useGame((s) => s.error);
+  const [replacing, setReplacing] = useState<{ label: string; turn: number } | null>(null);
+  const checking = useRef(false);
   const [restoringRoomId, setRestoringRoomId] = useState(() => {
     const saved = rememberedSeat();
     return mode === 'host' && status?.is_local && saved?.seat === 0 && saved.token ? saved.roomId : undefined;
@@ -136,8 +140,15 @@ export function LobbyScreen() {
       return;
     }
     const setup = buildSetup(lobby);
-    if (mode === 'host') hostNewGame(setup);
-    else startGame(setup, { training: lobby.training === true });
+    if (mode === 'host') { hostNewGame(setup); return; }
+    // A saved game is only replaced after asking; the new game's first save is what replaces it.
+    if (checking.current) return;
+    checking.current = true;
+    void listAutosaves().then(([newest]) => {
+      checking.current = false;
+      if (newest) setReplacing({ label: newest.label, turn: newest.turn });
+      else startGame(setup, { training: lobby.training === true });
+    });
   };
 
   // The Start button lives in a dock below the scrolling lobby, never on top of its settings.
@@ -156,6 +167,8 @@ export function LobbyScreen() {
           {activeCount(lobby)} empires · {mapSizeLabel(lobby.mapSize).toLowerCase()} map{lobby.barbarians === false ? ' · no barbarians' : ''}
         </span>
       </button>
+      {replacing && <ReplaceGameDialog saved={replacing} onCancel={() => setReplacing(null)}
+        onStart={() => { setReplacing(null); startGame(buildSetup(lobby), { training: lobby.training === true }); }} />}
     </>
   );
 
