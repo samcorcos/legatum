@@ -15,7 +15,6 @@ import type { useGame } from '../src/store';
 type GameWindow = Window & { legatum: typeof useGame };
 const SIZES = [{ width: 1000, height: 600 }, { width: 1440, height: 900 }];
 const out = fileURLToPath(new URL('../test-results/research-click/', import.meta.url));
-const HINT = 'Shift+click a technology to queue it next.';
 
 async function load(page: Page) {
   const f = researchFixture('India');
@@ -71,7 +70,7 @@ for (const size of SIZES) test.describe(`research card shortcuts ${size.width}x$
     const strip = d.locator('.research-queue');
     // Aim at the card's top band (its name row): always in view, so the click never scrolls the panel.
     const at = { x: 60, y: 24 };
-    await expect(d.getByTestId('queue-hint')).toContainText(HINT);
+    await expect(d.getByTestId('queue-empty').first()).toHaveText(/Empty$/);
     await shot(page, size, '01-nothing-queued');
 
     const before = await boxes([...cards, strip]);
@@ -108,11 +107,9 @@ for (const size of SIZES) test.describe(`research card shortcuts ${size.width}x$
     const afterAll = await boxes([...cards, strip]);
     afterAll.forEach((b, i) => same(b, before[i], `box ${i} after three picks`));
 
-    // The strip lists them in order, with no empty slot for a queued tech, and the hint is gone for good.
+    // The strip lists them in order, with no empty slot for a queued tech.
     await expect(d.locator('.research-queue li')).toHaveCount(3);
     expect(await d.locator('.research-queue li').evaluateAll((els) => els.map((e) => (e as HTMLElement).dataset.tech))).toEqual(['Masonry', 'Writing', 'Currency']);
-    await expect(d.getByTestId('queue-hint')).toHaveCount(0);
-    expect(await page.evaluate(() => localStorage.getItem('legatum.research-queue-hint.v1'))).toBe('1');
     await shot(page, size, '02-researching-and-queued');
 
     // 3. Click a queued card: it becomes the current research, the others follow; still nothing moves.

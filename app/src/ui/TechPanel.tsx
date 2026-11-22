@@ -8,7 +8,6 @@ import { firstScienceForecast } from '../research';
 import { revealedByTech } from '../resources';
 import { resourceArtUrl } from '../icons';
 import { ResearchQueue, editQueue } from './ResearchQueue';
-import { markQueueHintSeen } from './queueHint';
 import { flyToQueue } from './flyChip';
 import { BreakdownTable, Icon, Tip, YieldIcon } from './index';
 import { closeTips } from './Tip';
@@ -103,7 +102,12 @@ export function TechPanel() {
     return () => { cancel?.(); window.clearTimeout(done); };
   }, [picked]);
   useEffect(() => {
-    if (inspected) detail.current?.scrollIntoView({ block: 'nearest', behavior: 'instant' });
+    if (!inspected) return;
+    detail.current?.scrollIntoView({ block: 'nearest', behavior: 'instant' });
+    // A short window can't hold a tall card and its details at once: keep the card's name in view, details below.
+    const scroller = detail.current?.closest<HTMLElement>('.research-scroll');
+    const head = scroller?.querySelector<HTMLElement>(`.era-card[data-tech="${inspected}"]`);
+    if (scroller && head && head.getBoundingClientRect().top < scroller.getBoundingClientRect().top) scroller.scrollTop -= scroller.getBoundingClientRect().top - head.getBoundingClientRect().top + 4;
   }, [inspected]);
   if (!visible || !view) return null;
   const r = view.research;
@@ -135,7 +139,6 @@ export function TechPanel() {
   };
   const addToQueue = (tech: TechId) => {
     if (view.finished || queue.includes(tech)) return;
-    markQueueHintSeen();
     editQueue(view, appendToQueue(queue, tech));
     announce(tech);
   };

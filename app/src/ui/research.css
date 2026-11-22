@@ -116,8 +116,6 @@
 .research-queue li.first { border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
 .rq-ghost { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 4px 8px; border: 1px dashed var(--rule-2); overflow: hidden; color: var(--muted); font: 400 12px/1.25 var(--sans); }
 .rq-ghost .rq-number { border-color: var(--rule-2); color: var(--muted); }
-.rq-ghost.hint { border-color: var(--accent); color: var(--ink); font-weight: 600; }
-.rq-ghost.hint .rq-number { border-color: var(--accent); color: var(--accent); }
 .rq-number {
   display: inline-grid;
   place-items: center;
@@ -125,7 +123,7 @@
   width: 20px;
   height: 20px;
   border: 1px solid var(--accent);
-  border-radius: 50%;
+  border-radius: 2px; /* square: a round numbered disc is a seat (player) number */
   color: var(--accent);
   font: 700 11px/1 var(--sans);
 }
@@ -366,15 +364,17 @@
   .research-queue { gap: 3px; margin-bottom: 5px; padding: 4px 10px 5px; }
   .research-queue-head { height: auto; min-height: 26px; }
   .research-queue-head .btn:not(.primary) { height: 24px; font-size: 12px; }
-  .research-queue-cta .btn.primary { min-height: 34px; padding: 4px 14px; }
-  /* A slot is one row: number, name over arrival, then the three 24 px controls (the audit's minimum target). */
-  .research-queue-slots { grid-auto-columns: minmax(258px, 1fr); grid-template-rows: 38px; }
-  .research-queue li { grid-template-columns: 20px minmax(0, 1fr) 24px auto; grid-template-rows: 18px 16px; align-content: center; gap: 0 6px; padding-block: 2px; }
-  .research-queue li .rq-number { grid-column: 1; grid-row: 1 / 3; align-self: center; }
+  .research-queue-cta .btn.primary { min-height: 30px; padding: 3px 14px; }
+  /* A slot is one 30 px line: number, name, arrival, then the three 24 px controls (the audit's minimum target),
+     so the strip costs the cards as little height as it can. */
+  .research-queue-slots { grid-auto-columns: minmax(258px, 1fr); grid-template-rows: 30px; }
+  .research-queue li { grid-template-columns: 20px minmax(0, max-content) minmax(0, 1fr) 24px auto; grid-template-rows: 24px; align-content: center; gap: 0 6px; padding-block: 2px; }
+  .research-queue li .rq-number { grid-column: 1; grid-row: 1; align-self: center; }
   .research-queue li .rq-name { grid-column: 2; grid-row: 1; font-size: 14px; }
-  .research-queue li .rq-arrival { grid-column: 2; grid-row: 2; padding-left: 0; font-size: 12px; }
-  .research-queue li .rq-remove { grid-column: 3; grid-row: 1 / 3; align-self: center; }
-  .research-queue li .research-queue-controls { grid-column: 4; grid-row: 1 / 3; align-self: center; }
+  .research-queue li .rq-arrival { grid-column: 3; grid-row: 1; padding-left: 0; font-size: 11px; }
+  .research-queue li .rq-remove { grid-column: 4; grid-row: 1; align-self: center; }
+  .research-queue li .research-queue-controls { grid-column: 5; grid-row: 1; align-self: center; }
+  .rq-ghost { padding-block: 2px; }
   .research-scroll { gap: 6px; padding-bottom: 4px; scroll-padding-block: 6px; }
   .era-cards { padding-top: 19px; }
   .era-unlocks { gap: 3px; }
@@ -397,7 +397,7 @@
   .research-queue-head {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
-    grid-template-rows: minmax(24px, auto) minmax(20px, auto);
+    grid-template-rows: minmax(24px, auto) auto;
     align-items: center;
     gap: 2px 10px;
   }
@@ -457,3 +457,21 @@
 .era-unlock-art.pair,
 .benefit-ledger[data-benefits='4'] .era-unlock-art.pair,
 .era-card:has(.era-unlock.has-notes) .era-unlock-art.pair { width: 52px; min-height: 26px; }
+
+/* A short window (the 1000x600 laptop): the queue is one band, its label at the left, the slots in the middle and
+   its buttons at the right, so the technology cards keep their names in view with a card's details open.
+   The band keeps one height whatever is queued (nothing moves under the pointer). */
+@media (max-height: 700px) {
+  .research-queue { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-rows: auto auto auto; align-items: center; gap: 0 10px; padding-block: 4px; }
+  .research-queue .research-queue-head { display: contents; }
+  .research-queue-title { grid-column: 1; grid-row: 1; align-self: end; }
+  .research-queue-hint, .research-queue-total { grid-column: 1; grid-row: 2; align-self: start; font-size: 11.5px; }
+  .research-queue-pending { grid-column: 1; grid-row: 3; margin-left: 0; }
+  /* Queued, the numbered slots already say the order: the sentence steps aside for the finish turn. */
+  .research-queue:not(.idle) .research-queue-hint { display: none; }
+  .research-queue-slots { grid-column: 2; grid-row: 1 / -1; grid-auto-columns: minmax(262px, 1fr); }
+  .research-queue-cta, .research-queue-actions { grid-column: 3; grid-row: 1 / -1; margin-left: 0; justify-self: end; }
+  .research-queue-actions { flex-direction: column; align-items: stretch; gap: 3px; }
+  .research-queue-actions:empty { display: none; }
+  .research-queue-cta .btn.primary { padding-inline: 10px; letter-spacing: .04em; }
+}
