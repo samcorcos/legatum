@@ -54,6 +54,21 @@ Releases (the web deploy, the signed Mac app, the secrets each needs) are descri
 
 ## Test
 
+### Quick checks
+
+For a small change these are enough to start with. CI runs the full suite on every pull request, so you do not have to run it all yourself.
+
+```sh
+python3 tools/gates/check.py HEAD --base origin/master --checks-only   # the static gates, no build needed
+cargo fmt --all --check                                    # formatting
+cargo test -p <crate> <name>                               # only the tests you touched, e.g. -p legatum-core
+cd app && npm ci && npm test -- <file>                     # UI-only changes: one vitest file
+```
+
+`npm test` for the app needs the WASM package, so run `scripts/build-wasm.sh` once first (see Set up above) if the test imports the engine.
+
+### Full run
+
 Run what your change touches, and everything before you open a pull request:
 
 ```sh

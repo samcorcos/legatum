@@ -1,7 +1,7 @@
 # Third-party notices
 
 Legatum's own code is MIT (`LICENSE`) and its art is CC BY 4.0 (`LICENSE-ART`). It builds on the open-source
-components below, each under its own licence. Last audited 2026-11-21 at commit 6641660 with `cargo metadata` on both
+components below, each under its own licence. Last audited 2026-11-21 with `cargo metadata` on both
 shipped Cargo workspaces and the licence fields of `app/package-lock.json`. No dependency is GPL, LGPL-only or AGPL,
 none is unlicensed, and none comes from git or from a path outside this repository.
 
