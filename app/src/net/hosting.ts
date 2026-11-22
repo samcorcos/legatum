@@ -83,7 +83,10 @@ export async function startHosting(relay: string, announce: RoomAnnounce, resume
     engine,
     room: resume?.room ?? null,
     onSave: keepSave,
-    onRecording: (json) => void recordGameHistory(json).catch((e) => events.error?.(String(e))),
+    onRecording: (json) => void recordGameHistory(json).catch((e) => {
+      console.warn('game history', e);
+      events.error?.('Could not save this game to your history.');
+    }),
     onTunnel: (state, room) => {
       if (active !== host) return;
       if (state !== 'closed') remember({ relay, announce, room });

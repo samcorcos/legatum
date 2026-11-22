@@ -1208,7 +1208,8 @@ export const useGame = create<State>((set, get) => {
         set({ busy: null, lan: { status, mySeat: null, seats: status.seats, conn: 'closed' } });
         get().joinSeat(0, setup.players[0].name);
       } catch (e) {
-        set({ busy: null, error: `Could not host the game: ${String(e)}` });
+        console.warn('host game', e);
+        set({ busy: null, error: 'Could not start the game. Try again.' });
       }
     },
 

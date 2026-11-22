@@ -130,7 +130,7 @@ export function GameMenu() {
             <button onClick={() => (goto('title'), setOpen(false))}>Exit to title</button>
           )}
           <div className="menu-foot">
-            {kind !== 'remote' ? 'Autosaved each turn' : hostHere ? 'Online game · you host it: keep this tab open' : 'Online game · the host keeps the game'}
+            {kind !== 'remote' ? 'Autosaved each turn' : hostHere ? 'Online game · you host it, so keep this tab open' : 'Online game · the host keeps the game'}
           </div>
           {/* Troubleshooting only: reachable, but out of the player's way. */}
           <details className="menu-advanced">
