@@ -52,7 +52,7 @@ jobs:
 
   gates:
     # The static pre-merge gates (tools/gates/check.py): secrets, personal data, saves, large binaries,
-    # engine invariants. Reviewer markers and the art check stay with the lead before merging.
+    # engine invariants. Reviewer verdicts (PR comments naming the head SHA) and the art check stay with the lead before merging.
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
