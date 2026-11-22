@@ -59,7 +59,7 @@ for (const size of SIZES) test.describe(`score ledger ${size.name}`, () => {
 
   test('2 empires: all sources, rank order and default expansion', async ({ page }) => {
     await loadFixture(page, coreFixture(progressFixture().fixture), 2);
-    await stageHoldings(page);
+    await stageHoldings(page, { oneCardPerAge: true });
     const sheet = await openLedger(page);
     await expect(sheet.getByRole('button', { name: 'Close objectives' })).toHaveClass(/\bbtn\b/);
     await expect(sheet.locator('.sl-col')).toHaveCount(2);
