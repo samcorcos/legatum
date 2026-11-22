@@ -20,7 +20,7 @@ beforeEach(() => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, text: async () => JSON.stringify({ mode: 'server', has_game: true, turn: 7, seats: [], is_local: true, staging: null }) }));
 });
 afterEach(() => {
-  useGame.getState().leaveLan();
+  useGame.getState().leaveOnline();
   vi.unstubAllGlobals();
 });
 
@@ -39,7 +39,7 @@ it('Host from a save hands the exact engine save to the host and opens the seat 
   const file = parseSaveFile(hostedSaveText()!);
   expect(await useGame.getState().hostOnlineFromSave('Ada', file)).toBeNull();
   expect(fakeHost.fromSave).toBe(game);
-  expect(useGame.getState().lan?.status.is_local).toBe(true);
+  expect(useGame.getState().net?.status.is_local).toBe(true);
   // The host takes its own seat 0 at once (as in a new game), without the seat screen.
   expect(useGame.getState().busy).toBe('Joining…');
 });

@@ -1245,7 +1245,7 @@ export const useGame = create<State>((set, get) => {
         return 'Could not open your game. Try again.';
       }
       // Seats keep their saved names and are open for guests. The host takes seat 0 for itself, as in a new game.
-      set({ lan: { status, mySeat: null, seats: status.seats, conn: 'closed' } });
+      set({ net: { status, mySeat: null, seats: status.seats, conn: 'closed' } });
       if (status.has_game) get().joinSeat(0, status.seats[0]?.name || name);
       else set({ screen: 'setup', setupMode: 'host' });
       return null;
