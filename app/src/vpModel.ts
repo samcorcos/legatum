@@ -49,7 +49,7 @@ export interface EraObjective {
     countBaseline?: number; countTotal?: number; countingSinceTurn?: number; restartEras?: number[] };
 }
 
-/** An era as a way to score: its three objectives, who has entered it, and the viewer's standing in it. */
+/** An era as a way to score: its World Age card, who has entered it, and the viewer's standing in it. */
 interface EraInfo {
   era: number;
   /** The era's name from the core ("Consolidation"). */
