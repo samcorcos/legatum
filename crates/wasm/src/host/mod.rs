@@ -1,27 +1,58 @@
-use crate::{
-    events::visible_events,
-    outbox,
-    protocol::{ClientMessage, SeatStatus, ServerMessage, Status},
-    saves::Saves,
-    staging::{Room, RoomError, StagingConfig},
+//! The authoritative online host (plans/online-play.md, plans/game-protocol.md): one game, its
+//! staging room, seat credentials and every connected player. It has no transport and does no
+//! I/O: the browser host (`app/src/browserHost.ts`) feeds it messages through [`net::NetHost`]
+//! and writes what it queues to the relay tunnel or to the host's own UI. Saves and game
+//! histories are handed to JavaScript, which keeps them in the browser.
+
+mod credentials;
+mod events;
+pub mod net;
+mod outbox;
+mod protocol;
+mod staging;
+
+pub use protocol::{SeatStatus, Status};
+pub use staging::{
+    FactionChoice, Occupant, SeatKind, StagingConfig, StagingSeat, StagingSettings, StagingState,
 };
+
+use crate::session::{BrainKind, Session};
+use events::visible_events;
 use legatum_core::{
     GameSetup, GameState, Order, PlayerId, forecast_attack_mode, forecast_city_assault,
     player_view, validate_orders,
 };
-use legatum_wasm::session::{BrainKind, Session};
-use std::{
-    collections::BTreeMap,
-    fs,
-    path::{Path, PathBuf},
-    sync::Arc,
-    time::{SystemTime, UNIX_EPOCH},
-};
-
-const MAX_SCENARIO_RUN_FILES: usize = 500;
-const MAX_SCENARIO_RUN_BYTES: u64 = 100 * 1024 * 1024;
+use protocol::{ClientMessage, ServerMessage};
+use serde::Serialize;
+use staging::{Room, RoomError};
+use std::{collections::BTreeMap, sync::Arc};
 
 pub(crate) type ConnectionId = u64;
+
+/// Wall-clock nanoseconds, for unique game and room ids (never for game rules).
+fn now_nanos() -> u128 {
+    #[cfg(target_arch = "wasm32")]
+    {
+        (js_sys::Date::now() * 1_000_000.0) as u128
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos()
+    }
+}
+
+/// The relay's lobby row for this host (the tunnel's `summary` frame).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct Summary {
+    pub players: usize,
+    pub humans: usize,
+    pub open_seats: usize,
+    pub phase: &'static str,
+    pub turn: u32,
+}
 
 struct Connection {
     sender: outbox::Sender,
@@ -69,17 +100,11 @@ impl Game {
             })
             .collect();
         Ok(Self {
-            id: format!(
-                "{}-{}",
-                state.hash(),
-                SystemTime::now()
-                    .duration_since(UNIX_EPOCH)
-                    .unwrap_or_default()
-                    .as_nanos()
-            ),
+            id: format!("{}-{}", state.hash(), now_nanos()),
             session: {
                 if let Some(h) = &mut session.history {
-                    h.metadata.source = legatum_archive::Source::Lan;
+                    // A networked game (the archive's name for it predates online play).
+                    h.metadata.source = crate::history::Source::Lan;
                 }
                 session
             },
@@ -134,59 +159,47 @@ impl Game {
 pub(crate) struct Host {
     game: Option<Game>,
     room: Option<Room>,
-    saves: Saves,
-    scenario_runs_dir: PathBuf,
-    lan_urls: Vec<String>,
     connections: BTreeMap<ConnectionId, Connection>,
     next_connection: ConnectionId,
-    /// `None` when the archive folder could not be opened: the game runs without a record.
-    archive: Option<legatum_archive::Archive>,
     checkpoint_turns: u32,
+    /// The latest save of the live game, waiting for the browser to keep it (`take_save`).
+    save: Option<String>,
+    /// Game histories (archive recordings, JSON) waiting for the browser to keep them.
+    recordings: Vec<String>,
 }
 
 impl Host {
-    #[cfg(test)]
-    pub(crate) fn open(saves_dir: PathBuf, lan_urls: Vec<String>) -> Result<Self, String> {
-        let archive = legatum_archive::Archive::open(saves_dir.join("archive"))?;
-        Self::open_with_archive(saves_dir, lan_urls, archive, 5)
-    }
-
-    pub(crate) fn open_with_archive(
-        saves_dir: PathBuf,
-        lan_urls: Vec<String>,
-        archive: impl Into<Option<legatum_archive::Archive>>,
-        checkpoint_turns: u32,
-    ) -> Result<Self, String> {
-        let archive = archive.into();
+    /// A host with no game, or one resuming `save` (the browser's copy of an earlier online
+    /// game). Credentials are session-only: a resumed game's seats are locked until the host
+    /// explicitly opens or reassigns them, so a restart never opens private empires to guests.
+    pub(crate) fn new(save: Option<&str>, checkpoint_turns: u32) -> Result<Self, String> {
         if checkpoint_turns == 0 {
             return Err("checkpoint turns must be positive".into());
         }
-        let scenario_runs_dir = saves_dir.join("scenarios");
-        let saves =
-            Saves::open(saves_dir).map_err(|e| format!("cannot open saves directory: {e}"))?;
-        let mut game = saves.load_session()?.map(Game::from_session).transpose()?;
-        // Credentials are session-only. A restart locks restored seats until the host
-        // explicitly reassigns them; it never silently opens private empires to the LAN.
+        let mut game = save
+            .map(|save| {
+                check_state(&crate::json::parse_state(save)?)?;
+                Game::from_session(Session::from_save_json(save, |_| BrainKind::Scripted)?)
+            })
+            .transpose()
+            .map_err(|e| format!("cannot resume the saved online game: {e}"))?;
         if let Some(game) = &mut game {
             for seat in &mut game.seats {
                 // Resuming must not re-arm the first-join barrier for absent players.
                 seat.joined = true;
-                seat.token = Some(crate::credentials::token()?);
+                seat.token = Some(credentials::token()?);
             }
         }
-        let host = Self {
+        let mut host = Self {
             game,
             room: None,
-            saves,
-            scenario_runs_dir,
-            lan_urls,
             connections: BTreeMap::new(),
             next_connection: 0,
-            archive,
             checkpoint_turns,
+            save: None,
+            recordings: Vec::new(),
         };
-        // Retry a finish whose file/index write was interrupted before shutdown.
-        host.checkpoint()?;
+        host.checkpoint();
         Ok(host)
     }
 
@@ -196,18 +209,16 @@ impl Host {
             has_game: self.game.is_some(),
             turn: self.game.as_ref().map_or(0, |g| g.session.state.turn),
             seats: self.game.as_ref().map_or_else(Vec::new, Game::seat_status),
-            lan_urls: self.lan_urls.clone(),
             is_local,
             staging: self.room.as_ref().map(|room| room.state(false)),
         }
     }
 
     /// The relay's lobby row. An open room is shown as staging even while an older game runs.
-    pub(crate) fn summary(&self) -> crate::relay::Summary {
-        use crate::staging::SeatKind;
+    pub(crate) fn summary(&self) -> Summary {
         if let Some(room) = &self.room {
             let seats = &room.config.seats;
-            return crate::relay::Summary {
+            return Summary {
                 players: seats.iter().filter(|s| s.kind != SeatKind::Closed).count(),
                 humans: seats
                     .iter()
@@ -223,7 +234,7 @@ impl Host {
             };
         }
         match &self.game {
-            Some(game) => crate::relay::Summary {
+            Some(game) => Summary {
                 players: game.session.state.players.len(),
                 humans: game.seats.len(),
                 // Unassigned seats a guest can claim with `game_take`.
@@ -231,7 +242,7 @@ impl Host {
                 phase: "playing",
                 turn: game.session.state.turn,
             },
-            None => crate::relay::Summary {
+            None => Summary {
                 players: 0,
                 humans: 0,
                 open_seats: 0,
@@ -248,7 +259,7 @@ impl Host {
     }
 
     pub(crate) fn load_game(&mut self, save: &str) -> Result<(), String> {
-        check_state(&legatum_wasm::json::parse_state(save)?)?;
+        check_state(&crate::json::parse_state(save)?)?;
         let mut session = Session::from_save_json(save, |_| BrainKind::Scripted)?;
         if let Some(h) = &mut session.history {
             h.fork();
@@ -257,12 +268,9 @@ impl Host {
     }
 
     fn replace_game(&mut self, session: Session) -> Result<(), String> {
-        // Validate and persist before replacing the live game or disconnecting anyone.
+        // Validate before replacing the live game or disconnecting anyone.
         let game = Game::from_session(session)?;
-        let previous = self.preserve_current_history()?;
-        self.saves
-            .write_session(&game.session)
-            .map_err(|e| format!("cannot save game: {e}"))?;
+        let previous = self.preserve_current_history();
         for (_, connection) in std::mem::take(&mut self.connections) {
             connection
                 .sender
@@ -279,11 +287,10 @@ impl Host {
                 room.detach(connection);
             }
         }
+        self.save = Some(game.session.save_json());
         self.game = Some(game);
         self.finish_replaced_history(previous);
-        if let Err(error) = self.checkpoint() {
-            self.archive_warning(error);
-        }
+        self.checkpoint();
         Ok(())
     }
 
@@ -292,14 +299,24 @@ impl Host {
         Ok(game.session.save_json())
     }
 
-    fn checkpoint(&self) -> Result<(), String> {
-        if let Some(history) = self.game.as_ref().and_then(|g| g.session.history.as_ref()) {
-            self.record(history)?;
-        }
-        Ok(())
+    /// The live game's save, once per change, for the browser to keep.
+    pub(crate) fn take_save(&mut self) -> Option<String> {
+        self.save.take()
     }
 
-    fn preserve_current_history(&self) -> Result<Option<legatum_archive::Recording>, String> {
+    /// Game histories to keep in the browser's archive, oldest first.
+    pub(crate) fn take_recordings(&mut self) -> Vec<String> {
+        std::mem::take(&mut self.recordings)
+    }
+
+    fn checkpoint(&mut self) {
+        if let Some(history) = self.game.as_ref().and_then(|g| g.session.history.as_ref()) {
+            let json = serde_json::to_string(history).expect("recordings serialize");
+            self.recordings.push(json);
+        }
+    }
+
+    fn preserve_current_history(&mut self) -> Option<crate::history::Recording> {
         let previous = self
             .game
             .as_ref()
@@ -307,63 +324,21 @@ impl Host {
             .filter(|h| h.metadata.finished_at.is_none())
             .cloned();
         if let Some(history) = &previous {
-            self.record(history)?;
+            self.record(history);
         }
-        Ok(previous)
+        previous
     }
 
-    fn finish_replaced_history(&mut self, previous: Option<legatum_archive::Recording>) {
+    fn finish_replaced_history(&mut self, previous: Option<crate::history::Recording>) {
         if let Some(mut history) = previous {
             history.stop("abandoned");
-            if let Err(error) = self.record(&history) {
-                self.archive_warning(error);
-            }
+            self.record(&history);
         }
     }
 
-    fn archive_warning(&mut self, error: String) {
-        let message = format!("Game saved, but archive write failed: {error}");
-        eprintln!("{message}");
-        self.broadcast(&ServerMessage::Error {
-            code: None,
-            message,
-        });
-    }
-
-    /// Write a recording to the archive, or do nothing when this host runs without one.
-    fn record(&self, recording: &legatum_archive::Recording) -> Result<(), String> {
-        record_in(self.archive.as_ref(), recording)
-    }
-
-    pub(crate) fn archive_authorized(&self, token: &str) -> bool {
-        let token = Some(token).filter(|t| !t.is_empty());
-        self.game.as_ref().is_some_and(|g| {
-            g.seats
-                .iter()
-                .any(|s| crate::credentials::matches(s.token.as_deref(), token))
-        }) || self.room.as_ref().is_some_and(|r| {
-            r.occupants
-                .iter()
-                .flatten()
-                .any(|o| crate::credentials::matches(Some(&o.token), token))
-        })
-    }
-
-    /// Save a finished scenario run (format "legatum-scenario-run") into the saves directory.
-    pub(crate) fn save_scenario_run(&self, json: &str) -> Result<PathBuf, String> {
-        let name = scenario_run_name(json)?;
-        prune_scenario_runs(&self.scenario_runs_dir, &name, json.len() as u64)
-            .map_err(|e| format!("Could not prune scenario runs: {e}"))?;
-        self.saves
-            .write_scenario_run(&name, json)
-            .map_err(|e| format!("Could not save the scenario run: {e}"))
-    }
-
-    pub(crate) fn upload_archive(
-        &self,
-        recording: &legatum_archive::Recording,
-    ) -> Result<(), String> {
-        self.record(recording)
+    fn record(&mut self, recording: &crate::history::Recording) {
+        self.recordings
+            .push(serde_json::to_string(recording).expect("recordings serialize"));
     }
 
     pub(crate) fn connect(
@@ -402,12 +377,6 @@ impl Host {
                 );
             }
             self.detach(connection);
-        }
-    }
-
-    fn broadcast(&mut self, message: &ServerMessage) {
-        for connection in self.connections.keys().copied().collect::<Vec<_>>() {
-            self.send(connection, message);
         }
     }
 
@@ -517,7 +486,7 @@ impl Host {
             if !local && (s.token.is_some() || seat == 0) {
                 return Err("This seat is reserved. Use its reconnect credential or ask the host to open this seat.".into());
             }
-            let token = crate::credentials::token()?;
+            let token = crate::host::credentials::token()?;
             let previous = s.connection.take();
             if let Some(old) = previous
                 && old != connection
@@ -561,7 +530,7 @@ impl Host {
                 return Err("This browser already owns a seat; reconnect to change seats".into());
             }
             let s = &mut game.seats[seat];
-            if !crate::credentials::matches(s.token.as_deref(), Some(token.as_str())) {
+            if !crate::host::credentials::matches(s.token.as_deref(), Some(token.as_str())) {
                 self.send(
                     connection,
                     &ServerMessage::Error {
@@ -601,9 +570,8 @@ impl Host {
             let view = ServerMessage::View {
                 view: Box::new(game.view(player)),
             };
-            self.saves
-                .write_session(&game.session)
-                .map_err(|e| format!("cannot save joined player: {e}"))?;
+            // The joined name is part of the saved history.
+            self.save = Some(game.session.save_json());
             self.send_batch(connection, &[welcome, view]);
             // A game takeover may also displace a staging watcher/occupant.
             if let Some(room) = &mut self.room {
@@ -717,15 +685,13 @@ impl Host {
         }
         let events = game.session.step(&orders);
         let state = &game.session.state;
-        let save_error = self.saves.write_session(&game.session).err();
-        let archive_error = game
-            .session
-            .history
-            .as_ref()
-            .filter(|h| {
-                state.finished || h.metadata.turn_count.is_multiple_of(self.checkpoint_turns)
-            })
-            .and_then(|h| record_in(self.archive.as_ref(), h).err());
+        self.save = Some(game.session.save_json());
+        if let Some(history) = game.session.history.as_ref().filter(|h| {
+            state.finished || h.metadata.turn_count.is_multiple_of(self.checkpoint_turns)
+        }) {
+            self.recordings
+                .push(serde_json::to_string(history).expect("recordings serialize"));
+        }
         let hash = state.hash().to_string();
         let mut messages = Vec::new();
         for (seat, before) in game.seats.iter().zip(&before) {
@@ -751,17 +717,6 @@ impl Host {
         for (connection, message) in messages {
             self.send_batch(connection, &message);
         }
-        if let Some(error) = save_error {
-            let message = format!("Turn resolved, but autosave failed: {error}");
-            eprintln!("{message}");
-            self.broadcast(&ServerMessage::Error {
-                code: None,
-                message,
-            });
-        }
-        if let Some(error) = archive_error {
-            self.archive_warning(error);
-        }
     }
 
     pub(crate) fn configure_staging(&mut self, config: StagingConfig) -> Result<(), String> {
@@ -769,13 +724,7 @@ impl Host {
         let lost = if let Some(room) = &mut self.room {
             room.configure(config)
         } else {
-            let id = format!(
-                "room-{}",
-                SystemTime::now()
-                    .duration_since(UNIX_EPOCH)
-                    .unwrap_or_default()
-                    .as_nanos()
-            );
+            let id = format!("room-{}", now_nanos());
             self.room = Some(Room::new(id, config));
             vec![]
         };
@@ -858,14 +807,11 @@ impl Host {
         for (seat, slot) in game.seats.iter_mut().zip(room.player_slots()) {
             seat.token = Some(match &room.occupants[slot] {
                 Some(occupant) => occupant.token.clone(),
-                None => crate::credentials::token()?,
+                None => crate::host::credentials::token()?,
             });
         }
-        // Commit first. A disk failure must preserve the room, old game, and all sockets.
-        let previous = self.preserve_current_history()?;
-        self.saves
-            .write_session(&game.session)
-            .map_err(|e| format!("cannot save game: {e}"))?;
+        let previous = self.preserve_current_history();
+        self.save = Some(game.session.save_json());
         let room = self.room.take().expect("room exists");
         let started: Vec<_> = room
             .player_slots()
@@ -876,9 +822,7 @@ impl Host {
         let game_id = game.id.clone();
         self.game = Some(game);
         self.finish_replaced_history(previous);
-        if let Err(error) = self.checkpoint() {
-            self.archive_warning(error);
-        }
+        self.checkpoint();
         // Watchers must survive the game replacement to receive their handoff. Existing
         // game-only connections retain the established replacement/reconnect behavior.
         let old: Vec<_> = self
@@ -921,7 +865,7 @@ impl Host {
             && let Some(seat) = game
                 .seats
                 .iter()
-                .position(|s| crate::credentials::matches(s.token.as_deref(), Some(token)))
+                .position(|s| crate::host::credentials::matches(s.token.as_deref(), Some(token)))
         {
             let message = ServerMessage::StagingStarted {
                 game_id: game.id.clone(),
@@ -1005,17 +949,6 @@ impl Host {
     }
 }
 
-/// Write a recording to the archive, or do nothing when the host runs without one.
-fn record_in(
-    archive: Option<&legatum_archive::Archive>,
-    recording: &legatum_archive::Recording,
-) -> Result<(), String> {
-    match archive {
-        Some(archive) => archive.write(recording).map(|_| ()),
-        None => Ok(()),
-    }
-}
-
 fn check_setup(setup: &GameSetup) -> Result<(), String> {
     legatum_core::validation::check_setup(setup)?;
     let humans = setup.players.iter().take_while(|p| p.is_human).count();
@@ -1023,7 +956,7 @@ fn check_setup(setup: &GameSetup) -> Result<(), String> {
         || humans == 0
         || setup.players[humans..].iter().any(|p| p.is_human)
     {
-        return Err("LAN games require 2-8 players with 1-8 humans in the first seats".into());
+        return Err("Online games require 2-8 players with 1-8 humans in the first seats".into());
     }
     check_dimensions(setup.width, setup.height, setup.turn_limit)
 }
@@ -1042,80 +975,6 @@ pub(crate) fn check_dimensions(
     Ok(())
 }
 
-/// Make room for the incoming file before writing it. Replacing an existing name counts as
-/// one file with the new length; ties in modification time are broken by path.
-fn prune_scenario_runs(dir: &Path, name: &str, incoming_bytes: u64) -> std::io::Result<()> {
-    fs::create_dir_all(dir)?;
-    let destination = dir.join(name);
-    let mut files = Vec::new();
-    let mut total_bytes = incoming_bytes;
-    let mut total_files = 1;
-    for entry in fs::read_dir(dir)? {
-        let entry = entry?;
-        if !entry.file_type()?.is_file() {
-            continue;
-        }
-        let path = entry.path();
-        let metadata = entry.metadata()?;
-        if path == destination {
-            continue;
-        }
-        total_bytes += metadata.len();
-        total_files += 1;
-        files.push((metadata.modified()?, path, metadata.len()));
-    }
-    files.sort_by(|a, b| (&a.0, &a.1).cmp(&(&b.0, &b.1)));
-    for (_, path, bytes) in files {
-        if total_files <= MAX_SCENARIO_RUN_FILES && total_bytes <= MAX_SCENARIO_RUN_BYTES {
-            break;
-        }
-        fs::remove_file(path)?;
-        total_files -= 1;
-        total_bytes -= bytes;
-    }
-    if total_bytes > MAX_SCENARIO_RUN_BYTES {
-        return Err(std::io::Error::new(
-            std::io::ErrorKind::InvalidInput,
-            "Scenario run exceeds the 100 MiB storage limit",
-        ));
-    }
-    Ok(())
-}
-
-/// `<scenario id>-<start time>.json` for a run file (the finish time for a run without one), with
-/// every character checked: the name comes from the client, and must never leave the scenarios
-/// directory. One run keeps one name, so each turn's checkpoint is replaced by the next.
-pub(crate) fn scenario_run_name(json: &str) -> Result<String, String> {
-    let run: serde_json::Value =
-        serde_json::from_str(json).map_err(|e| format!("Invalid scenario run: {e}"))?;
-    if run["format"] != "legatum-scenario-run" {
-        return Err("Not a scenario run".into());
-    }
-    let id = run["scenario"]["id"].as_str().unwrap_or_default();
-    let at = run["started_at"]
-        .as_str()
-        .or(run["finished_at"].as_str())
-        .unwrap_or_default();
-    let stamp: String = at
-        .split('.')
-        .next()
-        .unwrap_or_default()
-        .trim_end_matches('Z')
-        .chars()
-        .map(|c| if c == ':' { '-' } else { c })
-        .collect();
-    let safe = |s: &str| {
-        !s.is_empty()
-            && s.len() <= 64
-            && s.chars()
-                .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
-    };
-    if !safe(id) || !safe(&stamp) {
-        return Err("Scenario run has an invalid id or time".into());
-    }
-    Ok(format!("{id}-{stamp}Z.json"))
-}
-
 pub(crate) fn check_state(state: &GameState) -> Result<(), String> {
     legatum_core::validation::check_state(state)?;
     check_setup(&state.setup)?;
@@ -1129,85 +988,55 @@ pub(crate) fn check_state(state: &GameState) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::json;
     use legatum_core::Faction;
-    use legatum_wasm::json;
+    use serde_json::Value;
 
-    const RUN: &str = r#"{"format":"legatum-scenario-run","scenario":{"id":"rush-offense"},"finished_at":"2026-10-03T20:25:09.123Z"}"#;
+    /// Everything a connection would write now, parsed.
+    fn drain(receiver: &outbox::Receiver) -> Vec<Value> {
+        receiver
+            .drain()
+            .texts
+            .iter()
+            .map(|t| serde_json::from_str(t).unwrap())
+            .collect()
+    }
 
-    #[test]
-    fn scenario_run_names_come_from_the_run_and_stay_in_their_directory() {
-        assert_eq!(
-            scenario_run_name(RUN).unwrap(),
-            "rush-offense-2026-10-03T20-25-09Z.json"
-        );
-        let started = RUN.replacen('{', r#"{"started_at":"2026-10-03T20:00:00.5Z","#, 1);
-        assert_eq!(
-            scenario_run_name(&started).unwrap(),
-            "rush-offense-2026-10-03T20-00-00Z.json"
-        );
-        for id in ["../escape", "a/b", "", "x y"] {
-            let run = RUN.replace("rush-offense", id);
-            assert!(scenario_run_name(&run).is_err(), "{id:?} was accepted");
-        }
-        assert!(scenario_run_name(r#"{"format":"legatum-save"}"#).is_err());
-        assert!(scenario_run_name("not json").is_err());
+    /// As `drain`, without the seat snapshots every connection also gets.
+    fn drain_room(receiver: &outbox::Receiver) -> Vec<Value> {
+        let mut written = drain(receiver);
+        written.retain(|m| m["type"] != "seats");
+        written
     }
 
     #[test]
-    fn scenario_runs_are_saved_under_the_saves_directory() {
-        let root = tempfile::tempdir().unwrap();
-        let host = Host::open(root.path().join("saves"), vec![]).unwrap();
-        let path = host.save_scenario_run(RUN).unwrap();
-        assert!(path.starts_with(root.path().join("saves").join("scenarios")));
-        assert_eq!(std::fs::read_to_string(path).unwrap(), RUN);
-    }
-
-    #[test]
-    fn lan_archive_retains_orders_names_and_hashes_across_restart() {
-        let root = tempfile::tempdir().unwrap();
-        let archive = legatum_archive::Archive::open(root.path().join("archive")).unwrap();
+    fn online_history_is_handed_over_with_orders_names_and_hashes_across_restart() {
         let mut setup = GameSetup::standard(72, [Faction::India, Faction::Byzantium]);
         setup.turn_limit = Some(4);
-        let mut host =
-            Host::open_with_archive(root.path().join("saves"), vec![], archive.clone(), 2).unwrap();
+        let mut host = Host::new(None, 2).unwrap();
         host.new_game(setup).unwrap();
         let (a, _a) = peer(&mut host);
         let (b, _b) = peer(&mut host);
         join(&mut host, a, 0);
         join(&mut host, b, 1);
+        host.take_recordings();
         for _ in 0..2 {
             host.message(a, ready(&host, true)).unwrap();
             host.message(b, ready(&host, true)).unwrap();
         }
-        let history = host
-            .game
-            .as_ref()
-            .unwrap()
-            .session
-            .history
-            .as_ref()
-            .unwrap()
-            .clone();
-        let checkpoint = archive
-            .root()
-            .join(legatum_archive::Archive::relative_path(&history).unwrap());
-        assert_eq!(
-            legatum_archive::read(&checkpoint).unwrap().tape.turns.len(),
-            2
-        );
+        // A checkpoint every second turn: none after turn 1, one after turn 2.
+        let checkpoints = host.take_recordings();
+        assert_eq!(checkpoints.len(), 1);
+        let checkpoint: crate::history::Recording = serde_json::from_str(&checkpoints[0]).unwrap();
+        assert_eq!(checkpoint.tape.turns.len(), 2);
+        assert_eq!(checkpoint.metadata.source, crate::history::Source::Lan);
+        let save = host.take_save().expect("the turn was saved");
+        assert!(host.take_save().is_none(), "a save is handed over once");
         drop(host);
-        let mut host =
-            Host::open_with_archive(root.path().join("saves"), vec![], archive.clone(), 2).unwrap();
-        assert_eq!(
-            host.game
-                .as_ref()
-                .unwrap()
-                .session
-                .history
-                .as_ref()
-                .unwrap(),
-            &history
-        );
+
+        let mut host = Host::new(Some(&save), 2).unwrap();
+        // Resuming hands the history over again, unchanged.
+        assert_eq!(host.take_recordings(), checkpoints);
         let (a, _a) = peer(&mut host);
         let (b, _b) = peer(&mut host);
         join(&mut host, a, 0);
@@ -1217,26 +1046,36 @@ mod tests {
             host.message(b, ready(&host, true)).unwrap();
         }
         let session = &host.game.as_ref().unwrap().session;
-        let final_history = session.history.as_ref().unwrap();
-        let path = archive
-            .root()
-            .join(legatum_archive::Archive::relative_path(final_history).unwrap());
-        let stored = legatum_archive::read(&path).unwrap();
-        assert_eq!(stored.metadata.game_id, history.metadata.game_id);
-        assert_eq!(stored.metadata.source, legatum_archive::Source::Lan);
+        let last = host.recordings.last().unwrap();
+        let stored: crate::history::Recording = serde_json::from_str(last).unwrap();
+        assert_eq!(stored.metadata.game_id, checkpoint.metadata.game_id);
         assert_eq!(stored.metadata.seats[0].name, "Human 0");
+        assert!(stored.metadata.finished_at.is_some());
         assert_eq!(stored.tape.turns.len(), 4);
         assert_eq!(stored.replay().unwrap().hash(), session.state.hash());
-        assert!(!checkpoint.exists());
-        drop(host);
-        Host::open_with_archive(root.path().join("saves"), vec![], archive.clone(), 2).unwrap();
-        assert_eq!(
-            std::fs::read_to_string(archive.root().join("index.jsonl"))
-                .unwrap()
-                .lines()
-                .count(),
-            1
-        );
+    }
+
+    #[test]
+    fn replacing_an_unfinished_game_hands_over_its_history_as_abandoned() {
+        let mut host = Host::new(None, 5).unwrap();
+        host.new_game(GameSetup::standard(7, [Faction::India, Faction::Byzantium]))
+            .unwrap();
+        host.take_recordings();
+        host.new_game(GameSetup::standard(8, [Faction::India, Faction::Byzantium]))
+            .unwrap();
+        let outcomes: Vec<String> = host
+            .take_recordings()
+            .iter()
+            .map(|r| {
+                serde_json::from_str::<crate::history::Recording>(r)
+                    .unwrap()
+                    .metadata
+                    .outcome
+            })
+            .collect();
+        // The old game as it stood, then stopped, then the new game's first checkpoint.
+        assert_eq!(outcomes.len(), 3);
+        assert_eq!(outcomes[1], "abandoned");
     }
 
     fn room_config() -> StagingConfig {
@@ -1284,10 +1123,9 @@ mod tests {
 
     #[test]
     fn staging_leave_acknowledgment_survives_a_coalesced_seat_reclaim() {
-        let root = tempfile::tempdir().unwrap();
-        let mut host = Host::open(root.path().to_owned(), vec![]).unwrap();
+        let mut host = Host::new(None, 5).unwrap();
         host.configure_staging(room_config()).unwrap();
-        let (guest, mut messages) = peer(&mut host);
+        let (guest, messages) = peer(&mut host);
         host.message(
             guest,
             ClientMessage::StagingTake {
@@ -1297,8 +1135,6 @@ mod tests {
             },
         )
         .unwrap();
-        let taken: serde_json::Value =
-            serde_json::from_str(&messages.reliable.try_recv().unwrap().texts[0]).unwrap();
         host.message(guest, ClientMessage::StagingLeave).unwrap();
         assert!(host.status(true).staging.unwrap().occupants[1].is_none());
         let (next, _next_messages) = peer(&mut host);
@@ -1311,25 +1147,25 @@ mod tests {
             },
         )
         .unwrap();
-        let left: serde_json::Value =
-            serde_json::from_str(&messages.reliable.try_recv().unwrap().texts[0]).unwrap();
+        // Drained only now: the room snapshots in between coalesced into the latest one.
+        let written = drain_room(&messages);
+        assert_eq!(written[0]["type"], "staging_taken");
         assert_eq!(
-            left,
+            written[1],
             serde_json::json!({
-                "type": "staging_left", "room_id": taken["room_id"],
+                "type": "staging_left", "room_id": written[0]["room_id"],
             })
         );
-        let snapshot: serde_json::Value =
-            serde_json::from_str(messages.staging.borrow().as_ref().unwrap()).unwrap();
-        assert_eq!(snapshot["state"]["occupants"][1]["name"], "Bob");
+        assert_eq!(written[2]["type"], "staging");
+        assert_eq!(written[2]["state"]["occupants"][1]["name"], "Bob");
+        assert_eq!(written.len(), 3);
     }
 
     #[test]
     fn staging_is_coalesced_and_eviction_disconnects_the_reservation() {
-        let root = tempfile::tempdir().unwrap();
-        let mut host = Host::open(root.path().to_owned(), vec![]).unwrap();
+        let mut host = Host::new(None, 5).unwrap();
         host.configure_staging(room_config()).unwrap();
-        let (watcher, mut watching) = peer(&mut host);
+        let (watcher, watching) = peer(&mut host);
         host.message(watcher, ClientMessage::StagingWatch { host: false })
             .unwrap();
         let (guest, guest_messages) = peer(&mut host);
@@ -1346,14 +1182,17 @@ mod tests {
             host.message(guest, ClientMessage::StagingReady { ready: i % 2 != 0 })
                 .unwrap();
         }
-        assert_eq!(watching.reliable.len(), 0);
-        assert_eq!(guest_messages.reliable.len(), 1); // private credential acknowledgment
-        let latest: serde_json::Value =
-            serde_json::from_str(watching.staging.borrow_and_update().as_ref().unwrap()).unwrap();
-        assert_eq!(latest["state"]["occupants"][1]["ready"], true);
+        let written = drain_room(&watching);
+        assert_eq!(written.len(), 1, "only the latest room snapshot");
+        assert_eq!(written[0]["state"]["occupants"][1]["ready"], true);
         host.message(guest, ClientMessage::StagingReady { ready: true })
             .unwrap();
-        assert!(!watching.staging.has_changed().unwrap());
+        assert!(
+            drain_room(&watching).is_empty(),
+            "an identical snapshot is not rewritten"
+        );
+        // The private credential acknowledgment is the guest's one reliable delivery so far;
+        // seventeen pongs nobody reads overflow the queue.
         for _ in 0..17 {
             let _ = host.message(guest, ClientMessage::Ping);
         }
@@ -1362,26 +1201,21 @@ mod tests {
         assert!(!occupant.connected);
         assert!(!occupant.ready);
         assert!(host.staging_can_start().is_err());
-        assert_eq!(
-            guest_messages.close.borrow().as_ref().unwrap().code,
-            Some("slow_consumer")
-        );
+        let evicted = guest_messages.drain();
+        assert!(evicted.closed);
+        assert!(evicted.texts[0].contains("slow_consumer"));
+        drain_room(&watching);
         host.close_staging();
-        assert!(
-            watching.staging.borrow().is_none(),
-            "closed room left a stale snapshot"
-        );
-        let event: serde_json::Value =
-            serde_json::from_str(&watching.reliable.try_recv().unwrap().texts[0]).unwrap();
-        assert_eq!(event["type"], "staging_closed");
+        let written = drain_room(&watching);
+        assert_eq!(written.len(), 1, "a closed room leaves no stale snapshot");
+        assert_eq!(written[0]["type"], "staging_closed");
     }
 
     #[test]
-    fn only_loopback_sockets_can_take_the_host_slot() {
-        let root = tempfile::tempdir().unwrap();
-        let mut host = Host::open(root.path().to_owned(), vec![]).unwrap();
+    fn only_the_hosts_own_connection_can_take_the_host_slot() {
+        let mut host = Host::new(None, 5).unwrap();
         host.configure_staging(room_config()).unwrap();
-        let (sender, mut remote_messages) = outbox::channel();
+        let (sender, remote_messages) = outbox::channel();
         let remote = host.connect(sender, false).unwrap();
         host.message(
             remote,
@@ -1392,9 +1226,7 @@ mod tests {
             },
         )
         .unwrap();
-        let error: serde_json::Value =
-            serde_json::from_str(&remote_messages.reliable.try_recv().unwrap().texts[0]).unwrap();
-        assert_eq!(error["code"], "not_open");
+        assert_eq!(drain_room(&remote_messages)[0]["code"], "not_open");
         assert!(host.status(true).staging.unwrap().occupants[0].is_none());
         host.message(
             remote,
@@ -1407,7 +1239,7 @@ mod tests {
         .unwrap();
         host.message(remote, ClientMessage::StagingReady { ready: true })
             .unwrap();
-        let (local, mut local_messages) = peer(&mut host);
+        let (local, local_messages) = peer(&mut host);
         host.message(
             local,
             ClientMessage::StagingTake {
@@ -1417,13 +1249,12 @@ mod tests {
             },
         )
         .unwrap();
-        local_messages.reliable.try_recv().unwrap(); // staging_taken
+        assert_eq!(drain_room(&local_messages)[0]["type"], "staging_taken");
         host.start_staging().unwrap();
-        let started: serde_json::Value =
-            serde_json::from_str(&local_messages.reliable.try_recv().unwrap().texts[0]).unwrap();
-        assert_eq!(started["type"], "staging_started");
-        assert_eq!(started["seat"], 0);
-        assert!(local_messages.staging.borrow().is_none());
+        let written = drain_room(&local_messages);
+        assert_eq!(written.len(), 1, "no room snapshot after the start");
+        assert_eq!(written[0]["type"], "staging_started");
+        assert_eq!(written[0]["seat"], 0);
     }
 
     fn peer(host: &mut Host) -> (ConnectionId, outbox::Receiver) {
@@ -1443,7 +1274,7 @@ mod tests {
     fn join(host: &mut Host, id: ConnectionId, seat: usize) {
         let token = host.game.as_mut().unwrap().seats[seat]
             .token
-            .get_or_insert_with(|| crate::credentials::token().unwrap())
+            .get_or_insert_with(|| credentials::token().unwrap())
             .clone();
         host.message(
             id,
@@ -1458,13 +1289,12 @@ mod tests {
 
     #[test]
     fn oversized_saved_collections_preserve_live_game_and_autosave() {
-        let root = tempfile::tempdir().unwrap();
-        let mut host = Host::open(root.path().to_owned(), vec![]).unwrap();
+        let mut host = Host::new(None, 5).unwrap();
         host.new_game(GameSetup::standard(7, [Faction::India, Faction::Byzantium]))
             .unwrap();
         let saved = host.save_game().unwrap();
-        let committed = std::fs::read(root.path().join("autosave.json")).unwrap();
-        let original: serde_json::Value = serde_json::from_str(&saved).unwrap();
+        assert_eq!(host.take_save().as_ref(), Some(&saved));
+        let original: Value = serde_json::from_str(&saved).unwrap();
         let tiles = original["map"]["tiles"].as_array().unwrap().len();
         let history_limit = legatum_core::data::SCIENCE_HISTORY_TURNS;
         for (field, replacement) in [
@@ -1490,14 +1320,9 @@ mod tests {
             let result = host.load_game(&invalid.to_string());
             assert!(result.is_err(), "accepted invalid {field}");
             assert_eq!(host.save_game().unwrap(), saved);
-            assert_eq!(
-                std::fs::read(root.path().join("autosave.json")).unwrap(),
-                committed
-            );
-            // Startup must enforce the same bounds as HTTP imports.
-            let restart = tempfile::tempdir().unwrap();
-            std::fs::write(restart.path().join("autosave.json"), invalid.to_string()).unwrap();
-            assert!(Host::open(restart.path().to_owned(), vec![]).is_err());
+            assert!(host.take_save().is_none(), "a refused load saved nothing");
+            // Resuming must enforce the same bounds as loading.
+            assert!(Host::new(Some(&invalid.to_string()), 5).is_err());
         }
         // Legacy saves may omit observations; shorter histories/memory remain supported.
         let mut legacy = original;
@@ -1513,8 +1338,7 @@ mod tests {
 
     #[test]
     fn slow_observers_keep_only_the_latest_seat_snapshot() {
-        let root = tempfile::tempdir().unwrap();
-        let mut host = Host::open(root.path().to_owned(), vec![]).unwrap();
+        let mut host = Host::new(None, 5).unwrap();
         host.new_game(GameSetup::standard(7, [Faction::India, Faction::Byzantium]))
             .unwrap();
         let (observer, messages) = peer(&mut host);
@@ -1524,20 +1348,14 @@ mod tests {
             host.message(human, ready(&host, i % 2 == 0)).unwrap();
         }
         assert!(host.connections.contains_key(&observer));
-        assert_eq!(
-            messages.reliable.len(),
-            0,
-            "seat updates entered the reliable queue"
-        );
-        let snapshot: serde_json::Value =
-            serde_json::from_str(messages.seats.borrow().as_ref().unwrap()).unwrap();
-        assert_eq!(snapshot["seats"][0]["ready"], false);
+        let written = drain(&messages);
+        assert_eq!(written.len(), 1, "seat updates entered the reliable queue");
+        assert_eq!(written[0]["seats"][0]["ready"], false);
     }
 
     #[test]
     fn reliable_queue_overflow_evicts_without_waiting_for_the_reader() {
-        let root = tempfile::tempdir().unwrap();
-        let mut host = Host::open(root.path().to_owned(), vec![]).unwrap();
+        let mut host = Host::new(None, 5).unwrap();
         let (slow, messages) = peer(&mut host);
         for _ in 0..17 {
             let _ = host.message(slow, ClientMessage::Ping);
@@ -1546,17 +1364,22 @@ mod tests {
             !host.connections.contains_key(&slow),
             "full queue kept the connection"
         );
-        assert!(messages.reliable.len() <= 16);
+        let evicted = messages.drain();
+        assert!(evicted.closed);
         assert_eq!(
-            messages.close.borrow().as_ref().unwrap().code,
-            Some("slow_consumer")
+            drain_texts_code(&evicted.texts),
+            Some("slow_consumer".into())
         );
+    }
+
+    fn drain_texts_code(texts: &[String]) -> Option<String> {
+        let value: Value = serde_json::from_str(texts.first()?).ok()?;
+        value["code"].as_str().map(str::to_owned)
     }
 
     #[test]
     fn connections_have_a_fixed_cap() {
-        let root = tempfile::tempdir().unwrap();
-        let mut host = Host::open(root.path().to_owned(), vec![]).unwrap();
+        let mut host = Host::new(None, 5).unwrap();
         let mut readers = Vec::new();
         for _ in 0..outbox::MAX_CONNECTIONS {
             let (_, receiver) = peer(&mut host);
@@ -1571,8 +1394,7 @@ mod tests {
 
     #[test]
     fn orders_and_ready_require_the_current_game_and_planning_turn() {
-        let root = tempfile::tempdir().unwrap();
-        let mut host = Host::open(root.path().to_owned(), vec![]).unwrap();
+        let mut host = Host::new(None, 5).unwrap();
         host.new_game(GameSetup::standard(7, [Faction::India, Faction::Byzantium]))
             .unwrap();
         let (a, _a_messages) = peer(&mut host);
@@ -1590,7 +1412,7 @@ mod tests {
             .next()
             .unwrap()
             .id;
-        let decode = |v: serde_json::Value| serde_json::from_value::<ClientMessage>(v).unwrap();
+        let decode = |v: Value| serde_json::from_value::<ClientMessage>(v).unwrap();
         for connection in [a, b] {
             host.message(connection, decode(serde_json::json!({"type": "ready", "game_id": game_id, "turn": 1, "ready": true}))).unwrap();
         }
@@ -1628,23 +1450,21 @@ mod tests {
 
     #[test]
     fn stale_connection_cannot_submit_or_disconnect_replacement_and_save_resumes_identically() {
-        let root = tempfile::tempdir().unwrap();
         let setup = GameSetup::standard(u64::MAX - 7, [Faction::India, Faction::Byzantium]);
-        let mut host = Host::open(root.path().to_owned(), vec![]).unwrap();
+        let mut host = Host::new(None, 5).unwrap();
         host.new_game(setup.clone()).unwrap();
-        let (a, mut a_messages) = peer(&mut host);
+        let (a, a_messages) = peer(&mut host);
         join(&mut host, a, 0);
         host.message(a, ready(&host, true)).unwrap();
         assert_eq!(host.status(true).turn, 1, "seat 1 has never joined");
         let (b, _b_messages) = peer(&mut host);
         join(&mut host, b, 1);
-        while a_messages.reliable.try_recv().is_ok() {}
-        let (replacement, mut messages) = peer(&mut host);
+        let (replacement, messages) = peer(&mut host);
         join(&mut host, replacement, 0);
-        let outbox::Close { code, message } =
-            a_messages.close.borrow().clone().expect("takeover close");
+        let displaced = a_messages.drain();
+        assert!(displaced.closed);
         assert_eq!(
-            serde_json::to_value(ServerMessage::Error { code, message }).unwrap(),
+            serde_json::from_str::<Value>(&displaced.texts[0]).unwrap(),
             serde_json::json!({
                 "type": "error",
                 "code": "seat_taken",
@@ -1666,22 +1486,20 @@ mod tests {
             json::parse_state(&host.save_game().unwrap()).unwrap(),
             native.state
         );
-        let mut turn_seen = false;
-        while let Ok(batch) = messages.reliable.try_recv() {
-            let message: serde_json::Value = serde_json::from_str(&batch.texts[0]).unwrap();
-            if message["type"] == "turn" {
-                assert_eq!(message["turn"], 2);
-                assert_eq!(message["hash"], native.state.hash().to_string());
-                turn_seen = true;
-                let message: serde_json::Value = serde_json::from_str(&batch.texts[1]).unwrap();
-                assert_eq!(message["type"], "view");
-                assert_eq!(message["view"]["me"], 0);
-                assert_eq!(message["view"]["turn"], 2);
-            }
-        }
-        assert!(turn_seen);
-        let mut restored = Host::open(root.path().to_owned(), vec![]).unwrap();
-        assert_eq!(restored.save_game().unwrap(), host.save_game().unwrap());
+        let written = drain(&messages);
+        let at = written
+            .iter()
+            .position(|m| m["type"] == "turn")
+            .expect("a turn report");
+        assert_eq!(written[at]["turn"], 2);
+        assert_eq!(written[at]["hash"], native.state.hash().to_string());
+        assert_eq!(written[at + 1]["type"], "view");
+        assert_eq!(written[at + 1]["view"]["me"], 0);
+        assert_eq!(written[at + 1]["view"]["turn"], 2);
+        let save = host.take_save().unwrap();
+        assert_eq!(save, host.save_game().unwrap());
+        let mut restored = Host::new(Some(&save), 5).unwrap();
+        assert_eq!(restored.save_game().unwrap(), save);
         let (a, _a_messages) = peer(&mut restored);
         let (b, _b_messages) = peer(&mut restored);
         join(&mut restored, a, 0);

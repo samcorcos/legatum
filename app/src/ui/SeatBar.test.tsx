@@ -228,7 +228,7 @@ it('a LAN seat with living teammates observes without planning or a Resolve acti
     faction: p.faction, connected: true, ready: false, orders: 0,
   }));
   act(() => useGame.setState({ client, views: [view], humans: [1], seat: 0, ready: [true], orders: [[]], errors: [[]],
-    lan: { mySeat: 1, seats, conn: 'open', status: { mode: 'server', has_game: true, seats, turn: 1, is_local: false, lan_urls: [] } },
+    lan: { mySeat: 1, seats, conn: 'open', status: { mode: 'server', has_game: true, seats, turn: 1, is_local: false } },
   }));
   expect(host.querySelector('.cta-label')?.textContent).toBe('Observing');
   expect(host.querySelector<HTMLButtonElement>('.cta')?.disabled).toBe(true);

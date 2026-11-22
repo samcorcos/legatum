@@ -30,7 +30,7 @@ beforeEach(async () => {
   useGame.setState({
     screen: 'join', client: null, views: null, orders: [[], []], ready: [false, false],
     lan: {
-      status: { mode: 'server', has_game: true, turn: 1, seats: [], lan_urls: [], is_local: true },
+      status: { mode: 'server', has_game: true, turn: 1, seats: [], is_local: true },
       mySeat: null, seats: [], conn: 'closed',
     },
   });

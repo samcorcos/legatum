@@ -6,10 +6,9 @@ import { FACTION_SHEETS } from '../factionSheets';
 import { colorFactions, factionColor } from '../theme';
 import { FactionMark } from '../ui/bits';
 import { HexBackdrop } from './HexBackdrop';
-import { InviteLink } from '../ui/InviteLink';
 import { ReclaimSeatButton } from '../ui/ReclaimSeatButton';
 
-/** LAN: pick which human seat this browser plays. */
+/** An online game: pick which human seat this browser plays. */
 export function JoinScreen() {
   const lan = useGame((s) => s.lan);
   const exitToTitle = useGame((s) => s.exitToTitle);
@@ -73,11 +72,6 @@ export function JoinScreen() {
             );
           })}
         </div>
-        {lan.status.is_local && lan.status.lan_urls.length > 0 && (
-          <div className="title-invite center">
-            <InviteLink urls={lan.status.lan_urls} />
-          </div>
-        )}
         {error && <div className="toast bad inline">{error}</div>}
         <ReclaimSeatButton />
       </div>

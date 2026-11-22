@@ -1,7 +1,7 @@
-// LAN staging room, as specified in plans/lan-protocol.md.
+// The online staging room, as specified in plans/game-protocol.md.
 import type { AiDifficulty, Faction } from './types';
 import { MAP_SIZES, activeRules, levelFields, levelOf, mapDimensions, readDifficultyPreference, type Lobby, type LobbyRules, type MapSizeId, type Slot } from './lobby';
-import { rememberSeat, rememberedSeat, defaultWsUrl, defaultSocketFactory, serverBase, type ServerStatus, type SocketFactory, type SocketLike } from './remote';
+import { apiFetch, rememberSeat, rememberedSeat, defaultWsUrl, defaultSocketFactory, serverBase, type ServerStatus, type SocketFactory, type SocketLike } from './remote';
 
 // ---- Flag ----
 
@@ -64,7 +64,8 @@ export type StagingClientMsg =
   | { type: 'staging_release'; seat: number }
   | { type: 'staging_update'; name?: string; faction?: Faction | 'Random' }
   | { type: 'staging_ready'; ready: boolean }
-  | { type: 'staging_leave' };
+  | { type: 'staging_leave' }
+  | { type: 'ping' };
 
 export type StagingServerMsg =
   | { type: 'staging'; state: StagingState }
@@ -151,10 +152,10 @@ export function settingsAcknowledged(config: StagingConfig, acknowledged: Stagin
     host.name === (config.seats[0].name.trim() || 'Player') && host.faction === config.seats[0].faction;
 }
 
-// ---- HTTP (host only: the server allows these from loopback) ----
+// ---- Host calls (only the host's own in-tab connection can make them) ----
 
 async function call(method: string, path: string, body?: unknown) {
-  const res = await fetch(`${serverBase()}${path}`, {
+  const res = await apiFetch(`${serverBase()}${path}`, {
     method,
     headers: { 'content-type': 'application/json' },
     body: body === undefined ? undefined : JSON.stringify(body),
@@ -237,6 +238,8 @@ export class StagingClient {
   private socket: SocketLike | null = null;
   private stopped = false;
   private timer: ReturnType<typeof setTimeout> | null = null;
+  /** Keeps a guest who is only watching or waiting from looking gone to the host. */
+  private pingTimer: ReturnType<typeof setInterval> | null = null;
   private pendingUpdate: { name?: string; faction?: Faction | 'Random' } | null = null;
   private leaving = false;
 
@@ -268,6 +271,8 @@ export class StagingClient {
         this.send({ type: 'staging_update', ...this.pendingUpdate });
         this.pendingUpdate = null;
       }
+      if (this.pingTimer) clearInterval(this.pingTimer);
+      this.pingTimer = setInterval(() => this.send({ type: 'ping' }), 20_000);
       this.events.connection?.(true);
     };
     sock.onmessage = (ev) => {
@@ -277,6 +282,7 @@ export class StagingClient {
     sock.onclose = () => {
       if (this.socket !== sock) return;
       this.socket = null;
+      this.stopPing();
       this.events.connection?.(false);
       this.setLeaving(false);
       if (!this.stopped) this.timer = setTimeout(() => this.connect(), 1000);
@@ -286,6 +292,7 @@ export class StagingClient {
   disconnect() {
     this.stopped = true;
     if (this.timer) clearTimeout(this.timer);
+    this.stopPing();
     const s = this.socket;
     this.socket = null;
     s?.close();
@@ -293,7 +300,13 @@ export class StagingClient {
     this.setLeaving(false);
   }
 
+  private stopPing() {
+    if (this.pingTimer) clearInterval(this.pingTimer);
+    this.pingTimer = null;
+  }
+
   take(seat: number, name: string) {
+
     if (this.leaving) return;
     if (this.seat !== seat) this.token = undefined;
     this.seat = seat;

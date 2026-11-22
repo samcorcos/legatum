@@ -10,6 +10,10 @@ import type { PlayerView } from '../types';
 import { FakeSocket } from '../test/fakeSocket';
 import { JoinScreen } from './JoinScreen';
 import { StagingScreen } from './StagingScreen';
+import { hostThisTab, joinedFromThisTab } from '../test/fakeHosting';
+import { setOnlineApi } from '../platform/online';
+
+vi.mock('../net/hosting', async () => (await import('../test/fakeHosting')).fakeHostingModule());
 
 vi.mock('./HexBackdrop', () => ({ HexBackdrop: () => null }));
 
@@ -17,7 +21,7 @@ let container: HTMLDivElement;
 let root: Root;
 let sockets: FakeSocket[];
 const status: ServerStatus = {
-  mode: 'server', has_game: true, turn: 5, lan_urls: [], is_local: true, staging: null,
+  mode: 'server', has_game: true, turn: 5, is_local: true, staging: null,
   seats: [{ seat: 0, player: 0, name: 'Host', faction: 'India', connected: false, reserved: true, ready: false, orders: 0 }],
 };
 
@@ -42,6 +46,7 @@ afterEach(async () => {
     useGame.getState().leaveLan();
   });
   container.remove();
+  setOnlineApi();
   vi.useRealTimers();
   vi.unstubAllGlobals();
 });
@@ -52,6 +57,7 @@ it.each([true, false])('offers explicit reclaim after an invalid saved credentia
   rememberSeat({ seat: 0, name: 'Host', gameId: 'old-game', token: 'expired-token' });
   const currentStatus = { ...status, is_local: isLocal };
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, text: async () => JSON.stringify(currentStatus) }));
+  if (isLocal) hostThisTab(); else joinedFromThisTab();
   await useGame.getState().boot();
   sockets[0].open();
   expect(sockets[0].sent).toEqual([{ type: 'join', seat: 0, name: 'Host', token: 'expired-token' }]);
@@ -95,6 +101,7 @@ it.each([true, false])('offers explicit reclaim after an invalid saved credentia
 it('does not offer reclaim for an unrelated error or an ordinary explicit Join', async () => {
   rememberSeat({ seat: 0, name: 'Host', gameId: 'old-game', token: 'expired-token' });
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, text: async () => JSON.stringify(status) }));
+  hostThisTab();
   await useGame.getState().boot();
   sockets[0].open();
   sockets[0].push({ type: 'error', code: 'bad_request', message: 'Invalid seat credential.' });
