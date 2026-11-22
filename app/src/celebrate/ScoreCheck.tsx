@@ -5,7 +5,7 @@ import { Icon } from '../ui/bits';
 import { useReducedMotion } from '../ui/useReducedMotion';
 import { eraArt } from './eraArt';
 import type { Moment } from './moments';
-import type { Box, ScoreCheckCard } from './scoreCheck';
+import type { Box, ScoreCheckCard } from './scoreCheckCards';
 import './scoreCheck.css';
 
 const LEGEND: { state: Box['state']; text: string }[] = [

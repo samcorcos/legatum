@@ -8,7 +8,7 @@ import { FixtureClient } from '../test/fixtureEngine';
 import { useGame } from '../store';
 import { withScoreCheck, withWorldAges } from '../test/vpV2Fixture';
 import { momentsForTurn, planMoments } from './moments';
-import { scoreCheckFor } from './scoreCheck';
+import { scoreCheckFor } from './scoreCheckCards';
 import { ScoreCheck } from './ScoreCheck';
 import { EraUpTakeover } from './EraUpTakeover';
 import type { PlayerView } from '../types';
