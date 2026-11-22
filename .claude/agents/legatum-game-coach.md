@@ -34,6 +34,7 @@ Answer with numbers from the save, never vibes:
    - target choice;
    - the economy curve;
    - use of the faction's signature;
+   - what the faction's drawback cost him (a number or an event; say "nothing" when it cost nothing, because four drawbacks do not bite a human player and the review must show it before any rule changes);
    - diplomacy;
    - wonders and VP;
    - exploiting AI blind spots.

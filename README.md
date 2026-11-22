@@ -39,7 +39,7 @@
 
 ---
 
-Legatum is a turn-based strategy game in the tradition of Civilization VI. You found cities, research through nine eras, raise armies, make and break alliances, and race your rivals for victory points. A full game is paced for about 300 turns.
+Legatum is a turn-based strategy game in the tradition of Civilization VI. You found cities, research through nine eras, raise armies, make and break alliances, and race your rivals for victory points. A full game is designed for 250 to 300 turns; in the 2026-11-22 census of 2,112 all-Hard eight-empire games the median game ended on turn 220.
 
 It is an open-source project in active development. The game runs in a browser, on a laptop, tablet or phone, and online for two or more players. There is no stable release yet; see [Status](#status).
 
@@ -51,7 +51,8 @@ These are the design rules the project holds itself to. Where the game falls sho
 - **Nobody waits.** Turns are simultaneous. Every empire, human or AI, plans at the same time, and the engine resolves all the orders together in fixed stages.
 - **No hidden maths.** Yields, costs and combat strengths open into a breakdown. Attacks, advances and Peace offers show a forecast before you commit.
 - **The race is always visible.** Victory points (VP) are public from turn one. World Age cards, faction goals, world wonders and held rival capitals are on one screen, with who holds each. A team that holds its target for ten turns wins, so a leader is on a clock everyone can see.
-- **Eleven peoples, nine of them finished.** Switzerland, India, Byzantium, Germany, the Celts, the Mongols, Sparta, Athens and the Aztecs each have a signature strength, a drawback that pays for it and a faction goal worth 2 VP. Egypt and Rome are playable early designs with no faction goal yet. <!-- peoples-count -->
+- **Eleven peoples, nine of them finished.** Switzerland, India, Byzantium (an early design: its rule kit is under review), Germany, the Celts, the Mongols, Sparta, Athens and the Aztecs each have a signature strength, a drawback that pays for it and a faction goal worth 2 VP. Egypt and Rome are playable early designs with no faction goal yet. <!-- peoples-count -->
+- **No navy.** There are no ships or naval units; all fighting is on land.
 - **An AI that plays by your rules.** Easy, Normal and Hard get no extra yields, no cheaper costs, no stronger units and no extra sight. Each AI empire plans from the same fogged view a player in its seat would have. A harder level decides better. The exact scope is under [What the AI can see and do](#what-the-ai-can-see-and-do).
 - **Strategy with a counter.** Rushing, expanding wide, turtling, building an economy and playing diplomatically are each designed to have an answer, so the best plan depends on your people, the map and your neighbours. Expansion, by settling or by conquest, is the core loop. Staying small is deliberately weak.
 - **Close to the end.** A leader can pull ahead, but each technology costs less for every other empire that already knows it, a public warning names whoever is closest to winning, and the Hard AI will go to war to contain them.
@@ -115,7 +116,7 @@ These clips are recorded from the running game.
 
 ## Play it
 
-**[Play in your browser](https://legatum-game.pages.dev).** Nothing to install. Single player against the AI, hot seat on one computer, the scenarios and online games all work there. It runs on a laptop or desktop and in a phone or tablet browser; it is tested most in Chrome. The first load is about 7 MB. Your game is autosaved in that browser, and Menu → Save to file gives you a copy to keep. The game's record is also uploaded to the project, without player names; see [Privacy](#privacy).
+**[Play in your browser](https://playlegatum.com).** Nothing to install. Single player against the AI, hot seat on one computer, the scenarios and online games all work there. It runs on a laptop or desktop and in a phone or tablet browser; it is tested most in Chrome. The first load is about 7 MB. Your game is autosaved in that browser, and Menu → Save to file gives you a copy to keep. The game's record is also uploaded to the project, without player names; see [Privacy](#privacy).
 
 ### Privacy
 
@@ -222,7 +223,7 @@ Direction, in rough order of how soon it matters:
 
 - **An AI that plays like a strong human.** The AI is being tuned against milestones recorded from human games, and it has not reached its targets yet. This comes before faction balance work, because balance numbers mean little while the AI is weak.
 - **Finishing Egypt and Rome.** Neither has a faction goal yet.
-- **Faction balance.** The aim is that the best people's win rate is at most 1.5 times the worst's, checked on about 2,000 games plus held-out seeds. Balance changes add drawbacks or deepen a weak identity; they do not flatten strengths.
+- **Faction balance.** The aim is that the best people's win rate is at most 1.5 times the worst's, checked on about 2,000 games plus held-out seeds. It is not met yet: the 2026-11-22 census ([results](docs/sim-results/2026-11-22-census-eleven-factions-rules50.md)) has Egypt at 21.4% and Rome at 2.3% of wins, a ratio of 9.1 (2.6 among the nine finished peoples). Balance changes add drawbacks or deepen a weak identity; they do not flatten strengths.
 - **A late-game way to score for stalemated games.** A stalled game should have a hard path to two more points in the Future era. It waits until simulations show it is needed.
 - **Delegation for the mid-game.** War across a big empire is tedious by hand. Generals who run a campaign for you are planned once the AI's own campaign logic is good enough to trust.
 

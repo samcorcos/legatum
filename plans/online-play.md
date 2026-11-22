@@ -34,7 +34,7 @@ guest tab                 --wss-->  Cloudflare Worker (infra/relay)  <--wss (dia
 
 ## Relay HTTP and WebSocket API (Worker, `infra/relay/`)
 
-Base URL `RELAY` (e.g. `https://legatum-relay.<account>.workers.dev`). All responses carry
+Base URL `RELAY` (live: `https://relay.playlegatum.com`). All responses carry
 `Access-Control-Allow-Origin: *` and `Cache-Control: no-store`; `OPTIONS` preflight is answered.
 
 | Method | Path | Meaning |

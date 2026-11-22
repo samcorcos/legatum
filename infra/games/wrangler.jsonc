@@ -5,6 +5,10 @@
   "name": "legatum-games",
   "main": "src/index.ts",
   "compatibility_date": "2026-10-01",
+  // The public address. A custom domain puts the Worker behind the zone's rate-limiting rule (README "Edge rule").
+  "routes": [{ "pattern": "games.playlegatum.com", "custom_domain": true }],
+  // The workers.dev address stays on for builds published before the domain; it is outside the edge rule.
+  "workers_dev": true,
   "r2_buckets": [{ "binding": "GAMES", "bucket_name": "legatum-games" }],
   // One Quota object counts the new games per client address and UTC day (it keeps only a salted hash of the address).
   "durable_objects": { "bindings": [{ "name": "QUOTA", "class_name": "Quota" }] },
@@ -14,7 +18,7 @@
   ],
   "vars": {
     // Pages that may upload, comma separated. "*.legatum-game.pages.dev" covers preview deploys.
-    "ALLOWED_ORIGINS": "https://legatum-game.pages.dev,*.legatum-game.pages.dev,http://localhost:*,http://127.0.0.1:*",
+    "ALLOWED_ORIGINS": "https://playlegatum.com,https://www.playlegatum.com,https://legatum-game.pages.dev,*.legatum-game.pages.dev,http://localhost:*,http://127.0.0.1:*",
     // New games (not later checkpoints of a stored game) one client address may store per UTC day; more get 429.
     // A string, as Worker vars are; a bad value means 50.
     "MAX_NEW_GAMES_PER_DAY": "50"

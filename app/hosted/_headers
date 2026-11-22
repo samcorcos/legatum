@@ -11,7 +11,7 @@
   Strict-Transport-Security: max-age=31536000; includeSubDomains
   Cross-Origin-Opener-Policy: same-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://legatum-relay.sam-1e7.workers.dev wss://legatum-relay.sam-1e7.workers.dev; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://relay.playlegatum.com wss://relay.playlegatum.com https://legatum-relay.sam-1e7.workers.dev wss://legatum-relay.sam-1e7.workers.dev https://legatum-games.sam-1e7.workers.dev; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'
 
 # Vite names everything under /assets/ by content hash, so a changed file gets a new address.
 /assets/*

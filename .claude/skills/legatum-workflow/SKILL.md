@@ -69,7 +69,7 @@ Current rules only, one line each with the date and who. Detail, the user's full
 ## AI work
 
 - Read `docs/status/state-of-the-ai.md` before any AI work and update it with every AI landing (user, 2026-11-06).
-- Judge AI work by his games first: the designer-seat score from the hill-climb suite (`tools/hill-climb/`), then short paired scenarios (`tools/sim/scenario-gate.sh`), then large censuses (user, 2026-10-31; 2026-11-09).
+- Judge AI work by his games first: the designer-seat score from the hill-climb suite (`tools/hill-climb/`), then short paired scenarios (`tools/sim/scenario-gate.sh`), then large censuses (user, 2026-10-31; 2026-11-09). A census summary reports win rates plus median end turn, ending shares and the World War share, and each record carries `max_era` (`crates/sim/src/stats.rs`; absent in older reports, meaning unknown, not Ancient). With more factions than seats, use `--rotate-factions` with explicit rosters so every faction plays equal seats (`docs/sim-results/2026-11-22-census-eleven-factions-rules50.md`).
 - Measure AI changes seat-only and opponents-only on the same maps and salts (user, 2026-10-10).
 - Any branch that changes units, buildings, techs, factions or rules ships with AI support for the new content (lead, 2026-10-11).
 - AI improvement is compute-heavy and token-light; explore strategies, not only tune numbers (user, 2026-10-18, 2026-10-26).
