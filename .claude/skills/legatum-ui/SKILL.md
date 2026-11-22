@@ -650,7 +650,7 @@ Verify UI changes with Playwright screenshots at the three sizes and attach them
 - **Each number once per tooltip:** don't print "4 moves" twice in one card.
 - **Tour fixtures that depend on turn resolution pin their outcome** (garrison HP, seeds) and assert the payoff line (e.g. "captured"), so AI or rule changes fail loudly instead of quietly losing the payoff shots.
 - **After a rebalance, grep the skills and the Guide for the old numbers.**
-- **Archive every release's tour on release day** (`~/LegatumRuns/tours/playtest-<version>-review/`). 8.9.18 wasn't archived, which cost an extra tour run.
+- **Archive every release's tour on release day** (`/mnt/project-files/ui-tours/<release>/` since 2026-11-22; `~/LegatumRuns/tours/playtest-<version>-review/` on the Mac before that). 8.9.18 wasn't archived, which cost an extra tour run.
 - **A unit-panel tooltip goes beside the panel**, so it doesn't cover the Lens switcher at the left edge.
 - **Mounted surfaces agree:** card, forecast, tooltip and Guide show the same three numbers (130% strength, +40% against ranged, −33% against a city) in the same words. Review all four together.
 
