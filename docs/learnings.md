@@ -2,6 +2,12 @@
 
 Newest first. One entry per non-obvious finding: what we learned, the evidence, and what we changed. Correct or delete entries that turn out to be wrong.
 
+## 2026-11-22: Why a finished city built Scouts, and projects for every empire
+
+- **Cause.** Gold and Science automation (`production.rs::automated_choice`) builds its own kind first, then lets any item Hard values above zero fill in. A finished city has no Gold building left, so the fill-in ran. Hard values a Scout at 200+ whenever the empire has none and either reachable unexplored land or a rival whose army is worth watching (`intel::information_value`), and the Gold/Science filter removed only combat units. So a T100 Roman city on Gold built Scouts. Fixed: automation builds a Scout only under Balanced and only to explore (`scout_explores`), skips units whose upgrade is researched, and runs the focus's project when nothing is left (`idle_project`).
+- **The AI fixture (`ai/src/fixture.rs`) had no project options**, so a test of a project fallback silently got `None`. It now lists the Gold and Science projects, as core does; no existing AI unit test changed result.
+- **No `RULES_VERSION` bump for opening projects to every faction.** The save shape is unchanged and every order that was legal stays legal, so recorded tapes replay identically and the live game keeps loading. Only new orders (a non-German project) differ.
+
 ## 2026-11-22: A new order kind is dropped silently unless the app's decoder knows it (PR 31 UI review)
 
 - **`ORDER_KINDS` in `app/src/orderDecoding.ts` is a hand-kept copy of `core::orders::Order`.** `decodeOrders` runs on every order list that comes from storage or the relay (`remote.ts`). It drops a kind it doesn't know, with only a console warning, and `describeOrder` shows "Unknown order (GiveGold)". `GiveGold` was added to the core, the TypeScript union and `describeOrder`, but not to the set. So a queued gift showed as unknown, and an online guest's gift would never have reached the host. tsc can't catch this, because the set is typed `Set<Order['type']>` and a missing member is legal. A test now checks that a `GiveGold` order survives `decodeOrders`, and the give-gold tour asserts the pending-orders line.

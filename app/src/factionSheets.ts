@@ -5,7 +5,7 @@
 // wording. Ratings and the lore paragraph are new presentation, not duplicates of anything.
 import {
   FLOWER_WARS, AZTEC_NO_HORSES, BUILDING_STATS, INDIA_CAPITAL_RADIUS, INDIA_NETWORK_PERCENT_PER_CITY, INDIA_NETWORK_RADIUS, INDIA_YIELD_PERCENT_PER_HEX,
-  GERMANY_PROJECT_GOLD_PERCENT, GERMANY_PROJECT_SCIENCE_PERCENT, EGYPT_NILE_BUILD_PERCENT,
+  GERMANY_PROJECT_GOLD_PERCENT, GERMANY_PROJECT_SCIENCE_PERCENT, PROJECT_GOLD_PERCENT, PROJECT_SCIENCE_PERCENT, EGYPT_NILE_BUILD_PERCENT,
   KESHIG_KIND, RULES, SPECIAL_UNIT, TECH_NAME, UNIT_NAME, UNIT_STATS, specialUnitEdge, specialUnitName, companyRule, THIN_LEVIES, factionGoalVp, itemName, swissInterestRule, swissTollRule, SWISS_CHEAP_BUYS, SWISS_CAPTURE_RULE, unitStatsFor,
 } from './data';
 import { pieceAgainst } from './pieceCompare';
@@ -13,7 +13,7 @@ import type { BuildingKind, Faction, ProductionItem, TechId } from './types';
 
 /** Tiles from the capital at which an Indian city's Food, Gold and Science reach zero. */
 const indiaZeroAt = INDIA_CAPITAL_RADIUS + 100 / INDIA_YIELD_PERCENT_PER_HEX;
-/** Germany's Industry project shares in words (half, a quarter), falling back to a percentage. */
+/** Project shares in words (half, a quarter), falling back to a percentage. */
 const share = (percent: number) => ({ 50: 'half', 25: 'a quarter' } as Record<number, string>)[percent] ?? `${percent}%`;
 const keshig = unitStatsFor('Mongols', KESHIG_KIND);
 /** The row for a faction's special unit: what it replaces and the edge that sets it apart (the Guide prints it; the sheet shows the unit's card instead). */
@@ -169,7 +169,7 @@ export const FACTION_SHEETS: Record<Faction, FactionSheet> = {
       { strength: 'Ruhr Foundry: +6 Production (a Forge gives +3).', strengthIcon: 'building-foundry', onCard: true },
       { price: 'Each Production building in a German city costs 1 Food.', priceIcon: 'yield-food' },
       { strength: 'Your strategic deposits supply twice as much.', strengthIcon: 'resource-iron' },
-      { strength: `A city can work on an Industry project instead of building: each turn it turns ${share(GERMANY_PROJECT_GOLD_PERCENT)} of its Production into Gold, or ${share(GERMANY_PROJECT_SCIENCE_PERCENT)} into Science.`, strengthIcon: 'yield-gold' },
+      { strength: `Projects pay more: a Gold project turns ${share(GERMANY_PROJECT_GOLD_PERCENT)} of a city’s Production into Gold, a Science project ${share(GERMANY_PROJECT_SCIENCE_PERCENT)} into Science (others: ${share(PROJECT_GOLD_PERCENT)} and ${share(PROJECT_SCIENCE_PERCENT)}).`, strengthIcon: 'yield-gold' },
       specialRow('Germany', 'unit-panzer'),
     ],
     counteredBy: 'Attack early, before their Production builds up.',

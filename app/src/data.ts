@@ -683,7 +683,7 @@ export const FACTION_INFO: Record<Faction, FactionInfo> = {
   Switzerland: factionInfo("switzerland", "Switzerland", "Guard the passes. Keep the accounts.", `${swissTollRule()} ${swissInterestRule()} ${SWISS_CHEAP_BUYS}`, uniquePieceText(UNIQUE_PIECE.Switzerland), goalLine('Switzerland'), `Military unit upkeep is triple: 3 Gold a turn instead of 1. ${SWISS_CAPTURE_RULE}`),
   India: factionInfo("india", "India", "Akbar's regional courts bind a populous empire.", `Cities can be founded 3 tiles apart. +1 Food in every city. Each other Indian city within ${RULES.indiaNetworkRadius} tiles adds ${RULES.indiaNetworkPercentPerCity}% to Food and Production.`, uniquePieceText(UNIQUE_PIECE.India), goalLine('India'), `Non-capital cities send no Gold to your treasury until they have a Revenue Office, then half the Gold they make. Corruption cuts all four city yields by ${RULES.indiaYieldPercentPerHex}% per tile beyond ${RULES.indiaCapitalRadius} from the capital, up to 100%. Production never falls below 3.`),
   Byzantium: factionInfo("byzantium", "Byzantium", "Hold Constantinople. Hire the swords.", companyRule(), BYZANTIUM_LEGIONARY, goalLine('Byzantium'), THIN_LEVIES),
-  Germany: factionInfo("germany", "Germany", "Coal, steel, and skilled hands.", `Your strategic deposits supply twice as much. A city can run an Industry project instead of building, turning ${RULES.germanyProjectGoldPercent}% of its Production into Gold or ${RULES.germanyProjectSciencePercent}% into Science each turn.`, uniquePieceText(UNIQUE_PIECE.Germany), goalLine('Germany'), 'Each Production building in a German city costs 1 Food.'),
+  Germany: factionInfo("germany", "Germany", "Coal, steel, and skilled hands.", `Your strategic deposits supply twice as much. Gold projects turn ${RULES.germanyProjectGoldPercent}% of a city’s Production into Gold, and Science projects ${RULES.germanyProjectSciencePercent}% into Science (others: ${RULES.projectGoldPercent}% and ${RULES.projectSciencePercent}%).`, uniquePieceText(UNIQUE_PIECE.Germany), goalLine('Germany'), 'Each Production building in a German city costs 1 Food.'),
   Celts: factionInfo("celts", "Celts", "Raid, burn and move on.", `A sack takes ${RULES.celtsSackGoldPerPopulation} Gold per population and raises a warband camp. A sacked rival capital scores 1 VP for good. Barbarians never attack the Celts.`, '', goalLine('Celts'), "Celts can't keep cities they capture: they sack and burn them. A city you founded comes home intact when you retake it."),
   Mongols: factionInfo("mongols", "Mongols", "Across the steppe, news travels.", "Military units, Scouts too, get +1 move. Settlers keep 2 moves. A city with a Market at least 8 tiles from your capital earns +2 Gold.", uniquePieceText(UNIQUE_PIECE.Mongols), goalLine('Mongols'), "Mongol military units get no defence bonus from terrain, though fortifying still works. Mongol cities raise no Walls, Castles or Star Forts and buy no Siege before the Medieval era. Walls in a city they capture still defend it."),
   Sparta: factionInfo("sparta", "Sparta", "Train in the agoge. Hold the line.", `Spartan military units start at level 1, gain XP 50% faster, and alone can reach level 6, Spartan Veteran. Each level adds ${RULES.promotion.strengthPercent}% to a unit's strength. Hoplites gain +${HOPLITE_PHALANX_STRENGTH} strength next to another Hoplite. The melee line fights at full strength when wounded. Destroying an enemy military unit restores up to 100 HP, shared among the Spartan units that hit it that turn and survived. Capturing a city fully heals Spartan military units within 2 tiles.`, uniquePieceText(UNIQUE_PIECE.Sparta), goalLine('Sparta'), `Settlers and non-military buildings cost 50% more Production, except Walls, Castles, Star Forts and the Agoge.`),
@@ -697,6 +697,14 @@ export const factionGoalVp = (faction: Faction): number => goalVp(faction);
 export const GERMANY_PROJECT_GOLD_PERCENT = RULES.germanyProjectGoldPercent;
 export const EGYPT_NILE_BUILD_PERCENT = RULES.egyptNileBuildPercent;
 export const GERMANY_PROJECT_SCIENCE_PERCENT = RULES.germanyProjectSciencePercent;
+/** Every other empire's Gold and Science projects (core `data::PROJECT_*_PERCENT`). */
+export const PROJECT_GOLD_PERCENT = RULES.projectGoldPercent;
+export const PROJECT_SCIENCE_PERCENT = RULES.projectSciencePercent;
+/** A faction's share of city Production a Gold or Science project converts (core `project_percent`). */
+export const projectPercent = (faction: Faction | undefined, project: 'Gold' | 'Science'): number =>
+  faction === 'Germany'
+    ? project === 'Gold' ? GERMANY_PROJECT_GOLD_PERCENT : GERMANY_PROJECT_SCIENCE_PERCENT
+    : project === 'Gold' ? PROJECT_GOLD_PERCENT : PROJECT_SCIENCE_PERCENT;
 /** Food for the first growth (population 1 to 2) (core `FIRST_GROWTH`). */
 export const FIRST_GROWTH = RULES.firstGrowth;
 /** The game's expected length in turns: the horizon forecasts and the AI pace against (core `data::EXPECTED_GAME_TURNS`). */
@@ -717,7 +725,7 @@ export function factionUnavailableReason(item: ProductionItem, faction: Faction,
   if (faction === 'Rome' && item.kind === 'Unit' && item.unit === 'Settler') return 'Rome cannot train or buy Settlers; full-health melee veterans can found cities';
   if (availableToPlayer(faction, item, era)) return null;
   if (faction === 'Aztecs' && item.kind === 'Unit' && HORSE_MOUNTED.includes(item.unit)) return AZTEC_NO_HORSES;
-  if (item.kind === 'Project') return item.project === 'Grow' ? 'Only Egyptian cities can choose Grow' : 'Only German cities can run industry projects';
+  if (item.kind === 'Project' && item.project === 'Grow') return 'Only Egyptian cities can choose Grow';
   if (faction === 'Egypt' && item.kind === 'Building' && isWorkshopLine(item.building)) return 'Workshops, Forges and Factories do nothing for Egypt, which has no Production';
   if (item.kind === 'Building' && item.building === 'BroodHall') return 'No people can build the Rice Storehouse yet';
   if ((item.kind === 'Building' || item.kind === 'Wonder') && item.building === 'CourierHall') return 'Only Mongols can build the Yam Relay Station';
@@ -739,11 +747,16 @@ export const IMPROVEMENT_SUMMARY: Record<ImprovementKind, string> = {
   Quarry: 'Adds Production to a worked tile',
   SaltpeterWorks: 'Adds tile yields and Niter supply',
 };
-const PROJECT_COPY: Record<'Gold' | 'Science' | 'Grow', { summary: string; blurb: string }> = {
-  Gold: { summary: `Turns ${RULES.germanyProjectGoldPercent}% of city Production into Gold each turn`, blurb: `While it runs, this city builds nothing else, and ${RULES.germanyProjectGoldPercent}% of its Production comes out as Gold every turn. It never finishes: pick another item to stop it.` },
-  Science: { summary: `Turns ${RULES.germanyProjectSciencePercent}% of city Production into Science each turn`, blurb: `While it runs, this city builds nothing else, and ${RULES.germanyProjectSciencePercent}% of its Production comes out as Science every turn. It never finishes: pick another item to stop it.` },
-  Grow: { summary: 'Grows the city with its surplus Food instead of building', blurb: 'This city builds nothing, and its surplus Food grows it. It never finishes: pick something to build to stop it.' },
-};
+/** A project's card text. Egypt's projects convert the build progress its surplus Food makes. */
+function projectCopy(project: 'Gold' | 'Science' | 'Grow', faction?: Faction): { summary: string; blurb: string } {
+  if (project === 'Grow') return { summary: 'Grows the city with its surplus Food instead of building', blurb: 'This city builds nothing, and its surplus Food grows it. It never finishes: pick something to build to stop it.' };
+  const pct = projectPercent(faction, project);
+  const from = faction === 'Egypt' ? 'build progress from Food' : 'Production';
+  return {
+    summary: `Turns ${pct}% of city ${from} into ${project} each turn`,
+    blurb: `While it runs, this city builds nothing else, and ${pct}% of its ${from} comes out as ${project} every turn. It never finishes: pick another item to stop it.`,
+  };
+}
 export const improvementName = (kind: ImprovementKind, upgraded = false): string =>
   upgraded ? IMPROVEMENT_INFO[kind].upgradedName : IMPROVEMENT_INFO[kind].name;
 
@@ -783,7 +796,7 @@ function isWorkshopLine(building: BuildingKind): boolean {
 }
 
 export function availableToFaction(faction: Faction, item: ProductionItem): boolean {
-  if (item.kind === 'Project') return item.project === 'Grow' ? faction === 'Egypt' : faction === 'Germany';
+  if (item.kind === 'Project') return item.project !== 'Grow' || faction === 'Egypt';
   // The Nile: Egypt has no Production, so the Workshop line would do nothing.
   if (faction === 'Egypt' && item.kind === 'Building' && isWorkshopLine(item.building)) return false;
   if (item.kind === 'Unit') return (item.unit !== 'Heir' || faction === 'Byzantium') && (faction !== 'Aztecs' || !HORSE_MOUNTED.includes(item.unit)) && (faction !== 'Rome' || item.unit !== 'Settler');
@@ -865,7 +878,7 @@ export function itemSummary(item: ProductionItem, faction?: Faction): string {
   if (item.kind === 'Building' || item.kind === 'Wonder') return BUILDING_STATS[item.building].summary;
   // The Nile: Egypt has no Production, so its Mine is for Copper's Gold and the supply.
   if (item.kind === 'Improvement') return faction === 'Egypt' && item.improvement === 'Mine' ? 'Gives Gold on Copper, and supply on Iron or Coal' : IMPROVEMENT_SUMMARY[item.improvement];
-  return PROJECT_COPY[item.project].summary;
+  return projectCopy(item.project, faction).summary;
 }
 
 export function itemDescription(item: ProductionItem, faction?: Faction): string {
@@ -873,7 +886,7 @@ export function itemDescription(item: ProductionItem, faction?: Faction): string
     const info = IMPROVEMENT_INFO[item.improvement];
     return `Improves a resource tile this city works. A resource yields its bonus only once improved. Becomes ${/^[AEIOU]/.test(info.upgradedName) ? 'an' : 'a'} ${info.upgradedName} by itself with ${TECH_NAME[info.upgradeTech]}.`;
   }
-  if (item.kind === 'Project') return PROJECT_COPY[item.project].blurb;
+  if (item.kind === 'Project') return projectCopy(item.project, faction).blurb;
   const piece = faction ? FACTION_PIECES[faction] : null;
   const pieceText = faction && (PIECE_TEXT[faction]?.[itemKey(item)] ?? (piece && sameItem(item, piece.item) ? FACTION_INFO[faction].unique : undefined));
   if (faction && pieceText) return pieceText;
@@ -906,7 +919,7 @@ export const GERMANY_FACTORY_NOTE = `The city keeps its Ruhr Foundry, and it sti
 const MONGOLS_MARKET_NOTE = 'A city at least 8 tiles from your capital also earns +2 Gold, once for the Market and its upgrades.';
 
 export function itemName(item: ProductionItem, faction?: Faction): string {
-  if (item.kind === 'Project') return item.project === 'Grow' ? 'Grow' : `Industry: ${item.project}`;
+  if (item.kind === 'Project') return item.project === 'Grow' ? 'Grow' : `${item.project} project`;
   if (item.kind === 'Improvement') return IMPROVEMENT_INFO[item.improvement].name;
   const replacement = faction && factionItemName(faction, item.kind === 'Unit' ? item.unit : item.building);
   if (replacement) return replacement;

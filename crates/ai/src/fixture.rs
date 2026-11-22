@@ -538,6 +538,11 @@ impl ViewBuilder {
                     .iter()
                     .map(|b| ProductionItem::Building { building: *b }),
             )
+            // Every empire's Gold and Science projects, as in core.
+            .chain(
+                [legatum_core::IndustryProject::Gold, legatum_core::IndustryProject::Science]
+                    .map(|project| ProductionItem::Project { project }),
+            )
             .filter(|i| data::item_requires(*i).is_none_or(|t| known.contains(&t)))
             // The Brood Hall, Courier Hall and Heir belong to one faction each, as in core.
             .filter(|i| {

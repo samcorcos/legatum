@@ -112,7 +112,7 @@ fn ruhr_production_off_makes_it_an_ordinary_forge() {
 }
 
 #[test]
-fn industry_projects_off_removes_the_choice_and_its_yield() {
+fn industry_projects_off_leaves_germany_everyones_rate() {
     let gold = project(IndustryProject::Gold);
     let mut s = german();
     let c = found(&mut s, P0, at(5, 5));
@@ -123,34 +123,64 @@ fn industry_projects_off_removes_the_choice_and_its_yield() {
     assert!(control.total.gold > 0 && control.total.gold >= control.total.production / 2);
 
     s.setup.rule_experiments = off(FactionRule::GermanyIndustryProjects);
-    let reason = economy::production_check::<String>(&s, &s.cities[&c], gold, true)
-        .expect("the project is refused");
-    assert!(reason.contains("switched off"), "{reason}");
-    assert!(!data::available_to_faction_rules(
-        s.setup.rule_experiments.faction_rules_off,
-        Faction::Germany,
-        project(IndustryProject::Science)
-    ));
+    assert!(economy::production_check::<economy::Blocked>(&s, &s.cities[&c], gold, true).is_none());
     let ablated = economy::city_yields(&s, &s.cities[&c]);
     assert!(
         ablated.total.gold < control.total.gold,
-        "no Production-to-Gold"
+        "everyone's rate is lower than Germany's"
     );
-    // The player's view lists no project option for the city.
-    let view = crate::player_view(&s, P0);
-    let detail = view
-        .cities
-        .iter()
-        .find(|v| v.id == c)
-        .unwrap()
-        .detail
-        .as_ref()
-        .unwrap();
+}
+
+/// Every empire can run a Gold or Science project (Sam, 2026-11-22), at a lower rate than Germany.
+#[test]
+fn every_empire_runs_projects_below_germanys_rate() {
+    let rules = crate::experiments::RuleExperiments::default();
+    for faction in Faction::ALL {
+        for p in [IndustryProject::Gold, IndustryProject::Science] {
+            assert!(data::available_to_faction(faction, project(p)), "{faction:?} {p:?}");
+            let pct = rules.project_percent(faction, p);
+            let german = rules.project_percent(Faction::Germany, p);
+            if faction == Faction::Germany {
+                assert_eq!(pct, if p == IndustryProject::Gold { 50 } else { 25 });
+            } else {
+                assert!(pct > 0 && pct * 2 <= german, "{faction:?} {p:?} {pct} vs {german}");
+            }
+        }
+    }
+    let mut s = test_game(&[(Faction::Rome, 0), (Faction::India, 1)]);
+    let c = found(&mut s, P0, at(5, 5));
+    s.cities.get_mut(&c).unwrap().population = 6;
+    let gold = project(IndustryProject::Gold);
+    assert!(economy::production_check::<economy::Blocked>(&s, &s.cities[&c], gold, true).is_none());
+    let idle = economy::city_yields(&s, &s.cities[&c]);
+    s.cities.get_mut(&c).unwrap().producing = Some(gold);
+    let running = economy::city_yields(&s, &s.cities[&c]);
+    assert_eq!(
+        running.total.gold - idle.total.gold,
+        running.total.production * i32::from(data::PROJECT_GOLD_PERCENT) / 100
+    );
+    s.cities.get_mut(&c).unwrap().producing = Some(project(IndustryProject::Science));
+    let science = economy::city_yields(&s, &s.cities[&c]);
+    assert_eq!(
+        science.total.science - idle.total.science,
+        science.total.production * i32::from(data::PROJECT_SCIENCE_PERCENT) / 100
+    );
+}
+
+/// Egypt has no Production: its project converts the build progress its surplus Food makes.
+#[test]
+fn an_egyptian_project_converts_food_funded_progress() {
+    let mut s = test_game(&[(Faction::Egypt, 0), (Faction::India, 1)]);
+    let c = found(&mut s, P0, at(5, 5));
+    s.cities.get_mut(&c).unwrap().population = 1;
+    s.cities.get_mut(&c).unwrap().producing = Some(project(IndustryProject::Gold));
+    let y = economy::city_yields(&s, &s.cities[&c]);
+    let progress = y.total.production;
+    assert!(progress > 0, "surplus Food builds: {y:?}");
     assert!(
-        !detail
-            .options
-            .iter()
-            .any(|o| matches!(o.item, ProductionItem::Project { .. }))
+        y.sources.iter().any(|src| src.label.starts_with("Gold project")
+            && src.yields.gold == progress * i32::from(data::PROJECT_GOLD_PERCENT) / 100),
+        "{y:?}"
     );
 }
 

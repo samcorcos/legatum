@@ -339,6 +339,8 @@ fn ui_rules_match_core() {
         "egyptNileFoodPercent": legatum_core::experiments::EGYPT_NILE_FOOD_PERCENT,
         "egyptNileBuildPercent": legatum_core::experiments::EGYPT_NILE_BUILD_PERCENT,
         "germanyProjectSciencePercent": data::GERMANY_SCIENCE_PROJECT_PERCENT,
+        "projectGoldPercent": data::PROJECT_GOLD_PERCENT,
+        "projectSciencePercent": data::PROJECT_SCIENCE_PERCENT,
         "keshig": {
             "kind": format!("{:?}", data::KESHIG_KIND),
             "cost": data::KESHIG_COST,

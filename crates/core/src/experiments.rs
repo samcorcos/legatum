@@ -325,6 +325,13 @@ pub struct RuleExperiments {
     /// The Nile: build progress per 100 surplus Food (default `EGYPT_NILE_BUILD_PERCENT`).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub egypt_nile_build: Option<u16>,
+    /// A Gold project's share of city Production for every empire but Germany, in percent
+    /// (default `data::PROJECT_GOLD_PERCENT`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub project_gold: Option<u16>,
+    /// A Science project's share, in percent (default `data::PROJECT_SCIENCE_PERCENT`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub project_science: Option<u16>,
 }
 
 fn is_zero(n: &u8) -> bool {
@@ -367,6 +374,26 @@ impl RuleExperiments {
 
     pub fn egypt_nile_build_percent(self) -> i32 {
         i32::from(self.egypt_nile_build.unwrap_or(EGYPT_NILE_BUILD_PERCENT))
+    }
+
+    /// The share of city Production (Egypt: of its Food-funded build progress) a project turns
+    /// into Gold or Science each turn, in percent. Germany's Industry is better (its faction
+    /// strength); switched off, Germany falls back to everyone's rate.
+    pub fn project_percent(self, faction: crate::Faction, project: crate::IndustryProject) -> i32 {
+        use crate::IndustryProject::{Gold, Grow, Science};
+        let german = faction == crate::Faction::Germany
+            && !self.rule_off(FactionRule::GermanyIndustryProjects);
+        match (project, german) {
+            (Gold, true) => crate::data::GERMANY_GOLD_PROJECT_PERCENT,
+            (Science, true) => crate::data::GERMANY_SCIENCE_PROJECT_PERCENT,
+            (Gold, false) => {
+                i32::from(self.project_gold.unwrap_or(crate::data::PROJECT_GOLD_PERCENT))
+            }
+            (Science, false) => {
+                i32::from(self.project_science.unwrap_or(crate::data::PROJECT_SCIENCE_PERCENT))
+            }
+            (Grow, _) => 0,
+        }
     }
 
     /// Whether `rule` is switched off.
@@ -503,9 +530,17 @@ impl RuleExperiments {
                     ("egypt-nile-build", 25..=400) => {
                         self.egypt_nile_build = (value != EGYPT_NILE_BUILD_PERCENT).then_some(value)
                     }
+                    ("project-gold", 1..=100) => {
+                        self.project_gold =
+                            (value != crate::data::PROJECT_GOLD_PERCENT).then_some(value)
+                    }
+                    ("project-science", 1..=100) => {
+                        self.project_science =
+                            (value != crate::data::PROJECT_SCIENCE_PERCENT).then_some(value)
+                    }
                     _ => {
                         return Err(format!(
-                            "unknown or out-of-range experiment: {flag} (tech costs 1..100, settlers 0..8, commerce 2..8, decadence 0..1000, VP 1..60, objectives 50..1000, walls 1..1000, Egypt Nile Food 100..400, build 25..400)"
+                            "unknown or out-of-range experiment: {flag} (tech costs 1..100, settlers 0..8, commerce 2..8, decadence 0..1000, VP 1..60, objectives 50..1000, walls 1..1000, Egypt Nile Food 100..400, build 25..400, projects 1..100)"
                         ));
                     }
                 }

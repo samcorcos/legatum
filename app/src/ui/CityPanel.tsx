@@ -9,7 +9,7 @@ import type { BuildingKind, CityView, Faction, Order, PlayerView, ProductionItem
 import { comparisonSentence, pieceAgainst, pieceComparison } from '../pieceCompare';
 import { PieceVsLine } from './PieceVs';
 import { razeLossLines, razeLosses, razeWorkText } from '../razeLosses';
-import { BUILDING_NAME, BUILDING_STATS, TERRAIN_NAME, FIRST_GROWTH, GROWTH_BASE, GROWTH_PER_POP, WORK_RADIUS, GERMANY_PROJECT_GOLD_PERCENT, GERMANY_PROJECT_SCIENCE_PERCENT, costInFactionYield, costYield, isGrow, greatWorkRules, greatWorkRequirement, GREAT_WORKS, isGreatWork, isProductionBuilding, TECH_NAME, CAPTURE_RESISTANCE_TURNS, itemCardText, itemDescription, itemSummary, moreText, itemKey, itemName as baseItemName, IMPROVEMENT_INFO, sameItem, buildingFamily, RULES, HORSE_MOUNTED } from '../data';
+import { BUILDING_NAME, BUILDING_STATS, TERRAIN_NAME, FIRST_GROWTH, GROWTH_BASE, GROWTH_PER_POP, WORK_RADIUS, projectPercent, costInFactionYield, costYield, isGrow, greatWorkRules, greatWorkRequirement, GREAT_WORKS, isGreatWork, isProductionBuilding, TECH_NAME, CAPTURE_RESISTANCE_TURNS, itemCardText, itemDescription, itemSummary, moreText, itemKey, itemName as baseItemName, IMPROVEMENT_INFO, sameItem, buildingFamily, RULES, HORSE_MOUNTED } from '../data';
 import { effectiveProduction, errorsWhere, orderCity, productionQueue, queueAfterBuild, setProductionQueue, toggleBuy } from '../orders';
 import { distance, hexEq, tileIndex } from '../hex';
 import { WONDER_INFO, WONDER_PERCENT, cityWonders, wonderArt, wonderBonusSentence, wonderYieldWord } from '../wonders';
@@ -331,7 +331,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
       const turns = Math.max(1, Math.ceil((d.growth_threshold - d.food_stored) / gain));
       return `Grows in ${turns} turn${turns === 1 ? '' : 's'}`;
     }
-    return `+${Math.floor(y.total.production * (item.project === 'Gold' ? GERMANY_PROJECT_GOLD_PERCENT : GERMANY_PROJECT_SCIENCE_PERCENT) / 100)} ${item.project}/turn`;
+    return `+${Math.floor(Math.max(0, y.total.production) * projectPercent(owner?.faction, item.project) / 100)} ${item.project}/turn`;
   };
   const growOption = owner?.faction === 'Egypt' ? d.options.find((o) => isGrow(o.item)) ?? null : null;
   const nileSurplus = egyptBuilding ? -(yields.sources.find((src) => src.label.startsWith('The Nile: surplus Food builds'))?.yields.food ?? 0) : 0;
@@ -983,7 +983,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
         </div> : renderUnavailable(r.unavailable))}{permanentLine(listUnavailable.filter((u) => u.item.kind === 'Unit'), listOptions.filter((o) => o.item.kind === 'Unit')) && <p className="prod-faction-rule" role="note">{permanentLine(listUnavailable.filter((u) => u.item.kind === 'Unit'), listOptions.filter((o) => o.item.kind === 'Unit'))}</p>}
       </div>
       {hire}
-      {owner?.faction === 'Germany' && <><div className="cp-sub">Industry projects</div><div className="prod-list">{d.options.filter((o) => o.item.kind === 'Project').map((o) => renderOption(o))}</div></>}
+      {d.options.some((o) => o.item.kind === 'Project' && !isGrow(o.item)) && <><div className="cp-sub">Projects</div><div className="prod-list">{d.options.filter((o) => o.item.kind === 'Project' && !isGrow(o.item)).map((o) => renderOption(o))}</div></>}
       <div className="cp-sub">Buildings</div>
       {idleNote}
       <div className={`prod-list ${producing ? '' : 'choosing'}`}>{renderBuildingPicker(listOptions.filter((o) => o.item.kind === 'Building'), listUnavailable.filter((u) => u.item.kind === 'Building'))}</div>

@@ -361,8 +361,8 @@ fn yields_for_item<const FULL: bool>(
                     data::building_name_for(owner.faction, building)
                 }
                 ProductionItem::Project { project } => match project {
-                    IndustryProject::Gold => "Industry: Gold",
-                    IndustryProject::Science => "Industry: Science",
+                    IndustryProject::Gold => "Gold project",
+                    IndustryProject::Science => "Science project",
                     IndustryProject::Grow => "Grow",
                 },
                 ProductionItem::Improvement { improvement, .. } => {
@@ -386,40 +386,30 @@ fn yields_for_item<const FULL: bool>(
     if city.resistance > 0 {
         return y.y;
     }
-    if owner.faction == Faction::Germany
-        && !state
-            .setup
-            .rule_experiments
-            .rule_off(crate::experiments::FactionRule::GermanyIndustryProjects)
-    {
-        match item {
-            Some(ProductionItem::Project {
-                project: IndustryProject::Gold,
-            }) => y.add(
-                "Industry project: Gold (50% Production)",
-                Yields::new(
-                    0,
-                    0,
-                    y.y.total.production * data::GERMANY_GOLD_PROJECT_PERCENT / 100,
-                    0,
-                ),
-            ),
-            Some(ProductionItem::Project {
-                project: IndustryProject::Science,
-            }) => y.add(
-                "Industry project: Science (25% Production)",
-                Yields::new(
-                    0,
-                    0,
-                    0,
-                    y.y.total.production * data::GERMANY_SCIENCE_PROJECT_PERCENT / 100,
-                ),
-            ),
-            _ => {}
-        }
-    }
     if owner.faction == Faction::Egypt && state.setup.rule_experiments.egypt_nile() {
         nile(state, city, item, &mut y);
+    }
+    // A Gold or Science project turns part of the city's Production into Gold or Science; after the
+    // Nile, so an Egyptian city converts the build progress its surplus Food makes.
+    if let Some(ProductionItem::Project { project }) = item
+        && project != IndustryProject::Grow
+    {
+        let pct = state
+            .setup
+            .rule_experiments
+            .project_percent(owner.faction, project);
+        let made = y.y.total.production.max(0) * pct / 100;
+        if project == IndustryProject::Gold {
+            y.add(
+                || format!("Gold project ({pct}% of Production)"),
+                Yields::new(0, 0, made, 0),
+            );
+        } else {
+            y.add(
+                || format!("Science project ({pct}% of Production)"),
+                Yields::new(0, 0, 0, made),
+            );
+        }
     }
     let pct = crate::scoring::decadence_percent(state, city.owner);
     if pct > 0 {

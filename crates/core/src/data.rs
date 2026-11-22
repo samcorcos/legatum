@@ -1419,9 +1419,8 @@ pub fn available_to_faction_rules(
         ProductionItem::Project {
             project: crate::IndustryProject::Grow,
         } => faction == Faction::Egypt && !off.contains(FactionRule::EgyptNile),
-        ProductionItem::Project { .. } => {
-            faction == Faction::Germany && !off.contains(FactionRule::GermanyIndustryProjects)
-        }
+        // Every empire can run a Gold or Science project (Sam, 2026-11-22); Germany's rate is better.
+        ProductionItem::Project { .. } => true,
         ProductionItem::Unit {
             unit: UnitKind::Heir,
         } => faction == Faction::Byzantium,
@@ -1590,6 +1589,10 @@ pub fn building_name(kind: BuildingKind) -> &'static str {
 /// faction selects the piece; modifiers are applied exactly once, here.
 pub const GERMANY_GOLD_PROJECT_PERCENT: i32 = 50;
 pub const GERMANY_SCIENCE_PROJECT_PERCENT: i32 = 25;
+/// Every other empire's Gold and Science projects (Sam, 2026-11-22: a finished city needs something
+/// useful to do, at a much steeper loss than Germany's). Sim arms: `project-gold=N`, `project-science=N`.
+pub const PROJECT_GOLD_PERCENT: u16 = 25;
+pub const PROJECT_SCIENCE_PERCENT: u16 = 10;
 
 pub fn unit_moves_for(faction: Faction, kind: UnitKind) -> i32 {
     unit_moves_for_rules(FactionRuleSet::EMPTY, faction, kind)
@@ -1887,7 +1890,6 @@ pub fn faction_unavailable_reason(item: ProductionItem, faction: Faction) -> Opt
         {
             "Workshops, Forges and Factories do nothing for Egypt, which has no Production".into()
         }
-        ProductionItem::Project { .. } => "Only German cities can run industry projects".into(),
         ProductionItem::Building {
             building: BuildingKind::BroodHall,
         } => "No people can build the Rice Storehouse yet".into(),
@@ -1926,12 +1928,6 @@ pub fn player_unavailable_reason_rules(
 ) -> Option<String> {
     if available_to_player_rules(off, faction, era, item) {
         return None;
-    }
-    if matches!(item, ProductionItem::Project { project } if project != crate::IndustryProject::Grow)
-        && faction == Faction::Germany
-        && off.contains(FactionRule::GermanyIndustryProjects)
-    {
-        return Some("Industry projects are switched off".into());
     }
     if faction == Faction::Mongols && is_mongol_gated(item) {
         return Some(MONGOL_WALLS_REASON.into());

@@ -38,7 +38,7 @@ it.skipIf(!available)('offers Egypt a Grow button that sets the Grow project, an
     expect(grow, container.textContent ?? '').not.toBeNull();
     expect(grow!.textContent).toMatch(/Grows in \d+ turns?|No surplus Food/);
     expect(container.textContent).toContain('Growth');
-    expect(container.textContent).not.toContain('Industry projects');
+    expect(container.textContent).toContain('Gold project');
     act(() => grow!.click());
     expect(useGame.getState().orders[0]).toContainEqual(expect.objectContaining({ city: city.id }));
     expect(JSON.stringify(useGame.getState().orders[0])).toContain('"Grow"');

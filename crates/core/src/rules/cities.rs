@@ -45,10 +45,10 @@ pub fn item_name(item: ProductionItem) -> &'static str {
         }
         ProductionItem::Project {
             project: IndustryProject::Gold,
-        } => "Industry: Gold",
+        } => "Gold project",
         ProductionItem::Project {
             project: IndustryProject::Science,
-        } => "Industry: Science",
+        } => "Science project",
         ProductionItem::Project {
             project: IndustryProject::Grow,
         } => "Grow",
