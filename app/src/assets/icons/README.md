@@ -41,8 +41,8 @@ The set is **solid silhouettes with knocked-out detail** (the majority of the or
 | `unit-stealthfighter.svg` | Air, Future: the Stealth Fighter, a faceted arrowhead with a notched tail and a canopy cut-out (hangar unit). |
 | `unit-stealthbomber.svg` | Air, Future: the Stealth Bomber, a flying wing with a saw-toothed rear edge (hangar unit). |
 | `unit-keshig.svg` | Mongol Keshig (the Mongols' Classical mounted unit, replacing the Cataphract; a mounted archer): a horse head in profile with a drawn recurved bow and an arrow flying back over it (the Parthian shot), so it never reads as `unit-horseman` (the head alone) or `unit-archer` (a bow alone). |
-| `unit-oathbearer.svg` | Sparta Soldier: a closed helm in profile with a visor slit and vents. |
-| `unit-legionary.svg` | Byzantium Trooper, the Varangian Guard (the file keeps its pre-rename name): a long-hafted Dane axe, broad bearded blade with a hole in it, spike on the haft's head and a butt cap. |
+| `unit-oathbearer.svg` | Sparta's Spearman (the Spartan Hoplite; the file keeps its older name): a closed helm in profile with a visor slit and vents. |
+| `unit-legionary.svg` | Byzantium Pikeman, the Varangian Guard (the file keeps its pre-rename name): a long-hafted Dane axe, broad bearded blade with a hole in it, spike on the haft's head and a butt cap. |
 | `unit-heirtothethrone.svg` | The Byzantium's Heir: a crowned head over a cloak with the house star cut into it (civilian; never the Settler's dome). |
 
 ## Tile improvements
@@ -86,7 +86,7 @@ Every tier of a family has its own drawing that keeps one cue of the base buildi
 | `building-customsbastion.svg` | Switzerland Walls: a sloped bastion with a keyhole portal. |
 | `building-ricestorehouse.svg` | Rice Storehouse (the retired Japan piece, still a building kind in the core): a plastered storehouse under a tiled roof. |
 | `building-foundry.svg` | Germany Ruhr Foundry (Forge): a furnace with a flame above its mouth. |
-| `building-yamrelaystation.svg` | Mongols-only Courier Hall: a Portolan compass rose (long cardinal points, short intercardinals, a knocked-out hub) with a fleur-de-lis on the north point, so it never reads as a plain compass ring. The map's plaque is this rose drawn in the holder's tint. |
+| `building-yamrelaystation.svg` | Mongols-only Yam Relay Station: a Portolan compass rose (long cardinal points, short intercardinals, a knocked-out hub) with a fleur-de-lis on the north point, so it never reads as a plain compass ring. The map's plaque is this rose drawn in the holder's tint. |
 | `building-roadworks.svg` | Roadworks: a road narrowing to the horizon, its centre line knocked out in three widening dashes. |
 | `building-listeninghouse.svg` | Athens' Lyceum (replaces the Library): a colonnade under a flat roof, the grove's tree behind it. |
 
