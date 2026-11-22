@@ -84,7 +84,7 @@ test('end a turn with combat, close the report, reopen it from Last turn, step b
     await page.getByRole('button', { name: 'Close report' }).click();
   }
   const lastTurn = page.locator('.seatbar .last-turn');
-  await expect(lastTurn).toContainText('Last turn');
+  await expect(lastTurn).toContainText('Turn report');
   await expect(lastTurn).toContainText('L');
   await lastTurn.click();
   report = await shownReport(page);

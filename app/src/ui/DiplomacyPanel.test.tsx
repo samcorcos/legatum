@@ -69,7 +69,7 @@ function allied(protectedUntil: number, actions: Priced[]): PlayerView {
 
 it('counts only incoming offers, prioritizes responding, and makes Accept primary', () => {
   act(() => root.render(<><VpTrack /><SeatBar /><DiplomacyPanel /></>));
-  expect(button('Diplomacy inbox').textContent).toBe('Diplomacy inbox (1)');
+  expect(button('Diplomacy').textContent).toBe('Diplomacy (1)');
   expect(button('Respond to offer')).toBeTruthy();
   expect(button('Accept Alliance').classList.contains('primary')).toBe(true);
   expect(button('Decline').classList.contains('primary')).toBe(false);
@@ -77,7 +77,7 @@ it('counts only incoming offers, prioritizes responding, and makes Accept primar
   expect(useGame.getState().orders[0]).toContainEqual({ type: 'RespondToProposal', proposal: 1, accept: true });
   expect(button('Respond to offer')).toBeUndefined();
   // The badge counts offers still awaiting a response, like the primary action.
-  expect(button('Diplomacy inbox').textContent).toBe('Diplomacy inbox');
+  expect(button('Diplomacy').textContent).toBe('Diplomacy');
   // G17: answering the last offer closes the inbox; a notice confirms it, with Undo.
   expect(useGame.getState().diplomacyOpen).toBe(false);
   expect(useGame.getState().notice?.text).toMatch(/^Alliance from .+ accepted$/);
@@ -158,7 +158,7 @@ it('opens the inbox from a received-offer report line', () => {
   useGame.setState({ diplomacyOpen: false, reportOpen: true, report: { turn: 1, hash: '1', events: [[event]], lines: [formatEvents([event], contextFromViews(null, view))] } });
   act(() => root.render(<TurnReport />));
   expect(container.textContent).toContain('arrived');
-  act(() => button('Open inbox').click());
+  act(() => button('Open Diplomacy').click());
   expect(useGame.getState()).toMatchObject({ diplomacyOpen: true, diplomacyTeam: 1, reportOpen: false });
 });
 

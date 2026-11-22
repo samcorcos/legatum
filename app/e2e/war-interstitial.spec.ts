@@ -101,7 +101,7 @@ test('War declared on you: Esc closes it where it is; Open diplomacy opens Spart
   await expect(alarm(other)).toBeVisible();
   await alarm(other).getByRole('button', { name: 'Open diplomacy', exact: true }).click();
   await expect(other.getByTestId('alarm-screen')).toHaveCount(0);
-  await expect(other.getByRole('complementary', { name: 'Diplomacy inbox' })).toBeVisible();
+  await expect(other.getByRole('complementary', { name: 'Diplomacy', exact: true })).toBeVisible();
   await other.close();
 });
 

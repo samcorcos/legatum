@@ -67,7 +67,7 @@ for (const size of SIZES) {
       });
       const race = page.getByRole('region', { name: 'Victory race', exact: true });
       await expect(race).toContainText('The next Age begins when any empire enters the Medieval era');
-      await race.getByRole('button', { name: 'All objectives', exact: true }).click();
+      await race.getByRole('button', { name: 'Score ledger', exact: true }).click();
       const sheet = page.getByTestId('objective-sheet');
       await expect(sheet).not.toContainText('Age III: Medieval');
       const era = sheet.locator('.sl-row[data-row="era-2"] button');
