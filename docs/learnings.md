@@ -2,6 +2,12 @@
 
 Newest first. One entry per non-obvious finding: what we learned, the evidence, and what we changed. Correct or delete entries that turn out to be wrong.
 
+## 2026-11-22: Whole-game tour layout fixes at 1000x600 (`ui-tour/layout`)
+
+- The city panel's idle reveal (`revealIdleProductionPicker`) scrolls to the build list under the sticky head, so any row between the head and the list (the yields) vanished on open. Rows that must stay in view belong inside `.cp-head`; `--cp-head-h` and the reveal follow its height on their own.
+- The left dock's bottom is `--lens-height` + the lens gap: when the lens tool shrinks to a chip placed beside the dock, publish `--lens-height: 0` or the panel keeps the old bar's gap.
+- Playwright clears `test-results/` at the start of every run, so re-shooting one domain deletes another domain's tour shots; run every domain you need to compare in one command. The research tour's `scrollIntoViewIfNeeded` on the details centred them and cut the card names, masking what the panel itself does.
+
 ## 2026-11-22: Engine robustness review: save references, aircraft upgrade Gold, save/hash allocations (`claude/review-engine-robustness`)
 
 - **Save validation may only refuse what would index out of bounds: player ids (into `players`) and tiles (into the map).** Team, city and unit references are stale in ordinary play (a razed Hall city, pruned camp rosters, memories, supply records, relations of a team whose empires are gone) and every reader uses `.get` or a member filter; no code indexes by a team id. A first version also refused stale team references and stale city/unit ids (those named by Hall records, camp rosters, memories and the like) and was wrong: it refused the app's Hall and Broadcast fixtures and an analysis test (`hall.wasm.test.ts`, `actions.wasm.test.ts`, `analysis/tests/rules.rs`). `save_fuzz.rs` now round-trips three full all-Hard games through `parse_state` every 5 turns.
