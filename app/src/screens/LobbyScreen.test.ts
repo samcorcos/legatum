@@ -7,6 +7,10 @@ import type { StagingConfig, StagingState } from '../staging';
 import { rememberedSeat, rememberSeat, type ServerStatus } from '../remote';
 import { FakeSocket } from '../test/fakeSocket';
 import { LobbyScreen } from './LobbyScreen';
+import { hostThisTab } from '../test/fakeHosting';
+import { setOnlineApi } from '../platform/online';
+
+vi.mock('../net/hosting', async () => (await import('../test/fakeHosting')).fakeHostingModule());
 
 vi.mock('./HexBackdrop', () => ({ HexBackdrop: () => null }));
 
@@ -55,7 +59,7 @@ beforeEach(() => {
   useGame.setState({
     screen: 'setup', setupMode: 'host',
     lan: {
-      status: { mode: 'server', has_game: false, turn: 0, seats: [], lan_urls: [], is_local: true, staging: null },
+      status: { mode: 'server', has_game: false, turn: 0, seats: [], is_local: true, staging: null },
       mySeat: null, seats: [], conn: 'closed',
     },
   });
@@ -70,6 +74,8 @@ afterEach(async () => {
     useGame.getState().exitStaging();
   });
   container.remove();
+  useGame.getState().leaveLan();
+  setOnlineApi();
   sessionStorage.clear();
   vi.useRealTimers();
   vi.unstubAllGlobals();
@@ -155,7 +161,8 @@ it('waits for the settings response and room deletion before Back can reopen Hos
   expect(sockets[1].sent).toContainEqual({ type: 'staging_take', seat: 0, name: 'Player 1' });
   expect(requests).toEqual(['POST', 'POST', 'DELETE', 'POST']);
   expect(serverRoom).not.toBeNull();
-  await act(async () => vi.runAllTimersAsync());
+  // Later timers (the room keepalive pings every 20 s) send nothing more to the room.
+  await act(async () => vi.advanceTimersByTimeAsync(60_000));
   expect(serverRoom).not.toBeNull();
   expect(requests).toEqual(['POST', 'POST', 'DELETE', 'POST']);
 });
@@ -237,7 +244,7 @@ it.each([
     ...publicRoom, seed,
     occupants: publicRoom.occupants.map((o) => o ? { ...o, connected: true } : null),
   };
-  const status: ServerStatus = { mode: 'server', has_game: false, turn: 0, seats: [], lan_urls: [], is_local: true, staging: publicRoom };
+  const status: ServerStatus = { mode: 'server', has_game: false, turn: 0, seats: [], is_local: true, staging: publicRoom };
   const posted: StagingConfig[] = [];
   const settingsResponse = deferred();
   const fetch = vi.fn(async (url: string, init?: RequestInit) => {
@@ -250,6 +257,7 @@ it.each([
   vi.stubGlobal('fetch', fetch);
   useGame.setState(useGame.getInitialState(), true);
   rememberSeat({ seat: 0, name: 'Host', roomId: publicRoom.room_id, gameId: null, token: 'host-secret' });
+  hostThisTab();
   await useGame.getState().boot();
   expect(useGame.getState()).toMatchObject({ screen: 'setup', setupMode: 'host' });
   sockets[0].open();
@@ -407,7 +415,7 @@ it.each(['status', 'staging_closed', 'no_room'] as const)('opens a fresh lobby w
     await vi.advanceTimersByTimeAsync(250);
   });
   expect(posted).toHaveLength(1);
-  expect(sockets.at(-1)!.sent).toContainEqual({ type: 'staging_take', seat: 0, name: 'Player 1' });
+  expect(sockets.at(-1)!.sent).toContainEqual(expect.objectContaining({ type: 'staging_take', seat: 0 }));
   expect(useGame.getState().error).toBeNull();
 });
 

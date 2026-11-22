@@ -1,34 +1,49 @@
 import { DurableObject } from "cloudflare:workers";
 import {
+  CLOSE_RATE,
   Env,
   GRACE_MS,
+  GUEST_RATE,
+  HEARD_REPORT_MS,
+  HOST_RATE,
   KIND_BYE,
   KIND_CLOSE,
   KIND_DATA,
   KIND_OPEN,
+  KIND_PING,
   KIND_STATUS,
   KIND_SUMMARY,
   MAX_GUESTS,
   MAX_GUEST_MSG,
   MAX_HOST_MSG,
+  REASON_TOO_MANY_FROM_IP,
   RoomAnnounce,
+  SocketRate,
+  clientIp,
   frame,
+  ipHash,
   keyMatches,
+  limitsFrom,
+  newSalt,
   parseSummary,
 } from "./shared";
 
 interface Meta {
   room: string;
   keyHash: string;
+  salt?: string; // for guest address hashes; a room made before this field existed gets one on first use
 }
 /** Per-socket state that survives hibernation (serializeAttachment, max 16 KiB). */
 interface HostAtt {
   nextConn: number; // next guest connection id for this tunnel
   dead?: boolean; // replaced or being closed by the relay: ignore its events
+  pings?: boolean; // has sent a ping frame, so the lobby holds it to the heartbeat
+  reported?: number; // when the Lobby was last told this tunnel is alive (ms)
 }
 interface GuestAtt {
   conn: number;
   dead?: boolean; // closed by the relay: do not tell the host again
+  ip?: string; // salted hash of the guest's address, for the per-address cap
 }
 
 const OPEN = 1; // WebSocket.READY_STATE_OPEN
@@ -46,15 +61,32 @@ const json = (body: unknown, status = 200): Response =>
  */
 export class Room extends DurableObject<Env> {
   private meta: Meta | null | undefined;
+  /** Rate buckets per socket, in memory only (see `SocketRate`). */
+  private rates = new WeakMap<WebSocket, SocketRate>();
 
   private async getMeta(): Promise<Meta | null> {
     if (this.meta === undefined) this.meta = (await this.ctx.storage.get<Meta>("meta")) ?? null;
     return this.meta;
   }
 
+  private async salt(meta: Meta): Promise<string> {
+    if (!meta.salt) {
+      meta.salt = newSalt();
+      await this.ctx.storage.put("meta", meta);
+    }
+    return meta.salt;
+  }
+
+  /** null when the socket may send `size` more bytes now; otherwise the close reason. */
+  private overRate(ws: WebSocket, host: boolean, size: number): string | null {
+    let r = this.rates.get(ws);
+    if (!r) this.rates.set(ws, (r = new SocketRate(host ? HOST_RATE : GUEST_RATE)));
+    return r.take(size, Date.now());
+  }
+
   /** Called by the Worker right after the Lobby accepted the room. */
   async init(room: string, keyHash: string): Promise<void> {
-    this.meta = { room, keyHash };
+    this.meta = { room, keyHash, salt: newSalt() };
     await this.ctx.storage.put("meta", this.meta);
     // A room whose host never shows up goes away on its own.
     await this.ctx.storage.setAlarm(Date.now() + GRACE_MS);
@@ -64,6 +96,7 @@ export class Room extends DurableObject<Env> {
     return this.env.LOBBY.get(this.env.LOBBY.idFromName("lobby")) as unknown as {
       setConnected(room: string, c: boolean): Promise<void>;
       setSummary(room: string, s: unknown): Promise<void>;
+      heard(room: string, at: number): Promise<void>;
       remove(room: string): Promise<void>;
     };
   }
@@ -102,7 +135,7 @@ export class Room extends DurableObject<Env> {
     const url = new URL(request.url);
     if (url.pathname.endsWith("/api/status")) return this.status();
     if (url.pathname.endsWith("/host")) return this.acceptHost(request, url, meta);
-    if (url.pathname.endsWith("/ws")) return this.acceptGuest(request);
+    if (url.pathname.endsWith("/ws")) return this.acceptGuest(request, meta);
     return json({ error: "not found" }, 404);
   }
 
@@ -140,21 +173,32 @@ export class Room extends DurableObject<Env> {
     return new Response(null, { status: 101, webSocket: client });
   }
 
-  private acceptGuest(request: Request): Response {
+  private async acceptGuest(request: Request, meta: Meta): Promise<Response> {
     if (request.headers.get("Upgrade")?.toLowerCase() !== "websocket") return json({ error: "websocket required" }, 426);
+    const ip = await ipHash(await this.salt(meta), clientIp(request));
+    // No awaits from here on, so two guests arriving together cannot both slip past a cap.
     const pair = new WebSocketPair();
     const [client, server] = [pair[0], pair[1]];
     const host = this.liveHost();
-    if (!host || this.liveGuests().length >= MAX_GUESTS) {
+    const guests = this.liveGuests();
+    const sameIp = guests.filter((g) => (g.deserializeAttachment() as GuestAtt | null)?.ip === ip).length;
+    const refuse = !host
+      ? "host not connected"
+      : guests.length >= MAX_GUESTS
+        ? "room is full"
+        : sameIp >= limitsFrom(this.env).MAX_GUESTS_PER_IP
+          ? REASON_TOO_MANY_FROM_IP
+          : null;
+    if (refuse !== null || !host) {
       server.accept();
-      server.close(1013, host ? "room is full" : "host not connected");
+      server.close(1013, refuse ?? "host not connected");
       return new Response(null, { status: 101, webSocket: client });
     }
     const hatt = (host.deserializeAttachment() as HostAtt | null) ?? { nextConn: 1 };
     const conn = hatt.nextConn;
     host.serializeAttachment({ ...hatt, nextConn: conn + 1 });
     this.ctx.acceptWebSocket(server, ["guest", `c${conn}`]);
-    server.serializeAttachment({ conn } satisfies GuestAtt);
+    server.serializeAttachment({ conn, ip } satisfies GuestAtt);
     host.send(frame(conn, KIND_OPEN));
     return new Response(null, { status: 101, webSocket: client });
   }
@@ -172,6 +216,8 @@ export class Room extends DurableObject<Env> {
     if (typeof message !== "string") return this.endGuest(ws, att, 1003, "text only");
     const bytes = enc.encode(message);
     if (bytes.length > MAX_GUEST_MSG) return this.endGuest(ws, att, 1009, "message too big");
+    const over = this.overRate(ws, false, bytes.length);
+    if (over) return this.endGuest(ws, att, CLOSE_RATE, over);
     this.liveHost()?.send(frame(att.conn, KIND_DATA, bytes));
   }
 
@@ -196,6 +242,9 @@ export class Room extends DurableObject<Env> {
     const kind = view.getUint8(4);
     const payload = new Uint8Array(message, 5);
     if (payload.length > MAX_HOST_MSG) return void ws.close(1009, "message too big");
+    const over = this.overRate(ws, true, message.byteLength);
+    if (over) return void ws.close(CLOSE_RATE, over);
+    if (kind === KIND_PING || hatt?.pings) this.heardFromHost(ws, hatt);
 
     switch (kind) {
       case KIND_DATA: {
@@ -207,7 +256,8 @@ export class Room extends DurableObject<Env> {
       case KIND_CLOSE: {
         const guest = this.guest(conn);
         if (!guest) return;
-        guest.serializeAttachment({ conn, dead: true });
+        const gatt = (guest.deserializeAttachment() as GuestAtt | null) ?? { conn };
+        guest.serializeAttachment({ ...gatt, dead: true });
         guest.close(1000, "closed by host");
         return;
       }
@@ -236,8 +286,26 @@ export class Room extends DurableObject<Env> {
       case KIND_BYE:
         return this.destroy("host said bye");
       default:
-        return; // unknown kinds (and a stray `open`) are ignored
+        return; // ping, unknown kinds and a stray `open` are not forwarded
     }
+  }
+
+  /**
+   * Heartbeat: once a host pings, every frame from it keeps its lobby row fresh. Throttled, so a host that
+   * pings every 20 s costs one Lobby call about every 40 s. The throttle lives in the socket attachment,
+   * which survives hibernation between pings. The Lobby call is not awaited: awaiting it here would let the
+   * next host frame overtake this one.
+   */
+  private heardFromHost(ws: WebSocket, hatt: HostAtt | null): void {
+    const now = Date.now();
+    const att = hatt ?? { nextConn: 1 };
+    if (att.pings && att.reported !== undefined && now - att.reported < HEARD_REPORT_MS) return;
+    ws.serializeAttachment({ ...att, pings: true, reported: now } satisfies HostAtt);
+    const report = async () => {
+      const meta = await this.getMeta();
+      if (meta) await this.lobby().heard(meta.room, now);
+    };
+    this.ctx.waitUntil(report().catch(() => {}));
   }
 
   private guest(conn: number): WebSocket | null {

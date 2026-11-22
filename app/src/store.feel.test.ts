@@ -150,7 +150,7 @@ async function lanGame(): Promise<{ socket: FakeSocket; view: PlayerView }> {
   vi.stubGlobal('WebSocket', class extends FakeSocket {
     constructor(url: string) { super(url); sockets.push(this); }
   });
-  const status = { mode: 'server' as const, has_game: true, turn: 1, seats: [], lan_urls: [], is_local: false };
+  const status = { mode: 'server' as const, has_game: true, turn: 1, seats: [], is_local: false };
   useGame.setState({ lan: { status, mySeat: null, seats: [], conn: 'closed' } });
   useGame.getState().joinSeat(0, 'Ada');
   const socket = sockets[0];

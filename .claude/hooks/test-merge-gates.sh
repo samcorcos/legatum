@@ -28,7 +28,7 @@ g() { git -C "$R" -c user.name=t -c user.email=t@t -c commit.gpgsign=false "$@" 
 put() { mkdir -p "$R/$(dirname "$1")"; printf '%s\n' "$2" >> "$R/$1"; g add -- "$1"; }
 commit() { put "$1" "$2"; g commit -q -m "$1"; }
 branch() { g checkout -q -b "$1" master; }
-ok() {  # ok <docs|ui|plain> <branch> [extra marker lines...]
+ok() {  # ok <docs|ui|plain|art> <branch> [extra marker lines...]
   local kind="$1" b="$2"; shift 2
   mkdir -p "$R/.progress/$kind-review"
   { git -C "$R" rev-parse "$b"; printf '%s\n' "$@"; } > "$R/.progress/$kind-review/$(echo "$b" | tr / -).ok"
@@ -131,9 +131,11 @@ branch astra/noprose-tsx;  commit app/src/ui/Panel.tsx 'export const Box = () =>
 
 # Art: an identical pair fails the lookalike check, a distinct one passes (both carry docs and UI markers).
 branch astra/art-dupe; cp "$R/app/src/assets/icons/building-granary.svg" "$R/app/src/assets/icons/building-forge.svg"
-g add -A; g commit -q -m dupe; ok docs astra/art-dupe; ok ui astra/art-dupe ship
+g add -A; g commit -q -m dupe; ok docs astra/art-dupe; ok ui astra/art-dupe ship; ok art astra/art-dupe pass
 branch astra/art-ok; cp "$SRC/app/src/assets/icons/building-broodhall.svg" "$R/app/src/assets/icons/"
-g add -A; g commit -q -m art; ok docs astra/art-ok; ok ui astra/art-ok ship
+g add -A; g commit -q -m art; ok docs astra/art-ok; ok ui astra/art-ok ship; ok art astra/art-ok pass
+branch astra/art-noreview; cp "$SRC/app/src/assets/icons/building-broodhall.svg" "$R/app/src/assets/icons/"
+g add -A; g commit -q -m "art, unreviewed"; ok docs astra/art-noreview; ok ui astra/art-noreview ship
 
 # Scenario-only branches: the fast scenario check stands in for the docs review and the extended verify.
 scen() {  # scen <id> [save_version] [briefing] [state data suffix] [baseline docs: yes|no]
@@ -274,6 +276,7 @@ k = check.classify('$R', b, t); print(len(k['scenario']), len(k['code']), len(k[
 echo "-- art"
 m deny  astra/art-dupe           "identical icon pair"                             "[art]"
 m allow astra/art-ok             "distinct icons"
+m deny  astra/art-noreview       "art with no art reviewer marker"                 "art review"
 
 ok docs astra/rule-change; echo "$REVIEWED_TIP" > "$R/.progress/docs-review/astra-rule-change.ok"
 check deny  "$R" "git merge --no-ff astra/rule-change"                           "marker naming a commit not in the branch"

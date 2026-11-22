@@ -1,14 +1,8 @@
-// Screen tour, title, lobby, LAN, hot seat and scenarios. One of the domain slices of the old e2e/screen-tour.spec.ts; run it alone with
+// Screen tour, title, lobby, hot seat and scenarios. One of the domain slices of the old e2e/screen-tour.spec.ts; run it alone with
 // `npx playwright test e2e/tour/title-lobby`. Shots land in test-results/screen-tour/<size>/title-lobby/.
 import { test, expect } from '../fixtures';
 import { endPlanning } from '../turnActions';
 import { SIZES, shot } from './helpers';
-import { spawn, type ChildProcess } from 'node:child_process';
-import { createServer } from 'node:net';
-import { fileURLToPath } from 'node:url';
-// @ts-expect-error plain .mjs helper without types
-import { startFakeRelay } from '../../scripts/fake-relay.mjs';
-import { test as plain, type Page } from '@playwright/test';
 
 // Each test starts from its own save, so tests can run on separate workers.
 test.describe.configure({ mode: 'parallel' });
@@ -87,35 +81,6 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await page.locator('.seat-row:not(.head)').last().scrollIntoViewIfNeeded();
     await page.mouse.move(5, size.height / 2);
     await shot(page, size, '03g-lobby-large-eight-seats');
-  });
-
-  test('LAN: host room, then the host and guest on turn one', async ({ page: host, guestPage: guest }) => {
-    for (const p of [host, guest]) await p.addInitScript(() => {
-      if (location.protocol.startsWith('http')) localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
-    });
-    await host.goto('/');
-    await host.getByRole('button', { name: /^Multiplayer/ }).click();
-    await host.getByRole('button', { name: /^Host Game/ }).click();
-    await expect(host.getByRole('heading', { name: 'Host Game', exact: true })).toBeVisible();
-    await host.getByRole('radiogroup', { name: 'Map size', exact: true }).getByRole('radio', { name: /^Small/ }).click();
-    await host.getByLabel('Map seed', { exact: true }).fill('20240926');
-    await guest.goto('/');
-    await guest.getByRole('button', { name: /^Multiplayer/ }).click();
-    await guest.getByRole('button', { name: /^Join Game/ }).click();
-    await guest.getByRole('button', { name: 'Take seat', exact: true }).first().click();
-    await guest.getByLabel('Your name', { exact: true }).fill('Alice');
-    await guest.getByRole('button', { name: /^Ready Lock/ }).click();
-    const start = host.getByRole('button', { name: /^Start game/ });
-    await expect(start).toBeEnabled();
-    // Filling the seed scrolled the setup down to it: show the seat table, as a host sees it on arrival.
-    await host.evaluate(() => { (document.activeElement as HTMLElement | null)?.blur(); for (const el of document.querySelectorAll('*')) if (el.scrollTop) el.scrollTop = 0; });
-    await shot(host, size, '03b-lan-host-room');
-    await shot(guest, size, '03c-lan-guest-room');
-    await start.click();
-    await expect(host.getByTestId('turn-number')).toHaveText('1', { timeout: 60_000 });
-    await expect(guest.getByTestId('turn-number')).toHaveText('1', { timeout: 60_000 });
-    await expect(host.locator('.loading-screen')).toHaveCount(0);
-    await shot(host, size, '05c-lan-host-first-turn');
   });
 
   test('hot seat: two humans on turn one', async ({ page }) => {
@@ -234,143 +199,5 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await page.getByTestId('scenario-show-target').click();
     await page.waitForTimeout(500);
     await shot(page, size, '38-scenario-target-in-fog');
-  });
-});
-
-// Online play (desktop app): the Multiplayer menu, the lobby list and the game room, against a fake relay
-// with the desktop commands mocked.
-type Relay = { url: string; close(): Promise<void>; setRooms(r: unknown[]): void; setFail(f: boolean): void; control(c: Record<string, unknown>): void };
-const onlineRoom = (over: Record<string, unknown> = {}) => ({
-  room: 'room-aaaaaaaa', name: 'Ada', build: '8.9.74', rules_version: 12, protocol: 1,
-  players: 2, humans: 2, open_seats: 1, phase: 'staging', turn: 0, updated_ms: 1, ...over,
-});
-
-async function desktop(page: Page, relay: Relay | null, host: 'ok' | 'hang' | 'fail' = 'ok') {
-  await page.addInitScript(({ info, mode }) => {
-    (window as unknown as { __TAURI_INTERNALS__: unknown }).__TAURI_INTERNALS__ = {
-      invoke: async (cmd: string) => {
-        if (cmd === 'online_info') return info;
-        if (cmd === 'online_host_start') {
-          if (mode === 'hang') return new Promise(() => {});
-          if (mode === 'fail') throw new Error('no');
-          return { url: 'http://127.0.0.1:1/', room: null };
-        }
-        throw new Error(`unmocked ${cmd}`);
-      },
-    };
-  }, { info: { relay: relay ? relay.url : null, build: '8.9.74', rules_version: 12, protocol: 1 }, mode: host });
-}
-
-// Plain Playwright test: the shared fixture fails on any console error, and these screens show 404/503 on purpose.
-for (const size of SIZES) plain.describe(`online screens ${size.name}`, () => {
-  plain.use({ viewport: { width: size.width, height: size.height } });
-  let relay: Relay;
-  plain.beforeEach(async () => { relay = await startFakeRelay({ rooms: [] }); });
-  plain.afterEach(async () => { await relay.close(); });
-  const menu = async (page: Page) => {
-    await page.goto(`${relay.url}/`);
-    await page.getByRole('button', { name: /^Multiplayer/ }).click();
-    await expect(page.getByRole('button', { name: /^Host Game/ })).toBeVisible();
-  };
-
-  plain('multiplayer menu: normal, no relay, starting, failed', async ({ page }) => {
-    await desktop(page, relay);
-    await menu(page);
-    await shot(page, size, '20-online-menu');
-    await expect(page.locator('.title-actions .primary')).toContainText('Join Game');
-
-    const bare = await page.context().newPage();
-    await desktop(bare, null);
-    await menu(bare);
-    await shot(bare, size, '21-online-menu-no-relay');
-    await expect(bare.getByRole('button', { name: /^Join Game/ })).toBeDisabled();
-
-    const slow = await page.context().newPage();
-    await desktop(slow, relay, 'hang');
-    await menu(slow);
-    await slow.getByRole('button', { name: /^Host Game/ }).click();
-    await expect(slow.getByText('Opening your game…')).toBeVisible();
-    await expect(slow.getByRole('button', { name: /^Join Game/ })).toBeDisabled();
-    await shot(slow, size, '22-online-menu-starting');
-
-    const bad = await page.context().newPage();
-    await desktop(bad, relay, 'fail');
-    await menu(bad);
-    await bad.getByRole('button', { name: /^Host Game/ }).click();
-    await expect(bad.getByText('Could not open your game.')).toBeVisible();
-    await expect(bad.getByRole('button', { name: /^Host Game/ })).toHaveClass(/primary/);
-    await shot(bad, size, '23-online-menu-failed');
-  });
-
-  plain('lobby: loading, list with mismatch and full rows, joining, join error', async ({ page }) => {
-    relay.setRooms([
-      onlineRoom(),
-      onlineRoom({ room: 'room-bbbbbbbb', name: 'Bo from Zürich', build: '8.9.70', phase: 'playing', turn: 14, players: 3 }),
-      onlineRoom({ room: 'room-cccccccc', name: 'Cy', phase: 'playing', turn: 31, players: 4, open_seats: 0 }),
-      onlineRoom({ room: 'room-dddddddd', name: '', rules_version: 11 }),
-    ]);
-    relay.control({ lobbyDelay: 1500 });
-    await desktop(page, relay);
-    await menu(page);
-    await page.getByRole('button', { name: /^Join Game/ }).click();
-    await expect(page.getByText('Looking for games…')).toBeVisible();
-    await shot(page, size, '30-lobby-loading');
-    relay.control({ lobbyDelay: 0 });
-    await expect(page.locator('.online-room')).toHaveCount(4, { timeout: 8000 });
-    await expect(page.getByText('4 players · Full')).toBeVisible();
-    await expect(page.getByText('Unnamed game')).toBeVisible();
-    await page.mouse.move(5, size.height - 5);
-    await shot(page, size, '31-lobby-list');
-
-    relay.control({ statusDelay: 2500 });
-    await page.locator('.online-room').first().getByRole('button', { name: /^Join/ }).click();
-    await expect(page.getByRole('button', { name: 'Joining…' })).toBeVisible();
-    await shot(page, size, '32-lobby-joining');
-
-    // No host behind the room: the failure shows in the row that failed.
-    await expect(page.locator('.online-room').first().getByRole('alert')).toContainText('The host is not connected right now.', { timeout: 10_000 });
-    await shot(page, size, '33-lobby-join-error');
-    await page.keyboard.press('Escape');
-    await expect(page.getByRole('button', { name: /^Single Player/ })).toBeVisible();
-  });
-
-  plain('game room with the host away stays on screen', async ({ page }) => {
-    plain.setTimeout(90_000);
-    const root = fileURLToPath(new URL('../../', import.meta.url));
-    const probe = createServer();
-    await new Promise<void>((r) => probe.listen(0, '127.0.0.1', r));
-    const port = (probe.address() as { port: number }).port;
-    await new Promise<void>((r) => probe.close(() => r()));
-    const lanBase = `http://127.0.0.1:${port}`;
-    const lan: ChildProcess = spawn('node', ['scripts/fake-lan-server.mjs', '--port', String(port)], { cwd: root, stdio: 'pipe' });
-    const live = await (async () => {
-      await expect.poll(() => fetch(`${lanBase}/api/status`).then((r) => r.status).catch(() => 0)).toBe(200);
-      const seat = (kind: string, name: string) => ({ kind, name, faction: 'Random', team: 0, difficulty: 'Normal' });
-      await fetch(`${lanBase}/api/staging`, {
-        method: 'POST', headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ seed: '1', width: 40, height: 24, turn_limit: null, seats: [seat('host', 'Ada'), seat('open', 'Player 2'), seat('ai', 'AI 1')] }),
-      });
-      return startFakeRelay({ upstream: lanBase, rooms: [onlineRoom({ room: 'room-live' })] }) as Promise<Relay>;
-    })();
-    try {
-      await desktop(page, live);
-      await page.goto(`${live.url}/`);
-      await page.getByRole('button', { name: /^Multiplayer/ }).click();
-      await page.getByRole('button', { name: /^Join Game/ }).click();
-      await page.locator('.online-room').getByRole('button', { name: /^Join/ }).click();
-      await expect(page.getByRole('heading', { name: 'Join Game' })).toBeVisible({ timeout: 10_000 });
-      await expect(page.getByRole('button', { name: /^Take seat/ }).first()).toBeVisible();
-      await shot(page, size, '40-game-room');
-      live.control({ away: true });
-      const notice = page.locator('.host-away');
-      await expect(notice).toContainText('The host is not connected right now.', { timeout: 15_000 });
-      await expect(notice).toContainText('Waiting for the host to come back…');
-      const box = (await notice.boundingBox())!;
-      expect(box.y + box.height, 'the notice is inside the window').toBeLessThanOrEqual(size.height);
-      await shot(page, size, '41-game-room-host-away');
-    } finally {
-      await live.close();
-      lan.kill();
-    }
   });
 });

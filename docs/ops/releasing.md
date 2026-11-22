@@ -35,9 +35,11 @@ a notice and deploys nothing, so forks stay green.
 
 ### What the hosted build is
 
-Static files only. `VITE_LEGATUM_HOSTED=1` (`app/src/platform/hosted.ts`) makes the UI skip every request to
-`legatum-server`, and the Multiplayer menu says that Host Game and Join Game need the host program. Single
-player, hot seat, scenarios, autosave (browser storage) and Save to file / Load Game (download and upload) work.
+Static files only; there is no game server. `VITE_LEGATUM_HOSTED=1` (`app/src/platform/hosted.ts`) makes the UI
+skip server probes. Online play runs in the host player's tab and goes through the relay (`infra/relay`,
+`plans/online-play.md`): `scripts/build-web.sh` bakes the relay's address in (`LEGATUM_RELAY_URL`, default the live
+relay, `none` for a build without online play) and writes it into the page's `connect-src`. Single player, hot
+seat, online co-op, scenarios, autosave (browser storage) and Save to file / Load Game (download and upload) work.
 `app/hosted/_headers` sets the security headers and long caching for the hashed files; `app/hosted/404.html`
 answers unknown addresses. The title screen shows `Version <app version> · web <commit>`.
 
@@ -50,6 +52,8 @@ To build and check it locally:
 scripts/build-web.sh
 cd app && npm run e2e:hosted
 ```
+
+When the build has `LEGATUM_GAMES_URL`, the hosted test answers requests to that Worker itself (no test game reaches the real bucket) and fails if no upload was sent. To check that path locally, build with any URL, for example `LEGATUM_GAMES_URL=https://legatum-games.example.workers.dev scripts/build-web.sh`, then run `npm run e2e:hosted`.
 
 ## The Mac app (signed and notarized)
 
