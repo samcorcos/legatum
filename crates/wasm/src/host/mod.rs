@@ -59,6 +59,66 @@ struct Connection {
     local: bool,
     watching: bool,
     show_seed: bool,
+    /// Wrong join codes this connection has sent; the connection is closed at [`MAX_WRONG_CODES`].
+    wrong_codes: u8,
+    /// The seat this guest claimed with `game_take` and its credential: a claimed seat counts as
+    /// held until the host opens or removes it, even before the guest joins it.
+    claim: Option<(usize, String)>,
+}
+
+/// Wrong join codes one connection may send before the host closes it.
+const MAX_WRONG_CODES: u8 = 5;
+/// Longest join code a guest may send, and the limits of a code the host may set.
+const MAX_CODE_SENT: usize = 32;
+const CODE_LEN: std::ops::RangeInclusive<usize> = 4..=12;
+
+/// What a claim on a seat of a locked game gets.
+enum Gate {
+    Open,
+    NeedCode,
+    Wrong,
+    /// The fifth wrong code: refuse and close the connection.
+    Lockout,
+}
+
+impl Gate {
+    /// Checks the code a connection presents. A game with no code, or the host's own
+    /// connection, needs none. Compared in time that depends only on length.
+    fn check(join_code: &Option<String>, conn: &mut Connection, presented: Option<&str>) -> Self {
+        let Some(code) = join_code else {
+            return Self::Open;
+        };
+        if conn.local {
+            return Self::Open;
+        }
+        let Some(presented) = presented.filter(|p| !p.is_empty()) else {
+            return Self::NeedCode;
+        };
+        let normal = presented.to_ascii_uppercase();
+        if presented.chars().count() <= MAX_CODE_SENT
+            && credentials::matches(Some(code), Some(&normal))
+        {
+            return Self::Open;
+        }
+        conn.wrong_codes += 1;
+        if conn.wrong_codes >= MAX_WRONG_CODES {
+            Self::Lockout
+        } else {
+            Self::Wrong
+        }
+    }
+
+    fn error(&self) -> Option<ServerMessage> {
+        let (code, message) = match self {
+            Self::Open => return None,
+            Self::NeedCode => ("join_code_needed", "This game needs a join code."),
+            Self::Wrong | Self::Lockout => ("wrong_join_code", "That join code is not right."),
+        };
+        Some(ServerMessage::Error {
+            code: Some(code),
+            message: message.into(),
+        })
+    }
 }
 
 struct Seat {
@@ -175,6 +235,9 @@ pub(crate) struct Host {
     save: Option<String>,
     /// Game histories (archive recordings, JSON) waiting for the browser to keep them.
     recordings: Vec<String>,
+    /// The host's join code, upper-cased. Lives only here: never in a status, summary, view, save,
+    /// history or message, and never sent to the relay.
+    join_code: Option<String>,
 }
 
 impl Host {
@@ -207,9 +270,33 @@ impl Host {
             checkpoint_turns,
             save: None,
             recordings: Vec::new(),
+            join_code: None,
         };
         host.checkpoint();
         Ok(host)
+    }
+
+    /// Sets or clears (`None` or empty) the join code: 4 to 12 letters or digits, not case sensitive.
+    pub(crate) fn set_join_code(&mut self, code: Option<&str>) -> Result<(), String> {
+        let code = code.map(str::trim).filter(|c| !c.is_empty());
+        self.join_code = match code {
+            None => None,
+            Some(c)
+                if CODE_LEN.contains(&c.len()) && c.bytes().all(|b| b.is_ascii_alphanumeric()) =>
+            {
+                Some(c.to_ascii_uppercase())
+            }
+            Some(_) => return Err("A join code is 4 to 12 letters or digits.".into()),
+        };
+        Ok(())
+    }
+
+    /// Closes a connection from the host's side, with a code and a reason the guest can show.
+    fn close_connection(&mut self, connection: ConnectionId, code: &'static str, message: &str) {
+        if let Some(c) = self.connections.remove(&connection) {
+            c.sender.close(Some(code), message);
+        }
+        self.detach(connection);
     }
 
     pub(crate) fn status(&self, is_local: bool) -> Status {
@@ -379,6 +466,8 @@ impl Host {
                 local,
                 watching: false,
                 show_seed: false,
+                wrong_codes: 0,
+                claim: None,
             },
         );
         Ok(self.next_connection)
@@ -470,6 +559,7 @@ impl Host {
             ClientMessage::StagingWatch { .. }
                 | ClientMessage::StagingTake { .. }
                 | ClientMessage::StagingRelease { .. }
+                | ClientMessage::StagingRemove { .. }
                 | ClientMessage::StagingUpdate { .. }
                 | ClientMessage::StagingReady { .. }
                 | ClientMessage::StagingLeave
@@ -502,12 +592,73 @@ impl Host {
             s.orders.clear();
             return Ok(());
         }
-        if let ClientMessage::GameTake { seat } = message {
+        if let ClientMessage::GameRemove { seat } = message {
+            if !self.connections[&connection].local {
+                return Err("Only the host can remove a player.".into());
+            }
+            let s = game.seats.get_mut(seat).ok_or("Choose a human seat")?;
+            let held_by_host = s
+                .connection
+                .and_then(|c| self.connections.get(&c))
+                .is_some_and(|c| c.local);
+            if seat == 0 || held_by_host || s.token.is_none() {
+                return Err("There is no other player in that seat.".into());
+            }
+            // A new credential nobody holds kills the old one and keeps the seat closed to
+            // strangers until the host opens it. The seat counts as joined, so it never blocks
+            // the turn (a seat with no connection is skipped when everyone else is ready).
+            s.token = Some(crate::host::credentials::token()?);
+            s.ready = false;
+            s.orders.clear();
+            s.joined = true;
+            s.joined_at = None;
+            let old = s.connection.take();
+            if let Some(old) = old {
+                self.close_connection(old, "removed", "The host removed you from this game.");
+            }
+            return Ok(());
+        }
+        if let ClientMessage::GameTake { seat, code } = message {
             let local = self.connections[&connection].local;
             let s = game.seats.get_mut(seat).ok_or("Choose a human seat")?;
             if !local && (s.token.is_some() || seat == 0) {
                 return Err("This seat is reserved. Use its reconnect credential or ask the host to open this seat.".into());
             }
+            if !local {
+                let holds_staging = self.room.as_ref().is_some_and(|r| r.holds(connection));
+                let claimed = self.connections[&connection]
+                    .claim
+                    .as_ref()
+                    .and_then(|(seat, token)| {
+                        let held = game.seats.get(*seat)?.token.as_deref();
+                        Some(credentials::matches(held, Some(token)))
+                    })
+                    .unwrap_or(false);
+                if holds_staging
+                    || claimed
+                    || game.seats.iter().any(|x| x.connection == Some(connection))
+                {
+                    return Err("You already have a seat in this game.".into());
+                }
+                let conn = self
+                    .connections
+                    .get_mut(&connection)
+                    .expect("live connection");
+                let gate = Gate::check(&self.join_code, conn, code.as_deref());
+                if let Some(error) = gate.error() {
+                    self.send(connection, &error);
+                    if matches!(gate, Gate::Lockout) {
+                        self.close_connection(
+                            connection,
+                            "too_many_codes",
+                            "Too many wrong join codes.",
+                        );
+                    }
+                    return Ok(());
+                }
+            }
+            let game = self.game.as_mut().expect("game checked above");
+            let s = &mut game.seats[seat];
             let token = crate::host::credentials::token()?;
             let previous = s.connection.take();
             if let Some(old) = previous
@@ -525,6 +676,11 @@ impl Host {
             let game_id = game.id.clone();
             if let Some(old) = previous.filter(|old| *old != connection) {
                 self.detach(old);
+            }
+            if let Some(c) = self.connections.get_mut(&connection)
+                && !c.local
+            {
+                c.claim = Some((seat, token.clone()));
             }
             self.send(
                 connection,
@@ -940,7 +1096,30 @@ impl Host {
         }
         let result = if let Some(room) = &mut self.room {
             match message {
-                ClientMessage::StagingTake { seat, name, token } => {
+                ClientMessage::StagingTake {
+                    seat,
+                    name,
+                    token,
+                    code,
+                } => {
+                    // A rejoin with the seat's own credential needs no join code.
+                    let gate = if room.owns(seat, token.as_deref()) {
+                        Gate::Open
+                    } else {
+                        Gate::check(&self.join_code, client, code.as_deref())
+                    };
+                    if let Some(error) = gate.error() {
+                        let lockout = matches!(gate, Gate::Lockout);
+                        self.send(connection, &error);
+                        if lockout {
+                            self.close_connection(
+                                connection,
+                                "too_many_codes",
+                                "Too many wrong join codes.",
+                            );
+                        }
+                        return;
+                    }
                     match room.take(connection, client.local, seat, &name, token.as_deref()) {
                         Ok((token, old)) => {
                             client.watching = true;
@@ -973,6 +1152,37 @@ impl Host {
                     Ok(())
                 }
                 ClientMessage::StagingRelease { seat } => room.release(client.local, seat),
+                ClientMessage::StagingRemove { seat } => {
+                    let local = client.local;
+                    let holder = room
+                        .occupants
+                        .get(seat)
+                        .and_then(|o| o.as_ref()?.connection);
+                    let holder_is_host = holder
+                        .and_then(|c| self.connections.get(&c))
+                        .is_some_and(|c| c.local);
+                    if !local {
+                        Err(RoomError {
+                            code: "host_only",
+                            message: "Only the host can remove a player.",
+                        })
+                    } else if holder_is_host {
+                        Err(RoomError {
+                            code: "not_removable",
+                            message: "That seat is yours.",
+                        })
+                    } else {
+                        room.remove(seat).map(|old| {
+                            if let Some(old) = old {
+                                self.close_connection(
+                                    old,
+                                    "removed",
+                                    "The host removed you from this game.",
+                                );
+                            }
+                        })
+                    }
+                }
                 ClientMessage::StagingReady { ready } => {
                     room.ready(connection, ready);
                     Ok(())
@@ -1183,6 +1393,7 @@ mod tests {
                 seat: 1,
                 name: "Alice".into(),
                 token: None,
+                code: None,
             },
         )
         .unwrap();
@@ -1195,6 +1406,7 @@ mod tests {
                 seat: 1,
                 name: "Bob".into(),
                 token: None,
+                code: None,
             },
         )
         .unwrap();
@@ -1226,6 +1438,7 @@ mod tests {
                 seat: 1,
                 name: "Guest".into(),
                 token: None,
+                code: None,
             },
         )
         .unwrap();
@@ -1274,6 +1487,7 @@ mod tests {
                 seat: 0,
                 name: "Imposter".into(),
                 token: None,
+                code: None,
             },
         )
         .unwrap();
@@ -1285,6 +1499,7 @@ mod tests {
                 seat: 1,
                 name: "Guest".into(),
                 token: None,
+                code: None,
             },
         )
         .unwrap();
@@ -1297,6 +1512,7 @@ mod tests {
                 seat: 0,
                 name: "Host".into(),
                 token: None,
+                code: None,
             },
         )
         .unwrap();
@@ -1691,5 +1907,353 @@ mod tests {
             json::parse_state(&restored.save_game().unwrap()).unwrap(),
             native.state
         );
+    }
+
+    // ---- join code, one seat per connection, remove player ----
+
+    fn guest(host: &mut Host) -> (ConnectionId, outbox::Receiver) {
+        let (sender, receiver) = outbox::channel();
+        (host.connect(sender, false).unwrap(), receiver)
+    }
+
+    /// Two or three human seats: seat 0 is the host's, the rest are open for guests.
+    fn open_game(humans: usize) -> Host {
+        let mut setup = GameSetup::standard(7, [Faction::India, Faction::Byzantium]);
+        for p in setup.players.iter_mut().take(humans) {
+            p.is_human = true;
+        }
+        let mut host = Host::new(None, 5).unwrap();
+        host.new_game(setup).unwrap();
+        host.game.as_mut().unwrap().seats[0].token = Some(credentials::token().unwrap());
+        host
+    }
+
+    fn take(seat: usize, code: Option<&str>) -> ClientMessage {
+        ClientMessage::GameTake {
+            seat,
+            code: code.map(str::to_owned),
+        }
+    }
+
+    fn staging_take(seat: usize, token: Option<String>, code: Option<&str>) -> ClientMessage {
+        ClientMessage::StagingTake {
+            seat,
+            name: "Eve".into(),
+            token,
+            code: code.map(str::to_owned),
+        }
+    }
+
+    fn error_code(messages: &[Value]) -> Option<String> {
+        messages
+            .iter()
+            .find(|m| m["type"] == "error")
+            .and_then(|m| m["code"].as_str().map(str::to_owned))
+    }
+
+    fn got_token(messages: &[Value]) -> Option<String> {
+        messages
+            .iter()
+            .find(|m| m["type"] == "seat_token")
+            .map(|m| m["token"].as_str().unwrap().to_owned())
+    }
+
+    fn staging_token(messages: &[Value]) -> Option<String> {
+        messages
+            .iter()
+            .find(|m| m["type"] == "staging_taken")
+            .map(|m| m["token"].as_str().unwrap().to_owned())
+    }
+
+    #[test]
+    fn a_join_code_must_be_four_to_twelve_letters_or_digits() {
+        let mut host = Host::new(None, 5).unwrap();
+        for bad in ["abc", "abcdefghijklm", "ab cd", "ab-cd", "héllo1"] {
+            assert!(host.set_join_code(Some(bad)).is_err(), "{bad}");
+            assert!(host.join_code.is_none());
+        }
+        host.set_join_code(Some("Wolf42")).unwrap();
+        assert_eq!(host.join_code.as_deref(), Some("WOLF42"));
+        host.set_join_code(Some("")).unwrap();
+        assert!(host.join_code.is_none());
+        host.set_join_code(Some("abcd")).unwrap();
+        host.set_join_code(None).unwrap();
+        assert!(host.join_code.is_none());
+    }
+
+    #[test]
+    fn a_locked_game_seat_needs_the_right_code_and_an_open_game_needs_none() {
+        let mut host = open_game(3);
+        host.set_join_code(Some("Wolf42")).unwrap();
+        let (a, ra) = guest(&mut host);
+        host.message(a, take(1, None)).unwrap();
+        assert_eq!(error_code(&drain(&ra)).as_deref(), Some("join_code_needed"));
+        host.message(a, take(1, Some("nope99"))).unwrap();
+        let wrong = drain(&ra);
+        assert_eq!(error_code(&wrong).as_deref(), Some("wrong_join_code"));
+        assert_eq!(
+            wrong.iter().find(|m| m["type"] == "error").unwrap()["message"],
+            "That join code is not right."
+        );
+        assert!(host.game.as_ref().unwrap().seats[1].token.is_none());
+        // A code that is far too long is wrong, not a crash.
+        host.message(a, take(1, Some(&"W".repeat(500)))).unwrap();
+        assert_eq!(error_code(&drain(&ra)).as_deref(), Some("wrong_join_code"));
+        // Not case sensitive.
+        host.message(a, take(1, Some("wolf42"))).unwrap();
+        assert!(got_token(&drain(&ra)).is_some());
+        assert!(host.game.as_ref().unwrap().seats[1].token.is_some());
+        // The host's own connection never needs the code.
+        let (local, rl) = peer(&mut host);
+        host.message(local, take(2, None)).unwrap();
+        assert!(got_token(&drain(&rl)).is_some());
+        // An open game needs none.
+        let mut open = open_game(2);
+        let (b, rb) = guest(&mut open);
+        open.message(b, take(1, None)).unwrap();
+        assert!(got_token(&drain(&rb)).is_some());
+    }
+
+    #[test]
+    fn a_guest_with_its_seat_credential_rejoins_a_locked_game_without_the_code() {
+        let mut host = open_game(2);
+        host.set_join_code(Some("Wolf42")).unwrap();
+        let (a, ra) = guest(&mut host);
+        host.message(a, take(1, Some("WOLF42"))).unwrap();
+        let token = got_token(&drain(&ra)).unwrap();
+        host.disconnect(a);
+        let (b, rb) = guest(&mut host);
+        host.message(
+            b,
+            ClientMessage::Join {
+                seat: 1,
+                name: "Back".into(),
+                token,
+            },
+        )
+        .unwrap();
+        let written = drain(&rb);
+        assert!(written.iter().any(|m| m["type"] == "welcome"));
+        assert!(error_code(&written).is_none());
+    }
+
+    #[test]
+    fn five_wrong_codes_close_the_connection_in_a_game_and_in_a_room() {
+        let mut host = open_game(2);
+        host.set_join_code(Some("Wolf42")).unwrap();
+        let (a, ra) = guest(&mut host);
+        for _ in 0..4 {
+            host.message(a, take(1, Some("WRONG1"))).unwrap();
+            assert!(host.connections.contains_key(&a));
+        }
+        host.message(a, take(1, Some("WRONG1"))).unwrap();
+        assert!(!host.connections.contains_key(&a), "closed at the fifth");
+        let closed = ra.drain();
+        assert!(closed.closed);
+        assert!(closed.texts[0].contains("too_many_codes"));
+        // A missing code is not a strike.
+        let (b, _rb) = guest(&mut host);
+        for _ in 0..10 {
+            host.message(b, take(1, None)).unwrap();
+        }
+        assert!(host.connections.contains_key(&b));
+        // The same in the staging room.
+        let mut host = Host::new(None, 5).unwrap();
+        host.set_join_code(Some("Wolf42")).unwrap();
+        host.configure_staging(room_config()).unwrap();
+        let (c, rc) = guest(&mut host);
+        for _ in 0..5 {
+            host.message(c, staging_take(1, None, Some("nope")))
+                .unwrap();
+        }
+        assert!(!host.connections.contains_key(&c));
+        assert!(rc.drain().closed);
+        assert!(host.room.as_ref().unwrap().occupants[1].is_none());
+    }
+
+    #[test]
+    fn a_staging_seat_of_a_locked_room_needs_the_code_but_a_rejoin_does_not() {
+        let mut host = Host::new(None, 5).unwrap();
+        host.set_join_code(Some("Wolf42")).unwrap();
+        host.configure_staging(room_config()).unwrap();
+        let (a, ra) = guest(&mut host);
+        host.message(a, staging_take(1, None, None)).unwrap();
+        assert_eq!(error_code(&drain(&ra)).as_deref(), Some("join_code_needed"));
+        host.message(a, staging_take(1, None, Some("bad"))).unwrap();
+        assert_eq!(error_code(&drain(&ra)).as_deref(), Some("wrong_join_code"));
+        host.message(a, staging_take(1, None, Some("Wolf42")))
+            .unwrap();
+        let token = staging_token(&drain(&ra)).expect("seat taken with the right code");
+        host.disconnect(a);
+        let (b, rb) = guest(&mut host);
+        host.message(b, staging_take(1, Some(token), None)).unwrap();
+        assert!(staging_token(&drain(&rb)).is_some());
+    }
+
+    #[test]
+    fn the_join_code_is_in_no_status_summary_staging_view_save_or_history() {
+        let secret = "ZEBRA77Q";
+        let mut host = open_game(2);
+        host.set_join_code(Some(secret)).unwrap();
+        let (a, ra) = guest(&mut host);
+        host.message(a, take(1, Some(secret))).unwrap();
+        let (l, rl) = peer(&mut host);
+        join_as(&mut host, l, 0, "Host");
+        host.message(l, ClientMessage::StagingWatch { host: true })
+            .unwrap();
+        host.configure_staging(room_config()).unwrap();
+        let mut everything = vec![
+            serde_json::to_string(&host.status(true)).unwrap(),
+            serde_json::to_string(&host.status(false)).unwrap(),
+            serde_json::to_string(&host.summary()).unwrap(),
+            host.save_game().unwrap(),
+            host.take_save().unwrap_or_default(),
+        ];
+        everything.extend(host.take_recordings());
+        everything.extend(ra.drain().texts);
+        everything.extend(rl.drain().texts);
+        assert!(everything.len() > 8);
+        for text in &everything {
+            assert!(
+                !text.to_ascii_uppercase().contains(secret),
+                "the join code leaked: {}",
+                &text[..text.len().min(120)]
+            );
+        }
+    }
+
+    #[test]
+    fn a_remote_connection_holds_one_seat_in_a_game_and_in_a_room() {
+        let mut host = open_game(3);
+        let (a, ra) = guest(&mut host);
+        host.message(a, take(1, None)).unwrap();
+        assert!(got_token(&drain(&ra)).is_some());
+        assert!(host.message(a, take(2, None)).is_err());
+        assert!(host.game.as_ref().unwrap().seats[2].token.is_none());
+        // The host's own connection can still do what it did before.
+        let (l, rl) = peer(&mut host);
+        host.message(l, take(2, None)).unwrap();
+        assert!(got_token(&drain(&rl)).is_some());
+        // In a room, taking a second seat gives up the first one.
+        let mut config = room_config();
+        config.seats.push(config.seats[1].clone());
+        let mut host = Host::new(None, 5).unwrap();
+        host.configure_staging(config).unwrap();
+        let (b, _rb) = guest(&mut host);
+        for seat in [1, 2] {
+            host.message(b, staging_take(seat, None, None)).unwrap();
+        }
+        let occupants = &host.room.as_ref().unwrap().occupants;
+        assert!(occupants[1].is_none());
+        assert_eq!(occupants[2].as_ref().unwrap().connection, Some(b));
+    }
+
+    #[test]
+    fn removing_a_player_closes_the_seat_kills_the_credential_and_does_not_block_the_turn() {
+        let mut host = open_game(2);
+        let (l, rl) = peer(&mut host);
+        join_as(&mut host, l, 0, "Host");
+        let (g, rg) = guest(&mut host);
+        host.message(g, take(1, None)).unwrap();
+        let token = got_token(&drain(&rg)).unwrap();
+        let join = ClientMessage::Join {
+            seat: 1,
+            name: "Eve".into(),
+            token: token.clone(),
+        };
+        host.message(g, join).unwrap();
+        drain(&rl);
+        // A guest cannot remove anyone; the host cannot remove itself.
+        assert!(
+            host.message(g, ClientMessage::GameRemove { seat: 1 })
+                .is_err()
+        );
+        assert!(
+            host.message(g, ClientMessage::GameRemove { seat: 0 })
+                .is_err()
+        );
+        assert!(
+            host.message(l, ClientMessage::GameRemove { seat: 0 })
+                .is_err()
+        );
+        assert!(host.game.as_ref().unwrap().seats[1].connection.is_some());
+        host.message(l, ClientMessage::GameRemove { seat: 1 })
+            .unwrap();
+        assert!(!host.connections.contains_key(&g));
+        assert!(rg.drain().closed);
+        let seat = &host.game.as_ref().unwrap().seats[1];
+        assert!(seat.connection.is_none());
+        assert!(seat.token.is_some(), "closed, not open");
+        assert_ne!(seat.token.as_deref(), Some(token.as_str()));
+        assert_eq!(host.summary().open_seats, 0);
+        // The old credential is dead, and the same stranger cannot take the seat again.
+        let (g2, rg2) = guest(&mut host);
+        let rejoin = ClientMessage::Join {
+            seat: 1,
+            name: "Eve".into(),
+            token,
+        };
+        host.message(g2, rejoin).unwrap();
+        assert_eq!(
+            error_code(&drain(&rg2)).as_deref(),
+            Some("invalid_seat_credential")
+        );
+        assert!(host.message(g2, take(1, None)).is_err());
+        // The removed seat does not hold up the host's turn.
+        let turn = host.status(true).turn;
+        host.message(l, ready(&host, true)).unwrap();
+        assert_eq!(host.status(true).turn, turn + 1);
+        // The host can open it again with the existing control.
+        host.message(l, ClientMessage::GameRelease { seat: 1 })
+            .unwrap();
+        assert!(host.game.as_ref().unwrap().seats[1].token.is_none());
+        assert_eq!(host.summary().open_seats, 1);
+    }
+
+    #[test]
+    fn removing_a_player_from_a_room_closes_the_seat_until_the_host_opens_it() {
+        let mut config = room_config();
+        config.seats.push(config.seats[1].clone());
+        let mut host = Host::new(None, 5).unwrap();
+        host.configure_staging(config).unwrap();
+        let (l, rl) = peer(&mut host);
+        let (g, rg) = guest(&mut host);
+        host.message(g, staging_take(1, None, None)).unwrap();
+        let token = staging_token(&drain(&rg)).unwrap();
+        drain(&rl);
+        // Not by a guest.
+        let (other, ro) = guest(&mut host);
+        host.message(other, ClientMessage::StagingRemove { seat: 1 })
+            .unwrap();
+        assert_eq!(error_code(&drain(&ro)).as_deref(), Some("host_only"));
+        assert!(host.connections.contains_key(&g));
+        // Not an empty seat, not the host's own.
+        host.message(l, ClientMessage::StagingRemove { seat: 2 })
+            .unwrap();
+        host.message(l, ClientMessage::StagingRemove { seat: 0 })
+            .unwrap();
+        assert_eq!(
+            drain(&rl).iter().filter(|m| m["type"] == "error").count(),
+            2
+        );
+        assert!(host.connections.contains_key(&g));
+        host.message(l, ClientMessage::StagingRemove { seat: 1 })
+            .unwrap();
+        assert!(!host.connections.contains_key(&g));
+        assert!(rg.drain().closed);
+        let room = host.room.as_ref().unwrap();
+        let occupant = room.occupants[1].as_ref().expect("seat stays reserved");
+        assert!(occupant.connection.is_none());
+        assert!(!room.owns(1, Some(&token)), "the old credential is dead");
+        // A stranger cannot take it, with or without the old credential.
+        let (g2, rg2) = guest(&mut host);
+        for t in [None, Some(token)] {
+            host.message(g2, staging_take(1, t, None)).unwrap();
+        }
+        assert!(staging_token(&drain(&rg2)).is_none());
+        // Opening it is the host's existing control.
+        host.message(l, ClientMessage::StagingRelease { seat: 1 })
+            .unwrap();
+        assert!(host.room.as_ref().unwrap().occupants[1].is_none());
     }
 }
