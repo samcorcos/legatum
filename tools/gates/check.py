@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
-"""Pre-merge gates for one branch: the deterministic checks, and which reviewer markers the branch needs.
+"""Pre-merge gates for one branch: the deterministic checks, and which reviewers the branch needs.
 
-The merge hook (.claude/hooks/merge-gates.sh) runs this on every `git merge <branch>` into master. Run it yourself
-before landing to see the same verdict:
+  tools/gates/check.py <branch> [--repo DIR] [--base REF] [--checks-only] [--skip NAME ...] [--pr-comments FILE]
 
-  tools/gates/check.py <branch> [--repo DIR] [--base REF] [--checks-only] [--skip NAME ...]
+CI (.github/workflows/ci.yml, job `gates`, and tools/ci/local-ci.sh) runs `--base origin/master --checks-only
+--skip art` on every pull request: the deterministic checks only, since the art check needs a browser.
 
-CI (.github/workflows/ci.yml, job `gates`) runs `--base origin/master --checks-only --skip art` on every pull
-request: the deterministic checks only, since reviewer markers live in the lead's local .progress/ and the art
-check needs a browser. The reviewers still run before the lead merges the PR.
+Reviewer gate: each required reviewer posts its verdict as a PR comment that names the reviewer and the head commit
+SHA; the merger checks those comments are present for the PR's head before merging. Without --pr-comments this
+script lists the reviewers the changed paths require. With --pr-comments FILE (the PR's comments as JSON, e.g.
+`gh pr view N --json comments > FILE` or `gh api repos/OWNER/REPO/issues/N/comments > FILE`, or plain text with one
+verdict per line) it also checks that each required reviewer has a comment naming it and the branch tip's SHA
+(7 or more hex digits); a comment that says FAIL or BLOCK counts as a failed review.
 
 By changed path:
   every branch            hygiene.py           secrets, personal data, saves, large binaries, dead code markers
@@ -17,19 +20,20 @@ By changed path:
   crates/core, crates/ai  engine-invariants.py floats, hash-order iteration, unseeded RNG, clocks, render deps,
                                                saved-state changes without a RULES_VERSION bump, stale fixtures
   art assets              art.py               tools/art/distinctness.py --render --check (cached per art tree)
-  code                    legatum-docs-reviewer marker  .progress/docs-review/<branch>.ok
-  player text             legatum-plain-language-reviewer marker  .progress/plain-review/<branch>.ok
-                                               (the copy files below, or any app/src source line that adds a sentence)
+  code                    legatum-docs-reviewer
+  player text             legatum-plain-language-reviewer  (the copy files below, or any app/src source line that
+                                               adds a sentence)
   scenario-only branch    scenario.py          only scenarios/lab/*.json plus docs: no docs review, no extended verify;
                                                instead the fast scenario check (rules version, baseline doc, state
                                                loads on master's engine, copy lint; seconds)
-  UI                      legatum-ui-reviewer marker    .progress/ui-review/<branch>.ok
-  art, or art-related code  legatum-art-reviewer marker  .progress/art-review/<branch>.ok
-                                               (art files, or the names/kinds/wiring that art depends on: ART_IMPACT)
-Exit 1 when a check fails or a marker is missing.
+  UI                      legatum-ui-reviewer
+  art, or art-related code  legatum-art-reviewer  (art files, or the names/kinds/wiring that art depends on:
+                                               ART_IMPACT)
+Exit 1 when a check fails, or (with --pr-comments) a required review is missing or failed.
 """
 import argparse
 import importlib.util
+import json
 import os
 import re
 import sys
@@ -38,7 +42,14 @@ import time
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from common import changed_files, diff_added, git  # noqa: E402
-from markers import marker_status  # noqa: E402
+
+# Which reviewer each kind of change needs (CLAUDE.md, "Before merging a PR").
+REVIEWERS = {
+    "docs": "legatum-docs-reviewer",
+    "plain": "legatum-plain-language-reviewer",
+    "ui": "legatum-ui-reviewer",
+    "art": "legatum-art-reviewer",
+}
 
 TESTS = re.compile(r"^crates/[^/]+/tests/|_tests\.rs$|/tests\.rs$|^app/e2e/|\.test\.tsx?$|^app/src/test/|/__snapshots__/")
 # Scenario Lab files: data, not code, when the branch changes nothing else that is code (see tools/gates/scenario.py).
@@ -72,7 +83,7 @@ def load(name):
 
 
 def classify(repo, base, tip, files=None):
-    """{'code','ui','copy','engine','art','scenario': [paths]} for BASE..TIP. A branch whose only code is Lab scenario
+    """{'code','ui','copy','engine','art','artimpact','scenario': [paths]} for BASE..TIP. A branch whose only code is Lab scenario
     files is `scenario`: those files are not `code` or `copy` (the scenario check covers them instead)."""
     files = files if files is not None else [p for s, p in changed_files(repo, base, tip)]
     out = {k: [] for k in ("code", "ui", "copy", "engine", "art", "artimpact", "scenario")}
@@ -110,15 +121,6 @@ def adds_prose(entry):
     return any(PROSE.search(lines[n]) and not COMMENT.match(lines[n]) for n in added)
 
 
-CLASSES = {
-    "code": lambda f: not NON_CODE.search(f),
-    "ui": lambda f: bool(UI.search(f)) and not TESTS.search(f),
-    # Any later change to app source or a scenario may change player text: a fresh plain-language review.
-    "copy": lambda f: bool(APP_SOURCE.match(f) or f.startswith("scenarios/")) and not TESTS.search(f),
-    "art": lambda f: bool(ART.search(f) or ART_IMPACT.search(f)) and not TESTS.search(f),
-}
-
-
 def run_checks(repo, base, tip, kinds, skip=()):
     """[(check name, seconds, [finding lines])] for the deterministic checks the changed paths call for."""
     plan = [("hygiene", lambda: load("hygiene").check(repo, base, tip)[0]),
@@ -138,10 +140,62 @@ def run_checks(repo, base, tip, kinds, skip=()):
     return results
 
 
-def gate(repo, name, base, tip):
-    """(check results, marker results, kinds) for landing NAME (tip TIP, merge base BASE) on master."""
-    kinds = classify(repo, base, tip)
-    return run_checks(repo, base, tip, kinds), marker_status(repo, name, tip, kinds, CLASSES), kinds
+def required_reviews(kinds):
+    """[(kind, reviewer agent, why)] for the reviews the changed paths call for."""
+    out = []
+    if kinds["code"]:
+        out.append(("docs", REVIEWERS["docs"], "code changed"))
+    if kinds["copy"]:
+        # Player text (user, 2026-11-21): a card says the short rule, the Guide holds the detail, in plain words.
+        out.append(("plain", REVIEWERS["plain"], "player text changed: " + ", ".join(kinds["copy"][:4])))
+    if kinds["ui"]:
+        out.append(("ui", REVIEWERS["ui"], "UI changed"))
+    if kinds["art"] or kinds.get("artimpact"):
+        # Art, and changes that may make art stale (user, 2026-11-22): the art reviewer judges both.
+        out.append(("art", REVIEWERS["art"], "art or art-related code changed: "
+                    + ", ".join((kinds["art"] + kinds.get("artimpact", []))[:4])))
+    return out
+
+
+def load_comments(path):
+    """Comment bodies from a PR comments file: JSON (a list of strings or of objects with `body`, or an object with
+    a `comments` list, as `gh pr view --json comments` writes) or plain text (each line is one comment)."""
+    with open(path, encoding="utf-8") as f:
+        text = f.read()
+    try:
+        data = json.loads(text)
+    except ValueError:
+        return [ln for ln in text.splitlines() if ln.strip()]
+    if isinstance(data, dict):
+        data = data.get("comments", [])
+    bodies = []
+    for c in data if isinstance(data, list) else []:
+        body = c.get("body", "") if isinstance(c, dict) else c
+        if isinstance(body, str):
+            bodies.append(body)
+    return bodies
+
+
+SHA = re.compile(r"\b[0-9a-f]{7,40}\b")
+FAILED = re.compile(r"\b(FAIL(ED|S)?|BLOCK(ED|S|ER)?)\b", re.I)
+
+
+def comment_status(reviews, comments, tip):
+    """[(kind, ok, message)]: a review counts when a comment names its reviewer and a prefix of TIP; the last such
+    comment decides, and one that says FAIL or BLOCK is a failed review."""
+    out = []
+    for kind, reviewer, why in reviews:
+        last = None
+        for body in comments:
+            if reviewer in body and any(tip.startswith(m) for m in SHA.findall(body.lower())):
+                last = body
+        if last is None:
+            out.append((kind, False, f"no PR comment from {reviewer} naming {tip[:9]} ({why})"))
+        elif FAILED.search(last):
+            out.append((kind, False, f"{reviewer} reported a failure at {tip[:9]}"))
+        else:
+            out.append((kind, True, ""))
+    return out
 
 
 def main(argv=None):
@@ -149,8 +203,9 @@ def main(argv=None):
     ap.add_argument("branch")
     ap.add_argument("--repo", default=".")
     ap.add_argument("--base", default="refs/heads/master", help="ref the branch lands on (CI: origin/master)")
-    ap.add_argument("--checks-only", action="store_true", help="skip the reviewer markers")
+    ap.add_argument("--checks-only", action="store_true", help="skip the reviewer requirements")
     ap.add_argument("--skip", action="append", default=[], help="a check to leave out (e.g. art)")
+    ap.add_argument("--pr-comments", metavar="FILE", help="the PR's comments; check each required reviewer's verdict")
     a = ap.parse_args(argv)
     tip = (git(a.repo, "rev-parse", "--verify", "-q", a.branch + "^{commit}") or "").strip()
     base = (git(a.repo, "merge-base", a.base, tip) or "").strip() if tip else ""
@@ -159,21 +214,28 @@ def main(argv=None):
         return 2
     kinds = classify(a.repo, base, tip)
     checks = run_checks(a.repo, base, tip, kinds, set(a.skip))
-    markers = [] if a.checks_only else marker_status(a.repo, a.branch, tip, kinds, CLASSES)
+    reviews = [] if a.checks_only else required_reviews(kinds)
     bad = 0
     for name, secs, findings in checks:
         print(f"{name}: {'PASS' if not findings else 'FAIL'} ({secs:.1f} s)")
         for f in findings:
             print("  " + f)
         bad += bool(findings)
-    for kind, ok, msg in markers:
-        print(f"{kind} review: {'ok' if ok else 'MISSING'}{' (' + msg + ')' if msg else ''}")
-        bad += not ok
     if a.checks_only:
         print("reviews: not checked (--checks-only)")
-    elif not markers:
+    elif not reviews:
         print("reviews: none needed (" + ("scenario files only, the scenario check stands in" if kinds["scenario"] else
                                           "docs or tests only" if not kinds["code"] else "") + ")")
+    else:
+        print("reviewers required: " + ", ".join(r for _, r, _ in reviews)
+              + f" (verdicts as PR comments naming {tip[:9]})")
+        if a.pr_comments:
+            for kind, ok, msg in comment_status(reviews, load_comments(a.pr_comments), tip):
+                print(f"{kind} review: {'ok' if ok else 'MISSING'}{' (' + msg + ')' if msg else ''}")
+                bad += not ok
+        else:
+            for kind, reviewer, why in reviews:
+                print(f"  {reviewer}: {why}")
     return 1 if bad else 0
 
 

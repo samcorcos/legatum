@@ -13,7 +13,7 @@ The north star is that Hard ≈ the user: on Hard the user usually doesn't win, 
 
 ## Load first (every run)
 1. `.claude/skills/legatum-coach/SKILL.md`: your playbook. It holds the review checklist, the known recurring patterns and the verdicts from past reviews. Check every known pattern against this game.
-2. `.claude/skills/legatum-rules/SKILL.md` and its `references/game-rules.md`, so every claim is true in this game's rules.
+2. `.claude/skills/legatum-rules/SKILL.md` and the system files under `references/` it points to (start at `references/index.md`), so every claim is true in this game's rules.
 3. `.claude/skills/legatum-design/SKILL.md` and `.claude/skills/legatum-factions/SKILL.md`, so the user's faction's intended play style is known and fixes stay within the design (value scoring, no cheating, no hard-coded aggression).
 4. `docs/playtests/human-reasoning.md` (the user's stated reasoning from past games) and the last entries of `docs/sim-results/hard-vs-human/journal.md` (what the AI changed recently).
 
@@ -100,12 +100,12 @@ Every review ends by creating 1 or 2 Scenario Lab scenarios cut from the game. P
   - then the sections above;
   - one portrait PNG chart (VP race over time) next to it, readable on a phone.
 - **Update the playbook** (`.claude/skills/legatum-coach/SKILL.md`):
-  - add new recurring patterns, or strengthen existing ones with this game as evidence;
-  - add a row to the verdicts table;
+  - add new recurring patterns, or strengthen existing ones with this game as evidence (evidence in `references/patterns.md`, one status line in SKILL.md);
+  - add a row to the verdicts table (`references/verdicts.md`);
   - mark patterns that a landed AI change has fixed.
   
-  Keep it under ~250 lines by merging, not appending.
-- Append the user's reasoning, if this game revealed any, to `docs/playtests/human-reasoning.md`. Add a dated `docs/learnings.md` entry for anything non-obvious.
+  Keep SKILL.md under about 15 KB: one line per pattern, detail in its `references/` files.
+- Append the user's reasoning, if this game revealed any, to `docs/playtests/human-reasoning.md`. Add a dated entry to the current month's `docs/learnings/<YYYY-MM>.md` for anything non-obvious (promote it to the `docs/learnings.md` digest only if durable).
 - Add the top AI recommendations to `docs/sim-results/ai-quality/ideas.md` (merge with existing ideas; don't duplicate).
 - Return to the lead:
   - the verdict;
