@@ -100,7 +100,10 @@ it('collapses to the compact toggle on desktop while a city is selected, and res
     expect(host.querySelector<HTMLDivElement>('.lens-content')!.hidden).toBe(false);
     render(true);
     const toggle = host.querySelector<HTMLButtonElement>('.lens-toggle')!;
-    expect(toggle.textContent).toBe('Lens: Default');
+    // The Default lens beside a panel is a small chip that still names the lens to assistive tech.
+    expect(toggle.textContent).toBe('Lens');
+    expect(toggle.getAttribute('aria-label')).toBe('Lens: Default');
+    expect(host.querySelector('.map-lenses')!.getAttribute('data-chip')).toBe('true');
     expect(host.querySelector('.map-lenses')!.getAttribute('data-compact')).toBe('true');
     expect(host.querySelector<HTMLDivElement>('.lens-content')!.hidden).toBe(true);
     act(() => toggle.click());
@@ -280,7 +283,7 @@ it('the compact toggle names the lens and the overlays that are on', () => {
   const matchMedia = vi.spyOn(window, 'matchMedia').mockReturnValue(media);
   const m = mount({ collapsed: true });
   try {
-    expect(m.host.querySelector('.lens-toggle')!.textContent).toBe('Lens: Default');
+    expect(m.host.querySelector('.lens-toggle')!.textContent).toBe('Lens');
     act(() => setOverlay('yields', true));
     expect(m.host.querySelector('.lens-toggle')!.textContent).toBe('Lens: Default · Yields');
     act(() => setOverlay('borders', true));

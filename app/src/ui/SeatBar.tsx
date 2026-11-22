@@ -261,7 +261,10 @@ export function SeatBar({ phoneDetails = false, onOpenDetails, race }: { phoneDe
     cta = { label: solo ? 'End turn' : 'Ready', sub: lastTurn ? 'Last turn of the scenario' : solo ? 'Resolve the turn' : 'End planning for this seat', onClick: readyAndPass, kind: 'ready' };
   }
 
-  const details = <div id="turn-details" className="turn-details">
+  // Beside the race, a This Turn with nothing in it (no report link, order, seat or review) is only a heading over
+  // "0 orders": it hides (sidebar.css also waits for no siege or air card) until it has something to show.
+  const quiet = !!race && !phoneDetails && !report && !remote && humans.length <= 1 && !bankruptcy && !wounded.length && orders[seat].length + automated.length === 0;
+  const details = <div id="turn-details" className={`turn-details${quiet ? ' quiet' : ''}`}>
       {/* Once a turn has resolved, the subtitle line becomes the way back to its report. */}
       <PanelHead title="This Turn" sub={report ? <LastTurnButton /> : race ? undefined : humans.length > 1 || remote ? 'Every seat plans at once' : 'Plan, then end the turn'} />
       {/* Everything that grows (seats, cities, orders, reviews) scrolls in this body on desktop, so
