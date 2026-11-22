@@ -43,7 +43,7 @@ afterEach(async () => {
   await act(async () => {
     root.unmount();
     useGame.getState().exitStaging();
-    useGame.getState().leaveLan();
+    useGame.getState().leaveOnline();
   });
   container.remove();
   setOnlineApi();
@@ -61,13 +61,13 @@ it.each([true, false])('offers explicit reclaim after an invalid saved credentia
   await useGame.getState().boot();
   sockets[0].open();
   expect(sockets[0].sent).toEqual([{ type: 'join', seat: 0, name: 'Host', token: 'expired-token' }]);
-  useGame.getState().reclaimLanSeat();
+  useGame.getState().reclaimOnlineSeat();
   expect(sockets).toHaveLength(1); // No rejection, no reassignment.
   sockets[0].push({ type: 'error', code: 'invalid_seat_credential', message: 'Invalid seat credential.' });
   expect(useGame.getState().screen).toBe('join');
   await act(async () => root.render(createElement(JoinScreen)));
   // The Join screen's status refresh must not forget the rejection.
-  expect(useGame.getState().lan?.credentialRejected).toBe(true);
+  expect(useGame.getState().net?.credentialRejected).toBe(true);
   expect(!!button('Reclaim my seat')).toBe(isLocal);
 
   await act(async () => {
@@ -77,7 +77,7 @@ it.each([true, false])('offers explicit reclaim after an invalid saved credentia
   });
   expect(sockets[1].sent).toEqual([{ type: 'join', seat: 0, name: 'Host', token: 'expired-token' }]);
   if (!isLocal) {
-    useGame.getState().reclaimLanSeat();
+    useGame.getState().reclaimOnlineSeat();
     expect(sockets).toHaveLength(2);
     expect(rememberedSeat()?.token).toBe('expired-token');
     return;
@@ -94,7 +94,7 @@ it.each([true, false])('offers explicit reclaim after an invalid saved credentia
   });
   expect(sockets[2].sent.at(-1)).toEqual({ type: 'join', seat: 0, name: 'Host', token: 'fresh-token' });
   expect(rememberedSeat()).toEqual({ seat: 0, name: 'Host', gameId: 'restarted', token: 'fresh-token' });
-  expect(useGame.getState()).toMatchObject({ screen: 'game', busy: null, error: null, lan: { conn: 'open', credentialRejected: false } });
+  expect(useGame.getState()).toMatchObject({ screen: 'game', busy: null, error: null, net: { conn: 'open', credentialRejected: false } });
   expect(button('Reclaim my seat')).toBeUndefined();
 });
 
@@ -117,7 +117,7 @@ it('disables Leave with a reason while disconnected, then retains UI ownership u
   const state: StagingState = { room_id: 'room', config, occupants: config.seats.map((s, i) => i < 2
     ? { name: i === 0 ? 'Host' : 'Alice', faction: s.faction, ready: false, connected: true, is_host: i === 0 } : null) };
   rememberSeat({ seat: 1, name: 'Alice', gameId: null, roomId: 'room', token: 'secret' });
-  useGame.setState({ screen: 'staging', lan: { status: { ...status, is_local: false, staging: state }, seats: [], mySeat: null, conn: 'closed' } });
+  useGame.setState({ screen: 'staging', net: { status: { ...status, is_local: false, staging: state }, seats: [], mySeat: null, conn: 'closed' } });
   await act(async () => root.render(createElement(StagingScreen)));
   await act(async () => {
     sockets[0].open();

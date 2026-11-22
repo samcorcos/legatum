@@ -703,7 +703,7 @@ dialog.settings-modal::backdrop {
   text-transform: uppercase;
   color: var(--ink-2);
 }
-/* Short windows (the desktop app's minimum is 1100x700): tighten the vertical rhythm. */
+/* Short windows: tighten the vertical rhythm. */
 @media (max-height: 820px) {
   .title-inner::before {
     flex-basis: clamp(32px, 6vh, 64px); /* so the whole menu fits at the 700px minimum */
@@ -736,7 +736,7 @@ dialog.settings-modal::backdrop {
   .title-actions .btn.big:not(.primary) { padding: 4px 16px 2px; }
 }
 /* Laptop heights up to 760px: the Scenarios entry added a row, so tighten the menu one step so
-   Quit (desktop app) still fits inside the slip. */
+   every entry fits inside the slip. */
 @media (max-height: 760px) {
   .title-kicker { margin-top: 12px; }
   .title-tag { margin: 6px 0 14px; }

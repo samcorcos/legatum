@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { saveFile, useGame, type SaveFile } from '../store';
+import { hostedSaveText, saveFile, useGame, type SaveFile } from '../store';
 import { openGuide } from './guideState';
 import { HintSettings } from './FirstGameHints';
 import { HapticsSettings } from './HapticsSettings';
@@ -8,19 +8,31 @@ import { CombatFxSettings } from './CombatFxSettings';
 import { loadFromFile, saveToFile } from '../platform/files';
 import { checkSaveText } from '../platform/saveLimits';
 import { loadErrorMessage, parseSaveFile } from '../saveErrors';
-import { exportRetainedHistories, retryGameHistory } from '../platform/archive';
+import { exportRetainedHistories } from '../platform/archive';
 import { currentActivePlaySeconds, startActivePlayClock } from '../activePlayTime';
 import { archivePlaySeconds, formatPlayDuration } from '../playTime';
 
-export async function saveGameToFile() {
+export function saveGameToFile() {
   const { client, views } = useGame.getState();
   if (!client || !views) return;
   try {
     const s = saveFile(client, views);
     // Serialize the envelope only; s.game stays an opaque string.
-    await saveToFile(JSON.stringify(s), s.turn);
+    saveToFile(JSON.stringify(s), s.turn);
   } catch (e) {
     useGame.getState().set({ error: String(e) });
+  }
+}
+
+/** The online host's "Save to file…": the game as the host engine holds it now, so it can be hosted again. */
+export async function saveHostedGameToFile() {
+  const { set, views } = useGame.getState();
+  try {
+    const text = hostedSaveText();
+    if (!text || !views?.length) return set({ error: 'There is no game to save yet.' });
+    await saveToFile(text, views[0].turn);
+  } catch (e) {
+    set({ error: String(e) });
   }
 }
 
@@ -48,8 +60,8 @@ export function GameMenu() {
   const hash = useGame((s) => s.lastHash);
   const hasReport = useGame((s) => !!s.report);
   const kind = useGame((s) => s.client?.kind);
-  const leaveLan = useGame((s) => s.leaveLan);
-  const hostHere = useGame((s) => !!s.lan?.status.is_local);
+  const leaveOnline = useGame((s) => s.leaveOnline);
+  const hostHere = useGame((s) => !!s.net?.status.is_local);
   const client = useGame((s) => s.client);
   const turn = useGame((s) => s.views?.[s.seat]?.turn);
   const archivedSeconds = useMemo(() => archivePlaySeconds(client?.archive?.()), [client, turn]);
@@ -81,7 +93,7 @@ export function GameMenu() {
         }
       }}
       onBlur={(e) => {
-        // Safari and WKWebView (the Mac app) do not focus a <button> on click: mousedown moves focus
+        // Safari and other WebKit views do not focus a <button> on click: mousedown moves focus
         // from the previously focused element to <body>, so blur fires with relatedTarget null in the
         // middle of every click on a menu item. Closing on that blur (even after a rAF check of
         // activeElement) unmounts the item before mouseup and the click never fires. Only keyboard
@@ -113,6 +125,12 @@ export function GameMenu() {
               <hr />
             </>
           )}
+          {kind === 'remote' && hostHere && (
+            <>
+              <button onClick={() => (saveHostedGameToFile(), setOpen(false))}>Save to file…</button>
+              <hr />
+            </>
+          )}
           <HintSettings />
           <HapticsSettings />
           <SoundSettings />
@@ -128,16 +146,16 @@ export function GameMenu() {
             hostHere ? (
               <button onClick={() => {
                 setOpen(false);
-                if (window.confirm('End this game for everyone? Other players go back to the title, and the game cannot be resumed.')) leaveLan();
+                if (window.confirm('End this game for everyone? Other players go back to the title, and the game cannot be resumed.')) leaveOnline();
               }}>End the game for everyone</button>
             ) : (
-              <button onClick={() => (leaveLan(), setOpen(false))}>Leave the game (free this seat)</button>
+              <button onClick={() => (leaveOnline(), setOpen(false))}>Leave the game (free this seat)</button>
             )
           ) : (
             <button onClick={() => (goto('title'), setOpen(false))}>Exit to title</button>
           )}
           <div className="menu-foot">
-            {kind !== 'remote' ? 'Autosaved each turn' : hostHere ? 'Online game · you host it, so keep this tab open' : 'Online game · the host keeps the game'}
+            {kind !== 'remote' ? 'Autosaved each turn' : hostHere ? 'Online game · you host it: keep this tab open, or save to a file' : 'Online game · the host keeps the game'}
           </div>
           {/* Troubleshooting only: reachable, but out of the player's way. */}
           <details className="menu-advanced">
@@ -147,14 +165,9 @@ export function GameMenu() {
                 setOpen(false);
                 void exportRetainedHistories(useGame.getState().client?.archive?.()).catch((e) => set({ error: String(e) }));
               }}>Export game history</button>
-              <button onClick={() => {
-                setOpen(false);
-                void retryGameHistory().catch((e) => set({ error: String(e) }));
-              }}>Retry history archive</button>
             </>}
             <div className="menu-foot">
-              {kind === 'remote' ? 'Online player' : 'Core (WASM)'}
-
+              {kind === 'remote' && 'Online player'}
               {hash && <div className="mono">state {hash.slice(0, 10)}…</div>}
             </div>
           </details>

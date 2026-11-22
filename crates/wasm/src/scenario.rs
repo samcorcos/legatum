@@ -335,10 +335,10 @@ pub struct Checked {
     pub title: String,
 }
 
-/// Everything a dropped-in scenario file must satisfy before the Lab offers it, in the words the
-/// Lab shows when it does not: the format, the rules version the state was made for, and that
+/// Everything a scenario file must satisfy before the Lab can offer it, in plain words when it
+/// does not: the format, the rules version the state was made for, and that
 /// the state loads (hash), is legal and has an objective that parses. The `Err` is a plain
-/// reason, never a panic. Used by the desktop app's folder loader and `legatum-sim scenario-check`.
+/// reason, never a panic. Used by `legatum-sim scenario-check`.
 pub fn check_file(text: &str) -> Result<Checked, String> {
     let file = ScenarioFile::parse(text)?;
     if file.lab.is_none() {

@@ -132,7 +132,7 @@ export const DIFFICULTY_INFO: Record<AiLevel, string> = {
 
 /**
  * The level a seat or the lobby default is set to. Training only counts on top of Hard, and only
- * with the developer switch: without it a lobby that says Training (a saved or LAN room) is Hard.
+ * with the developer switch: without it a lobby that says Training (a saved or online room) is Hard.
  */
 export function levelOf(s: { difficulty: AiDifficulty; search?: boolean }, training = trainingOffered()): AiLevel {
   return training && s.difficulty === 'Hard' && s.search ? 'Training' : s.difficulty;
@@ -386,7 +386,7 @@ export function teams(l: Lobby): TeamSummary[] {
   return out;
 }
 
-/** Problems that block starting the game, locally or on the LAN server. */
+/** Problems that block starting the game, locally or on the online host. */
 export function problems(l: Lobby): string[] {
   const p: string[] = [];
   const active = l.slots.filter(isActive);

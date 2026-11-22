@@ -392,7 +392,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
       if (!attackable) continue;
       if (shotBlockReason(view, ownSel.pos, h, ownSel.kind)) { blocked.push(h); continue; }
       if (client.kind === 'remote') {
-        // LAN validate() only returns the last server result. Use the advertised effective
+        // Online validate() only returns the last server result. Use the advertised effective
         // turn for a queued declaration, while LOS is checked locally from this PlayerView.
         valid.push(h);
       } else {
@@ -1409,7 +1409,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
             <b>{inspectedSite && !activePreview ? 'Place for a city' : <>{activePreview ? mode === 'ranged' ? 'Ranged strike' : pathAttack || previewPeace ? 'Attack' : 'Move' : 'Tile'} {(activePreview && (mode === 'ranged' || pathAttack || previewPeace) && forecastTargetName(view, touchInfo.hex)) || coord(touchInfo.hex)}</>}</b>
             <button className="btn quiet" aria-label="Close tile actions" onClick={clearTouch}>Close</button>
           </div>
-          {inspectedSite && <div className="settlement-details" aria-label="Settlement suitability"><SettlementDetails key={`${inspectedSite.pos.q},${inspectedSite.pos.r}`} site={inspectedSite} /></div>}
+          {inspectedSite && <div className="settlement-details" aria-label="Settlement suitability"><SettlementDetails faction={view?.players.find((p) => p.id === view.me)?.faction} key={`${inspectedSite.pos.q},${inspectedSite.pos.r}`} site={inspectedSite} /></div>}
           {siteAt(touchInfo.hex) && ownSel && isFounderCandidate(view, ownSel) && !activePreview && !hexEq(ownSel.pos, touchInfo.hex) && <button className="btn primary" onClick={() => {
             setTapPreview({ unit: ownSel.id, seat, turn: view.turn, mode, target: touchInfo.hex });
           }}>Preview move to this site</button>}
@@ -1455,7 +1455,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
       )}
       {/* One card at a time: the Peace hint is the decision here, so the tile card waits (both used the same spot). */}
       {!touchInfo && !hoveredBanner && !forecast && !airForecast && !peaceHere && hover && hoverTile && (hoverTile.explored || (view?.units.some((u) => u.heir_of != null && hexEq(u.pos, hover.hex)) ?? false)) && tileHoverReady && view && !gesture.current.contacts.length && (
-        inspectedSite ? <SettlementCard site={inspectedSite} anchor={cardAnchor!} /> : <TileCard view={view} hex={hover.hex} anchor={cardAnchor!} blockedReason={blockedShot || undefined} routeWarning={ownSel ? routeWarningAt(hover.hex) : undefined} reinforcement={reinforcementAt(hover.hex)} note={placeNote ?? blockedSiteNote} refusal={placeRefusal} />
+        inspectedSite ? <SettlementCard site={inspectedSite} anchor={cardAnchor!} faction={view?.players.find((p) => p.id === view.me)?.faction} /> : <TileCard view={view} hex={hover.hex} anchor={cardAnchor!} blockedReason={blockedShot || undefined} routeWarning={ownSel ? routeWarningAt(hover.hex) : undefined} reinforcement={reinforcementAt(hover.hex)} note={placeNote ?? blockedSiteNote} refusal={placeRefusal} />
       )}
     </div>
   );

@@ -132,7 +132,7 @@ it('Join points the app at that room and continues as a guest', async () => {
   await flush();
   expect(serverBase()).toBe(`${RELAY}/rooms/abcdefghij`);
   expect(useGame.getState().screen).toBe('join');
-  expect(useGame.getState().lan?.status.is_local).toBe(false);
+  expect(useGame.getState().net?.status.is_local).toBe(false);
 });
 
 it('Join on a room that has gone says so and keeps the list', async () => {

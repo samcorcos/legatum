@@ -1,5 +1,5 @@
-// Regression (.reviews/astra-master-4369f0b.md #2): after a LAN game, starting a local game must
-// drop the LAN session; a late or reconnected socket's `view` must not replace the local game.
+// Regression (.reviews/astra-master-4369f0b.md #2): after an online game, starting a local game must
+// drop the online session; a late or reconnected socket's `view` must not replace the local game.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { GameClient } from './client';
 import { coopVsAiSetup } from './gameSetup';
@@ -41,9 +41,9 @@ class FakeSocket {
   }
 }
 
-const lanView = { turn: 40, me: 1, team: 0, players: [], units: [], cities: [], finished: true } as unknown as PlayerView;
+const onlineView = { turn: 40, me: 1, team: 0, players: [], units: [], cities: [], finished: true } as unknown as PlayerView;
 
-describe('store: leaving a LAN game for a local one', () => {
+describe('store: leaving an online game for a local one', () => {
   beforeEach(() => {
     FakeSocket.all = [];
     vi.stubGlobal('WebSocket', FakeSocket);
@@ -54,17 +54,17 @@ describe('store: leaving a LAN game for a local one', () => {
       removeItem: (k: string) => mem.delete(k),
     });
     useGame.setState({
-      lan: { status: { mode: 'server', has_game: true, turn: 40, seats: [], is_local: false }, mySeat: null, seats: [], conn: 'closed' },
+      net: { status: { mode: 'server', has_game: true, turn: 40, seats: [], is_local: false }, mySeat: null, seats: [], conn: 'closed' },
     });
   });
   afterEach(() => vi.unstubAllGlobals());
 
-  const joinLan = () => {
+  const joinSocket = () => {
     useGame.getState().joinSeat(1, 'Ben');
     const sock = FakeSocket.all[0];
     sock.open();
     sock.push({ type: 'welcome', seat: 1, game_id: 'g1', orders: [] });
-    sock.push({ type: 'view', view: lanView });
+    sock.push({ type: 'view', view: onlineView });
     expect(useGame.getState().client?.kind).toBe('remote');
     expect(useGame.getState().views![0].turn).toBe(40);
     return sock;
@@ -79,22 +79,22 @@ describe('store: leaving a LAN game for a local one', () => {
   };
 
   it('Back to title then Single Player: the old socket is closed and its messages ignored', async () => {
-    const sock = joinLan();
+    const sock = joinSocket();
     useGame.getState().exitToTitle();
     expect(sock.closed).toBe(true);
-    expect(useGame.getState().lan?.mySeat).toBeNull();
+    expect(useGame.getState().net?.mySeat).toBeNull();
     await useGame.getState().startGame(coopVsAiSetup('5', [{ name: 'Ann', faction: 'India' }]));
     expectLocalGame();
     // A late message from the old connection changes nothing.
-    sock.push({ type: 'view', view: lanView });
+    sock.push({ type: 'view', view: onlineView });
     sock.push({ type: 'seats', seats: [{ seat: 1, player: 1, name: 'Ben', faction: 'India', connected: true, ready: true, orders: 0 }] });
     expectLocalGame();
     expect(useGame.getState().ready).toEqual([false]);
     expect(FakeSocket.all).toHaveLength(1);
   });
 
-  it('a local game started while still connected (title reached without leaving) drops the LAN session', async () => {
-    const sock = joinLan();
+  it('a local game started while still connected (title reached without leaving) drops the online session', async () => {
+    const sock = joinSocket();
     useGame.getState().set({ screen: 'title' });
     useGame.getState().editOrders((o) => o);
     await useGame.getState().startGame(coopVsAiSetup('5', [{ name: 'Ann', faction: 'India' }]));
@@ -103,7 +103,7 @@ describe('store: leaving a LAN game for a local one', () => {
     useGame.getState().editOrders(() => [{ type: 'SleepUnit', unit: 1 }]);
     // Even a reconnect-style welcome + view from that socket is ignored.
     sock.push({ type: 'welcome', seat: 1, game_id: 'g1', orders: [] });
-    sock.push({ type: 'view', view: lanView });
+    sock.push({ type: 'view', view: onlineView });
     expectLocalGame();
     expect(useGame.getState().orders[0]).toHaveLength(1);
     expect(FakeSocket.all).toHaveLength(1);

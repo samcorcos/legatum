@@ -34,7 +34,7 @@ beforeEach(async () => {
   act(() => root.render(<StrictMode><GameOver /></StrictMode>));
 });
 afterEach(() => {
-  act(() => { root.unmount(); useGame.getState().leaveLan(); });
+  act(() => { root.unmount(); useGame.getState().leaveOnline(); });
   useCombatFx.getState().update({ enabled: true });
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
@@ -109,7 +109,7 @@ it('shows the eventual outcome after loading an unfinished save', async () => {
   expect(host.querySelector('dialog')!.open).toBe(true);
 });
 
-it('resets dismissal for an installed LAN session and a replacement game on the same socket', () => {
+it('resets dismissal for an installed online session and a replacement game on the same socket', () => {
   const socket = new FakeSocket('ws://host/ws');
   vi.stubGlobal('WebSocket', class { constructor() { return socket; } });
   const view = useGame.getState().views![0];

@@ -214,15 +214,15 @@ test('Online: host in one browser, a guest joins from the game list, both Ready 
   await start.click();
   await expectTurn(host, 1);
   await expectTurn(guest, 1);
-  await expect(host.getByTestId('lan-seat-1')).toContainText('Alice');
-  await expect(host.getByTestId('lan-seat-1')).toContainText('online');
-  await expect(guest.getByTestId('lan-seat-0')).toContainText('online');
+  await expect(host.getByTestId('online-seat-1')).toContainText('Alice');
+  await expect(host.getByTestId('online-seat-1')).toContainText('online');
+  await expect(guest.getByTestId('online-seat-0')).toContainText('online');
 
   await chooseCapitalProduction(host);
   await chooseCapitalProduction(guest);
   await endPlanning(host);
   await expect(host.getByRole('button', { name: /^Waiting for Alice/ })).toBeVisible();
-  await expect(guest.getByTestId('lan-seat-0')).toContainText('Ready');
+  await expect(guest.getByTestId('online-seat-0')).toContainText('Ready');
   await expectTurn(host, 1);
   await expectTurn(guest, 1);
   await endPlanning(guest);
@@ -238,8 +238,8 @@ test('Online: host in one browser, a guest joins from the game list, both Ready 
       const v = s.views![s.seat];
       return v.cities.find((c) => c.owner === v.me)?.detail?.producing ?? null;
     })).toEqual(expect.any(Object));
-    await expect(page.getByTestId('lan-seat-0')).toContainText('Planning');
-    await expect(page.getByTestId('lan-seat-1')).toContainText('Planning');
+    await expect(page.getByTestId('online-seat-0')).toContainText('Planning');
+    await expect(page.getByTestId('online-seat-1')).toContainText('Planning');
     await expect(page.getByRole('region', { name: 'Victory race', exact: true })).toBeVisible();
   }
 });

@@ -1,6 +1,3 @@
-import { isTauri, invoke } from '@tauri-apps/api/core';
-import { rememberedSeat } from '../remote';
-import { HOSTED } from './hosted';
 import { uploadGameHistory, uploadsGames } from './gameUpload';
 
 interface History {
@@ -43,34 +40,9 @@ async function transaction<T>(mode: IDBTransactionMode, run: (store: IDBObjectSt
 }
 
 async function deliver(json: string): Promise<boolean> {
-  if (isTauri()) {
-    // Native compression; plugin-fs writes only inside the configured archive scope.
-    // Native finalization serializes all app/server/sim writers with the same index lock.
-    const staged = await invoke<{ ticket: string; path: string; bytes: number[] } | null>('archive_stage', { json });
-    // The native archive is off (its folder could not be opened): keep the history on this device.
-    if (!staged) return false;
-    const { writeFile } = await import('@tauri-apps/plugin-fs');
-    await writeFile(staged.path, new Uint8Array(staged.bytes));
-    await invoke('archive_commit', { ticket: staged.ticket });
-    return true;
-  }
-  // The hosted web build uploads each game (gameUpload.ts); a build without an upload address keeps histories on this device (Export game history).
-  if (uploadsGames()) return uploadGameHistory(json);
-  if (HOSTED) return false;
-  const status = await fetch('/api/status', { signal: AbortSignal.timeout(5000), cache: 'no-store' });
-  if (status.status === 404) return false;
-  // Static hosts often return index.html for unknown paths.
-  if (!status.ok) throw new Error(`Archive server returned HTTP ${status.status}`);
-  if (!status.headers.get('content-type')?.includes('application/json')) return false;
-  const host = await status.json() as { mode?: string };
-  if (host.mode !== 'server') return false;
-  const token = rememberedSeat()?.token;
-  const response = await fetch('/api/archive', {
-    method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-    body: json, signal: AbortSignal.timeout(30000),
-  });
-  if (!response.ok) throw new Error(`Game history is kept on this device, but the archive upload failed (HTTP ${response.status}). Use Export game history, or try again when connected.`);
-  return true;
+  // A build with an upload address sends each game to it (gameUpload.ts); otherwise histories stay on this
+  // device (Export game history).
+  return uploadsGames() ? uploadGameHistory(json) : false;
 }
 
 async function flush(): Promise<void> {
@@ -122,7 +94,7 @@ export function recordGameHistory(json: string): Promise<void> {
     try {
       await transaction('readwrite', (s) => s.put(pending));
     } catch (error) {
-      // A denied/full browser database must not prevent a functioning native/server archive.
+      // A denied/full browser database must not prevent the upload.
       if (await deliver(json)) return;
       throw new Error(`Could not keep game history: ${String(error)}. Export game history before leaving.`);
     }

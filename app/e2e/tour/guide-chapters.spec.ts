@@ -13,6 +13,7 @@ const CHAPTERS = [
   { id: 'peoples', button: /The peoples/, scrolls: ['Byzantium', 'Mongols', 'Sparta'] },
   { id: 'turns', button: /Your first turns/, scrolls: ['Diplomacy'] },
   { id: 'cities', button: /Cities & research/, scrolls: ['Growth and production'] },
+  { id: 'controls', button: /Controls & saves/, scrolls: ['Save and resume'] },
 ] as const;
 
 for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
