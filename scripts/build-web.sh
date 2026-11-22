@@ -43,7 +43,7 @@ if [ -z "${LEGATUM_BUILD_ID:-}" ]; then
 fi
 [[ "$LEGATUM_BUILD_ID" =~ ^[a-z0-9][a-z0-9-]{0,39}$ ]] || { echo "LEGATUM_BUILD_ID must be lower-case letters, digits and hyphens: $LEGATUM_BUILD_ID" >&2; exit 1; }
 # The live relay, and the origins the page's Content-Security-Policy allows for it (hosted/_headers).
-default_relay="https://legatum-relay.sam-1e7.workers.dev"
+default_relay="https://relay.playlegatum.com"
 relay="${LEGATUM_RELAY_URL:-$default_relay}"
 relay="${relay%/}"
 [ "$relay" = none ] && relay=""
@@ -51,7 +51,7 @@ case "$relay" in ""|http://*|https://*) ;; *) echo "LEGATUM_RELAY_URL must start
 games_url="${LEGATUM_GAMES_URL:-}"
 games_url="${games_url%/}"
 if [ -n "$games_url" ] && ! [[ "$games_url" =~ ^https://[A-Za-z0-9.-]+$ ]]; then
-  echo "LEGATUM_GAMES_URL must be an https origin such as https://legatum-games.example.workers.dev" >&2; exit 1
+  echo "LEGATUM_GAMES_URL must be an https origin such as https://games.playlegatum.com" >&2; exit 1
 fi
 # Bundled PNG art is served as WebP on the website (app/vite-plugin-webp.ts). LEGATUM_WEBP=0 keeps PNG.
 LEGATUM_WEBP="${LEGATUM_WEBP:-1}" VITE_LEGATUM_BUILD_ID="$LEGATUM_BUILD_ID" VITE_LEGATUM_RELAY_URL="$relay" VITE_LEGATUM_GAMES_URL="$games_url" npm run build

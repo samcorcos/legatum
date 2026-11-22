@@ -45,7 +45,7 @@ npx wrangler r2 bucket create legatum-games    # once
 npx wrangler deploy
 ```
 
-The URL is `https://legatum-games.<your-subdomain>.workers.dev`. Set it as the repository variable
+The URL is `https://games.playlegatum.com` (the `routes` entry in `wrangler.jsonc`; a fork changes it to a domain in its own Cloudflare account, or removes it and uses `https://legatum-games.<your-subdomain>.workers.dev`). The zone's rate-limiting rule covers it (`infra/relay/README.md`, "Edge rule"). Set it as the repository variable
 `LEGATUM_GAMES_URL` (or the environment variable of the same name for `scripts/build-web.sh`): the web build
 then uploads games there and allows the page to connect to it. Without it the web build uploads nothing.
 
