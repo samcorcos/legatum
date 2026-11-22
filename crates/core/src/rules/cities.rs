@@ -162,10 +162,9 @@ fn check_order(
             if let Some(
                 ProductionItem::Wonder { tile, .. } | ProductionItem::Improvement { tile, .. },
             ) = picked
+                && !state.map.contains(tile)
             {
-                if !state.map.contains(tile) {
-                    return Err("that tile is off the map".to_string());
-                }
+                return Err("that tile is off the map".to_string());
             }
         }
         Order::Raze { city } => {
