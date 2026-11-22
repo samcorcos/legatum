@@ -118,7 +118,7 @@ export function LobbyScreen() {
   const blockers = problems(lobby);
   if (room && !staging) blockers.push('Opening the game room…');
   else if (room && !synced) blockers.push('Saving the latest settings…');
-  else if (room && staging && !everyoneReady(staging)) blockers.push('Waiting for every network seat to be taken and Ready.');
+  else if (room && staging && !everyoneReady(staging)) blockers.push('Waiting for every online seat to be taken and Ready.');
 
   const start = () => {
     if (blockers.length || busy) return;

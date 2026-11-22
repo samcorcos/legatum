@@ -69,9 +69,9 @@ export function GuideContent({ section }: { section: GuideSection }) {
       <div className="guide-modes">
         <section><h4>Single Player</h4><p>You against AI empires. The default is a free-for-all against five AI rivals on a Standard map; change seats and teams in the lobby.</p></section>
         <section><h4>Multiplayer · Hot Seat</h4><p>Share one computer. Each human plans for their own empire, then marks Ready and passes to the next seat.</p></section>
-        <section><h4>Multiplayer · Host Game</h4><p>With the network host running on this computer, set up the game and share its displayed invite address. Keep the host running while you play.</p></section>
-        <section><h4>Multiplayer · Join Game</h4><p>Open the host’s network address in your browser, choose Join Game and take an open human seat.</p></section>
-        <section><h4>Multiplayer · Online</h4><p>In the desktop app, Host Game lists your game so other players can find it. Anyone with the same version can see and join it, so keep the app open while you play. Join Game lists the open games: choose one and press Join.</p></section>
+        <section><h4>Multiplayer · Host Game</h4><p>Your browser tab runs the game and lists it so other players can find it. Anyone with the same version can join. Keep that tab open while you play: closing it ends the game for everyone.</p></section>
+        <section><h4>Multiplayer · Join Game</h4><p>See the games that are open now. Choose one, press Join and take an open human seat.</p></section>
+
       </div>
       <h3>Make the lobby yours</h3>
       <p>Set names, factions, human or AI seats, and team numbers; close unwanted seats. The same team means shared vision, shared victory and no friendly attacks. Other teams start at Peace, with closed borders. Open the Diplomacy inbox from the victory race to negotiate or declare War.</p>

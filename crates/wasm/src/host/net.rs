@@ -337,3 +337,9 @@ impl BrowserHost {
         serde_json::to_string(&self.0.take_recordings()).expect("strings serialize")
     }
 }
+
+/// The rules version a guest must match to join this host (`RoomAnnounce::rules_version`).
+#[wasm_bindgen::prelude::wasm_bindgen]
+pub fn online_rules_version() -> u32 {
+    legatum_core::RULES_VERSION
+}

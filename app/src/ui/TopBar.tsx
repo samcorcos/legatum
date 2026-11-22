@@ -9,7 +9,6 @@ import { BreakdownTable, Icon, Tip, YieldIcon } from './index';
 import { signed } from './bits';
 import { GameMenu } from './GameMenu';
 import { SupplyChips } from './SupplyChips';
-import { InviteLink } from './InviteLink';
 import { Wordmark } from '../brand/ornaments';
 import { itemName } from '../data';
 import { bankruptcyWarning, FORECAST_ASSUMPTIONS } from './forecastWarnings';
@@ -74,7 +73,6 @@ export function TopBar() {
   const bar = useRef<HTMLElement>(null);
   useTopBarCompaction(bar, phone);
   if (!view) return null;
-  const seatsOpen = lan && lan.seats.some((x) => x.seat !== lan.mySeat && !x.connected);
   const e = view.economy;
   const gold = pendingSpend(view, orders ?? [], errors ?? []).gold;
   const bankruptcy = bankruptcyWarning(view);
@@ -170,11 +168,11 @@ export function TopBar() {
         </div>
       </div>
       <div className="tb-right">
-        {lan?.status.is_local && seatsOpen && lan.status.lan_urls.length > 0 && <InviteLink urls={lan.status.lan_urls} compact />}
         {lan && (
           <Tip content={lan.conn === 'open' ? 'Connected to the host' : 'Connection lost: reconnecting automatically'} className={`net ${lan.conn}`}>
             <span className={`conn-dot ${lan.conn === 'open' ? 'on' : 'warn'}`} />
-            {lan.conn === 'open' ? 'LAN' : lan.conn === 'taken' ? 'Seat taken' : 'Reconnecting'}
+            {lan.conn === 'open' ? 'Online' : lan.conn === 'taken' ? 'Seat taken' : 'Reconnecting'}
+
           </Tip>
         )}
         <Tip content={<>{turnTip}<TrainingTip /></>} className="turn">

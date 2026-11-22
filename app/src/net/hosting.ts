@@ -1,0 +1,113 @@
+// This tab's online game, if it hosts one: starts the in-tab host (net/browserHost.ts) on the WASM engine,
+// connects the host's own UI to it, keeps its save so a reload of this tab resumes the game, and files its
+// game histories in the browser's archive like any local game.
+import { setLocalEndpoint } from '../remote';
+import { recordGameHistory } from '../platform/archive';
+import { loadWasmModule } from '../wasmClient';
+import { BrowserHost, type HostEngine, type RoomAnnounce, type RoomKey, type TunnelState } from './browserHost';
+
+/** Per tab: a reload resumes hosting the same room; another tab or a new visit does not. */
+const HOSTING_KEY = 'legatum.online.hosting';
+const SAVE_KEY = 'legatum.online.save';
+
+export interface HostingRecord {
+  relay: string;
+  announce: RoomAnnounce;
+  room: RoomKey;
+}
+
+let active: BrowserHost | null = null;
+
+export function hostingRecord(): HostingRecord | null {
+  try {
+    const raw = globalThis.sessionStorage?.getItem(HOSTING_KEY);
+    const r = raw ? (JSON.parse(raw) as HostingRecord) : null;
+    return r && typeof r.relay === 'string' && typeof r.room?.room === 'string' && typeof r.room.host_key === 'string' ? r : null;
+  } catch {
+    return null;
+  }
+}
+
+function remember(record: HostingRecord | null) {
+  try {
+    if (record) globalThis.sessionStorage?.setItem(HOSTING_KEY, JSON.stringify(record));
+    else {
+      globalThis.sessionStorage?.removeItem(HOSTING_KEY);
+      globalThis.sessionStorage?.removeItem(SAVE_KEY);
+    }
+  } catch {
+    // Storage may be blocked: the game still runs, it just cannot survive a reload.
+  }
+}
+
+function savedGame(): string | null {
+  try {
+    return globalThis.sessionStorage?.getItem(SAVE_KEY) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function keepSave(save: string) {
+  try {
+    globalThis.sessionStorage?.setItem(SAVE_KEY, save);
+  } catch {
+    // Too large or blocked: a reload then starts a fresh room instead of resuming.
+  }
+}
+
+export interface HostingEvents {
+  tunnel?(state: TunnelState): void;
+  /** A game history could not be kept. */
+  error?(message: string): void;
+}
+
+/**
+ * Opens a room on the relay and runs the game in this tab. With `resume` (a reloaded host tab), reconnects to
+ * that room and resumes the saved game. Rejects when the relay cannot be reached.
+ */
+export async function startHosting(relay: string, announce: RoomAnnounce, resume: HostingRecord | null = null, events: HostingEvents = {}): Promise<BrowserHost> {
+  const save = resume ? savedGame() : null;
+  if (active) stopHosting();
+  const mod = (await loadWasmModule()) as unknown as { BrowserHost: new (save?: string | null) => HostEngine };
+  let engine: HostEngine;
+  try {
+    engine = new mod.BrowserHost(save);
+  } catch {
+    // A save this build cannot resume: start clean rather than not at all.
+    engine = new mod.BrowserHost(null);
+  }
+  const host: BrowserHost = new BrowserHost({
+    relay,
+    announce,
+    engine,
+    room: resume?.room ?? null,
+    onSave: keepSave,
+    onRecording: (json) => void recordGameHistory(json).catch((e) => events.error?.(String(e))),
+    onTunnel: (state, room) => {
+      if (active !== host) return;
+      if (state !== 'closed') remember({ relay, announce, room });
+      events.tunnel?.(state);
+    },
+  });
+  try {
+    await host.start();
+  } catch (e) {
+    host.stop();
+    remember(null);
+    throw e;
+  }
+  active = host;
+  remember({ relay, announce, room: host.room! });
+  setLocalEndpoint({ fetch: host.fetch, socket: () => host.socket() });
+  return host;
+}
+
+/** Closes this tab's room for everyone, if it hosts one. */
+export function stopHosting() {
+  const host = active;
+  active = null;
+  setLocalEndpoint(null);
+  remember(null);
+  host?.stop();
+}

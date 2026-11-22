@@ -75,7 +75,7 @@ it('LAN submits client-planned orders before Ready using only the joined seat vi
   view.units.push(foreign);
   const sockets: FakeSocket[] = [];
   vi.stubGlobal('WebSocket', class extends FakeSocket { constructor(url: string) { super(url); sockets.push(this); } });
-  useGame.setState({ client: null, views: null, lan: { status: { mode: 'server', has_game: true, turn: 1, seats: [], lan_urls: [], is_local: false }, seats: [], mySeat: null, conn: 'connecting' } });
+  useGame.setState({ client: null, views: null, lan: { status: { mode: 'server', has_game: true, turn: 1, seats: [], is_local: false }, seats: [], mySeat: null, conn: 'connecting' } });
   useGame.getState().joinSeat(0, 'Explorer');
   const socket = sockets[0]; socket.open();
   socket.push({ type: 'welcome', seat: 0, game_id: 'auto', orders: [] });

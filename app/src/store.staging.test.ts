@@ -2,6 +2,10 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { useGame } from './store';
 import { rememberedSeat } from './remote';
 import { FakeSocket } from './test/fakeSocket';
+import { hostThisTab, joinedFromThisTab } from './test/fakeHosting';
+import { setOnlineApi } from './platform/online';
+
+vi.mock('./net/hosting', async () => (await import('./test/fakeHosting')).fakeHostingModule());
 
 let sockets: FakeSocket[];
 beforeEach(() => {
@@ -20,6 +24,7 @@ beforeEach(() => {
 afterEach(() => {
   useGame.getState().exitStaging();
   useGame.getState().leaveLan();
+  setOnlineApi();
   vi.unstubAllGlobals();
 });
 
@@ -30,7 +35,8 @@ it.each([
   { seat: 0, isLocal: true, host: true },
 ])('restores seat $seat (local: $isLocal) on boot and joins a missed game handoff with the exact credential', async ({ seat, isLocal, host }) => {
   sessionStorage.setItem('legatum.lan.seat', JSON.stringify({ seat, name: 'Alice', gameId: null, roomId: 'room', token: 'credential' }));
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, text: async () => JSON.stringify({ mode: 'server', has_game: false, turn: 0, seats: [], lan_urls: [], is_local: isLocal, staging: null }) }));
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, text: async () => JSON.stringify({ mode: 'server', has_game: false, turn: 0, seats: [], is_local: isLocal, staging: null }) }));
+  if (isLocal) hostThisTab(); else joinedFromThisTab();
   await useGame.getState().boot();
   expect(useGame.getState().screen).toBe(host ? 'setup' : 'staging');
   if (host) expect(useGame.getState().setupMode).toBe('host');
@@ -54,7 +60,7 @@ it('passes the handoff credential directly when browser storage becomes unavaila
 
 it('keeps an explicitly left game at the title on reload while retaining manual rejoin credentials', async () => {
   sessionStorage.setItem('legatum.lan.seat', JSON.stringify({ seat: 1, name: 'Alice', gameId: 'game', token: 'credential', autoJoin: false }));
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, text: async () => JSON.stringify({ mode: 'server', has_game: true, turn: 1, seats: [{ seat: 1, connected: false }], lan_urls: [], is_local: false, staging: null }) }));
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, text: async () => JSON.stringify({ mode: 'server', has_game: true, turn: 1, seats: [{ seat: 1, connected: false }], is_local: false, staging: null }) }));
   await useGame.getState().boot();
   expect(useGame.getState().screen).toBe('title');
   expect(sockets).toHaveLength(0);
@@ -67,7 +73,8 @@ it.each([false, true])('auto-rejoins a reloaded game tab using sessionStorage wh
   sessionStorage.setItem('legatum.lan.seat', JSON.stringify({ seat: 1, name: 'Alice', gameId: 'game', token: 'credential' }));
   const localStorage = { getItem: vi.fn(), setItem: vi.fn() };
   vi.stubGlobal('localStorage', localStorage);
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, text: async () => JSON.stringify({ mode: 'server', has_game: true, turn: 1, seats: [{ seat: 1, reserved: true, connected }], lan_urls: [], is_local: false, staging: null }) }));
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, text: async () => JSON.stringify({ mode: 'server', has_game: true, turn: 1, seats: [{ seat: 1, reserved: true, connected }], is_local: false, staging: null }) }));
+  joinedFromThisTab();
   await useGame.getState().boot();
   sockets[0].open();
   expect(sockets[0].sent).toEqual([{ type: 'join', seat: 1, name: 'Alice', token: 'credential' }]);
@@ -77,7 +84,8 @@ it.each([false, true])('auto-rejoins a reloaded game tab using sessionStorage wh
 
 it('does not automatically claim a seat the host released when this tab still has the old credential', async () => {
   sessionStorage.setItem('legatum.lan.seat', JSON.stringify({ seat: 1, name: 'Alice', gameId: 'game', token: 'old-token' }));
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, text: async () => JSON.stringify({ mode: 'server', has_game: true, turn: 1, seats: [{ seat: 1, reserved: false, connected: false }], lan_urls: [], is_local: false, staging: null }) }));
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, text: async () => JSON.stringify({ mode: 'server', has_game: true, turn: 1, seats: [{ seat: 1, reserved: false, connected: false }], is_local: false, staging: null }) }));
+  joinedFromThisTab();
   await useGame.getState().boot();
   expect(useGame.getState().screen).toBe('join');
   expect(sockets).toHaveLength(0);
@@ -89,7 +97,7 @@ it('does not automatically claim a seat the host released when this tab still ha
 
 it('bootstraps the host seat after an explicit new game even when an older token is remembered', async () => {
   sessionStorage.setItem('legatum.lan.seat', JSON.stringify({ seat: 0, name: 'Host', gameId: 'old', token: 'old-token', autoJoin: false }));
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, text: async () => JSON.stringify({ mode: 'server', has_game: true, turn: 1, seats: [{ seat: 0, reserved: false, connected: false }], lan_urls: [], is_local: true, staging: null }) }));
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, text: async () => JSON.stringify({ mode: 'server', has_game: true, turn: 1, seats: [{ seat: 0, reserved: false, connected: false }], is_local: true, staging: null }) }));
   await useGame.getState().hostNewGame({ seed: '7', width: 24, height: 20, turn_limit: 100, players: [
     { name: 'Host', faction: 'India', team: 0, is_human: true },
     { name: 'Guest', faction: 'Byzantium', team: 1, is_human: true },

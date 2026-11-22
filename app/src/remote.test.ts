@@ -543,19 +543,19 @@ describe('RemoteClient', () => {
   });
 });
 
-describe('server detection', () => {
+describe('online game status', () => {
   const res = (ok: boolean, body: string) => async () => ({ ok, status: ok ? 200 : 404, text: async () => body });
 
-  it('detects server mode from /api/status', async () => {
-    const status = { mode: 'server', has_game: false, turn: 0, seats: [], lan_urls: ['http://10.0.0.2:7878'], is_local: true };
-    expect(await fetchStatus('', res(true, JSON.stringify(status)))).toEqual(status);
+  it('reads the game from /api/status', async () => {
+    const status = { mode: 'server', has_game: false, turn: 0, seats: [], is_local: true };
+    expect(await fetchStatus('https://r/rooms/a', res(true, JSON.stringify(status)))).toEqual(status);
   });
 
-  it('falls back to local mode on 404, HTML or network errors', async () => {
-    expect(await fetchStatus('', res(false, 'nope'))).toBeNull();
-    expect(await fetchStatus('', res(true, '<!doctype html><html>'))).toBeNull();
+  it('is null on 404, HTML or network errors', async () => {
+    expect(await fetchStatus('https://r/rooms/a', res(false, 'nope'))).toBeNull();
+    expect(await fetchStatus('https://r/rooms/a', res(true, '<!doctype html><html>'))).toBeNull();
     expect(
-      await fetchStatus('', async () => {
+      await fetchStatus('https://r/rooms/a', async () => {
         throw new Error('ECONNREFUSED');
       }),
     ).toBeNull();
@@ -563,7 +563,7 @@ describe('server detection', () => {
 
   it('hosts a game with POST /api/game', async () => {
     const calls: { url: string; method?: string; body?: string }[] = [];
-    const status = { mode: 'server', has_game: true, turn: 1, seats: [], lan_urls: [], is_local: true };
+    const status = { mode: 'server', has_game: true, turn: 1, seats: [], is_local: true };
     const out = await hostGame({ seed: '7', width: 48, height: 32, players: [], turn_limit: null }, '', async (url, init) => {
       calls.push({ url, method: init?.method, body: init?.body });
       return { ok: true, status: 200, text: async () => JSON.stringify(status) };

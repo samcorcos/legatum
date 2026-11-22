@@ -36,7 +36,6 @@ export async function pickSaveFile(onLoad: (s: SaveFile) => void | Promise<void>
   }
 }
 
-const NO_URLS: string[] = [];
 
 export function GameMenu() {
   const [open, setOpen] = useState(false);
@@ -50,7 +49,7 @@ export function GameMenu() {
   const hasReport = useGame((s) => !!s.report);
   const kind = useGame((s) => s.client?.kind);
   const leaveLan = useGame((s) => s.leaveLan);
-  const lanUrls = useGame((s) => (s.lan?.status.is_local ? s.lan.status.lan_urls : NO_URLS));
+  const hostHere = useGame((s) => !!s.lan?.status.is_local);
   const client = useGame((s) => s.client);
   const turn = useGame((s) => s.views?.[s.seat]?.turn);
   const archivedSeconds = useMemo(() => archivePlaySeconds(client?.archive?.()), [client, turn]);
@@ -131,8 +130,7 @@ export function GameMenu() {
             <button onClick={() => (goto('title'), setOpen(false))}>Exit to title</button>
           )}
           <div className="menu-foot">
-            {kind === 'remote' ? 'LAN game · the host saves every turn' : 'Autosaved each turn'}
-            {lanUrls[0] && <div>Invite: {lanUrls[0]}</div>}
+            {kind !== 'remote' ? 'Autosaved each turn' : hostHere ? 'Online game · you host it: keep this tab open' : 'Online game · the host keeps the game'}
           </div>
           {/* Troubleshooting only: reachable, but out of the player's way. */}
           <details className="menu-advanced">
@@ -148,7 +146,8 @@ export function GameMenu() {
               }}>Retry history archive</button>
             </>}
             <div className="menu-foot">
-              {kind === 'remote' ? 'LAN client' : 'Core (WASM)'}
+              {kind === 'remote' ? 'Online player' : 'Core (WASM)'}
+
               {hash && <div className="mono">state {hash.slice(0, 10)}…</div>}
             </div>
           </details>
