@@ -2,6 +2,7 @@ import { cancelCelebrationFeedback, feel, useCombatFx } from '../feel';
 import { contextFromViews, formatEvent } from '../format';
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { pendingAlarms, useGame, type TurnReport } from '../store';
+import type { Event as GameEvent } from '../types';
 import { CrestMedallion } from '../brand/ornaments';
 import { playerColor } from '../theme';
 import { useReducedMotion } from '../ui/useReducedMotion';
@@ -71,8 +72,12 @@ export function CelebrationProvider({ children }: { children: ReactNode }) {
   const batch = useMemo(() => {
     // An era-up takeover or unlock card reopened from its report line plays alone, apart from the turn's own story.
     if (reopenedEra && view && !view.finished) {
-      const [again] = momentsForTurn([{ type: 'EraEntered', player: view.me, era: reopenedEra.era, first: reopenedEra.first }], view.me, null, view);
-      return planMoments(again ? [again] : []);
+      // An Age's line replays the score check, after the opener's own era-up; an era line replays the era-up.
+      const { era, first, age } = reopenedEra;
+      const events: GameEvent[] = age != null
+        ? [...(first ? [{ type: 'EraEntered' as const, player: view.me, era, first: true }] : []), { type: 'AgeBegan' as const, era, first: age }]
+        : [{ type: 'EraEntered', player: view.me, era, first }];
+      return planMoments(momentsForTurn(events, view.me, null, view));
     }
     if (reopened && view && !view.finished) {
       const [again] = momentsForTurn([{ type: 'TechResearched', player: view.me, tech: reopened }], view.me, null, view);
@@ -87,6 +92,10 @@ export function CelebrationProvider({ children }: { children: ReactNode }) {
     // A reopened card is asked for, so it never holds the report back.
     if (!alarmUp) setPlay({ report, seat, client, index: 0, started: performance.now(), released: !!useGame.getState().unlockReopen || !!useGame.getState().eraReopen });
   }, [report, seat, client, alarmUp, reopenSeq]);
+  const playRef = useRef(play);
+  playRef.current = play;
+  const shownCount = useRef(0);
+  shownCount.current = batch.shown.length;
   const current = !alarmUp && play?.report === report && play?.seat === seat && play?.client === client;
   // Research picked while a held card waited (behind the research screen) settles the card's "Choose research".
   const researchChosen = useGame((s) => { const v = s.views?.[s.seat]; return !!v && effectiveResearchQueue(s.orders[s.seat] ?? [], v.research).length > 0; });
@@ -96,7 +105,11 @@ export function CelebrationProvider({ children }: { children: ReactNode }) {
   const unlockUp = useRef(false);
   const dismiss = useCallback(() => {
     // A reopened card stands alone: closing it ends that story, never replays the turn's.
-    if (useGame.getState().unlockReopen || useGame.getState().eraReopen) { useGame.getState().set({ unlockReopen: null, eraReopen: null }); setPlay((p) => p ? { ...p, index: 3, released: true } : p); return; }
+    if (useGame.getState().unlockReopen || useGame.getState().eraReopen) {
+      // A reopened Age plays its era-up and score check in turn, then ends.
+      if (playRef.current && playRef.current.index + 1 < shownCount.current) { setPlay((p) => p ? { ...p, index: p.index + 1, started: performance.now(), released: true } : p); return; }
+      useGame.getState().set({ unlockReopen: null, eraReopen: null }); setPlay((p) => p ? { ...p, index: 3, released: true } : p); return;
+    }
     setPlay((p) => p ? { ...p, index: p.index + 1, started: performance.now(), released: true } : p);
   }, []);
   // A card held for the player ignores stray gestures (map pans, taps, an opened report): only its own controls close it.

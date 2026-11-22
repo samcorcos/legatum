@@ -42,7 +42,8 @@
 /* The boxes: solid ink is kept for good, a thick outline is held, gilt is this Age's card, a thin rule is still to win, dashed is still to come. */
 .sc-box { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; font: 700 9px/1 var(--sans); letter-spacing: .02em; }
 .sc-box.kept { background: var(--ink); color: var(--panel); border: 1px solid var(--ink); }
-.sc-box.held { background: var(--field); color: var(--ink); border: 3px solid var(--ink); }
+/* A held point is a point you have: filled like a kept one, hatched to say it can be lost (UI review 2026-11-22). */
+.sc-box.held { background: repeating-linear-gradient(135deg, var(--ink) 0 3px, #5b4a36 3px 5px); color: var(--panel); border: 1px solid var(--ink); }
 .sc-box.new { background: var(--field); color: #7a5a12; border: 2px solid var(--gilt, #8f6f1c); box-shadow: 0 0 6px rgb(236 196 108 / .8); }
 .sc-box.open { background: var(--field); color: var(--rule-2); border: 1px solid var(--rule-2); }
 .sc-box.later { background: transparent; color: var(--rule); border: 1px dashed var(--rule); }
@@ -51,10 +52,12 @@
 .sc-legend { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 0; padding: 6px 16px 7px; list-style: none; border-top: 1px solid var(--rule); font: 400 12px/1.3 var(--sans); color: var(--ink-2); }
 .sc-legend li { display: inline-flex; align-items: center; gap: 6px; }
 .sc-legend .sc-box { width: 14px; height: 14px; }
-.sc-legend .sc-box.held { border-width: 2px; }
 
 @media (max-height: 640px) {
   .sc-body { gap: 9px; }
   .sc-pieces { min-height: 50px; }
   .sc-row { padding-block: 5px; }
 }
+
+/* The primary's focus ring is gilt on a takeover, never the default red that reads as a warning. */
+.score-check [data-primary-action]:focus-visible, .score-check [data-primary-action]:focus { outline: 2px solid var(--gilt, #c9a24a); outline-offset: 3px; }

@@ -43,7 +43,7 @@ describe('the score check model', () => {
     const card = scoreCheckFor(view, 3, view.me);
     const ages = card.lines.find((l) => l.key === 'ages')!;
     expect(ages.boxes.slice(0, 3).map((b) => b.state)).toEqual(['kept', 'new', 'later']);
-    expect(ages.how).toBe('New card: Breach');
+    expect(ages.how).toBe('New card: Breach, capture a city that has Walls');
     expect(ages.fresh).toBe(true);
     expect(ages.open).toBe(1);
     const capitals = card.lines.find((l) => l.key === 'capitals')!;
@@ -61,7 +61,7 @@ describe('the score check model', () => {
     mongols.vp = 10;
     mongols.victory_hold = { turns_held: 6, turns_needed: 10 };
     const card = scoreCheckFor(view, 3, view.me);
-    expect(card.hold).toBe('Mongols holds 10 VP: they win in 4 turns unless someone stops them.');
+    expect(card.hold).toBe('Mongols holds 10 VP and wins in 4 turns unless someone stops them.');
     expect(card.track[10].pieces.map((p) => p.faction)).toEqual(['Mongols']);
   });
 });

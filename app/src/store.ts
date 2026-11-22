@@ -11,6 +11,7 @@ import { create } from 'zustand';
 import type { GameClient, ClientKind } from './client';
 import { createClient } from './client';
 import type {
+  PlayerId,
   AirPick,
   BuildingKind,
   Event,
@@ -189,7 +190,7 @@ interface State {
   /** Counts reopen requests, so asking for the same card twice shows it twice. */
   unlockReopenSeq: number;
   /** Your own era-up whose takeover was reopened from its turn-report line (null: none). Shares `unlockReopenSeq`. */
-  eraReopen: { era: number; first: boolean } | null;
+  eraReopen: { era: number; first: boolean; age?: PlayerId } | null;
   /** The latest turn's report (map cues, celebrations and sounds read this one). */
   report: TurnReport | null;
   /** The last `REPORT_HISTORY` reports, oldest first, for this session; the latest is `report`. */
@@ -353,7 +354,7 @@ interface State {
   /** Show a finished technology's unlock card again (from the turn report). */
   reopenUnlock(tech: TechId): void;
   /** Show an era-up takeover again (from the turn report). */
-  reopenEra(era: number, first: boolean): void;
+  reopenEra(era: number, first: boolean, age?: PlayerId): void;
   set(p: Partial<State>): void;
 }
 
@@ -1718,7 +1719,7 @@ export const useGame = create<State>((set, get) => {
     jumpTo: (hex, clear) => set({ focus: { hex, seq: ++focusSeq, ...(clear ? { clear } : {}) } }),
 
     reopenUnlock: (tech) => set({ unlockReopen: tech, eraReopen: null, unlockReopenSeq: get().unlockReopenSeq + 1 }),
-    reopenEra: (era, first) => set({ eraReopen: { era, first }, unlockReopen: null, unlockReopenSeq: get().unlockReopenSeq + 1 }),
+    reopenEra: (era, first, age) => set({ eraReopen: { era, first, age }, unlockReopen: null, unlockReopenSeq: get().unlockReopenSeq + 1 }),
 
   };
 });

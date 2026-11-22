@@ -152,11 +152,20 @@ for (const size of SIZES) test.describe(`era takeover ${size.width}x${size.heigh
     await expect.poll(() => takeover(page).locator('.et-foot').evaluate((el) => Number(getComputedStyle(el).opacity)), { timeout: 1500 }).toBeGreaterThan(0.95);
     await page.keyboard.press('Escape');
     await expect(takeover(page)).toHaveCount(0);
+    // You opened the Age, so its score check follows; close it too.
+    const check = page.getByTestId('score-check');
+    await expect(check).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(check).toHaveCount(0);
     await expect(page.getByTestId('report-panel')).toBeVisible().catch(() => undefined);
-    await page.getByRole('button', { name: 'Show card' }).first().click();
+    // The Age's line plays both again: your era-up, then the score check.
+    await page.getByRole('button', { name: 'Show score check' }).first().click();
     await expect(takeover(page)).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(takeover(page)).toHaveCount(0);
+    await expect(check).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(check).toHaveCount(0);
   });
 
   test('Return opens research from the takeover', async ({ page }) => {

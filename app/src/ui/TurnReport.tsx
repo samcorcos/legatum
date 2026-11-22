@@ -231,10 +231,10 @@ export function TurnReport({ embedded = false }: { embedded?: boolean }) {
                     <Line className="rline-text"
                       aria-expanded={l.details.length ? isOpen : undefined}
                       aria-controls={l.details.length ? detailsId : undefined}
-                      title={l.reopenTech ? 'Show the unlock card again' : l.reopenEra ? 'Show the era card again' : l.at ? (l.from ? 'Show on the map, with an arrow from the attacker' : 'Show on the map') : undefined}
+                      title={l.reopenTech ? 'Show the unlock card again' : l.reopenEra ? (l.reopenEra.age != null ? 'Show the score check again' : 'Show the era card again') : l.at ? (l.from ? 'Show on the map, with an arrow from the attacker' : 'Show on the map') : undefined}
                       onClick={() => {
                         if (l.reopenTech) { useGame.getState().reopenUnlock(l.reopenTech); return; }
-                        if (l.reopenEra) { useGame.getState().reopenEra(l.reopenEra.era, l.reopenEra.first); return; }
+                        if (l.reopenEra) { useGame.getState().reopenEra(l.reopenEra.era, l.reopenEra.first, l.reopenEra.age); return; }
                         show(l);
                         if (l.details.length) setExpanded(isOpen ? null : id);
                       }}
@@ -254,7 +254,7 @@ export function TurnReport({ embedded = false }: { embedded?: boolean }) {
                     </Line>
                     {l.at && <button className="link rline-show-map" onClick={() => show(l)}>Show on map</button>}
                     {l.reopenTech && <button className="link rline-show-card" onClick={() => useGame.getState().reopenUnlock(l.reopenTech!)}>Show card</button>}
-                    {l.reopenEra && <button className="link rline-show-card" onClick={() => useGame.getState().reopenEra(l.reopenEra!.era, l.reopenEra!.first)}>Show card</button>}
+                    {l.reopenEra && <button className="link rline-show-card" onClick={() => useGame.getState().reopenEra(l.reopenEra!.era, l.reopenEra!.first, l.reopenEra!.age)}>{l.reopenEra.age != null ? 'Show score check' : 'Show card'}</button>}
                     {l.openLedger && <button className="link rline-show-card" onClick={() => set({ vpExpanded: true })}>See how you win</button>}
                     {l.reopenHold && <button className="link rline-show-card" onClick={() => set({ holdReopen: l.reopenHold! })}>Show card</button>}
                     {l.openInboxTeam !== undefined && <button className="btn primary" onClick={() => set({

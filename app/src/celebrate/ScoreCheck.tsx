@@ -8,7 +8,7 @@ import './scoreCheck.css';
 
 const LEGEND: { state: Box['state']; text: string }[] = [
   { state: 'kept', text: 'Scored, kept for good' },
-  { state: 'held', text: 'Held: lost if you lose it' },
+  { state: 'held', text: 'Held: you lose it if you lose the city or goal' },
   { state: 'new', text: 'New this Age' },
   { state: 'open', text: 'Still to win' },
   { state: 'later', text: 'Age to come' },
@@ -53,7 +53,7 @@ export function ScoreCheck({ moment, dismiss }: { moment: Moment; dismiss(): voi
       </section>
 
       <section className="sc-panel sc-sheet" aria-label="Your score sheet" data-testid="score-sheet">
-        <div className="sc-row sc-cols" aria-hidden="true"><span>Your sheet</span><span>Scored and open</span><span>How to score more</span><span>Open</span></div>
+        <div className="sc-row sc-cols" aria-hidden="true"><span>Your sheet</span><span>Scored and open</span><span>How to score more</span><span>VP left</span></div>
         {card.lines.map((l) => <div key={l.key} className={`sc-row${l.fresh ? ' fresh' : ''}`} data-line={l.key}>
           <span className="sc-name"><b>{l.name}</b><small>{l.terms}</small></span>
           <span className="sc-boxes">{l.boxes.map((b, i) => <span key={i} className={`sc-box ${b.state}`} title={b.title} aria-label={b.title}>{b.mark}</span>)}</span>
