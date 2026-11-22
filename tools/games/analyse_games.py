@@ -304,7 +304,8 @@ def build_facts(record: dict, events: list[dict] | None = None, narrative: str |
             L.append("")
             L.append("## Wars (from telemetry)")
             L.append("")
-            for start, end, (a, b) in sorted(wars):
+            # An open war has end None, which can't be compared with a number: sort it last.
+            for start, end, (a, b) in sorted(wars, key=lambda w: (w[0], w[1] is None, w[1] or 0, w[2])):
                 L.append(f"- T{start}–{('T' + str(end)) if end else 'end'}: {seat_label(seats, a)} vs {seat_label(seats, b)}")
         # Human's army versus the strongest neighbour, sampled.
         L.append("")
