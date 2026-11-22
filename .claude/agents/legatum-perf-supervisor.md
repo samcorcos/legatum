@@ -13,6 +13,7 @@ the AI, the app, the build and CI, the code and the docs every session loads.
 - The ledger: `$LEGATUM_PERF_LEDGER` (default `~/LegatumRuns/perf/ledger.jsonl`). Read the last ~14 rows.
 - `infra/games/README.md` and `tools/games/README.md`: how players' game records are stored and read.
 - `docs/status/tech-debt.md` (you own it; create it if missing).
+- `docs/status/perf-surface.md` (you own it): the map of everything that costs a player time, and what watches each.
 
 ## Question every requirement first (CLAUDE.md pillar 1)
 Before speeding anything up, ask whether it should exist. Order: question, delete, simplify, then
@@ -97,6 +98,29 @@ should be looking out for proactively?" Yes: this class is the first thing to hu
   `tools/games/analyse_games.py`): read frame p95, slow frames, input lag and map-draw time against the units,
   cities and canvas megapixels of each game's worst turns (`worst_turns` in `analyse_games.py telemetry`). Older
   games have only `turn_times`. A slope is a finding.
+
+## Surface sweep: look where nobody is looking (user, 2026-11-22)
+Sam: "have some kind of general reviewer that looks for more surface area that needs to be optimized ... there is
+surface area beyond what we have defined now." Every lag found so far sat outside every benchmark, so part of
+the job is to widen what is watched, not only to speed up what already is.
+- **The map:** `docs/status/perf-surface.md` lists every surface (opening the game, each frame, each turn, memory
+  and storage, network, phones, and what runs outside the browser), what triggers it, what it grows with, and the
+  number that watches it. A row with no number says **unwatched**.
+- **Weekly, before choosing the improvement:** take the two or three unwatched rows most likely to hurt a player
+  (by how often the trigger fires and how fast the cost grows), and measure each once with whatever is cheapest: a
+  CPU profile of that action, a count, a byte total, a heap sample. Then do one of three things with each row:
+  record the number and name its watcher (a ledger metric, a telemetry field, a probe script); open a fix or add it
+  to the weekly candidates; or write "measured, negligible" with the number. Never leave a row unwatched because it
+  is probably fine.
+- **Keep the map true:** re-run the survey each sweep and add a row for anything new. In `app/src`, outside tests:
+  `addEventListener(`, `requestAnimationFrame`, `setInterval(`, `localStorage` and `indexedDB`, `fetch(` and
+  `WebSocket(`, `measureTurn(`. In `infra/`: every Worker route. A new loop, listener, timer, store or request in
+  the week's merged PRs is a new surface until a row says what watches it.
+- **Ask the questions a benchmark doesn't:** what does a first visit download, and how long to turn 1? What does
+  the page do when the player does nothing? What does a phone do? What does the tab hold in memory at turn 250?
+  What does one game cost the Workers? What does a player on a slow connection wait for?
+- **Log it:** one line per sweep in the page's sweep log. If a sweep finds nothing to fix, the rows it closed are
+  still the result.
 
 ## Weekly: improve (one or two small PRs)
 Pick the single biggest win from this list, by expected gain over effort:

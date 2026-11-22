@@ -63,30 +63,56 @@ export function landmarkCore(b: { x: number; y: number; s: number }) {
   return { x: b.x + b.s * 0.08, y: b.y + b.s * 0.22, w: b.s * 0.84, h: b.s * 0.68 };
 }
 
-/** Each world wonder fills at least the city's painted footprint on its own wonder tile. */
-export function landmarkBox(c: { x: number; y: number }, hexPx: number, covers: readonly { x: number; y: number; w: number; h: number }[] = []) {
+type Rect = { x: number; y: number; w: number; h: number };
+/** Where a wonder may stand on its tile, as offsets from the centred footprint in hex radii (the first is the centred one). */
+const SPOTS: readonly (readonly [number, number])[] = [[0, 0], [-0.7, 0], [-0.7, 0.55], [0.7, 0], [0.7, 0.55], [0, 0.8]];
+/** The zoom the footprint is chosen at (the opening zoom), so zooming and panning never move a wonder. */
+export const LANDMARK_REF_ZOOM = 0.9;
+
+function boxAt(c: { x: number; y: number }, hexPx: number, spot: readonly [number, number]) {
   const s = hexPx * 3;
-  const base = { x: c.x - s / 2, y: c.y - s * 0.36, s };
-  // Banners and earlier landmarks determine the footprint. Moving units must never be covers.
-  const candidates = [base, ...[-0.7, 0.7].flatMap(dx => [0, 0.55].map(dy => ({ x: base.x + dx * hexPx, y: base.y + dy * hexPx, s }))), { ...base, y: base.y + 0.8 * hexPx }];
-  const overlap = (a: { x: number; y: number; w: number; h: number }, r: { x: number; y: number; w: number; h: number }) =>
+  return { x: c.x - s / 2 + spot[0] * hexPx, y: c.y - s * 0.36 + spot[1] * hexPx, s };
+}
+
+/** The solid part of a city's painted town (walls and towers, not its faded ground), centred on the city's hex. */
+export function townCover(c: { x: number; y: number }, hexPx: number): Rect {
+  return { x: c.x - 0.8 * hexPx, y: c.y - 0.5 * hexPx, w: 1.6 * hexPx, h: 1.2 * hexPx };
+}
+
+/** Which of SPOTS keeps the painting clearest of `covers` (banners and earlier landmarks, never moving units). */
+function landmarkSpot(c: { x: number; y: number }, hexPx: number, covers: readonly Rect[]) {
+  const overlap = (a: Rect, r: Rect) =>
     Math.max(0, Math.min(a.x + a.w, r.x + r.w) - Math.max(a.x, r.x)) * Math.max(0, Math.min(a.y + a.h, r.y + r.h) - Math.max(a.y, r.y));
   // Whole-box overlap keeps clear of banners; the solid core counts twice more so the facade stays clear.
-  const covered = (b: typeof base) => covers.reduce((sum, r) => sum + overlap({ x: b.x, y: b.y, w: s, h: s }, r) + 2 * overlap(landmarkCore(b), r), 0);
-  return candidates.reduce((best, b) => covered(b) < covered(best) ? b : best, base);
+  const covered = (b: ReturnType<typeof boxAt>) => covers.reduce((sum, r) => sum + overlap({ x: b.x, y: b.y, w: b.s, h: b.s }, r) + 2 * overlap(landmarkCore(b), r), 0);
+  let best = SPOTS[0], least = covered(boxAt(c, hexPx, best));
+  for (const spot of SPOTS.slice(1)) { const n = covered(boxAt(c, hexPx, spot)); if (n < least) { best = spot; least = n; } }
+  return best;
+}
+
+/** Each world wonder fills at least the city's painted footprint on its own wonder tile. */
+export function landmarkBox(c: { x: number; y: number }, hexPx: number, covers: readonly Rect[] = []) {
+  return boxAt(c, hexPx, landmarkSpot(c, hexPx, covers));
 }
 
 export type LandmarkBox = ReturnType<typeof landmarkBox>;
 
-/** One deterministic footprint per tile for finished works, sites, and the construction animation. */
-export function landmarkBoxes(sites: readonly { tile: number; hex: Hex }[], toScreen: (p: { x: number; y: number }) => { x: number; y: number }, hexPx: number, banners: readonly { x: number; y: number; w: number; h: number }[]): Map<number, LandmarkBox> {
+/**
+ * One deterministic footprint per tile for finished works, sites, and the construction animation. The spot is chosen at
+ * LANDMARK_REF_ZOOM against `refCovers` (every banner on the map, in world units × LANDMARK_REF_ZOOM), then scaled to the
+ * camera: banners keep a near-fixed pixel size, so choosing at the live zoom made a wonder hop a hex as the player zoomed.
+ */
+export function landmarkBoxes(sites: readonly { tile: number; hex: Hex }[], toScreen: (p: { x: number; y: number }) => { x: number; y: number }, hexPx: number, refCovers: readonly Rect[]): Map<number, LandmarkBox> {
   const boxes = new Map<number, LandmarkBox>();
-  const covers = [...banners];
+  const covers = [...refCovers];
+  const refPx = HEX_SIZE * LANDMARK_REF_ZOOM;
   for (const site of [...sites].sort((a, b) => a.tile - b.tile)) {
     if (boxes.has(site.tile)) continue;
-    const box = landmarkBox(toScreen(hexToPixel(site.hex, HEX_SIZE)), hexPx, covers);
-    boxes.set(site.tile, box);
-    covers.push(landmarkCore(box));
+    const world = hexToPixel(site.hex, HEX_SIZE);
+    const ref = { x: world.x * LANDMARK_REF_ZOOM, y: world.y * LANDMARK_REF_ZOOM };
+    const spot = landmarkSpot(ref, refPx, covers);
+    covers.push(landmarkCore(boxAt(ref, refPx, spot)));
+    boxes.set(site.tile, boxAt(toScreen(world), hexPx, spot));
   }
   return boxes;
 }
