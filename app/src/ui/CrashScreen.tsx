@@ -67,11 +67,11 @@ export function errorDetails(error: unknown, kind: CrashKind, now = new Date()):
   try { agent = navigator.userAgent; } catch { /* keep "unknown" */ }
   return [
     `Legatum error report (${kind === 'engine' ? 'engine did not load' : 'app error'})`,
+    `Error: ${message}`,
+    '',
     `Build: ${build}`,
     `Time: ${now.toISOString()}`,
     `Browser: ${agent}`,
-    '',
-    `Error: ${message}`,
     ...(err?.stack ? ['', 'Stack:', err.stack] : []),
     ...(err && 'cause' in err && err.cause !== undefined ? ['', `Cause: ${String(err.cause)}`] : []),
   ].join('\n');
@@ -116,6 +116,7 @@ export function CrashCard({ error, kind = 'crash', handlers }: { error: unknown;
   const act = { ...DEFAULT_HANDLERS, ...handlers };
   const cardRef = useRef<HTMLDivElement>(null);
   const reloadRef = useRef<HTMLButtonElement>(null);
+  const detailsRef = useRef<HTMLTextAreaElement>(null);
   const [hasSave] = useState(() => readAutosaveText() !== null);
   const [saveNote, setSaveNote] = useState<string | null>(null);
   const [copyNote, setCopyNote] = useState<string | null>(null);
@@ -130,6 +131,11 @@ export function CrashCard({ error, kind = 'crash', handlers }: { error: unknown;
     document.addEventListener('focusin', keep);
     return () => document.removeEventListener('focusin', keep);
   }, []);
+
+  // When copying failed, the text to copy by hand takes focus (its onFocus selects it all).
+  useEffect(() => {
+    if (manual) detailsRef.current?.focus();
+  }, [manual]);
 
   const onKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
     // Return always means Reload, unless another button of the card has focus (then that button acts).
@@ -162,7 +168,7 @@ export function CrashCard({ error, kind = 'crash', handlers }: { error: unknown;
   const sentence = engine
     ? 'The game did not finish loading. Check your connection, then reload the page.'
     : hasSave
-      ? 'The game hit an error. Your last finished turn is saved in this browser.'
+      ? 'The game hit an error. Your last finished turn is saved in this browser. Reload, then choose Continue.'
       : 'The game hit an error. Reload to start again.';
 
   return (
@@ -188,10 +194,11 @@ export function CrashCard({ error, kind = 'crash', handlers }: { error: unknown;
           {hasSave && <button type="button" className="btn" onClick={() => void onSave()}>Save to file</button>}
           <button type="button" className="btn" onClick={() => void onCopy()}>Copy error details</button>
         </div>
-        {(saveNote || copyNote) && (
-          <p className="crash-note" role="status">{[saveNote, copyNote].filter(Boolean).join(' ')}</p>
-        )}
-        {manual && <textarea className="crash-details" readOnly value={manual} aria-label="Error details" rows={6} onFocus={(e) => e.currentTarget.select()} />}
+        <div role="status">
+          {saveNote && <p className="crash-note">{saveNote}</p>}
+          {copyNote && <p className="crash-note">{copyNote}</p>}
+        </div>
+        {manual && <textarea ref={detailsRef} className="crash-details" readOnly value={manual} aria-label="Error details" rows={6} onFocus={(e) => e.currentTarget.select()} />}
       </div>
     </main>
   );

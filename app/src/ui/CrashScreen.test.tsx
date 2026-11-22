@@ -100,13 +100,14 @@ it('a failed copy shows the details to copy by hand', async () => {
   act(() => root.render(<CrashCard error={new Error('x')} handlers={{ reload: vi.fn(), copy }} />));
   await act(async () => button('Copy error details')!.click());
   expect(host.textContent).toContain('Could not copy. Select the text below and copy it.');
+  expect(document.activeElement).toBe(host.querySelector('textarea'));
   expect(host.querySelector('textarea')!.value).toContain('Error: Error: x');
 });
 
 it('the engine card says the engine did not load', () => {
   act(() => root.render(<CrashCard error={new TypeError('Failed to fetch')} kind="engine" handlers={{ reload: vi.fn() }} />));
   expect(host.querySelector('h1')!.textContent).toBe('The game could not load');
-  expect(host.textContent).toContain('Check your connection and reload.');
+  expect(host.textContent).toContain('Check your connection, then reload the page.');
 });
 
 it('a fatal window error reaches the mounted boundary; a benign rejection is only logged', () => {
@@ -146,6 +147,6 @@ it('reads the autosave straight from storage and names the file like Save to fil
 
 it('the details carry the error, build and browser, and nothing from the game', () => {
   const text = errorDetails(new Error('boom'), 'crash', new Date('2026-11-22T10:00:00Z'));
-  expect(text).toMatch(/^Legatum error report \(app error\)\nBuild: .+\nTime: 2026-11-22T10:00:00.000Z\nBrowser: /);
+  expect(text).toMatch(/^Legatum error report \(app error\)\nError: Error: boom\n\nBuild: .+\nTime: 2026-11-22T10:00:00.000Z\nBrowser: /);
   expect(text).toContain('Stack:');
 });

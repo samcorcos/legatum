@@ -25,7 +25,7 @@ afterEach(() => {
 it('a phone-sized touch screen sees the plate first; Continue anyway opens the game and is remembered', () => {
   narrow(true);
   act(() => root.render(<NarrowGate><p>game</p></NarrowGate>));
-  expect(host.textContent).toContain('Legatum is made for a laptop or desktop.');
+  expect(host.textContent).toContain('The map and panels are cramped on a phone. Open Legatum on a laptop or desktop for the full map.');
   expect(host.textContent).not.toContain('game');
   const go = host.querySelector<HTMLButtonElement>('.btn.primary')!;
   expect(go.textContent).toBe('Continue anyway');
