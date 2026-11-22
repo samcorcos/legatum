@@ -83,7 +83,7 @@ for (const size of SIZES) {
       await page.evaluate((v) => { const store = (window as unknown as GameWindow).legatum, s = store.getState(); store.setState({ views: s.views!.map((x, i) => (i === s.seat ? v : x)) }); }, view);
       const line = page.getByRole('complementary', { name: 'Empire sidebar' }).locator('.sidebar-objective');
       await expect(line).toBeVisible();
-      await expect(line).toContainText('Age of Classical · 1 VP');
+      await expect(line).toContainText('Classical Age · 1 VP');
       await expect(line.getByTestId('era-objective')).toHaveCount(1);
       await expect(line.locator('.eo-text')).toHaveText('Veterans');
       await expect(line.locator('.eo-num')).toHaveText('2/4');

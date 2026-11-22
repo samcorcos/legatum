@@ -39,7 +39,7 @@ describe('the compact block (the default)', () => {
     expect(el.querySelectorAll('[data-testid=era-objective]')).toHaveLength(0);
     const line = el.querySelector('[data-testid=era-glance]')!;
     // The newest Age you have not scored leads: the rival began the Medieval Age, and it is open to you too.
-    expect(line.querySelector('.eo-g-tag')?.textContent).toMatch(/^Age of Medieval · 1 VP( each)?$/);
+    expect(line.querySelector('.eo-g-tag')?.textContent).toMatch(/^Medieval Age · 1 VP( each)?$/);
     // Population 30/40 is nearest done (75%, against 43% and 0%).
     expect(line.querySelector('.eo-num')?.textContent).toBe('30/40');
   });

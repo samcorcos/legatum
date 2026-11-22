@@ -9,7 +9,7 @@ import { cardName } from '../ageCards';
 import { eraObjectivesFor } from '../eraObjectives';
 import { empireOfPlayer } from '../empires';
 import { distance } from '../hex';
-import { roman } from '../brand/ornaments';
+import { roman } from '../brand/roman';
 import { playerColor } from '../theme';
 
 /** How a box on your sheet is filled: kept for good, held (lost with its city or item), new this Age, open, or an Age still to come. */

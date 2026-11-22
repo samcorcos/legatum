@@ -116,7 +116,7 @@ for (const size of SIZES) test.describe(`unit panel ${size.name}`, () => {
       await expect(panel.locator('.up-hints .hint')).toBeInViewport({ ratio: 1 });
     }
     if (scenario === 'resource-blocked') {
-      const ironReason = panel.locator('.improve-reason', { hasText: 'need 1 Iron. All 2 Iron are in use' });
+      const ironReason = panel.locator('.improve-reason', { hasText: 'need 1 Iron. Your 2 Iron are all in use' });
       await expect(ironReason.first()).toBeVisible();
       await expect(ironReason.first().locator('.resource-reason-link')).toHaveAttribute('aria-label', 'Open Iron supply');
       for (const button of await panel.locator('.improve-row button.act').all()) await expect(button).toBeDisabled();

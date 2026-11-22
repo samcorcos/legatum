@@ -131,7 +131,7 @@ export function glance(hud: EraHud, members = 1): Glance {
   const { focus } = hud;
   // The stake stays in the line: what the objective scores, and which era it is in.
   const vp = members > 1 ? '1 VP each' : '1 VP';
-  const tag = focus.state === 'preview' ? `Next: ${vp} in ${focus.name}` : focus.state === 'scored' ? focus.name : `Age of ${focus.name} · ${vp}`;
+  const tag = focus.state === 'preview' ? `Next: ${vp} in ${focus.name}` : focus.state === 'scored' ? focus.name : `${focus.name} Age · ${vp}`;
   if (focus.state === 'scored') return { tag, line: null };
   const line = focus.lines.reduce<ObjectiveLine | null>((best, l) => (!best || suggestionRank(l) > suggestionRank(best) ? l : best), null);
   return { tag, line };

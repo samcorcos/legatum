@@ -130,7 +130,7 @@
 .right-sidebar .sidebar-objective { padding-block: 5px; }
 .right-sidebar .sidebar-objective-stake { font: 500 12px var(--sans); margin: 0 0 0 auto; }
 .right-sidebar .sidebar-section-link { align-items: center; gap: 6px; margin-bottom: 5px; }
-/* A World Age's line ("Age of Classical · 1 VP") has its own row under the heading, so a narrow rail never wraps it into the title. */
+/* A World Age's line ("Classical Age · 1 VP") has its own row under the heading, so a narrow rail never wraps it into the title. */
 .right-sidebar .sidebar-section-link.age { flex-wrap: wrap; }
 .right-sidebar .sidebar-section-link.age .sidebar-objective-stake { order: 2; flex: 1 0 100%; margin: 0; text-align: left; }
 .right-sidebar .vhc-hold-meter { height: 5px; }

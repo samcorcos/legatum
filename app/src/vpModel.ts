@@ -10,7 +10,7 @@ import {
   BUILDING_NAME, FACTION_GOAL, FACTION_INFO, GREAT_WORK_ICON, GREAT_WORK_NAME, GREAT_WORK_RULE,
   factionGoalRule, factionGoalTerms, factionGoalVp, decadenceRules, factionObjectiveText, isGreatWork, type DecadenceRules,
 } from './data';
-import { roman } from './brand/ornaments';
+import { roman } from './brand/roman';
 import { isBarbarian } from './barbarians';
 import { cappedGoalLabel } from './ui/goalText';
 import { empireOfPlayer, livingPlayers } from './empires';

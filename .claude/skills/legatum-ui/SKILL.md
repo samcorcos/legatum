@@ -81,6 +81,8 @@ This file holds the current rules, one line each. The user's words, dates, as-bu
 - **One Return on screen:** a moment card has one filled primary with Return ("Show on map", "Choose production" or "Continue"; no Turn report button, L opens it). While a moment card or interstitial owns Return, the dock's call to action steps back and drops its key chip. An interstitial's primary is ink, red only when the act is hostile (Declare war).
 - **1000x600 room:** the city panel's sticky head carries the yields row; a unit's idle orders sit above Improve; an empty This Turn is hidden; the Default lens is a small "Lens" chip beside a selection's panel; a top-bar status chip never grows a sentence (extra words go in its tooltip: "6 / 2" in red, "4 over the cap" in the tip).
 - **City banners draw above units** when zoomed in (Civ 6); a unit behind a banner is lifted so its head shows, and a click on the banner goes to the city's hex. Tour: `e2e/tour/unit-north.spec.ts`.
+- **A shortage sentence states the gap, never "N in use" above supply** (in use can't exceed supply): "Siege needs 1 Iron. You are already 2 Iron short: claim another Iron deposit or build a Mine (+1)."
+- **Tour helpers import only modules without `?url` asset imports** (Playwright can't load them): keep pure helpers such as `roman` in `brand/roman.ts`, not in an asset-importing `.tsx`.
 - **Copy changes update tour assertions in the same change:** grep `app/e2e/tour` for the old string; the tour is not in local CI.
 
 ## Game text: plain language

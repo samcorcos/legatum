@@ -126,5 +126,4 @@ export function CrestMedallion({ faction, size = 26, color }: { faction: string;
   );
 }
 
-const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
-export const roman = (n: number) => ROMAN[n - 1] ?? String(n);
+export { roman } from './roman';

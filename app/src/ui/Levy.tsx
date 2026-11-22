@@ -11,7 +11,7 @@ import './Levy.css';
 export const LEVY_CHIP_LABEL = 'Military units';
 const levyText = (l: LevyView) => `${LEVY_CHIP_LABEL} ${l.units} / ${l.cap}`;
 /** What the count means once it reaches the cap: "full" at the cap, "N over the cap" past it (nothing is disbanded). */
-const levyState = (l: LevyView) => l.units > l.cap ? `${l.units - l.cap} over the cap` : l.units === l.cap ? 'full' : '';
+const levyState = (l: LevyView) => l.units > l.cap ? `${l.units - l.cap} over the limit` : l.units === l.cap ? 'full' : '';
 const levyFull = (l: LevyView) => l.units >= l.cap;
 /** The viewer's own levy, when their faction has one. */
 const ownLevy = (view: PlayerView | null | undefined): LevyView | undefined => view?.players.find((p) => p.id === view.me)?.levy;
