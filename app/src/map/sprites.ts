@@ -777,6 +777,8 @@ export interface BannerMeter {
   auto?: { label: string; icon: string };
   /** The icon is a label, not an item in progress: ink, not the meter's colour. */
   inkIcon?: boolean;
+  /** An exact icon colour (a yield's ink for a Gold, Science or Food focus), over `paused` and `inkIcon`. */
+  iconColor?: string;
 }
 
 /** Food green and production orange, matching --y-food in brand/tokens.css. */
@@ -797,7 +799,7 @@ export function bannerMetersSize(look: LookId, meters: BannerMeter[], dpr: numbe
 }
 
 function metersSprite(look: LookId, meters: BannerMeter[], dpr: number): Sprite {
-  const key = meters.map((m) => `${m.kind}:${m.fraction}:${m.text}:${m.bad ? 1 : 0}:${m.paused ? 1 : 0}:${m.icon ?? ''}:${m.inkIcon ? 1 : 0}:${m.auto ? `${m.auto.label}/${m.auto.icon}` : ''}`).join(',');
+  const key = meters.map((m) => `${m.kind}:${m.fraction}:${m.text}:${m.bad ? 1 : 0}:${m.paused ? 1 : 0}:${m.icon ?? ''}:${m.inkIcon ? 1 : 0}:${m.iconColor ?? ''}:${m.auto ? `${m.auto.label}/${m.auto.icon}` : ''}`).join(',');
   return cached(`meters|${look}|${key}|${dpr}`, () => {
     const font = `700 11px ${FONTS[look].sans}`;
     const [, m] = canvas(1, 1, 1);
@@ -822,7 +824,7 @@ function metersSprite(look: LookId, meters: BannerMeter[], dpr: number): Sprite 
         else { g.fillStyle = color; g.beginPath(); g.arc(cx + icon / 2, mid, icon / 2 - 1, 0, Math.PI * 2); g.fill(); }
       } else if (mt.icon) {
         // Production: the icon of the item being built.
-        const ic = tintedIcon(mt.icon, mt.inkIcon ? INK.atlas.ink : color, icon * dpr);
+        const ic = tintedIcon(mt.icon, mt.iconColor ?? (mt.inkIcon ? INK.atlas.ink : color), icon * dpr);
         if (ic) g.drawImage(ic, cx, mid - icon / 2, icon, icon);
         else { g.fillStyle = color; g.beginPath(); g.arc(cx + icon / 2, mid, icon / 2 - 1, 0, Math.PI * 2); g.fill(); }
       } else {

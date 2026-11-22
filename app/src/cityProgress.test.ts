@@ -2,6 +2,7 @@
 import { expect, it } from 'vitest';
 import { claimSummary, growthProgress, productionProgress, territoryCounts } from './cityProgress';
 import { bannerMeters } from './map/render';
+import { YIELD_FILL } from './map/yieldIcons';
 import { FixtureClient } from './test/fixtureEngine';
 import { progressFixture } from './test/progressFixture';
 import type { CityDetail, CityView, PlayerView, ProductionOption } from './types';
@@ -118,7 +119,7 @@ it('production meter shows a distinct "choose" state for an idle city', () => {
 it('an automated idle city shows its focus on the banner, not the red "Build" prompt', () => {
   const { city } = cityWithDetail({ producing: null, production_queue: [] });
   expect(bannerMeters(city, undefined, 'Science').find((m) => m.kind === 'production'))
-    .toEqual({ kind: 'production', fraction: 0, text: 'Auto', paused: true, icon: 'yield-science', inkIcon: true });
+    .toEqual({ kind: 'production', fraction: 0, text: 'Auto', paused: true, icon: 'yield-science', iconColor: YIELD_FILL.science });
 });
 
 it('an automated city that is building carries the Auto mark inside its meter strip', () => {
