@@ -5,6 +5,7 @@
 //! the `#[wasm_bindgen]` methods only convert errors to `JsError`.
 
 pub mod history;
+pub mod host;
 pub mod json;
 pub mod rusher;
 pub mod scenario;

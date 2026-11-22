@@ -4,7 +4,7 @@
 #   tools/cloud/remote.sh <worktree> --npm --artifact .progress/pw-sweep -- bash tools/ops/pw-sweep.sh chromium 12 24 36 48
 #   tools/cloud/remote.sh <worktree> --npm --artifact .progress/pw-sweep -- bash tools/ops/pw-sweep.sh webkit 4 8 16 24
 #
-# Builds the WASM package, the app and the release server once, then runs the same Playwright command at each worker
+# Builds the WASM package and the static e2e web dist (relay on 127.0.0.1:8787) once, then runs the same Playwright command at each worker
 # count and writes one TSV row each to .progress/pw-sweep/<engine>.tsv: workers, wall seconds, load average before and
 # after, counts, failures by class, screenshots written. The specs are whatever LEGATUM_SWEEP_SPECS says (default: all
 # game specs for chromium; the screen tour and exit-to-title for webkit, as the release check runs them).
@@ -13,9 +13,7 @@ engine="${1:?engine: chromium or webkit}"; shift
 [ "$#" -ge 1 ] || { echo "usage: pw-sweep.sh chromium|webkit WORKERS..." >&2; exit 2; }
 out=".progress/pw-sweep"; mkdir -p "$out"
 scripts/build-wasm.sh
-( cd app && npm run build )
-cargo build --release -p legatum-server
-mkdir -p target/debug && ln -sf "$PWD/target/release/legatum-server" target/debug/legatum-server
+LEGATUM_RELAY_URL=http://127.0.0.1:8787 scripts/build-web.sh --skip-wasm
 if [ "$engine" = webkit ]; then
   specs="${LEGATUM_SWEEP_SPECS:-e2e/tour e2e/exit-to-title.spec.ts}"; timeout=120000
 else

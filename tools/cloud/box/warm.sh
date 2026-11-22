@@ -32,7 +32,7 @@ step() { echo "== $*"; "$@" || { echo "FAILED: $*"; fail=$((fail + 1)); }; }
 step cargo fetch --locked
 step cargo clippy --workspace --all-targets --release -- -D warnings
 step cargo test --workspace --profile release-checked --no-run
-step cargo build --release -p legatum-sim -p legatum-server
+step cargo build --release -p legatum-sim
 step scripts/build-wasm.sh
 [ ! -f app/package.json ] || { cd app && step npm run build; }
 echo "warm done, $fail failed step(s)"

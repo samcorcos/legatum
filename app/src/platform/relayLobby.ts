@@ -21,6 +21,9 @@ export const LOBBY_POLL_MS = 3000;
 /** Shown in the game room while a relayed game's host is away. */
 export const HOST_AWAY = 'The host is not connected right now.';
 
+/** Shown to the host while its game cannot be reached through the relay. */
+export const HOST_OFFLINE = 'Other players cannot reach your game right now. Reconnecting…';
+
 type FetchLike = (url: string, init?: { signal?: AbortSignal; cache?: 'no-store' }) => Promise<{ ok: boolean; json(): Promise<unknown> }>;
 
 const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : 0);

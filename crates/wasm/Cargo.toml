@@ -26,6 +26,8 @@ js-sys = "0.3"
 # Native sessions plan AI seats in parallel (`Session::ai_orders`); WASM stays single-threaded.
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 rayon.workspace = true
+# Online seat credentials outside the browser (tests); in WASM they come from crypto.getRandomValues.
+getrandom = "0.3"
 
 [features]
 # Measurement builds: time each AI seat's planning in `Session::ai_orders` (docs/sim-results/perf).
