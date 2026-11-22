@@ -1,6 +1,6 @@
 use super::*;
 use crate::experiments::RuleExperiments;
-use crate::rules::cities::tests::{P0, P1, P2, at, found, test_game, two_players};
+use crate::rules::cities::tests::{P0, P1, at, found, test_game, two_players};
 use crate::rules::test_support::know_eras_before;
 use crate::{Event, TechId, economy};
 
@@ -19,12 +19,16 @@ fn run(state: &mut GameState) -> Vec<Event> {
 /// A World Age setup whose era-`era` draw satisfies `want`.
 fn age_setup(era: u8, want: impl Fn(&[Objective]) -> bool) -> crate::state::GameSetup {
     (1..400)
-        .map(|seed| {
-            let mut s = setup(seed);
-            s.rule_experiments.apply("objectives=deck").unwrap();
-            s
-        })
+        .map(setup)
         .find(|s| want(&era_objectives(s, era)))
+        .expect("some seed draws it")
+}
+
+/// A setup whose draws satisfy `want` (seeds 1..400).
+fn setup_where(want: impl Fn(&crate::state::GameSetup) -> bool) -> crate::state::GameSetup {
+    (1..400)
+        .map(setup)
+        .find(|s| want(s))
         .expect("some seed draws it")
 }
 
@@ -52,16 +56,15 @@ fn player_view_eras(s: &GameState, p: PlayerId) -> Vec<u8> {
 #[test]
 fn every_age_draws_one_card_from_its_pool() {
     let mut s = setup(71);
-    s.rule_experiments.apply("objectives=deck").unwrap();
     for era in 2..=7 {
         let pool = age_pool(era);
-        assert_eq!(pool.len(), if era >= 4 { 4 } else { 3 });
+        assert_eq!(pool.len(), if era >= 4 { 7 } else { 6 });
         for seed in 1..60 {
             s.seed = seed;
             let cards = era_objectives(&s, era);
             assert_eq!(cards.len(), 1);
             assert_eq!(cards, era_objectives(&s, era), "same seed, same draw");
-            assert!(pool.contains(&cards[0]));
+            assert!(scaled_pool(&s, era).contains(&cards[0]));
         }
     }
     assert!(era_objectives(&s, 1).is_empty());
@@ -70,6 +73,45 @@ fn every_age_draws_one_card_from_its_pool() {
             .iter()
             .all(|c| !matches!(c, Objective::Cities { .. }))
     );
+}
+
+/// The peaceful cards (owner, 2026-11-22, via the review: Ages leaned on war): every Age offers
+/// Patrons, Prosperity and Frontier, and Patrons asks for a building every faction can raise
+/// (the Library line or the Bank, never the Workshop line Egypt lacks or Walls the Mongols lack).
+#[test]
+fn every_age_offers_three_peaceful_cards_every_faction_can_reach() {
+    for era in 2..=data::era_count() {
+        let pool = age_pool(era);
+        let peaceful: Vec<&Objective> = pool
+            .iter()
+            .filter(|o| o.family() != Family::Fight && !matches!(o, Objective::Cities { .. }))
+            .collect();
+        assert_eq!(peaceful.len(), 3, "Age {era}: {pool:?}");
+        assert!(
+            pool.iter()
+                .any(|o| matches!(o, Objective::Population { .. }))
+        );
+        assert!(
+            pool.iter()
+                .any(|o| matches!(o, Objective::Territory { .. }))
+        );
+        let Some(Objective::Buildings { building, .. }) = pool
+            .iter()
+            .find(|o| matches!(o, Objective::Buildings { .. }))
+        else {
+            panic!("Age {era} has a Patrons card");
+        };
+        assert!(
+            matches!(
+                data::building_family(*building),
+                BuildingKind::Laboratory | BuildingKind::Clearinghouse | BuildingKind::Market
+            ),
+            "Age {era}: {building:?}"
+        );
+        assert!(pool.iter().filter(|o| o.family() == Family::Fight).count() >= 3);
+    }
+    assert!(age_pool(1).is_empty());
+    assert!(age_pool(data::era_count() + 1).is_empty());
 }
 
 #[test]
@@ -116,7 +158,7 @@ fn the_first_empire_to_enter_an_era_opens_it_for_everyone_and_future_ages_stay_h
 }
 
 #[test]
-fn an_age_begins_once_when_the_first_empire_enters_its_era_and_only_in_deck_games() {
+fn an_age_begins_once_when_the_first_empire_enters_its_era() {
     let last = TechId::Writing;
     let enter = |s: &mut GameState, p: PlayerId| {
         know_eras_before(s, p, 1);
@@ -146,10 +188,6 @@ fn an_age_begins_once_when_the_first_empire_enters_its_era_and_only_in_deck_game
     crate::eras::learn(&mut s, P0, TechId::Mathematics, &mut ev);
     scoring::update(&mut s, &mut ev);
     assert_eq!(began(&ev), [Event::AgeBegan { era: 3, first: P0 }]);
-    // Default rules: the era is entered, but no Age begins.
-    let mut d = two_players();
-    assert!(!d.setup.rule_experiments.objectives_deck);
-    assert!(began(&enter(&mut d, P0)).is_empty());
 }
 
 fn veterans_age() -> GameState {
@@ -255,11 +293,10 @@ fn the_tribute_and_monument_cards_are_gone_and_every_age_still_has_cards() {
             "Age {era}: {pool:?}"
         );
         for seed in 1..200 {
-            let mut setup = setup(seed);
-            setup.rule_experiments.apply("objectives=deck").unwrap();
+            let setup = setup(seed);
             let drawn = era_objectives(&setup, era);
             assert_eq!(drawn.len(), 1, "Age {era}, seed {seed}");
-            assert!(pool.contains(&drawn[0]));
+            assert!(scaled_pool(&setup, era).contains(&drawn[0]));
         }
     }
     assert!(
@@ -320,7 +357,6 @@ fn humble_the_mighty_and_breach_skip_capitals_and_wonder_cities() {
     take(&mut s, capital);
     take(&mut s, wonder);
     let f = s.player(P0).fight;
-    assert_eq!((f.captures, f.from_ahead), (2, 2));
     assert_eq!(
         (f.humbled, f.walled),
         (0, 0),
@@ -359,57 +395,35 @@ fn a_celtic_sack_of_a_walled_city_counts_as_a_breach() {
         }
     )));
     record_fights(&mut s, &events, &vp);
-    assert_eq!(s.player(P0).fight.captures, 1);
     assert_eq!(s.player(P0).fight.walled, 1);
 }
 
 #[test]
 fn deck_vp_hold_needs_no_city_capture() {
     let mut s = two_players();
-    s.setup.rule_experiments.apply("objectives=deck").unwrap();
     s.setup.rule_experiments.vp_target = Some(1);
     s.player_mut(P0).faction_goal_done = true;
     assert!(scoring::team_vp(&s, s.team_of(P0)) >= 1);
-    assert_eq!(s.player(P0).fight.captures, 0);
     run(&mut s);
     assert_eq!(s.vp_holds.get(&s.team_of(P0)), Some(&1));
 }
 
 #[test]
-fn every_era_after_the_first_has_one_objective_per_family_and_is_seed_deterministic() {
+fn every_age_card_is_seed_deterministic_and_varies_by_seed() {
     assert!(era_objectives(&setup(7), 1).is_empty());
     assert!(era_objectives(&setup(7), data::era_count() + 1).is_empty());
     for era in 2..=data::era_count() {
-        let a = era_objectives(&setup(7), era);
         assert_eq!(
-            a.iter().map(|o| o.family()).collect::<Vec<_>>(),
-            Family::ALL.to_vec()
-        );
-        assert_eq!(a, era_objectives(&setup(7), era), "same seed, same draw");
-        assert!(
-            a.iter()
-                .all(|o| era_pool(era).iter().any(|p| p.family() == o.family()))
+            era_objectives(&setup(7), era),
+            era_objectives(&setup(7), era)
         );
     }
-    // Different seeds must be able to draw different objectives somewhere.
+    // Different seeds must be able to draw different cards somewhere.
     let varied = (0..40u64).any(|seed| {
         (2..=data::era_count())
             .any(|era| era_objectives(&setup(seed), era) != era_objectives(&setup(7), era))
     });
     assert!(varied);
-}
-
-#[test]
-fn pools_cover_every_family_for_every_era() {
-    for era in 2..=data::era_count() + 3 {
-        let pool = era_pool(era);
-        for f in Family::ALL {
-            assert!(
-                pool.iter().filter(|o| o.family() == f).count() >= 2,
-                "era {era} {f:?}"
-            );
-        }
-    }
 }
 
 #[test]
@@ -456,7 +470,7 @@ fn great_works_score_directly() {
     assert!(crate::scoring::vp(&s, P0).contains(&(VpSource::GreatWork { of: P0 }, 2)));
 }
 
-/// Gain what the era's Expand objective asks for (cities, population or territory).
+/// Gain what the Age's Expand card asks for (cities, population or territory).
 fn gain_expand(s: &mut GameState, era: u8) {
     let expand = era_objectives(&s.setup, era)
         .into_iter()
@@ -472,7 +486,7 @@ fn gain_expand(s: &mut GameState, era: u8) {
             found(s, P0, at(3, 3));
             found(s, P0, at(9, 3));
             for c in s.cities.values_mut() {
-                c.population = 40;
+                c.population = 60;
             }
             for t in s.map.tiles.iter_mut() {
                 t.owner = Some(P0);
@@ -481,9 +495,13 @@ fn gain_expand(s: &mut GameState, era: u8) {
     }
 }
 
+fn expand_card(cards: &[Objective]) -> bool {
+    cards[0].family() == Family::Expand
+}
+
 #[test]
-fn an_era_is_scored_once_entered_by_meeting_one_objective_and_stays_open_otherwise() {
-    let mut s = two_players();
+fn an_age_is_scored_once_by_meeting_its_card_and_stays_open_otherwise() {
+    let mut s = age_game(age_setup(2, expand_card));
     // Not entered yet: nothing is recorded.
     run(&mut s);
     assert_eq!(s.player(P0).eras.len(), 0);
@@ -515,7 +533,7 @@ fn an_era_is_scored_once_entered_by_meeting_one_objective_and_stays_open_otherwi
     gain_expand(&mut s, 2);
     let ev = run(&mut s);
     assert!(ev.iter().any(
-        |e| matches!(e, Event::EraObjectiveScored { player, era: 2, slot: 1, .. } if *player == P0)
+        |e| matches!(e, Event::EraObjectiveScored { player, era: 2, slot: 0, .. } if *player == P0)
     ));
     assert!(scoring::vp(&s, P0).contains(&(VpSource::EraObjective { era: 2 }, 1)),);
     // Only once.
@@ -524,15 +542,13 @@ fn an_era_is_scored_once_entered_by_meeting_one_objective_and_stays_open_otherwi
         !ev.iter()
             .any(|e| matches!(e, Event::EraObjectiveScored { .. }))
     );
-    // The other empire never met anything: era 2 stays open for it.
-    know_eras_before(&mut s, P1, 1);
-    run(&mut s);
+    // The other empire never met anything: the Age stays open for it.
     assert!(s.player(P1).eras[&2].scored.is_none());
 }
 
 #[test]
-fn what_an_empire_held_when_it_entered_an_era_does_not_count_for_it() {
-    let mut s = two_players();
+fn what_an_empire_held_when_an_age_began_does_not_count_for_it() {
+    let mut s = age_game(age_setup(2, expand_card));
     gain_expand(&mut s, 2);
     know_eras_before(&mut s, P0, 1);
     let ev = run(&mut s);
@@ -543,27 +559,29 @@ fn what_an_empire_held_when_it_entered_an_era_does_not_count_for_it() {
     for o in era_objectives(&s.setup, 2) {
         assert_eq!(o.progress(&s, P0, 2), 0, "{}", o.text());
     }
-    // Before entering an era, nothing counts for it either.
+    // Before an Age begins, nothing counts for it either.
     for o in era_objectives(&s.setup, 3) {
         assert_eq!(o.progress(&s, P0, 3), 0, "{}", o.text());
     }
 }
 
 #[test]
-fn the_view_reports_the_count_baseline_total_turn_and_other_open_eras() {
-    let mut s = two_players();
+fn the_view_reports_the_count_baseline_total_turn_and_other_open_ages() {
+    let mut s = age_game(setup_where(|s| {
+        expand_card(&era_objectives(s, 3)) && fight_card(&era_objectives(s, 2))
+    }));
     found(&mut s, P0, at(3, 3));
     know_eras_before(&mut s, P0, 2);
     s.turn = 112;
     run(&mut s);
-    let o = era_objectives(&s.setup, 3)[1];
+    let o = era_objectives(&s.setup, 3)[0];
     let (base, total) = o
         .count_accounting(&s, P0, 3)
         .expect("Expand is a gain count");
     let accounting = crate::player_view(&s, P0).objective_accounting;
     let line = accounting
         .iter()
-        .find(|p| p.era == 3 && p.slot == 1)
+        .find(|p| p.era == 3 && p.slot == 0)
         .unwrap();
     assert_eq!(
         (line.baseline, line.total, line.counting_since_turn),
@@ -573,21 +591,27 @@ fn the_view_reports_the_count_baseline_total_turn_and_other_open_eras() {
     s.turn = 113;
     win_fights(&mut s, P0);
     run(&mut s);
+    assert!(s.player(P0).eras[&2].scored.is_some());
     assert_eq!(s.player(P0).eras[&3].counting_since, 113);
 }
 
-/// Pile up enough fights to meet any Fight objective of the first eras.
+/// Pile up enough fights to meet any fight card.
 fn win_fights(s: &mut GameState, p: PlayerId) {
     let f = &mut s.player_mut(p).fight;
-    f.captures += 100;
-    f.from_ahead += 100;
-    f.from_leader += 100;
-    f.kills += 1000;
+    f.humbled += 100;
+    f.walled += 100;
+    f.promotions += 100;
+}
+
+fn fight_card(cards: &[Objective]) -> bool {
+    cards[0].family() == Family::Fight
 }
 
 #[test]
-fn one_event_scores_one_era_and_an_older_open_era_needs_fresh_work() {
-    let mut s = two_players();
+fn one_event_scores_one_age_and_an_older_open_age_needs_fresh_work() {
+    let mut s = age_game(setup_where(|s| {
+        fight_card(&era_objectives(s, 2)) && fight_card(&era_objectives(s, 3))
+    }));
     // Entering eras 2 and 3 on the same turn.
     know_eras_before(&mut s, P0, 2);
     run(&mut s);
@@ -623,8 +647,8 @@ fn one_event_scores_one_era_and_an_older_open_era_needs_fresh_work() {
 }
 
 #[test]
-fn gains_count_from_the_last_era_score_for_cities_population_and_territory() {
-    let mut s = two_players();
+fn gains_count_from_the_last_age_score_for_cities_population_and_territory() {
+    let mut s = age_game(age_setup(2, fight_card));
     know_eras_before(&mut s, P0, 2);
     run(&mut s);
     found(&mut s, P0, at(3, 3));
@@ -679,44 +703,6 @@ fn a_buildings_objective_counts_cities_that_gained_the_building() {
     assert_eq!(o.progress(&s, P0, 2), 1);
 }
 
-#[test]
-fn captures_and_kills_count_from_the_turn_the_era_was_entered() {
-    let mut s = test_game(&[
-        (Faction::Byzantium, 0),
-        (Faction::Athens, 1),
-        (Faction::Byzantium, 2),
-    ]);
-    let c = found(&mut s, P1, at(10, 10));
-    found(&mut s, P2, at(3, 15));
-    // P1 is the strict VP leader, and ahead of P0.
-    s.player_mut(P1).faction_goal_done = true;
-    let event = |from, to| Event::CityCaptured {
-        city: c,
-        from,
-        to,
-        bounty: None,
-    };
-    // A capture before P0 has entered era 2 is banked in `fight` but not counted for era 2.
-    let mut ev = vec![event(P1, P0)];
-    run_with(&mut s, &mut ev);
-    let f = s.player(P0).fight;
-    assert_eq!((f.captures, f.from_ahead, f.from_leader), (1, 1, 1));
-    know_eras_before(&mut s, P0, 1);
-    run(&mut s);
-    assert_eq!(
-        Objective::Captures { n: 1 }.progress(&s, P0, 2),
-        0,
-        "earlier captures do not count for the era"
-    );
-    let mut ev = vec![event(P2, P0)];
-    run_with(&mut s, &mut ev);
-    assert_eq!(Objective::Captures { n: 1 }.progress(&s, P0, 2), 1);
-    assert_eq!(
-        Objective::CapturesFromLeader { n: 1 }.progress(&s, P0, 2),
-        0
-    );
-}
-
 fn give_era_points(state: &mut GameState, player: PlayerId, points: u8) {
     for era in 2..2 + points {
         state.player_mut(player).eras.insert(
@@ -729,20 +715,16 @@ fn give_era_points(state: &mut GameState, player: PlayerId, points: u8) {
     }
 }
 
+/// A capital capture that levels the score in the same turn still leaves the victim ahead for the
+/// turn's other captures: every capture is judged on the turn-start VP.
 #[test]
-fn a_five_four_capital_capture_keeps_its_pre_resolution_leader_credit() {
+fn a_five_four_capital_capture_keeps_its_pre_resolution_credit() {
     let mut s = two_players();
     let capital = found(&mut s, P1, at(10, 10));
+    let plain = found(&mut s, P1, at(15, 10));
     give_era_points(&mut s, P0, 4);
     give_era_points(&mut s, P1, 5);
     let vp = CaptureVpSnapshot::new(&s);
-    assert_eq!(
-        (
-            scoring::team_vp(&s, s.team_of(P0)),
-            scoring::team_vp(&s, s.team_of(P1))
-        ),
-        (4, 5)
-    );
     let mut events = Vec::new();
     crate::rules::battle::capture_city(&mut s, capital, P0, &mut events);
     assert_eq!(
@@ -752,20 +734,21 @@ fn a_five_four_capital_capture_keeps_its_pre_resolution_leader_credit() {
         ),
         (5, 5)
     );
+    crate::rules::battle::capture_city(&mut s, plain, P0, &mut events);
     record_fights(&mut s, &events, &vp);
     assert_eq!(
-        (
-            s.player(P0).fight.from_ahead,
-            s.player(P0).fight.from_leader
-        ),
-        (1, 1)
+        s.player(P0).fight.humbled,
+        1,
+        "the capital never counts; the plain city does, against the turn-start lead"
     );
 }
 
 #[test]
 fn a_wonder_transfer_keeps_the_victims_pre_resolution_lead() {
     let mut s = two_players();
+    found(&mut s, P1, at(5, 15));
     let city = found(&mut s, P1, at(10, 10));
+    let plain = found(&mut s, P1, at(15, 10));
     give_era_points(&mut s, P0, 4);
     give_era_points(&mut s, P1, 3);
     s.player_mut(P1).great_work_completed = Some(BuildingKind::RelayUplink);
@@ -780,45 +763,23 @@ fn a_wonder_transfer_keeps_the_victims_pre_resolution_lead() {
         city,
         of: P1,
     });
+    s.cities
+        .get_mut(&city)
+        .unwrap()
+        .buildings
+        .insert(BuildingKind::RelayUplink);
     assert_eq!(scoring::team_vp(&s, s.team_of(P1)), 5);
     let vp = CaptureVpSnapshot::new(&s);
     let mut events = Vec::new();
     crate::rules::battle::capture_city(&mut s, city, P0, &mut events);
     assert!(scoring::team_vp(&s, s.team_of(P0)) >= scoring::team_vp(&s, s.team_of(P1)));
+    crate::rules::battle::capture_city(&mut s, plain, P0, &mut events);
     record_fights(&mut s, &events, &vp);
     assert_eq!(
-        (
-            s.player(P0).fight.from_ahead,
-            s.player(P0).fight.from_leader
-        ),
-        (1, 1)
+        s.player(P0).fight.humbled,
+        1,
+        "the wonder city never counts"
     );
-}
-
-#[test]
-fn simultaneous_captures_use_one_pre_resolution_vp_snapshot() {
-    let mut s = two_players();
-    let capital = found(&mut s, P1, at(10, 10));
-    let second = found(&mut s, P1, at(15, 10));
-    give_era_points(&mut s, P0, 4);
-    give_era_points(&mut s, P1, 5);
-    let vp = CaptureVpSnapshot::new(&s);
-    let mut events = Vec::new();
-    crate::rules::battle::capture_city(&mut s, capital, P0, &mut events);
-    crate::rules::battle::capture_city(&mut s, second, P0, &mut events);
-    record_fights(&mut s, &events, &vp);
-    assert_eq!(
-        (
-            s.player(P0).fight.captures,
-            s.player(P0).fight.from_ahead,
-            s.player(P0).fight.from_leader
-        ),
-        (2, 2, 2)
-    );
-}
-
-fn run_with(state: &mut GameState, events: &mut Vec<Event>) {
-    scoring::update(state, events);
 }
 
 #[test]
@@ -1208,33 +1169,34 @@ fn the_view_publishes_opted_in_decadence() {
 }
 
 #[test]
-fn objective_counts_are_the_written_counts_unless_the_knob_scales_them() {
-    let mut big = setup(7);
-    big.rule_experiments.apply("objective-scale=150").unwrap();
-    assert_eq!(setup(7).rule_experiments.objective_scale_percent(), 100);
+fn card_counts_are_the_written_counts_unless_the_knob_scales_them() {
     let mut counted = 0;
-    for era in 2..=data::era_count() {
-        let (base, scaled) = (era_objectives(&setup(7), era), era_objectives(&big, era));
-        assert_eq!(base.len(), scaled.len());
-        for (b, n) in base.iter().zip(&scaled) {
-            assert_eq!(n.family(), b.family(), "the draw does not move");
-            let counted_kind = matches!(
-                b,
-                Objective::Cities { .. }
-                    | Objective::Population { .. }
-                    | Objective::Territory { .. }
-                    | Objective::Buildings { .. }
-                    | Objective::Kills { .. }
-            );
-            if counted_kind {
-                counted += 1;
-                assert!(
-                    n.target().abs_diff((b.target() * 150 + 50) / 100) <= 1,
-                    "{b:?} -> {n:?}"
-                );
-                assert!(n.target() > b.target(), "{b:?} -> {n:?}");
-            } else {
-                assert_eq!(n.target(), b.target(), "other objectives are not scaled");
+    for seed in 1..40 {
+        let mut big = setup(seed);
+        big.rule_experiments.apply("objective-scale=150").unwrap();
+        assert_eq!(setup(seed).rule_experiments.objective_scale_percent(), 100);
+        for era in 2..=data::era_count() {
+            let (base, scaled) = (era_objectives(&setup(seed), era), era_objectives(&big, era));
+            assert_eq!(base.len(), scaled.len());
+            for (b, n) in base.iter().zip(&scaled) {
+                assert_eq!(n.family(), b.family(), "the draw does not move");
+                let counted_kind = matches!(
+                    b,
+                    Objective::Cities { .. }
+                        | Objective::Population { .. }
+                        | Objective::Territory { .. }
+                        | Objective::Buildings { .. }
+                ) && !matches!(b, Objective::Cities { .. });
+                if counted_kind {
+                    counted += 1;
+                    assert!(
+                        n.target().abs_diff((b.target() * 150 + 50) / 100) <= 1,
+                        "{b:?} -> {n:?}"
+                    );
+                    assert!(n.target() > b.target(), "{b:?} -> {n:?}");
+                } else {
+                    assert_eq!(n.target(), b.target(), "other cards are not scaled");
+                }
             }
         }
     }

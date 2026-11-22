@@ -112,6 +112,7 @@ fn encode(order: &Order) -> Vec<i32> {
         Order::UpgradeUnit { unit } => [8, unit.0 as i32, 0, 0],
         Order::UpgradeSiege { unit } => [17, unit.0 as i32, 0, 0],
         Order::Action { .. } => panic!("numeric profiling tape does not encode empire actions"),
+        Order::GiveGold { .. } => panic!("numeric profiling tape does not encode Gold gifts"),
         Order::AirStrike { .. }
         | Order::Rebase { .. }
         | Order::AirRecon { .. }

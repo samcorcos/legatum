@@ -264,9 +264,6 @@ pub struct RuleExperiments {
     /// empires, in the engine and in what the AI reads; empty in every app game.
     #[serde(skip_serializing_if = "FactionRuleSet::is_empty")]
     pub faction_rules_off: FactionRuleSet,
-    /// Experimental era objective cards. The default remains the original era objectives.
-    #[serde(skip_serializing_if = "std::ops::Not::not")]
-    pub objectives_deck: bool,
     /// Settler escalation is +150 Production per trained Settler, instead of +50.
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub settler_escalation: bool,
@@ -276,6 +273,10 @@ pub struct RuleExperiments {
     /// Each owned city costs max(city count - 2, 0) Gold per turn.
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub city_upkeep: bool,
+    /// A city cannot buy a military unit while an enemy military unit at War stands within two
+    /// tiles of it (Sam, 2026-11-22, via the Fable review; judged on his Swiss and Mongol games).
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub no_purchase_under_threat: bool,
     /// Coalition pressure adds 10 points per city per permanent-team member beyond two.
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub expansion_coalitions: bool,
@@ -313,9 +314,9 @@ pub struct RuleExperiments {
     /// Overrides the solo VP target (`solo_vp_target`); a team's target is this times its members.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub vp_target: Option<u8>,
-    /// Era objective thresholds, in percent of the base counts in `objectives::era_pool` (default
-    /// `DEFAULT_OBJECTIVE_SCALE`; 100 restores the counts as written). Applied after the lobby-size
-    /// scaling.
+    /// World Age count-card thresholds (Patrons, Prosperity, Frontier), in percent of the counts in
+    /// `objectives::age_pool` (default `DEFAULT_OBJECTIVE_SCALE`; 100 restores the counts as
+    /// written). Applied after the lobby-size scaling.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub objective_scale: Option<u16>,
     /// The Nile: Egypt's Food in percent of normal (default `EGYPT_NILE_FOOD_PERCENT`).
@@ -338,8 +339,8 @@ pub const POWER_WINDOW_TURNS: u8 = 50;
 /// percent of every income (user, 2026-10-17: proportional to how far ahead each empire is; the mean
 /// since 2026-10-18). Zero disables the rule; positive values have no maximum.
 pub const DEFAULT_DECADENCE_SLOPE: u16 = 0;
-/// Era objective thresholds are the counts written in `objectives::era_pool`, so 100 percent.
-/// `objective-scale` can vary the counts in active VP pacing batches.
+/// World Age count cards use the counts written in `objectives::age_pool`, so 100 percent.
+/// `objective-scale` can vary the counts in VP pacing batches.
 pub const DEFAULT_OBJECTIVE_SCALE: u16 = 100;
 
 /// The Nile doubles Egypt's Food (designer, 2026-11-21: "double food yield, no production").
@@ -459,7 +460,7 @@ impl RuleExperiments {
         )
     }
 
-    /// Era objective thresholds in percent of the base counts.
+    /// World Age count-card thresholds in percent of the written counts.
     pub fn objective_scale_percent(self) -> u16 {
         self.objective_scale.unwrap_or(DEFAULT_OBJECTIVE_SCALE)
     }
@@ -467,12 +468,11 @@ impl RuleExperiments {
     /// Shared CLI parser; reject misspelled or out-of-range experiments before simulating.
     pub fn apply(&mut self, flag: &str) -> Result<(), String> {
         match flag {
-            "objectives=deck" => self.objectives_deck = true,
-            "objectives=era" => self.objectives_deck = false,
             "settler-escalation" => self.settler_escalation = true,
             "city-research" => self.city_research = true,
             "city-upkeep" => self.city_upkeep = true,
             "expansion-coalitions" => self.expansion_coalitions = true,
+            "no-purchase-under-threat" => self.no_purchase_under_threat = true,
             "frontier-cities" => self.frontier_cities = true,
             "market-plunder" => self.market_plunder = true,
             "wall-masonry" => self.wall_masonry = true,

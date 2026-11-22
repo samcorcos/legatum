@@ -20,6 +20,7 @@ pub mod air;
 pub mod barbarians;
 pub mod battle;
 pub mod cities;
+pub mod gifts;
 pub mod movement;
 pub mod occupation;
 #[cfg(test)]
@@ -203,34 +204,39 @@ pub fn validate_orders(state: &GameState, player: PlayerId, orders: &[Order]) ->
         })
         .collect();
     let supply_unchanged = taken.is_empty() && sieged.is_empty();
-    let city_errors = if gold == start_gold && disbanded.is_empty() && supply_unchanged {
-        cities::validate_city_orders(state, player, orders)
-    } else {
-        let mut after = state.clone();
-        after.player_mut(player).gold = gold;
-        for (unit, to) in &upgraded {
-            if let Some(u) = after.units.get_mut(unit) {
-                u.kind = *to;
-                u.siege &= !crate::data::built_in_siege(*to);
+    // The city check also projects the state after the valid unit and city orders, which aircraft
+    // upgrades (paid later, in the ranged phase) spend from.
+    let (city_errors, after_cities) =
+        if gold == start_gold && disbanded.is_empty() && supply_unchanged {
+            cities::validate_city_orders_projected(state, player, orders)
+        } else {
+            let mut after = state.clone();
+            after.player_mut(player).gold = gold;
+            for (unit, to) in &upgraded {
+                if let Some(u) = after.units.get_mut(unit) {
+                    u.kind = *to;
+                    u.siege &= !crate::data::built_in_siege(*to);
+                }
             }
-        }
-        for unit in sieged {
-            if let Some(u) = after.units.get_mut(&unit) {
-                u.siege = true;
+            for unit in sieged {
+                if let Some(u) = after.units.get_mut(&unit) {
+                    u.siege = true;
+                }
             }
-        }
-        for unit in disbanded {
-            after.units.remove(&unit);
-        }
-        cities::validate_city_orders(&after, player, orders)
-    };
+            for unit in disbanded {
+                after.units.remove(&unit);
+            }
+            cities::validate_city_orders_projected(&after, player, orders)
+        };
     errors.extend(city_errors);
     errors.extend(actions::validate_actions(state, player, orders));
+    errors.extend(gifts::validate_gifts(state, player, orders));
     // An air strike resolves in the same ranged phase, so it sees the same surprise wars.
     errors.extend(air::validate_orders(
         ranged_state.as_ref().unwrap_or(state),
         player,
         orders,
+        after_cities,
     ));
     errors.extend(diplomacy_errors);
     errors.sort_by_key(|e| e.index);
@@ -301,12 +307,27 @@ pub fn resolve_turn(
             !surprise.contains(&crate::diplomacy::pair(team, other))
         });
     }
-    for (p, os) in &orders {
-        cities::apply_city_orders(&mut s, *p, os, &mut events);
+    // Same-turn bids on one tile are tried in a seeded order, not by empire id.
+    match cities::defer_contested_tile_buys(&s, &orders) {
+        None => {
+            for (p, os) in &orders {
+                cities::apply_city_orders(&mut s, *p, os, &mut events);
+            }
+        }
+        Some((kept, deferred)) => {
+            for (p, os) in &kept {
+                cities::apply_city_orders(&mut s, *p, os, &mut events);
+            }
+            for (p, order) in deferred {
+                cities::apply_city_orders(&mut s, p, std::slice::from_ref(&order), &mut events);
+            }
+        }
     }
     for (p, os) in &orders {
         actions::apply_actions(&mut s, *p, os, &mut events);
     }
+    // Gifts between teammates move after every purchase, so a teammate spends them next turn.
+    gifts::apply_gifts(&mut s, &orders, &mut events);
     // 2. Ranged attacks.
     let held = air::resolve_ranged_phase(
         &mut s,
@@ -360,6 +381,8 @@ pub fn resolve_turn(
     // A Company's contract ends after its last turn's upkeep is paid.
     crate::company::expire(&mut s, &mut events);
     cities::process_research(&mut s, &mut events);
+    // Empires entering the same era this turn: the first is drawn, not the lowest id.
+    crate::eras::draw_same_turn_firsts(&mut s, &mut events);
     cities::process_borders(&mut s, &mut events);
     crate::roads::extend(&mut s, &mut events);
     crate::roads::extend_roadworks(&mut s);

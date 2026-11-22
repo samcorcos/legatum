@@ -460,7 +460,7 @@ fn ruhr_foundry_replaces_the_forge_and_factory_is_ordinary() {
 
 #[test]
 fn building_prices_purchases_and_settler_sequence_apply_once() {
-    for (f, costs) in [(Faction::Germany, [50, 50, 60, 60, 80, 100, 600])] {
+    for (f, costs) in [(Faction::Germany, [50, 50, 60, 60, 80, 100, 400])] {
         let mut s = state(f);
         let c = city(&mut s, at(4, 4));
         s.player_mut(P).techs.extend(TechId::ALL);

@@ -415,6 +415,7 @@ name = "legatum-sim"
 version = "0.1.0"
 dependencies = [
  "clap",
+ "flate2",
  "legatum-ai",
  "legatum-analysis",
  "legatum-archive",

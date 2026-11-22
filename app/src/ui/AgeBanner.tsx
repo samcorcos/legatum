@@ -37,7 +37,7 @@ export function AgeBanner() {
   const covered = useCovered();
   const [dismissed, setDismissed] = useState<string | null>(null);
   const opened = useMemo(() => {
-    if (!report || !view?.rule_experiments?.objectives_deck) return null;
+    if (!report || !view) return null;
     const team = new Set(view.players.filter((p) => p.team === view.team).map((p) => p.id));
     const events = report.events[seat] ?? [];
     const i = events.findIndex((e) => e.type === 'EraEntered' && e.first && !team.has(e.player));

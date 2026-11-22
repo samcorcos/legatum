@@ -433,8 +433,7 @@ impl Session {
     }
 
     pub fn save_json(&self) -> String {
-        let mut value: serde_json::Value =
-            serde_json::from_str(&crate::json::state_to_json(&self.state)).expect("state JSON");
+        let mut value = crate::json::state_to_value(&self.state);
         if let Some(history) = &self.history {
             value["archive"] = serde_json::to_value(history).expect("archive JSON");
         }
@@ -455,22 +454,30 @@ impl Session {
         brain_for: impl Fn(PlayerId) -> BrainKind,
     ) -> Result<Self, String> {
         crate::json::check_json_size(save)?;
-        let value: serde_json::Value = serde_json::from_str(save).map_err(|e| e.to_string())?;
-        let state = crate::json::parse_state(save)?;
-        let archive = value
-            .get("archive")
+        let mut value: serde_json::Value = serde_json::from_str(save).map_err(|e| e.to_string())?;
+        // Take the session's own fields off the tree; the rest is the engine state, decoded from
+        // this same tree rather than by parsing the text a second time.
+        let (archive, opponent_memory) = match value.as_object_mut() {
+            Some(fields) => (
+                fields.remove("archive"),
+                fields.remove("ai_opponent_memory"),
+            ),
+            None => (None, None),
+        };
+        let state = crate::json::state_from_value(value, true)?;
+        let archive = archive
             .map(|v| {
-                let recording: crate::history::Recording = serde_json::from_value(v.clone())
-                    .map_err(|e| format!("invalid saved archive: {e}"))?;
+                let recording: crate::history::Recording =
+                    serde_json::from_value(v).map_err(|e| format!("invalid saved archive: {e}"))?;
                 recording.validate()?;
                 Ok::<_, String>(recording)
             })
             .transpose()?;
         let mut session = Self::from_state(state, brain_for);
         // Brains with no assessment history learn from their next view.
-        if let Some(value) = value.get("ai_opponent_memory") {
+        if let Some(value) = opponent_memory {
             let memories: BTreeMap<PlayerId, legatum_ai::OpponentMemory> =
-                serde_json::from_value(value.clone())
+                serde_json::from_value(value)
                     .map_err(|e| format!("invalid saved AI opponent memory: {e}"))?;
             for (id, memory) in memories {
                 if let Some((_, brain)) = session.brains.get_mut(&id) {
@@ -778,6 +785,30 @@ mod tests {
         value["ai_opponent_memory"] = serde_json::json!({"0": "invalid"});
         let result = Session::from_save_json(&value.to_string(), |_| BrainKind::Scripted);
         assert!(matches!(result, Err(error) if error.contains("invalid saved AI opponent memory")));
+    }
+
+    #[test]
+    fn save_round_trips_to_identical_text_and_state_hash() {
+        let mut session = scripted_game(5, 8);
+        session.ai_orders();
+        let saved = session.save_json();
+        // The text the save path wrote before it reused the state's JSON tree.
+        let mut before: serde_json::Value =
+            serde_json::from_str(&crate::json::state_to_json(&session.state)).unwrap();
+        before["archive"] = serde_json::to_value(session.history.as_ref().unwrap()).unwrap();
+        let memories: BTreeMap<_, _> = session
+            .brains
+            .iter()
+            .filter_map(|(id, (_, brain))| brain.opponent_memory().map(|m| (*id, m)))
+            .collect();
+        assert!(!memories.is_empty(), "fixture must save opponent memory");
+        before["ai_opponent_memory"] = serde_json::to_value(memories).unwrap();
+        assert_eq!(saved, before.to_string());
+        let loaded = Session::from_save_json(&saved, |_| BrainKind::Scripted).unwrap();
+        assert_eq!(loaded.state, session.state);
+        assert_eq!(loaded.state.hash(), session.state.hash());
+        assert_eq!(loaded.history, session.history);
+        assert_eq!(loaded.save_json(), saved);
     }
 
     fn scripted_game(seed: u64, turns: u32) -> Session {

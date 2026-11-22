@@ -136,7 +136,7 @@ fn relay_forecast_requires_the_full_paid_project() {
             .into_iter()
             .find(|u| u.item == item)
             .unwrap();
-        let cost = if faction == Faction::Sparta { 900 } else { 600 };
+        let cost = if faction == Faction::Sparta { 600 } else { 400 };
         assert_eq!(quote.cost, cost);
         assert_eq!(quote.cost_breakdown.total, cost);
         assert_eq!(quote.buy_cost, None);

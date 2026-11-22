@@ -1,22 +1,17 @@
-//! VP v2 era objectives (TI4-style public objectives).
+//! World Ages: one public card per Age (owner, 2026-11-22: "world ages and then we'll iterate on
+//! world ages from there"; the three-objectives-per-era system is gone).
 //!
-//! Every era after the first reveals three public objectives, one each from Build, Expand and
-//! Fight, drawn deterministically from the era's pool at game start. Meeting any one earns that
-//! era's single permanent VP, once per empire. An empire can score an era only once it has entered
-//! it, and an unscored era stays open for good. The era's objectives are a pure function of the
-//! game seed and the era index, so they need no stored state.
-//!
-//! Era objectives count only what an empire gains after it entered the era and after its last era
-//! score (R1, user 2026-10-20): each open era keeps a snapshot of the empire's fight counters and
-//! holdings (`EraRecord::base`, `EraRecord::levels`), and every era score takes a fresh snapshot
-//! for the eras still open, so what scored one era never scores another. At most one era scores
-//! per empire per turn, the oldest first (R2).
-//!
-//! Era-generic: the era index and count come from `data::era_index` / `data::era_count`. To add
-//! eras, add a pool for each in `era_pool` (an era without one falls back to `generic_pool`).
+//! When the first empire reaches a new era, a new Age begins for the whole world and one card,
+//! drawn at random from the Age's pool (`age_pool`), is revealed to everyone. Any empire may
+//! complete it for 1 permanent VP; the card never expires. Only what an empire does after the
+//! reveal counts: each open Age keeps a snapshot of the empire's fight counters and holdings
+//! (`EraRecord::base`, `EraRecord::levels`), and every Age score takes a fresh snapshot for the
+//! Ages still open, so what scored one Age never scores another (R1). At most one Age scores per
+//! empire per turn, the oldest first (R2). The cards are a pure function of the game seed and the
+//! era index, so they need no stored state.
 
 use crate::data;
-use crate::events::{Attacker, Defender, Event};
+use crate::events::Event;
 use crate::rng::{Rng, purpose};
 use crate::scoring;
 use crate::state::GameState;
@@ -24,39 +19,24 @@ use crate::types::*;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
-/// Fights an empire has won so far. Fight objectives count from when counting began for their era
-/// (`EraRecord::base`), so a capture made long ago banks nothing for a later era.
+/// Fights an empire has won so far. Fight cards count from when counting began for their Age
+/// (`EraRecord::base`), so a capture made long ago banks nothing for a later Age.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct FightStats {
-    /// Cities taken from another empire (captured or razed).
-    pub captures: u16,
-    /// ...of which from an empire ahead of the taker on VP.
-    pub from_ahead: u16,
-    /// ...of which from the VP leader.
-    pub from_leader: u16,
-    /// Enemy military units destroyed.
-    pub kills: u16,
-    /// A VP hold ended by taking a city from the holder the same turn.
-    pub holds_broken: u16,
-    /// World Ages: cities taken from an empire ahead on VP, not counting capitals and wonder cities.
+    /// Cities taken from an empire ahead on VP, not counting capitals and wonder cities.
     #[serde(default, skip_serializing_if = "is_zero_u16")]
     pub humbled: u16,
-    /// World Ages: captured walled cities that were not capitals or wonder cities.
+    /// Captured walled cities that were not capitals or wonder cities.
     #[serde(default, skip_serializing_if = "is_zero_u16")]
     pub walled: u16,
-    /// World Ages: promotion levels gained through XP by this empire's units (levels a unit starts
-    /// with never count).
+    /// Promotion levels gained through XP by this empire's units (levels a unit starts with never
+    /// count).
     #[serde(default, skip_serializing_if = "is_zero_u16")]
     pub promotions: u16,
 }
 
 impl FightStats {
     pub const ZERO: FightStats = FightStats {
-        captures: 0,
-        from_ahead: 0,
-        from_leader: 0,
-        kills: 0,
-        holds_broken: 0,
         humbled: 0,
         walled: 0,
         promotions: 0,
@@ -68,11 +48,6 @@ impl FightStats {
 
     fn since(self, base: FightStats) -> FightStats {
         FightStats {
-            captures: self.captures.saturating_sub(base.captures),
-            from_ahead: self.from_ahead.saturating_sub(base.from_ahead),
-            from_leader: self.from_leader.saturating_sub(base.from_leader),
-            kills: self.kills.saturating_sub(base.kills),
-            holds_broken: self.holds_broken.saturating_sub(base.holds_broken),
             humbled: self.humbled.saturating_sub(base.humbled),
             walled: self.walled.saturating_sub(base.walled),
             promotions: self.promotions.saturating_sub(base.promotions),
@@ -91,7 +66,6 @@ pub struct Levels {
     pub cities: u16,
     pub population: u32,
     pub tiles: u32,
-    pub techs: u16,
     /// Cities holding each building (or a later step of its family), by kind; zero counts omitted.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub buildings: Vec<(BuildingKind, u16)>,
@@ -108,7 +82,6 @@ impl Levels {
             cities: Self::cities_now(state, p),
             population: Self::population_now(state, p),
             tiles: Self::tiles_now(state, p),
-            techs: state.player(p).techs.len() as u16,
             buildings: BuildingKind::ALL
                 .iter()
                 .filter_map(|b| {
@@ -183,6 +156,7 @@ pub struct EraScore {
     pub slot: u8,
 }
 
+/// What kind of play a card asks for: building, growing or fighting. Shown on the card.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub enum Family {
     Build,
@@ -191,9 +165,6 @@ pub enum Family {
 }
 
 impl Family {
-    /// The three families of the era objectives.
-    pub const ALL: [Family; 3] = [Family::Build, Family::Expand, Family::Fight];
-
     pub fn name(self) -> &'static str {
         match self {
             Family::Build => "Build",
@@ -203,38 +174,25 @@ impl Family {
     }
 }
 
-/// One thing an empire can do to score an era.
+/// One World Age card: one thing an empire can do to score an Age.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind")]
 pub enum Objective {
-    /// World Age Veterans: your units earn `n` promotions (levels gained through XP) after the
-    /// reveal.
+    /// Veterans: your units earn `n` promotions (levels gained through XP) after the reveal.
     Veterans { n: u16 },
-    /// World Age Humble the mighty: capture a city from an empire ahead of you on VP. A capital or
-    /// wonder city never counts.
+    /// Humble the mighty: capture a city from an empire ahead of you on VP. A capital or wonder
+    /// city never counts.
     HumbleTheMighty,
-    /// World Age Breach: capture a walled city. A capital or wonder city never counts.
+    /// Breach: capture a walled city. A capital or wonder city never counts.
     Breach,
-    /// Expand: gain `n` cities (founded or captured) after counting began.
+    /// Gain `n` cities (founded or captured) after the reveal.
     Cities { n: u16 },
-    /// Expand: grow total population by `n`.
+    /// Prosperity: grow total population by `n`.
     Population { n: u16 },
-    /// Expand: gain `n` tiles of territory.
+    /// Frontier: gain `n` tiles of territory.
     Territory { n: u16 },
-    /// Build: `cities` more cities hold the building (or a later step of its family).
+    /// Patrons: `cities` more cities hold the building (or a later step of its family).
     Buildings { building: BuildingKind, cities: u16 },
-    /// Build: learn `n` technologies.
-    Techs { n: u16 },
-    /// Fight: take `n` cities from other empires after entering the era.
-    Captures { n: u16 },
-    /// Fight: take `n` cities from empires ahead of you on VP.
-    CapturesFromAhead { n: u16 },
-    /// Fight: take `n` cities from the VP leader.
-    CapturesFromLeader { n: u16 },
-    /// Fight: destroy `n` enemy military units.
-    Kills { n: u16 },
-    /// Fight: take a city from a team holding its VP target, ending the hold.
-    BreakLeaderHold,
 }
 
 impl Objective {
@@ -253,22 +211,9 @@ impl Objective {
                 u32::from(r.levels.building_at(building)),
                 u32::from(Levels::building_now(state, p, building)),
             ),
-            Objective::Techs { .. } => (
-                u32::from(r.levels.techs),
-                state.player(p).techs.len() as u32,
-            ),
-            Objective::Captures { .. } => (u32::from(r.base.captures), u32::from(f.captures)),
-            Objective::CapturesFromAhead { .. } => {
-                (u32::from(r.base.from_ahead), u32::from(f.from_ahead))
-            }
-            Objective::CapturesFromLeader { .. } => {
-                (u32::from(r.base.from_leader), u32::from(f.from_leader))
-            }
-            Objective::Kills { .. } => (u32::from(r.base.kills), u32::from(f.kills)),
             Objective::HumbleTheMighty => (u32::from(r.base.humbled), u32::from(f.humbled)),
             Objective::Breach => (u32::from(r.base.walled), u32::from(f.walled)),
             Objective::Veterans { .. } => (u32::from(r.base.promotions), u32::from(f.promotions)),
-            _ => return None,
         };
         Some(pair)
     }
@@ -278,8 +223,10 @@ impl Objective {
             Objective::Cities { .. }
             | Objective::Population { .. }
             | Objective::Territory { .. } => Family::Expand,
-            Objective::Buildings { .. } | Objective::Techs { .. } => Family::Build,
-            _ => Family::Fight,
+            Objective::Buildings { .. } => Family::Build,
+            Objective::Veterans { .. } | Objective::HumbleTheMighty | Objective::Breach => {
+                Family::Fight
+            }
         }
     }
 
@@ -289,21 +236,15 @@ impl Objective {
             Objective::Veterans { n }
             | Objective::Cities { n }
             | Objective::Population { n }
-            | Objective::Territory { n }
-            | Objective::Techs { n }
-            | Objective::Captures { n }
-            | Objective::CapturesFromAhead { n }
-            | Objective::CapturesFromLeader { n }
-            | Objective::Kills { n } => u32::from(n),
+            | Objective::Territory { n } => u32::from(n),
             Objective::Buildings { cities, .. } => u32::from(cities),
-            Objective::BreakLeaderHold => 1,
         }
     }
 
-    /// Plain-language rule, e.g. "Gain 5 cities".
+    /// Plain-language rule, e.g. "Frontier: gain 80 tiles of territory".
     pub fn text(self) -> String {
         let n = self.target();
-        let s = if n == 1 { "" } else { "s" };
+        let cities = if n == 1 { "city" } else { "cities" };
         match self {
             Objective::Veterans { n } => format!(
                 "Veterans: earn {n} promotions in battle (a promotion is a level a unit gains from combat experience after this Age began)"
@@ -312,36 +253,19 @@ impl Objective {
                 "Humble the mighty: capture a city from an empire ahead of you on VP".into()
             }
             Objective::Breach => "Breach: capture a walled city".into(),
-            Objective::Cities { .. } => format!("Gain {n} cit{}", if n == 1 { "y" } else { "ies" }),
-            Objective::Population { .. } => format!("Grow your population by {n}"),
-            Objective::Territory { .. } => format!("Gain {n} tiles of territory"),
+            Objective::Cities { .. } => format!("Gain {n} {cities}"),
+            Objective::Population { .. } => format!("Prosperity: grow your population by {n}"),
+            Objective::Territory { .. } => format!("Frontier: gain {n} tiles of territory"),
             Objective::Buildings { building, .. } => format!(
-                "Add a {} to {n} more cit{}",
-                data::building_name(building),
-                if n == 1 { "y" } else { "ies" }
+                "Patrons: add a {} to {n} more {cities}",
+                data::building_name(building)
             ),
-            Objective::Techs { .. } => format!("Learn {n} technologies"),
-            Objective::Captures { .. } => {
-                format!("Capture {n} enemy cit{}", if n == 1 { "y" } else { "ies" })
-            }
-            Objective::CapturesFromAhead { .. } => format!(
-                "Capture {n} cit{} from an empire ahead of you on VP",
-                if n == 1 { "y" } else { "ies" }
-            ),
-            Objective::CapturesFromLeader { .. } => format!(
-                "Take {n} cit{} from the VP leader",
-                if n == 1 { "y" } else { "ies" }
-            ),
-            Objective::Kills { .. } => format!("Destroy {n} enemy military unit{s}"),
-            Objective::BreakLeaderHold => {
-                "End a rival's victory hold by taking one of its cities".into()
-            }
         }
     }
 
     /// How far empire `p` is towards it (not capped at the target), counting only what it gained
-    /// since counting began for `era`: when it entered, or at its last era score if later. An era
-    /// it has not entered counts nothing.
+    /// since counting began for the Age: its reveal, or its last Age score if later. An Age that
+    /// has not begun counts nothing.
     pub fn progress(self, state: &GameState, p: PlayerId, era: u8) -> u32 {
         let player = state.player(p);
         let record = player.eras.get(&era);
@@ -368,12 +292,6 @@ impl Objective {
                     u32::from(l.building_at(building))
                 })
             }
-            Objective::Techs { .. } => gain(player.techs.len() as u32, &|l| u32::from(l.techs)),
-            Objective::Captures { .. } => u32::from(fights().captures),
-            Objective::CapturesFromAhead { .. } => u32::from(fights().from_ahead),
-            Objective::CapturesFromLeader { .. } => u32::from(fights().from_leader),
-            Objective::Kills { .. } => u32::from(fights().kills),
-            Objective::BreakLeaderHold => u32::from(fights().holds_broken),
         }
     }
 
@@ -385,164 +303,6 @@ impl Objective {
 
 use Objective as O;
 
-/// The pool each era draws from (1-based era: 2 Classical .. 9 Future; Ancient has none): about
-/// eight objectives, three Build, three Expand and two or three Fight (each family must be
-/// present, or the era has no objective in that family). Counts are for an 8-empire lobby
-/// (`scaled_for` raises them for fewer) and count what an empire gains after entering the era and
-/// after its last era score (R1), so Build and Expand counts are gains, not holdings. Eras stay
-/// open for good. Each threshold sits near the 70th percentile of the best gain entrants made
-/// (Fight measures count from entry too): about 60% of the empires that enter Classical score it,
-/// falling to about 35% in the Future era (user, 2026-10-10; TI4 public objectives are the
-/// baseline). Recalibrate with `vp_race.rs` peaks and `tools/sim/era-objectives.sh`:
-/// `docs/sim-results/era-objectives/step1.md`. An era without a pool falls back to
-/// `generic_pool`.
-pub fn era_pool(era: u8) -> Vec<Objective> {
-    match era {
-        2 => vec![
-            O::Buildings {
-                building: BuildingKind::Laboratory,
-                cities: 4,
-            },
-            O::Buildings {
-                building: BuildingKind::Market,
-                cities: 4,
-            },
-            O::Buildings {
-                building: BuildingKind::Workshop,
-                cities: 4,
-            },
-            O::Cities { n: 5 },
-            O::Population { n: 50 },
-            O::Territory { n: 80 },
-            O::Captures { n: 2 },
-            O::Kills { n: 30 },
-        ],
-        3 => vec![
-            O::Buildings {
-                building: BuildingKind::Laboratory,
-                cities: 4,
-            },
-            O::Buildings {
-                building: BuildingKind::Walls,
-                cities: 4,
-            },
-            O::Buildings {
-                building: BuildingKind::Castle,
-                cities: 2,
-            },
-            O::Cities { n: 4 },
-            O::Population { n: 42 },
-            O::Territory { n: 62 },
-            O::CapturesFromAhead { n: 1 },
-            O::Kills { n: 38 },
-        ],
-        4 => vec![
-            O::Buildings {
-                building: BuildingKind::College,
-                cities: 4,
-            },
-            O::Buildings {
-                building: BuildingKind::Clearinghouse,
-                cities: 2,
-            },
-            O::Buildings {
-                building: BuildingKind::Hydroponics,
-                cities: 2,
-            },
-            O::Cities { n: 3 },
-            O::Population { n: 34 },
-            O::Territory { n: 49 },
-            O::CapturesFromAhead { n: 1 },
-            O::Kills { n: 38 },
-        ],
-        5 => vec![
-            O::Buildings {
-                building: BuildingKind::MachineShop,
-                cities: 2,
-            },
-            O::Buildings {
-                building: BuildingKind::Autoworks,
-                cities: 2,
-            },
-            O::Buildings {
-                building: BuildingKind::College,
-                cities: 3,
-            },
-            O::Cities { n: 2 },
-            O::Population { n: 25 },
-            O::Territory { n: 35 },
-            O::CapturesFromLeader { n: 1 },
-            O::Kills { n: 29 },
-        ],
-        // Machine Age: a placeholder until its own pool (increment 2 of the Machine Age): the
-        // World War pool (then called Modern) with the era's Stock Exchange in place of the Research
-        // Lab.
-        6 => vec![
-            O::Buildings {
-                building: BuildingKind::Autoworks,
-                cities: 2,
-            },
-            O::Buildings {
-                building: BuildingKind::StockExchange,
-                cities: 2,
-            },
-            O::Buildings {
-                building: BuildingKind::Clearinghouse,
-                cities: 3,
-            },
-            O::Cities { n: 2 },
-            O::Population { n: 23 },
-            O::Territory { n: 31 },
-            O::Captures { n: 1 },
-            O::CapturesFromLeader { n: 1 },
-            O::Kills { n: 30 },
-        ],
-        7 => vec![
-            O::Buildings {
-                building: BuildingKind::Autoworks,
-                cities: 2,
-            },
-            O::Buildings {
-                building: BuildingKind::InferenceCore,
-                cities: 2,
-            },
-            O::Buildings {
-                building: BuildingKind::Clearinghouse,
-                cities: 3,
-            },
-            O::Cities { n: 2 },
-            O::Population { n: 23 },
-            O::Territory { n: 31 },
-            O::Captures { n: 1 },
-            O::CapturesFromLeader { n: 1 },
-            O::Kills { n: 30 },
-        ],
-        // Modern (user, 2026-11-14): a placeholder until its own pool (increment 2 of the Modern
-        // era): the Future's pool.
-        8 | 9 => vec![
-            O::Buildings {
-                building: BuildingKind::InferenceCore,
-                cities: 3,
-            },
-            O::Buildings {
-                building: BuildingKind::StarFort,
-                cities: 2,
-            },
-            O::Buildings {
-                building: BuildingKind::Autoworks,
-                cities: 2,
-            },
-            O::Cities { n: 2 },
-            O::Population { n: 25 },
-            O::Territory { n: 33 },
-            O::Captures { n: 1 },
-            O::CapturesFromLeader { n: 1 },
-            O::Kills { n: 26 },
-        ],
-        _ => generic_pool(era),
-    }
-}
-
 /// Promotions a Veterans card asks for in every Age.
 const VETERANS_PROMOTIONS: u16 = 4;
 /// Cities gained by a Gain N cities card. The card is only in the pool from the Renaissance on,
@@ -551,9 +311,34 @@ const CITIES_GAINED: u16 = 3;
 /// The first era whose pool has a Gain N cities card (Renaissance).
 const CITIES_FROM_ERA: u8 = 4;
 
-/// The cards a World Age (era 2..9) can draw from. None is a stock the empire already holds, so
-/// each counts only what is done after the reveal (cards never expire): Veterans counts promotions earned in battle; Humble the mighty and Breach are harder captures than a normal war;
-/// Gain N cities counts from the Renaissance on.
+/// The peaceful cards of an Age (era 2..9): Patrons (a building that every faction can raise:
+/// the Library line, or the Bank in the Machine Age and World War), Prosperity (population) and
+/// Frontier (territory), so an empire at peace always has a card it can work towards. Counts are
+/// gains after the reveal for an 8-empire lobby (`scaled_for` raises them for fewer), carried
+/// over from the old era objectives, whose counts sat near the 70th percentile of the best gain
+/// entrants made (`docs/sim-results/era-objectives/step1.md`).
+fn peaceful_cards(era: u8) -> [Objective; 3] {
+    let (building, cities, population, tiles) = match era {
+        2 => (BuildingKind::Laboratory, 4, 50, 80),
+        3 => (BuildingKind::Laboratory, 4, 42, 62),
+        4 => (BuildingKind::College, 4, 34, 49),
+        5 => (BuildingKind::College, 3, 25, 35),
+        6 => (BuildingKind::Clearinghouse, 3, 23, 31),
+        7 => (BuildingKind::Clearinghouse, 3, 23, 31),
+        _ => (BuildingKind::InferenceCore, 3, 25, 33),
+    };
+    [
+        O::Buildings { building, cities },
+        O::Population { n: population },
+        O::Territory { n: tiles },
+    ]
+}
+
+/// The cards a World Age (era 2..9) can draw from, as written (`scaled_pool` applies the lobby
+/// size). None is a stock the empire already holds, so each counts only what is done after the
+/// reveal (cards never expire): Veterans counts promotions earned in battle; Humble the mighty
+/// and Breach are harder captures than a normal war; Gain N cities counts from the Renaissance
+/// on; Patrons, Prosperity and Frontier are the peaceful cards.
 pub fn age_pool(era: u8) -> Vec<Objective> {
     if !(2..=data::era_count()).contains(&era) {
         return Vec::new();
@@ -568,97 +353,55 @@ pub fn age_pool(era: u8) -> Vec<Objective> {
     if era >= CITIES_FROM_ERA {
         pool.push(O::Cities { n: CITIES_GAINED });
     }
+    pool.extend(peaceful_cards(era));
     pool
 }
 
-/// A scaled pool for an era with no hand-written one.
-fn generic_pool(era: u8) -> Vec<Objective> {
-    let e = u16::from(era);
-    vec![
-        O::Buildings {
-            building: BuildingKind::Workshop,
-            cities: 2 + e,
-        },
-        O::Buildings {
-            building: BuildingKind::Market,
-            cities: 2 + e,
-        },
-        O::Techs { n: 4 * e + 2 },
-        O::Cities { n: 2 + e },
-        O::Population { n: 10 * e },
-        O::Territory { n: 15 * e },
-        O::CapturesFromAhead { n: 1 },
-        O::Kills { n: 3 * e },
-    ]
-}
-
 impl Objective {
-    /// Count targets are written for an 8-empire lobby; fewer empires share the land and each
-    /// grows bigger, so they rise 12% per missing empire (a 4-empire lobby asks 48% more).
+    /// The peaceful cards' counts are written for an 8-empire lobby; fewer empires share the land
+    /// and each grows bigger, so they rise 12% per missing empire (a 4-empire lobby asks 48% more).
+    /// The fight cards and Gain N cities are not scaled.
     fn scaled_for(self, empires: usize, objective_scale: u16) -> Objective {
         let lobby = 100 + 12 * 8usize.saturating_sub(empires.max(2)) as u32;
         let percent = (lobby * u32::from(objective_scale) + 50) / 100;
         let scale = |n: u16| ((u32::from(n) * percent + 50) / 100) as u16;
         match self {
-            Objective::Cities { n } => Objective::Cities { n: scale(n) },
             Objective::Population { n } => Objective::Population { n: scale(n) },
             Objective::Territory { n } => Objective::Territory { n: scale(n) },
             Objective::Buildings { building, cities } => Objective::Buildings {
                 building,
                 cities: scale(cities),
             },
-            Objective::Kills { n } => Objective::Kills { n: scale(n) },
             other => other,
         }
     }
 }
 
-/// The era's whole pool at the game's counts (`scaled_for`), in `era_pool` order.
+/// The Age's whole pool at the game's counts (`scaled_for`), in `age_pool` order.
 pub fn scaled_pool(setup: &crate::state::GameSetup, era: u8) -> Vec<Objective> {
-    if setup.rule_experiments.objectives_deck {
-        return age_pool(era);
-    }
     let empires = setup.players.len();
     let objective_scale = setup.rule_experiments.objective_scale_percent();
-    era_pool(era)
+    age_pool(era)
         .into_iter()
         .map(|o| o.scaled_for(empires, objective_scale))
         .collect()
 }
 
-/// The public objectives of an era (one each from Build, Expand and Fight; with World Ages, the single card drawn for the Age), identical for every empire in a
-/// game, each with its index in `era_pool`. Empty for era 1 and for eras beyond the tree.
+/// The single card drawn for an Age, identical for every empire in a game, with its index in
+/// `age_pool`. Empty for era 1 and for eras beyond the tree.
 pub fn drawn_from_pool(setup: &crate::state::GameSetup, era: u8) -> Vec<(usize, Objective)> {
     if era < 2 || era > data::era_count() {
         return Vec::new();
     }
-    let seed = setup.seed;
     let pool = scaled_pool(setup, era);
-    if setup.rule_experiments.objectives_deck {
-        // One card per Age, drawn at random (user, 2026-11-11: "only one, randomly decided option per age").
-        let mut rng = Rng::derive(seed, &[u64::from(era), purpose::OBJECTIVES, 97]);
-        let i = rng.range(0, pool.len() as i64 - 1) as usize;
-        return vec![(i, pool[i])];
-    }
-    Family::ALL
-        .iter()
-        .enumerate()
-        .filter_map(|(slot, family)| {
-            let candidates: Vec<usize> = (0..pool.len())
-                .filter(|i| pool[*i].family() == *family)
-                .collect();
-            if candidates.is_empty() {
-                return None;
-            }
-            let mut rng = Rng::derive(seed, &[u64::from(era), purpose::OBJECTIVES, slot as u64]);
-            let i = candidates[rng.range(0, candidates.len() as i64 - 1) as usize];
-            Some((i, pool[i]))
-        })
-        .collect()
+    // One card per Age, drawn at random (user, 2026-11-11: "only one, randomly decided option per age").
+    let mut rng = Rng::derive(setup.seed, &[u64::from(era), purpose::OBJECTIVES, 97]);
+    let i = rng.range(0, pool.len() as i64 - 1) as usize;
+    vec![(i, pool[i])]
 }
 
-/// The public objectives of an era (one each from Build, Expand and Fight; with World Ages, the single card drawn for the Age), identical for every empire in a
-/// game. Empty for era 1 and for eras beyond the tree.
+/// The card of an Age (one per Age), identical for every empire in a game. Empty for era 1 and
+/// for eras beyond the tree.
 pub fn era_objectives(setup: &crate::state::GameSetup, era: u8) -> Vec<Objective> {
     drawn_from_pool(setup, era)
         .into_iter()
@@ -666,18 +409,11 @@ pub fn era_objectives(setup: &crate::state::GameSetup, era: u8) -> Vec<Objective
         .collect()
 }
 
-/// The slot an objective takes in its era's list: 0 for the single World Age card,
-/// or the index of its family in the original era objectives.
+/// The slot a card takes in its Age's list: always 0 (one card per Age).
 pub fn slot_in(setup: &crate::state::GameSetup, era: u8, objective: Objective) -> u8 {
-    if setup.rule_experiments.objectives_deck {
-        return era_objectives(setup, era)
-            .iter()
-            .position(|o| *o == objective)
-            .unwrap_or(0) as u8;
-    }
-    Family::ALL
+    era_objectives(setup, era)
         .iter()
-        .position(|f| *f == objective.family())
+        .position(|o| *o == objective)
         .unwrap_or(0) as u8
 }
 
@@ -687,11 +423,14 @@ pub fn era_of(state: &GameState, p: PlayerId) -> u8 {
     crate::eras::current_era(&state.player(p).techs) + 1
 }
 
-/// The team strictly ahead on VP, if exactly one is.
+/// Each living team's VP at the start of the turn, so every capture this turn is judged against
+/// the same standings.
 #[derive(Clone, Debug)]
 pub struct CaptureVpSnapshot {
     vp: BTreeMap<TeamId, u32>,
-    leader: Option<TeamId>,
+    /// Who held each scoring rival original capital at the start of the turn
+    /// (`scoring::capital_holders`), so end-of-turn scoring reports its change of hands.
+    pub(crate) capitals: BTreeMap<CityId, (PlayerId, String)>,
 }
 
 impl CaptureVpSnapshot {
@@ -707,12 +446,10 @@ impl CaptureVpSnapshot {
             })
             .map(|t| (t, scoring::team_vp(state, t)))
             .collect();
-        let best = vp.values().copied().max();
-        let mut top = vp.iter().filter(|(_, v)| Some(**v) == best);
-        let leader = top
-            .next()
-            .and_then(|(team, _)| top.next().is_none().then_some(*team));
-        Self { vp, leader }
+        Self {
+            vp,
+            capitals: scoring::capital_holders(state),
+        }
     }
 
     fn ahead(&self, victim: TeamId, taker: TeamId) -> bool {
@@ -787,86 +524,28 @@ fn record_fights(state: &mut GameState, events: &[Event], vp: &CaptureVpSnapshot
             _ => {}
         }
     }
-    let mut kills: Vec<PlayerId> = Vec::new();
-    for e in events {
-        if let Event::Battle {
-            attacker,
-            attacker_owner,
-            defender,
-            defender_hp_after,
-            attacker_hp_after,
-            ..
-        } = e
-        {
-            let defender_owner = match defender {
-                Defender::Unit { owner, .. } | Defender::City { owner, .. } => *owner,
-            };
-            if *defender_hp_after == 0
-                && matches!(defender, Defender::Unit { .. })
-                && !attacker_owner.is_barbarian()
-                && !defender_owner.is_barbarian()
-            {
-                kills.push(*attacker_owner);
-            }
-            if *attacker_hp_after == 0
-                && matches!(attacker, Attacker::Unit(_))
-                && !attacker_owner.is_barbarian()
-                && !defender_owner.is_barbarian()
-            {
-                kills.push(defender_owner);
-            }
-        }
-    }
-    // VictoryHoldBroken is emitted later in scoring::check_victory. At this point the
-    // post-combat VP is already known, while vp_holds still contains last turn's hold.
-    let broken: Vec<TeamId> = events
-        .iter()
-        .filter_map(|e| match e {
-            Event::VictoryHoldBroken { team, .. } => Some(*team),
-            _ => None,
-        })
-        .collect();
     for t in taken {
         let (taker, victim) = (t.taker, t.victim);
         if taker.is_barbarian() || victim.is_barbarian() || taker == victim {
             continue;
         }
-        let victim_team = state.team_of(victim);
-        let ahead = vp.ahead(victim_team, state.team_of(taker));
-        let from_leader = vp.leader == Some(victim_team) && state.team_of(taker) != victim_team;
-        let hold_broken = broken.contains(&victim_team);
+        let ahead = vp.ahead(state.team_of(victim), state.team_of(taker));
         let f = &mut state.player_mut(taker).fight;
-        f.captures = f.captures.saturating_add(1);
-        if ahead {
-            f.from_ahead = f.from_ahead.saturating_add(1);
-            if !t.prize {
-                f.humbled = f.humbled.saturating_add(1);
-            }
+        if ahead && !t.prize {
+            f.humbled = f.humbled.saturating_add(1);
         }
         if t.walled && !t.prize {
             f.walled = f.walled.saturating_add(1);
         }
-        if from_leader {
-            f.from_leader = f.from_leader.saturating_add(1);
-        }
-        if hold_broken {
-            f.holds_broken = f.holds_broken.saturating_add(1);
-        }
-    }
-    for owner in kills {
-        let f = &mut state.player_mut(owner).fight;
-        f.kills = f.kills.saturating_add(1);
     }
 }
 
-/// End-of-turn: credit fights, open the eras each empire has entered (World Ages: when the first
-/// empire enters an era it opens for every living empire at once), and score any era whose
-/// objective is met.
+/// End-of-turn: credit fights, open each Age the turn the first empire enters its era (for every
+/// living empire at once), and score any Age whose card is met.
 pub fn update(state: &mut GameState, events: &mut Vec<Event>, vp: &CaptureVpSnapshot) {
     let this_turn = events.clone();
     record_fights(state, &this_turn, vp);
     let setup = state.setup.clone();
-    let world_ages = setup.rule_experiments.objectives_deck;
     let turn = state.turn;
     let ids: Vec<PlayerId> = state
         .players
@@ -876,19 +555,13 @@ pub fn update(state: &mut GameState, events: &mut Vec<Event>, vp: &CaptureVpSnap
         .collect();
     let newest = ids.iter().map(|p| era_of(state, *p)).max().unwrap_or(1);
     let opened_before = revealed_era(state);
-    if world_ages {
-        for era in opened_before + 1..=newest {
-            if let Some(first) = state.era_firsts.get(&(era - 1)) {
-                events.push(Event::AgeBegan { era, first: *first });
-            }
+    for era in opened_before + 1..=newest {
+        if let Some(first) = state.era_firsts.get(&(era - 1)) {
+            events.push(Event::AgeBegan { era, first: *first });
         }
     }
     for p in ids {
-        let reached = if world_ages {
-            newest.max(revealed_era(state))
-        } else {
-            era_of(state, p)
-        };
+        let reached = newest.max(revealed_era(state));
         for era in 2..=reached {
             if !state.player(p).eras.contains_key(&era) {
                 let base = state.player(p).fight;

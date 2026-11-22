@@ -83,18 +83,19 @@ describe('forecastModel', () => {
 });
 
 describe('ForecastCard', () => {
-  it('shows the permanent point only for the first rival original-capital capture', async () => {
+  it('shows the held point for capturing a rival original capital, even one taken before', async () => {
     const { v, horse, target } = await scene();
     const city = addCity(v, 2, 'Nara', target);
     city.original_capital = true;
     city.original_capital_of = 2;
     const forecast = charge(horse, addUnit(v, 2, 'Soldier', at(target.q + 1, target.r)));
     render(<ForecastCard forecast={forecast} ranged={false} view={v} unit={horse} target={city.pos} />);
-    expect(byTestId('forecast-capital-vp').querySelector(':scope > span:last-child')!.textContent).toBe('+1 VP, kept for good: your first capture of Nara');
+    expect(byTestId('forecast-capital-vp').querySelector(':scope > span:last-child')!.textContent).toBe('+1 VP while you hold Nara');
     expect(byTestId('forecast-capital-vp').querySelector('.vh-seal')).not.toBeNull();
+    // A point scored on an earlier capture does not stop the next one: the point follows the city.
     v.players.find((p) => p.id === v.me)!.vp_sources.push([{ kind: 'CapitalTaken', capital: city.id }, 1]);
     render(<ForecastCard forecast={forecast} ranged={false} view={v} unit={horse} target={city.pos} />);
-    expect(byTestId('forecast-capital-vp')).toBeNull();
+    expect(byTestId('forecast-capital-vp')).not.toBeNull();
   });
 
   it('shows the Gold a Celtic city attack would sack', async () => {

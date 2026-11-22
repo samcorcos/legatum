@@ -24,6 +24,7 @@ mimalloc = { version = "0.1", default-features = false }
 libc = "0.2"
 
 [dev-dependencies]
+flate2 = "1"
 
 # These examples contain unit tests; include them in `cargo test --workspace`.
 [[example]]

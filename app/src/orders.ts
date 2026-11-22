@@ -18,7 +18,7 @@ import { hexEq, toOffset } from './hex';
 import { diplomaticCost, offerLabel, teamName, treatyLabel } from './diplomacy';
 import { ownerName } from './barbarians';
 import { empireOfPlayer, placeName } from './empires';
-import { withArticle } from './resources';
+import { withArticle, withThe } from './resources';
 import { aircraftNeedingOrders, type Hold } from './airWing';
 import { isKnownOrderKind } from './orderDecoding';
 import { peaceScope, peaceScopeForAction } from './peaceScope';
@@ -327,6 +327,7 @@ export function describeOrder(o: Order, view: PlayerView): string {
     case 'SetResearchQueue':
       return o.techs.length ? `Research ${o.techs.map((t) => TECH_NAME[t]).join(' → ')}` : 'Clear research queue';
     case 'SetScienceConversion': return `Convert Science to ${o.to}`;
+    case 'GiveGold': return `Give ${o.amount} Gold to ${withThe(empireOfPlayer(view, o.to))}`;
     case 'Action':
       switch (o.action.action) {
         case 'Swarm': return `Kindle the New Fire: offer ${view.actions?.swarm?.population ?? 50} population · +2 VP, permanent`;

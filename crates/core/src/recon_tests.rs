@@ -75,7 +75,7 @@ mod recon {
     }
 
     fn errors(s: &GameState, os: Vec<Order>) -> Vec<String> {
-        air::validate_orders(s, P0, &os)
+        air::validate_orders(s, P0, &os, s.clone())
             .into_iter()
             .map(|e| e.message)
             .collect()
