@@ -137,7 +137,7 @@ function RowDetail({ model, s, kind }: { model: VpModel; s?: Source; kind: 'work
   }
   const info = s.era!;
   return <div className={`sl-detail sl-era${info.myScored ? ' scored' : ''}`}>
-    <p className="sl-detail-rule">{eraLine(s)} <span className="sl-detail-fine">{`${info.myScored ? 'Every empire sees these cards the turn the first empire enters the era, and they never expire. ' : ''}Each card counts only what you do after its Age begins. Humble the mighty and Breach never count capitals or wonder cities.`}</span></p>
+    <p className="sl-detail-rule">{eraLine(s)} <span className="sl-detail-fine">{`${info.myScored ? 'Every empire sees this card the turn the first empire enters the era, and it never expires. ' : ''}Each card counts only what you do after its Age begins. Humble the mighty and Breach never count capitals or wonder cities.`}</span></p>
     <EraObjectives model={model} s={s} />
   </div>;
 }
@@ -246,7 +246,7 @@ export function ScoreLedger({ model, turn, close, closeRef }: { model: VpModel; 
         <span className="sl-kick"><Star size={8} /> Victory points · turn {turn}</span>
         <h2 id="vh-sheet-title">Every Way to Score</h2>
       </div>
-      <p className="sl-win">The first team to hold <b>{target} VP</b> for 10 turns wins. World wonders, rival capitals and held goals can change hands; Age points stay earned.</p>
+      <p className="sl-win">The first team to hold <b>{target} VP</b> for 10 turns wins. World wonders, rival capitals and goals can be lost; Age points stay earned.</p>
       <button ref={closeRef} type="button" className="btn vh-close" onClick={close} aria-label="Close objectives">Close <kbd className="kbd">Esc</kbd></button>
     </header>
     <div className="sl-body" ref={body}>

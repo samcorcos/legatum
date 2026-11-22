@@ -266,7 +266,7 @@ export function buildVpModel(view: PlayerView): VpModel {
     };
     return {
       id: eraId(ev.era), kind: 'era', name: `Age ${roman(ev.era)}: ${ev.name}`, icon: ERA_ICON, vp: 1, rule: 'Score this Age’s card whenever you like; 1 VP, kept for good',
-      terms: 'Kept for good · once per Age · the cards never expire', live: false, owners, own: own(owners),
+      terms: 'Kept for good · once per Age · the card never expires', live: false, owners, own: own(owners),
       facts: alive.map((p) => ({ id: p.id, value: owners.includes(p.id) ? 2 : ev.entered_by.includes(p.id) ? 1 : 0, label: owners.includes(p.id) ? 'Scored' : 'Open' })),
       unit: '', era: info,
     };

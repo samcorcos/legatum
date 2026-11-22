@@ -19,7 +19,7 @@ export const ALLIANCE_SHARES = 'Allies defend each other at once, and each ally 
 
 export const TREATY_DEFINITION = {
   Peace: `You can’t attack each other. Peace signed after a War starts a ${guaranteeTurns}-turn truce; neither side can declare War or be pulled into War with the other during it. After it ends, a declaration starts War at once.`,
-  Alliance: `${ALLIANCE_SHARES} Each empire pays Gold per turn for its cities, but no upkeep while at War with an empire close to winning.`,
+  Alliance: `${ALLIANCE_SHARES} Each ally pays Gold a turn for its cities, but nothing while at War with an empire close to winning.`,
   War: `You can attack each other, and so can the allies who joined each side. A Peace treaty ends only the war between its two teams once both agree, then starts a ${guaranteeTurns}-turn truce for that pair. Other wars continue.`,
 } as const;
 

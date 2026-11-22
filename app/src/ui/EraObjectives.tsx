@@ -16,7 +16,7 @@ import './eraObjectives.css';
 
 const PART_ICON = { eras: 'milestone-six-techs', work: 'milestone-relay-uplink', goal: 'vp' } as const;
 /** The one rule behind every count (R1), shown wherever progress is. */
-const COUNT_NOTE = 'Counts only what you do after the Age begins and after your last Age score';
+const COUNT_NOTE = 'Counts only what you do after this Age begins and after you last scored an Age';
 const open = () => useGame.getState().set({ vpExpanded: true });
 const COUNT_UNIT: Record<string, string> = {
   Cities: 'cities', Population: 'population', Territory: 'tiles', Buildings: 'cities with this building',
@@ -110,7 +110,7 @@ function EntryNote({ hud }: { hud: EraHud }) {
   return <p className="eo-note" data-testid="era-entry-note">
     {hud.noObjective
       ? <>No Age has begun. The first begins when any empire enters the {hud.focus.name} era, and its card is shown to everyone.</>
-      : hud.focus.era < ERA_COUNT ? <>The next Age begins when any empire enters the {eraName(hud.focus.era)} era. Its cards stay hidden until then.</> : null}
+      : hud.focus.era < ERA_COUNT ? <>The next Age begins when any empire enters the {eraName(hud.focus.era)} era. Its card stays hidden until then.</> : null}
   </p>;
 }
 
