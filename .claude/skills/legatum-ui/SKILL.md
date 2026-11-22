@@ -103,7 +103,7 @@ Pillars 5 (no hidden math) and 9 (the next action is always obvious) from CLAUDE
 - **State each rule once per card.**
 - **In compact rows, the deciding fact comes first** and is never truncated.
 - **Invalid choices are greyed out and can't be selected (Civ 6).** An item the city can't build now (e.g. a Settler at pop 1) shows its reason on the card and in a tooltip ("Needs 2 population · grows in 7 turns"). No queue-and-wait states that waste turns, and repeated clicks never silently stack identical items (playtest 6.2).
-- **Faction-accurate everywhere:** tech cards, pickers and the Guide show only what helps *your* faction, and show its replacements (Customs Bastion, not Walls). A tech with no benefit says so ("No benefit for the Mongols · leads to X"). Never show a bonus the faction can't use (playtest 6.2: Laboratory +3 Science shown to a faction that did not research).
+- **Faction-accurate everywhere:** tech cards, pickers and the Guide show only what helps *your* faction, and show its replacements (Customs Bastion, not Walls). No card ever says a tech gives nothing (user, 2026-11-22: "any time you have this kind of card is a failure mode"): a tech with nothing for a faction is skipped, known from the start and left off its research screens. Never show a bonus the faction can't use (playtest 6.2: Laboratory +3 Science shown to a faction that did not research).
 - **Text fits its box.** Long messages use readable sentence-case body text, not tiny letter-spaced caps, and never overflow under key hints.
 - **Identify empires everywhere:** names plus colours or emblems, and where they are on the map; the minimap matters.
 - Every unit names its owner in words and emblem; owners are never told apart by colour alone.
