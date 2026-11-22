@@ -331,7 +331,7 @@
    "set": "units-miniature",
    "a": "autonomous-armour",
    "b": "mechanised-infantry",
-   "why": "Low unmanned olive tracked vehicle with sensor turret versus tan multi-person mechanised group and vehicle. Shared broad base footprint; distinctly different contents. Group readability is separately still a poor-art finding. Accepted by the lead 2026-11-16 (two different paintings; a shared standing outline is not a copied figure)."
+   "why": "Low unmanned olive tracked vehicle with a sensor turret versus a sand-and-olive eight-wheeled carrier with one soldier on its ramp: tracks against wheels and a figure. Accepted by the lead 2026-11-22 (art audit repaint; two different paintings of their own subjects, the shared cream base raises the outline score)."
   },
   {
    "set": "units-miniature",
@@ -392,6 +392,30 @@
    "a": "reislaufer",
    "b": "spartan-hoplite",
    "why": "spearmen of two different factions and eras, just over the line; accepted on the user's delegation (\"use your judgment\", 2026-11-14)"
+  },
+  {
+   "set": "units-miniature",
+   "a": "hunter-killer",
+   "b": "tank",
+   "why": "A dark grey hull walking on four thick legs versus an olive WWII tank on tracks with a long gun: legs against tracks, read at 45 px. Accepted by the lead 2026-11-22 (art audit repaint; two different paintings of their own subjects, the shared cream base raises the outline score)."
+  },
+  {
+   "set": "units-miniature",
+   "a": "hunter-killer",
+   "b": "panzer",
+   "why": "A dark grey hull walking on four thick legs versus a camouflaged WWII Panzer on tracks: legs against tracks, read at 45 px. Accepted by the lead 2026-11-22 (art audit repaint; two different paintings of their own subjects, the shared cream base raises the outline score)."
+  },
+  {
+   "set": "units-miniature",
+   "a": "main-battle-tank",
+   "b": "mechanised-infantry",
+   "why": "A low tracked tank with a long gun versus an eight-wheeled carrier with its ramp down and one soldier stepping off: wheels and a figure against tracks and a gun. Accepted by the lead 2026-11-22 (art audit repaint; two different paintings of their own subjects, the shared cream base raises the outline score)."
+  },
+  {
+   "set": "units-miniature",
+   "a": "artillery",
+   "b": "hunter-killer",
+   "why": "A towed field gun on two spoked wheels versus a turreted hull on four legs. Accepted by the lead 2026-11-22 (art audit repaint; two different paintings of their own subjects, the shared cream base raises the outline score)."
   }
  ],
  "watch": {
