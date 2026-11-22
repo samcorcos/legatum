@@ -122,7 +122,8 @@ already). The host's own in-tab connection never sees chunks.
 ## UI (`app/src`)
 
 - **Multiplayer > Host Game**: asks for the name shown in the game list, starts the in-tab host and lands in the
-  existing staging room. **Leave game** sends `bye`, closes the room and returns to the title.
+  existing staging room. In a running game the host's menu item is **End the game for everyone** (after a confirm);
+  it sends `bye`, closes the room and returns to the title. A guest's item is **Leave the game (free this seat)**.
 - **Multiplayer > Join Game**: a lobby list from `GET /lobby` (refresh every 3 s): host name,
   players, open seats, "Waiting in lobby" or "Turn N". One primary action per row: **Join**. A row whose
   `build` differs from this build's (both known) shows "This game is on version X and you have Y. Update the
