@@ -327,6 +327,7 @@ export function describeOrder(o: Order, view: PlayerView): string {
     case 'SetResearchQueue':
       return o.techs.length ? `Research ${o.techs.map((t) => TECH_NAME[t]).join(' → ')}` : 'Clear research queue';
     case 'SetScienceConversion': return `Convert Science to ${o.to}`;
+    case 'GiveGold': return `Give ${o.amount} Gold to ${view.players.find((p) => p.id === o.to)?.name ?? `Empire ${o.to}`} (after this turn's purchases)`;
     case 'Action':
       switch (o.action.action) {
         case 'Swarm': return `Kindle the New Fire: offer ${view.actions?.swarm?.population ?? 50} population · +2 VP, permanent`;

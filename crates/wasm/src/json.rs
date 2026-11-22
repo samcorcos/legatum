@@ -105,6 +105,94 @@ fn parse_state_with_version(json: &str, check_version: bool) -> Result<GameState
     Ok(state)
 }
 
+/// The rules version `upgrade_from_49` reads.
+pub const UPGRADABLE_RULES_VERSION: u32 = 49;
+
+/// Simulation only (the app keeps refusing a version-49 save): read a rules-49 saved state as a
+/// rules-50 one, for analysis that starts from recorded positions which cannot be regenerated
+/// (hill-climb do-no-harm states). `json` is a save (`save_version` 49 or 50) or a bare state
+/// line with no `save_version` (`audit_states` output). See `upgrade_value_from_49` for what changes.
+pub fn upgrade_from_49(json: &str) -> Result<GameState, String> {
+    check_json_size(json)?;
+    let v: Value = serde_json::from_str(json).map_err(|e| format!("invalid JSON: {e}"))?;
+    match v.get("save_version").and_then(Value::as_u64) {
+        None => {}
+        Some(n) if n == u64::from(UPGRADABLE_RULES_VERSION) => {}
+        Some(n) if n == u64::from(legatum_core::RULES_VERSION) => return parse_state(json),
+        Some(n) => {
+            return Err(format!(
+                "upgrade reads rules {UPGRADABLE_RULES_VERSION} or {}, got {n}",
+                legatum_core::RULES_VERSION
+            ));
+        }
+    }
+    upgrade_value_from_49(v)
+}
+
+/// The rules-49 to rules-50 upgrade of a parsed state:
+/// - `Player::capitals_taken` (49: every original capital the empire ever captured, kept for good)
+///   is gone. Rules 50 derives a held capital's point from who holds it now, so a capital the
+///   taker still holds keeps scoring and one it lost stops. A Celtic entry whose city no longer
+///   exists was a sack, so it moves to `capitals_sacked` and keeps its point for good. Any other
+///   entry whose city is gone (an ordered Raze) loses its point, as in rules 50.
+/// - Removed fields (`objectives_deck`, retired `FightStats` counters, `Levels::techs`) are ignored.
+/// - A scored Age record keeps its point, and its slot becomes 0 (one card per Age). A record's
+///   counting snapshot is kept, so a 49 era-arm game's open eras count from the same turn. The
+///   next turn end gives every living empire a record for each Age begun so far.
+///
+/// Faithful except for the slot, which only names which card scored (it never changes VP).
+pub fn upgrade_value_from_49(mut v: Value) -> Result<GameState, String> {
+    let mut taken: Vec<Vec<(u64, String)>> = Vec::new();
+    if let Some(players) = v.get_mut("players").and_then(Value::as_array_mut) {
+        for p in players {
+            let list = p
+                .as_object_mut()
+                .and_then(|o| o.remove("capitals_taken"))
+                .and_then(|m| m.as_object().cloned())
+                .map(|m| {
+                    m.into_iter()
+                        .filter_map(|(k, name)| Some((k.parse().ok()?, name.as_str()?.to_owned())))
+                        .collect()
+                })
+                .unwrap_or_default();
+            taken.push(list);
+        }
+    }
+    if let Some(setup) = v.get_mut("setup") {
+        seed_from_string(setup, "seed")?;
+    }
+    let mut state: GameState =
+        serde_json::from_value(v).map_err(|e| format!("invalid rules-49 state: {e}"))?;
+    for (i, list) in taken.into_iter().enumerate() {
+        let Some(p) = state.players.get(i) else {
+            continue;
+        };
+        if p.faction != legatum_core::Faction::Celts {
+            continue;
+        }
+        let gone: Vec<(legatum_core::CityId, String)> = list
+            .into_iter()
+            .map(|(id, name)| (legatum_core::CityId(id as u32), name))
+            .filter(|(id, _)| !state.cities.contains_key(id))
+            .collect();
+        let sacked = &mut state.players[i].capitals_sacked;
+        for entry in gone {
+            if !sacked.iter().any(|(id, _)| *id == entry.0) {
+                sacked.push(entry);
+            }
+        }
+    }
+    for p in &mut state.players {
+        for record in p.eras.values_mut() {
+            if let Some(score) = &mut record.scored {
+                score.slot = 0;
+            }
+        }
+    }
+    legatum_core::validation::check_state(&state)?;
+    Ok(state)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

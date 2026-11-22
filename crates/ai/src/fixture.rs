@@ -717,6 +717,7 @@ pub fn assert_valid(view: &PlayerView, orders: &[Order]) {
             Order::SetAutoFire { .. } => panic!("AI seats do not set human garrison automation"),
             Order::SetCityAutomation { .. } => panic!("AI seats do not delegate city production"),
             Order::BuyTile { .. } => panic!("AI seats do not buy tiles"),
+            Order::GiveGold { .. } => panic!("AI seats do not give Gold"),
             Order::Raze { city } => {
                 let c = own_city(*city);
                 assert!(

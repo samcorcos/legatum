@@ -20,6 +20,7 @@ pub mod air;
 pub mod barbarians;
 pub mod battle;
 pub mod cities;
+pub mod gifts;
 pub mod movement;
 pub mod occupation;
 #[cfg(test)]
@@ -226,6 +227,7 @@ pub fn validate_orders(state: &GameState, player: PlayerId, orders: &[Order]) ->
     };
     errors.extend(city_errors);
     errors.extend(actions::validate_actions(state, player, orders));
+    errors.extend(gifts::validate_gifts(state, player, orders));
     // An air strike resolves in the same ranged phase, so it sees the same surprise wars.
     errors.extend(air::validate_orders(
         ranged_state.as_ref().unwrap_or(state),
@@ -320,6 +322,8 @@ pub fn resolve_turn(
     for (p, os) in &orders {
         actions::apply_actions(&mut s, *p, os, &mut events);
     }
+    // Gifts between teammates move after every purchase, so a teammate spends them next turn.
+    gifts::apply_gifts(&mut s, &orders, &mut events);
     // 2. Ranged attacks.
     let held = air::resolve_ranged_phase(
         &mut s,

@@ -1204,6 +1204,12 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
       return line('victory', `${who(ctx, e.captor)} sacked the original capital ${e.name}: +1 VP, kept for good`, {
         players: [e.captor], weight: 2, tone: e.captor === ctx.me ? 'good' : 'neutral',
       });
+    case 'GoldGiven':
+      return line('economy', e.from === ctx.me
+        ? `You gave ${who(ctx, e.to)} ${e.amount} Gold`
+        : e.to === ctx.me ? `${who(ctx, e.from)} gave you ${e.amount} Gold` : `${who(ctx, e.from)} gave ${who(ctx, e.to)} ${e.amount} Gold`, {
+        players: [e.from, e.to], weight: 2, tone: e.to === ctx.me ? 'good' : 'neutral',
+      });
     case 'CapitalLost':
       return line('victory', `${who(ctx, e.player)} no longer ${e.player === ctx.me ? 'hold' : 'holds'} the original capital ${e.name}: −1 VP`, {
         at: ctx.cityPos(e.capital), players: [e.player], weight: 2, tone: e.player === ctx.me ? 'bad' : 'neutral',

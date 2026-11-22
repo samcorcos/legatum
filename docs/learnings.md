@@ -2,6 +2,12 @@
 
 Newest first. One entry per non-obvious finding: what we learned, the evidence, and what we changed. Correct or delete entries that turn out to be wrong.
 
+## 2026-11-22: Rules-49 states upgrade for sims; co-op Gold gifts (rules 50, `claude/review-world-ages`)
+
+- **A rules-49 state can be upgraded faithfully, with two known differences.** `wasm::json::upgrade_from_49` drops each player's `capitals_taken`. A Celtic entry whose city no longer exists becomes `capitals_sacked`, which is exactly the rules-50 exception. Held-capital VP is derived live from current holders. Every scored Age card's `slot` is set to 0, since only one card per Age exists now. The two differences: the slot rename (display only), and a non-Celtic capital razed by order loses its point, which is what rules 50 intends. The app still refuses 49. Only sims opt in (`hill_suite --accept-rules 49`). The checked-in fixture is the owner's "India: strike the leader" T148 state (`crates/sim/tests/fixtures-rules49/`), which plays 10 all-Hard turns after the upgrade.
+- **Tapes cannot be upgraded this way.** A tape replays from turn 1 under new rules, so a 49 tape still fails on its first hash mismatch. Only states carry over.
+- **Gold gifts move after purchases, not at the turn's start.** If a gift moved first, the giver could promise Gold and then spend it on a purchase in the same turn, and both would be checked against the same treasury. Moving the gift after `apply_actions`, capped at the Gold left, means purchases always win and a gift never overdraws. Validation still checks all of a turn's gifts against the starting treasury, so the forecast the player sees is an upper bound ("before income and purchases"). The AI never gives Gold. Its fixture panics on a `GiveGold`, so a future AI path has to be added on purpose.
+
 ## 2026-11-22: World Ages becomes the only era scoring; three peaceful cards per Age (rules 50, `claude/review-world-ages`)
 
 - **What was removed.** The `objectives_deck` switch and the `objectives=era` arm, plus everything only that arm used. On the card side: the Techs, Captures, CapturesFromAhead, CapturesFromLeader, Kills and BreakLeaderHold kinds, `era_pool`, and the slot-per-family draw. Counters went too: `FightStats` captures, kills and leader counters, `Levels::techs`, and the `CaptureVpSnapshot` leader. The AI lost its arms for those kinds (`objective_pursuit`), and the app lost every `rule_experiments?.objectives_deck` branch plus the lobby's Rule experiments section. The setup and staging types the lobby used are gone with it.

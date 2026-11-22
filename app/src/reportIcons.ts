@@ -33,6 +33,7 @@ export function eventIcon(e: Event, faction?: (player: number) => Faction | unde
     case 'EraEntered': case 'AgeBegan': case 'EraObjectiveScored': return 'emblem-milestone';
     case 'CapitalTaken': return 'vp';
     case 'CapitalSacked': return 'vp';
+    case 'GoldGiven': return 'yield-gold';
     case 'CapitalLost': return 'vp';
     case 'FactionGoalCompleted': return e.faction === 'Byzantium' ? 'unit-heir' : e.faction === 'Mongols' ? 'building-courierhall' : 'emblem-milestone';
     case 'FactionGoalLost': return e.faction === 'Byzantium' ? 'unit-heir' : e.faction === 'Mongols' ? 'building-courierhall' : 'ui-trend-down';

@@ -410,6 +410,13 @@ pub enum Event {
         capital: CityId,
         name: String,
     },
+    /// Team only: Gold one empire gave a teammate (`Order::GiveGold`), after this turn's
+    /// purchases. `amount` is what moved, capped at the Gold the giver had left.
+    GoldGiven {
+        from: PlayerId,
+        to: PlayerId,
+        amount: i32,
+    },
     /// Public: a Celtic empire burned a rival's original capital in a sack and keeps its 1 VP
     /// for the rest of the game.
     CapitalSacked {

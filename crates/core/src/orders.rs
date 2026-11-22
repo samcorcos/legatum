@@ -191,6 +191,13 @@ pub enum Order {
     Action {
         action: Action,
     },
+    /// Give Gold to a living teammate (same team, never yourself). It moves after every empire's
+    /// purchases this turn, capped at the Gold the giver has left then, so the teammate can spend
+    /// it from next turn (`rules::gifts`).
+    GiveGold {
+        to: PlayerId,
+        amount: i32,
+    },
 }
 
 /// The one-time actions an empire can order (`Order::Action`). One order variant carries them

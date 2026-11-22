@@ -1052,7 +1052,9 @@ export type Order =
   | { type: 'BuyTile'; city: CityId; tile: Hex }
   /** Buy Siege for a land military unit in own territory: its attacks on a city ignore enemy Walls, for good (core `rules::siege`). */
   | { type: 'UpgradeSiege'; unit: UnitId }
-  | { type: 'Action'; action: GameAction };
+  | { type: 'Action'; action: GameAction }
+  /** Give Gold to a living teammate (core `rules::gifts`): it moves after this turn's purchases, capped at the Gold left then. */
+  | { type: 'GiveGold'; to: PlayerId; amount: number };
 
 /**
  * A one-time empire action (core `orders::Action`, serde tag "action"). One order carries them
@@ -1171,6 +1173,8 @@ export type Event =
   | { type: 'AthensCityCaptured'; city: CityId; from: PlayerId; to: PlayerId }
   | { type: 'CapitalTaken'; captor: PlayerId; capital: CityId; name: string }
   | { type: 'CapitalSacked'; captor: PlayerId; capital: CityId; name: string }
+  /** Team only: Gold one empire gave a teammate, after this turn's purchases. */
+  | { type: 'GoldGiven'; from: PlayerId; to: PlayerId; amount: number }
   | { type: 'CapitalLost'; player: PlayerId; capital: CityId; name: string }
   | { type: 'CityRazed'; city: CityId; from: PlayerId; by: PlayerId; at: Hex; original_capital?: boolean; sack_gold?: number; camp?: Hex; ordered?: boolean }
   | { type: 'BuildingDismantled'; city: CityId; owner: PlayerId; building: BuildingKind; reason: string }

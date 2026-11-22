@@ -159,6 +159,10 @@ const CASES: Record<Event['type'], [string, Event, Tone][]> = {
     ['you sacked a capital', ev({ type: 'CapitalSacked', captor: 0, capital: 5, name: 'Rome' }), 'good'],
     ['a rival sacked a capital', ev({ type: 'CapitalSacked', captor: 2, capital: 5, name: 'Rome' }), 'neutral'],
   ],
+  GoldGiven: [
+    ['you gave a teammate Gold', ev({ type: 'GoldGiven', from: 0, to: 1, amount: 40 }), 'neutral'],
+    ['a teammate gave you Gold', ev({ type: 'GoldGiven', from: 1, to: 0, amount: 40 }), 'good'],
+  ],
   CapitalLost: [
     ['your held point lost', ev({ type: 'CapitalLost', player: 0, capital: 5, name: 'Rome' }), 'bad'],
     ['rival held point lost', ev({ type: 'CapitalLost', player: 2, capital: 5, name: 'Rome' }), 'neutral'],
