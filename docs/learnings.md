@@ -12,6 +12,7 @@ Newest first. One entry per non-obvious finding: what we learned, the evidence, 
 - **Own banners drew under own units unless a foreign unit stood beside the city** (`render.ts::bannerAboveUnits`, now gone), so a unit on the NE or NW neighbour covered the name, population and meters (tour 2026-11-22, `unit-north/*`). Zoomed in, every banner now draws after the units; zoomed out the seal still draws under them.
 - **Drawing the banner on top was not enough at the smallest near zooms (0.61-1.0):** the plate plus meters is about 40 px tall against a 44 px hex, so the token on the hex above vanished almost entirely. `bannerLift` raises such a token to the banner's top edge (at most half a hex), and its head and owner disc show. The raised token pokes out of its own hex, so `draw` returns `liftedHits` and the map routes clicks there to the token's hex.
 - **Map clicks were hex-only:** a banner drawn over a token would have sent its clicks to the unit behind it. `bannerCityAt` (`bannerTooltip.ts`) routes click, tap, right-click and hover on a banner to its city, using the drawn parts (plate, and the meter/siege strip at its own width), not the cover box: an alarmed banner's cover box reaches the neighbouring hex's centre, which broke `occupation-lock`'s right-click. Tour helper `aim` now aims at a raised token's head when a banner covers the hex centre.
+
 ## 2026-11-22: Whole-game tour layout fixes at 1000x600 (`ui-tour/layout`)
 
 - The city panel's idle reveal (`revealIdleProductionPicker`) scrolls to the build list under the sticky head, so any row between the head and the list (the yields) vanished on open. Rows that must stay in view belong inside `.cp-head`; `--cp-head-h` and the reveal follow its height on their own.
@@ -59,6 +60,18 @@ Newest first. One entry per non-obvious finding: what we learned, the evidence, 
 ## 2026-11-22: The new-era card reopened the research screen after research was picked (`claude/project-thread-fuxj51`)
 
 - **A held card's "Choose research" was frozen when the turn's story was planned.** `eraUpCardFor` and `unlockCardFor` read `research.queue`/`current` from the view after the turn; a research pick is a pending `SetResearchQueue` order, not in the view until the next turn resolves. The held card also waits behind any open dialog (`useDialogOpen` in `MomentLane.tsx`), so a player who opened the research screen quickly, picked, then met the era takeover still saw "Choose research", and Return reopened the screen. `celebrate/researchSettled.ts` now re-checks `effectiveResearchQueue` over the pending orders when the card shows and turns that primary into Continue (or keeps Show for an unlock).
+
+## 2026-11-22: Chrome consistency: one form per concept (`ui-tour/chrome`)
+
+- **All-caps key hints came from `.btn { text-transform: uppercase }` reaching the `<kbd>` inside it.** `.kbd` and `:is(.btn,.act,.cta,.prod,.link) kbd` now set `text-transform: none`, so "Return" and "Esc" print as typed in every button.
+- **Renaming a visible label means renaming its `aria-label` and every e2e `getByRole` name with it.** The Score ledger link kept `aria-label="All objectives"` and about 25 specs matched on it; the link now has no aria-label (its text is its name). Specs matching "Diplomacy inbox" now match `/^Diplomacy/`.
+
+## 2026-11-22: Tour copy and icons: sheets, report medallions, Age word (`ui-tour/copyb`)
+
+- **Faction sheets read `FACTION_GOAL[f].sheet` (one sentence), not `detail`.** `detail` keeps the fine print for the Guide, `vpModel` and the picker blurb; a goal without a `sheet` falls back to `detail`. VP amounts on the sheet go through `Amounts` so they wear the VP icon.
+- **Report medallions take two pseudo-icon names:** `era-numeral:III` (the era's numeral seal) and `wonder:<Wonder>` (a natural wonder's painting), both handled by `Glyph` in `ringMedallion.tsx`. `EraEntered` was unreachable at its second `case` (the tech case came first), so era lines drew the tech emblem.
+- **Deck mode is the "Age" mode:** a screen that can show either mode must pick the word from `view.rule_experiments.objectives_deck` (the `HowYouWin.deck` flag for the HUD); screens with no view (the loading tips) stay neutral ("Scored objectives").
+- **One word per concept is enforced by `app/src/test/copyRules.ts`** (HP not health, "No Walls", "Not growing", "Military units 3 / 2", "strength" not "melee" for a figure, "65 ranged · range 2", "Needs orders", "Needs X" for a missing tech). The Iron shortage line is built in `improvementReason` from supply data ("Siege needs 1 Iron. You have 2 Iron for 4 needs: ..."); when Upgrade and Siege are both blocked it is one line, because two lines push Disband out of the 1000x600 panel.
 
 ## 2026-11-22: Engine robustness review: save references, aircraft upgrade Gold, save/hash allocations (`claude/review-engine-robustness`)
 

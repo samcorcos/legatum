@@ -83,7 +83,7 @@ These clips are recorded from the running game.
 
 <table align="center">
   <tr>
-    <td width="50%"><img src="docs/media/loop-race.webp" alt="The race panel opens into the score ledger: every way to score, and which of eight empires holds each point." width="100%"></td>
+    <td width="50%"><img src="docs/media/loop-race.webp" alt="The Victory race opens into the Score ledger: every way to score, and which of eight empires holds each point." width="100%"></td>
     <td width="50%"><img src="docs/media/loop-research.webp" alt="The research screen with illustrated unlock cards and a unit hovercard." width="100%"></td>
   </tr>
   <tr>
@@ -91,7 +91,7 @@ These clips are recorded from the running game.
     <td valign="top"><sub><b>Technologies worth wanting.</b> Every unlock is illustrated, and a hover shows what it beats, what it loses to and how it compares with what it replaces.</sub></td>
   </tr>
   <tr>
-    <td width="50%"><img src="docs/media/loop-diplomacy.webp" alt="The Diplomacy inbox: an empire declined an Alliance, with every factor in its decision listed." width="100%"></td>
+    <td width="50%"><img src="docs/media/loop-diplomacy.webp" alt="Diplomacy, Inbox tab: an empire declined an Alliance, with every factor in its decision listed." width="100%"></td>
     <td width="50%"><img src="docs/media/loop-factions.webp" alt="The faction picker: the peoples, each with a sheet of strengths and the price that pays for them." width="100%"></td>
   </tr>
   <tr>
