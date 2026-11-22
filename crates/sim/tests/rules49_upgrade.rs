@@ -1,4 +1,4 @@
-//! A rules-49 saved state upgrades to rules 50 for simulation (`legatum_wasm::json::upgrade_from_49`)
+//! A rules-49 saved state upgrades to the current rules (50, then 51, which changes no field) for simulation (`legatum_wasm::json::upgrade_from_49`)
 //! and plays on with Hard in every seat. The fixture is the T148 state of the "India: strike the
 //! leader" Lab scenario as it stood at rules 49 (the owner's recorded game): the Celts had sacked
 //! Dyrrachium, an original capital, and the Mongols held Lugdunum.

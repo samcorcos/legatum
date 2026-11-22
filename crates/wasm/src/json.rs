@@ -116,31 +116,46 @@ pub fn state_from_value(mut v: Value, check_version: bool) -> Result<GameState, 
     Ok(state)
 }
 
-/// The rules version `upgrade_from_49` reads.
+/// The oldest rules version `upgrade_from_49` reads (it reads 49, 50 and the current one).
 pub const UPGRADABLE_RULES_VERSION: u32 = 49;
 
-/// Simulation only (the app keeps refusing a version-49 save): read a rules-49 saved state as a
-/// rules-50 one, for analysis that starts from recorded positions which cannot be regenerated
-/// (hill-climb do-no-harm states). `json` is a save (`save_version` 49 or 50) or a bare state
-/// line with no `save_version` (`audit_states` output). See `upgrade_value_from_49` for what changes.
+/// Simulation only (the app keeps refusing a save from any other rules version): read a rules-49
+/// or rules-50 saved state as a current (rules-51) one, for analysis that starts from recorded
+/// positions which cannot be regenerated (hill-climb do-no-harm states). `json` is a save
+/// (`save_version` 49, 50 or 51) or a bare state line with no `save_version` (`audit_states`
+/// output; a line carrying `capitals_taken` is read as rules 49, any other as rules 50). See
+/// `upgrade_value_from_49` and `upgrade_value_from_50` for what changes.
 pub fn upgrade_from_49(json: &str) -> Result<GameState, String> {
     check_json_size(json)?;
     let v: Value = serde_json::from_str(json).map_err(|e| format!("invalid JSON: {e}"))?;
     match v.get("save_version").and_then(Value::as_u64) {
-        None => {}
-        Some(n) if n == u64::from(UPGRADABLE_RULES_VERSION) => {}
-        Some(n) if n == u64::from(legatum_core::RULES_VERSION) => return parse_state(json),
-        Some(n) => {
-            return Err(format!(
-                "upgrade reads rules {UPGRADABLE_RULES_VERSION} or {}, got {n}",
-                legatum_core::RULES_VERSION
-            ));
-        }
+        None if carries_rules_49_fields(&v) => upgrade_value_from_49(v),
+        None | Some(50) => upgrade_value_from_50(v),
+        Some(49) => upgrade_value_from_49(v),
+        Some(n) if n == u64::from(legatum_core::RULES_VERSION) => parse_state(json),
+        Some(n) => Err(format!(
+            "upgrade reads rules {UPGRADABLE_RULES_VERSION} to {}, got {n}",
+            legatum_core::RULES_VERSION
+        )),
     }
-    upgrade_value_from_49(v)
 }
 
-/// The rules-49 to rules-50 upgrade of a parsed state:
+/// Whether a bare recorded state carries a field only a rules-49 engine wrote
+/// (`Player::capitals_taken`).
+pub fn carries_rules_49_fields(v: &Value) -> bool {
+    v.get("players")
+        .and_then(Value::as_array)
+        .is_some_and(|ps| ps.iter().any(|p| p.get("capitals_taken").is_some()))
+}
+
+/// The rules-50 to rules-51 upgrade of a parsed state: the identity. Rules 51 only changes who
+/// counts for Humble the mighty (`objectives::humbles`, judged each turn from the turn-start VP);
+/// no field changes, and a capture counted under rules 50 stays counted.
+pub fn upgrade_value_from_50(v: Value) -> Result<GameState, String> {
+    state_from_value(v, false)
+}
+
+/// The rules-49 to rules-50 upgrade of a parsed state (then rules 51, which changes no field):
 /// - `Player::capitals_taken` (49: every original capital the empire ever captured, kept for good)
 ///   is gone. Rules 50 derives a held capital's point from who holds it now, so a capital the
 ///   taker still holds keeps scoring and one it lost stops. A Celtic entry whose city no longer
@@ -174,6 +189,7 @@ pub fn upgrade_value_from_49(mut v: Value) -> Result<GameState, String> {
     }
     let mut state: GameState =
         serde_json::from_value(v).map_err(|e| format!("invalid rules-49 state: {e}"))?;
+    // Every later upgrade step (50 to 51) is the identity.
     for (i, list) in taken.into_iter().enumerate() {
         let Some(p) = state.players.get(i) else {
             continue;
@@ -287,13 +303,15 @@ mod tests {
     }
 
     #[test]
-    fn rules_50_saves_round_trip_and_a_version_49_save_is_refused() {
+    fn rules_51_saves_round_trip_and_a_version_50_save_is_refused() {
         // Rules 47: held shots at fallen cities; 48: Egypt's Nile and its Grow project. The save
         // shape only gains the project value, so a city growing on the Nile round-trips at 48,
         // and a 47 save is refused rather than migrated. Rules 49: Egypt starts knowing the Bronze
         // Working it skips; the save shape is unchanged, and a 48 save is refused. Rules 50: a
         // rival capital's VP is held, so `Player::capitals_taken` is gone, and a 49 save is refused.
-        assert_eq!(legatum_core::RULES_VERSION, 50);
+        // Rules 51: who counts for Humble the mighty; the save shape is unchanged, and the app
+        // refuses a 50 save (only the simulation upgrade reads it).
+        assert_eq!(legatum_core::RULES_VERSION, 51);
         let mut setup = GameSetup::all_ai(3);
         setup.players[0].faction = legatum_core::Faction::Egypt;
         let mut state = legatum_core::new_game(&setup);
@@ -316,7 +334,7 @@ mod tests {
         );
         assert_eq!(state.cities[&city].producing, Some(grow), "{events:?}");
         let save = state_to_json(&state);
-        assert!(save.contains("\"save_version\":50"));
+        assert!(save.contains("\"save_version\":51"));
         assert!(!save.contains("capitals_taken"));
         assert!(
             state
@@ -327,12 +345,13 @@ mod tests {
         assert!(save.contains("\"Grow\""));
         assert_eq!(parse_state(&save).unwrap(), state);
         let mut old: Value = serde_json::from_str(&save).unwrap();
-        old["save_version"] = Value::from(49);
+        old["save_version"] = Value::from(50);
         assert!(
             parse_state(&old.to_string())
                 .unwrap_err()
-                .contains("incompatible rules version: saved Some(49), current 50")
+                .contains("incompatible rules version: saved Some(50), current 51")
         );
+        assert_eq!(upgrade_from_49(&old.to_string()).unwrap(), state);
     }
 
     #[test]
