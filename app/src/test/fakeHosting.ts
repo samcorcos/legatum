@@ -1,8 +1,8 @@
 // Store tests that need "this tab hosts the game" without the WASM host: stands in for net/hosting.ts.
 // The in-tab host's status and admin calls go to the test's stubbed global fetch, and its sockets are
 // the test's stubbed WebSocket, so a test reads like it did against a same-origin server.
-//   vi.mock('../net/hosting', async () => (await import('./fakeHosting')).fakeHostingModule());
-//   hostThisTab();   // before boot(): a reload of a hosting tab
+// Use it by mocking '../net/hosting' with fakeHostingModule(), and call hostThisTab() before boot()
+// to stand for a reload of a hosting tab.
 import { setLocalEndpoint, type SocketLike } from '../remote';
 import { setOnlineApi } from '../platform/online';
 
