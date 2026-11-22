@@ -23,6 +23,8 @@ env:
   PAGES_PROJECT: ${{ vars.CLOUDFLARE_PAGES_PROJECT || 'legatum-game' }}
   # Optional: the public address for the link-preview tags, when it is not the one in app/package.json (`homepage`).
   LEGATUM_SITE_URL: ${{ vars.LEGATUM_SITE_URL }}
+  # Optional: the game-upload Worker (infra/games). Set, every game played on the site is saved there.
+  LEGATUM_GAMES_URL: ${{ vars.LEGATUM_GAMES_URL }}
 
 jobs:
   deploy:

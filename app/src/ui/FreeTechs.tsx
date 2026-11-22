@@ -6,7 +6,7 @@
 // `Action::ChooseFreeTechs`, which resolves when the turn ends.
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { PlayerBadge } from './PlayerBadge';
-import { FACTION_INFO, TECH_NAME, techHasBenefit } from '../data';
+import { FACTION_INFO, TECH_NAME } from '../data';
 import { empireOfPlayer, empireTitle } from '../empires';
 import { freeTechTarget, pickState, togglePick } from '../goalActions';
 import { currentEraTechs, eraName, eraNumeral } from './eraResearch';
@@ -135,7 +135,6 @@ export function FreeTechPicker() {
   }, [up]);
   if (!up || !view || !free) return null;
   const research = view.research;
-  const me = view.players.find((p) => p.id === view.me)!;
   const from = free.from !== null ? view.players.find((p) => p.id === free.from) : undefined;
   const target = freeTechTarget(view);
   const left = target - chosen.length;
@@ -170,7 +169,6 @@ export function FreeTechPicker() {
             const state = pickState(research, chosen, t);
             const full = state === 'open' && chosen.length >= target;
             const price = cost(t);
-            const benefit = techHasBenefit(me.faction, t);
             return <button key={t} className={`ftp-tech ${state}${full ? ' full' : ''}`} aria-pressed={state === 'chosen'} aria-disabled={state === 'known' || state === 'blocked' || full}
               data-tech={t} data-state={state}
               title={state === 'known' ? 'Already known' : full ? `You have chosen ${target}: unchoose one first` : undefined}
@@ -181,7 +179,7 @@ export function FreeTechPicker() {
               <span className="ftp-name">{TECH_NAME[t]}</span>
               <span className="ftp-note">
                 {state === 'known' ? 'Known'
-                  : <>{price !== null && <s><Amount n={price} unit="Science" /></s>} free{!benefit && <em> · no benefit for you</em>}</>}
+                  : <>{price !== null && <s><Amount n={price} unit="Science" /></s>} free</>}
               </span>
             </button>;
           })}

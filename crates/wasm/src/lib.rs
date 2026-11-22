@@ -1060,6 +1060,14 @@ impl Game {
         }))
     }
 
+    /// The archive with every seat under its default name ("Player 1", "AI 2"), safe to upload.
+    pub fn public_archive(&self) -> Result<String, JsError> {
+        js(guard(|| {
+            let history = self.session.history.as_ref().ok_or("No recorded history")?;
+            to_json(&history.anonymized()?)
+        }))
+    }
+
     /// Attach nondeterministic client timing to a resolved archive turn, outside GameState.
     pub fn record_turn_time(
         &mut self,

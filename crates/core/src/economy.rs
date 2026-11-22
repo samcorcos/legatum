@@ -1082,6 +1082,8 @@ pub fn tech_known_by(state: &GameState, p: crate::types::PlayerId, tech: TechId)
         .players
         .iter()
         .filter(|o| o.id != p && o.alive && o.techs.contains(&tech))
+        // A faction that skipped it (`data::skipped_techs`) never researched it.
+        .filter(|o| !data::tech_skipped(state.setup.rule_experiments, o.faction, tech))
         .count() as i32
 }
 

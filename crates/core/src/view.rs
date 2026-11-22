@@ -1044,6 +1044,11 @@ pub struct ResearchView {
     pub cost: Option<i32>,
     pub turns_left: Option<i32>,
     pub known: Vec<TechId>,
+    /// Technologies this faction skips: known from the start because they give it nothing
+    /// (`data::skipped_techs`). Research screens leave them out, and the era counts above
+    /// exclude them.
+    #[serde(default)]
+    pub skipped: Vec<TechId>,
     pub available: Vec<TechOption>,
     /// Every existing technology, including locked nodes, at current diffusion prices.
     pub catalog: Vec<TechOption>,
@@ -2122,14 +2127,15 @@ pub fn player_view_cached(
         });
     }
     let era = crate::eras::current_era(&player.techs);
+    let skipped: Vec<TechId> =
+        crate::data::skipped_techs(state.setup.rule_experiments, player.faction).collect();
+    let era_techs = || crate::eras::era_techs(era).filter(|t| !skipped.contains(t));
     let research = ResearchView {
         science_conversion: player.science_conversion,
         era,
         era_name: crate::eras::era_name(era).into(),
-        era_total: crate::eras::era_techs(era).count() as u32,
-        era_known: crate::eras::era_techs(era)
-            .filter(|t| player.techs.contains(t))
-            .count() as u32,
+        era_total: era_techs().count() as u32,
+        era_known: era_techs().filter(|t| player.techs.contains(t)).count() as u32,
         era_firsts: state.era_firsts.iter().map(|(e, p)| (*e, *p)).collect(),
         schedule,
         current: player.researching,
@@ -2138,6 +2144,7 @@ pub fn player_view_cached(
         cost: current_cost,
         turns_left: current_cost.and_then(|cost| turns_needed(cost - stored, science)),
         known: player.techs.iter().copied().collect(),
+        skipped: skipped.clone(),
         catalog: TechId::ALL.into_iter().map(option).collect(),
         unlocks: crate::research::tech_unlocks_for(state, me, full, cache),
         available: TechId::ALL

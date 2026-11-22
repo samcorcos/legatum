@@ -322,4 +322,89 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await shot(page, size, '80l-crop-rotation-paired-unlock');
   });
 
+
+  test('Egypt skips Bronze Working: four Ancient cards, counts without it, its unlock and era-up cards', async ({ page, browser }) => {
+    test.setTimeout(150_000);
+    const research = page.locator('dialog.tech-modal');
+    // Turn 1 as Egypt: Bronze Working is known from the start (it gives Egypt nothing) and is not on the screen.
+    const egypt = researchFixture('Egypt');
+    egypt.players[0].techs = ['BronzeWorking'];
+    await loadFixture(page, coreFixture(egypt), 2);
+    await shot(page, size, '93-egypt-topbar');
+    await page.locator('.topbar .research-chip').click();
+    await expect(research).toBeVisible();
+    await expect(research.locator('.era-current .era-card')).toHaveCount(4);
+    await expect(research.locator('.era-card[data-tech="BronzeWorking"]')).toHaveCount(0);
+    await expect(research).not.toContainText('No benefit');
+    await page.mouse.move(5, size.height / 2);
+    await shot(page, size, '93-research-egypt-turn1');
+    await research.locator('.research-scroll').evaluate((el) => el.scrollTo(0, el.scrollHeight));
+    await shot(page, size, '93b-research-egypt-later-eras');
+    // Compare: India on turn 1 with nothing known.
+    {
+      const context = await browser.newContext({ viewport: { width: size.width, height: size.height } });
+      try {
+        const p = await context.newPage();
+        const india = researchFixture('India');
+        india.players[0].techs = [];
+        await loadFixture(p, coreFixture(india), 2);
+        await shot(p, size, '94-india-topbar');
+        await p.locator('.topbar .research-chip').click();
+        await expect(p.locator('dialog.tech-modal .era-current .era-card')).toHaveCount(5);
+        await p.mouse.move(5, size.height / 2);
+        await shot(p, size, '94-research-india-turn1');
+      } finally { await context.close(); }
+    }
+    // Egypt's Machinery card: the Workshop/Forge/Factory Production line is gone, Hagia Sophia stays.
+    {
+      const context = await browser.newContext({ viewport: { width: size.width, height: size.height } });
+      try {
+        const p = await context.newPage();
+        const mid = researchFixture('Egypt');
+        mid.players[0].techs = [0, 1].flatMap(eraTechs);
+        await loadFixture(p, coreFixture(mid), 2);
+        await p.locator('.topbar .research-chip').click();
+        const machinery = p.locator('dialog.tech-modal .era-card[data-tech="Machinery"]');
+        await machinery.scrollIntoViewIfNeeded();
+        await expect(machinery).not.toContainText('Workshop, Forge and Factory');
+        await p.mouse.move(5, size.height / 2);
+        await shot(p, size, '95-research-egypt-medieval');
+      } finally { await context.close(); }
+    }
+    // Egypt finishes the Ancient era with four technologies: the unlock card, then the era-up.
+    {
+      const context = await browser.newContext({ viewport: { width: size.width, height: size.height } });
+      try {
+        const p = await context.newPage();
+        const finishing = researchFixture('Egypt');
+        finishing.players[0].techs = ['BronzeWorking', 'Irrigation', 'Masonry', 'Currency'];
+        finishing.players[0].research = 'Writing';
+        finishing.players[0].research_queue = ['Writing'];
+        finishing.players[0].science = 5000;
+        await loadFixture(p, coreFixture(finishing), 2);
+        await endPlanning(p);
+        await expect(p.locator('.moment-card.unlock:not(.era-up)')).toBeVisible();
+        await p.mouse.move(5, size.height / 2);
+        await shot(p, size, '96-egypt-unlock-writing');
+        await p.keyboard.press('Escape');
+        const era = p.getByTestId('era-takeover');
+        await expect(era).toContainText('The Classical Era');
+        await p.waitForTimeout(3200);
+        await shot(p, size, '97-egypt-era-up');
+      } finally { await context.close(); }
+    }
+  });
+
+  test('the Guide: Eras section', async ({ page }) => {
+    await page.goto('/?client=wasm');
+    await page.getByRole('button', { name: /^How to Play/ }).click();
+    const guide = page.getByRole('dialog', { name: 'How to Play', exact: true });
+    await guide.getByRole('button', { name: /Cities & research/ }).click();
+    const h = guide.locator('.guide-page').getByRole('heading', { name: /^Eras: research in order/ });
+    await h.scrollIntoViewIfNeeded();
+    await h.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+    await page.mouse.move(5, size.height / 2);
+    await shot(page, size, '98-guide-eras');
+  });
+
 });
