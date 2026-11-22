@@ -4,7 +4,7 @@ Generated paintings (see `../PROVENANCE.md` for how each class of art was made).
 
 ## Active title and Guide key art (2026-10-10)
 
-The title screen and Guide use `title-keyart-c-road-at-dawn-1600.jpg`, direction C from the historical title exploration. Its quiet dawn sky supports the wordmark; the road carries the eye into the landscape. The full-resolution PNG master and prompt remain beside the JPEG. The title line is “From the first city to the age to come.” The two directions that were not chosen and the layout studies are described in `docs/design/title-keyart/README.md`.
+The title screen and Guide use `title-keyart-c-road-at-dawn-1600.jpg`, direction C from the historical title exploration. Its quiet dawn sky supports the wordmark; the road carries the eye into the landscape. The prompt sits beside the JPEG; the full-resolution PNG master is archived outside git (see "Where the masters live" below). The title line is “From the first city to the age to come.” The two directions that were not chosen and the layout studies are described in `docs/design/title-keyart/README.md`.
 
 ## Active camp and ruin map art (2026-10-10)
 
@@ -12,7 +12,7 @@ The map uses the approved B “painted jewel” miniatures from `docs/design/cam
 
 ## Historical title key art exploration (2026-10-10)
 
-Three historical candidates were painted: A (the Old World at dusk), B (the great survey) and C (the road at dawn). C is active and is the only one kept here: `title-keyart-c-road-at-dawn.png` is 2560 × 1440 (resampled from the generator's 1672 × 941 output), its `-1600.jpg` is 1600 × 900 at JPEG quality 88, and its prompt is adjacent. The unused A and B masters, and the earlier title painting from the retired setting (`title-keyart.png`, a fallen relay spire), were removed on 2026-11-21 because nothing loaded them; they are in git history, and the comparison sheet and review are in `docs/design/title-keyart/README.md`.
+Three historical candidates were painted: A (the Old World at dusk), B (the great survey) and C (the road at dawn). C is active and is the only one kept here: the master `title-keyart-c-road-at-dawn.png` (archived outside git, not in the tree) is 2560 × 1440 (resampled from the generator's 1672 × 941 output), its `-1600.jpg` is 1600 × 900 at JPEG quality 88, and its prompt is adjacent. The unused A and B masters, and the earlier title painting from the retired setting (`title-keyart.png`, a fallen relay spire), were removed on 2026-11-21 because nothing loaded them; they are in git history, and the comparison sheet and review are in `docs/design/title-keyart/README.md`.
 
 ## Historical people portraits (2026-10-10)
 
@@ -32,7 +32,7 @@ Paired, unnamed adult portraits, one for each of the eleven peoples: nine finish
 | Egypt | Egypt (early design) | see `people-egypt.prompt.txt` |
 | Rome | Rome (early design) | see `people-rome.prompt.txt` |
 
-For the paired portraits, `people-<faction>.png` is 1024 × 1024, `people-<faction>-512.png` is 512 × 512, and `people-<faction>-360.jpg` is 360 × 360 JPEG quality 88. The `.prompt.txt` file beside each original records its prompt and any final image edit. Japan is not a playable people: its portrait was removed on 2026-11-21 (git history has it), and the older review sheets in `docs/design/historical-factions/` and `docs/design/art-pass-2/` still show it.
+For the paired portraits, `people-<faction>.png` (archived outside git, not in the tree) is 1024 × 1024, `people-<faction>-512.png` is 512 × 512, and `people-<faction>-360.jpg` is 360 × 360 JPEG quality 88. The `.prompt.txt` file beside each original records its prompt and any final image edit. Japan is not a playable people: its portrait was removed on 2026-11-21 (git history has it), and the older review sheets in `docs/design/historical-factions/` and `docs/design/art-pass-2/` still show it.
 
 ## Moment vignettes (art exploration, 2026-10-10)
 
@@ -53,3 +53,6 @@ sips -s format jpeg -s formatOptions 88 -Z 1600 title-keyart-c-road-at-dawn.png 
 
 The paired portraits use the same derivative commands (`sips -Z 1024`, `sips -Z 512`, then the 360 px JPEG above) under their `people-<faction>` names.
 
+## Where the masters live
+
+The full-size `people-<faction>.png` paintings and `title-keyart-c-road-at-dawn.png` are not in the repository. `tools/art/sources-manifest.json` lists each (path, byte size, sha256); `python3 tools/art/fetch-sources.py app/src/assets/art/people-athens.png` (or `--all`) downloads it from the archive named by `LEGATUM_ART_SOURCES_URL` and verifies the hash. The app bundles only the 512 px, 360 px and 1600 px derivatives, so a build and the tests never need a master. A new master is registered with `fetch-sources.py --add <path>` and uploaded to the archive; commit the manifest, not the file.
