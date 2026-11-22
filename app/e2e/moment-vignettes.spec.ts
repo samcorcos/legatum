@@ -47,8 +47,7 @@ for (const [width, height] of [[1000, 600], [1440, 900]] as const) {
         await expect(card.locator('.moment-vignette')).toHaveAttribute('src', new RegExp(`moment-${image}-104\\.png`));
         await expect(card.locator('[data-emblem]')).toBeVisible();
         await expect(card.locator('h2')).toBeVisible();
-        await expect(card.getByRole('button', { name: 'Show on map' })).toBeVisible();
-        await expect(card.getByRole('button', { name: 'Turn report' })).toBeVisible();
+        await expect(card.getByRole('button', { name: /^Show on map/ })).toBeVisible();
         await mkdir(shots, { recursive: true });
         await page.screenshot({ path: path.join(shots, `${kind}-${width}x${height}.png`) });
       });

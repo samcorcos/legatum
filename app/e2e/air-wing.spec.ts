@@ -339,7 +339,7 @@ for (const size of SIZES) {
       // pinned and on screen at every window size (8.9.4 review: the 1000x600 card hid them).
       await expect(card.locator('h2')).toHaveText('Fighter ready');
       const area = (await card.boundingBox())!;
-      for (const name of ['Show on map', 'Turn report']) {
+      for (const name of ['Show on map']) {
         const box = (await card.getByRole('button', { name }).boundingBox())!;
         expect(box.y + box.height, `${name} is inside the card`).toBeLessThanOrEqual(area.y + area.height + 0.5);
         expect(box.y + box.height, `${name} is on screen`).toBeLessThanOrEqual(size.height);

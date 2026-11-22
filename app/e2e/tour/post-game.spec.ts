@@ -124,15 +124,14 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
       footerTop: el.querySelector('footer')!.getBoundingClientRect().top,
     }));
     expect(bodyBottom, 'moment body stops before the buttons').toBeLessThanOrEqual(footerTop + 0.5);
-    for (const name of ['Show on map', 'Turn report']) {
+    for (const name of ['Show on map']) {
       const box = (await card.getByRole('button', { name }).boundingBox())!;
       expect(box.y + box.height, `${name} is inside the card and on screen`).toBeLessThanOrEqual(Math.min(area.y + area.height, size.height) + 0.5);
     }
     await page.evaluate(() => (window as unknown as GameWindow).legatum.setState({ reportOpen: false }));
     await page.mouse.move(5, size.height / 2);
     await shot(page, size, '97c-air-wing-ready-card');
-    await card.getByRole('button', { name: 'Show on map' }).click();
-    await card.getByRole('button', { name: 'Dismiss celebration' }).click();
+    await card.getByRole('button', { name: 'Show on map' }).click(); // the primary also closes the card
     await page.evaluate(() => (window as unknown as GameWindow).legatum.setState({ reportOpen: false }));
     const fighter = await page.evaluate(() => {
       const s = (window as unknown as GameWindow).legatum.getState();

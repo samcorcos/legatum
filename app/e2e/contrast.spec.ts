@@ -60,7 +60,6 @@ const GALLERY = `
     <button class="btn big">Big<span class="btn-sub">Sub line</span></button><button class="btn big" disabled>Big<span class="btn-sub">Sub line</span></button>
     <button class="btn big primary">Big primary<span class="btn-sub">Sub line</span></button><button class="btn big primary" disabled>Big primary<span class="btn-sub">Sub line</span></button>
     <button class="link">Link</button><button class="link" disabled>Link</button>
-    <button class="moment-link">Turn report</button>
   </div>
   <div class="actions" style="width:420px">
     <span><button class="act primary">Found City <span class="kbd">B</span></button></span>

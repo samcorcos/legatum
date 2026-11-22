@@ -67,8 +67,8 @@ test('War declared on you: a full-screen declaration before the report; Return c
 
   // The event stays reachable: the report line (red, down arrow) and a new red war pin in the race.
   await expect.poll(async () => {
-    const open = page.getByTestId('moment-lane').getByRole('button', { name: 'Turn report', exact: true });
-    if (await open.isVisible()) await open.click();
+    // A moment card holds the report back; L opens it (the card has no Turn report button).
+    if (await page.getByTestId('moment-lane').locator('.moment-card').isVisible()) await page.keyboard.press('l');
     return report(page).isVisible();
   }).toBe(true);
   const line = report(page).locator('.rline', { hasText: /Sparta declared war/ });

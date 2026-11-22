@@ -108,7 +108,7 @@ it('holds the report for only the first card, while the later cards and overflow
   expect(host.querySelector('.report')).not.toBeNull();
 });
 
-it.each(['.moment-effect', '.moment-show-map', '.moment-dismiss'])('a tap on %s releases the report immediately without discarding later cards', (selector) => {
+it.each(['.moment-effect', '.moment-primary', '.moment-dismiss'])('a tap on %s releases the report immediately without discarding later cards', (selector) => {
   useGame.setState({ reportOpen: true }); render();
   expect(host.querySelector('.report')).toBeNull();
   click(selector);
@@ -151,14 +151,29 @@ it('starts a fresh first-card hold on the next report without reopening a dismis
   expect(card()).not.toBeNull();
 });
 
-it('keeps Show on map prominent and never offers an empty details disclosure', async () => {
+it('has one filled primary, Show on map with Return, and never offers an empty details disclosure', async () => {
   await celebrationFixture('legendary'); render();
   expect(host.querySelector('button.moment-effect')).toBeNull();
   expect(host.querySelector('.moment-effect')?.textContent).toContain('Completed in');
+  // The turn report is L, not a second button on the card.
+  expect([...card()!.querySelectorAll('footer button')].map((b) => b.textContent)).toEqual(['Show on map Return']);
   const focus = useGame.getState().focus;
-  click('.moment-show-map');
+  click('.moment-primary');
   expect(useGame.getState().focus).not.toBe(focus);
+});
+
+it('Return takes the card\'s primary and L opens the turn report it was holding', async () => {
+  await celebrationFixture('legendary'); useGame.setState({ reportOpen: false }); render();
+  const focus = useGame.getState().focus;
+  const press = (key: string) => { const e = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }); act(() => { window.dispatchEvent(e); }); return e; };
+  expect(press('Enter').defaultPrevented).toBe(true);
+  expect(useGame.getState().focus).not.toBe(focus);
+  await celebrationFixture('notable', 3); render();
   expect(card()).not.toBeNull();
+  press('l');
+  expect(useGame.getState().reportOpen).toBe(true);
+  expect(card()).toBeNull();
+  expect(host.querySelector('.report')).not.toBeNull();
 });
 
 describe('the tech unlock card', () => {

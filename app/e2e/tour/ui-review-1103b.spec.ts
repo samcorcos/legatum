@@ -32,7 +32,7 @@ for (const size of SIZES) test.describe(`ui review 1103b ${size.name}`, () => {
     await shot(page, size, `m-${kind}-card`);
     const card = page.locator('.moment-card').first();
     await expect(card).toBeVisible();
-    await page.getByRole('button', { name: 'Turn report', exact: true }).first().click().catch(() => undefined);
+    await page.keyboard.press('l'); // the card holds the report back; L opens it
     await shot(page, size, `m-${kind}-report`);
   });
 });
