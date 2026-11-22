@@ -70,11 +70,10 @@ Metadata fields:
 | `first_turn`, `complete_history` | Where recording starts, and whether orders cover the game from setup |
 | `parent_game_id` | Original identity when an explicitly loaded save forks another play |
 
-Names stay as entered, including LAN join names, independently of hashed engine state (they are in the state hash, which is why an anonymized recording replays its orders to recompute every hash). The only exception is the recording the hosted web build uploads and queues: seat names are "Player N" / "AI N".
+Names stay as entered, including the names online guests join with, independently of hashed engine state (they are in the state hash, which is why an anonymized recording replays its orders to recompute every hash). The only exception is the recording the hosted web build uploads and queues: seat names are "Player N" / "AI N".
 No seat credentials, authorization headers, tokens, pending socket messages or connection
 addresses enter the recording. Archives intentionally contain full game information for the
-owner's analysis, including information hidden by fog in the player UI. The server does not
-provide LAN download access to full archives.
+owner's analysis, including information hidden by fog in the player UI.
 
 Each telemetry snapshot has `turn` and `players`. Player rows contain `player`, `vp`, `cities`,
 `population`, `science` (produced in that resolved turn), `science_stored`, `gold` (treasury),
@@ -89,11 +88,11 @@ describe active relationships after resolution, not counts of declarations or ag
 ## Saves, checkpoints and browser delivery
 
 Session save JSON retains its existing state fields and adds `archive`, carrying the entire
-recording and stable identity. Native/WASM state hashes do not include the recording. Server
-autosaves persist it every turn; a standalone compressed checkpoint is written at game creation,
+recording and stable identity. Native/WASM state hashes do not include the recording. The
+browser's per-turn autosave keeps it; a standalone compressed checkpoint is written at game creation,
 every five turns by default, and at finish. A restart restores the same history and retries
-the archive write, including a finish interrupted before indexing. Lost LAN credentials are
-still handled by the existing host-controlled seat recovery; credentials are never restored
+the archive write, including a finish interrupted before indexing. Lost online-seat credentials are
+still handled by the host-controlled seat recovery; credentials are never restored
 from a tape. Explicit file loads fork the archive identity rather than overwriting another play.
 Replacing an unfinished game preserves its final recorded turns and indexes it as `abandoned`.
 
