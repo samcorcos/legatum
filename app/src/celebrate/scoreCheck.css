@@ -47,7 +47,9 @@
 .sc-box.new { background: var(--field); color: #7a5a12; border: 2px solid var(--gilt, #8f6f1c); box-shadow: 0 0 6px rgb(236 196 108 / .8); }
 .sc-box.open { background: var(--field); color: var(--rule-2); border: 1px solid var(--rule-2); }
 /* An icon still to win is drawn faint in ink, so you can tell the Pyramids from the Colosseum before you build them. */
-.sc-box.open .mask-icon { background-color: var(--ink-2) !important; opacity: .5; }
+.sc-box.open .mask-icon, .sc-box.open svg { background-color: var(--ink-2) !important; color: var(--ink-2); opacity: .5; }
+/* A held icon sits on a solid ink pad, so the hatching never runs through it (UI review, 2026-11-22). */
+.sc-box.held:has(.mask-icon), .sc-box.held:has(svg) { background: radial-gradient(circle, var(--ink) 0 8.5px, transparent 9.5px), repeating-linear-gradient(135deg, var(--ink) 0 3px, #5b4a36 3px 5px); }
 .sc-box .mask-icon, .sc-box svg { flex: none; }
 .sc-box.later { background: transparent; color: var(--rule); border: 1px dashed var(--rule); }
 

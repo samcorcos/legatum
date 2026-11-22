@@ -10,7 +10,7 @@ import './scoreCheck.css';
 
 const LEGEND: { state: Box['state']; text: string }[] = [
   { state: 'kept', text: 'Scored, kept for good' },
-  { state: 'held', text: 'Held: you lose it if someone takes it from you' },
+  { state: 'held', text: 'Held: yours only while you keep it' },
   { state: 'new', text: 'New this Age' },
   { state: 'open', text: 'Still to win' },
   { state: 'later', text: 'Age to come' },
@@ -18,12 +18,12 @@ const LEGEND: { state: Box['state']; text: string }[] = [
 
 const CREST = 32;
 const BOX = 24, GAP = 4;
-/** The capital star the map draws (`CapitalStarGlyph`'s path): filled for a capital you have, outlined for one still to take. */
+/** The capital star the map draws (`CapitalStarGlyph`'s filled path). Always filled: on the map a hollow star means "its VP is yours", so a capital still to take is a faint filled star (art review, 2026-11-22). */
 const STAR = 'M0 -5.4L1.6 -1.6L5.4 0L1.6 1.6L0 5.4L-1.6 1.6L-5.4 0L-1.6 -1.6Z';
 
 /** What a box shows: the capital's star, the wonder's or goal's icon, or the Age's numeral. */
 function BoxFace({ box }: { box: Box }) {
-  if (box.star) return <svg width={14} height={14} viewBox="-6 -6 12 12" aria-hidden="true"><path d={STAR} fill={box.state === 'open' ? 'none' : 'currentColor'} stroke="currentColor" strokeWidth={0.9} strokeLinejoin="round" /></svg>;
+  if (box.star) return <svg width={14} height={14} viewBox="-6 -6 12 12" aria-hidden="true"><path d={STAR} fill="currentColor" stroke="currentColor" strokeWidth={0.6} strokeLinejoin="round" /></svg>;
   if (box.icon) return <Icon name={box.icon} size={16} />;
   return <>{box.mark}</>;
 }
@@ -48,21 +48,40 @@ function useTally(root: React.RefObject<HTMLDivElement | null>, id: string, off:
       animations.push(a);
     };
     const from = zero?.getBoundingClientRect();
+    let landed = 0;
     el.querySelectorAll<HTMLElement>('.sc-piece').forEach((piece, i) => {
       const vp = Number(piece.dataset.vp);
       if (!from || !vp) return;
       const at = piece.getBoundingClientRect();
       const dx = from.left + from.width / 2 - (at.left + at.width / 2);
-      animate(piece, [{ transform: `translateX(${dx}px)`, opacity: 0 }, { opacity: 1, offset: 0.12 }, { transform: 'none', opacity: 1 }],
-        { duration: Math.min(1100, 220 + vp * 90), delay: 420 + i * 45, easing: 'cubic-bezier(.3,.75,.25,1)' });
+      // One hop per space, so it reads as counting: down on each space, up between them.
+      const frames: Keyframe[] = [{ transform: `translate(${dx}px, 0)`, opacity: 0 }];
+      for (let k = 1; k <= vp; k++) {
+        const x = (dx * (vp - k + 0.5)) / vp;
+        frames.push({ transform: `translate(${x}px, -7px)`, opacity: 1, offset: (k - 0.5) / vp, easing: 'ease-in' });
+        frames.push({ transform: `translate(${(dx * (vp - k)) / vp}px, 0)`, opacity: 1, offset: k / vp, easing: 'ease-out' });
+      }
+      const step = Math.max(70, Math.min(140, 1000 / vp));
+      const delay = 420 + i * 45, duration = step * vp;
+      animate(piece, frames, { duration, delay, easing: 'linear' });
+      landed = Math.max(landed, delay + duration);
+      // Your own crest gets its landing beat: a gilt flare as it arrives.
+      const crest = piece.firstElementChild as HTMLElement | null;
+      if (piece.classList.contains('mine') && crest) {
+        animate(crest, [{ transform: 'scale(1)', filter: 'drop-shadow(0 0 0 rgb(236 196 108 / 0))' }, { transform: 'scale(1.22)', filter: 'drop-shadow(0 0 10px rgb(236 196 108 / 1))', offset: 0.4 }, { transform: 'scale(1)', filter: 'drop-shadow(0 0 0 rgb(236 196 108 / 0))' }],
+          { duration: 480, delay: delay + duration, easing: 'ease-out', fill: 'none' });
+      }
     });
+    const stampsFrom = Math.max(760, Math.min(landed - 200, 1300));
     el.querySelectorAll<HTMLElement>('.sc-sheet .sc-row .sc-box.kept, .sc-sheet .sc-row .sc-box.held').forEach((box, i) => {
-      animate(box, [{ transform: 'scale(1.7)', opacity: 0 }, { transform: 'scale(1)', opacity: 1 }], { duration: 240, delay: 760 + i * 80, easing: 'cubic-bezier(.2,.9,.3,1.25)' });
+      animate(box, [{ transform: 'scale(1.7)', opacity: 0 }, { transform: 'scale(1)', opacity: 1 }], { duration: 240, delay: stampsFrom + i * 80, easing: 'cubic-bezier(.2,.9,.3,1.25)' });
+      // A soft tick as each box inks in (the sound and haptic settings apply; the feel layer spaces them).
+      animations[animations.length - 1]?.finished?.then(() => feel.snap(), () => undefined);
     });
     const inked = el.querySelectorAll('.sc-sheet .sc-row .sc-box.kept, .sc-sheet .sc-row .sc-box.held').length;
     el.querySelectorAll<HTMLElement>('.sc-sheet .sc-row .sc-box.new').forEach((box) => {
       animate(box, [{ transform: 'scale(.6)', opacity: 0, boxShadow: '0 0 0 rgb(236 196 108 / 0)' }, { transform: 'scale(1.15)', opacity: 1, boxShadow: '0 0 18px rgb(236 196 108 / 1)', offset: 0.6 }, { transform: 'scale(1)', opacity: 1 }],
-        { duration: 520, delay: 860 + inked * 80, easing: 'ease-out' });
+        { duration: 520, delay: stampsFrom + 100 + inked * 80, easing: 'ease-out' });
     });
     running.current = animations;
     return () => { animations.forEach((a) => a.cancel()); running.current = []; };
