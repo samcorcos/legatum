@@ -6,6 +6,38 @@ pub(crate) fn token() -> Result<String, String> {
     Ok(bytes.iter().map(|b| format!("{b:02x}")).collect())
 }
 
+/// A random game id: 128 bits of system entropy. It says nothing about the game's state or seed.
+pub(crate) fn game_id() -> Result<String, String> {
+    let mut bytes = [0u8; 16];
+    fill(&mut bytes)?;
+    Ok(format!(
+        "game-{}",
+        bytes.iter().map(|b| format!("{b:02x}")).collect::<String>()
+    ))
+}
+
+/// A secret 128-bit key for [`masked_hash`], made once per hosted game and never sent or saved.
+pub(crate) fn hash_key() -> Result<(u64, u64), String> {
+    let mut bytes = [0u8; 16];
+    fill(&mut bytes)?;
+    let (a, b) = bytes.split_at(8);
+    Ok((
+        u64::from_le_bytes(a.try_into().expect("8 bytes")),
+        u64::from_le_bytes(b.try_into().expect("8 bytes")),
+    ))
+}
+
+/// The per-turn value players see in place of the state hash: SipHash-2-4 of the hash under the
+/// game's secret key. Every seat gets the same value for a turn, but nobody can test a guess at
+/// the hidden state (for example a short map seed) against it without the key.
+pub(crate) fn masked_hash(key: (u64, u64), state_hash: u64) -> u64 {
+    use std::hash::Hasher;
+    #[allow(deprecated)] // the only keyed hash in std; SipHash-2-4 itself is sound
+    let mut hasher = std::hash::SipHasher::new_with_keys(key.0, key.1);
+    hasher.write_u64(state_hash);
+    hasher.finish()
+}
+
 #[cfg(target_arch = "wasm32")]
 fn fill(bytes: &mut [u8]) -> Result<(), String> {
     use wasm_bindgen::prelude::*;
