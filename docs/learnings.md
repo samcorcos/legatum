@@ -2,6 +2,11 @@
 
 Newest first. One entry per non-obvious finding: what we learned, the evidence, and what we changed. Correct or delete entries that turn out to be wrong.
 
+## 2026-11-22: A hover tooltip stuck over a scrolled list (`ui-tour/moments`)
+
+- `Tip`'s capture-phase scroll listener stays attached until React re-renders. When the browser sends the pointer's leave and the list's scroll in the same frame, the leave closed the tip and the still-attached listener (seeing a non-hover mode) took its "pinned: follow the trigger" branch and set a position again, so the bubble came back and stuck. Scroll and resize handlers now do nothing once the tip is closed, and the bubble is hidden whenever its mode is null. Reproduced only in a real browser (a wheel over a scrolling list); `Tip.scroll.test.tsx` replays the same-frame order.
+- Timed moment cards now own Return (their primary) and L (the turn report they hold back) while shown; e2e helpers that clicked the card's old "Turn report" button press L instead.
+
 ## 2026-11-22: Engine robustness review: save references, aircraft upgrade Gold, save/hash allocations (`claude/review-engine-robustness`)
 
 - **Save validation may only refuse what would index out of bounds: player ids (into `players`) and tiles (into the map).** Team, city and unit references are stale in ordinary play (a razed Hall city, pruned camp rosters, memories, supply records, relations of a team whose empires are gone) and every reader uses `.get` or a member filter; no code indexes by a team id. A first version also refused stale team references and stale city/unit ids (those named by Hall records, camp rosters, memories and the like) and was wrong: it refused the app's Hall and Broadcast fixtures and an analysis test (`hall.wasm.test.ts`, `actions.wasm.test.ts`, `analysis/tests/rules.rs`). `save_fuzz.rs` now round-trips three full all-Hard games through `parse_state` every 5 turns.
