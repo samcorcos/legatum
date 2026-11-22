@@ -46,7 +46,7 @@ export function OnlineLobbyScreen() {
       if (!relay || joining) return;
       setJoining(room.room);
       setJoinError(null);
-      const problem = await joinOnline(relay, room.room);
+      const problem = await joinOnline(relay, room.room, room.locked);
       setJoining(null);
       if (problem) setJoinError({ room: room.room, text: problem });
     },
@@ -118,6 +118,15 @@ export function OnlineLobbyScreen() {
                     <div className="online-room-meta">
                       <span>{seatsText(room)}</span>
                       <span className="online-room-phase">{phaseText(room)}</span>
+                      {room.locked && (
+                        <span className="online-room-lock">
+                          <svg viewBox="0 0 12 14" width="11" height="13" aria-hidden focusable="false">
+                            <rect x="1.5" y="6" width="9" height="7" rx="1" fill="currentColor" />
+                            <path d="M3.5 6V4a2.5 2.5 0 0 1 5 0v2" fill="none" stroke="currentColor" strokeWidth="1.6" />
+                          </svg>
+                          Locked
+                        </span>
+                      )}
                     </div>
                   </div>
                   <button

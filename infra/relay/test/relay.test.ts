@@ -17,6 +17,22 @@ describe("announce and lobby", () => {
     host.ws.close(1000);
   });
 
+  it("lists a locked flag: false by default, true when the host locked the game, and never a code", async () => {
+    const open = await create(announce("open-game"));
+    const locked = await create(announce("locked-game", { locked: true, code: "SECRET99" }));
+    expect(open.r.status).toBe(200);
+    expect(locked.r.status).toBe(200);
+    const a = await connect(`/rooms/${open.j.room}/host?key=${open.j.host_key}`);
+    const b = await connect(`/rooms/${locked.j.room}/host?key=${locked.j.host_key}`);
+    const rooms = await lobbyRooms();
+    expect(rooms.find((x) => x.room === open.j.room)!.locked).toBe(false);
+    const row = rooms.find((x) => x.room === locked.j.room)!;
+    expect(row.locked).toBe(true);
+    expect(JSON.stringify(rooms)).not.toContain("SECRET99");
+    a.ws.close(1000);
+    b.ws.close(1000);
+  });
+
   it("lists newest first", async () => {
     const a = await hostedRoom("first-xx");
     const b = await hostedRoom("second-x");
@@ -42,6 +58,9 @@ describe("announce and lobby", () => {
       announce("ok", { rules_version: "3" }),
       announce("ok", { protocol: -1 }),
       announce("ok", { protocol: 1.5 }),
+      announce("ok", { locked: "yes" }),
+      announce("ok", { locked: 1 }),
+      announce("ok", { locked: null }),
       { name: "ok", build: "b", protocol: 1 },
     ];
     for (const b of bad) expect((await create(b)).r.status).toBe(400);

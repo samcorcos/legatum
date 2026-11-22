@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useGame } from '../store';
 import { FactionPicker } from '../ui/FactionPicker';
 import { Icon } from '../ui/bits';
+import { JoinCodeField } from '../ui/JoinCodeField';
 import { connectionFirst } from '../platform/relayLobby';
 import { canTakeSeat, everyoneReady, lobbyFromStaging } from '../staging';
 import { LobbyFrame, Victory } from './LobbyScreen';
@@ -16,6 +17,8 @@ export function StagingScreen() {
   const connected = useGame((s) => s.stagingConnected);
   const leaving = useGame((s) => s.stagingLeaving);
   const error = useGame((s) => s.error);
+  const locked = useGame((s) => !!s.net?.locked);
+  const codeText = useGame((s) => s.joinCodeText);
   const g = useGame.getState;
   const [name, setName] = useState('Player');
   useEffect(() => {
@@ -75,7 +78,7 @@ export function StagingScreen() {
       );
     }
     return (
-      <button className="btn take-seat" disabled={mySeat !== null} onClick={() => g().takeStagingSeat(seat, name.trim() || 'Player')}>
+      <button className="btn take-seat" disabled={mySeat !== null || (locked && !codeText)} onClick={() => g().takeStagingSeat(seat, name.trim() || 'Player')}>
         Take seat
       </button>
     );
@@ -90,6 +93,7 @@ export function StagingScreen() {
             ? 'Everyone is Ready. Waiting for the host to start…'
             : 'Pick your faction and press Ready. The host starts once every seat is Ready.'}
       </p>
+      {locked && mySeat === null && <JoinCodeField />}
       <div className="lobby-body">
         <SeatsTable lobby={lobby} room={{ state: staging, guest: true, mySeat, renderOpen }} />
         <aside className="lobby-side">

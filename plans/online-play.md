@@ -48,8 +48,9 @@ Base URL `RELAY` (e.g. `https://legatum-relay.<account>.workers.dev`). All respo
 ```
 RoomAnnounce = { name: string (<= 80 chars, the host's display name),
                  build: string (<= 40, the app's build label, e.g. "8.9.74"),
-                 rules_version: number, protocol: number }
-RoomInfo     = RoomAnnounce & { room: string, players: number, humans: number, open_seats: number,
+                 rules_version: number, protocol: number,
+                 locked?: boolean (default false: the host set a join code) }
+RoomInfo     = RoomAnnounce & { room: string, locked: boolean, players: number, humans: number, open_seats: number,
                  phase: "staging" | "playing", turn: number, updated_ms: number }
 ```
 
@@ -65,6 +66,47 @@ message rates (close 4029), cleans room names and has a `LOBBY_OPEN` kill switch
 kill switch") holds the numbers. Security review (2026-11-22): an IPv6 client counts as its /64 for every per-address limit,
 the `build` label takes only letters, digits, spaces and `. · ( ) _ + -`, a host `status` frame over 64 KiB is dropped, and
 every relay answer carries `X-Content-Type-Options: nosniff`.
+
+### Join code, one seat per connection and Remove (2026-11-22 security review)
+
+The lobby is public, so a stranger could open a listed game, take every open seat and never press Ready, and the host
+could not remove a connected player. The owner chose a short code typed once, not join links, and the game still
+shows in the list.
+
+- **Join code (optional).** The host types 4 to 12 letters or digits in the "Join code" box next to the name on
+  Host Game and Host from a save (empty = an open game). The code lives only in the host engine
+  (`BrowserHost.set_join_code`, `crates/wasm/src/host/mod.rs`) and in the host tab's `sessionStorage`
+  (`legatum.online.joincode`, next to the room key, so a host reload keeps the game locked; a reload that cannot find
+  the code does not reopen the game unlocked). It is never in a `Status`, `Summary`, staging state, view, save, game
+  history or any frame, and it is never sent to the relay. The code is not case sensitive and is compared in time
+  that depends only on its length (`credentials::matches`).
+- **What the relay learns:** one boolean, `RoomAnnounce.locked` (strictly a boolean when present, default false),
+  returned in every `/lobby` row. The lobby shows a lock mark and the word "Locked" on those rows.
+- **Where the code travels:** an optional `code` string (the guest's UI sends at most 32 characters) on the guest's seat
+  claims, `game_take` and `staging_take`. A claim on a locked game without the right code is refused with
+  `join_code_needed` ("This game needs a join code.") or `wrong_join_code` ("That join code is not right."). A
+  rejoin with the seat's own credential (`join`, or `staging_take` with its token) needs no code, and the host's own
+  connection never needs it. After 5 wrong codes from one connection the host closes it (terminal error
+  `too_many_codes`); a missing code is not a strike. The guest types the code once in an inline box on the seat screen; it
+  is kept in memory only.
+- **Limit:** every new connection starts with 0 strikes, so the lockout slows guessing but does not stop a script that
+  reconnects; the relay's per-address socket and rate caps are what bound that (see Limits). A 4-character code is weak
+  against that; use 8 or more for a game you care about.
+- **One seat per connection.** A guest connection that already holds or has claimed a game seat (`game_take` counts
+  from the claim, before `join`) or holds a room seat cannot claim a game seat (refused: "You already have a seat in this
+  game."). In a room, taking another seat already gave up the first, and still does. The host's own connection is
+  unaffected.
+- **Remove player (host only).** `game_remove` and `staging_remove` (`seat`) are local-only admin messages; a guest gets
+  `host_only` (room) or an error (game). Removing closes the seat's connection (terminal error `removed`, "The host
+  removed you from this game."), replaces its credential with one nobody holds so the old one is dead, clears its
+  orders and Ready, and leaves the seat closed (reserved, not open): the same stranger cannot take it back. The host
+  opens it again with the existing Open seat control. A removed in-game seat counts as joined and has no connection,
+  so it never holds up turn resolution (as for any disconnected human seat; `Game::can_resolve`). The host's own
+  seat cannot be removed. The guest's client stops retrying after `removed`.
+- **Protocol:** `ONLINE_PROTOCOL` stays 1. A guest and host must already have the same build label to be listed as
+  joinable, so an old guest never meets a new host; the new fields are optional. An old relay drops `locked` (the game is then
+  listed without the lock mark, and the guest is still asked for the code when the host refuses its claim), so
+  deploy the relay first.
 
 ### Limits
 
@@ -128,7 +170,7 @@ already). The host's own in-tab connection never sees chunks.
   the rules version.
 - `app/src/net/browserHost.ts` is the transport: `POST RELAY/rooms`, the tunnel at
   `RELAY/rooms/<id>/host?key=`, the frame codec and chunking (`tunnel.ts`), a 1 s timer that ticks the engine,
-  `status` and `summary` pushed when they change, the 20 s `ping` frame, reconnect with backoff (1 s to 30 s)
+  `status` and `summary` pushed when they change (the announce carries only `locked`, never the join code), the 20 s `ping` frame, reconnect with backoff (1 s to 30 s)
   keeping the room and key, and `bye` on leave. A browser cannot see why a WebSocket upgrade failed, so when a
   reconnect never opens, it asks `GET RELAY/rooms/<id>/api/status`: 404 means the relay forgot the room, and it
   announces a new one.
@@ -158,7 +200,9 @@ already). The host's own in-tab connection never sees chunks.
   existing staging room. In a running game the host's menu item is **End the game for everyone** (after a confirm);
   it sends `bye`, closes the room and returns to the title. A guest's item is **Leave the game (free this seat)**.
 - **Multiplayer > Join Game**: a lobby list from `GET /lobby` (refresh every 3 s): host name,
-  players, open seats, "Waiting in lobby" or "Turn N". One primary action per row: **Join**. A row whose
+  players, open seats, "Waiting in lobby" or "Turn N", and "Locked" with a lock mark for a game with a join code. One
+  primary action per row: **Join**. On a locked game the seat screen asks for the code once ("Join code", seat buttons
+  wait for it). A row whose
   `build` differs from this build's (both known) shows "This game is on version X and you have Y. Update the
   older one to play together."; one whose `rules_version` or `protocol` differs, or whose build is unknown, shows
   "This game is on a different version from yours. Update both to the newest to play together." The note comes first

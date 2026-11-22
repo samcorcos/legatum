@@ -9,6 +9,8 @@ import { BrowserHost, type HostEngine, type RelayRefusal, type RoomAnnounce, typ
 /** Per tab: a reload resumes hosting the same room; another tab or a new visit does not. */
 const HOSTING_KEY = 'legatum.online.hosting';
 const SAVE_KEY = 'legatum.online.save';
+/** The join code, kept only in this tab's session next to the room key so a reload keeps the game locked. */
+const CODE_KEY = 'legatum.online.joincode';
 
 export interface HostingRecord {
   relay: string;
@@ -34,9 +36,27 @@ function remember(record: HostingRecord | null) {
     else {
       globalThis.sessionStorage?.removeItem(HOSTING_KEY);
       globalThis.sessionStorage?.removeItem(SAVE_KEY);
+      globalThis.sessionStorage?.removeItem(CODE_KEY);
     }
   } catch {
     // Storage may be blocked: the game still runs, it just cannot survive a reload.
+  }
+}
+
+function savedJoinCode(): string | null {
+  try {
+    return globalThis.sessionStorage?.getItem(CODE_KEY) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function keepJoinCode(code: string | null) {
+  try {
+    if (code) globalThis.sessionStorage?.setItem(CODE_KEY, code);
+    else globalThis.sessionStorage?.removeItem(CODE_KEY);
+  } catch {
+    // Blocked storage: a reload then resumes an open game, so the host is told below.
   }
 }
 
@@ -68,7 +88,7 @@ export interface HostingEvents {
  * Opens a room on the relay and runs the game in this tab. With `resume` (a reloaded host tab), reconnects to
  * that room and resumes the saved game. Rejects when the relay cannot be reached.
  */
-export async function startHosting(relay: string, announce: RoomAnnounce, resume: HostingRecord | null = null, events: HostingEvents = {}, fromSave: string | null = null): Promise<BrowserHost> {
+export async function startHosting(relay: string, announce: RoomAnnounce, resume: HostingRecord | null = null, events: HostingEvents = {}, fromSave: string | null = null, joinCode: string | null = null): Promise<BrowserHost> {
   const save = fromSave ?? (resume ? savedGame() : null);
   if (active) stopHosting();
   const mod = (await loadWasmModule()) as unknown as { BrowserHost: new (save?: string | null) => HostEngine };
@@ -86,6 +106,13 @@ export async function startHosting(relay: string, announce: RoomAnnounce, resume
       engine = new mod.BrowserHost(null);
     }
   }
+  // A resumed tab gets its code back from the session; a locked game never reopens unlocked.
+  const code = joinCode ?? (resume?.announce.locked ? savedJoinCode() : null);
+  if (resume?.announce.locked && !code) {
+    engine.free?.();
+    throw new Error('The join code was lost');
+  }
+  if (code) engine.set_join_code(code);
   const host: BrowserHost = new BrowserHost({
     relay,
     announce,
@@ -111,6 +138,7 @@ export async function startHosting(relay: string, announce: RoomAnnounce, resume
     throw e;
   }
   active = host;
+  keepJoinCode(code);
   remember({ relay, announce, room: host.room! });
   // A game chosen from a file is kept right away, so a reload of this tab resumes it too.
   if (fromSave) keepSave(fromSave);

@@ -17,6 +17,13 @@ pub(crate) enum ClientMessage {
     /// Claim an unassigned seat, or explicitly reassign it from loopback.
     GameTake {
         seat: usize,
+        /// The join code of a locked game (at most 32 characters). Never stored or echoed.
+        #[serde(default)]
+        code: Option<String>,
+    },
+    /// Loopback host removes a remote player: the seat stays closed until the host opens it.
+    GameRemove {
+        seat: usize,
     },
     /// Loopback host opens a disconnected seat for a fresh claim.
     GameRelease {
@@ -56,8 +63,15 @@ pub(crate) enum ClientMessage {
         seat: usize,
         name: String,
         token: Option<String>,
+        /// The join code of a locked game (at most 32 characters). Never stored or echoed.
+        #[serde(default)]
+        code: Option<String>,
     },
     StagingRelease {
+        seat: usize,
+    },
+    /// Loopback host removes a remote player from a staging seat; the seat stays closed.
+    StagingRemove {
         seat: usize,
     },
     StagingUpdate {

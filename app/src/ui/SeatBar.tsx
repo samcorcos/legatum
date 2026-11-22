@@ -19,6 +19,7 @@ import { CrestMedallion, PanelHead } from '../brand/ornaments';
 import { CityList } from './CityList';
 import { AirWatch } from './AirWatch';
 import { OpenSeatButton } from './OpenSeatButton';
+import { RemoveSeatButton } from './RemoveSeatButton';
 import { BUILDING_NAME, itemName } from '../data';
 import { empireOfPlayer } from '../empires';
 import { bankruptcyWarning, FORECAST_ASSUMPTIONS, idleProductionWarning, woundedNearEnemies } from './forecastWarnings';
@@ -171,6 +172,8 @@ export function SeatBar({ phoneDetails = false, onOpenDetails, race }: { phoneDe
   const scenario = useGame((s) => s.scenario);
   const remote = useGame((s) => s.client?.kind === 'remote');
   const disconnected = remote && net?.conn !== 'open';
+  // The host's seat list opens by itself only while a lost player's seat can be opened. Remove is rare
+  // and waits behind Turn details, so the race stays in view (UI review, 2026-11-22).
   const hostCanOpenSeat = remote && net?.status.is_local && net.seats.some((st) =>
     st.seat !== net.mySeat && !st.connected && st.reserved !== false);
   if (!views) return null;
@@ -417,6 +420,7 @@ export function OnlineSeats() {
   const ready = useGame((s) => s.ready[s.seat]);
   const orders = useGame((s) => s.orders[s.seat]);
   const releaseSeat = useGame((s) => s.releaseOnlineSeat);
+  const removePlayer = useGame((s) => s.removeOnlinePlayer);
   const conn = net.conn;
   const mySeat = net.mySeat;
   const rows = net.seats.map((st) => {
@@ -445,6 +449,9 @@ export function OnlineSeats() {
             <span className={`seat-ready ${isReady ? 'on' : ''}`}>{p?.alive === false ? 'Observing' : isReady ? <><Icon name="ui-check" size={12} className="ui-mark" /> Ready</> : 'Planning'}</span>
             {net.status.is_local && !me && !connected && st.reserved !== false && (
               <OpenSeatButton name={st.name} disabled={conn !== 'open'} onOpen={() => releaseSeat(seat)} />
+            )}
+            {net.status.is_local && !me && connected && (
+              <RemoveSeatButton name={st.name} disabled={conn !== 'open'} onRemove={() => removePlayer(seat)} />
             )}
           </div>
         );

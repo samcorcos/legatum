@@ -242,6 +242,12 @@ impl NetHost {
         })
     }
 
+    /// Sets or clears the join code (4 to 12 letters or digits; empty clears). It stays in this
+    /// host: no status, summary, save or message carries it.
+    pub fn set_join_code(&mut self, code: Option<&str>) -> Result<(), String> {
+        self.host.set_join_code(code)
+    }
+
     /// The live game's save, once per change.
     pub fn take_save(&mut self) -> Option<String> {
         self.host.take_save()
@@ -335,6 +341,11 @@ impl BrowserHost {
 
     pub fn take_save(&mut self) -> Option<String> {
         self.0.take_save()
+    }
+
+    /// Sets or clears the join code. Local only: it never leaves this engine.
+    pub fn set_join_code(&mut self, code: Option<String>) -> Result<(), wasm_bindgen::JsError> {
+        crate::js(self.0.set_join_code(code.as_deref()))
     }
 
     /// Opens every seat but the host's own for guests (hosting from a save file).

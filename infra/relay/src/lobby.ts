@@ -158,7 +158,7 @@ export class Lobby extends DurableObject<Env> {
     for (const r of rows) {
       const a = JSON.parse(r.announce as string) as RoomAnnounce;
       const s = JSON.parse(r.summary as string) as Summary;
-      out.push({ ...a, ...s, room: r.room as string, updated_ms: r.updated_ms as number });
+      out.push({ ...a, locked: a.locked === true, ...s, room: r.room as string, updated_ms: r.updated_ms as number });
     }
     return out;
   }
