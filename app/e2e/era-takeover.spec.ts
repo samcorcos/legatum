@@ -128,6 +128,13 @@ for (const size of SIZES) test.describe(`era takeover ${size.width}x${size.heigh
     await expect(check.getByTestId('score-track').locator('li')).toHaveCount(11);
     await expect(check.locator('.sc-row[data-line] .sc-name b')).toHaveText(['Age cards', 'Rival capitals', 'World wonders', 'Faction goal']);
     await expect(check.locator('[data-primary-action]')).toHaveCount(1);
+    // An open capital is a faint star, never a filled square: only mask icons take a background colour.
+    expect(await check.locator('.sc-row[data-line=capitals] .sc-box.open svg').first().evaluate((el) => getComputedStyle(el).backgroundColor)).toBe('rgba(0, 0, 0, 0)');
+    // The tally: crests walk up the track and your boxes ink in; a click on the sheet finishes it at once.
+    const running = () => check.evaluate((el) => el.getAnimations({ subtree: true }).filter((a) => a.playState === 'running' && (a as CSSAnimation).animationName === undefined).length);
+    expect(await running()).toBeGreaterThan(0);
+    await check.getByTestId('score-sheet').dispatchEvent('pointerdown');
+    expect(await running()).toBe(0);
     await page.waitForTimeout(800);
     // It fits whole: every panel inside the window, nothing scrolls inside, no word under 12 px but the box marks.
     for (const part of ['.sc-head', '.sc-track', '.sc-sheet', '.sc-foot', '[data-primary-action]']) {
