@@ -43,7 +43,7 @@ function GiftRow({ view, to, name, orders }: { view: PlayerView; to: PlayerId; n
   const f = giftForecast(view, to, valid ? amount : 0, orders);
   const give = () => useGame.getState().editOrders((os) => [...os, { type: 'GiveGold', to, amount }]);
   const undo = () => useGame.getState().editOrders((os) => os.filter((o) => !(o.type === 'GiveGold' && o.to === to)));
-  return <li className="empire-row gift-row" data-testid="gift-row">
+  return <li className="gift-row" data-testid="gift-row">
     <strong>{name}</strong>
     {queued.length > 0
       ? <p data-testid="gift-queued">Queued: give <Amount n={queued.reduce((n, o) => n + o.amount, 0)} unit="Gold" /> to {name}. <button className="link" onClick={undo}>Undo</button></p>
