@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import { useGame } from '../store';
 import { MapCanvas } from '../map/MapCanvas';
 import { Minimap } from '../map/Minimap';
+import { PingControl } from '../ui/PingControl';
 import { TopBar } from '../ui/TopBar';
 import { VpTrack } from '../ui/VpTrack';
 import { UnitPanel } from '../ui/UnitPanel';
@@ -92,7 +93,7 @@ export function GameScreen() {
       <ScenarioBar />
       <MomentLane />
       <ObjectiveSheet />
-      <aside className="right-sidebar paper-grain" aria-label="Empire sidebar"><SeatBar race={<VpTrack />} /><Minimap /></aside>
+      <aside className="right-sidebar paper-grain" aria-label="Empire sidebar"><SeatBar race={<VpTrack />} /><Minimap /><PingControl /></aside>
       <div className="command-docks">
       <div className="left-dock" data-overlay-slot="selection-dock">
         {selection && <button className="btn quiet selection-close touch-only" onClick={() => useGame.getState().select(null)}>Close selection</button>}

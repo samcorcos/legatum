@@ -99,6 +99,7 @@ export function GuideContent({ section }: { section: GuideSection }) {
       </ol>
       <p>Peace keeps borders closed to foreign units, except an ally’s and the land of whoever holds a Yam Relay Station. Crossing like this is not a provocation.</p>
       <p>You cannot attack a rival you are at Peace with. Declaring War while at Peace is a surprise war. It takes effect at once, so an attack ordered with it resolves the same turn. Signing Peace after War starts a {TREATY_TERMS.guaranteeTurns}-turn truce between the two teams. Neither may declare War on the other or be pulled back into that war by an ally until the shown end turn has passed. Permanent teammates share vision and victory. You can give Gold to a teammate from the Your team section of the diplomacy panel. It arrives next turn, after this turn's purchases, and you can give at most the Gold you had at the start of the turn. Alliances with other teams do not combine victory scores.</p>
+      <p>With a human teammate you can ping. Press Ping at the foot of the right-hand panel, then click a tile. A ring marks it on their map until the turn ends.</p>
       <p>An Alliance gives shared sight and open borders. Each side’s units may enter the other’s land and pass through allied units of the same class, but cannot end on their tiles. Allied cities are also transit-only. It also changes how wars work (see below). Each empire pays {alliance.upkeep} Gold per owned city each turn, and never less than {alliance.upkeep} Gold in all. Its Gold breakdown lists the total as Treaty upkeep.</p>
       <p>No Alliance upkeep while at War with an empire close to winning. An empire is close to winning when it is within 2 VP of its victory target or holding its target. The Alliance pays nothing on any turn either ally is at War with such an empire, and the Gold breakdown shows the upkeep and the waiver as two lines.</p>
       <p>You must have met an empire to offer it an Alliance, which means one of your units or cities has seen one of its units, cities or borders. Peace and War need no contact.</p>
@@ -347,6 +348,7 @@ export function GuideContent({ section }: { section: GuideSection }) {
         <div><dt>Shift+Return</dt><dd>End turn or Ready. If decisions remain, review the list and confirm once or go to the first decision. The End Turn button and Ready anyway use the same review.</dd></div>
         <div><dt>1–8</dt><dd>Switch between local human seats.</dd></div>
         <div><dt>Backspace / Delete</dt><dd>Cancel the selected unit’s pending order.</dd></div>
+        <div><dt>P</dt><dd>Ping: mark a tile for your teammate. Press P, then click the tile. Escape cancels. Only shown when you have a human teammate.</dd></div>
         <div><dt>Shift + X</dt><dd>Disband the selected unit.</dd></div>
         <div><dt>Escape</dt><dd>Close a panel, cancel targeting, or deselect. On a coach question, Escape only hides the card. The Coach question button, or the Turn report (<kbd>L</kbd>), brings it back.</dd></div>
         <div><dt>A / D</dt><dd>With Diplomacy open: accept or decline the offer awaiting your reply. Diplomacy then moves to the next offer, or closes.</dd></div>

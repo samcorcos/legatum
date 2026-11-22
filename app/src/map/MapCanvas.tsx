@@ -28,6 +28,8 @@ import { settleTileNote, withProxySettler } from './settleAdvice';
 import { LensSwitcher } from './LensSwitcher';
 import { isBarbarian } from '../barbarians';
 import { SettlementCard, SettlementDetails } from './SettlementCard';
+import { PING_PULSE_MS, pingsFor } from '../teamPing';
+import type { PingMark } from './pingDraw';
 import { arrowAt, battleCues, cuesAt, ARROW_FADE_MS, ARROW_HOLD_MS, CUE_FADE_MS, CUE_HOLD_MS, type MapCue, type ReportArrow } from './cues';
 import { UNIT_ACTIONS, orderUnit } from '../orders';
 import { ForecastCard, ForecastSummary, forecastTargetName } from '../ui/ForecastCard';
@@ -65,6 +67,8 @@ import { productionQueue, setAirOrder, toggleBuyTile } from '../orders';
 import { tilePurchasePreview } from '../ui/productionPurchases';
 
 /** Whether a field the draw loop reads changed between two renders (by identity; the effects flag by value). */
+const NO_PINGS: PingMark[] = [];
+
 export function frameChanged<T extends Record<string, unknown>>(prev: T, next: T): boolean {
   for (const key of Object.keys(next)) {
     const a = prev[key], b = next[key];
@@ -159,6 +163,12 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
   const reportArrow = useGame((s) => s.reportArrow);
   const arrow = useMemo(() => (reportArrow ? { from: reportArrow.from, to: reportArrow.to, start: performance.now() } : null), [reportArrow]);
   const drawnArrow = useRef<ReportArrow | null>(null);
+  // Team pings (teamPing.ts): this turn's rings from the viewer's team, drawn only while there are any.
+  const allPings = useGame((s) => s.pings);
+  const pingMode = useGame((s) => s.pingMode);
+  const canPing = useGame((s) => s.canPing());
+  const livePings = useMemo(() => pingsFor(views ? views[seat] : null, allPings), [views, seat, allPings]);
+  const pingSeen = useRef(new Map<string, number>());
   const busy = useGame((s) => s.busy);
   const view: PlayerView | null = views ? views[seat] : null;
   // A goal action, while it is weighed or ordered: the Great Migration's shrinking cities and released tiles,
@@ -580,6 +590,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
     borderTiles: overlayTiles.borders,
     cues: null as { list: MapCue[]; start: number } | null,
     arrow: null as { from: Hex | null; to: Hex; start: number } | null,
+    pings: livePings,
     anim,
     seat,
     reducedMotion,
@@ -588,7 +599,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
     scenarioTargets,
     siege,
   });
-  const nextFrame = { anchoringPreview: !!activePreview, lens, lensTiles, overlays, yieldTiles: overlayTiles.yields, borderTiles: overlayTiles.borders, view, selUnit, selection, pathInfo, pathAttack, pendingLines, pendingMarks, cityFocuses, rangedTiles, goalPreview, territoryOverlay, tileBuys, improveOverlay, placeOverlay, airOverlay, hover, hoverSelect: intent === 'select', cues, arrow, anim, seat, reducedMotion, combatFx: { enabled: combatFx.enabled }, celebration, scenarioTargets, siege };
+  const nextFrame = { anchoringPreview: !!activePreview, lens, lensTiles, overlays, yieldTiles: overlayTiles.yields, borderTiles: overlayTiles.borders, view, selUnit, selection, pathInfo, pathAttack, pendingLines, pendingMarks, cityFocuses, rangedTiles, goalPreview, territoryOverlay, tileBuys, improveOverlay, placeOverlay, airOverlay, hover, hoverSelect: intent === 'select', cues, arrow, pings: livePings, anim, seat, reducedMotion, combatFx: { enabled: combatFx.enabled }, celebration, scenarioTargets, siege };
   // Redraw only when something the map draws changed: a render for a card or a panel leaves the canvas alone.
   if (frameChanged(frame.current, nextFrame)) dirty.current = true;
   frame.current = nextFrame;
@@ -886,6 +897,17 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
       const at = f.celebration.active?.at;
       const capT = at && f.anim ? (plan ? captureTime(plan, at) : null) ?? (mplan ? momentTime(mplan, at) : null) : null;
       const celebStarted = capT != null && f.anim ? Math.max(f.celebration.started, f.anim.start + capT) : f.celebration.started;
+      // A teammate's ping pulses the first time this viewer sees it (and always draws once, still); no ping, no work.
+      let pingLive = false;
+      const pingMarks: PingMark[] = f.pings.length ? [] : NO_PINGS;
+      if (!f.pings.length && pingSeen.current.size) pingSeen.current.clear();
+      for (const p of f.pings) {
+        const key = `${f.seat}:${p.seq}`;
+        if (!pingSeen.current.has(key)) pingSeen.current.set(key, t);
+        const age = still ? PING_PULSE_MS : t - pingSeen.current.get(key)!;
+        if (age < PING_PULSE_MS) pingLive = true;
+        pingMarks.push({ hex: p.hex, color: mapPlayerColor(p.from), age, own: p.from === f.view.me });
+      }
       const celebrating = !still && !!f.celebration.active && t - celebStarted < EFFECT_MS + 50;
       const siegePulse = !still && f.siege.size > 0 && t - lastPulse > 33;
       // Idle life (idleLife.ts) redraws the map a few times a second, never every frame, with map animations on.
@@ -895,12 +917,12 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
       // Damaged cities smoulder while Map animations are on (about 20 frames a second is enough for smoke).
       const smoulder = !still && hasVisibleSmoulder(f.view.cities, cam.current, size.current.w, size.current.h);
       const smoulderTick = smoulder && t - lastSmoulder > 50;
-      if (!dirty.current && !animating && !pulse && !cueLive && !arrowLive && !celebrating && !siegePulse && !smoulderTick && !idleTick) return;
+      if (!dirty.current && !animating && !pulse && !cueLive && !arrowLive && !pingLive && !celebrating && !siegePulse && !smoulderTick && !idleTick) return;
       if (pulse || siegePulse) lastPulse = t;
       // Nothing but the ambient motion wants a frame (the selection pulse, a siege ring breathing, a damaged city's
       // smoke, idle life): repaint just their boxes, with the rest of the map's clock held. A full redraw of a crowded
       // late-game map 20 to 30 times a second only for these kept the main thread busy and made hover and clicks lag.
-      const pulseOnly = (pulse || siegePulse || smoulderTick || idleTick) && !dirty.current && !animating && !cueLive && !arrowLive && !celebrating
+      const pulseOnly = (pulse || siegePulse || smoulderTick || idleTick) && !dirty.current && !animating && !cueLive && !arrowLive && !pingLive && !celebrating
         && !f.scenarioTargets?.length && (!pulse || !!lastRing) && (!(siegePulse || smoulderTick) || lastAmbient.length > 0);
       const drawT = pulseOnly ? lastFullT : t;
       if (!pulseOnly) lastFullT = t;
@@ -1004,6 +1026,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
         pendingMarks: f.pendingMarks,
         cityFocuses: f.cityFocuses,
         cues: f.cues ? cuesAt(f.cues.list, t - f.cues.start, still, cueDelay) : [],
+        pings: pingMarks,
         reportArrow: (drawnArrow.current = f.arrow ? arrowAt(f.arrow, t - f.arrow.start) : null),
         celebration: !still && f.celebration.active && t >= celebStarted ? { moment: f.celebration.active, elapsed: t - celebStarted, reduced: still, targets: celebrationTargets.current } : undefined,
         rangedTiles: f.rangedTiles,
@@ -1152,6 +1175,8 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
     const s = useGame.getState();
     const v = s.views?.[s.seat];
     if (!v || tileIndex(h, v.width, v.height) < 0) return;
+    // Ping mode: this click marks the tile for the team instead of selecting or ordering.
+    if (s.pingMode) { s.sendPing(h); return; }
     if (allowRanged && s.mode === 'ranged' && !v.finished && !isEliminated(v)) {
       rangedSelected(h);
       return;
@@ -1434,7 +1459,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
         data-game-map
         data-overlay-slot="map-viewport"
         aria-label="World map. Drag to pan, pinch to zoom. Tap a destination twice to order; hold for actions. Arrow keys or WASD pan. Return selects the next decision, or ends the turn when none remain. Space skips the selected unit this turn. Shift+Return requests End Turn. F fortifies military units or makes civilians wait. H heals a damaged unit until it is whole. Use Cities seen to select known cities."
-        className={`map-canvas ${mode === 'ranged' ? 'is-ranged' : ''} ${intent === 'select' ? 'is-select' : ''} ${intent === 'peaceful' ? 'is-peaceful' : ''}`}
+        className={`map-canvas ${pingMode ? 'is-pinging' : ''} ${mode === 'ranged' ? 'is-ranged' : ''} ${intent === 'select' ? 'is-select' : ''} ${intent === 'peaceful' ? 'is-peaceful' : ''}`}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         // Safari/WKWebView can deliver a mouse move without a matching pointer move.
@@ -1489,6 +1514,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
           {!inspectedSite && <TileCard view={view} hex={touchInfo.hex} reinforcement={reinforcementAt(touchInfo.hex)}
             note={lens === 'settle' && scoreUnit && view.tiles[tileIndex(touchInfo.hex, view.width, view.height)]?.explored
               ? settleTileNote(view, touchInfo.hex) : undefined} />}
+          {canPing && <button className="btn" data-testid="touch-ping" onClick={() => { useGame.getState().sendPing(touchInfo.hex); clearTouch(); }}>Ping this tile</button>}
           {(touchInfo.context || view.units.some((u) => hexEq(u.pos, touchInfo.hex)) || view.cities.some((c) => hexEq(c.pos, touchInfo.hex))) && <div className="map-context-actions">
             <button className="btn" onClick={() => { useGame.getState().setMode('normal'); clickHex(touchInfo.hex); clearTouch(); }}>Select here</button>
             {ownSel && hexEq(ownSel.pos, touchInfo.hex) && <>

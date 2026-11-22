@@ -54,11 +54,13 @@ export type ClientMsg =
   | { type: 'ready'; game_id: string; turn: number; ready: boolean }
   | { type: 'forecast'; req_id: number; unit: number; target: Hex; mode: AttackMode }
   | { type: 'assault'; req_id: number; unit: number; target: Hex; mode: AttackMode; alongside: AlongsideAttack[] }
-  | { type: 'ping' };
+  | { type: 'ping' }
+  /** Team map ping; sent only when the host's welcome said `map_pings`. */
+  | { type: 'map_ping'; hex: Hex };
 
 export type ServerMsg =
   | { type: 'seat_token'; seat: number; game_id: string; token: string }
-  | { type: 'welcome'; seat: number; game_id: string; orders: Order[] }
+  | { type: 'welcome'; seat: number; game_id: string; orders: Order[]; map_pings?: boolean }
   | { type: 'view'; view: PlayerView }
   | { type: 'seats'; seats: SeatStatus[] }
   | { type: 'validation'; errors: OrderError[] }
@@ -66,7 +68,8 @@ export type ServerMsg =
   | { type: 'forecast'; req_id: number; forecast: BattleForecast | null }
   | { type: 'assault'; req_id: number; assault: CityAssaultForecast | null }
   | { type: 'error'; code?: string; message: string }
-  | { type: 'pong' };
+  | { type: 'pong' }
+  | { type: 'map_ping'; from: number; hex: Hex; turn: number };
 
 // ---- HTTP ----
 
@@ -198,6 +201,8 @@ export interface RemoteEvents {
   /** A forecast reply arrived (the cache changed). */
   forecast(): void;
   connection(state: ConnState): void;
+  /** A teammate pinged a tile. */
+  ping(from: number, hex: Hex, turn: number): void;
   error(message: string, code?: string): void;
 }
 
@@ -309,6 +314,8 @@ export class RemoteClient implements GameClient {
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private pingTimer: ReturnType<typeof setInterval> | null = null;
   private listeners: Partial<RemoteEvents> = {};
+  /** The host said it relays map pings (hosts from before pings never say so). */
+  private hostPings = false;
 
   constructor(
     seat: number,
@@ -490,6 +497,7 @@ export class RemoteClient implements GameClient {
         this.validatingOrders = [];
         this.seat = msg.seat;
         this.gameId = msg.game_id;
+        this.hostPings = msg.map_pings === true;
         this.attempts = 0;
         // Restore the server snapshot with the following view, before enabling Ready.
         this.welcomeOrders = decodeOrders(msg.orders);
@@ -583,6 +591,9 @@ export class RemoteClient implements GameClient {
         break;
       case 'pong':
         break;
+      case 'map_ping':
+        this.listeners.ping?.(msg.from, msg.hex, msg.turn);
+        break;
     }
   }
 
@@ -619,6 +630,16 @@ export class RemoteClient implements GameClient {
     if (this.awaitingView || this.pendingTurn || this.state !== 'open' || !this.cachedView || !this.gameId) return false;
     this.pushOrders();
     return this.send({ type: 'ready', game_id: this.gameId, turn: this.cachedView.turn, ready });
+  }
+
+  /** Whether this host relays map pings to teammates. */
+  canPing(): boolean {
+    return this.hostPings && this.state === 'open';
+  }
+
+  /** Tell teammates about a tile. Nothing is sent to a host that does not relay pings. */
+  sendPing(hex: Hex): boolean {
+    return this.canPing() && this.send({ type: 'map_ping', hex });
   }
 
   pendingOrders(): Order[] {

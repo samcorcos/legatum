@@ -55,6 +55,7 @@ import { drawLandmarks, landmarkBoxes, landmarksOf } from './landmarks';
 import { drawConstructionSites } from './constructionFx';
 import { constructionStage, sitesOf, type ConstructionSite } from './constructionSites';
 import { CONSTRUCTION_ANIMATION, buildPhases } from './momentFx';
+import { drawPings, type PingMark } from './pingDraw';
 import { drawMarchDust, drawMomentFx, drawMomentGround, drawRevealed, revealAt, type MomentView } from './momentFxDraw';
 import { drawAirCandidates, drawAirLabels, drawAirOffscreen, drawAirRings, drawTileCandidates, type AirOverlay } from './airOverlay';
 import { aircraftAsUnit } from '../airWing';
@@ -111,6 +112,8 @@ export interface RenderInput {
   cues?: MapCue[];
   /** A clicked combat line: attacker → target arrow (or a target ring when the attacker went unseen). */
   reportArrow?: ReportArrow | null;
+  /** Teammates' map pings (teamPing.ts), with each ring's age for its pulse. */
+  pings?: PingMark[];
   celebration?: MapCelebration;
   /** The hovered tile holds the player's own unit or city: draw a select ring, not a path. */
   hoverSelect?: boolean;
@@ -1058,6 +1061,8 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
     }
     ctx.restore();
   }
+
+  if (inp.pings?.length) drawPings(ctx, inp.pings, S2, hexPx, S.tone.vellum, !!inp.reducedMotion);
 
   // Combat playback: missiles, clashes, losses and captures over the units and banners, under the damage cues.
   if (inp.fx) {

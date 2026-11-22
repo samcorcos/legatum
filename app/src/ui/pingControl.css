@@ -1,0 +1,19 @@
+/* A quiet strip at the foot of the right sidebar: it never competes with the turn's primary button above it. */
+.ping-row {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  background: var(--tip-bg);
+  border: var(--slip-border);
+}
+.ping-btn.on {
+  background: var(--accent);
+  color: var(--paper, #fff);
+}
+.ping-go {
+  white-space: normal;
+  font-size: 12px;
+}

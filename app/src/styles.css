@@ -888,6 +888,9 @@ dialog.settings-modal::backdrop {
 .map-canvas.is-peaceful {
   cursor: pointer;
 }
+.map-canvas.is-pinging {
+  cursor: crosshair;
+}
 .peace-hint {
   max-width: 260px;
   padding: 10px 14px 8px;
