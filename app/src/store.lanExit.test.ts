@@ -54,7 +54,7 @@ describe('store: leaving a LAN game for a local one', () => {
       removeItem: (k: string) => mem.delete(k),
     });
     useGame.setState({
-      lan: { status: { mode: 'server', has_game: true, turn: 40, seats: [], lan_urls: [], is_local: false }, mySeat: null, seats: [], conn: 'closed' },
+      lan: { status: { mode: 'server', has_game: true, turn: 40, seats: [], is_local: false }, mySeat: null, seats: [], conn: 'closed' },
     });
   });
   afterEach(() => vi.unstubAllGlobals());

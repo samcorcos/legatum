@@ -1,35 +1,38 @@
-import { test, expect, type Page } from '@playwright/test';
-import { spawn, type ChildProcess } from 'node:child_process';
+import type { Page, Route } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
-import { createServer } from 'node:net';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-// @ts-expect-error plain .mjs helper without types
-import { startFakeRelay } from '../scripts/fake-relay.mjs';
+import { E2E_RELAY, expect, testWithFailingRequests as test } from './fixtures';
 
-// The online lobby (plans/online-play.md) against a fake relay, with the desktop commands mocked.
+// The online lobby (plans/online-play.md): the game list, with the relay's /lobby answered by the test.
+// Joining and playing through the real relay is game.spec.ts's online test. The list's error state makes
+// the browser log a failed request, so this file runs without the console-error watch.
 // Set ONLINE_LOBBY_SHOTS=<folder> to also save screenshots of each state at both laptop sizes.
 
-type Relay = { url: string; port: number; close(): Promise<void>; setRooms(r: unknown[]): void; setFail(f: boolean): void };
+type Relay = { setRooms(r: unknown[]): void; setFail(f: boolean): void };
 const SIZES = [{ width: 1000, height: 600 }, { width: 1440, height: 900 }];
 const shots = process.env.ONLINE_LOBBY_SHOTS;
 if (shots) mkdirSync(shots, { recursive: true });
 
+/** The build and rules this page runs, filled in by openLobby, so a listed game matches unless a test says otherwise. */
+let mine = { build: '', rules_version: 0, protocol: 1 };
 const room = (over: Record<string, unknown> = {}) => ({
-  room: 'room-aaaaaaaa', name: 'Ada', build: '8.9.74', rules_version: 12, protocol: 1,
+  room: 'room-aaaaaaaa', name: 'Ada', ...mine,
   players: 2, humans: 2, open_seats: 1, phase: 'staging', turn: 0, updated_ms: 1, ...over,
 });
 
-async function openLobby(page: Page, relay: Relay, host = false) {
-  await page.addInitScript((info) => {
-    (window as unknown as { __TAURI_INTERNALS__: unknown }).__TAURI_INTERNALS__ = {
-      invoke: async (cmd: string) => {
-        if (cmd === 'online_info') return info;
-        throw new Error(`unmocked command ${cmd}`);
-      },
-    };
-  }, { relay: relay.url, build: '8.9.74', rules_version: 12, protocol: 1 });
-  await page.goto(`${relay.url}/`);
+/** Answers the relay's game list for this page. */
+async function fakeLobby(page: Page): Promise<Relay> {
+  let rooms: unknown[] = [];
+  let fail = false;
+  await page.route(`${E2E_RELAY}/lobby`, (route: Route) =>
+    route.fulfill(fail
+      ? { status: 500, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: '{"error":"down"}' }
+      : { status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify({ rooms }) }));
+  return { setRooms: (r) => { rooms = r; }, setFail: (f) => { fail = f; } };
+}
+
+async function openLobby(page: Page, _relay: Relay, host = false) {
+  await page.goto('/');
   await page.getByRole('button', { name: /^Multiplayer/ }).click();
   if (!host) await page.getByRole('button', { name: /^Join Game/ }).click();
 }
@@ -58,11 +61,13 @@ async function expectNoClipping(page: Page) {
 
 test.describe('online lobby', () => {
   let relay: Relay;
-  test.beforeEach(async () => {
-    relay = await startFakeRelay({ rooms: [] });
-  });
-  test.afterEach(async () => {
-    await relay.close();
+  test.beforeEach(async ({ page }) => {
+    relay = await fakeLobby(page);
+    await page.goto('/');
+    mine = await page.evaluate(() => {
+      const info = (window as unknown as { legatum: typeof import('../src/store').useGame }).legatum.getState().online!;
+      return { build: info.build, rules_version: info.rules_version, protocol: info.protocol };
+    });
   });
 
   test('lists games, blocks a version mismatch and refreshes by itself', async ({ page }) => {
@@ -76,7 +81,7 @@ test.describe('online lobby', () => {
     await expect(rows.nth(0)).toContainText('2 players · 1 open seat');
     await expect(rows.nth(0)).toContainText('Waiting in lobby');
     await expect(rows.nth(1)).toContainText('Turn 14');
-    await expect(rows.nth(1)).toContainText('This game is on version 8.9.70 and you have 8.9.74. Update the older one to play together.');
+    await expect(rows.nth(1)).toContainText(`This game is on version 8.9.70 and you have ${mine.build}. Update the older one to play together.`);
     await expect(rows.nth(0).getByRole('button', { name: /^Join/ })).toBeEnabled();
     await expect(rows.nth(1).getByRole('button', { name: /^Join/ })).toBeDisabled();
     await expectNoClipping(page);
@@ -108,48 +113,6 @@ test.describe('online lobby', () => {
   test('Back returns to the title', async ({ page }) => {
     await openLobby(page, relay);
     await page.getByRole('button', { name: /Back/ }).click();
-    await expect(page.getByRole('button', { name: /^Single Player/ })).toBeVisible();
-  });
-});
-
-// Join through the relay into a real staging room, bridged to the fake LAN server.
-test.describe('joining through the relay', () => {
-  let lan: ChildProcess;
-  let lanBase: string;
-  let relay: Relay;
-  const root = fileURLToPath(new URL('../', import.meta.url));
-
-  test.beforeAll(async () => {
-    const probe = createServer();
-    await new Promise<void>((r) => probe.listen(0, '127.0.0.1', r));
-    const port = (probe.address() as { port: number }).port;
-    await new Promise<void>((r) => probe.close(() => r()));
-    lanBase = `http://127.0.0.1:${port}`;
-    lan = spawn('node', ['scripts/fake-lan-server.mjs', '--port', String(port)], { cwd: root, stdio: 'pipe' });
-    await expect.poll(() => fetch(`${lanBase}/api/status`).then((r) => r.status).catch(() => 0)).toBe(200);
-    const seat = (kind: string, name: string) => ({ kind, name, faction: 'Random', team: 0, difficulty: 'Normal' });
-    const made = await fetch(`${lanBase}/api/staging`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ seed: '1', width: 40, height: 24, turn_limit: null, seats: [seat('host', 'Ada'), seat('open', 'Player 2'), seat('ai', 'AI 1')] }),
-    });
-    expect(made.status).toBe(200);
-    relay = await startFakeRelay({ upstream: lanBase, rooms: [room({ room: 'room-live' })] });
-  });
-  test.afterAll(async () => {
-    await relay?.close();
-    lan?.kill();
-  });
-
-  test('Join lands a guest in the host\'s game room', async ({ page }) => {
-    const sockets: string[] = [];
-    page.on('websocket', (ws) => sockets.push(ws.url()));
-    await openLobby(page, relay);
-    await page.locator('.online-room').getByRole('button', { name: /^Join/ }).click();
-    await expect(page.getByRole('heading', { name: 'Join Game' })).toBeVisible({ timeout: 10_000 });
-    await expect.poll(() => sockets.some((u) => u.endsWith('/rooms/room-live/ws'))).toBe(true);
-    // Leaving goes back to the title with no room kept.
-    await page.getByRole('button', { name: /Back/ }).first().click();
     await expect(page.getByRole('button', { name: /^Single Player/ })).toBeVisible();
   });
 });

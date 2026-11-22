@@ -33,7 +33,7 @@ it('waits for living LAN players and drops eliminated players from the waiting t
     client: new RemoteClient(0, 'Ana'), views: [view], humans: [0], seat: 0,
     ready: [true], orders: [[]], errors: [[]],
     lan: {
-      status: { mode: 'server', has_game: true, turn: view.turn, seats, lan_urls: [], is_local: true },
+      status: { mode: 'server', has_game: true, turn: view.turn, seats, is_local: true },
       seats, mySeat: 0, conn: 'open',
     },
   });

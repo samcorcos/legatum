@@ -216,7 +216,7 @@ The source of truth for decisions is the design doc's decisions log (see CLAUDE.
   - **Air (D7):** an air strike on the turn you declare war is legal, like a ground attack; rebases apply in aircraft id order, so two aircraft cannot swap between full hangars.
 - **Old saves (D8):** a Quick-speed save opens at Standard with one plain notice, not converted; a save without `vp_holds` restarts victory holds (accepted, documented). The former `title_since` crown clock was removed on 2026-10-20; old values are ignored.
   - **Saves are validated on load (D9):** structure and size are checked, a broken save is refused with the field named, never silently repaired; the running game and autosave are untouched.
-  - **LAN is for trusted networks (D10):** plain HTTP/WebSocket, no TLS for now, said in the README and the join screen; scenario uploads from LAN devices are capped (2 MiB each, 500 files or 100 MiB), not locked.
+  - **LAN is for trusted networks (D10):** superseded 2026-11-22: LAN mode is gone; online games run in the host's browser tab and go through the relay over TLS.
   - **A new unit order clears the old standing order even if it fails (D11):** intentional, not a bug.
 
 - **Siege is built in from the Industrial era (user, 2026-10-28).** Industrial and later units fight walled cities as if they had Siege (every wall tier), and the Siege upgrade is no longer offered to them. Rifled artillery made masonry forts obsolete in the 1860s. Walls keep their strength and strike. The user picked this over painting gunpowder-era siege gear, after a Rifleman showed a medieval siege tower and a Field Cannon showed a bombard. Siege stays a bought upgrade through the Renaissance.

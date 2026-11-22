@@ -1,4 +1,4 @@
-//! LAN and local reports share the same core visibility policy.
+//! Online and local reports share the same core visibility policy.
 pub(crate) use legatum_core::event_visibility::{VisibleEvent, visible_events};
 
 // Diplomacy is deliberately covered by the same policy as local play: war/peace announcements

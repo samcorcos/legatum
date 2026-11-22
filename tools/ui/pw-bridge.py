@@ -145,12 +145,10 @@ def handle(request_file):
                 if code:
                     raise RuntimeError(f"WASM build exited {code}")
             if "app/e2e/staging.spec.ts" in specs:
-                code = run([str(worktree / "tools/sim/build-slot.sh"), "--", "cargo", "build", "-p", "legatum-server"], worktree, log, deadline)
+                web_env = {**os.environ, "LEGATUM_RELAY_URL": "http://127.0.0.1:8787"}
+                code = run([str(worktree / "scripts/build-web.sh"), "--skip-wasm"], worktree, log, deadline, env=web_env)
                 if code:
-                    raise RuntimeError(f"server build exited {code}")
-                code = run(["npm", "run", "build"], app, log, deadline)
-                if code:
-                    raise RuntimeError(f"app build exited {code}")
+                    raise RuntimeError(f"web build exited {code}")
             command = ["npx", "playwright", "test", *specs]
             if grep is not None:
                 command += ["-g", grep]
