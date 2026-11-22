@@ -374,7 +374,7 @@ fn standings(vp: &[(u8, u32)]) -> BTreeMap<TeamId, u32> {
     vp.iter().map(|(t, v)| (TeamId(*t), *v)).collect()
 }
 
-/// Rules 51 (owner, 2026-11-22): the sole VP leader scores Humble the mighty from the rival with
+/// Rules 52 (owner, 2026-11-22): the sole VP leader scores Humble the mighty from the rival with
 /// the most VP, and from nobody else.
 #[test]
 fn a_sole_leader_humbles_only_the_top_rival() {

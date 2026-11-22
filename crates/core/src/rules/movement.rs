@@ -51,6 +51,12 @@
 //!    movement ended for the turn and its fortification cleared. **One attack per order**
 //!    (G18, Civ 6): a fighter whose opponent survived ends its order when movement is over. It
 //!    stays where it fought with no destination and needs orders; it never re-attacks next turn.
+//!    **Peaceful contests** (Sam, 2026-11-22). Units of different teams that are not at war
+//!    with each other stepping onto the same tile (no city there) never fight: the team with
+//!    the most combined strength among its claimants (meeting strength after damage; civilians
+//!    0) keeps its claim, as force decides a fallen city (`settle_by_force`), and every other
+//!    team's claimant stays put with a MoveBlocked naming the winner and both totals. Equal
+//!    best totals are drawn by seed, turn and tile (`settle_peaceful_contest`).
 //! 5. **Advance, military first.** A military claimant of tile T advances iff it survived, is
 //!    not pinned, wins the surviving claims to T, no hostile military unit is left
 //!    alive on T, any hostile city on T is at 0 HP (capture), and a
@@ -957,10 +963,12 @@ const CITY_HELD: &str = "another of your units holds the city";
 /// shot at it this turn; a side is one permanent team, so allies of other teams do not add up)
 /// walks in, if it has a melee unit that can.
 /// Sides without one count no less but cannot win. Returns the units of the winning side, or
-/// the MoveBlocked reason for every claimant: for the losers, the winner and both forces; on an
-/// exact tie, everyone stays out.
+/// the MoveBlocked reason for every claimant: for the losers, the winner and both forces. An
+/// exact tie between the strongest sides is drawn by seed, turn and tile (Sam, 2026-11-22, rules
+/// 51; it was a bounce for everyone), as on open ground (`settle_peaceful_contest`).
 fn settle_by_force(
     state: &GameState,
+    tile: Hex,
     force: &BTreeMap<UnitId, i32>,
     rivals: &[UnitId],
     pinned: &BTreeSet<UnitId>,
@@ -1005,40 +1013,45 @@ fn settle_by_force(
         let o = strongest.get(s).map_or(*s, |e| e.2);
         state.player(o).name.clone()
     };
-    let mut candidates: Vec<PlayerId> = rivals
+    let candidates: Vec<PlayerId> = rivals
         .iter()
         .filter(|r| !pinned.contains(r) && data::attacks_in_melee(state.units[*r].kind))
         .map(|r| side[&state.units[r].owner])
         .collect::<BTreeSet<_>>()
         .into_iter()
         .collect();
-    candidates.sort_by_key(|s| (std::cmp::Reverse(force_of(s)), *s));
     let mut reasons = BTreeMap::new();
-    let Some(&best) = candidates.first() else {
+    let Some(top) = candidates.iter().map(force_of).max() else {
         return (Vec::new(), reasons);
     };
-    if let Some(&second) = candidates.get(1)
-        && force_of(&second) == force_of(&best)
-    {
-        for r in rivals {
-            let mine = side[&state.units[r].owner];
-            let other = if mine == best { second } else { best };
-            reasons.insert(
-                *r,
-                format!(
-                    "{} brought equal force ({} each), so nobody took the city",
-                    name(&other),
-                    force_of(&best)
-                ),
-            );
-        }
-        return (Vec::new(), reasons);
-    }
+    let tied: Vec<PlayerId> = candidates
+        .iter()
+        .copied()
+        .filter(|s| force_of(s) == top)
+        .collect();
+    let best = crate::rng::seeded_order(
+        state.dice_seed(),
+        &[
+            state.turn as u64,
+            purpose::UNIT_CONTEST,
+            tile.q as u64,
+            tile.r as u64,
+        ],
+        &tied,
+    )[0];
     let mut winners = Vec::new();
     for r in rivals {
         let mine = side[&state.units[r].owner];
         if mine == best {
             winners.push(*r);
+        } else if tied.contains(&mine) {
+            reasons.insert(
+                *r,
+                format!(
+                    "{} brought equal force ({top} each) and won the draw for the city",
+                    name(&best)
+                ),
+            );
         } else {
             reasons.insert(
                 *r,
@@ -1054,13 +1067,138 @@ fn settle_by_force(
     (winners, reasons)
 }
 
+/// Reason prefix of a MoveBlocked event for a unit that lost a peaceful contest for a tile
+/// (`settle_peaceful_contest`); the rest names the winner and both strengths ("Sparta's
+/// Hoplite is stronger (25 against 15) and moved in"). The client headlines it.
+pub const OUTMATCHED_PREFIX: &str = "outmatched: ";
+
+/// A unit's strength in a peaceful contest for a tile: its meeting strength (combat strength
+/// after damage, with no terrain or fortification). Civilians have none.
+fn contest_strength(state: &GameState, u: &Unit) -> i32 {
+    if !is_military(u.kind) {
+        return 0;
+    }
+    let off = state.setup.rule_experiments.faction_rules_off;
+    let faction = state.player(u.owner).faction;
+    combat::unit_meeting_strength_for_rules(
+        off,
+        faction,
+        state.made_by(u),
+        u.kind,
+        u.hp,
+        super::promotion::level_for_rules(off, faction, u.xp),
+    )
+    .total
+}
+
+/// Units of empires that are not at war stepping onto the same tile in the same round (Sam,
+/// 2026-11-22, a ruin both a Spartan and a weaker unit went for): nobody attacks, and the side
+/// with the most combined strength moves in while every other side stays where it is. This is
+/// the open-ground twin of `settle_by_force` at a fallen city (user, 2026-11-11 and 2026-11-14:
+/// "the one with the most force walks in"): a side is one permanent team, so co-op partners add
+/// up, and its force is the sum of `contest_strength` over its claimants of the tile. Inside the
+/// winning side the usual claim rules apply. A side needs an unpinned claimant to win; pinned
+/// units still add their strength. Equal best forces are drawn by seed, turn and tile, so no
+/// seat is favoured (rules 50's seeded ties). Applies only when no two claimants are at war (a
+/// war meeting is fought as before) and the tile has no city. Returns the MoveBlocked reason
+/// for each unit that stays out.
+fn settle_peaceful_contest(
+    state: &GameState,
+    tile: Hex,
+    units: &[UnitId],
+    pinned: &BTreeSet<UnitId>,
+) -> BTreeMap<UnitId, String> {
+    let mut out = BTreeMap::new();
+    let owner = |u: &UnitId| state.units[u].owner;
+    let team = |u: &UnitId| state.team_of(owner(u));
+    let teams: BTreeSet<TeamId> = units.iter().map(team).collect();
+    if teams.len() < 2
+        || units
+            .iter()
+            .any(|a| units.iter().any(|b| hostile(state, owner(a), owner(b))))
+    {
+        return out;
+    }
+    let mut force: BTreeMap<TeamId, i32> = BTreeMap::new();
+    let mut members: BTreeMap<TeamId, Vec<UnitId>> = BTreeMap::new();
+    for u in units {
+        *force.entry(team(u)).or_default() += contest_strength(state, &state.units[u]);
+        members.entry(team(u)).or_default().push(*u);
+    }
+    let candidates: Vec<TeamId> = members
+        .iter()
+        .filter(|(_, us)| us.iter().any(|u| !pinned.contains(u)))
+        .map(|(t, _)| *t)
+        .collect();
+    let Some(top) = candidates.iter().map(|t| force[t]).max() else {
+        return out;
+    };
+    let tied: Vec<TeamId> = candidates
+        .iter()
+        .copied()
+        .filter(|t| force[t] == top)
+        .collect();
+    let drawn = tied.len() > 1;
+    let side = crate::rng::seeded_order(
+        state.dice_seed(),
+        &[
+            state.turn as u64,
+            purpose::UNIT_CONTEST,
+            tile.q as u64,
+            tile.r as u64,
+        ],
+        &tied,
+    )[0];
+    // Name the winning side by its unit ("Sparta's Spartan Hoplite"), or by its strongest
+    // unit's owner when several of its units add up ("Sparta's units").
+    let winners = &members[&side];
+    let lead = winners
+        .iter()
+        .max_by_key(|u| {
+            (
+                contest_strength(state, &state.units[*u]),
+                std::cmp::Reverse(**u),
+            )
+        })
+        .expect("a side has a claimant");
+    let p = state.player(owner(lead));
+    let (name, verb) = if winners.len() == 1 {
+        (
+            format!(
+                "{}'s {}",
+                p.name,
+                data::unit_name_for(p.faction, state.units[lead].kind)
+            ),
+            "is",
+        )
+    } else {
+        (format!("{}'s units", p.name), "are")
+    };
+    for u in units {
+        if team(u) == side {
+            continue;
+        }
+        let mine = force[&team(u)];
+        let why = if mine < top {
+            format!("{name} {verb} stronger ({top} against {mine}) and moved in")
+        } else if drawn && candidates.contains(&team(u)) {
+            format!("{name} {verb} just as strong ({top} each) and won the draw to move in")
+        } else {
+            // A side as strong as the winner whose every claimant was pinned by an attack.
+            format!("it was attacked, and {name} moved in")
+        };
+        out.insert(*u, format!("{OUTMATCHED_PREFIX}{why}"));
+    }
+    out
+}
+
 /// A MoveBlocked reason worth reporting for a unit that also fought this round: why its
 /// fight did not take the city.
 fn reported_after_a_fight(reason: &str) -> bool {
     reason == RANGED_CAPTURE
         || reason == CITY_REINFORCED
         || reason.contains(" took the city with force ")
-        || reason.ends_with("so nobody took the city")
+        || reason.ends_with("and won the draw for the city")
 }
 
 /// One round. Returns false when nobody had a step to declare.
@@ -1798,7 +1936,7 @@ fn movement_round(
             let Some(force) = forces.get(tile) else {
                 continue;
             };
-            let (winners, reasons) = settle_by_force(state, force, &rivals, &pinned);
+            let (winners, reasons) = settle_by_force(state, *tile, force, &rivals, &pinned);
             decided.extend(reasons);
             if winners.is_empty() {
                 continue;
@@ -1850,6 +1988,26 @@ fn movement_round(
             team_captors.insert(*tile, eligible[chosen]);
         }
     }
+    // Units of teams not at war contesting one tile: the strongest side moves in, the others
+    // stay put; nobody attacks (Sam, 2026-11-22).
+    let mut peaceful: BTreeMap<Hex, Vec<UnitId>> = BTreeMap::new();
+    for ((tile, _), units) in &claimants {
+        if at(*tile).city.is_some() || holders.contains_key(tile) {
+            continue;
+        }
+        peaceful.entry(*tile).or_default().extend(
+            units
+                .iter()
+                .copied()
+                .filter(|u| alive(state, *u) && !decided.contains_key(u)),
+        );
+    }
+    let mut outmatched: BTreeSet<UnitId> = BTreeSet::new();
+    for (tile, units) in &peaceful {
+        let lost = settle_peaceful_contest(state, *tile, units, &pinned);
+        outmatched.extend(lost.keys().copied());
+        decided.extend(lost);
+    }
     let mut waiting = BTreeSet::new();
     let mut succeeded: BTreeSet<UnitId> = BTreeSet::new();
     let mut captures_city: BTreeMap<UnitId, CityId> = BTreeMap::new();
@@ -1884,7 +2042,9 @@ fn movement_round(
                 continue;
             }
             // Different classes may stack only within a permanent team. Neutral claimants
-            // bounce even when the other claimant is a civilian; neither enters combat.
+            // left after `settle_peaceful_contest` (a tile with a city, or a war among the
+            // claimants) bounce even when the other claimant is a civilian; neither enters
+            // combat.
             let neutral_rival = intents.values().any(|j| {
                 j.to == i.to
                     && alive(state, j.unit)
@@ -1924,7 +2084,8 @@ fn movement_round(
                 reasons.insert(i.unit, CITY_HELD.into());
                 continue;
             }
-            let rivals = alive_claimants(state, i.to, military);
+            let mut rivals = alive_claimants(state, i.to, military);
+            rivals.retain(|r| !outmatched.contains(r));
             if rivals.len() > 1 {
                 if team_captors.contains_key(&i.to) {
                     // Wait until dependencies resolve before choosing the city captor.
@@ -3131,3 +3292,7 @@ mod capture_orders_tests;
 #[cfg(test)]
 #[path = "held_shot_tests.rs"]
 mod held_shot_tests;
+
+#[cfg(test)]
+#[path = "peaceful_contest_tests.rs"]
+mod peaceful_contest_tests;

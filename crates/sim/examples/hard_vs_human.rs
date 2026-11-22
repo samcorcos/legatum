@@ -1930,17 +1930,18 @@ mod tests {
         // The leader war and the siege clock (2026-11-21) returned it to five cities at T62 and two VP at T100, with no win; with the clock off by default (held-out finding, 2026-11-21) it is four cities at T62, no VP at T100 and the elimination win at T173 of the survive-him genes.
         // World Ages as the only era scoring, with its peaceful cards (rules 50, 2026-11-22), keeps four cities at T62 and no VP at T100, and the seat no longer wins on this tape.
         // Hard weighing a site's whole ring-one terrain (site_terrain_weight 20, 2026-11-22) gives five cities at T50 and T62, two VP at T100 and an elimination win at T154.
+        // Peaceful contests (rules 51, 2026-11-22: the stronger side takes a contested tile between empires not at War) give four cities at T50, five at T62, no VP at T100 and no win.
         assert_eq!(
             first_map_game(true),
             json!({
                 "cities_t30": 3,
-                "cities_t50": 5,
+                "cities_t50": 4,
                 "cities_t62": 5,
-                "vp_t100": 2,
+                "vp_t100": 0,
                 "vp_t60": 0,
-                "win": true,
-                "win_turn": 154,
-                "win_type": "elimination",
+                "win": false,
+                "win_turn": null,
+                "win_type": null,
             })
         );
     }
@@ -1967,17 +1968,18 @@ mod tests {
         // The survive-him genes (2026-11-21: neighbour_alarm, the production-thrash fix) leave four cities at T62 and no VP at T100.
         // The leader war and the siege clock (2026-11-21) left five cities at T62, no VP at T100 and an elimination win at T169; with the clock off by default (held-out finding, 2026-11-21) it is four cities at T62, no VP at T100 and no win.
         // Hard weighing a site's whole ring-one terrain (site_terrain_weight 20, 2026-11-22) gives five cities at T50 and T62, two VP at T100 and an elimination win at T225.
+        // Peaceful contests (rules 51, 2026-11-22: the stronger side takes a contested tile between empires not at War) give four cities at T50, five at T62, no VP at T100 and no win.
         assert_eq!(
             first_map_game(false),
             json!({
                 "cities_t30": 3,
-                "cities_t50": 5,
+                "cities_t50": 4,
                 "cities_t62": 5,
-                "vp_t100": 2,
+                "vp_t100": 0,
                 "vp_t60": 0,
-                "win": true,
-                "win_turn": 225,
-                "win_type": "elimination",
+                "win": false,
+                "win_turn": null,
+                "win_type": null,
             })
         );
     }

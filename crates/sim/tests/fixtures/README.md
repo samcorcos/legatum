@@ -10,15 +10,14 @@ determinism tests. The runner pin tests read that file and name the command when
 a digest differs. Keep `pins.json` outside this directory: replay import and the
 WASM checker treat every JSON file here as a tape.
 
-## Rules 51: Humble the mighty counts the top rival when you lead (2026-11-22)
+## Rules 52: Humble the mighty counts the top rival when you lead (2026-11-22)
 
-`LEGATUM_REPIN_THREADS=2 tools/sim/repin.sh` on `claude/review-rules-51` rebased on `origin/master`
-at 2f990b8 (after the ring-one site weight) kept all three mixed-AI tapes and every fixed-order
-replay hash. In `pins.json`, the third 80-turn mixed digest moved (`7018178352511085109` to
-`1409808469849651451`) and so did the 160-turn scripted-Hard city-fire digest
-(`5420664887013901260` to `13233039081665318437`). The cause is the leader now counting captures
-from its top rival for Humble the mighty, and Hard valuing those captures. No scenario state hash
-changed. The pin tests and all 12 determinism tests passed.
+`LEGATUM_REPIN_THREADS=2 tools/sim/repin.sh` on `claude/review-rules-51` merged with `origin/master`
+at 84cf42a (rules 51, peaceful contests) kept all three mixed-AI tapes, every fixed-order replay
+hash and all three 80-turn mixed digests. Only the 160-turn scripted-Hard city-fire digest moved
+(`8667513540014071380` to `11611989800583945056`): the leader now counts captures from its top
+rival for Humble the mighty, and Hard values those captures. No scenario state hash changed. The
+pin tests and all 12 determinism tests passed.
 
 ## Final rules-50 tree: master merged again, Gold gifts, wonder prices, Star Fort (2026-11-22)
 

@@ -4,12 +4,12 @@
 //!   hill_suite --tape TAPE.json --states STATES.jsonl --out RUNS.jsonl --branch 51 --end 81
 //!              --mode tape|hybrid|hard|storm|quiet [--seat 0] [--salts 48] [--victim 3]
 //!              [--war-turn 61] [--storm 3] [--report 60] [--arms control,NAME=PARAMS.json]
-//!              [--threads N] [--hybrid-defend on|off] [--accept-rules 49|50]
+//!              [--threads N] [--hybrid-defend on|off] [--accept-rules 49|50|51]
 //!
 //! `--states` is `audit_states` output (every recorded hash checked). `--accept-rules 49` reads states
 //! written by a rules-49 engine through `legatum_wasm::json::upgrade_value_from_49`, and
-//! `--accept-rules 50` reads rules-50 states through `upgrade_value_from_50` (the identity: rules 51
-//! changes no field). Sim only; see them for what changes. Without the flag a state carrying a
+//! `--accept-rules 50` or `51` reads rules-50 or rules-51 states through `upgrade_value_from_50`
+//! (the identity: rules 51 and 52 change no field). Sim only; see them for what changes. Without the flag a state carrying a
 //! rules-49-only field is refused. Every seat's Hard brain
 //! shadows the recorded game up to `--branch` so it has its real opponent memory. From the branch
 //! the designer's seat is played by:
@@ -80,7 +80,7 @@ struct Args {
     report: Option<u32>,
     arms: Vec<(String, Option<AiParams>)>,
     hybrid_defend: bool,
-    /// Read older recorded states through the upgrade (`--accept-rules 49` or `50`).
+    /// Read older recorded states through the upgrade (`--accept-rules 49`, `50` or `51`).
     accept: Option<u32>,
 }
 
@@ -121,8 +121,8 @@ fn parse_args() -> Args {
             "--hybrid-defend" => a.hybrid_defend = v == "on",
             "--accept-rules" => {
                 assert!(
-                    v == "49" || v == "50",
-                    "--accept-rules takes 49 or 50 (the older rules versions with an upgrade)"
+                    v == "49" || v == "50" || v == "51",
+                    "--accept-rules takes 49, 50 or 51 (the older rules versions with an upgrade)"
                 );
                 a.accept = Some(v.parse().unwrap());
             }

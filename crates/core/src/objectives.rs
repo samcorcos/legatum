@@ -459,7 +459,7 @@ impl CaptureVpSnapshot {
     }
 }
 
-/// The Humble the mighty test on each living team's VP (rules 51, owner 2026-11-22: "Leader's
+/// The Humble the mighty test on each living team's VP (rules 52, owner 2026-11-22: "Leader's
 /// card counts top rival"). A capture from `victim`'s team counts when that team is strictly
 /// ahead of `taker`'s team, or when no rival team is ahead of `taker`'s team and `victim`'s team
 /// has the highest VP among its rivals (every team tied for that highest counts). So the leader,

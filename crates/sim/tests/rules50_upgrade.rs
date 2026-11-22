@@ -1,6 +1,7 @@
-//! A rules-50 saved state upgrades to rules 51 for simulation (`legatum_wasm::json::upgrade_from_49`,
-//! which also reads 50) and plays on with Hard in every seat. Rules 51 changes no field, so the
-//! upgrade is the identity plus the version stamp. The fixture is the T148 state of the "India:
+//! A rules-50 saved state upgrades to the current rules (52) for simulation
+//! (`legatum_wasm::json::upgrade_from_49`, which also reads 50 and 51) and plays on with Hard in
+//! every seat. Rules 51 and 52 change no field, so the upgrade is the identity plus the version
+//! stamp; a rules-51 save takes the same path. The fixture is the T148 state of the "India:
 //! strike the leader" Lab scenario as it stood at rules 50.
 use std::io::Read;
 

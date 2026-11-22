@@ -694,7 +694,7 @@ mod tests {
         v
     }
 
-    /// Rules 51: a leading seat values the top rival's plain city for Humble the mighty, through
+    /// Rules 52: a leading seat values the top rival's plain city for Humble the mighty, through
     /// the core's own test, and never a lower rival's; a trailing seat still needs a team ahead.
     #[test]
     fn humble_the_mighty_targets_the_top_rival_when_leading() {
