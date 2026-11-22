@@ -71,6 +71,23 @@ async function gunzip(bytes: ArrayBuffer): Promise<string | null> {
   }
 }
 
+/** The month in the storage key comes from this, so it must be a real ISO time. */
+const CREATED_AT_RE = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])T([01]\d|2[0-3]):[0-5]\d:[0-5]\d(\.\d{1,9})?(Z|[+-]\d{2}:\d{2})$/;
+const ANSWER_TEXT_MAX = 2000;
+const ANSWER_KEYS = new Set(["type", "game", "turn", "category", "question", "evidence", "answer", "build"]);
+
+/** One coach answer line (app/src/why.ts WhyAnswerLine): known keys, bounded text. It is read by a model later. */
+function answerOk(x: unknown): boolean {
+  if (!x || typeof x !== "object" || Array.isArray(x)) return false;
+  const o = x as Record<string, unknown>;
+  if (!Object.keys(o).every((k) => ANSWER_KEYS.has(k))) return false;
+  for (const k of ["type", "game", "category", "question", "answer", "build"]) {
+    if (o[k] !== undefined && (typeof o[k] !== "string" || (o[k] as string).length > ANSWER_TEXT_MAX)) return false;
+  }
+  if (o.turn !== undefined && (!Number.isInteger(o.turn) || (o.turn as number) < 0 || (o.turn as number) > 10_000)) return false;
+  return o.evidence === undefined || JSON.stringify(o.evidence).length <= 32_000;
+}
+
 /** The record's shape, and the rule that matters most: no seat carries a name a player typed. */
 export function checkRecord(id: string, record: unknown): Metadata | string {
   if (!record || typeof record !== "object") return "not a game record";
@@ -81,16 +98,18 @@ export function checkRecord(id: string, record: unknown): Metadata | string {
   if (m.game_id !== id) return "game id does not match the address";
   if (!OUTCOMES.includes(m.outcome)) return "unknown outcome";
   if (!Number.isInteger(m.turn_count) || m.turn_count < 0 || m.turn_count > 10_000) return "bad turn count";
-  if (typeof m.created_at !== "string" || !/^\d{4}-\d{2}-\d{2}T/.test(m.created_at)) return "bad created_at";
+  if (typeof m.created_at !== "string" || !CREATED_AT_RE.test(m.created_at) || Number.isNaN(Date.parse(m.created_at))) return "bad created_at";
   if (!Array.isArray(m.seats) || m.seats.length < 1 || m.seats.length > 9) return "bad seats";
   for (const [i, s] of m.seats.entries()) {
     const name = DEFAULT_NAME_RE.exec(String(s?.name));
     if (!name || name[1] !== (s.human ? "Player" : "AI") || Number(name[2]) !== i + 1) return "seat names must be the defaults";
+    // Stored as listing metadata and shown on the analysis Mac: plain words only.
+    if (!/^[A-Za-z][A-Za-z ]{0,23}$/.test(String(s.faction)) || !/^[A-Za-z]{1,12}$/.test(String(s.difficulty))) return "bad faction or difficulty";
   }
   // The player's coach-question answers ride along as an optional list of objects.
   if (r.coach_answers !== undefined) {
     const a = r.coach_answers;
-    if (!Array.isArray(a) || a.length > 2000 || a.some((x) => !x || typeof x !== "object" || Array.isArray(x))) return "bad coach answers";
+    if (!Array.isArray(a) || a.length > 2000 || !a.every(answerOk)) return "bad coach answers";
   }
   return m;
 }
@@ -149,7 +168,12 @@ async function readApi(request: Request, env: Env, path: string): Promise<Respon
       cursor: page.truncated ? page.cursor : null,
     });
   }
-  const key = decodeURIComponent(path.slice("/v1/read/games/".length));
+  let key = "";
+  try {
+    key = decodeURIComponent(path.slice("/v1/read/games/".length));
+  } catch {
+    // A malformed escape such as "%E0%A4%A" is a bad key, not a server error.
+  }
   if (!path.startsWith("/v1/read/games/") || !KEY_RE.test(key)) return json({ error: "not found" }, 404);
   const object = await env.GAMES.get(key);
   if (!object) return json({ error: "not found" }, 404);
