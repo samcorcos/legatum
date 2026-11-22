@@ -20,3 +20,5 @@ Other factions in pool 1:
 - Sparta 4.5% → 12.0%.
 
 Those are single-pool, 200-seat swings from different land being taken. They are not a direct effect of the change.
+
+**Scale.** Egypt's doubled Food keeps the fixed Food ×4 weight. Averaged over Grassland, Plains, Hills and Forest, a tile scores 8.5 for other factions and 8 for Egypt, so the bands stay comparable on mixed land. An all-Grassland map rates higher for Egypt, which is true: Egypt gets more from it. The UI review saw most of a Grassland-heavy tour map in the top band. If Egypt's lens looks too flat in play, revisit the weight with sims.

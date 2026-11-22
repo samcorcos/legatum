@@ -24,9 +24,11 @@ export function yieldPhrase(y: SettlementSite['potential_yields']): string {
 
 /** The points of a site's quality, one per cause, in the order the hover lists them. They sum to `site.quality`. */
 export interface QualityPart { id: 'land' | 'strategic' | 'foreign' | 'wonder'; label: string; points: number }
-export function qualityParts(site: SettlementSite): QualityPart[] {
+export function qualityParts(site: SettlementSite, faction?: string): QualityPart[] {
   const y = site.potential_yields;
-  const parts: QualityPart[] = [{ id: 'land', label: `Land within ${WORK_RADIUS} tiles, outer ring at half: Food ×4 + Production ×3 + Gold ×2`, points: y.food * 4 + y.production * 3 + y.gold * 2 }];
+  // The Nile: Egypt's site numbers already hold double Food and no Production, so its formula names no Production.
+  const formula = faction === 'Egypt' ? 'Food ×4 + Gold ×2 (Food doubled by the Nile)' : 'Food ×4 + Production ×3 + Gold ×2';
+  const parts: QualityPart[] = [{ id: 'land', label: `Land within ${WORK_RADIUS} tiles, outer ring at half: ${formula}`, points: y.food * 4 + y.production * 3 + y.gold * 2 }];
   const strategic = site.resources.filter((r) => isStrategic(r.resource));
   if (strategic.length) parts.push({ id: 'strategic', label: `${strategic.map((r) => RESOURCE_INFO[r.resource].name).join(' and ')}: ${STRATEGIC_SITE_VALUE} each`, points: strategic.length * STRATEGIC_SITE_VALUE });
   if (site.foreign_tiles) parts.push({ id: 'foreign', label: `${tiles(site.foreign_tiles)} of foreign land: −${FOREIGN_TILE_COST} each`, points: -site.foreign_tiles * FOREIGN_TILE_COST });

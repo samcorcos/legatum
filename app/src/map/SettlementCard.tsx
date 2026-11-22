@@ -35,14 +35,14 @@ export function SettlementDetails({ site, faction }: { site: SettlementSite; fac
     <details className="settlement-breakdown" open={expanded} onToggle={(e) => setExpanded(e.currentTarget.open)}>
     <summary>Details</summary>
     <div className="settlement-score"><b>Site quality: {site.quality} ({site.band}, {bandRange(site.band)})</b></div>
-    <p className="muted">Quality is a fixed scale, the same on every map and for every Settler: {SETTLE_BANDS.map((b) => `${b} ${bandRange(b)}`).join(', ')}.</p>
-    <dl className="settlement-math" aria-label="Site quality calculation">{qualityParts(site).map((part) => <div key={part.id + part.label}><dt>{part.label}</dt><dd>{signed(part.points)}</dd></div>)}</dl>
+    <p className="muted">Quality is a fixed scale, the same on every map and for every Settler of your people: {SETTLE_BANDS.map((b) => `${b} ${bandRange(b)}`).join(', ')}.</p>
+    <dl className="settlement-math" aria-label="Site quality calculation">{qualityParts(site, faction).map((part) => <div key={part.id + part.label}><dt>{part.label}</dt><dd>{signed(part.points)}</dd></div>)}</dl>
     <p className="muted">For this Settler, travel and threats change the score to {site.score}; the band does not move.</p>
     <dl className="settlement-math" aria-label="Suitability calculation">{site.breakdown.filter((part) => part.value !== 0 || part.label.startsWith('India local network') || part.label.startsWith('Corruption:')).map((part, i) => <div key={i}><dt>{part.label}</dt><dd>{signed(part.value)}</dd></div>)}</dl>
     <p>Center terrain <YieldLine yields={site.center_yields} /></p>
     <p>Founding border: {site.ring_one.length ? <>{site.ring_one.length} tiles worked from turn one <YieldLine yields={site.ring_one.reduce((sum, t) => ({ food: sum.food + t.yields.food, production: sum.production + t.yields.production, gold: sum.gold + t.yields.gold, science: sum.science + t.yields.science }), { food: 0, production: 0, gold: 0, science: 0 })} /></> : 'no known free tile in the initial border.'}</p>
     <p className="muted">A city works every tile it owns within 3, and each population claims one more, nearest first. Terrain yields only; city income is added separately.</p>
-    <p>Known radius 3 potential (ring 3 at half) <YieldLine yields={site.potential_yields} /></p>
+    <p>Land within 3 tiles (outer ring at half) <YieldLine yields={site.potential_yields} /></p>
     {Object.values(site.terrain_bonus).some(Boolean) && <p>Faction terrain bonus <YieldLine yields={site.terrain_bonus} /></p>}
     <p>{site.nearest_city === null ? 'Your first city' : `${site.nearest_city} hexes to your nearest city`} · {site.travel_turns === null ? 'No known route' : `${site.travel_turns} travel turns`}</p>
     <p>Border overlap: {site.own_border_tiles} own · {site.foreign_tiles} foreign tiles. Foreign yields excluded; founding can reassign your initial ring.</p>

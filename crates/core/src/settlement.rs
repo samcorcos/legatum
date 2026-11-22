@@ -994,9 +994,14 @@ fn analyze_sites(
             let mut score = initial;
             let mut breakdown = Vec::new();
             if explain {
+                let nile = faction == Faction::Egypt && view.rule_experiments.egypt_nile();
                 breakdown.push(ScorePart {
-                    label: "Known radius 3 (ring 3 at half): food ×4 + production ×3 + gold ×2 (known resources included)"
-                        .into(),
+                    label: if nile {
+                        "Land within 3 tiles, outer ring at half: Food ×4 + Gold ×2 (Food doubled by the Nile)"
+                    } else {
+                        "Land within 3 tiles, outer ring at half: Food ×4 + Production ×3 + Gold ×2"
+                    }
+                    .into(),
                     value: score,
                 });
             }
