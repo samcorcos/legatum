@@ -1220,7 +1220,7 @@ fn germany_industry_runs_each_turn_without_completion_or_purchase() {
                         .total
                         .science
             }
-            IndustryProject::Grow => unreachable!("Germany has no Grow project"),
+            IndustryProject::Food | IndustryProject::Grow => unreachable!("not in this loop"),
         };
         assert_eq!(
             amount,

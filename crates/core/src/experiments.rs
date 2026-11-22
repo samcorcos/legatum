@@ -332,6 +332,9 @@ pub struct RuleExperiments {
     /// A Science project's share, in percent (default `data::PROJECT_SCIENCE_PERCENT`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub project_science: Option<u16>,
+    /// A Food project's share, in percent (default `data::PROJECT_FOOD_PERCENT`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub project_food: Option<u16>,
 }
 
 fn is_zero(n: &u8) -> bool {
@@ -377,10 +380,10 @@ impl RuleExperiments {
     }
 
     /// The share of city Production (Egypt: of its Food-funded build progress) a project turns
-    /// into Gold or Science each turn, in percent. Germany's Industry is better (its faction
+    /// into Gold, Science or Food each turn, in percent. Germany's Gold and Science are better (its faction
     /// strength); switched off, Germany falls back to everyone's rate.
     pub fn project_percent(self, faction: crate::Faction, project: crate::IndustryProject) -> i32 {
-        use crate::IndustryProject::{Gold, Grow, Science};
+        use crate::IndustryProject::{Food, Gold, Grow, Science};
         let german = faction == crate::Faction::Germany
             && !self.rule_off(FactionRule::GermanyIndustryProjects);
         match (project, german) {
@@ -393,6 +396,10 @@ impl RuleExperiments {
             (Science, false) => i32::from(
                 self.project_science
                     .unwrap_or(crate::data::PROJECT_SCIENCE_PERCENT),
+            ),
+            (Food, _) => i32::from(
+                self.project_food
+                    .unwrap_or(crate::data::PROJECT_FOOD_PERCENT),
             ),
             (Grow, _) => 0,
         }
@@ -539,6 +546,10 @@ impl RuleExperiments {
                     ("project-science", 1..=100) => {
                         self.project_science =
                             (value != crate::data::PROJECT_SCIENCE_PERCENT).then_some(value)
+                    }
+                    ("project-food", 1..=100) => {
+                        self.project_food =
+                            (value != crate::data::PROJECT_FOOD_PERCENT).then_some(value)
                     }
                     _ => {
                         return Err(format!(

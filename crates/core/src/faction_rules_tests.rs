@@ -173,6 +173,47 @@ fn every_empire_runs_projects_below_germanys_rate() {
     );
 }
 
+/// Every empire but Nile Egypt can run a Food project (Sam, 2026-11-22: a Science, Gold or Food
+/// stream). It turns `PROJECT_FOOD_PERCENT` of Production into Food; Germany has no better rate.
+#[test]
+fn a_food_project_turns_production_into_food_for_everyone_but_nile_egypt() {
+    let rules = crate::experiments::RuleExperiments::default();
+    let food = project(IndustryProject::Food);
+    for faction in Faction::ALL {
+        assert_eq!(
+            data::available_to_faction(faction, food),
+            faction != Faction::Egypt,
+            "{faction:?}"
+        );
+        assert_eq!(
+            rules.project_percent(faction, IndustryProject::Food),
+            i32::from(data::PROJECT_FOOD_PERCENT)
+        );
+    }
+    assert!(data::available_to_faction_rules(
+        off(FactionRule::EgyptNile).faction_rules_off,
+        Faction::Egypt,
+        food
+    ));
+    let mut s = test_game(&[(Faction::Rome, 0), (Faction::India, 1)]);
+    let c = found(&mut s, P0, at(5, 5));
+    s.cities.get_mut(&c).unwrap().population = 6;
+    assert!(economy::production_check::<economy::Blocked>(&s, &s.cities[&c], food, true).is_none());
+    let idle = economy::city_yields(&s, &s.cities[&c]);
+    s.cities.get_mut(&c).unwrap().producing = Some(food);
+    let running = economy::city_yields(&s, &s.cities[&c]);
+    let made = running.total.production * i32::from(data::PROJECT_FOOD_PERCENT) / 100;
+    assert!(made > 0, "{running:?}");
+    assert_eq!(running.total.food - idle.total.food, made);
+    assert!(
+        running
+            .sources
+            .iter()
+            .any(|src| src.label == "Food project (25% of Production)" && src.yields.food == made),
+        "{running:?}"
+    );
+}
+
 /// Egypt has no Production: its project converts the build progress its surplus Food makes.
 #[test]
 fn an_egyptian_project_converts_food_funded_progress() {

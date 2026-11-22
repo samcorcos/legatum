@@ -58,14 +58,19 @@ impl Brain for RandomBrain {
         for c in cities {
             let d = c.detail.as_ref().expect("filtered");
             // The options it had before every empire could run a Gold or Science project (only
-            // Germany then), so its games, and the tests built on them, stay the same.
+            // Germany then) or a Food project, so its games, and the tests built on them, stay the same.
             let finite: Vec<_> = d
                 .options
                 .iter()
                 .filter(|o| {
-                    germany
-                        || !matches!(o.item, legatum_core::ProductionItem::Project { project }
-                            if project != legatum_core::IndustryProject::Grow)
+                    use legatum_core::IndustryProject::{Food, Grow};
+                    match o.item {
+                        legatum_core::ProductionItem::Project { project: Food } => false,
+                        legatum_core::ProductionItem::Project { project } if project != Grow => {
+                            germany
+                        }
+                        _ => true,
+                    }
                 })
                 .collect();
             if d.producing.is_none() && !finite.is_empty() {

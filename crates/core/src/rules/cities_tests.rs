@@ -165,7 +165,7 @@ fn stopping_city_automation_keeps_current_build_and_drops_its_future_pick() {
         &[
             Order::SetCityAutomation {
                 city: id,
-                focus: Some(CityBuildFocus::Balanced),
+                focus: Some(CityBuildFocus::Economy),
                 picked: None,
             },
             Order::SetProductionQueue {

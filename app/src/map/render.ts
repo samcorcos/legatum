@@ -1321,7 +1321,7 @@ function drawTargetMark(ctx: CanvasRenderingContext2D, look: LookId, S: MapStyle
 }
 
 /** The icon each automatic-build focus wears on the banner. */
-const FOCUS_ICON: Record<CityBuildFocus, string> = { Balanced: 'ui-random', Science: 'yield-science', Gold: 'yield-gold', Military: 'unit-soldier' };
+const FOCUS_ICON: Record<CityBuildFocus, string> = { Military: 'unit-soldier', Economy: 'building-workshop', Gold: 'yield-gold', Science: 'yield-science', Food: 'yield-food' };
 
 const q24 = (f: number) => Math.round(Math.max(0, Math.min(1, f)) * 24) / 24;
 

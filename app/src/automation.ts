@@ -1,5 +1,5 @@
 import type { CityBuildFocus, CityView, Faction, Order, PlayerView, ProductionItem, UnitView } from './types';
-import { buildingStatsFor, itemName } from './data';
+import { itemName } from './data';
 import { pendingUnitOrder } from './orders';
 import { loadedWasmModule } from './wasmClient';
 
@@ -65,7 +65,11 @@ export function cityAutomationFocus(city: number, view: PlayerView, orders: Orde
 }
 
 /** I turns a city's automation on with the focus last chosen; Shift+I steps through this order. */
-const FOCUS_CYCLE: CityBuildFocus[] = ['Balanced', 'Military', 'Science', 'Gold'];
+export const FOCUS_CYCLE: CityBuildFocus[] = ['Economy', 'Military', 'Gold', 'Science', 'Food'];
+
+/** The focus's name in menus: a stream focus is named for its project (Nile Egypt's Food stream is Grow). */
+export const focusLabel = (focus: CityBuildFocus, faction?: Faction): string =>
+  focus === 'Food' && faction === 'Egypt' ? 'Grow' : focus === 'Military' || focus === 'Economy' ? focus : `${focus} project`;
 const FOCUS_KEY = 'legatum.lastAutomationFocus';
 let lastFocus: CityBuildFocus | null = null;
 
@@ -74,9 +78,9 @@ export function lastAutomationFocus(): CityBuildFocus {
     try {
       const saved = localStorage.getItem(FOCUS_KEY) as CityBuildFocus | null;
       if (saved && FOCUS_CYCLE.includes(saved)) lastFocus = saved;
-    } catch { /* storage blocked: Balanced */ }
+    } catch { /* storage blocked: Economy */ }
   }
-  return lastFocus ?? 'Balanced';
+  return lastFocus ?? 'Economy';
 }
 
 export function nextAutomationFocus(focus: CityBuildFocus | null): CityBuildFocus {
@@ -111,24 +115,15 @@ export async function addCityAutomatedOrders(view: PlayerView, orders: Order[]):
   return { orders: [...keep, ...planned], unchosen_cities };
 }
 
-const isFocusBuilding = (focus: CityBuildFocus, item: ProductionItem, faction: Faction): boolean => {
-  if (item.kind !== 'Building') return false;
-  const yields = buildingStatsFor(faction, item.building).yields;
-  return focus === 'Science' ? (yields.science ?? 0) > 0 : focus === 'Gold' && (yields.gold ?? 0) > 0;
-};
 const isArmyUnit = (item: ProductionItem): boolean => item.kind === 'Unit' && item.unit !== 'Scout' && item.unit !== 'Settler' && item.unit !== 'Heir';
 
 /** Why automation chose `pick` for `city`: the real reason, never a stock phrase. */
 export function autoPickReason(pick: ProductionItem, focus: CityBuildFocus, city: CityView, view: PlayerView): string {
   const faction = view.players.find((p) => p.id === city.owner)?.faction ?? 'Switzerland';
   const name = itemName(pick, faction);
-  const aName = `${/^[AEIOU]/.test(name) ? 'an' : 'a'} ${name}`;
-  if (focus === 'Balanced') return `${name}: Balanced picks what ${city.name} needs most.`;
-  if (isFocusBuilding(focus, pick, faction)) return `${name}: ${focus} focus, ${focus === 'Science' ? 'the best research building available' : 'the best economy building available'}.`;
-  if (focus === 'Military' && isArmyUnit(pick)) return `${name}: Military focus, the best military unit available.`;
-  const focusBuildAvailable = (city.detail?.options ?? []).some((o) => !o.resource_blocker && (focus === 'Military' ? isArmyUnit(o.item) : isFocusBuilding(focus, o.item, faction)));
-  const none = `No ${focus} ${focus === 'Military' ? 'unit' : 'building'} available`;
-  // A focus always builds its own kind when it can; the one exception left is a unit whose upkeep Gold can't cover.
-  if (!focusBuildAvailable) return `${none}; ${aName} is the next best build.`;
-  return focus === 'Military' ? `${name}: Not enough Gold to pay another unit's upkeep, so it builds the next best thing.` : `${name}: no ${focus} building can start now, so this is the next best build.`;
+  if (pick.kind === 'Project') {
+    return focus === 'Military' || focus === 'Economy' ? `${name}: nothing useful is left to build.` : `${name}: runs until you change the focus.`;
+  }
+  if (focus === 'Military' && isArmyUnit(pick)) return `${name}: the best unit your resources allow.`;
+  return focus === 'Military' ? `${name}: no unit can be trained or paid for now, so it builds this.` : `${name}: the most useful build for ${city.name}.`;
 }

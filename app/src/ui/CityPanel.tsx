@@ -3,7 +3,7 @@ import { rivalBuilders as rivalsOnWonder, rivalBuilderText } from '../wonderRace
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { purchasePreviews, tilePurchasePreview } from './productionPurchases';
 import { useGame } from '../store';
-import { AUTOMATION_NO_CHOICE, autoPickReason, cityAutomationFocus, setCityAutomation } from '../automation';
+import { AUTOMATION_NO_CHOICE, autoPickReason, cityAutomationFocus, FOCUS_CYCLE, focusLabel, setCityAutomation } from '../automation';
 import type { CityBuildFocus } from '../types';
 import type { BuildingKind, CityView, Faction, Order, PlayerView, ProductionItem, ProductionOption, Resource, ImprovementKind, UnavailableOption } from '../types';
 import { comparisonSentence, pieceAgainst, pieceComparison } from '../pieceCompare';
@@ -53,10 +53,11 @@ const upperFirst = (text: string) => text.charAt(0).toUpperCase() + text.slice(1
 
 /** What each automatic-build focus does, for the select's tooltip. */
 const FOCUS_TIP: Record<CityBuildFocus, string> = {
-  Balanced: 'Picks the best all-round build for the city. Spends no Gold.',
-  Science: 'Prefers Science buildings and never trains military units. Spends no Gold.',
-  Gold: 'Prefers Gold buildings and never trains military units. Spends no Gold.',
-  Military: 'Leans strongly toward military units. Spends no Gold.',
+  Military: 'Trains the newest military units your strategic resources allow, never outdated ones. Spends no Gold.',
+  Economy: 'Builds buildings and improvements, never units. Runs a project once nothing is left. Spends no Gold.',
+  Gold: 'Runs the Gold project and builds nothing else.',
+  Science: 'Runs the Science project and builds nothing else.',
+  Food: 'Runs the Food project and builds nothing else.',
 };
 
 /** How Build and + Queue work, and what happens to progress when you switch (one rule, one wording). */
@@ -758,13 +759,13 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
 
   /** Idle with nothing queued: the control sits on the "Choose what ... builds" line, so it never scrolls out of view above the cards and costs no extra row. */
   const idleChoice = city.owner === view.me && !producing && queue.length === 0;
-  const autoSelect = <select id={`city-automation-${city.id}`} aria-label={`Automate ${city.name}`} title={buildFocus ? FOCUS_TIP[buildFocus] : 'Pick a focus and the city chooses its builds. Spends no Gold.'} value={buildFocus ?? ''}
+  const autoSelect = <select id={`city-automation-${city.id}`} aria-label={`Automate ${city.name}`} title={buildFocus ? buildFocus === 'Food' && owner?.faction === 'Egypt' ? 'Runs Grow and builds nothing else.' : FOCUS_TIP[buildFocus] : 'Pick a focus and the city chooses its builds. Spends no Gold.'} value={buildFocus ?? ''}
     disabled={view.finished} onChange={(e) => editOrders((list) => setCityAutomation(list, city.id, (e.target.value || null) as CityBuildFocus | null))}>
-    <option value="">Off</option><option value="Balanced">Balanced</option><option value="Science">Science</option><option value="Gold">Gold</option><option value="Military">Military</option>
+    <option value="">Off</option>{FOCUS_CYCLE.map((f) => <option key={f} value={f}>{focusLabel(f, owner?.faction)}</option>)}
   </select>;
   const autoReason = buildFocus && productionWarning !== AUTOMATION_NO_CHOICE ? <p className="cp-automation-reason">{autoPick
     ? autoPickReason(autoPick, buildFocus, city, view)
-    : `Your queue goes first. When it empties, the city picks a ${buildFocus} build.`}</p> : null;
+    : buildFocus === 'Military' || buildFocus === 'Economy' ? `Your queue goes first. When it empties, the city picks a ${buildFocus} build.` : `Your queue goes first. When it empties, the city runs its ${focusLabel(buildFocus, owner?.faction)}.`}</p> : null;
   const automationRow = city.owner === view.me ? <section className="cp-automation" aria-label="City building automation">
     <label htmlFor={`city-automation-${city.id}`}>Automate <kbd className="kbd" title="I: on or off with your last focus. Shift+I: next focus.">I</kbd></label>
     {autoSelect}
@@ -974,7 +975,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
       {occupiedLine ? <><p className="hint warn" data-testid="city-occupied">{occupiedLine}. Food, Gold and Science continue.</p></> : <>
       <div className="cp-block production-choose-block">
         {/* How Build and Queue differ is one hover away, so the choices start right under the title. */}
-        <Tip as="div" className="cp-choose-title" content={owner?.faction === 'Egypt' ? EGYPT_BUILD_RULE : BUILD_RULE}>{buildFocus && idleChoice && productionWarning !== AUTOMATION_NO_CHOICE ? `Chooses at Ready · ${buildFocus} focus` : `Choose what ${city.name} builds`}</Tip>
+        <Tip as="div" className="cp-choose-title" content={owner?.faction === 'Egypt' ? EGYPT_BUILD_RULE : BUILD_RULE}>{buildFocus && idleChoice && productionWarning !== AUTOMATION_NO_CHOICE ? `Chooses at Ready · ${focusLabel(buildFocus, owner?.faction)}` : `Choose what ${city.name} builds`}</Tip>
       </div>
       <div className="cp-buyline">
         <div className="purchase-status" id={`purchase-status-${city.id}`} role="status">

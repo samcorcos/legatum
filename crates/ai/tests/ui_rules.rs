@@ -341,6 +341,7 @@ fn ui_rules_match_core() {
         "germanyProjectSciencePercent": data::GERMANY_SCIENCE_PROJECT_PERCENT,
         "projectGoldPercent": data::PROJECT_GOLD_PERCENT,
         "projectSciencePercent": data::PROJECT_SCIENCE_PERCENT,
+        "projectFoodPercent": data::PROJECT_FOOD_PERCENT,
         "keshig": {
             "kind": format!("{:?}", data::KESHIG_KIND),
             "cost": data::KESHIG_COST,

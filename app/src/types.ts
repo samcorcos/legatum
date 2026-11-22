@@ -155,7 +155,7 @@ export type ProductionItem =
   | { kind: 'Unit'; unit: UnitKind }
   | { kind: 'Building'; building: BuildingKind }
   | { kind: 'Wonder'; building: BuildingKind; tile: Hex }
-  | { kind: 'Project'; project: 'Gold' | 'Science' | 'Grow' }
+  | { kind: 'Project'; project: 'Gold' | 'Science' | 'Food' | 'Grow' }
   /** Improve one owned, worked resource tile (core `improvements`); `improvement` matches the tile's resource. */
   | { kind: 'Improvement'; improvement: ImprovementKind; tile: Hex };
 
@@ -269,7 +269,8 @@ interface IdleBuilding {
 }
 
 export type Automation = 'Explore';
-export type CityBuildFocus = 'Balanced' | 'Science' | 'Gold' | 'Military';
+/** Military and Economy pick builds; Gold, Science and Food run that project (core `CityBuildFocus`). */
+export type CityBuildFocus = 'Military' | 'Economy' | 'Gold' | 'Science' | 'Food';
 export type StandingOrder = 'Sleep' | 'Heal' | 'AutoFire';
 export type ExploreStopReason = 'Complete' | 'Threatened' | 'Damaged' | 'Blocked';
 

@@ -9,7 +9,7 @@ import { YieldIcon, Icon, signed } from './bits';
 import { ItemArt } from './ItemArt';
 import { closeTips, Tip } from './Tip';
 import type { CityBuildFocus, Faction } from '../types';
-import { setCityAutomation } from '../automation';
+import { FOCUS_CYCLE, focusLabel, setCityAutomation } from '../automation';
 import { cityRows, DEFAULT_CITY_SORT, nextSort, sortRows, type CityRow, type CitySort, type CitySortKey } from '../citiesOverview';
 import './citiesOverview.css';
 
@@ -67,7 +67,7 @@ export function CitiesOverview() {
   const set = useGame((s) => s.set);
   const [sort, setSort] = useState<CitySort>(loadSort);
   const [selected, setSelected] = useState<number[]>([]);
-  const [focus, setFocus] = useState<CityBuildFocus>('Balanced');
+  const [focus, setFocus] = useState<CityBuildFocus>('Economy');
   const editOrders = useGame((s) => s.editOrders);
   const dialog = useRef<HTMLDialogElement>(null);
   const closeButton = useRef<HTMLButtonElement>(null);
@@ -124,7 +124,7 @@ export function CitiesOverview() {
       <div className="co-automation" aria-label="Automate selected cities">
         <span>{chosen.length ? `${chosen.length} selected` : 'Select cities to automate'}</span>
         <select aria-label="Building focus for selected cities" value={focus} onChange={(e) => setFocus(e.target.value as CityBuildFocus)}>
-          <option>Balanced</option><option>Science</option><option>Gold</option><option>Military</option>
+          {FOCUS_CYCLE.map((f) => <option key={f} value={f}>{focusLabel(f, faction)}</option>)}
         </select>
         <button type="button" className={`btn${chosen.length ? ' primary' : ''}`} disabled={!chosen.length} onClick={() => apply(focus)}>Automate</button>
         <button type="button" className="btn" disabled={!chosen.length} onClick={() => apply(null)}>Stop automating</button>

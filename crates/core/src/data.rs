@@ -1419,6 +1419,10 @@ pub fn available_to_faction_rules(
         ProductionItem::Project {
             project: crate::IndustryProject::Grow,
         } => faction == Faction::Egypt && !off.contains(FactionRule::EgyptNile),
+        // Nile Egypt grows with Grow, which turns all of its surplus Food into growth.
+        ProductionItem::Project {
+            project: crate::IndustryProject::Food,
+        } => faction != Faction::Egypt || off.contains(FactionRule::EgyptNile),
         // Every empire can run a Gold or Science project (Sam, 2026-11-22); Germany's rate is better.
         ProductionItem::Project { .. } => true,
         ProductionItem::Unit {
@@ -1593,6 +1597,9 @@ pub const GERMANY_SCIENCE_PROJECT_PERCENT: i32 = 25;
 /// useful to do, at a much steeper loss than Germany's). Sim arms: `project-gold=N`, `project-science=N`.
 pub const PROJECT_GOLD_PERCENT: u16 = 25;
 pub const PROJECT_SCIENCE_PERCENT: u16 = 10;
+/// Every empire's Food project (Sam, 2026-11-22: a city can run a Science, Gold or Food stream).
+/// Germany has no better rate here. Sim arm: `project-food=N`.
+pub const PROJECT_FOOD_PERCENT: u16 = 25;
 
 pub fn unit_moves_for(faction: Faction, kind: UnitKind) -> i32 {
     unit_moves_for_rules(FactionRuleSet::EMPTY, faction, kind)
@@ -1885,6 +1892,9 @@ pub fn faction_unavailable_reason(item: ProductionItem, faction: Faction) -> Opt
         ProductionItem::Project {
             project: crate::IndustryProject::Grow,
         } => "Only Egyptian cities can choose Grow".into(),
+        ProductionItem::Project {
+            project: crate::IndustryProject::Food,
+        } => "Egyptian cities grow with Grow instead".into(),
         ProductionItem::Building { building }
             if faction == Faction::Egypt && is_workshop_line_building(building) =>
         {

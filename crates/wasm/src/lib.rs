@@ -1216,7 +1216,7 @@ mod tests {
         let state_city = game.session.state.cities.get_mut(&city).unwrap();
         state_city.producing = None;
         state_city.production_queue.clear();
-        state_city.build_automation = Some(CityBuildFocus::Balanced);
+        state_city.build_automation = Some(CityBuildFocus::Economy);
         game.invalidate_view();
         let view = game.view_json(0).unwrap();
         let planned = city_automation_orders_json(&view, "[]").unwrap();
@@ -1320,7 +1320,7 @@ mod tests {
                 .as_ref()
                 .unwrap()
                 .build_automation,
-            Some(CityBuildFocus::Balanced)
+            Some(CityBuildFocus::Economy)
         );
         // A missing field in an older city record is off by default.
         let mut old = serde_json::to_value(&reloaded.session.state.cities[&saved_city]).unwrap();

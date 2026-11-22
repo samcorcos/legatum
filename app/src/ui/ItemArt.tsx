@@ -14,7 +14,7 @@ export function ItemArt({ item, faction, size = 20 }: { item: ProductionItem; fa
   const art = item.kind === 'Unit' ? unitCardUrl(item.unit, faction) ?? itemArtUrl(item, faction, 64) : itemArtUrl(item, faction, 64);
   // A project has no miniature: its yield's icon, in the yield's ink and at the miniature's footprint, so the card doesn't look empty.
   if (!art && item.kind === 'Project') {
-    const k = item.project === 'Grow' ? 'food' : item.project === 'Gold' ? 'gold' : 'science';
+    const k = item.project === 'Grow' || item.project === 'Food' ? 'food' : item.project === 'Gold' ? 'gold' : 'science';
     return <Icon name={itemIcon(item, faction)} size={size + 6} color={YIELD_COLORS[k]} className="item-art-project" />;
   }
   if (!art) return <Icon name={itemIcon(item, faction)} size={size} />;

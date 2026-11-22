@@ -9996,6 +9996,7 @@
       "Trooper": 0
     }
   },
+  "projectFoodPercent": 25,
   "projectGoldPercent": 25,
   "projectSciencePercent": 10,
   "promotion": {

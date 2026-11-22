@@ -23,23 +23,25 @@ The Settle lens, settler preview, Found City blocker and AI site scoring use the
 
 **Default pacing (2026-10-22).** The capital gets +2 Production (like Civ 6's Palace). There is no opening ramp: until 2026-10-22 every Production price phased in from half the listed price on turn 0 to the full price on turn 100 (`economy::ramp_price`, the old speed surcharge); it was removed with the game-speed layer ("delete any leftover machinery", user 2026-10-21) and the early prices were retuned instead so the opening holds: the Settler costs 70 (+50 per Settler trained) and the early buildings and improvements cost what the ramp made them cost in the first third (Granary and Brood Hall 50, Workshop and Market 60, Library 80, Walls 100 (raised 2026-11-06), Farm/Pasture/Quarry 30, Mine 40); units are at their listed prices (a Spearman is 80 from turn 1, 40 before). 8-player Hard, 400 games, seed 5200001: first Settler median T18 and second city T25 before and after (`docs/sim-results/2026-10-22-opening-ramp-removal.md`); the games run about 8% shorter (309 to 285 turns on average) because the cheap early buildings stay cheap. City strike is default, but since 2026-10-03 only walled cities fire (§4). Older notes in this file about T16/T24 or T21/T29 describe earlier tunings; the numbers above are the measured ones. Individual factions can be later than these aggregate medians. See `docs/sim-results/2026-10-04-production-banking-validation.md` for per-faction measurements of the earlier tuning. Verify exact constants in crates/core/src/data.rs and economy.rs.
 
-**City building automation (2026-10-31).** A human may set each owned city's saved
-`City.build_automation` to Balanced, Science, Gold or Military with
+**City building automation (2026-10-31; focuses redesigned rules 52, Sam 2026-11-22).** A human may set each owned city's saved
+`City.build_automation` to Military, Economy, Gold, Science or Food (`CityBuildFocus`; Balanced is gone and old
+"Balanced" JSON reads as Economy) with
 `Order::SetCityAutomation`. Its optional `picked` item is refused when it names a tile off the map
 (2026-11-22: the pick is stored on the city as sent, and an online guest could otherwise make the save unloadable). This is separate from the city's
 tile claim focus. At Ready the client sends its own fogged `PlayerView` to WASM and
-`ai::city_automation_choice_with_pipeline`, which values available production using Hard's chooser.
-A focus builds its own kind first (2026-11-01, after a Military capital built a Granary and a Farm): any available
-research building (Science), economy building (Gold) or combat unit (Military) outranks every other option, each with
-a value of at least 1 even when Hard would see no use for it, and other items fill in only when none of that kind can
-start (for Military, when no unit's upkeep can be funded: `troop_unfunded`). Science and Gold exclude military units altogether,
-even when a city has no garrison or a nearby enemy (`ai/production.rs::automated_choice`). Focused modes leave Settlers to Balanced,
-which uses Hard's normal choice. **No filler (Sam, 2026-11-22, after a finished Gold city built Scouts at turn 100):**
-automation builds a Scout only under Balanced and only while unexplored land or an unseen rival city is reachable
-(`Planner::scout_explores`; Hard's information value no longer counts for a human city), and never a unit whose upgrade
-its owner has researched (`composition::obsolete`; the melee line excepted, which waits on Iron). When nothing is left to
-build, the city runs its focus's project (Gold or Science) instead of stopping at "Choose production"; Balanced and Military run Gold while the treasury's
-per-turn total is 0 or less, or once every technology is known, otherwise Science (`Planner::idle_project`). With no active build, the choice becomes a `SetProduction` order. If the
+`ai::city_automation_choice_with_pipeline`, which values available production using Hard's item values
+(`ai/production.rs::automated_choice`; it no longer calls the AI's own `choose_item`).
+- **Gold, Science, Food (streams):** the city runs that project and nothing else, even with no garrison or an enemy
+  next door (`CityBuildFocus::stream`). Nile Egypt has no Food project, so its Food stream runs Grow.
+- **Military:** combat land units first, each with a value of at least 1 even when Hard would see no use for one. It never
+  trains a unit when a better unit of the same line is buildable now, strategic resources included
+  (`composition::best_buildable_in_line`, `outdated_by_buildable`: an option with no `resource_blocker`); without Iron the
+  Spearman is the best melee unit left and stays allowed. Among the allowed units the newest generation wins
+  (`composition::quality`), value decides within it. Buildings fill in only when no unit can start or be funded (`troop_unfunded`).
+- **Economy:** buildings, Great Works and improvements; never a unit of any kind.
+- Neither Military nor Economy builds Settlers, Scouts or other civilians (expansion and exploring are the player's call).
+  When nothing is left, they run a project: Gold while the treasury's per-turn total is 0 or less, or once every technology
+  is known, otherwise Science (`Planner::idle_project`). With no active build, the choice becomes a `SetProduction` order. If the
 current build is forecast to finish this turn and the queue is empty, the choice is
 queued behind it with `SetProductionQueue`. An existing player queue takes precedence.
 If the chooser finds no build for a city that needs a choice, Ready stops before turn resolution
@@ -48,7 +50,7 @@ production order handles this turn. When WASM is loaded, the city warns before R
 same chooser result. The WASM plan returns `orders` and `unchosen_cities`; a later chooser change
 can attach a per-city reason there (`wasm/src/lib.rs::city_automation_orders_json`,
 `app/src/automation.ts::cityAutomationPreview`, `app/src/turnFlow.ts::pendingDecisions`).
-**Gold and Science projects (every empire since 2026-11-22, Sam; Germany-only before).** `ProductionItem::Project {Gold|Science}` is open to every faction (`data::available_to_faction_rules`). It never completes and banks nothing; each turn it adds `RuleExperiments::project_percent(faction, project)` percent of the city's Production total (after the Nile, before decadence, rounded down) as Gold or Science (`economy.rs::yields_for_item`, label "Gold project (25% of Production)"). Rates: Germany 50% Gold / 25% Science (`data::GERMANY_*_PROJECT_PERCENT`, its faction strength; with `germany_industry_projects` switched off Germany gets everyone's rate), everyone else `data::PROJECT_GOLD_PERCENT` 25% / `PROJECT_SCIENCE_PERCENT` 10% (sim arms `project-gold=N`, `project-science=N`, 1..100). Egypt has no Production: on a project its surplus Food still becomes build progress (the Nile), and the project converts that progress. The AI runs a project only when no item has positive value and idling would waste Production past the idle cap (`production.rs::choose_item`, `idle_project`); its Gold-seeking swaps (campaign Gold clock, paused troops, India's Diwan fallback) pick a project only for Germany (`gold_swap_allows`). Egypt still prefers Grow when growth pays back within `egypt_grow_payback`. No `RULES_VERSION` bump: the save shape is unchanged and no earlier order becomes illegal, so old tapes replay identically.
+**Gold, Science and Food projects (Gold and Science for every empire since 2026-11-22, Sam; Germany-only before; Food since rules 52).** `ProductionItem::Project {Gold|Science|Food}` is open to every faction except that Nile Egypt has no Food project ("Egyptian cities grow with Grow instead"; `data::available_to_faction_rules`). The Food project turns `data::PROJECT_FOOD_PERCENT` 25% of Production into Food for everyone, Germany included (sim arm `project-food=N`). It never completes and banks nothing; each turn it adds `RuleExperiments::project_percent(faction, project)` percent of the city's Production total (after the Nile, before decadence, rounded down) as Gold, Science or Food (`economy.rs::yields_for_item`, label "Gold project (25% of Production)"). The AI's own cities never pick the Food project (`idle_project` picks Gold or Science; RandomBrain skips it). Rates: Germany 50% Gold / 25% Science (`data::GERMANY_*_PROJECT_PERCENT`, its faction strength; with `germany_industry_projects` switched off Germany gets everyone's rate), everyone else `data::PROJECT_GOLD_PERCENT` 25% / `PROJECT_SCIENCE_PERCENT` 10% (sim arms `project-gold=N`, `project-science=N`, 1..100). Egypt has no Production: on a project its surplus Food still becomes build progress (the Nile), and the project converts that progress. The AI runs a project only when no item has positive value and idling would waste Production past the idle cap (`production.rs::choose_item`, `idle_project`); its Gold-seeking swaps (campaign Gold clock, paused troops, India's Diwan fallback) pick a project only for Germany (`gold_swap_allows`). Egypt still prefers Grow when growth pays back within `egypt_grow_payback`. Gold and Science (2026-11-22) needed no `RULES_VERSION` bump; the Food project and the new focuses are rules 52.
 An active project has no completion; automation replaces it at Ready. Egypt's Grow project (rules 48) never completes either.
 Changing or stopping automation keeps the active item and replaces or removes an
 unstarted item that automation itself queued; manual queue edits replace that marker

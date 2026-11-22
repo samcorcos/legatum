@@ -26,7 +26,7 @@ it.skipIf(!available)('WASM generates ordinary production orders from the owner 
   city.productionQueue = [];
   client.load(coreFixture(setup.fixture));
   const view = client.view(0);
-  const setting: Order = { type: 'SetCityAutomation', city: city.id, focus: 'Balanced' };
+  const setting: Order = { type: 'SetCityAutomation', city: city.id, focus: 'Economy' };
   const plan = (orders: Order[]) => JSON.parse(wasm.city_automation_orders(JSON.stringify(view), JSON.stringify(orders))) as CityAutomationPlan;
   const chosen = plan([setting]);
   expect(chosen.orders.some((o) => o.type === 'SetProduction' && o.city === city.id)).toBe(true);

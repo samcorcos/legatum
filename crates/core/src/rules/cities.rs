@@ -50,6 +50,9 @@ pub fn item_name(item: ProductionItem) -> &'static str {
             project: IndustryProject::Science,
         } => "Science project",
         ProductionItem::Project {
+            project: IndustryProject::Food,
+        } => "Food project",
+        ProductionItem::Project {
             project: IndustryProject::Grow,
         } => "Grow",
         ProductionItem::Improvement { improvement, .. } => {

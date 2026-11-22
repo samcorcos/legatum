@@ -46,12 +46,12 @@ function unchanged() {
   expect(useGame.getState().techOpen).toBe(false);
 }
 
-it('I toggles Balanced building automation for the selected owned city', () => {
+it('I toggles Economy building automation for the selected owned city', () => {
   const view = useGame.getState().views![0];
   const city = view.cities.find((c) => c.owner === view.me)!;
   useGame.setState({ selection: { kind: 'city', id: city.id } });
   press(map, 'i');
-  expect(useGame.getState().orders[0]).toContainEqual({ type: 'SetCityAutomation', city: city.id, focus: 'Balanced' });
+  expect(useGame.getState().orders[0]).toContainEqual({ type: 'SetCityAutomation', city: city.id, focus: 'Economy' });
   press(map, 'I');
   expect(useGame.getState().orders[0]).toContainEqual({ type: 'SetCityAutomation', city: city.id, focus: null });
 });

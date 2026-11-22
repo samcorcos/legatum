@@ -9,9 +9,9 @@ it('I uses the last chosen focus and Shift+I steps through the focuses', () => {
   setCityAutomation([], 1, 'Military');
   expect(lastAutomationFocus()).toBe('Military');
   expect(nextAutomationFocus(null)).toBe('Military');
-  expect(nextAutomationFocus('Balanced')).toBe('Military');
-  expect(nextAutomationFocus('Military')).toBe('Science');
-  expect(nextAutomationFocus('Gold')).toBe('Balanced');
+  expect(nextAutomationFocus('Economy')).toBe('Military');
+  expect(nextAutomationFocus('Military')).toBe('Gold');
+  expect(nextAutomationFocus('Food')).toBe('Economy');
 });
 
 it('uses the exact loaded chooser for preview and preserves a manual order when it cannot choose', async () => {
@@ -22,7 +22,7 @@ it('uses the exact loaded chooser for preview and preserves a manual order when 
   client.load(coreFixture(setup.fixture));
   const view = client.view(0);
   const city = view.cities.find((c) => c.id === setup.own)!;
-  city.detail!.build_automation = 'Science';
+  city.detail!.build_automation = 'Economy';
   city.detail!.producing = null;
   city.detail!.production_queue = [];
   city.detail!.options = city.detail!.options.filter((o) => o.item.kind === 'Unit' && o.item.unit === 'Soldier');

@@ -538,11 +538,12 @@ impl ViewBuilder {
                     .iter()
                     .map(|b| ProductionItem::Building { building: *b }),
             )
-            // Every empire's Gold and Science projects, as in core.
+            // Every empire's Gold, Science and Food projects, as in core.
             .chain(
                 [
                     legatum_core::IndustryProject::Gold,
                     legatum_core::IndustryProject::Science,
+                    legatum_core::IndustryProject::Food,
                 ]
                 .map(|project| ProductionItem::Project { project }),
             )

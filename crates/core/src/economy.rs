@@ -363,6 +363,7 @@ fn yields_for_item<const FULL: bool>(
                 ProductionItem::Project { project } => match project {
                     IndustryProject::Gold => "Gold project",
                     IndustryProject::Science => "Science project",
+                    IndustryProject::Food => "Food project",
                     IndustryProject::Grow => "Grow",
                 },
                 ProductionItem::Improvement { improvement, .. } => {
@@ -405,16 +406,20 @@ fn yields_for_item<const FULL: bool>(
         } else {
             "Production"
         };
-        if project == IndustryProject::Gold {
-            y.add(
+        match project {
+            IndustryProject::Gold => y.add(
                 || format!("Gold project ({pct}% of {from})"),
                 Yields::new(0, 0, made, 0),
-            );
-        } else {
-            y.add(
+            ),
+            IndustryProject::Science => y.add(
                 || format!("Science project ({pct}% of {from})"),
                 Yields::new(0, 0, 0, made),
-            );
+            ),
+            IndustryProject::Food => y.add(
+                || format!("Food project ({pct}% of {from})"),
+                Yields::new(made, 0, 0, 0),
+            ),
+            IndustryProject::Grow => {}
         }
     }
     let pct = crate::scoring::decadence_percent(state, city.owner);

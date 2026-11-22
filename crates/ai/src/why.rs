@@ -2098,7 +2098,7 @@ mod tests {
             .detail
             .as_mut()
             .unwrap()
-            .build_automation = Some(legatum_core::CityBuildFocus::Balanced);
+            .build_automation = Some(legatum_core::CityBuildFocus::Economy);
         let mut out = Vec::new();
         production(&view, &trace, std::slice::from_ref(&order), &mut out);
         assert!(out.is_empty());
@@ -2117,7 +2117,7 @@ mod tests {
                 order,
                 Order::SetCityAutomation {
                     city,
-                    focus: Some(legatum_core::CityBuildFocus::Balanced),
+                    focus: Some(legatum_core::CityBuildFocus::Economy),
                     picked: Some(items[1]),
                 },
             ],
@@ -2480,7 +2480,7 @@ mod tests {
             .detail
             .as_mut()
             .unwrap()
-            .build_automation = Some(legatum_core::CityBuildFocus::Balanced);
+            .build_automation = Some(legatum_core::CityBuildFocus::Economy);
         let mut automated = Vec::new();
         great_work(&view, &[order], &mut automated);
         assert!(automated.is_empty());
