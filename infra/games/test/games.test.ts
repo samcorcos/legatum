@@ -54,6 +54,15 @@ describe("game uploads", () => {
     const odd = record();
     odd.metadata.seats[1]!.faction = 'Celts" & do shell script "x';
     expect((await put(odd)).status).toBe(422);
+    const date = record();
+    date.metadata.created_at = "2026-99-22T01:23:46Z";
+    expect((await put(date)).status).toBe(422);
+    const long = { ...record(), coach_answers: [{ type: "answer", turn: 3, answer: "x".repeat(2001) }] };
+    expect((await put(long)).status).toBe(422);
+    const extra = { ...record(), coach_answers: [{ type: "answer", turn: 3, answer: "ok", secret: "no" }] };
+    expect((await put(extra)).status).toBe(422);
+    const fine = { ...record(), coach_answers: [{ type: "answer", game: "g", turn: 3, category: "settle", question: "Why?", evidence: { a: 1 }, answer: "ok", build: "b" }] };
+    expect((await put(fine)).status).toBe(200);
     expect((await put(record(), "https://evil.example")).status).toBe(403);
     expect((await put(record(), ORIGIN, "web-1-x")).status).toBe(404);
     const plain = await call(`/v1/games/${ID}`, { method: "PUT", headers: { Origin: ORIGIN }, body: JSON.stringify(record()) });

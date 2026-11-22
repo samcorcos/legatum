@@ -20,8 +20,8 @@ Every 15 minutes (launchd, `io.legatum.game-analysis`), `analyse_games.py poll`:
    - `facts.md`: standings, wars, expansion, losses, key events, the AI incident detector and the coach
      questions with the player's answers. The replay uses the engine the game was played on: `game_dump` and
      `legatum-analyze` are built at the game's `engine_commit` and cached in `engine/bin/<commit>`.
-   - `review.md`: a short coach-style triage written by Luna (Codex), or Haiku (Claude Code) if Codex fails,
-     from `review_prompt.md`.
+   - `review.md`: a short coach-style triage written by Haiku (Claude Code) from `review_prompt.md` with
+     `facts.md` pasted in, headed as untrusted model output.
    - `events.jsonl`, `coach-answers.json`, `record.json.gz` (the upload, for replays).
 5. Rewrites `reports/INDEX.md` (newest first) and shows a macOS notification.
 
@@ -37,8 +37,11 @@ Anyone can upload a game, so everything in an upload is treated as hostile:
   only plain-word faction and difficulty names.
 - At most 3 analyses per run and 12 per day (`LEGATUM_ANALYSE_PER_RUN`, `LEGATUM_ANALYSE_PER_DAY`), and only
   games with a human seat, so junk uploads cannot spend the Mac's model budget.
-- The reviewer model runs read-only with no network (Codex `-s read-only`; Claude limited to Read, Grep and
-  Glob). Coach answers are text players typed: at worst they mislead a review, which a person reads.
+- The reviewer gets `facts.md` pasted into its prompt and no tools at all (`claude -p --tools ""`), so text a
+  player typed cannot make it read files, run commands or reach the network. Player text is cut to one line
+  of 500 characters in `facts.md`, and `review.md` starts with an "untrusted" line for whoever reads it next.
+  Codex cannot turn its shell off, so it is opt-in (`LEGATUM_REVIEWER=codex,claude`) and runs `-s read-only`.
+- Every command has a timeout, so a crafted tape or a stuck model cannot hold the job's lock.
 
 ## Install
 
@@ -60,7 +63,7 @@ python3 tools/games/analyse_games.py facts record.json.gz --events events.jsonl
 ```
 
 Settings: `LEGATUM_GAMES_URL` (the Worker), `LEGATUM_REPO` (where to fetch engine commits),
-`LEGATUM_REVIEWER` (`codex,claude` order), `LEGATUM_GAMES_READ_TOKEN` (instead of the keychain).
+`LEGATUM_REVIEWER` (default `claude`; `codex,claude` tries Codex first), `LEGATUM_GAMES_READ_TOKEN` (instead of the keychain).
 
 Reports are a first pass. The full post-game review is the `legatum-game-coach` agent; the hill-climb work
 replays the player's orders against changed AIs.
