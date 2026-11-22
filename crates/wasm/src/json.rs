@@ -67,12 +67,17 @@ pub fn setup_to_value(setup: &GameSetup) -> Value {
 /// Full state JSON for saves, with the setup seed as a decimal string. Treat it as opaque in
 /// JavaScript: other 64-bit words (explored-tile bitsets) are still JSON numbers.
 pub fn state_to_json(state: &GameState) -> String {
+    state_to_value(state).to_string()
+}
+
+/// `state_to_json` as a JSON tree, for callers that add fields to the save before writing it.
+pub fn state_to_value(state: &GameState) -> Value {
     let mut v = serde_json::to_value(state).expect("state serializes");
     v["save_version"] = Value::from(legatum_core::RULES_VERSION);
     if let Some(setup) = v.get_mut("setup") {
         seed_to_string(setup, "seed");
     }
-    v.to_string()
+    v
 }
 
 pub fn parse_state(json: &str) -> Result<GameState, String> {
@@ -87,7 +92,13 @@ pub fn parse_state_for_rehash(json: &str) -> Result<GameState, String> {
 
 fn parse_state_with_version(json: &str, check_version: bool) -> Result<GameState, String> {
     check_json_size(json)?;
-    let mut v: Value = serde_json::from_str(json).map_err(|e| format!("invalid JSON: {e}"))?;
+    let v: Value = serde_json::from_str(json).map_err(|e| format!("invalid JSON: {e}"))?;
+    state_from_value(v, check_version)
+}
+
+/// `parse_state` for a save already parsed into a JSON tree (the caller has checked its size).
+/// Fields that are not part of the state, such as a session's archive, are ignored.
+pub fn state_from_value(mut v: Value, check_version: bool) -> Result<GameState, String> {
     let version = v.get("save_version").and_then(Value::as_u64);
     if check_version && version != Some(u64::from(legatum_core::RULES_VERSION)) {
         return Err(format!(
