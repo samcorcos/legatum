@@ -27,4 +27,4 @@ cargo test --workspace --release
 - One engine: rules live only in `crates/core`; never re-implement them elsewhere.
 - Deterministic: integer maths, seeded RNG streams, no hash-map iteration order. Rule changes that change
   outcomes re-pin tapes with `tools/sim/repin.sh`.
-- Keep saves loadable; update the matching file under `.claude/skills/legatum-rules/references/` with any rule change; delete dead code instead of commenting it out.
+- Saves and tapes from another rules version are refused and there are no migrations: bump `crates/core/src/lib.rs::RULES_VERSION` when a change alters saved state or results; update the matching file under `.claude/skills/legatum-rules/references/` with any rule change; delete dead code instead of commenting it out.

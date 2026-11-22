@@ -1,14 +1,14 @@
 # Legatum
 
-A historical 4X on a hex map (real peoples such as Switzerland, the Mongols and Sparta; grounded in real history, no sci-fi or fantasy, user 2026-10-10), built to feel familiar to Civ 6 players. The design target is two humans on a permanent team plus 6 AI empires; solo against AI empires, hot seat, LAN and online games also exist. Simultaneous turns, 3–6 hour games.
+A historical 4X on a hex map (real peoples such as Switzerland, the Mongols and Sparta; grounded in real history, no sci-fi or fantasy, user 2026-10-10), built to feel familiar to Civ 6 players. The design target is two humans on a permanent team plus 6 AI empires; solo against AI empires, hot seat, LAN and online games also exist. Simultaneous turns; a game ends between about turn 250 and 300 (turn limit 300).
 
 ## Sources of truth
 
 | What | Where |
 | --- | --- |
 | Design: what we're building, why, and the decisions log | Design doc (Claude Doc): (a private document, not published) — read it with the docs connector before any design work |
-| Engineering learnings: bug causes, balance findings, dead ends, gotchas | `docs/learnings.md` |
-| The active AI plan: goal, increments, gates, dates, open decisions | `plans/ai-war.md`, tracked in `plans/ai-war.prd.json` and `plans/ai-war-progress.txt`. Update both every session that touches it |
+| Engineering learnings: bug causes, balance findings, dead ends, gotchas | `docs/learnings.md` (short digest, read it) and `docs/learnings/<YYYY-MM>.md` (full monthly archive: new entries go to the current month) |
+| AI work: method, gates, progress | The live method is the Hard AI hill-climb, gated on the designer-seat score (`tools/hill-climb/README.md`). `plans/ai-war.md` and `plans/ai-war.prd.json` are the background plan; `plans/ai-war-progress.txt` is still appended every session that touches AI work |
 | Simulation results | `docs/sim-results/`, written by the simulation runner |
 | How the game actually works: orders, turn resolution, what's available when, systems that don't exist | `.claude/skills/legatum-rules/` (code-verified). Load it before proposing any mechanic, faction, opening or balance change; update it in the same change whenever a rule or mechanic changes |
 
@@ -39,22 +39,17 @@ Each kind of knowledge lives in exactly one place. Don't duplicate design conten
 ## Recording what we learn (mandatory)
 
 - A design decision is made → add a row to the design doc's decisions log in the same turn.
-- Something non-obvious is learned → add a dated entry to `docs/learnings.md` in the same turn. Correct or delete entries that turn out to be wrong.
+- Something non-obvious is learned → add a dated entry to the current month's `docs/learnings/<YYYY-MM>.md` in the same turn; promote it to the `docs/learnings.md` digest only if it is durable. Correct or delete entries that turn out to be wrong.
 - The user states a preference, rejects an idea, or corrects a recommendation → update the matching skill in the same turn: `legatum-design` (design philosophy, decided and rejected ideas), `legatum-factions` (faction method, current designs, lessons), `legatum-ui` (UI preferences), `legatum-art` (art direction and consistency), `legatum-workflow` (how we work, operational gotchas), `legatum-rules` (how the game works). Load the relevant skills before design, UI or planning work so settled questions aren't reopened.
 - Playtest builds ship first and are reviewed after (user, 2026-11-11): cut the build as soon as the code passes verify, then run the `legatum-ui-reviewer` agent (`.claude/agents/`) only if the build changes enough UI to warrant it, and ship its fixes as a follow-up build. Before merging any branch that changes UI to master, the reviewer still runs. It tours every screen at 1000x600 (the user's laptop) and 1440x900, and judges the screenshots against `legatum-ui`. Fix blockers first, and fold its proposed rules into the skills.
 - GitHub `samcorcos/legatum` is the source of truth, with one line on `master` (user, 2026-11-21). All work goes branch → pull request into `master` → CI → merge on GitHub; local checkouts only `git pull`. Never push to `master` directly.
 - While GitHub Actions is unavailable (user, 2026-11-21: "use something other than github actions for now", until the repo is public), "CI is green" means a passing `tools/ci/local-ci.sh` run on the PR's head, in a Claude cloud container or on the user's Mac, with its summary table posted as a PR comment. It runs the same steps as `.github/workflows/ci.yml`.
 - Who merges (user, 2026-11-21): Claude merges a PR it made at the user's request once CI is green and the reviewers the change needs have passed. Never merge anyone else's PR (outside contributors) without the user.
-- Before merging a PR, the gates must pass: CI's `gates` job runs the static checks (`tools/gates/check.py --checks-only`), and the lead runs the reviewers the changed paths need (`legatum-docs-reviewer` for code; `legatum-plain-language-reviewer` for any player-facing text; `legatum-ui-reviewer` for UI; for art, `legatum-art` plus `tools/gates/art.py`). Run `tools/gates/check.py <branch> --base origin/master` locally to see the full verdict with markers.
+- Before merging a PR, the gates must pass: CI's `gates` job runs the static checks (`tools/gates/check.py --checks-only`), and the lead runs the reviewers the changed paths need (`legatum-docs-reviewer` for code; `legatum-plain-language-reviewer` for any player-facing text; `legatum-ui-reviewer` for UI; for art, `legatum-art` plus `tools/gates/art.py`). Each required reviewer posts its verdict as a PR comment that names the reviewer and the head commit SHA; the merger checks those comments are present for the PR's head before merging. `tools/gates/check.py <branch> --base origin/master` lists the reviewers a branch needs; add `--pr-comments <file>` to check their verdicts.
 - Player text is board-game style (user, 2026-11-21): a card, tooltip or tip says the short rule ("Barbarians don't attack the Celts."); the nuance lives in the Guide, the in-game rulebook. Rules in `legatum-ui` ("Game text: plain language").
-- A Stop hook (`.claude/hooks/learnings-check.sh`) blocks finishing when code changed without a learnings update. If nothing is worth recording, say so in one line.
-- After context compaction, a SessionStart hook reminds you to re-read this file and `docs/learnings.md`.
+- A Stop hook (`.claude/hooks/learnings-check.sh`) prints a one-line reminder when code changed without a learnings update; it never blocks. If nothing is worth recording, say so in one line.
+- After context compaction, a SessionStart hook reminds you to re-read this file and the `docs/learnings.md` digest.
 
-## Astra (gpt-6-astra via Codex CLI)
+## Maintainer operations
 
-Codex and Claude both have limited budgets (user, 2026-10-04): pace both. Offload implementation to Codex when it fits, keep its queue fed but not oversubscribed, and have Claude review the results before anything merges. Codex runs only on the user's Mac; cloud sessions reach it through Remote Control.
-- `tools/astra/runner.sh queue <k>` (one per lane k=1..4, plus `runner.sh reaper`) works through `.progress/astra-queue/pending/*.md` (headers `mode: review|write`, `name:`, optional `model: astra|sol|luna` and `effort:`, blank line, prompt). Write tasks run on branch `astra/<name>`, cut from a freshly fetched `origin/master`, in the worker's persistent lane worktree (`.claude/worktrees/lane-<k>`), so builds stay incremental. The runner pushes the finished branch to GitHub; the lead opens the PR and merges it after review.
-- Pick the model per task (user, 2026-10-04): only `sol` (gpt-6-sol, default: implementation, AI and design work, reviews) and `luna` (gpt-6-luna, cheapest: mechanical work such as removals, docs and running sims). `astra` (gpt-6-astra) is for max-intelligence reviews and audits (user, 2026-10-24).
-- Model routing (user, 2026-10-04): pick the cheapest model that meets the quality bar for every task (table in the legatum-workflow skill). Sonnet 5.5 (half Opus's price) is the default for agent implementation work; Opus 5.5 for design judgement, novel architecture and hard debugging. Fable is allowed for diagnosis and audit agents for now (user, 2026-11-11; he may bring the ban back).
-- `tools/astra/runner.sh reviewer` reviews every new `origin/master` commit range.
-- Outputs land in `.reviews/astra-*.md`; progress in `.progress/astra.log`. Queue new tasks whenever the queue runs dry.
+Codex/Astra lanes, Codex and Claude budgets, and model routing (including when Fable is allowed): `docs/ops/maintainer.md`.
