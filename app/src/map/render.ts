@@ -9,7 +9,7 @@ import type { GoalPreview } from '../goalActions';
 import { itemIcon } from '../data';
 import { isFighter } from '../airText';
 import { capitalStar } from '../capitalMark';
-import { distance as hexDistance, hexToPixel, tileIndex } from '../hex';
+import { hexToPixel, tileIndex } from '../hex';
 import { healthColor, rgba } from '../theme';
 import type { PathStep } from '../path';
 import { tintedIcon } from '../icons';
@@ -67,17 +67,16 @@ export interface Camera {
   zoom: number;
 }
 
-/** Own city furniture must remain readable beneath parked foreign units, even without an alarm. */
-/** Whether a city's banner draws after the units: when it is under attack, or when it is ours and a
- * foreign unit stands beside it (barbarians parked by a Celtic city). Our own units beside our own city
- * stay on top of its banner, so a garrison's order badge or a wounded neighbour's HP bar is never hidden. */
-export function bannerAboveUnits(owner: number, me: number, alarmed: boolean, foreignBeside = false): boolean {
-  return alarmed || (owner === me && foreignBeside);
-}
-
-/** A unit not ours on the city's tile or a neighbouring one. */
-export function foreignUnitBeside(view: Pick<PlayerView, 'me' | 'units'>, at: Hex): boolean {
-  return view.units.some((u) => u.owner !== view.me && hexDistance(u.pos, at) <= 1);
+/** How far to raise a token that stands behind a zoomed-in city banner (on a hex above the city): its centre
+ * goes up to the banner's top edge, so the head and owner disc show above the banner, by at most half a hex
+ * (the token stays on its own hex). Tokens below a banner's bottom edge, or clear of it, never move. */
+export function bannerLift(x: number, y: number, tw: number, hexPx: number, covers: readonly Rect[]): number {
+  let lift = 0;
+  for (const c of covers) {
+    if (x + tw <= c.x || x - tw >= c.x + c.w || y >= c.y + c.h || y + tw * 1.3 <= c.y) continue;
+    lift = Math.max(lift, y - c.y);
+  }
+  return Math.min(lift, hexPx * 0.5);
 }
 
 export function neutralBarbarianCue(view: Pick<PlayerView, 'me' | 'players'>, owner: number): boolean {
@@ -256,7 +255,7 @@ const NO_SIEGE: ReadonlyMap<number, SiegeLevel> = new Map();
 // ---- main draw ----
 
 /** Draw a frame, returning visible label bounds and whether terrain needs another frame. */
-export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending: boolean; labelRects: Rect[]; bannerRects: Rect[]; bannerHits: { city: CityView; rect: Rect }[]; idle: boolean; ring: SelectionRing | null } {
+export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending: boolean; labelRects: Rect[]; bannerRects: Rect[]; bannerHits: { city: CityView; rect: Rect; cover: Rect; parts: Rect[]; far: boolean }[]; liftedHits: { hex: Hex; rect: Rect }[]; idle: boolean; ring: SelectionRing | null } {
   const t0 = performance.now();
   const { view, cam, width: w, height: h, dpr } = inp;
   const look: LookId = 'atlas';
@@ -767,9 +766,14 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   const pulse = 0.75 + 0.25 * Math.sin((inp.pulseTime ?? inp.time) / 300);
   let ring: SelectionRing | null = null;
   const ringAt = (x: number, y: number): void => { ring = { x, y, r: selectionRadius(hexPx) + 3.5 + 1.6 }; };
+  // Zoomed in, a token behind a city banner is raised (bannerLift): its selection mark goes with it.
+  const liftCovers = banners.filter((b) => !b.far).map((b) => b.cover);
+  const cityHexes = new Set(view.cities.map((c) => `${c.pos.q},${c.pos.r}`));
+  const liftOf = (u: UnitView, x: number, y: number) => inp.unitPos.has(u.id) || cityHexes.has(`${u.pos.q},${u.pos.r}`) ? 0 : bannerLift(x, y, tokenHalf(hexPx), hexPx, liftCovers);
   if (selUnit) {
     const wp = inp.unitPos.get(selUnit.id) ?? hxCenter(selUnit.pos);
     const p = worldToScreen(cam, w, h, wp.x, wp.y);
+    if (!isFar(hexPx)) p.y -= liftOf(selUnit, p.x, p.y);
     drawSelection(ctx, look, S, p.x, p.y, hexPx, pulse);
     ringAt(p.x, p.y);
   } else if (inp.selectedAir != null && !inp.fx?.plan.shots.some((s) => s.shooter === inp.selectedAir && aircraftPassProgress(s, inp.fx!.t) != null)) {
@@ -811,42 +815,18 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
     }
   }
 
-  // Foreign banners first: tokens may stand in front of them. Own banners wait until
-  // after tokens, so a parked foreign stack cannot hide the name or build meters.
-  // Zoomed out a banner is a seal with its name beside it (the name dropped only where it has no clear room).
-  for (const { c, spec, x, y: y0, fs, alpha: a0, meters, far } of banners) {
-    const alarmed = siege.has(c.id);
-    // A banner in a moment: a new city's drops into place, a captured city's flips over to its new owner.
+  // Zoomed out a city is a seal with its name beside it (the name dropped only where it has no clear room):
+  // its units sit at the seal's lower right, over it. Zoomed in, every banner waits until after the units
+  // (as in Civ 6), so a token on the hex above never hides the city's name or meters.
+  for (const { c, x, far, alpha: a0 } of banners) {
+    if (!far) continue;
     const motion = bannerMotion?.get(c.id);
     const alpha = a0 * (motion?.alpha ?? 1);
-    const y = y0 + (motion?.dy ?? 0);
     if (alpha <= 0.01) continue;
     if (motion && motion.sx !== 1) { ctx.save(); ctx.translate(x, 0); ctx.scale(motion.sx, 1); ctx.translate(-x, 0); }
-    if (far) {
-      drawSprite(ctx, far.seal, far.x, far.y + (motion?.dy ?? 0), alpha);
-      if (motion && motion.sx !== 1) ctx.restore();
-      if (alarmed) drawSiegeBar(ctx, far.x, far.y - far.seal.ay + far.seal.h + 2, Math.max(30, far.seal.w), c.hp, c.max_hp, FONTS[look].sans, false);
-      continue;
-    }
-    // An alarmed banner is drawn after the units (below), so attackers beside it never cover its name or HP.
-    if (bannerAboveUnits(c.owner, view.me, alarmed, foreignUnitBeside(view, c.pos))) { if (motion && motion.sx !== 1) ctx.restore(); continue; }
-    const r = drawBanner(ctx, look, spec, x, y, fs, dpr, alpha);
-    const hpNow = cityHp(c);
-    if (meters.length) drawBannerMeters(ctx, look, meters, x, r.y + r.h + (c.visible && hpNow < c.max_hp ? 6 : 1), dpr);
-    if (c.visible && hpNow < c.max_hp) {
-      const f = Math.max(0, hpNow / c.max_hp);
-      const bw = Math.min(r.w - 16, 72);
-      const bx = x - bw / 2;
-      const by = r.y + r.h + 1;
-      ctx.fillStyle = TOKEN_INK.atlas.paper;
-      ctx.fillRect(bx, by, bw, 4);
-      ctx.fillStyle = healthColor(f);
-      ctx.fillRect(bx, by, bw * f, 4);
-      ctx.strokeStyle = TOKEN_INK.atlas.ink;
-      ctx.lineWidth = 0.8;
-      ctx.strokeRect(bx, by, bw, 4);
-    }
+    drawSprite(ctx, far.seal, far.x, far.y + (motion?.dy ?? 0), alpha);
     if (motion && motion.sx !== 1) ctx.restore();
+    if (siege.has(c.id)) drawSiegeBar(ctx, far.x, far.y - far.seal.ay + far.seal.h + 2, Math.max(30, far.seal.w), c.hp, c.max_hp, FONTS[look].sans, false);
   }
 
   drawHallBadge(ctx, view, S2, hexPx, w, h);
@@ -867,6 +847,7 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   const far = isFar(hexPx);
   const tw = far ? PIP_HALF : tokenHalf(hexPx);
   const unitBottoms = new Map<number, number>();
+  const liftedHits: { hex: Hex; rect: Rect }[] = [];
   // A held garrison stands in its city, under the banner: its padlock is drawn after the banners so it is never hidden.
   const lockMarks: { x: number; y: number; w: number }[] = [];
   const order = [...displayUnits].sort((a, b) => a.pos.r - b.pos.r || Number(a.id === inp.selectedUnit || a.id === inp.selectedAir) - Number(b.id === inp.selectedUnit || b.id === inp.selectedAir));
@@ -893,6 +874,10 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
     }
     // Zoomed out a city's own seal fills its hex, so its units sit at the seal's lower right.
     if (cityTiles.has(k)) { if (far) { x += sealRadius(hexPx) * 0.8; y += sealRadius(hexPx) * 0.7; } else y += hexPx * CITY_UNIT_DROP; }
+    if (!far) {
+      const lift = liftOf(u, x, y);
+      if (lift > 0) { y -= lift; liftedHits.push({ hex: u.pos, rect: { x: x - tw, y: y - tw * 1.3, w: tw * 2, h: tw * 2.6 } }); }
+    }
     const shift = inp.unitShift?.get(u.id);
     if (shift) { x += shift.x * z; y += shift.y * z; }
     const stride = inp.march?.get(u.id);
@@ -955,18 +940,16 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
     if (far && focusOf(c)) drawTag(ctx, look, far.x, far.y - far.seal.ay - 15, 'Auto', 'neutral');
   }
 
-  // A city under attack wears its alarm above its own units: a ring (steady under reduced motion)
-  // and a siege badge, on top of the banner or seal at both zoom levels.
+  // Zoomed in, every banner above the units; a city under attack also wears its alarm: a ring
+  // (steady under reduced motion) and a siege badge, on top of the banner or seal at both zoom levels.
   for (const { c, spec, x, y, fs, alpha, meters, cover, far: city } of banners) {
     const level = siege.get(c.id);
-    if (!bannerAboveUnits(c.owner, view.me, !!level, foreignUnitBeside(view, c.pos))) continue;
     if (city) {
       if (!level) continue;
       const rad = sealRadius(hexPx);
       drawSiegeSealRing(ctx, city.x, city.y, rad, level, inp.time, inp.reducedMotion);
       drawSiegeBadge(ctx, city.x + rad * 0.85, city.y - rad * 0.85, 8, dpr);
     } else {
-      // Own banners and alarmed banners stand above neighbouring tokens.
       const motion = bannerMotion?.get(c.id);
       const drawAlpha = alpha * (motion?.alpha ?? 1);
       if (drawAlpha <= 0.01) continue;
@@ -994,7 +977,7 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   }
   for (const m of lockMarks) drawLockMark(ctx, look, m.x, m.y, m.w);
 
-  // Air-wing furniture stays on the banner edge after the own banner's late pass.
+  // Air-wing furniture stays on the banner edge, after the banners.
   for (const b of banners) {
     const wing = (view.aircraft ?? []).filter((a) => a.city === b.c.id && a.owner === view.me);
     if (!wing.length) continue;
@@ -1242,7 +1225,14 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   // City banners, so hover cards can keep clear of them (a card over your own city's banner hides it).
   // idle: whether idle life has anything in view to move (the loop stops ticking for it when not).
   return { pending, labelRects, bannerRects: banners.map((b) => b.cover),
-    bannerHits: banners.map((b) => ({ city: b.c, rect: b.far ? b.cover : bannerRect(look, b.spec, b.x, b.y, b.fs, dpr) })),
+    bannerHits: banners.map((b) => {
+      const rect = b.far ? b.cover : bannerRect(look, b.spec, b.x, b.y, b.fs, dpr);
+      // What is drawn: the plate, then the strip under it (meters, siege bar or HP bar), centred and no wider than they are.
+      const under = Math.max(b.meters.length ? bannerMetersSize(look, b.meters, dpr).w : 0, siege.has(b.c.id) ? Math.min(Math.max(rect.w - 8, 64), 128) : 0, cityHp(b.c) < b.c.max_hp ? Math.min(rect.w - 16, 72) : 0);
+      const parts = b.far ? [b.cover] : [rect, { x: b.x - under / 2, y: rect.y + rect.h, w: under, h: b.cover.h - rect.h }];
+      return { city: b.c, rect, cover: b.cover, parts, far: !!b.far };
+    }),
+    liftedHits,
     idle: idleLive > 0, ring };
 }
 
