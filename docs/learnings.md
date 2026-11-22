@@ -2,6 +2,13 @@
 
 Newest first. One entry per non-obvious finding: what we learned, the evidence, and what we changed. Correct or delete entries that turn out to be wrong.
 
+## 2026-11-22: A deploy broke the art in games already open in a tab (`claude/project-thread-7n64r8`)
+
+- **Symptom:** after the WebP deploy (e9d1e50), Sam's open game showed broken images on late-era research cards (Stock Exchange, Tank, Fighter, Bomber, Research Lab) and missing city sprites on the map. The live build itself was fine: all 897 `new URL(...)` art references in its main script answered 200.
+- **Cause:** Vite names built files by content (`assets/<name>-<hash>.<ext>`) and Cloudflare Pages serves only the newest deployment. A tab opened before a deploy keeps the old code, which loads art lazily by the old names; the WebP switch renamed every picture (`x-HASH.png` became `x-HASH.webp`, same hash), so every picture the tab had not yet shown answered 404. Pictures already shown were cached, which is why only later content broke. Any art change does this to the files it touches, not only the WebP switch.
+- **Reloading is not the fix:** a reload runs the new build, and a save on an older `RULES_VERSION` can't continue there (`saveErrors.ts`). Tell a mid-game player to Save to file before reloading after a rules bump.
+- **Fix:** `tools/release/carry-assets.mjs` keeps every file a deployed build used in the last 30 days (its `asset-history.json` records the last day a build used each file, not the first: dating by first deploy would drop long-lived art at the very deploy that stops using it; a crawl of the live pages the first time) in the next deploy; production (`deploy-web.yml`) and previews (`deploy-preview.sh`) set `LEGATUM_CARRY_ASSETS_FROM`. A build that is already gone from the site can be rebuilt: the asset hash depends only on the file's content, so `LEGATUM_WEBP=0 npx vite build` at an older commit gives the exact PNG names (`--from-dir`). `tools/release/check-dist-refs.mjs` fails a build whose JS, CSS or HTML points to a file it lacks (web build and CI app build).
+
 ## 2026-11-22: Uploaded games are analysed on the Mac (`tools/games`)
 
 - **A site deploy can strand a game in progress.** Deploying PR #33 also shipped rules 50 (#31), and the app refuses a rules-49 autosave (`json.rs`: only the sim upgrades 49 saves). Telling the player to reload to pick up a fix was wrong: a tab started on older rules must finish where it is. Before advising a reload, compare `RULES_VERSION` between the build the player is on and the one being deployed. The analysis job is unaffected: it replays each game at its own engine commit.
