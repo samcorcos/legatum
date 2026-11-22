@@ -99,6 +99,7 @@ export const BANNED: CopyRule[] = [
   { pattern: /\bCity health\b|\bHEALTH\b/, reason: 'a city has HP (glossary: "city health" is a Never)', instead: 'HP 200 / 200', source: true },
   { pattern: /\bNo walls\b/, reason: '"Walls" is the building, so it keeps its capital', instead: 'No Walls', source: true },
   { pattern: /\bStagnant\b/, reason: 'the city overview says "Not growing"; one word for one state', instead: 'Not growing', source: true },
+  { pattern: /\bnever attacks? (?:you|the Celts)\b/i, reason: 'the Celts\' barbarian rule has one wording, board-game short (UI review, 2026-11-22)', instead: '"Barbarians don\'t attack the Celts." or "...they don\'t attack you."', source: true },
   { pattern: /\bslots? left\b|\bfree slots\b/i, reason: '"slots" is never defined for military units (UI tour 2026-11-22)', instead: '"Upkeep: free (2 more free units)"', source: true },
   { pattern: /\bYour levies are full\b|\bUnits \d+\/\d+\b|\bMilitary units: \d+ of \d+\b/i, reason: 'the cap reads "Military units 3 / 2" (glossary: military unit); "levy" stays in Byzantium\'s rule line', instead: 'Military units 3 / 2 · 1 over the cap', source: true },
   { pattern: /\b\d+ melee(?:,|\b(?! (?:attack|unit|line|veteran)))|\bmelee strength\b/i, reason: 'a unit\'s strength is "strength", whatever its class (UI tour 2026-11-22: "32 melee", "Strength 20", "89 strength")', instead: '32 strength' },

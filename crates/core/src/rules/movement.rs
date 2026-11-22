@@ -1270,7 +1270,7 @@ fn movement_round(
             || spared
         {
             let reason = if spared {
-                "barbarians never attack the Celts".into()
+                "barbarians don't attack the Celts".into()
             } else if let Some(b) = neutral_unit {
                 // Name who is there: a move never attacks a unit of a team at Peace.
                 let b = &state.units[b];
@@ -1396,7 +1396,7 @@ fn movement_round(
                 owner: i.owner,
                 at: i.from,
                 toward: i.to,
-                reason: "barbarians never attack the Celts".into(),
+                reason: "barbarians don't attack the Celts".into(),
             });
             stopped.insert(id);
         }

@@ -230,8 +230,8 @@ export function UnitPanel({ unit, view, peek = false }: { unit: UnitView; view: 
             </b>
           </Tip>
         )}
-        {strengthKey && <Tip className="up-strength-key" content={`Units this unit can attack this turn carry a chip on the map. A rising triangle shows how much stronger they are in that fight, a falling one how much weaker. ${barbarianStrengthKey ? 'Barbarian chips use neutral ink because they never attack the Celts. ' : ''}It counts class, promotion and wounds, but not terrain or fortifying (the attack forecast has those).`}>
-          <span data-testid="strength-key">Map: <b className={onlyBarbarianStrength ? undefined : 'bad'}>▲</b> stronger · <b className={onlyBarbarianStrength ? undefined : 'good'}>▼</b> weaker{barbarianStrengthKey && ' · barbarians never attack you'}</span>
+        {strengthKey && <Tip className="up-strength-key" content={`Units this unit can attack this turn carry a chip on the map. A rising triangle shows how much stronger they are in that fight, a falling one how much weaker. ${barbarianStrengthKey ? "Barbarian chips use neutral ink because they don't attack the Celts. " : ''}It counts class, promotion and wounds, but not terrain or fortifying (the attack forecast has those).`}>
+          <span data-testid="strength-key">Map: <b className={onlyBarbarianStrength ? undefined : 'bad'}>▲</b> stronger · <b className={onlyBarbarianStrength ? undefined : 'good'}>▼</b> weaker{barbarianStrengthKey && ' · barbarians don\'t attack you'}</span>
         </Tip>}
       </div>
       {mine && !over && (
@@ -253,7 +253,7 @@ export function UnitPanel({ unit, view, peek = false }: { unit: UnitView; view: 
             <Action label={standing === 'AutoFire' ? 'Stop auto-fire' : 'Auto-fire from city'} icon="mark-autofire" hotkey="V"
               active={standing === 'AutoFire' || pending?.type === 'SetAutoFire' && pending.enabled}
               onClick={toggleAutoFireSelected}
-              tip={`Hold this city and shoot the best enemy in range each turn.${barbariansSpareMe(view) ? ' It never shoots barbarians, because they never attack you.' : ''} It never moves, declares War or spends Gold. Move the unit or turn this off to take control; a shot you order sets this turn’s target.`} />
+              tip={`Hold this city and shoot the best enemy in range each turn.${barbariansSpareMe(view) ? ' It never shoots barbarians, because they don\'t attack you.' : ''} It never moves, declares War or spends Gold. Move the unit or turn this off to take control; a shot you order sets this turn’s target.`} />
           )}
           {/* The idle orders sit right under the unit's own actions, above Improve, so a 600 px window shows them without scrolling. Fortify for military units, Wait for civilians, and Skip. */}
           <div className="unit-orders">
