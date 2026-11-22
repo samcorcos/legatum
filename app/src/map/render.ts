@@ -4,10 +4,10 @@ import { celebrationFrame, type MapCelebration } from '../celebrate/mapEffect';
 // unit tokens and city banners. Tokens, banners and text are drawn in screen space so they stay
 // crisp at any zoom.
 import { noteMapDraw } from '../frameTelemetry';
-import type { CityBuildFocus, CityView, Faction, Hex, PlayerView, UnitKind, UnitView } from '../types';
+import type { CityBuildFocus, CityView, Faction, Hex, PlayerView, ProductionItem, UnitKind, UnitView } from '../types';
 import { growthProgress, productionProgress } from '../cityProgress';
 import type { GoalPreview } from '../goalActions';
-import { itemIcon } from '../data';
+import { itemIcon, sameItem } from '../data';
 import { isFighter } from '../airText';
 import { capitalStar } from '../capitalMark';
 import { hexToPixel, tileIndex } from '../hex';
@@ -90,6 +90,8 @@ export type PendingMark = 'explore' | 'move' | 'sleep' | 'heal' | 'skip' | 'foun
 export interface RenderInput {
   view: PlayerView;
   cityFocuses?: ReadonlyMap<number, import('../types').CityBuildFocus | null>;
+  /** What each own city was told to build this turn (an order not yet resolved), so its banner shows the choice at once. */
+  cityBuilds?: ReadonlyMap<number, ProductionItem>;
   cam: Camera;
   width: number;
   height: number;
@@ -284,7 +286,7 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   const held = moments?.hold.cityOwner;
   const bannerView = held?.size ? { ...view, cities: view.cities.map((c) => held.has(c.id) ? { ...c, owner: held.get(c.id)! } : c) } : view;
   const focusOf = (c: CityView) => c.owner === view.me ? (inp.cityFocuses?.has(c.id) ? inp.cityFocuses.get(c.id) : c.detail?.build_automation) ?? null : null;
-  const banners = cityBanners(bannerView, cam, w, h, dpr, look, inp.selectedCity, siege, focusOf, moments?.hold.unscored);
+  const banners = cityBanners(bannerView, cam, w, h, dpr, look, inp.selectedCity, siege, focusOf, moments?.hold.unscored, inp.cityBuilds);
   // Landmarks use a fixed footprint chosen from banners and other landmarks, never moving units.
   const bannerCovers = banners.map((b) => b.cover);
   const toScreen = (p: { x: number; y: number }) => worldToScreen(cam, w, h, p.x, p.y);
@@ -1326,7 +1328,7 @@ const FOCUS_ICON: Record<CityBuildFocus, string> = { Balanced: 'ui-random', Scie
 const q24 = (f: number) => Math.round(Math.max(0, Math.min(1, f)) * 24) / 24;
 
 /** Growth (the territory bar: each growth claims a tile) and production meters for an own city's banner, from the same forecasts as the city panel. */
-export function bannerMeters(c: CityView, faction?: Faction, focus: CityBuildFocus | null = null): BannerMeter[] {
+export function bannerMeters(c: CityView, faction?: Faction, focus: CityBuildFocus | null = null, chosen: ProductionItem | null = null): BannerMeter[] {
   const growth = growthProgress(c);
   if (!growth) return [];
   const out: BannerMeter[] = [{
@@ -1336,7 +1338,15 @@ export function bannerMeters(c: CityView, faction?: Faction, focus: CityBuildFoc
   const production = productionProgress(c);
   // Occupation lock experiment: a frozen city shows the seal of a held city, not the red Build prompt.
   if (production && c.occupation_lock != null) out.push({ kind: 'production', fraction: 0, text: 'Held', paused: true, icon: 'fortify', inkIcon: true });
-  else if (production) {
+  else if (production && chosen && !sameItem(chosen, c.detail?.producing ?? null)) {
+    // Chosen this turn, not yet resolved: the banner shows the choice at once, with the forecast its build card gives.
+    const option = c.detail?.options.find((o) => sameItem(o.item, chosen));
+    out.push({
+      kind: 'production', fraction: q24(option && option.cost > 0 ? option.production_stored / option.cost : 0),
+      // No output (or a project with no turn count) has no forecast: a dash, as the build card prints no number.
+      text: option && option.turns > 0 ? String(option.turns) : '–', icon: itemIcon(chosen, faction),
+    });
+  } else if (production) {
     const auto = focus ? { label: 'Auto', icon: FOCUS_ICON[focus] } : undefined;
     out.push(production.state === 'idle'
       // An automated idle city chooses at Ready: it shows its focus, not the red "Build" prompt.
@@ -1359,7 +1369,7 @@ export function bannerSpec(view: Pick<PlayerView, 'me' | 'team' | 'players'>, c:
 }
 
 /** Every on-screen city banner: its spec, anchor and the screen rect it covers (health bar included). Zoomed out, the banner is a seal and a name instead. */
-function cityBanners(view: PlayerView, cam: Camera, w: number, h: number, dpr: number, look: LookId, selectedCity: number | null, siege: ReadonlyMap<number, SiegeLevel>, focusOf: (c: CityView) => CityBuildFocus | null, unscored?: ReadonlySet<number>) {
+function cityBanners(view: PlayerView, cam: Camera, w: number, h: number, dpr: number, look: LookId, selectedCity: number | null, siege: ReadonlyMap<number, SiegeLevel>, focusOf: (c: CityView) => CityBuildFocus | null, unscored?: ReadonlySet<number>, builds?: ReadonlyMap<number, ProductionItem>) {
   const hexPx = HEX_SIZE * cam.zoom;
   const far = isFar(hexPx);
   const fs = Math.round(Math.max(11, Math.min(16, hexPx * 0.42)) * 2) / 2;
@@ -1384,7 +1394,7 @@ function cityBanners(view: PlayerView, cam: Camera, w: number, h: number, dpr: n
     // Own cities only (rivals' Food, borders and production are private): growth, border and
     // production meters, readable from normal zoom in, so the player can watch them without
     // opening the city.
-    const meters = mine && c.visible && hexPx >= 20 ? bannerMeters(c, faction, focusOf(c)) : [];
+    const meters = mine && c.visible && hexPx >= 20 ? bannerMeters(c, faction, focusOf(c), builds?.get(c.id) ?? null) : [];
     const metersH = meters.length ? bannerMetersSize(look, meters, dpr).h + 1 : 0;
     // The block (plate and meters) ends BANNER_BOTTOM above the centre, over the town's roofline: the meters are a fixed
     // 17 px, so hung under the plate they covered the top of the town, most of it at small zoom.
@@ -1445,6 +1455,37 @@ export function ringClipRect(ring: SelectionRing, dpr: number, pad = 2): { x: nu
 export function idleClipBoxes(view: PlayerView, cam: Camera, w: number, h: number, t: number): Rect[] {
   const hexPx = HEX_SIZE * cam.zoom;
   return idleBoxes(view, t, { toScreen: (p) => worldToScreen(cam, w, h, p.x, p.y), hexPx, far: isFar(hexPx), w, h, dpr: 1 });
+}
+
+/**
+ * Where the hover mark and the route preview draw, in CSS pixels: what a frame repaints when only the tile under
+ * the pointer changed (MapCanvas clips to these boxes for the old and the new hover instead of redrawing the map).
+ */
+export function hoverClipBoxes(inp: Pick<RenderInput, 'view' | 'cam' | 'width' | 'height' | 'hover' | 'path' | 'pathRisk' | 'pathUnreachable' | 'selectedUnit' | 'pendingMarks'>): Rect[] {
+  const { view, cam, width: w, height: h } = inp;
+  const hexPx = HEX_SIZE * cam.zoom;
+  const at = (hx: Hex) => { const p = hexToPixel(hx, HEX_SIZE); return worldToScreen(cam, w, h, p.x, p.y); };
+  const around = (hx: Hex, half: number): Rect => { const p = at(hx); return { x: p.x - half, y: p.y - half, w: half * 2, h: half * 2 }; };
+  const out: Rect[] = [];
+  // The hover hex (radius 0.94 of a hex) and its select ring, with room for the stroke.
+  if (inp.hover) out.push(around(inp.hover, hexPx + 4));
+  const unit = inp.selectedUnit !== null ? view.units.find((u) => u.id === inp.selectedUnit) ?? null : null;
+  if (unit && inp.path?.length) {
+    // The route line, its shadow and turn roundels (radius 11), and the risk mark on one of its tiles.
+    const pts = [unit.pos, ...inp.path.map((st) => st.hex)].map(at);
+    const pad = Math.max(16, hexPx);
+    const xs = pts.map((p) => p.x), ys = pts.map((p) => p.y);
+    const x0 = Math.min(...xs) - pad, y0 = Math.min(...ys) - pad;
+    out.push({ x: x0, y: y0, w: Math.max(...xs) + pad - x0, h: Math.max(...ys) + pad - y0 });
+  }
+  if (inp.pathRisk) out.push(around(inp.pathRisk, hexPx + 4));
+  if (inp.pathUnreachable) out.push(around(inp.pathUnreachable, Math.max(12, hexPx)));
+  // A Settler's proposed city: the dashed ring around the target tile and its six neighbours.
+  if (unit?.kind === 'Settler' && unit.owner === view.me) {
+    const target = inp.pendingMarks.get(unit.id) === 'found' ? unit.pos : inp.path?.length ? inp.path[inp.path.length - 1].hex : null;
+    if (target) out.push(around(target, hexPx * 2.75 + 4));
+  }
+  return out;
 }
 
 /** The device-pixel boxes an ambient-only frame repaints: the selection ring's, then each smoke column's and siege ring's, kept on the canvas. */

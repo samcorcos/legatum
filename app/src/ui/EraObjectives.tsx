@@ -2,7 +2,8 @@
 // `ObjectiveRows` is the one list of an Age's card with your progress; the race panel's block, the era-up takeover and the
 // research screen all draw it, so a rule reads and counts the same on every surface.
 import { useGame } from '../store';
-import { eraName } from './eraResearch';
+import { eraName, eraNumeral } from './eraResearch';
+import { RingMedallion } from './ringMedallion';
 import { ERA_COUNT } from '../data';
 import { Icon } from './bits';
 import { Tip } from './Tip';
@@ -51,7 +52,7 @@ export function ObjectiveRows({ lines, preview = false, big = false, inline = fa
       const label = `${family}: ${l.text}, ${l.scoredHere ? 'scored' : idle ? `not needed: the Age is scored` : preview ? 'revealed when the first empire enters the era' : `${l.shown} of ${l.target}`}`;
       return <li key={l.slot} className={`eo-line fam-${l.family.toLowerCase()}${l.met && !preview && !idle ? ' met' : ''}${l.scoredHere ? ' scored' : ''}${idle ? ' idle' : ''}${l === nearest ? ' nearest' : ''}`} data-testid="era-objective" data-slot={l.slot} data-family={l.family}>
         <span className="eo-fam" title={compact ? family : undefined}>
-          {compact ? <><Icon name={FAMILY_ICON[l.family]} size={14} /><span className="sr-only">{family}</span></> : family}
+          {compact ? <><Icon name={FAMILY_ICON[l.family]} size={14} /><span className="sr-only">{family}</span></> : inline ? <><Icon name={FAMILY_ICON[l.family]} size={13} />{family}</> : family}
         </span>
         <span className="eo-text" title={cardName(l.text) !== l.text ? l.text : undefined}>{cardName(l.text)}</span>
         {!idle && <Count l={l} preview={preview} />}
@@ -179,13 +180,22 @@ export function EraObjectivesResearch({ view }: { view: PlayerView }) {
   const hud = eraHud(view);
   const { focus } = hud;
   return <section className={`era-objectives-research${hud.noObjective ? ' no-obj' : ''}`} data-testid="research-objectives" aria-label="World Ages">
-    <div className="eor-col current" data-testid="research-objectives-current">
-      <h4>{hud.noObjective ? <>No Age has begun</> : focus.state === 'scored' ? <>{focus.name} Age: 1 VP scored</> : <>Score 1 VP this Age <small>{focus.name}</small></>}</h4>
-      {hud.noObjective
-        ? <p className="eo-sub">The first Age begins when any empire enters the {focus.name} era, and its card is shown to everyone.</p>
-        : <ObjectiveRows lines={focus.lines} inline accounting view={view} era={focus.era} />}
-    </div>
-    {!hud.noObjective && focus.era < ERA_COUNT && <div className="eor-col next" data-testid="research-objectives-next"><h4>Next: {eraName(focus.era)} Age</h4><p className="eo-sub">Begins when any empire enters the {eraName(focus.era)} era.</p></div>}
+    {hud.noObjective
+      ? <div className="eor-col current" data-testid="research-objectives-current">
+        <h4>No Age has begun</h4>
+        <p className="eo-sub">The first Age begins when any empire enters the {focus.name} era, and its card is shown to everyone.</p>
+      </div>
+      // An open Age is how you win: its era seal beside the card makes it the screen's big moment, not a status line.
+      : <div className={`eor-col current age st-${focus.state}`} data-testid="research-objectives-current">
+        <RingMedallion icon={`era-numeral:${eraNumeral(focus.era - 1)}`} tone={focus.state === 'scored' ? 'gilt' : 'hollow'} size={46} className="eor-seal" />
+        <div className="eor-body">
+          <header className="eor-head">
+            <h4>{focus.state === 'scored' ? <>{focus.name} Age: 1 VP scored</> : <>{focus.name} Age: score 1 VP</>}</h4>
+            {focus.era < ERA_COUNT && <p className="eo-sub eor-next" data-testid="research-objectives-next">The next Age begins when any empire enters the {eraName(focus.era)} era.</p>}
+          </header>
+          <ObjectiveRows lines={focus.lines} inline accounting view={view} era={focus.era} />
+        </div>
+      </div>}
   </section>;
 }
 

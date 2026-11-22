@@ -102,7 +102,7 @@ for (const size of SIZES) {
       }, view);
       await page.locator('.topbar .research-chip').click();
       const d = page.locator('dialog.tech-modal');
-      await expect(d.getByTestId('research-objectives-current')).toContainText('Score 1 VP this Age');
+      await expect(d.getByTestId('research-objectives-current')).toContainText(/\w+ Age: score 1 VP/);
       await expectFirstCardWhole(d, page, 'mid-era', size.width);
     });
 
