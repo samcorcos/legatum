@@ -130,7 +130,7 @@ for (const size of SIZES) test.describe(`train 1101d ${size.name}`, () => {
       const status = page.locator('.unit-panel .up-status');
       await expect(status).toHaveText(text, { ignoreCase: true });
       await expect(status).toHaveClass(/standing/);
-      // Neutral ink, not the accent red of "Awaiting orders" (computed, since both are text colours on the same card).
+      // Neutral ink, not the accent red of "Needs orders" (computed, since both are text colours on the same card).
       const [ink, accent] = await status.evaluate((el) => {
         const probe = (v: string) => { const d = document.createElement('i'); d.style.color = `var(${v})`; document.body.append(d); const c = getComputedStyle(d).color; d.remove(); return c; };
         return [getComputedStyle(el).color, probe('--accent')];
@@ -224,7 +224,7 @@ for (const size of SIZES) test.describe(`train 1101d ${size.name}`, () => {
     await shot(page, size, 'd33-capital-taken-rival-card');
     await dismissCelebrations(page);
     // The ledger with a capital taken.
-    await page.getByRole('button', { name: /^Every way to score/ }).click();
+    await page.locator('button.vh-chip').click();
     const sheet = page.getByTestId('objective-sheet');
     await expect(sheet.locator('.sl-table')).toBeVisible();
     await sheet.locator('[data-row="capitals-held"]').scrollIntoViewIfNeeded();

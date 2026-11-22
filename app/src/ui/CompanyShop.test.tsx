@@ -64,7 +64,7 @@ it('shows the shop to Byzantium only, one row per seller', async () => {
   const first = rows().find((r) => r.dataset.seller === '2')!;
   const faction = useGame.getState().views![0]!.players.find((p) => p.id === 2)!.faction;
   expect(first.textContent).toContain(specialUnitName(faction));
-  expect(first.textContent).toMatch(/melee/);
+  expect(first.textContent).toMatch(/\d+ strength/);
   expect(first.textContent).toContain(specialUnitEdge(faction));
   expect(first.querySelector('button')!.getAttribute('aria-label')).toMatch(new RegExp(`^Hire an? ${specialUnitName(faction)} Company from .* for 40 Gold$`));
 });

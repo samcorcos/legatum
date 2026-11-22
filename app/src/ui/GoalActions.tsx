@@ -282,7 +282,7 @@ export function GoalActionDialog() {
           {kind === 'SakokuReopen' && <ForYouLine tone="gain">You can declare war and sign Alliances again, and technologies others know get cheaper for you again.</ForYouLine>}
           {kind === 'Broadcast' && <ForYouLine tone="cost">Every rival learns {broadcast!.techs_each} technologies without paying for them: {receivers.length} {receivers.length === 1 ? 'empire' : 'empires'} are stronger for it.</ForYouLine>}
           {kind === 'CallTheWild' && <>
-            <ForYouLine tone="gain">Barbarians never attack the Celts. Each camp has a guard and a scout, and its raiders prowl the rivals' cities near it, never yours.</ForYouLine>
+            <ForYouLine tone="gain">Barbarians don't attack the Celts.</ForYouLine>
             <ForYouLine tone="cost">The tile a camp stands on, and any tile a barbarian unit holds, gives no yield.</ForYouLine>
             <ForYouLine tone="cost">A rival that clears a camp takes the usual Gold and ends your VP. You get no Gold for clearing the camps you raised, and a city founded later has none until you call again.</ForYouLine>
           </>}

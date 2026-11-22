@@ -172,7 +172,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
 
     // A routine first turn has no founding celebration, but its report remains available.
     await page.getByRole('button', { name: 'Menu', exact: true }).click();
-    await page.getByRole('button', { name: 'Last turn report (L)', exact: true }).click();
+    await page.getByRole('button', { name: 'Turn report (L)', exact: true }).click();
     await expect(page.getByRole('complementary', { name: 'Turn report' })).toBeVisible();
     await shot(page, size, '09-turn-report');
     await closeReportIfOpen(page);
@@ -232,7 +232,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
 
     // Victory race, expanded.
     await page.evaluate(() => (window as unknown as GameWindow).legatum.getState().select(null));
-    await page.getByRole('region', { name: 'Victory race', exact: true }).getByRole('button', { name: 'All objectives', exact: true }).click();
+    await page.getByRole('region', { name: 'Victory race', exact: true }).getByRole('button', { name: 'Score ledger', exact: true }).click();
     await expect(page.getByTestId('objective-sheet')).toBeVisible();
     await shot(page, size, '13-vp-race');
     await page.getByRole('button', { name: 'Close objectives', exact: true }).click();

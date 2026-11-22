@@ -8,7 +8,7 @@
   "seat": 5,
   "difficulty": "Hard",
   "minutes": 12,
-  "briefing": "Turn 100. You are Germany, at War with the Celts since turn 55; the Celts lead on VP. The Celts have 12 cities and only 3 military units, none of them in Gergovia. Gergovia is their walled city of 8 population, four tiles from your city Essen, and nothing is garrisoned in it. You have 7 military units: 3 Spearmen, a Horseman, a Cataphract and 2 Pikemen, and 47 Gold. Barbarians never attack the Celts, so their camps around you are your problem, not theirs. Take Gergovia within 15 turns.",
+  "briefing": "Turn 100. You are Germany, at War with the Celts since turn 55; the Celts lead on VP. The Celts have 12 cities and only 3 military units, none of them in Gergovia. Gergovia is their walled city of 8 population, four tiles from your city Essen, and nothing is garrisoned in it. You have 7 military units: 3 Spearmen, a Horseman, a Cataphract and 2 Pikemen, and 47 Gold. Barbarians don't attack the Celts, so their camps around you are your problem, not theirs. Take Gergovia within 15 turns.",
   "tests": "Can you take an undefended Celtic city when your empire is already at War with them?",
   "objective": {
     "summary": "Take Gergovia by turn 115, keeping your own cities.",

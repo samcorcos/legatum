@@ -35,7 +35,7 @@ for (const size of [{ width: 1000, height: 600 }, { width: 1440, height: 900 }])
     await page.getByRole('button', { name: /^Continue/ }).click();
     for (const [id, focus] of [[own, 'Science'], [walled, 'Military']] as const) {
       await page.evaluate((city) => (window as unknown as GameWindow).legatum.getState().select({ kind: 'city', id: city }, true), id);
-      await page.getByRole('combobox', { name: /Build automatically in/ }).selectOption(focus);
+      await page.getByRole('combobox', { name: /^Automate / }).selectOption(focus);
     }
     await endPlanning(page);
     await expect(page.getByTestId('turn-number')).toHaveText(String(startingTurn + 1));
@@ -73,7 +73,7 @@ test('Ready returns an unchosen delegated city to Choose production', async ({ p
   await page.getByRole('button', { name: /^Continue/ }).click();
   await expect(page.getByTestId('turn-number')).toHaveText(String(fixture.turn));
   await page.evaluate((id) => (window as unknown as GameWindow).legatum.getState().select({ kind: 'city', id }, true), own);
-  await page.getByRole('combobox', { name: /Build automatically in/ }).selectOption('Science');
+  await page.getByRole('combobox', { name: /^Automate / }).selectOption('Science');
   await page.evaluate((id) => {
     const store = (window as unknown as GameWindow).legatum;
     const s = store.getState();

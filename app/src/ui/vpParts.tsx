@@ -139,8 +139,7 @@ function HeldLines({ model, s, goalOwner }: { model: VpModel; s: Source; goalOwn
       {holder ? <Marker e={holder} size={16} /> : <Socket size={16} />}
       <b>{s.holdNote}</b>
     </div>
-    {s.heldAt && <p className="vh-private" data-testid="heir-locate-hint">{hall ? 'Its city is on your map: click its token in the race panel to show it.' : 'His position is public: click his token in the race panel to show him on the map.'}</p>}
-    {holder && <p className="vh-private">{hall ? 'The points and the open road go with its city: a rival that captures the city scores them, and they return when it is retaken.' : 'The points go with him: a rival that captures him scores them, and they return when he is retaken.'}</p>}
+    {s.heldAt && <p className="vh-private" data-testid="heir-locate-hint">{hall ? 'Click its token in the race panel to show it on the map.' : 'Click his token in the race panel to show him on the map.'}</p>}
   </div>;
 }
 

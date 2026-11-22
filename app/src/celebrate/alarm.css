@@ -82,11 +82,14 @@
 
 .alarm-actions { grid-area: actions; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 14px 0 4px; }
 .alarm-primary { min-height: 46px; padding: 4px 26px 2px; font-size: 14px; letter-spacing: .14em; }
-.alarm-screen:not(.ally) .alarm-primary {
-  color: var(--spend-ink); background: var(--alarm-ink); border-color: var(--alarm-ink);
-  box-shadow: inset 0 0 0 2px var(--alarm-ink), inset 0 0 0 3px color-mix(in srgb, var(--spend-ink) 55%, transparent);
+/* An ink Continue keeps an ink focus ring: the red ring belongs to a hostile primary (Declare war) only. */
+.alarm-screen .alarm-primary:not(.hostile):focus-visible { outline-color: var(--ink); }
+/* The primary is ink like every routine Continue; red only for a hostile act (Declare war). */
+.alarm-screen .alarm-primary.hostile {
+  color: var(--spend-ink); background: var(--bad); border-color: var(--bad);
+  box-shadow: inset 0 0 0 2px var(--bad), inset 0 0 0 3px color-mix(in srgb, var(--spend-ink) 55%, transparent);
 }
-.alarm-screen:not(.ally) .alarm-primary .kbd { color: var(--spend-ink); border-color: color-mix(in srgb, var(--spend-ink) 55%, transparent); }
+.alarm-screen .alarm-primary.hostile .kbd { color: var(--spend-ink); border-color: color-mix(in srgb, var(--spend-ink) 55%, transparent); }
 .alarm-diplomacy { min-height: 46px; }
 .alarm-esc { font: 500 11px var(--sans); color: var(--ink-2); }
 .alarm-esc .kbd { margin: 0 4px 0 0; }

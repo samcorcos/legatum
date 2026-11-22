@@ -65,8 +65,8 @@ describe.skipIf(!available)('the unlock card for every technology', () => {
     // The Granary needs no research now: Irrigation unlocks no building, only +1 Food a city.
     expect(unlockCardFor(views.get('India')!, 'Irrigation').tiles.map((t) => t.name)).toEqual(['+1 Food in every city']);
     expect(sentence('India', 'CodeOfLaws')).toEqual([]);
-    expect(sentence('India', 'IronWorking')).toEqual(['Upgrade a Workshop to a Forge in a city of 4 or more: +3 Production', 'Train a Cataphract in any city: 33 melee, 4 moves']);
-    expect(sentence('India', 'Feudalism')[1]).toMatch(/^Train a Pikeman in any city: 32 melee, 2 moves/);
+    expect(sentence('India', 'IronWorking')).toEqual(['Upgrade a Workshop to a Forge in a city of 4 or more: +3 Production', 'Train a Cataphract in any city: 33 strength, 4 moves']);
+    expect(sentence('India', 'Feudalism')[1]).toMatch(/^Train a Pikeman in any city: 32 strength, 2 moves/);
     expect(sentence('India', 'Philosophy')[0]).toMatch(/^Build it on a chosen tile; its holder scores \+2 VP\./);
     // A tech that upgrades an improvement says so, as an effect tile (no item behind it).
     const names = (faction: Faction, tech: TechId) => unlockCardFor(views.get(faction)!, tech).tiles.map((t) => t.name);

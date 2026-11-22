@@ -34,8 +34,8 @@ async function start(page: Page) {
 async function shownReport(page: Page) {
   const report = page.getByRole('complementary', { name: 'Turn report' });
   await expect.poll(async () => {
-    const open = page.getByTestId('moment-lane').getByRole('button', { name: 'Turn report', exact: true });
-    if (await open.isVisible()) await open.click();
+    // A moment card holds the report back; L opens it (the card has no Turn report button).
+    if (await page.getByTestId('moment-lane').locator('.moment-card').isVisible()) await page.keyboard.press('l');
     return report.isVisible();
   }).toBe(true);
   return report;
@@ -84,7 +84,7 @@ test('end a turn with combat, close the report, reopen it from Last turn, step b
     await page.getByRole('button', { name: 'Close report' }).click();
   }
   const lastTurn = page.locator('.seatbar .last-turn');
-  await expect(lastTurn).toContainText('Last turn');
+  await expect(lastTurn).toContainText('Turn report');
   await expect(lastTurn).toContainText('L');
   await lastTurn.click();
   report = await shownReport(page);

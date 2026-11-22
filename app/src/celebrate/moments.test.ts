@@ -520,7 +520,7 @@ describe('world wonder moments', () => {
       { type: 'ProductionCompleted', city: c.id, owner: 0, item: { kind: 'Wonder', building: 'Pyramids', tile: { q: c.pos.q + 1, r: c.pos.r } } },
       { type: 'GreatWorkCompleted', player: 0, of: 0, building: 'Pyramids', vp: 2, again: false },
     ], 0, view, view);
-    expect(card).toMatchObject({ tier: 'legendary', title: 'Pyramids', kicker: `Completed in ${c.name}`, emblem: 'greatwork', deltas: [{ counter: 'vp', amount: 2 }] });
+    expect(card).toMatchObject({ tier: 'legendary', title: 'Pyramids', kicker: 'World wonder built', place: c.name, emblem: 'greatwork', deltas: [{ counter: 'vp', amount: 2 }] });
     expect(card.effect).toBe(`+2 VP while you hold it · +1 Production in ${c.name} · only one in the world`);
     expect(card.details).toEqual(['Only one in the world: no other empire can build it.']);
   });
@@ -533,8 +533,17 @@ describe('world wonder moments', () => {
       { type: 'GreatWorkCompleted', player: 0, of: r.id, building: 'Pyramids', vp: 2, again: true },
     ], 0, view, withWonder(c.id, r.id));
     expect(moments).toHaveLength(1);
-    expect(moments[0]).toMatchObject({ tier: 'legendary', title: 'Pyramids', kicker: `Taken with ${c.name}`, effect: `+2 VP · captured from ${r.name}`, deltas: [{ counter: 'vp', amount: 2 }] });
+    expect(moments[0]).toMatchObject({ tier: 'legendary', title: 'Pyramids', kicker: 'World wonder taken', place: c.name, effect: `+2 VP · captured from ${r.name}`, deltas: [{ counter: 'vp', amount: 2 }] });
     expect(moments[0].loss).toBeFalsy();
+  });
+
+  it('a wonder taken with a city names that city even when its tile is out of sight', () => {
+    const c = city(), r = rival();
+    const [card] = momentsForTurn([
+      { type: 'CityCaptured', city: c.id, from: r.id, to: 0 },
+      { type: 'GreatWorkCompleted', player: 0, of: r.id, building: 'Pyramids', vp: 2, again: true },
+    ], 0, view, view);
+    expect(card).toMatchObject({ kicker: 'World wonder taken', title: 'Pyramids', place: c.name });
   });
 
   it('losing a wonder city is one loss card with the signed VP', () => {
@@ -545,7 +554,7 @@ describe('world wonder moments', () => {
       { type: 'GreatWorkCompleted', player: r.id, of: 0, building: 'Pyramids', vp: 2, again: true },
     ], 0, view, withWonder(c.id, 0));
     expect(moments).toHaveLength(1);
-    expect(moments[0]).toMatchObject({ tier: 'major', loss: true, title: 'Pyramids', kicker: `Lost with ${c.name}`, effect: `−2 VP · taken by ${r.name}`, deltas: [{ counter: 'vp', amount: -2 }] });
+    expect(moments[0]).toMatchObject({ tier: 'major', loss: true, title: 'Pyramids', kicker: 'World wonder lost', place: c.name, effect: `−2 VP · taken by ${r.name}`, deltas: [{ counter: 'vp', amount: -2 }] });
   });
 
   it('a wonder destroyed with a razed city is a loss card that says it cannot be built again', () => {
@@ -554,7 +563,7 @@ describe('world wonder moments', () => {
       { type: 'CityRazed', city: c.id, from: 0, by: rival().id, at: c.pos, ordered: true },
       { type: 'GreatWorkLost', player: 0, of: 0, building: 'Pyramids', vp: 2 },
     ], 0, view, view).filter((m) => m.title === 'Pyramids');
-    expect(loss).toMatchObject({ tier: 'major', loss: true, kicker: 'A world wonder destroyed', effect: '−2 VP · destroyed with its city' });
+    expect(loss).toMatchObject({ tier: 'major', loss: true, kicker: 'World wonder destroyed', effect: '−2 VP · destroyed with its city' });
     expect(loss.details).toContain('It can never be built again.');
   });
 });

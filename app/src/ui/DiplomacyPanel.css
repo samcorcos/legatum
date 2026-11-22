@@ -4,7 +4,7 @@
 }
 .diplomacy-tabs { display: flex; gap: 6px; margin: 0 0 6px; }
 .diplomacy-tabs [role="tab"] { min-height: 26px; padding: 2px 12px; border: 1px solid var(--rule-2); border-radius: 3px; background: transparent; color: var(--ink-2); font: 600 11px/1.2 var(--sans); cursor: pointer; }
-.diplomacy-tabs [role="tab"][aria-selected="true"] { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--panel)); color: var(--ink); }
+.diplomacy-tabs [role="tab"][aria-selected="true"] { border-color: var(--primary-bg); background: var(--primary-bg); color: var(--primary-ink); }
 .relations-view { min-width: 0; }
 .relations-view h4.diplomacy-section { margin-top: 2px; }
 .relations-key { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin: 4px 0 10px !important; font-size: 11px; }
@@ -132,7 +132,7 @@
 .empire-pick-name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
 .empire-pick-level { display: block; margin-top: 3px; white-space: normal; font: 600 10px/1.2 var(--sans); color: var(--ink-2); }
 @media (hover: hover) { .empire-pick:hover .empire-pick-name { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; } }
-.empire-relation { border: 1px solid currentColor; color: var(--good); font-size: 10px; padding: 2px 5px; border-radius: 3px; }
+.empire-relation { display: inline-flex; align-items: center; gap: 4px; border: 1px solid currentColor; color: var(--ink); font-size: 10px; padding: 2px 5px; border-radius: 3px; }
 .empire-relation.war { color: var(--bad); }
 .empire-relation.alliance { color: var(--ink); }
 .empire-vp { font: 12px/1 var(--num-font); white-space: nowrap; color: var(--ink-2); }

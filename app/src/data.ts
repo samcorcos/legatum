@@ -480,16 +480,16 @@ const UNIQUE_PIECE: Record<Exclude<Faction, 'Aztecs' | 'Celts'>, UniquePiece> & 
   India: { name: 'Revenue Office', replaces: 'Market', cost: 60, effect: '+3 Gold; non-capital cities remit half the Gold they make', requires: 'Currency', rules: ['Only India can build the Imperial Diwan after every owned city has one.'] },
   // The Tagmatic Soldier is the Pikeman plus 4 design strength on the era curve, read from the stats so a retuned curve follows (a getter, as the Keshig's).
   get Byzantium(): UniquePiece {
-    return { name: 'Tagmatic Soldier', replaces: 'Pikeman', cost: 162, effect: `${unitStatsFor('Byzantium', 'Trooper').strength} melee, 2 moves`, requires: 'Feudalism', rules: ['Phalangite upgrade costs 84 Gold.'] };
+    return { name: 'Tagmatic Soldier', replaces: 'Pikeman', cost: 162, effect: `${unitStatsFor('Byzantium', 'Trooper').strength} strength, 2 moves`, requires: 'Feudalism', rules: ['Phalangite upgrade costs 84 Gold.'] };
   },
   Germany: { name: 'Ruhr Foundry', replaces: 'Forge', cost: 320, effect: '+6 Production', requires: 'Iron Working', rules: [], other: ['Upgrades a Workshop in a city of 4 or more. Needs Iron.'] },
   Celts: null,
   // The Keshig's numbers are the Cataphract's plus the bow, read from the stats so a retuned bow follows (a getter: `unitStatsFor` needs constants declared further down).
   get Mongols(): UniquePiece {
     const s = unitStatsFor('Mongols', KESHIG_KIND);
-    return { name: 'Keshig', replaces: 'Cataphract', cost: s.cost, effect: `${s.strength} melee, ${s.ranged} ranged at range ${s.range}, ${s.moves} moves`, rules: [] };
+    return { name: 'Keshig', replaces: 'Cataphract', cost: s.cost, effect: `${s.strength} strength, ${s.ranged} ranged · range ${s.range}, ${s.moves} moves`, rules: [] };
   },
-  Sparta: { name: 'Spartan Hoplite', replaces: 'Spearman', cost: 80, effect: '20 melee, 2 moves', rules: [], other: ['Military units trained at the Agoge start one level higher.'] },
+  Sparta: { name: 'Spartan Hoplite', replaces: 'Spearman', cost: 80, effect: '20 strength, 2 moves', rules: [], other: ['Military units trained at the Agoge start one level higher.'] },
   Athens: { name: 'Lyceum', replaces: 'Library', cost: 70, effect: '+6 Science', requires: 'Writing', rules: [] },
   Egypt: { name: 'Royal Granary', replaces: 'Granary', cost: 50, effect: '+3 Food total', rules: [] },
   Rome: { name: 'Castrum', replaces: 'Walls', cost: 100, effect: '+10 city strength', requires: 'Masonry', rules: ['Upgrading a melee unit in this city restores 50 HP, up to full health.'] },
@@ -502,7 +502,7 @@ export const costYield = (faction: Faction): 'Food' | 'Production' => (faction =
 export const costInFactionYield = (faction: Faction, cost: number): number =>
   faction === 'Egypt' ? Math.ceil((cost * 100) / Math.max(1, RULES.egyptNileBuildPercent)) : cost;
 const piecePrice = (faction: Faction, p: UniquePiece): string => `${costInFactionYield(faction, p.cost)} ${costYield(faction)}`;
-const requiresSentence = (p: UniquePiece): string[] => p.requires ? [`Requires ${p.requires}.`] : [];
+const requiresSentence = (p: UniquePiece): string[] => p.requires ? [`Needs ${p.requires}.`] : [];
 const uniquePieceText = (p: UniquePiece, faction?: Faction): string =>
   [`${p.lead ?? `${p.name} replaces ${p.replaces}`}: ${faction ? piecePrice(faction, p) : `${p.cost} Production`}, ${p.effect}.`, ...requiresSentence(p), ...p.rules, ...(p.other ?? [])].join(' ');
 /** The unique piece's line without its numbers: what it replaces, its price (in Food for Egypt), the technology it needs and its rules. For a surface whose faction lines already say the numbers. */
@@ -547,7 +547,7 @@ const CARD_TEXT: Partial<Record<Faction, Partial<Record<string, string>>>> = {
     'u:Cataphract': `Also shoots, at range ${RULES.keshig.range} with no return fire; a shot cannot take a city. Replaces Cataphract.`,
   },
   Sparta: {
-    'u:Soldier': '20 melee, 2 moves. Replaces Spearman.',
+    'u:Soldier': '20 strength, 2 moves. Replaces Spearman.',
     'b:WarShrine': 'Units trained here start at level 2, and veterans retire here for Honour the Veterans.',
   },
 };
@@ -574,6 +574,8 @@ export interface FactionGoal {
   rule: () => string;
   /** Every condition the core checks, for the faction sheet and the Guide (the card's `rule` leaves out the fine print). */
   detail: () => string;
+  /** One sentence for the faction sheet; the fine print (`detail`) lives in the Guide. Falls back to `detail`. */
+  sheet?: () => string;
   /** The goal as one sentence of what to do, for the Age score check, where `rule` runs longer; defaults to `rule`. */
   ask?: () => string;
   /** A live goal is held, not earned: it scores only while the condition stands and can be lost. */
@@ -616,37 +618,43 @@ export const FACTION_GOAL: Record<Faction, FactionGoal> = {
     name: 'The Reserve', live: goalLive('Switzerland'), icon: 'yield-gold',
     rule: () => `Keep ${fmtInt(goalTarget('Switzerland'))} Gold in your treasury`,
     detail: () => `Keep ${fmtInt(goalTarget('Switzerland'))} Gold in your treasury. You lose the ${goalVp('Switzerland')} VP while it is below that, and regain it once it recovers`,
+    sheet: () => `Keep ${fmtInt(goalTarget('Switzerland'))} Gold in your treasury to hold ${goalVp('Switzerland')} VP`,
   },
   India: {
     name: 'The Imperial Diwan', live: goalLive('India'), held: goalHeld('India'), heldItem: 'the Imperial Diwan', icon: 'building-imperialdiwan',
     rule: () => `Build a Revenue Office in every owned city, then build the Imperial Diwan. Whoever holds its city scores ${goalVp('India')} VP`,
     ask: () => 'Build a Revenue Office in each of your cities, then the Imperial Diwan',
     detail: () => `Every city you own needs a Revenue Office before you can build the Imperial Diwan. Whoever holds its city scores ${goalVp('India')} VP; capture transfers the points`,
+    sheet: () => `Build a Revenue Office in every city, then the Imperial Diwan: whoever holds its city scores ${goalVp('India')} VP`,
   },
   Byzantium: {
     name: 'The Heir to the Throne', live: goalLive('Byzantium'), held: goalHeld('Byzantium'), heldItem: 'the Heir', icon: 'unit-heir',
     rule: () => `Train the Heir and keep him: whoever holds him scores ${goalVp('Byzantium')} VP`,
     ask: () => 'Train the Heir and keep him',
     detail: () => `Train the Heir and keep him. Whoever holds him scores ${goalVp('Byzantium')} VP; if a rival captures him, be at War and retake him to get the points back. Costs ${UNIT_STATS.Heir.cost} Production · cannot be bought`,
+    sheet: () => `Train the Heir and keep him: whoever holds him scores ${goalVp('Byzantium')} VP`,
   },
   Germany: {
     name: 'Five Ruhr Foundries', live: goalLive('Germany'), icon: 'building-foundry',
     rule: () => 'Own five cities with a Ruhr Foundry',
     detail: () => `Own five cities with a Ruhr Foundry to hold ${goalVp('Germany')} VP. You lose the VP if your Foundry count drops below five, and regain it when you own five again. Cities without a Foundry do not affect the goal`,
+    sheet: () => `Own five cities with a Ruhr Foundry to hold ${goalVp('Germany')} VP`,
     liveNote: 'You lose the VP when you own fewer than five Ruhr Foundries, and regain it when you own five again',
   },
   Celts: {
     name: 'Raise the Warbands', live: goalLive('Celts'), icon: 'ui-camp', action: 'Raise the Warbands',
     rule: () => 'Raise the Warbands to keep a warband camp in the territory of every city you own',
     ask: () => 'Keep a warband camp in the territory of each of your cities',
-    detail: () => `Once per turn you may raise a warband camp in the territory of each Celtic city. Barbarians never attack the Celts, so the camps raid your rivals only. You hold the VP while every city has one`,
+    detail: () => `Once per turn you may raise a warband camp in the territory of each Celtic city. Barbarians don't attack the Celts, so the camps raid your rivals only. You hold the VP while every city has one`,
+    sheet: () => `Keep a warband camp in the territory of every city you own to hold ${goalVp('Celts')} VP`,
     liveNote: 'You lose the VP in any turn a city has no warband camp, and regain it when every city has one again',
   },
   Mongols: {
     name: 'The Yam Network', live: goalLive('Mongols'), held: goalHeld('Mongols'), heldItem: 'the Yam Relay Station', icon: 'building-courierhall',
-    rule: () => `Build the Yam Relay Station on a chosen tile: it builds roads to every city. Whoever holds its tile scores ${goalVp('Mongols')} VP, and every empire may cross the holder's land at Peace. Capture its city to take both`,
+    rule: () => `Build the Yam Relay Station: whoever holds its tile scores ${goalVp('Mongols')} VP`,
     ask: () => 'Build the Yam Relay Station on a tile you choose',
     detail: () => `Build the Yam Relay Station on a chosen tile, one per empire. It replaces that tile's yield and improvement, and lays roads to every city on the map. Whoever holds its tile scores the VP, and every empire's units may cross that holder's land at Peace. Capture the city and both follow you. If the station is destroyed, it can be rebuilt`,
+    sheet: () => `Build the Yam Relay Station: whoever holds its tile scores ${goalVp('Mongols')} VP`,
   },
   Sparta: {
     name: 'Honour the Veterans', live: goalLive('Sparta'), icon: 'building-warshrine', unitAction: 'Retire this veteran',
@@ -690,7 +698,7 @@ export const FACTION_INFO: Record<Faction, FactionInfo> = {
   India: factionInfo("india", "India", "Akbar's regional courts bind a populous empire.", `Cities can be founded 3 tiles apart. +1 Food in every city. Each other Indian city within ${RULES.indiaNetworkRadius} tiles adds ${RULES.indiaNetworkPercentPerCity}% to Food and Production.`, uniquePieceText(UNIQUE_PIECE.India), goalLine('India'), `Non-capital cities send no Gold to your treasury until they have a Revenue Office, then half the Gold they make. Corruption cuts all four city yields by ${RULES.indiaYieldPercentPerHex}% per tile beyond ${RULES.indiaCapitalRadius} from the capital, up to 100%. Production never falls below 3.`),
   Byzantium: factionInfo("byzantium", "Byzantium", "Hold Constantinople. Hire the swords.", companyRule(), BYZANTIUM_LEGIONARY, goalLine('Byzantium'), THIN_LEVIES),
   Germany: factionInfo("germany", "Germany", "Coal, steel, and skilled hands.", `Your strategic deposits supply twice as much. A city can run an Industry project instead of building, turning ${RULES.germanyProjectGoldPercent}% of its Production into Gold or ${RULES.germanyProjectSciencePercent}% into Science each turn.`, uniquePieceText(UNIQUE_PIECE.Germany), goalLine('Germany'), 'Each Production building in a German city costs 1 Food.'),
-  Celts: factionInfo("celts", "Celts", "Raid, burn and move on.", `A sack takes ${RULES.celtsSackGoldPerPopulation} Gold per population and raises a warband camp. A sacked rival capital scores 1 VP for good. Barbarians never attack the Celts.`, '', goalLine('Celts'), "Celts can't keep cities they capture: they sack and burn them. A city you founded comes home intact when you retake it."),
+  Celts: factionInfo("celts", "Celts", "Raid, burn and move on.", `A sack takes ${RULES.celtsSackGoldPerPopulation} Gold per population and raises a warband camp. A sacked rival capital scores 1 VP for good. Barbarians don't attack the Celts.`, '', goalLine('Celts'), "Celts can't keep cities they capture: they sack and burn them. A city you founded comes home intact when you retake it."),
   Mongols: factionInfo("mongols", "Mongols", "Across the steppe, news travels.", "Military units, Scouts too, get +1 move. Settlers keep 2 moves. A city with a Market at least 8 tiles from your capital earns +2 Gold.", uniquePieceText(UNIQUE_PIECE.Mongols), goalLine('Mongols'), "Mongol military units get no defence bonus from terrain, though fortifying still works. Mongol cities raise no Walls, Castles or Star Forts and buy no Siege before the Medieval era. Walls in a city they capture still defend it."),
   Sparta: factionInfo("sparta", "Sparta", "Train in the agoge. Hold the line.", `Spartan military units start at level 1, gain XP 50% faster, and alone can reach level 6, Spartan Veteran. Each level adds ${RULES.promotion.strengthPercent}% to a unit's strength. Hoplites gain +${HOPLITE_PHALANX_STRENGTH} strength next to another Hoplite. The melee line fights at full strength when wounded. Destroying an enemy military unit restores up to 100 HP, shared among the Spartan units that hit it that turn and survived. Capturing a city fully heals Spartan military units within 2 tiles.`, uniquePieceText(UNIQUE_PIECE.Sparta), goalLine('Sparta'), `Settlers and non-military buildings cost 50% more Production, except Walls, Castles, Star Forts and the Agoge.`),
   Athens: factionInfo("athens", "Athens", "Debate in the agora. Study at the Lyceum.", "Every ruin also gives you 20 Science.", uniquePieceText(UNIQUE_PIECE.Athens), goalLine('Athens'), `Markets yield only +1 Gold instead of +3, at the normal ${RULES.buildingStats.Market.cost} Production cost. A rival that captures one of your cities gets one free technology (once per city for each rival).`),
@@ -895,7 +903,7 @@ export function itemDescription(item: ProductionItem, faction?: Faction): string
   if (faction === 'Mongols' && item.kind === 'Building' && buildingFamily(item.building) === 'Market') return `${BUILDING_STATS[item.building].blurb}. ${MONGOLS_MARKET_NOTE}`;
   if (item.kind === 'Unit') {
     const stats = unitStatsFor(faction ?? 'India', item.unit);
-    return `${stats.strength} melee${stats.ranged ? `, ${stats.ranged} ranged at range ${stats.range}` : ''}, ${stats.moves} moves. ${UNIT_STATS[item.unit].blurb}`;
+    return `${stats.strength} strength${stats.ranged ? `, ${stats.ranged} ranged · range ${stats.range}` : ''}, ${stats.moves} moves. ${UNIT_STATS[item.unit].blurb}`;
   }
   const successor = BUILDING_KINDS.find((b) => BUILDING_STATS[b].predecessor === item.building);
   if (successor) {
@@ -1026,7 +1034,7 @@ export function specialUnitEdge(faction: Faction): string {
     case 'Switzerland': return `+${n.reislauferMountedPercent}% against mounted units, on top of the usual bonus`;
     case 'Germany': return `+${n.panzerMoves - plain.moves} move`;
     case 'Sparta': return `+${HOPLITE_PHALANX_STRENGTH} strength beside another Hoplite`;
-    case 'Mongols': return `${own.ranged} ranged at range ${own.range}: shoots or charges each turn`;
+    case 'Mongols': return `${own.ranged} ranged · range ${own.range}: shoots or charges each turn`;
     case 'Byzantium': return `+${own.strength - plain.strength} strength, +${own.cost - plain.cost} Production`;
     case 'Rome': return 'A city it founds starts at population 2';
   }

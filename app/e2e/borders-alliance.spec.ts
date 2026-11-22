@@ -67,8 +67,8 @@ for (const size of SIZES) {
       s.diplomacy!.betrayals = [{ by: 1, against: 0, turn: 8, until: 28 }];
       await load(page, coreFixture(s), 12);
       await revealSidebar(page, 'standings');
-      await page.getByRole('button', { name: /^Diplomacy inbox/ }).click();
-      const inbox = page.getByRole('complementary', { name: 'Diplomacy inbox' });
+      await page.getByRole('button', { name: /^Diplomacy( \(\d+\))?$/ }).click();
+      const inbox = page.getByRole('complementary', { name: 'Diplomacy', exact: true });
       await inbox.locator('.empire-pick').first().click();
       await expect(inbox.locator('.betrayal-line').first()).toHaveText("Broke an alliance on turn 8: your team won't ally until turn 28");
       await shot(page, size.name, '07-betrayal-record');
@@ -78,8 +78,8 @@ for (const size of SIZES) {
       const s = diplomacyState(12, { strangers: true });
       await load(page, coreFixture(s), 12);
       await revealSidebar(page, 'standings');
-      await page.getByRole('button', { name: /^Diplomacy inbox/ }).click();
-      const inbox = page.getByRole('complementary', { name: 'Diplomacy inbox' });
+      await page.getByRole('button', { name: /^Diplomacy( \(\d+\))?$/ }).click();
+      const inbox = page.getByRole('complementary', { name: 'Diplomacy', exact: true });
       await inbox.locator('.empire-pick').first().click();
       await expect(inbox.locator('.diplomacy-blocked-reason')).toHaveCount(1);
       const offer = inbox.getByRole('button', { name: /Offer Alliance/ });
@@ -100,8 +100,8 @@ for (const size of SIZES) {
       await shot(page, size.name, '05-economy-gold');
       await page.keyboard.press('Escape');
       await revealSidebar(page, 'standings');
-      await page.getByRole('button', { name: /^Diplomacy inbox/ }).click();
-      await expect(page.getByRole('complementary', { name: 'Diplomacy inbox' })).toContainText('Protected until turn 20');
+      await page.getByRole('button', { name: /^Diplomacy( \(\d+\))?$/ }).click();
+      await expect(page.getByRole('complementary', { name: 'Diplomacy', exact: true })).toContainText('Protected until turn 20');
       await shot(page, size.name, '06-diplomacy-allied');
     });
   });

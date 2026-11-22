@@ -635,7 +635,7 @@ it('keeps all seven wonders visible with a reason when their technology is unkno
   const section = container.querySelector('.cp-great-works')!;
   expect(section.querySelectorAll('.production-choice')).toHaveLength(7);
   expect(section.querySelectorAll('.wonder-locked')).toHaveLength(7);
-  expect(section.querySelector('[data-wonder="Pyramids"] .prod-unavailable')?.textContent).toContain('Research Masonry first');
+  expect(section.querySelector('[data-wonder="Pyramids"] .prod-unavailable')?.textContent).toContain('Needs Masonry');
 });
 
 it('shows Walls as Production only in the build list and disables its Buy control with the reason', async () => {

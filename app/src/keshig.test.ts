@@ -37,8 +37,8 @@ describe('the Keshig piece', () => {
     expect(uniquePieceRules('Mongols')).toBe('');
     expect(pieceComparison('Mongols', keshigItem)!.rules.map((r) => r.text)).toEqual([KESHIG_CHOICE]);
     const s = unitStatsFor('Mongols', 'Cataphract');
-    expect(FACTION_INFO.Mongols.unique).toBe(`Keshig replaces Cataphract: ${s.cost} Production, ${s.strength} melee, ${s.ranged} ranged at range ${s.range}, ${s.moves} moves.`);
-    expect(uniquePieceGain('Mongols')).toContain(`${s.ranged} ranged at range ${s.range}`);
+    expect(FACTION_INFO.Mongols.unique).toBe(`Keshig replaces Cataphract: ${s.cost} Production, ${s.strength} strength, ${s.ranged} ranged · range ${s.range}, ${s.moves} moves.`);
+    expect(uniquePieceGain('Mongols')).toContain(`${s.ranged} ranged · range ${s.range}`);
     // The build card leads with the difference and its price is in the tooltip prose.
     expect(itemCardText(keshigItem, 'Mongols')).toBe(`Also shoots, at range ${keshig.range} with no return fire; a shot cannot take a city. Replaces Cataphract.`);
     expect(itemDescription(keshigItem, 'Mongols')).toContain(`${keshig.cost} Production`);

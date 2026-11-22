@@ -57,7 +57,7 @@ for (const size of SIZES) {
 
     test('the ledger lists each begun Age’s card, scorers and your progress', async ({ page }) => {
       await startEightEmpires(page);
-      await page.getByRole('button', { name: /^Every way to score/ }).click();
+      await page.locator('button.vh-chip').click();
       const sheet = page.getByTestId('objective-sheet');
       await expect(sheet.locator('.sl-row.k-work')).toHaveCount(1);
       // No Age has begun on turn 1: its card stays hidden until the first empire enters the era.
@@ -65,7 +65,7 @@ for (const size of SIZES) {
       await expect(sheet).not.toContainText(/Developed Empire|Six Technologies|Twenty Population|Most Populous|Most Territory/);
       await page.keyboard.press('Escape');
       await stage(page, { era: 2, scored: [] });
-      await page.getByRole('button', { name: /^Every way to score/ }).click();
+      await page.locator('button.vh-chip').click();
       const era2 = sheet.locator('.sl-row[data-row="era-2"]');
       await expect(era2.locator('.sl-status')).toContainText('open to every empire');
       if (await era2.locator('button').getAttribute('aria-expanded') === 'false') await era2.locator('button').click();
@@ -80,12 +80,12 @@ for (const size of SIZES) {
       await shot(page, 'objectives-sheet', size);
       await page.keyboard.press('Escape');
       await stage(page, { era: 3, scored: [2] });
-      await page.getByRole('button', { name: /^Every way to score/ }).click();
+      await page.locator('button.vh-chip').click();
       await expect(sheet.locator('.sl-row[data-row="era-2"] .sl-status')).toContainText('scored');
       await expect(sheet.locator('.sl-row[data-row="era-2"] td.mine .sl-token')).toHaveCount(1);
       await page.keyboard.press('Escape');
       await stage(page, { era: 7, scored: [2, 3, 4] });
-      await page.getByRole('button', { name: /^Every way to score/ }).click();
+      await page.locator('button.vh-chip').click();
       // Six Ages have begun in the staged view.
       await expect(sheet.locator('.sl-row.k-era')).toHaveCount(6);
       const future = sheet.locator('.sl-row[data-row="era-7"]');
@@ -135,7 +135,7 @@ for (const size of SIZES) {
       await page.waitForTimeout(400);
       if (shots) await page.screenshot({ path: join(shots, `v3-gold-hover-decadence-${size.width}.png`) });
       await page.keyboard.press('Escape');
-      await page.getByRole('button', { name: /^Every way to score/ }).click();
+      await page.locator('button.vh-chip').click();
       const sheet = page.getByTestId('objective-sheet');
       await expect(sheet.locator('.sl-col.mine .sl-decadence')).toContainText(`decadence −${stagedDecadence}%`);
       await expect(sheet.locator('.sl-col .sl-decadence')).toHaveCount(2);

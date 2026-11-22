@@ -618,7 +618,7 @@ export function DiplomacyPanel() {
   const outgoing = d.proposals.filter((p) => !incoming.includes(p));
   const teamActions = relation ? d.actions.filter((a) => otherTeam(view, a.order) === team && !('proposal' in a.order) && fitsRelation(a, relation)) : [];
   const unmet = teamActions.find(blockedByContact);
-  return <aside className="report diplomacy-panel" aria-label="Diplomacy inbox" data-game-overlay data-dismissible="diplomacy" onKeyDown={(e) => {
+  return <aside className="report diplomacy-panel" aria-label="Diplomacy" data-game-overlay data-dismissible="diplomacy" onKeyDown={(e) => {
     e.stopPropagation();
     if (e.key === 'Escape') { e.preventDefault(); useGame.getState().set({ diplomacyOpen: false }); }
   }}>
@@ -627,7 +627,7 @@ export function DiplomacyPanel() {
         <button role="tab" aria-selected={tab === 'inbox'} onClick={() => setTab('inbox')}>Inbox</button>
         <button role="tab" aria-selected={tab === 'relations'} onClick={() => setTab('relations')}>Relations</button>
       </div>
-      <h3>{tab === 'relations' ? 'Empire relations' : 'Diplomacy inbox'}</h3></div>
+      <h3>Diplomacy</h3></div>
       <button ref={closeButton} className="icon-btn" aria-label="Close diplomacy" onClick={() => useGame.getState().set({ diplomacyOpen: false })}><Icon name="ui-cross" size={14} /></button>
     </div>
     <div className="report-body">
@@ -661,7 +661,7 @@ export function DiplomacyPanel() {
                 onClick={() => useGame.getState().set({ diplomacyTeam: s.team })}>
                 <EmpireMark view={view} team={s.team} size={24} />
                 <span className="empire-pick-identity"><span className="empire-pick-name">{empireTitle(view, s.team)}</span>{aiMembers.length > 0 && <small className="empire-pick-level">{aiMembers.map((p) => aiMembers.length === 1 ? `AI · ${aiLevel(p)}` : `${p.name}: ${aiLevel(p)}`).join(' · ')}</small>}</span>
-                <span className={`empire-relation ${state.toLowerCase()}`} title={treatyDefinition(state) ?? undefined}>{state}{state !== 'War' && rowRelation && rowRelation.guarantee_until > view.turn && <> · truce through turn {rowRelation.guarantee_until - 1}</>}</span>
+                <span className={`empire-relation ${state.toLowerCase()}`} title={treatyDefinition(state) ?? undefined}><TreatyEmblem kind={state} size={16} />{state}{state !== 'War' && rowRelation && rowRelation.guarantee_until > view.turn && <> · truce through turn {rowRelation.guarantee_until - 1}</>}</span>
                 <span className="empire-vp"><b>{s.vp}</b>/<Amount n={s.target} unit="VP" /></span>
               </button>
               <EmpireWhere view={view} team={s.team} />
@@ -709,8 +709,8 @@ function RelationsView({ view }: { view: PlayerView }) {
     : <span className="relations-unknown" aria-hidden="true">?</span>;
   return <section className="relations-view" aria-label="Relations between empires">
     <h4 className="diplomacy-section">Relations</h4>
-    <p className="muted relations-key"><span className="relations-sample war"><Icon name="ui-siege" size={15} /> War</span><span className="relations-sample alliance"><TreatyEmblem kind="Alliance" size={20} /> Alliance</span><span>Blank · Peace</span></p>
-    <div className="relations-scroll" role="region" aria-label="Empire relations table" tabIndex={0}>
+    <p className="muted relations-key"><span className="relations-sample war"><TreatyEmblem kind="War" size={20} /> War</span><span className="relations-sample alliance"><TreatyEmblem kind="Alliance" size={20} /> Alliance</span><span className="relations-sample"><TreatyEmblem kind="Peace" size={20} /> Peace</span></p>
+    <div className="relations-scroll" role="region" aria-label="Relations table" tabIndex={0}>
       <table className="relations-table" style={{ minWidth: 140 + model.empires.length * 60 }}>
         <thead><tr><th scope="col">Empire</th>{model.empires.map((empire) => <th scope="col" key={empire.team} title={empire.name}>{mark(empire.team)}<span className="sr-only">{empire.name}</span></th>)}</tr></thead>
         <tbody>{model.empires.map((empire, row) => <tr key={empire.team}>
@@ -718,9 +718,9 @@ function RelationsView({ view }: { view: PlayerView }) {
           {model.cells[row].map((cell) => <td key={cell.b} className={cell.state === 'Self' ? 'relations-self' : undefined}>
             {cell.state === 'Self' ? <span role="img" aria-label={`${empire.name}, itself`} title={empire.name} />
               : cell.state === 'Unknown' ? <span className="relations-unknown" title={cell.title} aria-label={cell.title}>?</span>
-                : cell.state === 'War' ? <span className="relations-cell war" title={cell.title} aria-label={cell.title}><Icon name="ui-siege" size={16} /></span>
+                : cell.state === 'War' ? <span className="relations-cell war" title={cell.title} aria-label={cell.title}><TreatyEmblem kind="War" size={23} /></span>
                   : cell.state === 'Alliance' ? <span className="relations-cell alliance" title={cell.title} aria-label={cell.title}><TreatyEmblem kind="Alliance" size={23} /></span>
-                    : <span className="relations-peace" title={cell.title} aria-label={cell.title} />}
+                    : <span className="relations-cell" title={cell.title} aria-label={cell.title}><TreatyEmblem kind="Peace" size={23} /></span>}
           </td>)}
         </tr>)}</tbody>
       </table>

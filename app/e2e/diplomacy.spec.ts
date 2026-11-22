@@ -37,9 +37,9 @@ test('Diplomacy: an incoming Peace offer opens the inbox and resolves next turn'
     created_turn: 3, respond_by: 5, relation_version: 1, consents: [1] }];
   await loadSave(page, coreFixture(state), 3);
   await revealSidebar(page, 'standings');
-  const inbox = page.getByRole('button', { name: /^Diplomacy inbox/ });
+  const inbox = page.getByRole('button', { name: /^Diplomacy( \(\d+\))?$/ });
   await expect(page.locator('.vp-row .vhc-rel.war')).toBeVisible();
-  await expect(inbox).toHaveText('Diplomacy inbox (1)');
+  await expect(inbox).toHaveText('Diplomacy (1)');
   await expect(page.getByRole('button', { name: /^Respond to offer/ })).toBeVisible();
   await inbox.click();
   const accept = page.getByRole('button', { name: /^Accept Peace with Switzerland/ });
@@ -47,13 +47,13 @@ test('Diplomacy: an incoming Peace offer opens the inbox and resolves next turn'
   await expect(page.getByRole('button', { name: /^Decline Peace with Switzerland/ })).not.toHaveClass(/primary/);
   await accept.click();
   // G17: answering the only offer closes the inbox and confirms it over the map.
-  await expect(page.getByRole('complementary', { name: 'Diplomacy inbox' })).toHaveCount(0);
+  await expect(page.getByRole('complementary', { name: 'Diplomacy', exact: true })).toHaveCount(0);
   await expect(page.locator('.decision-notice')).toContainText('Accepted Peace with Switzerland');
   await expect(page.getByRole('button', { name: /^Respond to offer/ })).toHaveCount(0);
-  await expect(inbox).toHaveText('Diplomacy inbox');
+  await expect(inbox).toHaveText('Diplomacy');
   await endPlanning(page);
   await expect(page.getByTestId('turn-number')).toHaveText('4');
-  await expect(inbox).toHaveText('Diplomacy inbox');
+  await expect(inbox).toHaveText('Diplomacy');
   await expect(page.locator('.vp-row .vhc-rel.peace')).toBeVisible();
 });
 
@@ -62,8 +62,8 @@ for (const [width, height] of [[1000, 600], [1440, 900]] as const) {
     await page.setViewportSize({ width, height });
     await loadSave(page, diplomacyCoreSave(1, { strangers: true }), 1);
     await revealSidebar(page, 'standings');
-    await page.getByRole('button', { name: /^Diplomacy inbox/ }).click();
-    const panel = page.getByRole('complementary', { name: 'Diplomacy inbox' });
+    await page.getByRole('button', { name: /^Diplomacy( \(\d+\))?$/ }).click();
+    const panel = page.getByRole('complementary', { name: 'Diplomacy', exact: true });
     const offer = panel.getByRole('button', { name: 'Offer Alliance', exact: true });
     await expect(offer).toBeDisabled();
     // Disabled looks disabled: a dashed outline and a not-allowed cursor.
@@ -82,20 +82,20 @@ for (const [width, height] of [[1000, 600], [1440, 900]] as const) {
 test('Diplomacy: an outgoing offer never counts in the inbox badge', async ({ page }) => {
   await loadSave(page, diplomacyCoreSave(), 1);
   await revealSidebar(page, 'standings');
-  const inbox = page.getByRole('button', { name: /^Diplomacy inbox/ });
+  const inbox = page.getByRole('button', { name: /^Diplomacy( \(\d+\))?$/ });
   await inbox.click();
   await page.getByRole('button', { name: 'Offer Alliance', exact: true }).click();
   await page.getByRole('button', { name: 'Close diplomacy', exact: true }).click();
-  await expect(inbox).toHaveText('Diplomacy inbox');
+  await expect(inbox).toHaveText('Diplomacy');
   await endPlanning(page);
   await expect(page.getByTestId('turn-number')).toHaveText('2');
   const closeReport = page.getByRole('button', { name: 'Close report', exact: true });
   if (await closeReport.isVisible()) await closeReport.click();
   // Our Alliance offer is pending with the AI; nothing awaits our response.
   await inbox.click();
-  await expect(page.getByRole('complementary', { name: 'Diplomacy inbox' })).toContainText('Alliance offered to');
+  await expect(page.getByRole('complementary', { name: 'Diplomacy', exact: true })).toContainText('Alliance offered to');
   await page.getByRole('button', { name: 'Close diplomacy', exact: true }).click();
-  await expect(inbox).toHaveText('Diplomacy inbox');
+  await expect(inbox).toHaveText('Diplomacy');
   await expect(page.getByRole('button', { name: /^Respond to offer/ })).toHaveCount(0);
 });
 
@@ -109,8 +109,8 @@ test('Diplomacy: the inbox and the first-game hint share the story area, one at 
   const hint = page.getByTestId('first-game-hint');
   await expect(hint).toBeVisible();
   await revealSidebar(page, 'standings');
-  await page.getByRole('button', { name: /^Diplomacy inbox/ }).click();
-  const inbox = page.getByRole('complementary', { name: 'Diplomacy inbox' });
+  await page.getByRole('button', { name: /^Diplomacy( \(\d+\))?$/ }).click();
+  const inbox = page.getByRole('complementary', { name: 'Diplomacy', exact: true });
   await expect(inbox).toBeVisible();
   await expect(hint).toHaveCount(0);
   await inbox.getByRole('button', { name: 'Close diplomacy', exact: true }).click();
@@ -120,7 +120,7 @@ test('Diplomacy: the inbox and the first-game hint share the story area, one at 
 test('Diplomacy: a human offers an alliance and sees the AI decision and its reasons', async ({ page }) => {
   await loadSave(page, diplomacyCoreSave(16), 16);
   await revealSidebar(page, 'standings');
-  const inbox = page.getByRole('button', { name: /^Diplomacy inbox/ });
+  const inbox = page.getByRole('button', { name: /^Diplomacy( \(\d+\))?$/ });
   await inbox.click();
   const offer = page.getByRole('button', { name: 'Offer Alliance', exact: true });
   // Upkeep is itemised once, beneath the button, before it is sent.
@@ -136,7 +136,7 @@ test('Diplomacy: a human offers an alliance and sees the AI decision and its rea
     if (await close.isVisible()) await close.click();
   }
   await inbox.click();
-  const panel = page.getByRole('complementary', { name: 'Diplomacy inbox' });
+  const panel = page.getByRole('complementary', { name: 'Diplomacy', exact: true });
   await expect(panel).toContainText(/(accepted|declined) Alliance/);
 });
 
@@ -147,7 +147,7 @@ test('Diplomacy: D declines the offer from the keyboard, and Z undoes it (G19)',
   await loadSave(page, allianceOfferSave(), 16);
   const respond = page.getByRole('button', { name: /^Respond to offer/ });
   await respond.click();
-  const panel = page.getByRole('complementary', { name: 'Diplomacy inbox' });
+  const panel = page.getByRole('complementary', { name: 'Diplomacy', exact: true });
   const card = panel.locator('.offer-card');
   // The keys are on the buttons.
   await expect(card.getByRole('button', { name: 'Accept Alliance', exact: true }).locator('.kbd')).toHaveText('A');
@@ -183,7 +183,7 @@ for (const size of [{ width: 1440, height: 900 }, { width: 1000, height: 600 }])
   test(`Diplomacy: an alliance offer is one decision card with the empire's identity and its Gold costs (${size.width}×${size.height})`, async ({ page }) => {
     await loadSave(page, allianceOfferSave(), 16);
     await page.getByRole('button', { name: /Respond to offer/ }).first().click();
-    const panel = page.getByRole('complementary', { name: 'Diplomacy inbox' });
+    const panel = page.getByRole('complementary', { name: 'Diplomacy', exact: true });
     const card = panel.locator('.offer-card');
     await expect(card).toHaveCount(1);
     // Headline: swatch in the empire's map color (Switzerland = deep teal; colours follow the faction since 2026-11-11), faction and seat.
@@ -261,7 +261,7 @@ for (const size of [{ width: 1440, height: 900 }, { width: 1000, height: 600 }])
   test(`Diplomacy: Decline closes the inbox with a notice, and its Undo restores the offer (${size.width}×${size.height})`, async ({ page }) => {
     await loadSave(page, allianceOfferSave(), 16);
     await page.getByRole('button', { name: /Respond to offer/ }).first().click();
-    const panel = page.getByRole('complementary', { name: 'Diplomacy inbox' });
+    const panel = page.getByRole('complementary', { name: 'Diplomacy', exact: true });
     await panel.locator('.offer-card').getByRole('button', { name: 'Decline', exact: true }).click();
     await expect(panel).toHaveCount(0);
     const notice = page.locator('.decision-notice');
@@ -297,7 +297,7 @@ for (const size of [{ width: 1440, height: 900 }, { width: 1000, height: 600 }])
     await expect(card).toContainText('Declining keeps your Alliance');
     await expect(card).toContainText('Declining costs nothing');
     await decline.click();
-    await expect(page.getByRole('complementary', { name: 'Diplomacy inbox' })).toHaveCount(0);
+    await expect(page.getByRole('complementary', { name: 'Diplomacy', exact: true })).toHaveCount(0);
     // The decision is settled: the turn can end without the call blocking it.
     await expect(page.getByRole('button', { name: /Answer call to arms/ })).toHaveCount(0);
   });

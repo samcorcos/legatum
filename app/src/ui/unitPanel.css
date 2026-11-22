@@ -29,12 +29,12 @@
 .game .refined-unit-panel .act-pair .act-wrap:last-child .act { background: transparent; border-color: var(--rule); }
 .game .refined-unit-panel .act-pair .act.primary { background: var(--primary-bg); border-color: var(--primary-bg); color: var(--primary-ink); }
 .game .refined-unit-panel .act .kbd { margin-left: auto; flex: none; }
-/* The order a unit is standing on (Fortify, Heal, Skip): a filled accent with a check, so it reads at a glance and survives the pair's own button styling above. */
+/* The order a unit is standing on (Fortify, Heal, Skip): a filled ink with a check, so it reads at a glance and survives the pair's own button styling above. */
 .game .refined-unit-panel .act-pair .act-wrap .act.active, .game .refined-unit-panel .actions .act-wrap .act.active:not(.primary) {
-  background: var(--accent); border-color: var(--accent); color: var(--panel); box-shadow: none; font-weight: 600;
+  background: var(--primary-bg); border-color: var(--primary-bg); color: var(--primary-ink); box-shadow: none; font-weight: 600;
 }
 .game .refined-unit-panel .act.active .action-check { flex: none; }
-.game .refined-unit-panel .act.active .kbd { color: var(--panel); border-color: color-mix(in srgb, var(--panel) 55%, transparent); background: transparent; }
+.game .refined-unit-panel .act.active .kbd { color: var(--primary-ink); border-color: color-mix(in srgb, var(--primary-ink) 55%, transparent); background: transparent; }
 .game .refined-unit-panel .act:disabled {
   opacity: 1; background: var(--panel-2); background-image: none; border: 1px solid var(--rule); color: var(--muted); box-shadow: none;
 }

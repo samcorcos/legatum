@@ -30,8 +30,8 @@ beforeEach(() => {
 it('keeps the piece card text to rule sentences, never leftovers of a stat line', () => {
   expect(uniquePieceRules('Celts')).toBe('');
   expect(uniquePieceRules('Mongols')).toBe('');
-  expect(uniquePieceRules('Switzerland')).toBe('Requires Masonry.');
-  expect(uniquePieceRules('Byzantium')).toBe(`Requires Feudalism. Phalangite upgrade costs ${84} Gold.`);
+  expect(uniquePieceRules('Switzerland')).toBe('Needs Masonry.');
+  expect(uniquePieceRules('Byzantium')).toBe(`Needs Feudalism. Phalangite upgrade costs ${84} Gold.`);
 });
 
 it('gives Random a complete ornamental sheet with every possible faction', () => {

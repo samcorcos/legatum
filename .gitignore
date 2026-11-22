@@ -6,6 +6,7 @@ node_modules/
 __pycache__/
 app/dist/
 app/src/wasm-pkg/
+app/public/THIRD_PARTY_LICENSES.txt
 crates/wasm/pkg/
 app/test-results/
 app/test-results-webkit/

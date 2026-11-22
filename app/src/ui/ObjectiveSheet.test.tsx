@@ -35,12 +35,12 @@ it('keeps the dialog shell, close control and VP chip entry point', () => {
   act(() => root.render(<><VpChip /><ObjectiveSheet /></>));
   expect(sheet()).toBeNull();
   const chip = host.querySelector<HTMLButtonElement>('.vh-chip')!;
-  expect(chip.getAttribute('aria-label')).toMatch(/^Every way to score/);
+  expect(chip.getAttribute('aria-label')).toMatch(/^Score ledger/);
   act(() => chip.click());
   expect(sheet().getAttribute('data-dismissible')).toBe('victory');
   expect(sheet().querySelector('.sl-table')).not.toBeNull();
   expect(sheet().querySelector('.vh-card')).toBeNull();
-  expect(document.getElementById(sheet().getAttribute('aria-labelledby')!)?.textContent).toBe('Every Way to Score');
+  expect(document.getElementById(sheet().getAttribute('aria-labelledby')!)?.textContent).toBe('Score ledger');
   act(() => sheet().querySelector<HTMLButtonElement>('.vh-close')!.click());
   expect(useGame.getState().vpExpanded).toBe(false);
 });
