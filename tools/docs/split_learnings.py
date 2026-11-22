@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """Carry edits made to the old one-file learnings log into the monthly archives.
 
-  tools/docs/split_learnings.py NEW_REF [--write]
+  tools/docs/split_learnings.py NEW_REF [--base REF] [--write]
+
+For a branch cut before the split: `tools/docs/split_learnings.py <branch> --base $(git merge-base origin/master
+<branch>) --write` carries only that branch's own entries into the archives.
 
 `docs/learnings.md` held every entry until 2026-11-22; it is now a short digest, and the entries live verbatim in
 `docs/learnings/<YYYY-MM>.md`, newest first. A branch cut before the split may still add or edit entries in the old
@@ -57,7 +60,10 @@ def main(argv):
         sys.exit(__doc__)
     new_ref, write = argv[0], "--write" in argv
     state = json.load(open(STATE))
-    _, base = blocks(git("show", f"{state['base']}:docs/learnings.md"))
+    # --base REF: diff against REF instead (for an older branch, its merge base with master, so only that branch's own
+    # additions and edits move and master's later entries are not taken for deletions); the recorded base is kept.
+    base_ref = argv[argv.index("--base") + 1] if "--base" in argv else None
+    _, base = blocks(git("show", f"{base_ref or state['base']}:docs/learnings.md"))
     _, new = blocks(git("show", f"{new_ref}:docs/learnings.md"))
     archives = {}
     for name in sorted(os.listdir(ARCHIVE)):
@@ -78,9 +84,10 @@ def main(argv):
         if key(b) not in new_keys:
             by_head.setdefault(b[0], []).append(b)
     report = {"added": 0, "changed": 0, "deleted": 0}
+    by_hand = set()
     for pos, b in enumerate(new):
         k = key(b)
-        if k in base_keys:
+        if k in base_keys or find(k):  # unchanged, or already carried over
             continue
         old = by_head.get(b[0], [])
         if old:  # same heading, new text: replace in place
@@ -93,6 +100,12 @@ def main(argv):
                 print(f"changed {month}: {b[0][:100]}")
                 continue
         month = month_of(b)
+        if any(a[0] == b[0] for _, (_, bl) in archives.items() for a in bl):
+            report.setdefault("by hand", 0)
+            report["by hand"] += 1
+            by_hand.add(b[0])
+            print(f"BY HAND {month}: same heading already archived with other text: {b[0][:100]}")
+            continue
         if month not in archives:
             archives[month] = ([f"# Learnings archive: {month}", "",
                                 f"Entries dated {month}, newest first. Append new entries for this month at the top "
@@ -124,7 +137,7 @@ def main(argv):
                 print(f"deleted {found[0]}: {head[:100]}")
 
     # No-loss check: every entry of NEW_REF is in an archive, verbatim.
-    missing = [b[0] for b in new if not find(key(b))]
+    missing = [b[0] for b in new if not find(key(b)) and b[0] not in by_hand]
     assert not missing, f"entries not in any archive: {missing[:5]}"
     total = sum(len(bl) for _, bl in archives.values())
     print(f"{report}; {len(new)} entries in {new_ref}, all found verbatim in the archives ({total} archived entries)")
@@ -132,6 +145,9 @@ def main(argv):
         for month, (head, bl) in archives.items():
             text = "\n".join(head + [ln for b in bl for ln in b])
             open(os.path.join(ARCHIVE, f"{month}.md"), "w").write(text if text.endswith("\n") else text + "\n")
+        if base_ref:
+            print("written (learnings-split.json left as it was)")
+            return
         state["base"] = git("rev-parse", new_ref).strip()
         with open(STATE, "w") as fh:
             json.dump(state, fh, indent=1)

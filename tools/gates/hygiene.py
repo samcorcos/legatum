@@ -16,6 +16,8 @@ Checks the lines and files that BASE..TIP adds:
   legacy-marker  `// legacy`, `// old:`, `// legacy code` markers (delete deprecated code; git keeps history); prose about
                  old data ("// Legacy saves have no history") is fine
   migration      an edit to, or deletion of, a committed migration (add a new migration instead)
+  split-file     docs/learnings.md over 30 KB or the game-rules.md stub over 5 KB: an older branch's merge brought
+                 the one-file version back (restore it and run the split script the message names)
 
 Escape for one line: a `gate-allow: <reason>` comment on the line or the line above (not for secrets).
 
@@ -58,6 +60,13 @@ LEGACY = re.compile(r"(?<![`\"'])(?://|#)\s*(?:legacy|old)\b(?:\s*[:(\-]|\s*$|\s
                     r"approach|method|way|behaviou?r|function|handler|branch|stuff)\b)", re.I)
 BACKUP = re.compile(r"(\.backup|\.bak|\.orig|~)$")
 MIGRATION = re.compile(r"(^|/)migrations?/")
+SPLIT_FILES = [
+    ("docs/learnings.md", 30_000,
+     "re-add your entries at the top of docs/learnings/<YYYY-MM>.md, or run `python3 tools/docs/split_learnings.py "
+     "<your branch before the merge> --base $(git merge-base origin/master <that commit>) --write`"),
+    (".claude/skills/legatum-rules/references/game-rules.md", 5_000,
+     "re-add your rule lines to the matching file in .claude/skills/legatum-rules/references/ (index.md lists them)"),
+]
 
 
 def export_rules(repo, rev):
@@ -205,6 +214,13 @@ def check(repo, base, tip, all_mode=False):
         lines, only = texts[path]
         for line_no, rule, msg, src, reason in line_checks(path, lines, only, personal, exported(path, excluded, kept)):
             add(f"{path}:{line_no}", rule, msg, src, reason)
+    # The learnings log and the rules reference were split on 2026-11-22 (docs/learnings/<YYYY-MM>.md, one rules file
+    # per system). A merge from an older branch can drag the one-file versions back in; block that loudly.
+    for path, cap, fix in SPLIT_FILES:
+        if size.get(path, 0) > cap:
+            add(path, "split-file", f"{size[path]:,} bytes, over the {cap:,}-byte cap for this file since the split. "
+                f"Restore it from origin/master (`git checkout origin/master -- {path}`), then {fix} "
+                f"(CONTRIBUTING.md, rule 8)", "", None)
     if not all_mode:
         findings.extend(gitleaks(repo, base, tip))
     return findings, allows

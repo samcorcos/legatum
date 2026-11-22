@@ -1,6 +1,6 @@
 {
  "_note": "Which lines of the old game-rules.md (at commit `base`) each per-system file holds; maintained by tools/docs/split_rules.py.",
- "base": "6d7efb7293fed1f05cc5959bc2a7ca652cba9269",
+ "base": "d6feaf9b36dd39894c4ba5ba1d68f8e61d66960c",
  "files": [
   {
    "file": "history.md",
