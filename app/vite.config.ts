@@ -3,9 +3,6 @@ import react from '@vitejs/plugin-react';
 import { readFileSync, realpathSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 
-// Tauri expects a fixed dev port and a relative base for the bundled app.
-// LEGATUM_SERVER=http://localhost:7878 npm run dev  -> the dev UI talks to a running legatum-server.
-const server = process.env.LEGATUM_SERVER;
 // The title screen's build label (src/buildLabel.ts): the release label if set, else git describe
 // against the last playtest-* tag.
 const describe = (() => {
@@ -21,13 +18,20 @@ const describe = (() => {
 const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as { homepage: string; version: string };
 const siteUrl = (process.env.LEGATUM_SITE_URL || pkg.homepage).replace(/\/+$/, '');
 
+// The engine's rules version (crates/core/src/lib.rs), which an online game must match: read here so the
+// title screen knows it without loading the engine. src/platform/online.test.ts checks it against the engine.
+const rulesVersion = Number(/pub const RULES_VERSION: u32 = (\d+);/.exec(readFileSync(new URL('../crates/core/src/lib.rs', import.meta.url), 'utf8'))?.[1]);
+if (!Number.isInteger(rulesVersion)) throw new Error('RULES_VERSION not found in crates/core/src/lib.rs');
+
 export default defineConfig({
   plugins: [react(), { name: 'legatum-site-url', transformIndexHtml: (html: string) => html.replaceAll('%SITE_URL%', siteUrl) }],
   define: {
     __BUILD_LABEL__: JSON.stringify(process.env.LEGATUM_BUILD_LABEL ?? ''),
     __BUILD_DESCRIBE__: JSON.stringify(describe),
     __APP_VERSION__: JSON.stringify(pkg.version),
+    __RULES_VERSION__: JSON.stringify(rulesVersion),
   },
+  // A relative base, so the build works from any folder of a static host.
   base: './',
   clearScreen: false,
   server: {
@@ -36,7 +40,6 @@ export default defineConfig({
     // The bundled scenarios live at the repo root (scenarios/*.json, imported raw). node_modules is
     // allowed by its real path: in worktrees it's a symlink to the main checkout, and fonts 403 otherwise.
     fs: { allow: ['.', '../scenarios', realpathSync('node_modules')] },
-    proxy: server ? { '/api': server, '/ws': { target: server.replace(/^http/, 'ws'), ws: true } } : undefined,
   },
   build: { target: 'es2022', outDir: 'dist', chunkSizeWarningLimit: 1500 },
   // 30 s per test and 60 s per hook: several WASM-backed tests take 4 to 10 s on a loaded machine,

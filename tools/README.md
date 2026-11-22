@@ -40,4 +40,4 @@ Helper programs around the engine. Everything here is optional for building and 
 | `scripts/archive-stats` | Summarise or export the game-archive index. |
 | `scripts/wasm-tape-check.mjs`, `scripts/wasm-search-check.mjs` | Check that WASM and native builds produce identical per-turn state hashes. |
 | `scripts/perf-profile.sh` | Record a reproducible single-threaded performance profile. |
-| `scripts/build-mac-app.sh`, `scripts/build-ios-sim.sh`, `scripts/lan-host.sh` | Desktop, iOS and LAN builds; being removed with the web-only change. |
+| `scripts/build-mac-app.sh`, `scripts/build-ios-sim.sh` | Desktop and iOS builds; being removed with the web-only change. |
