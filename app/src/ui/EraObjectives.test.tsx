@@ -152,9 +152,10 @@ describe('the research screen header', () => {
 
   it('shows the card of the Age in focus with progress, and when the next Age begins', () => {
     const el = research(withV2(base, { era: 3, scored: [2] }));
-    expect(el.querySelector('[data-testid=research-objectives-current] h4')?.textContent).toContain('Score 1 VP this Age');
+    expect(el.querySelector('[data-testid=research-objectives-current] h4')?.textContent).toMatch(/^\w+ Age: score 1 VP$/);
+    expect(el.querySelector('[data-testid=research-objectives-current] .eor-seal')).not.toBeNull();
     expect(rows(el.querySelector('[data-testid=research-objectives-current]')!)).toEqual([['Expand', '6/14'], ['Expand', '11/40'], ['Fight', '0/1']]);
-    expect(el.querySelector('[data-testid=research-objectives-next] h4')?.textContent).toBe('Next: Renaissance Age');
+    expect(el.querySelector('[data-testid=research-objectives-next]')?.textContent).toBe('The next Age begins when any empire enters the Renaissance era.');
   });
 
   it('before any Age begins it says so and when the first one does', () => {
@@ -162,5 +163,6 @@ describe('the research screen header', () => {
     expect(el.querySelector('[data-testid=research-objectives-current] h4')?.textContent).toBe('No Age has begun');
     expect(el.textContent).toContain('The first Age begins when any empire enters the Classical era');
     expect(el.querySelector('[data-testid=research-objectives-next]')).toBeNull();
+    expect(el.querySelector('.eor-seal')).toBeNull();
   });
 });
