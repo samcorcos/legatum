@@ -157,7 +157,7 @@ it('shares one Iron reason between Upgrade and Siege and links both disabled con
   act(() => root.render(<UnitPanel unit={unit} view={view} />));
   const reasons = container.querySelectorAll('.improve-reason');
   expect(reasons).toHaveLength(1);
-  expect(reasons[0].textContent).toBe('Upgrade and Siege need 1 Iron. All 6 Iron are in use: claim another Iron deposit or build a Mine (+1).');
+  expect(reasons[0].textContent).toBe('Upgrade and Siege need 1 Iron. Your 6 Iron are all in use: claim another Iron deposit or build a Mine (+1).');
   expect(reasons[0].querySelector('.resource-reason-link')?.getAttribute('aria-label')).toBe('Open Iron supply');
   const buttons = [...container.querySelectorAll<HTMLButtonElement>('.improve-row button.act')];
   expect(buttons.length).toBeGreaterThan(0);

@@ -55,7 +55,7 @@ export function VpChip() {
   const open = useGame((s) => s.vpExpanded);
   const set = useGame((s) => s.set);
   if (!view) return null;
-  return <button className="tb-nav vh-chip" aria-label="Every way to score" aria-haspopup="dialog" aria-expanded={open} title="Score ledger" onClick={() => set({ vpExpanded: !open })}>
+  return <button className="tb-nav vh-chip" aria-label="Score ledger" aria-haspopup="dialog" aria-expanded={open} title="Score ledger" onClick={() => set({ vpExpanded: !open })}>
     <Icon name="vp" size={14} className="vh-chip-icon" /> <span className="vh-chip-label">Score ledger</span>
   </button>;
 }

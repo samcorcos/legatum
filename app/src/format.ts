@@ -1505,7 +1505,7 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
  * line ("moved 3 hexes to x,y").
  */
 /**
- * A core order refusal in the words a player reads: "Astra can't train a Spearman: you already have 3 / 2 military units."
+ * A core order refusal in the words a player reads: "Astra can't train a Spearman: you have 3 military units and room for 2."
  * Other reasons keep core's wording after the contraction.
  */
 export function plainOrderError(message: string): string {
@@ -1514,7 +1514,7 @@ export function plainOrderError(message: string): string {
   const [, city, item, why] = m;
   const levy = /^Levies full: (\d+) of (\d+)$/.exec(why);
   const article = /^[AEIOU]/.test(item) ? 'an' : 'a';
-  if (levy) return `${city} can't train ${article} ${item}: you already have ${levy[1]} / ${levy[2]} military units.`;
+  if (levy) return `${city} can't train ${article} ${item}: you have ${levy[1]} military units and room for ${levy[2]}.`;
   return `${city} can't build ${item}: ${plainBlocker(why)}.`;
 }
 
