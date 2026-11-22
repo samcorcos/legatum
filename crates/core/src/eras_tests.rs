@@ -797,7 +797,7 @@ fn the_buildings_and_their_unlock_techs_follow_the_new_tree() {
         (B::WarShrine, TechId::Chivalry),
         (B::College, TechId::Education),
         (B::Hydroponics, TechId::Feudalism),
-        (B::StarFort, TechId::MilitaryEngineering),
+        (B::StarFort, TechId::Machinery),
         (B::Clearinghouse, TechId::Banking),
         (B::WorldExchange, TechId::Banking),
         (B::Autoworks, TechId::Industrialization),
@@ -1286,11 +1286,9 @@ fn a_star_fort_needs_a_castle_which_needs_walls() {
 
     let mut s = game(&[0, 1]);
     let id = city(&mut s, 0, hex(3, 3), 3);
-    s.player_mut(P0).techs.extend([
-        TechId::Masonry,
-        TechId::Chivalry,
-        TechId::MilitaryEngineering,
-    ]);
+    s.player_mut(P0)
+        .techs
+        .extend([TechId::Masonry, TechId::Chivalry, TechId::Machinery]);
     let can = |s: &GameState, b| {
         economy::can_produce(s, &s.cities[&id], ProductionItem::Building { building: b })
     };
@@ -1325,9 +1323,9 @@ fn a_star_fort_needs_a_castle_which_needs_walls() {
     assert!(!can(&s, Walls) && !can(&s, Castle));
     assert!(can(&s, StarFort));
     // Techs gate the tiers.
-    s.player_mut(P0).techs.remove(&TechId::MilitaryEngineering);
+    s.player_mut(P0).techs.remove(&TechId::Machinery);
     assert!(!can(&s, StarFort));
-    assert_eq!(blocker(&s, StarFort), "Requires Military Engineering");
+    assert_eq!(blocker(&s, StarFort), "Requires Machinery");
     s.player_mut(P0).techs.remove(&TechId::Chivalry);
     s.cities.get_mut(&id).unwrap().buildings = [Walls].into();
     assert!(!can(&s, Castle));
@@ -1374,11 +1372,7 @@ fn mongols_raises_no_walls_tier_before_the_medieval_era_and_every_tier_after() {
     }
     // In a game: with every Ancient and Classical technology and the Walls techs it is the
     // Medieval era and the line opens; with fewer it stays shut, whatever else is known.
-    let walls_techs = [
-        TechId::Masonry,
-        TechId::Feudalism,
-        TechId::MilitaryEngineering,
-    ];
+    let walls_techs = [TechId::Masonry, TechId::Feudalism, TechId::Machinery];
     s.player_mut(P0).techs.extend(walls_techs);
     assert!(s.era_of(P0) < 2);
     for building in [Walls, Castle, StarFort] {

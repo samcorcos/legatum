@@ -260,7 +260,7 @@ fn mongols_cannot_produce_engineers_walls_castles_or_star_forts_before_the_medie
         TechId::Feudalism,
         TechId::Chivalry,
         TechId::Mathematics,
-        TechId::MilitaryEngineering,
+        TechId::Machinery,
     ]);
     for item in [
         building(BuildingKind::Walls),
