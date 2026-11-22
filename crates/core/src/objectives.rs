@@ -250,7 +250,7 @@ impl Objective {
                 "Veterans: earn {n} promotions in battle (a promotion is a level a unit gains from combat experience after this Age began)"
             ),
             Objective::HumbleTheMighty => {
-                "Humble the mighty: capture a city from an empire ahead of you on VP. If you lead, from the rival with the most VP".into()
+                "Humble the mighty: capture a city from an empire ahead of you on VP or, if you lead, from the rival with the most VP".into()
             }
             Objective::Breach => "Breach: capture a walled city".into(),
             Objective::Cities { .. } => format!("Gain {n} {cities}"),
