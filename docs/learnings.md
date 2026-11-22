@@ -2,6 +2,12 @@
 
 Newest first. One entry per non-obvious finding: what we learned, the evidence, and what we changed. Correct or delete entries that turn out to be wrong.
 
+## 2026-11-22: Art gets its own reviewer; the lookalike check never judged style or staleness (`claude/art-reviewer`)
+
+- **The only automated art check was "too similar to another piece"** (`tools/art/distinctness.py`, run by `app/src/artDistinct.test.ts`). It passed with 0 failures while the launch build still showed unlock paintings with no ground under them, faded wonder tiles beside vivid neighbours, a unit copied from a commercial robot and five portraits whose men share one face. Style, set fit, subject correctness and stale art need a reviewer that looks at the pictures.
+- **A numeric style check is too noisy on its own.** Mean saturation, coverage and ground width per unlock flagged the faded wonders but also correct grey stone and concrete (ITER, the Swiss redoubt, the Machine Shop), and missed groundless pieces whose wheels or barrels span the bottom rows. `tools/art/art-review.py sheet` instead draws each changed piece beside its old version and its unchanged set neighbours at display size, in colour and greyscale, for the reviewer to judge.
+- **Art goes stale the way docs do.** `art-review.py impact` lists renames and new names in `data.rs`/`eras.rs`, new art-carrying enum variants, art slugs wired in `app/src` with no file, deleted art still named in `distinctness.json`, and art changed with no prompt or README beside it. The gate now requires `.progress/art-review/<branch>.ok` from `legatum-art-reviewer` when art or that code changes (`ART_IMPACT` in `tools/gates/check.py`). Terrain sprites (`app/public/terrain/`) now count as art too.
+
 ## 2026-11-22: Web games upload to R2; player names are inside the state hash
 
 - **The hosted web build kept every game only in the browser.** Histories queue in IndexedDB (`legatum-game-archive-v1`) and `deliver()` returned false on the hosted build, so they sat there until the player used Export game history. A designer's Hard game (Athens, 145 turns) was still recoverable from that queue after he left it, but a cleared browser would have lost it. Now `deliver()` uploads to the `infra/games` Worker when the build has `LEGATUM_GAMES_URL`, and a success acknowledges (deletes) the local copy.
