@@ -4,7 +4,7 @@ Facts below are cited to file (and usually function), read 2026-10-02 and audite
 recommendations that assume Civ 6 defaults this game doesn't have. If a fact isn't in the cited
 file, say so rather than guessing.
 
-**Rules version: 51** (`crates/core/src/lib.rs::RULES_VERSION`, checked 2026-11-22). Every save carries `save_version = RULES_VERSION`; a save or tape from any other version is refused, and there are no migrations. The version log and old compatibility notes are in `history.md`.
+**Rules version: 52** (`crates/core/src/lib.rs::RULES_VERSION`, checked 2026-11-22). Every save carries `save_version = RULES_VERSION`; a save or tape from any other version is refused, and there are no migrations. The version log and old compatibility notes are in `history.md`.
 
 The reference was one file, `game-rules.md`, until 2026-11-22. It is now one file per system, each holding its original text verbatim and in its original order. Open only the files your question needs, plus `not-in-game.md` before proposing anything.
 

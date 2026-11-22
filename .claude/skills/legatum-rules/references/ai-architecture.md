@@ -10,7 +10,7 @@ Moved verbatim from `game-rules.md` on 2026-11-22, in the original order; the or
   India links inform targets and border defense. Army changes are sighting deltas, and fogged
   garrisons remain unknown. A remote scout does not make a rival a homeland neighbor.
   A rush-capable neighbour within 10 hexes raises the military knob (`DefendedExpand`); only
-  observed aggression (2+ Spearmen' strength at our border, a visible buildup or any war it
+  observed aggression (2+ Spearmen's strength at our border, a visible buildup or any war it
   declared: `OpponentAssessment::observed_aggression`) makes exposed cities research legal Walls
   prerequisites and build a garrisoned shooter, then Walls (`production.rs::choose_item`,
   `adaptation.rs::assessed_border_threat`); a faction prior alone never walls (units counter

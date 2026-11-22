@@ -65,7 +65,7 @@ Don't copy those rules here; extend them there and keep this skill to direction 
 - Rejected: "Real peoples. Simultaneous turns. An AI that never cheats." as a tagline (user, 2026-10-24, again 2026-11-21).
 - Rejected: an era-metal ring on unit bases, and a raw strength number on every base (user, 2026-10-11).
 - Rejected: construction and payoff animation rounds 1 and 2 (generic scaffold, image reveals, sunbursts) (user, 2026-10-24).
-- Rejected: EarlyTank as a name on screen; it shows as "Early Tank", painted as a WWI rhomboid tank (user, 2026-11-14).
+- Rejected: Landship as a name on screen; it shows as "Early Tank", painted as a WWI rhomboid tank (user, 2026-11-14).
 - Superseded: the fantasy and sci-fi directions (Japan insects, Mongol elves, relay-star iconography) by the historical re-theme (user, 2026-10-10).
 - Superseded: engraved-ink-only improvement drawings by painted improvements (user, 2026-10-25).
 
