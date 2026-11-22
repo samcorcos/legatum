@@ -1,0 +1,337 @@
+{
+ "_note": "Which lines of the old game-rules.md (at commit `base`) each per-system file holds; maintained by tools/docs/split_rules.py.",
+ "base": "8f15df225597f1a3a52d1e0ca40f88718ed53f19",
+ "files": [
+  {
+   "file": "history.md",
+   "title": "Rules history",
+   "question": "How did save compatibility and the rules version evolve? (version log, old compatibility notes)",
+   "ranges": [
+    [
+     7,
+     14
+    ]
+   ]
+  },
+  {
+   "file": "setup.md",
+   "title": "Game setup and start",
+   "question": "How are factions, AI levels, seats and the calendar set up, and what does an empire start with on turn 1?",
+   "ranges": [
+    [
+     15,
+     76
+    ],
+    [
+     190,
+     198
+    ]
+   ]
+  },
+  {
+   "file": "turn-and-orders.md",
+   "title": "Turn structure and orders",
+   "question": "What orders exist, one order per unit, idle orders, automation, resolution phases, auto-fire, order UI?",
+   "ranges": [
+    [
+     77,
+     142
+    ],
+    [
+     169,
+     177
+    ],
+    [
+     184,
+     189
+    ]
+   ]
+  },
+  {
+   "file": "movement.md",
+   "title": "Movement, roads and routes",
+   "question": "How do units move, path, pass through friends, use roads, and avoid enemy reach?",
+   "ranges": [
+    [
+     143,
+     168
+    ],
+    [
+     178,
+     183
+    ]
+   ]
+  },
+  {
+   "file": "research-and-eras.md",
+   "title": "Research and eras",
+   "question": "What are the nine eras, the tech tree, unlock gates, research costs and game length?",
+   "ranges": [
+    [
+     199,
+     259
+    ],
+    [
+     355,
+     357
+    ]
+   ]
+  },
+  {
+   "file": "units.md",
+   "title": "Units",
+   "question": "What units exist, their costs and classes, the unit triangle, Siege, one unit per class per era?",
+   "ranges": [
+    [
+     260,
+     314
+    ]
+   ]
+  },
+  {
+   "file": "air.md",
+   "title": "Air",
+   "question": "How do aircraft, air strikes, recon, rebasing, hangars, air defence, aircraft promotion and aircraft sight work?",
+   "ranges": [
+    [
+     315,
+     344
+    ],
+    [
+     1044,
+     1045
+    ],
+    [
+     1428,
+     1429
+    ]
+   ]
+  },
+  {
+   "file": "wonders.md",
+   "title": "Wonders",
+   "question": "How do world wonders, wonder tiles, held wonder VP and natural wonders work?",
+   "ranges": [
+    [
+     345,
+     354
+    ],
+    [
+     1317,
+     1337
+    ]
+   ]
+  },
+  {
+   "file": "experiments.md",
+   "title": "Rule experiments",
+   "question": "Which simulator-only rule experiments exist (research cost, faction-rule ablation) and how are they switched on?",
+   "ranges": [
+    [
+     358,
+     362
+    ],
+    [
+     365,
+     366
+    ]
+   ]
+  },
+  {
+   "file": "cities-and-production.md",
+   "title": "Cities, borders and production",
+   "question": "How do cities grow, work tiles, claim borders, bank production, automate, and build improvements; Settler rules?",
+   "ranges": [
+    [
+     367,
+     386
+    ],
+    [
+     389,
+     426
+    ],
+    [
+     442,
+     446
+    ],
+    [
+     461,
+     503
+    ],
+    [
+     520,
+     548
+    ],
+    [
+     647,
+     683
+    ]
+   ]
+  },
+  {
+   "file": "economy-and-purchases.md",
+   "title": "Economy, upkeep and purchases",
+   "question": "What do Gold, upkeep, buying items and tiles, treasury bounds, resources and strategic supply cost and do?",
+   "ranges": [
+    [
+     387,
+     388
+    ],
+    [
+     427,
+     441
+    ],
+    [
+     447,
+     460
+    ],
+    [
+     504,
+     519
+    ],
+    [
+     549,
+     646
+    ]
+   ]
+  },
+  {
+   "file": "combat.md",
+   "title": "Combat and capture",
+   "question": "How are battles resolved (damage, melee, ranged, pursuit, walls, siege, city strike), and how do capture, the sack, raze, the occupation lock, healing and promotions work?",
+   "ranges": [
+    [
+     363,
+     364
+    ],
+    [
+     684,
+     1043
+    ],
+    [
+     1046,
+     1047
+    ]
+   ]
+  },
+  {
+   "file": "diplomacy.md",
+   "title": "Diplomacy",
+   "question": "How do Peace, Alliance and War, calls to arms, offers, leaving treaties, first contact, surprise wars and coalitions work?",
+   "ranges": [
+    [
+     1048,
+     1140
+    ],
+    [
+     1166,
+     1202
+    ]
+   ]
+  },
+  {
+   "file": "victory-and-scoring.md",
+   "title": "Victory and scoring",
+   "question": "How are VP scored and won (VP hold, capitals victory), what are era objectives and World Ages, and what does the game history record?",
+   "ranges": [
+    [
+     1203,
+     1314
+    ]
+   ]
+  },
+  {
+   "file": "map-and-exploration.md",
+   "title": "Map, exploration and vision",
+   "question": "How are maps and founding sites generated, how do ruins and sight work?",
+   "ranges": [
+    [
+     1315,
+     1316
+    ],
+    [
+     1338,
+     1359
+    ],
+    [
+     1397,
+     1427
+    ],
+    [
+     1430,
+     1446
+    ]
+   ]
+  },
+  {
+   "file": "barbarians.md",
+   "title": "Barbarians",
+   "question": "How do barbarian camps, raids and the Celtic exceptions work?",
+   "ranges": [
+    [
+     1360,
+     1396
+    ]
+   ]
+  },
+  {
+   "file": "factions.md",
+   "title": "Factions",
+   "question": "What does each faction do differently (rules, goals, special units, Mercenary Companies)?",
+   "ranges": [
+    [
+     1141,
+     1165
+    ],
+    [
+     1447,
+     1596
+    ]
+   ]
+  },
+  {
+   "file": "not-in-game.md",
+   "title": "Systems that do not exist",
+   "question": "Which Civ 6 systems are absent from Legatum? (read before proposing anything)",
+   "ranges": [
+    [
+     1597,
+     1639
+    ]
+   ]
+  },
+  {
+   "file": "ai-hard-genes.md",
+   "title": "AI: Hard genes and recent AI decisions",
+   "question": "What AI-only genes and decision rules (Hard defence, purchases, campaigns, Settlers, Peace, coalitions, faction playbooks) exist and what are their defaults?",
+   "ranges": [
+    [
+     1640,
+     2002
+    ]
+   ]
+  },
+  {
+   "file": "ai-architecture.md",
+   "title": "AI: architecture",
+   "question": "How is the AI built (views, ScriptedBrain, difficulty, openings, threat response, conquest, proxies, victory goals)?",
+   "ranges": [
+    [
+     2003,
+     2719
+    ]
+   ]
+  },
+  {
+   "file": "coach-questions.md",
+   "title": "Coach questions",
+   "question": "What does the app-side Coach questions option do (no rules change)?",
+   "ranges": [
+    [
+     2720,
+     2742
+    ]
+   ]
+  }
+ ]
+}

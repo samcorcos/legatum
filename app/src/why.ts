@@ -65,8 +65,9 @@ export interface WhyAnswerLine {
 export function answerLine(game: string, q: WhyQuestion, answer: string | null): WhyAnswerLine {
   const text = (answer ?? '').trim();
   return {
-    type: 'answer', game, turn: q.turn, category: q.category, question: q.text,
-    evidence: q.evidence, answer: text || 'skipped', build: buildLabel,
+    // The games Worker refuses a record whose answer text runs past 2000 characters (infra/games).
+    type: 'answer', game, turn: q.turn, category: q.category, question: q.text.slice(0, 2000),
+    evidence: q.evidence, answer: (text || 'skipped').slice(0, 2000), build: buildLabel,
   };
 }
 
