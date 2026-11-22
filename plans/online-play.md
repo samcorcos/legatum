@@ -62,7 +62,9 @@ host-to-guest message, room id 10+ and host key 32+ random URL-safe characters. 
 its host tunnel drops without returning, and immediately on a `bye` frame. Use the WebSocket Hibernation API.
 Since the relay hardening (2026-11-22) it also caps rooms and creations per client address, guest sockets per address,
 message rates (close 4029), cleans room names and has a `LOBBY_OPEN` kill switch; `infra/relay/README.md` ("Limits and
-kill switch") holds the numbers.
+kill switch") holds the numbers. Security review (2026-11-22): an IPv6 client counts as its /64 for every per-address limit,
+the `build` label takes only letters, digits, spaces and `. · ( ) _ + -`, a host `status` frame over 64 KiB is dropped, and
+every relay answer carries `X-Content-Type-Options: nosniff`.
 
 ### Limits
 

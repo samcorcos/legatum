@@ -7,6 +7,7 @@ export const GRACE_MS = 120_000; // room lives this long after its host tunnel d
 export const MAX_NAME_INPUT = 200; // UTF-16 units accepted in a POST /rooms name, before cleaning
 export const MAX_NAME_CHARS = 40; // visible characters kept in a lobby name
 export const MAX_BUILD = 40;
+export const MAX_STATUS_BYTES = 64 * 1024; // the host's `status` frame, which anyone can read back from `/api/status`
 
 // Tunables. Each can be overridden by a Worker var of the same name (wrangler.jsonc "vars").
 export const DEFAULT_LIMITS = {
@@ -167,10 +168,13 @@ export function parseAnnounce(v: unknown): RoomAnnounce | null {
   if (typeof name !== "string" || name.length > MAX_NAME_INPUT) return null;
   if (typeof build !== "string" || build.length < 1 || build.length > MAX_BUILD) return null;
   if (!isCount(rules_version) || !isCount(protocol)) return null;
-  // Control, format (direction-changing) and private-use characters have no business in a lobby row.
-  if (/\p{C}/u.test(build)) return null;
+  // Every player in the lobby reads the build label, so it holds only what a real label is made of
+  // ("Version 0.1.0 (abc1234)", "Dev · after 9 (abc1234)", "playtest-9"): no markup, links or symbols.
+  if (!BUILD_RE.test(build)) return null;
   return { name: sanitizeName(name), build, rules_version, protocol };
 }
+
+const BUILD_RE = /^[\p{L}\p{N}][\p{L}\p{N} .·()_+-]*$/u;
 
 /** Validate a host `summary` frame. Returns null when it is not usable (the old summary stays). */
 export function parseSummary(v: unknown): Summary | null {
@@ -217,9 +221,25 @@ export function newSalt(): string {
   return Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("");
 }
 
-/** A salted SHA-256 of a client address, 128 bits of hex. The raw address is never stored or logged. */
+/**
+ * What a client address is limited as. An IPv4 address stands for itself. An IPv6 address is cut to its
+ * first 64 bits: one home or phone line owns the whole /64 behind them, so counting each of its 2^64
+ * addresses on its own would let one line step around every per-address limit.
+ */
+export function addressKey(ip: string): string {
+  if (!ip.includes(":")) return ip;
+  const mapped = /^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/i.exec(ip);
+  if (mapped) return mapped[1]!;
+  const [head = "", tail] = ip.split("::");
+  const h = head ? head.split(":") : [];
+  const t = tail ? tail.split(":") : [];
+  const groups = tail === undefined ? h : [...h, ...new Array<string>(Math.max(0, 8 - h.length - t.length)).fill("0"), ...t];
+  return `${groups.slice(0, 4).map((g) => g.toLowerCase().replace(/^0+(?=.)/, "")).join(":")}::/64`;
+}
+
+/** A salted SHA-256 of a client address (see `addressKey`), 128 bits of hex. The raw address is never stored or logged. */
 export async function ipHash(salt: string, ip: string): Promise<string> {
-  return (await hashKey(`${salt}|${ip}`)).slice(0, 32);
+  return (await hashKey(`${salt}|${addressKey(ip)}`)).slice(0, 32);
 }
 
 /** The client's address as Cloudflare reports it; "" when absent (local dev without the header). */
