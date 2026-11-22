@@ -204,6 +204,7 @@ export function drawResourceIcons(ctx: CanvasRenderingContext2D, view: PlayerVie
   const dot = Math.max(2.5, r * 0.15);
   const lacked = emphasis ? lackedResources(view.supply) : null;
   const wanted = (res: string, owner: number | null) => !!lacked?.has(res as never) && owner !== view.me;
+  const myFaction = view.players.find((p) => p.id === view.me)?.faction;
   ctx.save();
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   for (let i = 0; i < view.tiles.length; i++) {
@@ -215,7 +216,7 @@ export function drawResourceIcons(ctx: CanvasRenderingContext2D, view: PlayerVie
     const cy = (centerY(i, W) - cam.y) * cam.zoom + height / 2;
     if (x < -r || x > width + r || cy < -r * 1.5 || cy > height + r) continue;
     ctx.globalAlpha = t.visible ? 1 : 0.75;
-    const dormant = isDormant(t, view.me);
+    const dormant = isDormant(t, view.me, myFaction);
     const ringed = !!t.improvement && !art;
     if (detail === 'dots') {
       if (dormant) ctx.globalAlpha *= FAR_DORMANT_FADE;

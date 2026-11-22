@@ -32,7 +32,7 @@ import { capitalLine, capitalMark, replacementKickerLine } from '../capitalMark'
 import { hallCardText, hallStands } from './goalText';
 import { isPermanentlyUnavailable, nestBuildingUpgrades, progressText, unavailableText, unitLines, withUnavailable, type BuildingLineNode } from './productionChoices';
 import { feel } from '../feel';
-import { RESOURCE_INFO, isStrategic, needText, supplyPerMine, supplyRuleText, withArticle } from '../resources';
+import { RESOURCE_INFO, isStrategic, needText, nileYields, supplyPerMine, supplyRuleText, withArticle } from '../resources';
 import { CostChip } from './CostChip';
 import { Amount, Amounts, Quantity } from './Amounts';
 import { ResourceReason, openResourceChip } from './ResourceReason';
@@ -537,6 +537,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
       return <div className="production-choice project-choice" key={itemKey(o.item)} data-item={itemKey(o.item)}>
         <Tip as="div" placement="right" summary={itemDescription(o.item, owner?.faction)} content={itemDescription(o.item, owner?.faction)}>
           <button className="prod" aria-label={`Run ${name}`} onClick={() => buildNow(o.item)} disabled={view.finished}>
+            <span className="prod-icons"><ItemArt item={o.item} faction={owner?.faction} size={20} /></span>
             <span className="prod-name">{name}</span>
             <span className="prod-cost">{projectRate(o.item, o.yields)}</span>
             <span className="prod-go">{sameItem(producing, o.item) ? 'Active' : isGrow(o.item) ? 'Grow →' : 'Run project →'}</span>
@@ -582,12 +583,15 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     const techKnown = !!info && view.research.known.includes(info.upgradeTech);
     // "+2 Production when built" (the number already includes a known upgrade), "+2 Production and +1 Iron supply when built" on the improvement of a strategic deposit,
     // or "+1 Food when built · Later: Irrigated Farm with Crop Rotation, +1 Food".
-    const gains = imp && preview ? `${yieldsText(improvementGain(preview.resource, view.research.known))}${isStrategic(preview.resource) ? ` and +${supplyPerMine(view.players.find((p) => p.id === view.me)?.faction)} ${RESOURCE_INFO[preview.resource].name} supply` : ''}` : '';
+    const impGain = imp && preview ? nileYields(owner?.faction, improvementGain(preview.resource, view.research.known)) : null;
+    const supplyGain = imp && preview && isStrategic(preview.resource) ? `+${supplyPerMine(view.players.find((p) => p.id === view.me)?.faction)} ${RESOURCE_INFO[preview.resource].name} supply` : '';
+    const gainYields = impGain && YIELD_KEYS.some((k) => impGain[k]) ? yieldsText(impGain) : '';
+    const gains = [gainYields, supplyGain].filter(Boolean).join(' and ');
     // The card copy already leads `detail`, so a site's effect adds only what this tile gives up.
     const effect = site && o.wonder && !unplaced ? `Replaces ${yieldsText(o.wonder.lost)} on this tile${view.tiles[tileIndex(site.tile, view.width, view.height)]?.improvement ? ' and removes its improvement' : ''}.` : imp && preview && info ? [
-      `${gains} when built`,
-      ...(techKnown ? [] : [`Later: ${info.upgradedName} with ${TECH_NAME[info.upgradeTech]}, ${yieldsText(improvementUpgradeYields(preview.resource))}`]),
-    ].join(' · ') : null;
+      gains ? `${gains} when built` : null,
+      ...(techKnown || !YIELD_KEYS.some((k) => nileYields(owner?.faction, improvementUpgradeYields(preview.resource))[k]) ? [] : [`Later: ${info.upgradedName} with ${TECH_NAME[info.upgradeTech]}, ${yieldsText(nileYields(owner?.faction, improvementUpgradeYields(preview.resource)))}`]),
+    ].filter(Boolean).join(' · ') : null;
     const against = owner ? pieceAgainst(owner.faction, o.item) : null;
     // A piece that renames its standard item (the Alpine Redoubt) has one quote, so only a distinct item gives a second price.
     const againstCost = against && !sameItem(against, o.item) ? costOf(against) : null;
@@ -728,7 +732,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
   /** Improvements: every worked, known resource tile this city can still improve, with what it adds. Resources lie dormant until then. */
   const improvementOptions = listOptions.filter((o) => o.item.kind === 'Improvement');
   // The same check as the map's faded medallions and the tile card: owned, known and unimproved.
-  const dormant = d.territory.filter((h) => { const t = view.tiles[tileIndex(h, view.width, view.height)]; return !!t && isDormant(t, view.me); }).length;
+  const dormant = d.territory.filter((h) => { const t = view.tiles[tileIndex(h, view.width, view.height)]; return !!t && isDormant(t, view.me, owner?.faction); }).length;
   const improvements = (city.owner === view.me && improvementOptions.length > 0) ? <section aria-label="Improvements" data-testid="improvements-group">
     <Tip as="div" className="cp-sub" content={`A resource yields its bonus only once its tile is improved. A strategic deposit supplies its resource as soon as it is inside your borders. Its improvement (${['Mine', 'SaltpeterWorks', 'OilWell', 'QuartzMine'].map((k) => withArticle(IMPROVEMENT_INFO[k as ImprovementKind].name)).join(', ')}) adds its tile's yield and 1 more supply. Pick a tile here or click it on the map. Improvements upgrade by themselves with technology; a released tile keeps its improvement, and a captured city's land keeps it.`}>
       Improvements <span className="cp-sub-note">· {dormant} resource tile{dormant === 1 ? '' : 's'} unimproved</span>
@@ -802,14 +806,14 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
       <div className="cp-yields" aria-label="City yields per turn" data-testid="city-yields">
         {YIELD_KEYS.map((k) => owner?.faction === 'Egypt' && k === 'production' ? (
           // The Nile: Egypt has no Production, so this cell says what its surplus Food builds instead.
-          <Tip key={k} content={`Egypt has no Production. While ${city.name} is building, its surplus Food goes into the build; on Grow, or with nothing to build, it grows the city.`} className="cp-yield" placement="top">
+          <Tip key={k} content={`Egypt has no Production. Surplus Food builds what ${city.name} is working on, or grows it if you choose Grow.`} className="cp-yield" placement="top">
             <span><YieldIcon k="food" size={15} /> <b data-testid="city-nile-builds">{egyptBuilding ? egyptProgress : 0}</b></span>
             <span className="cp-yield-l">Builds</span>
           </Tip>
         ) : (
           <Tip key={k} content={<YieldSourceTable yields={yields} k={k} />} summary={<CityYieldHover yields={yields} k={k} eaten={k === 'food' ? 2 * city.population : undefined} />} className="cp-yield" placement="top">
             {/* Food is what is left after the population eats, so a starving city reads negative (8.9.23 review: a gross "+2 Food" beside "losing population"). */}
-            <span><YieldIcon k={k} size={15} /> <b className={k === 'food' && surplus < 0 ? 'neg' : undefined} data-testid={k === 'food' ? 'city-food-net' : undefined}>{k === 'food' ? signed(surplus + nileSurplus) : yields.total[k]}</b></span>
+            <span><YieldIcon k={k} size={15} /> <b className={k === 'food' && surplus < 0 ? 'neg' : undefined} data-testid={k === 'food' ? 'city-food-net' : undefined}>{k === 'food' ? signed(surplus) : yields.total[k]}</b></span>
             <span className="cp-yield-l">{YIELD_LABEL[k]}</span>
           </Tip>
         ))}
