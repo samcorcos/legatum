@@ -49,8 +49,6 @@ describe('VP v2 moments', () => {
   it('entering an era is your held era card that lists each open Age card; scoring one is a major +1 VP moment', () => {
     const [entered] = run([{ type: 'EraEntered', player: 0, era: 2, first: false }]);
     expect(entered).toMatchObject({ tier: 'major', title: 'The Classical era', kicker: 'A new era', effect: 'A new era begins' });
-    // Every open Age with your progress on its card.
-    expect(entered.eraUp?.openAges.length).toBeGreaterThan(0);
     // A rival's entry is a notable card for a teammate only; elsewhere it is the report line and the era notice.
     expect(run([{ type: 'EraEntered', player: 2, era: 2, first: true }])).toEqual([]);
     const [scored] = run([{ type: 'EraObjectiveScored', player: 0, era: 2, slot: 1, objective: 'Gain 4 cities' }]);

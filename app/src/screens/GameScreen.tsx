@@ -23,7 +23,6 @@ import { DecisionNotice } from '../ui/DecisionNotice';
 import { SaveNotice } from '../ui/SaveNotice';
 import { TurnFailureDialog } from '../ui/TurnFailureDialog';
 import { EraNotice } from '../ui/EraNotice';
-import { AgeBanner } from '../ui/AgeBanner';
 import { TurnReport } from '../ui/TurnReport';
 import { HandoffScreen } from '../ui/HandoffScreen';
 import { GameOver } from '../ui/GameOver';
@@ -111,7 +110,6 @@ export function GameScreen() {
       <SaveNotice />
       <TurnFailureDialog />
       <EraNotice />
-      <AgeBanner />
       <TechPanel />
       <CitiesOverview />
       <GameOver />

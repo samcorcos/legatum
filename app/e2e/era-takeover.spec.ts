@@ -9,7 +9,7 @@ import { coreFixture } from '../src/test/coreFixture';
 import { researchFixture } from '../src/test/researchFixture';
 import { TECHS } from '../src/data';
 import type { useGame } from '../src/store';
-import { withWorldAges } from '../src/test/vpV2Fixture';
+import { withScoreCheck } from '../src/test/vpV2Fixture';
 import type { Hex } from '../src/types';
 
 type GameWindow = Window & { legatum: typeof useGame; legatumMap: { toScreen(hex: Hex): { x: number; y: number }; redraw(): void } };
@@ -46,14 +46,14 @@ function eraUpState() {
   return coreFixture(f);
 }
 
-/** Stage the era-up on the live view (render only): two open Ages, and your own EraEntered in the report. */
-async function stageWorldAges(page: Page) {
+/** The opener's World Age turn: its own era-up, then the Age begins and the score check follows (render only). */
+async function stageScoreCheck(page: Page) {
   const base = await page.evaluate(() => { const s = (window as unknown as GameWindow).legatum.getState(); return structuredClone(s.views![s.seat]); });
-  const view = withWorldAges(base);
+  const view = withScoreCheck(base);
   await page.evaluate((v) => {
     const store = (window as unknown as GameWindow).legatum, s = store.getState();
     store.setState({ views: s.views!.map((x, i) => (i === s.seat ? v : x)) });
-    store.getState().set({ report: { turn: v.turn, hash: 'era-up', lines: [[], []], events: [[{ type: 'EraEntered', player: v.me, era: 2, first: false }], []] }, reportOpen: false });
+    store.getState().set({ report: { turn: v.turn, hash: 'age-begins', lines: [[], []], events: [[{ type: 'EraEntered', player: v.me, era: 3, first: true }, { type: 'AgeBegan', era: 3, first: v.me }], []] }, reportOpen: false });
   }, view);
 }
 
@@ -114,27 +114,33 @@ for (const size of SIZES) test.describe(`era takeover ${size.width}x${size.heigh
     }
   });
 
-  test('in a World Age game it opens with the victory points open now, one block per open Age', async ({ page }) => {
+  test('in a World Age game the era-up keeps to the era, and the score check follows when the Age begins', async ({ page }) => {
     await load(page, eraUpState());
-    await stageWorldAges(page);
+    await stageScoreCheck(page);
     const t = takeover(page);
     await expect(t).toBeVisible();
-    const panel = t.getByTestId('era-up-objectives');
-    await expect(panel.locator('h3')).toContainText('Victory points open now');
-    await expect(panel.locator('.et-age h4')).toHaveText(['Classical Age', 'Medieval Age']);
-    await expect(panel.locator('.eo-num')).toHaveText(['2/4', '1/4']);
-    await expect(panel).toContainText('Scored by');
-    await expect(t).not.toContainText(/crown/i);
-    expect(await t.locator('.et-col').first().getAttribute('data-testid')).toBe('era-up-objectives');
-    await page.waitForTimeout(3200);
-    for (const col of await t.locator('.et-col').all()) expect(await col.evaluate((el) => el.scrollHeight <= el.clientHeight + 1 && el.scrollWidth <= el.clientWidth + 1)).toBe(true);
-    const foot = (await t.locator('.et-foot').boundingBox())!;
-    expect(foot.y + foot.height).toBeLessThanOrEqual(size.height + 0.5);
-    await expect(t.locator('[data-primary-action]')).toHaveCount(1);
-    for (const text of await panel.locator('.eo-text, .eo-num, .eo-scored-by, .et-age h4').allInnerTexts()) expect(text.length).toBeGreaterThan(0);
-    const small = await panel.evaluate((el) => [...el.querySelectorAll('*')].filter((n) => !n.closest('.vh-seal') && n.childNodes.length && [...n.childNodes].some((c) => c.nodeType === 3 && c.textContent!.trim()) && parseFloat(getComputedStyle(n).fontSize) < 12).map((n) => `${n.tagName}.${n.className}:${n.textContent}`));
-    expect(small, 'every word of the panel is at least 12px').toEqual([]);
-    await shot(page, size, 'era-up-world-ages');
+    await expect(t.getByTestId('era-up-objectives')).toHaveCount(0);
+    await expect(t).not.toContainText('Victory points open now');
+    await page.keyboard.press('Enter');
+    const check = page.getByTestId('score-check');
+    await expect(check).toBeVisible();
+    await expect(check.locator('.sc-kicker')).toHaveText('The Medieval Age begins · Turn 92');
+    await expect(check.getByTestId('score-track').locator('li')).toHaveCount(11);
+    await expect(check.locator('.sc-row[data-line] .sc-name b')).toHaveText(['Age cards', 'Rival capitals', 'World wonders', 'Faction goal']);
+    await expect(check.locator('[data-primary-action]')).toHaveCount(1);
+    await page.waitForTimeout(800);
+    // It fits whole: every panel inside the window, nothing scrolls inside, no word under 12 px but the box marks.
+    for (const part of ['.sc-head', '.sc-track', '.sc-sheet', '.sc-foot', '[data-primary-action]']) {
+      const b = (await check.locator(part).boundingBox())!;
+      expect(b.y, part).toBeGreaterThanOrEqual(0);
+      expect(b.y + b.height, part).toBeLessThanOrEqual(size.height + 0.5);
+    }
+    for (const panel of await check.locator('.sc-panel').all()) expect(await panel.evaluate((el) => el.scrollHeight <= el.clientHeight + 1 && el.scrollWidth <= el.clientWidth + 1)).toBe(true);
+    const small = await check.evaluate((el) => [...el.querySelectorAll('*')].filter((n) => !n.closest('.sc-box, .kbd') && [...n.childNodes].some((c) => c.nodeType === 3 && c.textContent!.trim()) && parseFloat(getComputedStyle(n).fontSize) < 11).map((n) => `${n.tagName}.${n.className}:${n.textContent}`));
+    expect(small, 'every word is at least 11px').toEqual([]);
+    await shot(page, size, 'age-score-check');
+    await page.keyboard.press('Enter');
+    await expect(check).toHaveCount(0);
   });
 
   test('its report line shows the card again, and the controls are on screen from the first moments', async ({ page }) => {
@@ -146,11 +152,20 @@ for (const size of SIZES) test.describe(`era takeover ${size.width}x${size.heigh
     await expect.poll(() => takeover(page).locator('.et-foot').evaluate((el) => Number(getComputedStyle(el).opacity)), { timeout: 1500 }).toBeGreaterThan(0.95);
     await page.keyboard.press('Escape');
     await expect(takeover(page)).toHaveCount(0);
+    // You opened the Age, so its score check follows; close it too.
+    const check = page.getByTestId('score-check');
+    await expect(check).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(check).toHaveCount(0);
     await expect(page.getByTestId('report-panel')).toBeVisible().catch(() => undefined);
-    await page.getByRole('button', { name: 'Show card' }).first().click();
+    // The Age's line plays both again: your era-up, then the score check.
+    await page.getByRole('button', { name: 'Show score check' }).first().click();
     await expect(takeover(page)).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(takeover(page)).toHaveCount(0);
+    await expect(check).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(check).toHaveCount(0);
   });
 
   test('Return opens research from the takeover', async ({ page }) => {

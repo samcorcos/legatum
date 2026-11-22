@@ -20,6 +20,7 @@ export interface CopyRule {
 
 /** Mechanics-speak and code terms: describe what the player gets, not the integer maths behind it. */
 export const BANNED: CopyRule[] = [
+  { pattern: /\bNearest you know\b/i, reason: 'reads oddly (plain-language review, 2026-11-22)', instead: '"Nearest known: Sarai (Mongols), 5 tiles from your city Ajmer."', source: true },
   { pattern: /\bPeace (?:ends|would end|ended) (?:all|every) (?:wars?|conflicts?)\b/i, reason: 'Peace ends only the war between its two named teams', instead: 'name that war and any wars that continue', source: true },
   { pattern: /\bPeace (?:covers|includes|binds) (?:their |your )?allies\b/i, reason: 'Alliances stay, but allies are not included in a Peace', instead: 'Peace is between the two named teams', source: true },
   { pattern: /\bWar Shrine\b/i, reason: 'Sparta’s building is called the Agoge', instead: 'Agoge', source: true },

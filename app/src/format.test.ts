@@ -455,9 +455,10 @@ describe('event formatting', () => {
     expect(formatEvent({ type: 'EraEntered', player: 2, era: 2, first: true }, age).text).toBe('Hollow Crown entered the Classical era first');
     expect(formatEvent({ type: 'AgeBegan', era: 2, first: 2 }, age)).toMatchObject({
       text: 'The Classical Age began: Hollow Crown entered the Classical era first. Its card is open to every empire.', openLedger: true, category: 'victory',
+      reopenEra: { era: 2, first: false, age: 2 },
     });
     expect(formatEvent({ type: 'AgeBegan', era: 2, first: 0 }, age)).toMatchObject({
-      text: 'The Classical Age began: You entered the Classical era first. Its card is open to every empire.', reopenEra: { era: 2, first: true },
+      text: 'The Classical Age began: You entered the Classical era first. Its card is open to every empire.', reopenEra: { era: 2, first: true, age: 0 },
     });
     // One line about it: the first empire's own entry line folds into the Age line.
     const texts = (evs: Event[]) => formatEvents(evs, age).map((l) => l.text);
