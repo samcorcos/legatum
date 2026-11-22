@@ -67,7 +67,13 @@ tools/games/install-mac.sh --remove  # stop it (ledger and reports stay)
 python3 tools/games/analyse_games.py poll --dry-run           # what is due
 python3 tools/games/analyse_games.py poll --only <game id> --force
 python3 tools/games/analyse_games.py facts record.json.gz --events events.jsonl
+python3 tools/games/analyse_games.py exclude <game id> --reason "misclicks, restarted"   # never analyse it
+python3 tools/games/analyse_games.py include <game id>                                 # undo
 ```
+
+An excluded game is never analysed (not even with `--force`) and moves to the "Excluded" table at the bottom
+of `reports/INDEX.md`, so AI work does not learn from it. Use it for games the player abandoned because of
+misclicks rather than decisions. It refuses to run while an analysis run holds the ledger.
 
 Settings: `LEGATUM_GAMES_URL` (the Worker), `LEGATUM_REPO` (where to fetch engine commits),
 `LEGATUM_REVIEWER` (default `claude`; `codex,claude` tries Codex first), `LEGATUM_GAMES_READ_TOKEN` (instead of the keychain).
