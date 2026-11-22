@@ -2400,8 +2400,9 @@ impl Planner<'_> {
                 continue;
             }
             let loss_chance = ((pressure - defense) * 100 / pressure).clamp(0, 100);
-            let keep =
-                city_keep_value(city) + crate::raze::held_vp_at_city(city) * crate::raze::VP_GOLD;
+            let keep = city_keep_value(city)
+                + (crate::raze::held_vp_at_city(city) + self.own_capital_vp(city))
+                    * crate::raze::VP_GOLD;
             let former_threatens = detail.former_owner.is_some_and(|owner| {
                 self.ctx
                     .enemy_units

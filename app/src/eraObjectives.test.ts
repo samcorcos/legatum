@@ -11,28 +11,28 @@ async function baseView(): Promise<PlayerView> {
   return structuredClone(client.view(0));
 }
 
-describe('era objectives for the HUD', () => {
-  it('in the first era there is no objective: Classical is the preview, with what you hold now', async () => {
-    const view = withV2(await baseView(), { era: 1, scored: [] });
-    const hud = eraHud(view)!;
+describe('World Ages for the HUD', () => {
+  it('before any Age begins there is no card: Classical is the preview, with nothing to count yet', async () => {
+    const view = { ...withV2(await baseView(), { era: 1, scored: [] }), eras: [], objective_progress: [] };
+    const hud = eraHud(view);
     expect(hud.noObjective).toBe(true);
-    expect(hud.focus).toMatchObject({ era: 2, name: 'Classical', state: 'preview' });
-    expect(hud.focus.lines.map((l) => [l.family, l.current, l.target])).toEqual([['Build', 6, 9], ['Expand', 2, 4], ['Fight', 0, 1]]);
+    expect(hud.focus).toMatchObject({ era: 2, name: 'Classical', state: 'preview', lines: [] });
     expect(hud.next).toBeNull();
-    expect(hud.entry).toMatchObject({ eraName: 'Ancient' });
-    expect(hud.entry!.total).toBeGreaterThan(0);
     expect(hud.older).toEqual([]);
+    expect(hud.oldest).toBeNull();
   });
 
-  it('in an entered era the three objectives are open with your live progress; a met one is flagged', async () => {
-    const view = withV2(await baseView(), { era: 2, scored: [], progress: { '2:0': [6, 9], '2:1': [4, 4], '2:2': [0, 1] } });
-    const hud = eraHud(view)!;
+  it('every begun Age is open to you with your live progress, the newest in focus; a met card is flagged', async () => {
+    const view = withV2(await baseView(), { era: 2, scored: [], progress: { '2:0': [6, 9], '2:1': [4, 4], '2:2': [0, 1], '3:1': [11, 40] } });
+    const hud = eraHud(view);
     expect(hud.noObjective).toBe(false);
-    expect(hud.focus).toMatchObject({ era: 2, state: 'open' });
-    expect(hud.focus.lines.map((l) => [l.shown, l.target, l.met, l.remaining])).toEqual([[6, 9, false, 3], [4, 4, true, 0], [0, 1, false, 1]]);
-    expect(hud.focus.closest?.family).toBe('Expand');
+    // The rival began the Medieval Age, so it is open to you although you are still in the Classical era.
+    expect(hud.focus).toMatchObject({ era: 3, state: 'open' });
+    expect(hud.older).toEqual([{ era: 2, name: 'Classical' }]);
+    expect(hud.oldest).toMatchObject({ era: 2 });
+    expect(hud.oldest!.lines.map((l) => [l.shown, l.target, l.met, l.remaining])).toEqual([[6, 9, false, 3], [4, 4, true, 0], [0, 1, false, 1]]);
+    expect(hud.oldest!.closest?.text).toBe('Gain 4 cities');
     expect(hud.next).toBeNull();
-    expect(hud.entry).toBeNull();
   });
 
   it('passes core accounting and restart effects through without deriving a baseline in the app', async () => {
@@ -41,21 +41,21 @@ describe('era objectives for the HUD', () => {
     expect(eraObjectivesFor(view, 3)!.lines[1]).toMatchObject({ countBaseline: 9, countTotal: 11, countingSinceTurn: 112, restartEras: [2] });
   });
 
-  it('a scored era says so, then previews the next one; an earlier unscored era stays listed as open', async () => {
+  it('a scored Age says so and leaves the focus; an earlier unscored Age stays open', async () => {
     const view = withV2(await baseView(), { era: 3, scored: [3] });
-    const hud = eraHud(view)!;
-    expect(hud.focus).toMatchObject({ era: 3, name: 'Medieval', state: 'scored' });
-    expect(hud.focus.lines.find((l) => l.scoredHere)?.slot).toBe(1);
-    expect(hud.next).toMatchObject({ era: 4, name: 'Renaissance', state: 'preview' });
-    expect(hud.entry).not.toBeNull();
-    expect(hud.older).toEqual([{ era: 2, name: 'Classical' }]);
+    const hud = eraHud(view);
+    expect(eraObjectivesFor(view, 3)).toMatchObject({ name: 'Medieval', state: 'scored' });
+    expect(eraObjectivesFor(view, 3)!.lines.find((l) => l.scoredHere)?.slot).toBe(1);
+    expect(hud.focus).toMatchObject({ era: 2, name: 'Classical', state: 'open' });
+    expect(hud.next).toBeNull();
+    expect(hud.older).toEqual([]);
   });
 
-  it('the last era has no preview after it, and an absent era has no block', async () => {
-    const future = withV2(await baseView(), { era: 7, scored: [7] });
-    expect(eraHud(future)!.next).toBeNull();
-    expect(eraHud({ ...(await baseView()), eras: [], objective_progress: [] })).toBeNull();
-    expect(eraObjectivesFor(future, 9)).toBeNull();
+  it('with every Age scored the newest is the focus, and an Age not begun has no block', async () => {
+    const all = withV2(await baseView(), { era: 7, scored: [2, 3, 4, 5, 6, 7] });
+    expect(eraHud(all).focus).toMatchObject({ era: 7, state: 'scored' });
+    expect(eraHud(all).oldest).toBeNull();
+    expect(eraObjectivesFor(all, 9)).toBeNull();
   });
 });
 
@@ -73,19 +73,20 @@ describe('how you win', () => {
   });
 });
 
-describe('objectives you are close to', () => {
-  it('reports the turn an objective gets within one of its target, once', async () => {
+describe('cards you are close to', () => {
+  it('reports the turn a card gets within one of its target, once', async () => {
     const base = await baseView();
-    const was = withV2(base, { era: 2, scored: [], progress: { '2:0': [6, 9], '2:1': [2, 4], '2:2': [0, 1] } });
-    const now = withV2(base, { era: 2, scored: [], progress: { '2:0': [6, 9], '2:1': [3, 4], '2:2': [0, 1] } });
+    const quiet = { '3:0': [0, 14], '3:1': [0, 40], '3:2': [0, 1] } as Record<string, [number, number]>;
+    const was = withV2(base, { era: 2, scored: [], progress: { ...quiet, '2:0': [6, 9], '2:1': [2, 4], '2:2': [0, 1] } });
+    const now = withV2(base, { era: 2, scored: [], progress: { ...quiet, '2:0': [6, 9], '2:1': [3, 4], '2:2': [0, 1] } });
     const close = closeObjectives(was, now);
     expect(close.map((c) => [c.era.name, c.line.text, c.line.remaining])).toEqual([['Classical', 'Gain 4 cities', 1]]);
     // Still one away the next turn: nothing new to say.
     expect(closeObjectives(now, now)).toEqual([]);
     // Met, or nothing started: no line (a met one scores through its own event).
-    expect(closeObjectives(now, withV2(base, { era: 2, scored: [], progress: { '2:0': [0, 9], '2:1': [4, 4], '2:2': [0, 1] } }))).toEqual([]);
-    // An era you have not entered never nags.
-    expect(closeObjectives(null, withV2(base, { era: 1, scored: [], progress: { '2:0': [8, 9], '2:1': [3, 4], '2:2': [0, 1] } }))).toEqual([]);
+    expect(closeObjectives(now, withV2(base, { era: 2, scored: [], progress: { ...quiet, '2:0': [0, 9], '2:1': [4, 4], '2:2': [0, 1] } }))).toEqual([]);
+    // A scored Age never nags.
+    expect(closeObjectives(null, withV2(base, { era: 2, scored: [2], progress: { ...quiet, '2:0': [8, 9], '2:1': [3, 4], '2:2': [0, 1] } }))).toEqual([]);
   });
 });
 

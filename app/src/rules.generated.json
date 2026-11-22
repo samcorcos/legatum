@@ -258,7 +258,7 @@
     },
     "Pyramids": {
       "cityStrength": 0,
-      "cost": 240,
+      "cost": 360,
       "requires": "Masonry",
       "warBuilding": false,
       "yields": {
@@ -270,7 +270,7 @@
     },
     "RelayUplink": {
       "cityStrength": 0,
-      "cost": 600,
+      "cost": 400,
       "requires": "Philosophy",
       "warBuilding": false,
       "yields": {
@@ -295,7 +295,7 @@
     "StarFort": {
       "cityStrength": 5,
       "cost": 320,
-      "requires": "MilitaryEngineering",
+      "requires": "Machinery",
       "warBuilding": true,
       "yields": {
         "food": 0,
@@ -1674,7 +1674,7 @@
       },
       "Pyramids": {
         "cityStrength": 0,
-        "cost": 240,
+        "cost": 360,
         "requires": "Masonry",
         "warBuilding": false,
         "yields": {
@@ -1686,7 +1686,7 @@
       },
       "RelayUplink": {
         "cityStrength": 0,
-        "cost": 600,
+        "cost": 400,
         "requires": "Philosophy",
         "warBuilding": false,
         "yields": {
@@ -1711,7 +1711,7 @@
       "StarFort": {
         "cityStrength": 5,
         "cost": 320,
-        "requires": "MilitaryEngineering",
+        "requires": "Machinery",
         "warBuilding": true,
         "yields": {
           "food": 0,
@@ -2012,7 +2012,7 @@
       },
       "Pyramids": {
         "cityStrength": 0,
-        "cost": 240,
+        "cost": 360,
         "requires": "Masonry",
         "warBuilding": false,
         "yields": {
@@ -2024,7 +2024,7 @@
       },
       "RelayUplink": {
         "cityStrength": 0,
-        "cost": 600,
+        "cost": 400,
         "requires": "Philosophy",
         "warBuilding": false,
         "yields": {
@@ -2049,7 +2049,7 @@
       "StarFort": {
         "cityStrength": 5,
         "cost": 320,
-        "requires": "MilitaryEngineering",
+        "requires": "Machinery",
         "warBuilding": true,
         "yields": {
           "food": 0,
@@ -2350,7 +2350,7 @@
       },
       "Pyramids": {
         "cityStrength": 0,
-        "cost": 240,
+        "cost": 360,
         "requires": "Masonry",
         "warBuilding": false,
         "yields": {
@@ -2362,7 +2362,7 @@
       },
       "RelayUplink": {
         "cityStrength": 0,
-        "cost": 600,
+        "cost": 400,
         "requires": "Philosophy",
         "warBuilding": false,
         "yields": {
@@ -2387,7 +2387,7 @@
       "StarFort": {
         "cityStrength": 5,
         "cost": 320,
-        "requires": "MilitaryEngineering",
+        "requires": "Machinery",
         "warBuilding": true,
         "yields": {
           "food": 0,
@@ -2688,7 +2688,7 @@
       },
       "Pyramids": {
         "cityStrength": 0,
-        "cost": 240,
+        "cost": 360,
         "requires": "Masonry",
         "warBuilding": false,
         "yields": {
@@ -2700,7 +2700,7 @@
       },
       "RelayUplink": {
         "cityStrength": 0,
-        "cost": 600,
+        "cost": 400,
         "requires": "Philosophy",
         "warBuilding": false,
         "yields": {
@@ -2725,7 +2725,7 @@
       "StarFort": {
         "cityStrength": 5,
         "cost": 320,
-        "requires": "MilitaryEngineering",
+        "requires": "Machinery",
         "warBuilding": true,
         "yields": {
           "food": 0,
@@ -3026,7 +3026,7 @@
       },
       "Pyramids": {
         "cityStrength": 0,
-        "cost": 240,
+        "cost": 360,
         "requires": "Masonry",
         "warBuilding": false,
         "yields": {
@@ -3038,7 +3038,7 @@
       },
       "RelayUplink": {
         "cityStrength": 0,
-        "cost": 600,
+        "cost": 400,
         "requires": "Philosophy",
         "warBuilding": false,
         "yields": {
@@ -3063,7 +3063,7 @@
       "StarFort": {
         "cityStrength": 5,
         "cost": 320,
-        "requires": "MilitaryEngineering",
+        "requires": "Machinery",
         "warBuilding": true,
         "yields": {
           "food": 0,
@@ -3364,7 +3364,7 @@
       },
       "Pyramids": {
         "cityStrength": 0,
-        "cost": 240,
+        "cost": 360,
         "requires": "Masonry",
         "warBuilding": false,
         "yields": {
@@ -3376,7 +3376,7 @@
       },
       "RelayUplink": {
         "cityStrength": 0,
-        "cost": 600,
+        "cost": 400,
         "requires": "Philosophy",
         "warBuilding": false,
         "yields": {
@@ -3401,7 +3401,7 @@
       "StarFort": {
         "cityStrength": 5,
         "cost": 320,
-        "requires": "MilitaryEngineering",
+        "requires": "Machinery",
         "warBuilding": true,
         "yields": {
           "food": 0,
@@ -3702,7 +3702,7 @@
       },
       "Pyramids": {
         "cityStrength": 0,
-        "cost": 240,
+        "cost": 360,
         "requires": "Masonry",
         "warBuilding": false,
         "yields": {
@@ -3714,7 +3714,7 @@
       },
       "RelayUplink": {
         "cityStrength": 0,
-        "cost": 600,
+        "cost": 400,
         "requires": "Philosophy",
         "warBuilding": false,
         "yields": {
@@ -3739,7 +3739,7 @@
       "StarFort": {
         "cityStrength": 5,
         "cost": 320,
-        "requires": "MilitaryEngineering",
+        "requires": "Machinery",
         "warBuilding": true,
         "yields": {
           "food": 0,
@@ -4040,7 +4040,7 @@
       },
       "Pyramids": {
         "cityStrength": 0,
-        "cost": 240,
+        "cost": 360,
         "requires": "Masonry",
         "warBuilding": false,
         "yields": {
@@ -4052,7 +4052,7 @@
       },
       "RelayUplink": {
         "cityStrength": 0,
-        "cost": 600,
+        "cost": 400,
         "requires": "Philosophy",
         "warBuilding": false,
         "yields": {
@@ -4077,7 +4077,7 @@
       "StarFort": {
         "cityStrength": 5,
         "cost": 320,
-        "requires": "MilitaryEngineering",
+        "requires": "Machinery",
         "warBuilding": true,
         "yields": {
           "food": 0,
@@ -4378,7 +4378,7 @@
       },
       "Pyramids": {
         "cityStrength": 0,
-        "cost": 240,
+        "cost": 360,
         "requires": "Masonry",
         "warBuilding": false,
         "yields": {
@@ -4390,7 +4390,7 @@
       },
       "RelayUplink": {
         "cityStrength": 0,
-        "cost": 600,
+        "cost": 400,
         "requires": "Philosophy",
         "warBuilding": false,
         "yields": {
@@ -4415,7 +4415,7 @@
       "StarFort": {
         "cityStrength": 5,
         "cost": 320,
-        "requires": "MilitaryEngineering",
+        "requires": "Machinery",
         "warBuilding": true,
         "yields": {
           "food": 0,
@@ -4716,7 +4716,7 @@
       },
       "Pyramids": {
         "cityStrength": 0,
-        "cost": 240,
+        "cost": 360,
         "requires": "Masonry",
         "warBuilding": false,
         "yields": {
@@ -4728,7 +4728,7 @@
       },
       "RelayUplink": {
         "cityStrength": 0,
-        "cost": 600,
+        "cost": 400,
         "requires": "Philosophy",
         "warBuilding": false,
         "yields": {
@@ -4753,7 +4753,7 @@
       "StarFort": {
         "cityStrength": 5,
         "cost": 320,
-        "requires": "MilitaryEngineering",
+        "requires": "Machinery",
         "warBuilding": true,
         "yields": {
           "food": 0,
@@ -5054,7 +5054,7 @@
       },
       "Pyramids": {
         "cityStrength": 0,
-        "cost": 240,
+        "cost": 360,
         "requires": "Masonry",
         "warBuilding": false,
         "yields": {
@@ -5066,7 +5066,7 @@
       },
       "RelayUplink": {
         "cityStrength": 0,
-        "cost": 600,
+        "cost": 400,
         "requires": "Philosophy",
         "warBuilding": false,
         "yields": {
@@ -5091,7 +5091,7 @@
       "StarFort": {
         "cityStrength": 5,
         "cost": 320,
-        "requires": "MilitaryEngineering",
+        "requires": "Machinery",
         "warBuilding": true,
         "yields": {
           "food": 0,
@@ -10159,7 +10159,7 @@
   "rocketArtilleryRange": 3,
   "rollMax": 120,
   "rollMin": 80,
-  "saveVersion": 49,
+  "saveVersion": 50,
   "settlerCostStep": 50,
   "siege": {
     "baseGold": 160,
@@ -10428,7 +10428,7 @@
       },
       "Pyramids": {
         "cityStrength": 0,
-        "cost": 240,
+        "cost": 360,
         "requires": "Masonry",
         "warBuilding": false,
         "yields": {
@@ -10440,7 +10440,7 @@
       },
       "RelayUplink": {
         "cityStrength": 0,
-        "cost": 600,
+        "cost": 400,
         "requires": "Philosophy",
         "warBuilding": false,
         "yields": {
@@ -10465,7 +10465,7 @@
       "StarFort": {
         "cityStrength": 5,
         "cost": 320,
-        "requires": "MilitaryEngineering",
+        "requires": "Machinery",
         "warBuilding": true,
         "yields": {
           "food": 0,
@@ -10766,7 +10766,7 @@
       },
       "Pyramids": {
         "cityStrength": 0,
-        "cost": 240,
+        "cost": 360,
         "requires": "Masonry",
         "warBuilding": false,
         "yields": {
@@ -10778,7 +10778,7 @@
       },
       "RelayUplink": {
         "cityStrength": 0,
-        "cost": 600,
+        "cost": 400,
         "requires": "Philosophy",
         "warBuilding": false,
         "yields": {
@@ -10803,7 +10803,7 @@
       "StarFort": {
         "cityStrength": 5,
         "cost": 320,
-        "requires": "MilitaryEngineering",
+        "requires": "Machinery",
         "warBuilding": true,
         "yields": {
           "food": 0,
@@ -11104,7 +11104,7 @@
       },
       "Pyramids": {
         "cityStrength": 0,
-        "cost": 240,
+        "cost": 360,
         "requires": "Masonry",
         "warBuilding": false,
         "yields": {
@@ -11116,7 +11116,7 @@
       },
       "RelayUplink": {
         "cityStrength": 0,
-        "cost": 600,
+        "cost": 400,
         "requires": "Philosophy",
         "warBuilding": false,
         "yields": {
@@ -11141,7 +11141,7 @@
       "StarFort": {
         "cityStrength": 5,
         "cost": 320,
-        "requires": "MilitaryEngineering",
+        "requires": "Machinery",
         "warBuilding": true,
         "yields": {
           "food": 0,
@@ -11442,7 +11442,7 @@
       },
       "Pyramids": {
         "cityStrength": 0,
-        "cost": 240,
+        "cost": 360,
         "requires": "Masonry",
         "warBuilding": false,
         "yields": {
@@ -11454,7 +11454,7 @@
       },
       "RelayUplink": {
         "cityStrength": 0,
-        "cost": 600,
+        "cost": 400,
         "requires": "Philosophy",
         "warBuilding": false,
         "yields": {
@@ -11479,7 +11479,7 @@
       "StarFort": {
         "cityStrength": 5,
         "cost": 320,
-        "requires": "MilitaryEngineering",
+        "requires": "Machinery",
         "warBuilding": true,
         "yields": {
           "food": 0,
@@ -11780,7 +11780,7 @@
       },
       "Pyramids": {
         "cityStrength": 0,
-        "cost": 240,
+        "cost": 360,
         "requires": "Masonry",
         "warBuilding": false,
         "yields": {
@@ -11792,7 +11792,7 @@
       },
       "RelayUplink": {
         "cityStrength": 0,
-        "cost": 600,
+        "cost": 400,
         "requires": "Philosophy",
         "warBuilding": false,
         "yields": {
@@ -11817,7 +11817,7 @@
       "StarFort": {
         "cityStrength": 5,
         "cost": 320,
-        "requires": "MilitaryEngineering",
+        "requires": "Machinery",
         "warBuilding": true,
         "yields": {
           "food": 0,
@@ -12118,7 +12118,7 @@
       },
       "Pyramids": {
         "cityStrength": 0,
-        "cost": 240,
+        "cost": 360,
         "requires": "Masonry",
         "warBuilding": false,
         "yields": {
@@ -12130,7 +12130,7 @@
       },
       "RelayUplink": {
         "cityStrength": 0,
-        "cost": 600,
+        "cost": 400,
         "requires": "Philosophy",
         "warBuilding": false,
         "yields": {
@@ -12155,7 +12155,7 @@
       "StarFort": {
         "cityStrength": 5,
         "cost": 320,
-        "requires": "MilitaryEngineering",
+        "requires": "Machinery",
         "warBuilding": true,
         "yields": {
           "food": 0,
@@ -12456,7 +12456,7 @@
       },
       "Pyramids": {
         "cityStrength": 0,
-        "cost": 240,
+        "cost": 360,
         "requires": "Masonry",
         "warBuilding": false,
         "yields": {
@@ -12468,7 +12468,7 @@
       },
       "RelayUplink": {
         "cityStrength": 0,
-        "cost": 600,
+        "cost": 400,
         "requires": "Philosophy",
         "warBuilding": false,
         "yields": {
@@ -12493,7 +12493,7 @@
       "StarFort": {
         "cityStrength": 5,
         "cost": 320,
-        "requires": "MilitaryEngineering",
+        "requires": "Machinery",
         "warBuilding": true,
         "yields": {
           "food": 0,
@@ -12794,7 +12794,7 @@
       },
       "Pyramids": {
         "cityStrength": 0,
-        "cost": 240,
+        "cost": 360,
         "requires": "Masonry",
         "warBuilding": false,
         "yields": {
@@ -12806,7 +12806,7 @@
       },
       "RelayUplink": {
         "cityStrength": 0,
-        "cost": 600,
+        "cost": 400,
         "requires": "Philosophy",
         "warBuilding": false,
         "yields": {
@@ -12831,7 +12831,7 @@
       "StarFort": {
         "cityStrength": 5,
         "cost": 320,
-        "requires": "MilitaryEngineering",
+        "requires": "Machinery",
         "warBuilding": true,
         "yields": {
           "food": 0,
@@ -13132,7 +13132,7 @@
       },
       "Pyramids": {
         "cityStrength": 0,
-        "cost": 240,
+        "cost": 360,
         "requires": "Masonry",
         "warBuilding": false,
         "yields": {
@@ -13144,7 +13144,7 @@
       },
       "RelayUplink": {
         "cityStrength": 0,
-        "cost": 600,
+        "cost": 400,
         "requires": "Philosophy",
         "warBuilding": false,
         "yields": {
@@ -13169,7 +13169,7 @@
       "StarFort": {
         "cityStrength": 5,
         "cost": 320,
-        "requires": "MilitaryEngineering",
+        "requires": "Machinery",
         "warBuilding": true,
         "yields": {
           "food": 0,
@@ -13470,7 +13470,7 @@
       },
       "Pyramids": {
         "cityStrength": 0,
-        "cost": 240,
+        "cost": 360,
         "requires": "Masonry",
         "warBuilding": false,
         "yields": {
@@ -13482,7 +13482,7 @@
       },
       "RelayUplink": {
         "cityStrength": 0,
-        "cost": 600,
+        "cost": 400,
         "requires": "Philosophy",
         "warBuilding": false,
         "yields": {
@@ -13507,7 +13507,7 @@
       "StarFort": {
         "cityStrength": 5,
         "cost": 320,
-        "requires": "MilitaryEngineering",
+        "requires": "Machinery",
         "warBuilding": true,
         "yields": {
           "food": 0,
@@ -13808,7 +13808,7 @@
       },
       "Pyramids": {
         "cityStrength": 0,
-        "cost": 240,
+        "cost": 360,
         "requires": "Masonry",
         "warBuilding": false,
         "yields": {
@@ -13820,7 +13820,7 @@
       },
       "RelayUplink": {
         "cityStrength": 0,
-        "cost": 600,
+        "cost": 400,
         "requires": "Philosophy",
         "warBuilding": false,
         "yields": {
@@ -13845,7 +13845,7 @@
       "StarFort": {
         "cityStrength": 5,
         "cost": 320,
-        "requires": "MilitaryEngineering",
+        "requires": "Machinery",
         "warBuilding": true,
         "yields": {
           "food": 0,

@@ -20,6 +20,7 @@ pub mod air;
 pub mod barbarians;
 pub mod battle;
 pub mod cities;
+pub mod gifts;
 pub mod movement;
 pub mod occupation;
 #[cfg(test)]
@@ -229,6 +230,7 @@ pub fn validate_orders(state: &GameState, player: PlayerId, orders: &[Order]) ->
         };
     errors.extend(city_errors);
     errors.extend(actions::validate_actions(state, player, orders));
+    errors.extend(gifts::validate_gifts(state, player, orders));
     // An air strike resolves in the same ranged phase, so it sees the same surprise wars.
     errors.extend(air::validate_orders(
         ranged_state.as_ref().unwrap_or(state),
@@ -305,12 +307,27 @@ pub fn resolve_turn(
             !surprise.contains(&crate::diplomacy::pair(team, other))
         });
     }
-    for (p, os) in &orders {
-        cities::apply_city_orders(&mut s, *p, os, &mut events);
+    // Same-turn bids on one tile are tried in a seeded order, not by empire id.
+    match cities::defer_contested_tile_buys(&s, &orders) {
+        None => {
+            for (p, os) in &orders {
+                cities::apply_city_orders(&mut s, *p, os, &mut events);
+            }
+        }
+        Some((kept, deferred)) => {
+            for (p, os) in &kept {
+                cities::apply_city_orders(&mut s, *p, os, &mut events);
+            }
+            for (p, order) in deferred {
+                cities::apply_city_orders(&mut s, p, std::slice::from_ref(&order), &mut events);
+            }
+        }
     }
     for (p, os) in &orders {
         actions::apply_actions(&mut s, *p, os, &mut events);
     }
+    // Gifts between teammates move after every purchase, so a teammate spends them next turn.
+    gifts::apply_gifts(&mut s, &orders, &mut events);
     // 2. Ranged attacks.
     let held = air::resolve_ranged_phase(
         &mut s,
@@ -364,6 +381,8 @@ pub fn resolve_turn(
     // A Company's contract ends after its last turn's upkeep is paid.
     crate::company::expire(&mut s, &mut events);
     cities::process_research(&mut s, &mut events);
+    // Empires entering the same era this turn: the first is drawn, not the lowest id.
+    crate::eras::draw_same_turn_firsts(&mut s, &mut events);
     cities::process_borders(&mut s, &mut events);
     crate::roads::extend(&mut s, &mut events);
     crate::roads::extend_roadworks(&mut s);

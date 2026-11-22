@@ -1,9 +1,8 @@
-//! VP v2 for the scripted AI (Hard, and Hard + Search through the same planner): era
-//! objectives.
+//! World Age cards for the scripted AI (Hard, and Hard + Search through the same planner).
 //!
-//! Era objectives are public and worth 1 permanent VP per era. Each turn the AI picks the live
-//! (entered, unscored) objective with the least estimated effort and biases production, tile
-//! buying and campaign targets towards it. Old unscored eras are worth the same as new ones.
+//! Each Age's card is public and worth 1 permanent VP. Each turn the AI picks the live (begun,
+//! unscored) card with the least estimated effort and biases production, tile buying and
+//! campaign targets towards it. Old unscored Ages are worth the same as new ones.
 
 use crate::DecisionParams;
 use crate::scripted::Planner;
@@ -178,9 +177,7 @@ impl Planner<'_> {
                     })
                     .count() as i32;
                 let expansion = if lacking < rem {
-                    if !v.rule_experiments.objectives_deck
-                        || self.count_good_sites(rem - lacking) < rem - lacking
-                    {
+                    if self.count_good_sites(rem - lacking) < rem - lacking {
                         return None;
                     }
                     (rem - lacking) * 24
@@ -193,24 +190,8 @@ impl Planner<'_> {
                     .map_or(0, |_| 50);
                 Some(tech_wait + rem * 18 + expansion)
             }
-            Objective::Techs { .. } => Some(rem * 18),
-            Objective::Captures { .. } => (hard && at_war && armed).then(|| 70 + rem * 30),
-            Objective::CapturesFromAhead { .. } => {
-                (hard && at_war && armed && rival_vp(&|vp| vp > my_vp)).then(|| 90 + rem * 30)
-            }
-            Objective::CapturesFromLeader { .. } => {
-                (hard && at_war && armed && self.leader_city_known()).then(|| 100 + rem * 30)
-            }
-            Objective::Kills { .. } => (hard && at_war && armed).then_some(rem * 10),
             // A promotion takes a few won fights by one unit: dearer than a kill, only at war.
             Objective::Veterans { .. } => (hard && at_war && armed).then_some(rem * 25),
-            Objective::BreakLeaderHold => (hard
-                && at_war
-                && armed
-                && v.standings
-                    .iter()
-                    .any(|s| s.team != v.team && s.victory_hold.is_some()))
-            .then_some(120),
         }
     }
 
@@ -303,14 +284,8 @@ impl Planner<'_> {
                 // free each turn. The old six/city made a long land count look instant.
                 Some((rem * 24 + cities - 1) / cities + 8)
             }
-            Objective::Captures { .. }
-            | Objective::CapturesFromAhead { .. }
-            | Objective::CapturesFromLeader { .. }
-            | Objective::HumbleTheMighty
-            | Objective::Breach => {
+            Objective::HumbleTheMighty | Objective::Breach => {
                 let my_vp = v.players.iter().find(|p| p.id == v.me).map_or(0, |p| p.vp);
-                let best = v.standings.iter().map(|s| s.vp).max().unwrap_or(0);
-                let strict_leader = v.standings.iter().filter(|s| s.vp == best).count() == 1;
                 let target = self
                     .ctx
                     .enemy_cities
@@ -322,15 +297,8 @@ impl Planner<'_> {
                             .find(|p| p.id == city.owner)
                             .map_or(0, |p| p.vp);
                         match o.objective {
-                            Objective::CapturesFromAhead { .. } => owner_vp > my_vp,
                             Objective::HumbleTheMighty => owner_vp > my_vp && !city.is_capital,
                             Objective::Breach => city.walls && !city.is_capital,
-                            Objective::CapturesFromLeader { .. } => {
-                                strict_leader
-                                    && v.standings
-                                        .iter()
-                                        .any(|s| s.team == v.team_of(city.owner) && s.vp == best)
-                            }
                             _ => true,
                         }
                     })
@@ -371,24 +339,6 @@ impl Planner<'_> {
             }
             _ => self.legacy_objective_effort(o),
         }
-    }
-
-    /// Whether we know a city of the strict VP leader (not our team).
-    fn leader_city_known(&self) -> bool {
-        let v = self.view();
-        let Some(best) = v.standings.iter().map(|s| s.vp).max() else {
-            return false;
-        };
-        let mut leaders = v.standings.iter().filter(|s| s.vp == best);
-        let (Some(leader), None) = (leaders.next(), leaders.next()) else {
-            return false;
-        };
-        leader.team != v.team
-            && self
-                .ctx
-                .enemy_cities
-                .iter()
-                .any(|c| v.team_of(c.owner) == leader.team)
     }
 
     /// The live objective the AI works towards: the least effort, the oldest era on a tie.
@@ -440,11 +390,7 @@ impl Planner<'_> {
     fn followup_effort(&self, first: &LiveObjective, next: &LiveObjective, effort: i32) -> i32 {
         let gained_cities = match first.objective {
             Objective::Cities { .. } => first.remaining() as i32,
-            Objective::Captures { .. }
-            | Objective::CapturesFromAhead { .. }
-            | Objective::CapturesFromLeader { .. }
-                if !self.sacks() =>
-            {
+            Objective::HumbleTheMighty | Objective::Breach if !self.sacks() => {
                 first.remaining() as i32
             }
             _ => 0,
@@ -476,11 +422,7 @@ impl Planner<'_> {
         {
             return 0;
         }
-        let pct = if self.view().rule_experiments.objectives_deck {
-            self.decisions.objective_bonus_percent.max(500)
-        } else {
-            self.decisions.objective_bonus_percent
-        };
+        let pct = self.decisions.objective_bonus_percent.max(500);
         match (o.objective, item) {
             (
                 Objective::Cities { .. },
@@ -501,11 +443,7 @@ impl Planner<'_> {
                 ProductionItem::Unit {
                     unit: UnitKind::Settler,
                 },
-            ) if self.view().rule_experiments.objectives_deck
-                && self.ctx.own_cities.len() < cities as usize =>
-            {
-                pct
-            }
+            ) if self.ctx.own_cities.len() < cities as usize => pct,
             (Objective::Population { .. }, ProductionItem::Building { building: b })
                 if self
                     .view()
@@ -616,8 +554,7 @@ impl Planner<'_> {
             }
             (Objective::Buildings { building, .. }, ProductionItem::Building { building: b }) => {
                 u32::from(
-                    (o.remaining() == 1
-                        || (self.view().rule_experiments.objectives_deck && o.remaining() == 0))
+                    o.remaining() <= 1
                         && data::building_satisfies(b, building)
                         && c.detail
                             .as_ref()
@@ -645,16 +582,6 @@ impl Planner<'_> {
             .find(|p| p.id == city.owner)
             .map_or(0, |p| p.vp);
         let my_vp = v.players.iter().find(|p| p.id == v.me).map_or(0, |p| p.vp);
-        let owner_team = v.team_of(city.owner);
-        let best = v.standings.iter().map(|s| s.vp).max().unwrap_or(0);
-        let strict_leader = v.standings.iter().filter(|s| s.vp == best).count() == 1
-            && v.standings
-                .iter()
-                .any(|s| s.team == owner_team && s.vp == best);
-        let holding = v
-            .standings
-            .iter()
-            .any(|s| s.team == owner_team && s.victory_hold.is_some());
         // Gene `capture_completes_count`: the captured city is one more city and brings its
         // owner's tiles around it (the ring is a floor: the city's whole border comes with it).
         let counts = self.decisions.capture_completes_count > 0 && !self.sacks_city(city);
@@ -667,15 +594,6 @@ impl Planner<'_> {
         let worth = |o: &LiveObjective| match o.objective {
             Objective::Cities { .. } => counts && o.remaining() == 1,
             Objective::Territory { .. } => counts && land >= 1 && o.remaining() as i32 <= land,
-            Objective::Captures { .. } => o.remaining() == 1,
-            Objective::CapturesFromAhead { .. } => o.remaining() == 1 && owner_vp > my_vp,
-            Objective::CapturesFromLeader { .. } => o.remaining() == 1 && strict_leader,
-            Objective::BreakLeaderHold => {
-                holding
-                    && (self.decisions.vp_hold_break == 0
-                        || crate::hold::rival_hold_of(v, owner_team)
-                            .is_some_and(|h| self.capture_goal_swing(city).1 as u32 > h.margin()))
-            }
             Objective::HumbleTheMighty => {
                 o.remaining() == 1 && owner_vp > my_vp && !city.is_capital
             }

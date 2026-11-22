@@ -11,9 +11,15 @@ type GameWindow = Window & { legatum: typeof useGame };
  * and the era you scored (kept for good); the first rival holds its goal and scored era II too; era III is entered by a rival
  * and scored by nobody.
  */
-export async function stageHoldings(page: Page) {
+export async function stageHoldings(page: Page, { oneCardPerAge = false }: { oneCardPerAge?: boolean } = {}) {
   const base = await page.evaluate(() => { const s = (window as unknown as GameWindow).legatum.getState(); return structuredClone(s.views![s.seat]); });
   const v = withV2(base, { era: 2, scored: [2] });
+  // `withV2` stages three cards per Age so list tests see several lines; a real game draws one.
+  if (oneCardPerAge) {
+    v.eras = v.eras.map((e) => ({ ...e, objectives: e.objectives.slice(0, 1) }));
+    const kept = new Set(v.eras.flatMap((e) => e.objectives.map((o) => `${e.era}:${o.slot}`)));
+    v.objective_progress = v.objective_progress.filter((p) => kept.has(`${p.era}:${p.slot}`));
+  }
   const rival = v.players.find((p) => p.team !== v.team && p.alive)!;
   v.great_works = (v.great_works ?? []).map((w) => w.player === v.me ? { ...w, completed: 'RelayUplink' } : w);
   v.players = v.players.map((p) => p.id === v.me ? { ...p, vp: p.vp + 2, vp_sources: [...p.vp_sources, [{ kind: 'GreatWork' as const, of: v.me }, 2] as [{ kind: 'GreatWork'; of: number }, number]] } : p.id === rival.id ? { ...p, faction_goal_done: true } : p);

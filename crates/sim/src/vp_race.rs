@@ -151,11 +151,9 @@ fn probes() -> Vec<(String, Objective)> {
         ("cities".to_string(), Objective::Cities { n: 0 }),
         ("population".into(), Objective::Population { n: 0 }),
         ("territory".into(), Objective::Territory { n: 0 }),
-        ("techs".into(), Objective::Techs { n: 0 }),
-        ("captures".into(), Objective::Captures { n: 0 }),
-        ("from_ahead".into(), Objective::CapturesFromAhead { n: 0 }),
-        ("from_leader".into(), Objective::CapturesFromLeader { n: 0 }),
-        ("kills".into(), Objective::Kills { n: 0 }),
+        ("humbled".into(), Objective::HumbleTheMighty),
+        ("walled".into(), Objective::Breach),
+        ("promotions".into(), Objective::Veterans { n: 0 }),
     ];
     for b in [
         B::Workshop,
@@ -251,12 +249,11 @@ impl Observer {
             for era in 2..=legatum_core::objectives::era_of(state, p.id)
                 .max(legatum_core::objectives::revealed_era(state))
             {
-                if state.setup.rule_experiments.objectives_deck
-                    && state
-                        .player(p.id)
-                        .eras
-                        .get(&era)
-                        .is_some_and(|r| r.entered == resolved_turn)
+                if state
+                    .player(p.id)
+                    .eras
+                    .get(&era)
+                    .is_some_and(|r| r.entered == resolved_turn)
                 {
                     d.entry_gold_income.entry(p.id.0).or_default().insert(
                         era,

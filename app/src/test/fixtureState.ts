@@ -105,13 +105,11 @@ export interface MPlayer {
   science: number;
   settlersTrained: number;
   militaryPurchases?: number;
-  /** Scored era objectives in a core save. */
+  /** Scored Age cards in a core save. */
   eras?: Record<number, { entered: number; scored?: { turn: number; slot: number } }>;
   greatWorkCompleted?: BuildingKind;
   greatWorkHolder?: PlayerId | null;
   factionGoalDone: boolean;
-  /** Original capitals this empire has already scored (core `Player::capitals_taken`: city id and name). */
-  capitalsTaken?: [CityId, string][];
   /** The goal has scored at least once (a Live goal regained is not a first completion). */
   factionGoalReachedBefore?: boolean;
   /** Core `Player::goal_holder`: who scored this empire's held goal (the Heir's holder) at the last scoring. */

@@ -139,7 +139,7 @@ fn first_completion_cancels_rival_orders_and_refunds_half_of_each_city_bank() {
         c.production_queue.push(rival_work);
     }
     let mut events = Vec::new();
-    cities::produce(&mut s, winner_city, 240, &mut events);
+    cities::produce(&mut s, winner_city, 360, &mut events);
     assert_eq!(
         s.player(P).great_work_completed,
         Some(BuildingKind::Pyramids)
@@ -197,7 +197,7 @@ fn a_lost_wonder_race_stops_the_city_for_a_choice_in_either_resolution_order() {
         if loser_first {
             cities::produce(&mut s, rival_city, 30, &mut events);
         }
-        cities::produce(&mut s, winner_city, 240, &mut events);
+        cities::produce(&mut s, winner_city, 360, &mut events);
         if !loser_first {
             cities::produce(&mut s, rival_city, 30, &mut events);
         }
@@ -245,7 +245,7 @@ fn a_production_order_clears_a_lost_wonder_race() {
     let rival_work = wonder(&s, rival_city, BuildingKind::Pyramids);
     s.cities.get_mut(&winner_city).unwrap().producing = Some(winner_work);
     s.cities.get_mut(&rival_city).unwrap().producing = Some(rival_work);
-    cities::produce(&mut s, winner_city, 240, &mut Vec::new());
+    cities::produce(&mut s, winner_city, 360, &mut Vec::new());
     assert!(s.cities[&rival_city].wonder_lost.is_some());
     let next = item(BuildingKind::Granary);
     let mut orders = std::collections::BTreeMap::new();

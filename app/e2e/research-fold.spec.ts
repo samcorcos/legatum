@@ -92,7 +92,7 @@ for (const size of SIZES) {
 
     test('mid-era with the objectives header (this era and the next): the first card is whole at scroll 0', async ({ page }) => {
       await turnOne(page).then((d) => d.page().keyboard.press('Escape'));
-      // A game under way: Science is flowing (no "No Science yet" note in the head), your era is Classical with progress on its objectives.
+      // A game under way: Science is flowing (no "No Science yet" note in the head), and Ages have begun with progress on their cards.
       const base = await page.evaluate(() => { const s = (window as unknown as GameWindow).legatum.getState(); return structuredClone(s.views![s.seat]); });
       const view = withV2(base, { era: 2, scored: [], progress: { '2:0': [6, 9], '2:1': [3, 4], '2:2': [0, 1] } });
       view.economy.science_per_turn.total = 4;
@@ -102,7 +102,7 @@ for (const size of SIZES) {
       }, view);
       await page.locator('.topbar .research-chip').click();
       const d = page.locator('dialog.tech-modal');
-      await expect(d.getByTestId('research-objectives-current')).toContainText('Score 1 VP this era');
+      await expect(d.getByTestId('research-objectives-current')).toContainText('Score 1 VP this Age');
       await expectFirstCardWhole(d, page, 'mid-era', size.width);
     });
 

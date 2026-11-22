@@ -347,7 +347,7 @@ export interface UpkeepPreview {
 }
 
 /** Core `economy::BuyBlock`, serialized snake_case. */
-export type BuyBlock = 'already_bought' | 'resistance' | 'settler_population' | 'not_buyable' | 'walls_need_production' | 'no_spawn_tile' | 'resource' | 'not_enough_gold';
+export type BuyBlock = 'already_bought' | 'resistance' | 'settler_population' | 'not_buyable' | 'walls_need_production' | 'no_spawn_tile' | 'resource' | 'not_enough_gold' | 'egypt_buildings_need_food' | 'under_threat';
 
 export interface ProductionOption {
   item: ProductionItem;
@@ -510,7 +510,7 @@ export interface CityView {
 }
 
 /** One way a player scored: the core's `types::VpSource`. A held goal (a capturable item) scores for whoever holds it, so the goal names its empire (`of`). */
-export type VpSource = { kind: 'GreatWork'; of: PlayerId } | { kind: 'FactionGoal'; of: PlayerId } | { kind: 'EraObjective'; era: number } | { kind: 'CapitalTaken'; capital: CityId };
+export type VpSource = { kind: 'GreatWork'; of: PlayerId } | { kind: 'FactionGoal'; of: PlayerId } | { kind: 'EraObjective'; era: number } | { kind: 'CapitalTaken'; capital: CityId } | { kind: 'CapitalSacked'; capital: CityId };
 
 /** Core `goals::GoalRule`: which rule a goal follows (the Aztecs use the Swarm rule for the New Fire). */
 export type GoalRule = 'None' | 'Hoard' | 'Swarm' | 'Sakoku' | 'Diwan' | 'Heir' | 'Factories' | 'Wild' | 'Retire' | 'Hall' | 'Broadcast';
@@ -529,6 +529,8 @@ export interface PlayerPublic {
   /** What the VP are made of, by id: era objectives, captured capitals, Great Works and faction goals. */
   vp_sources: [VpSource, number][];
   capitals_taken?: [CityId, string][];
+  /** Celts only: rival original capitals this empire sacked, each 1 VP kept for good (core `capitals_sacked`). */
+  capitals_sacked?: [CityId, string][];
   /** Its original capital still stands in its own team's hands (public; core `scoring::capital_stands`). Absent in older views: standing. */
   capital_stands?: boolean;
   cities: number;
@@ -1050,7 +1052,9 @@ export type Order =
   | { type: 'BuyTile'; city: CityId; tile: Hex }
   /** Buy Siege for a land military unit in own territory: its attacks on a city ignore enemy Walls, for good (core `rules::siege`). */
   | { type: 'UpgradeSiege'; unit: UnitId }
-  | { type: 'Action'; action: GameAction };
+  | { type: 'Action'; action: GameAction }
+  /** Give Gold to a living teammate (core `rules::gifts`): it moves after this turn's purchases, capped at the Gold left then. */
+  | { type: 'GiveGold'; to: PlayerId; amount: number };
 
 /**
  * A one-time empire action (core `orders::Action`, serde tag "action"). One order carries them
@@ -1168,6 +1172,10 @@ export type Event =
   | { type: 'CityCaptured'; city: CityId; from: PlayerId; to: PlayerId; bounty?: number }
   | { type: 'AthensCityCaptured'; city: CityId; from: PlayerId; to: PlayerId }
   | { type: 'CapitalTaken'; captor: PlayerId; capital: CityId; name: string }
+  | { type: 'CapitalSacked'; captor: PlayerId; capital: CityId; name: string }
+  /** Team only: Gold one empire gave a teammate, after this turn's purchases. */
+  | { type: 'GoldGiven'; from: PlayerId; to: PlayerId; amount: number }
+  | { type: 'CapitalLost'; player: PlayerId; capital: CityId; name: string }
   | { type: 'CityRazed'; city: CityId; from: PlayerId; by: PlayerId; at: Hex; original_capital?: boolean; sack_gold?: number; camp?: Hex; ordered?: boolean }
   | { type: 'BuildingDismantled'; city: CityId; owner: PlayerId; building: BuildingKind; reason: string }
   | { type: 'ItemBought'; city: CityId; owner: PlayerId; item: ProductionItem; gold: number }
@@ -1332,9 +1340,10 @@ export interface GameSetup {
 export interface RuleSwitches {
   start_met?: boolean;
   start_settlers?: number;
-  objectives_deck?: boolean;
   walls_cost?: number;
   decadence_slope?: number; vp_target?: number;
+  /** Experiment: a city can't buy a military unit while an enemy unit at War is within 2 tiles. */
+  no_purchase_under_threat?: boolean;
 }
 
 /** What end_turn returns. `turn` is the turn just resolved; `hash` is a u64 as a decimal string. */

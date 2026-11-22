@@ -116,7 +116,7 @@ describe.skipIf(!available)('WASM VP hold behavior', () => {
   });
 
   it('teams completing the same turn on equal VP: the larger population wins', () => {
-    // Both teams hold an extra scored era objective: equal VP, 4 against 3 population.
+    // Both teams hold an extra scored Age card: equal VP, 4 against 3 population.
     const { step, standing, core } = pair({ teams: THREES, holds: { 0: 9, 1: 9 }, cities: { 0: 4, 3: 3 }, bonusEra: [0, 3] });
     const { core: out } = step();
     (expect(standing(core, 0).vp).toMatchSnapshot(), void (standing(core, 1).vp));

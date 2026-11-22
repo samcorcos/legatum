@@ -747,9 +747,11 @@ pub struct Player {
     /// VP v2: each era this empire has entered, from the second on (`objectives`).
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub eras: BTreeMap<u8, crate::objectives::EraRecord>,
-    /// Original capitals captured at least once by this empire, with names retained after a sack.
-    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    pub capitals_taken: BTreeMap<CityId, String>,
+    /// Rival original capitals this empire burned in a Celtic sack, with their names. Each keeps
+    /// its 1 VP for the rest of the game (the city is gone, so nobody can take it back); only the
+    /// Celtic sack path adds to it (`rules::battle::capture_city`).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub capitals_sacked: Vec<(CityId, String)>,
     /// Permanently chosen on completion; captured buildings never populate this field.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub great_work_completed: Option<BuildingKind>,
@@ -931,7 +933,7 @@ static BARBARIAN_PLAYER: std::sync::LazyLock<Player> = std::sync::LazyLock::new(
     decadence_percent: 0,
     fight: crate::objectives::FightStats::ZERO,
     eras: BTreeMap::new(),
-    capitals_taken: BTreeMap::new(),
+    capitals_sacked: Vec::new(),
     great_work_completed: None,
     great_work_holder: None,
     faction_goal_done: false,

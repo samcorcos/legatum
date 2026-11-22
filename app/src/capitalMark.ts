@@ -14,8 +14,8 @@ export interface CapitalMark {
   /** A teammate founded it. */
   teammate: boolean;
   /**
-   * Who has scored its +1 VP. The point is per captor, not per team: `you` when your own capture scored it,
-   * `teammate` when only a teammate's did (you can still score it yourself), otherwise null.
+   * Who holds its 1 VP now (core `scoring::capitals_held`, the view's `capitals_taken`): `you` when you hold
+   * the city, `teammate` when a teammate does, otherwise null. The point is held, not kept: it moves with the city.
    */
   scored: 'you' | 'teammate' | null;
   /** You or a teammate hold it now, so you cannot capture it until a rival takes it. */
@@ -44,14 +44,12 @@ const possessive = (name: string) => (name.endsWith('s') ? `${name}'` : `${name}
 
 /** The one plain line every surface prints for a mark. */
 export function capitalLine(view: Pick<MarkView, 'players'>, mark: CapitalMark): string {
-  if (mark.own) return 'Your original capital. Each rival that captures it scores +1 VP.';
+  if (mark.own) return 'Your original capital. A rival scores 1 VP while it holds it.';
   const empire = empireOfPlayer(view, mark.founder);
-  if (mark.teammate) return `Your teammate's original capital (${empire}). Each rival that captures it scores +1 VP.`;
-  if (mark.scored === 'you') return `${possessive(empire)} original capital. You scored its +1 VP when you took it; taking it again scores nothing.`;
-  if (mark.scored === 'teammate') return mark.heldByTeam
-    ? `${possessive(empire)} original capital. Your teammate scored it. If a rival takes it, you can score it by capturing it yourself.`
-    : `${possessive(empire)} original capital. Your teammate has scored it. You can still score it by capturing it.`;
-  return `${possessive(empire)} original capital. Capture it to score +1 VP, kept for good. Each empire scores it once.`;
+  if (mark.teammate) return `Your teammate's original capital (${empire}). A rival scores 1 VP while it holds it.`;
+  if (mark.scored === 'you') return `${possessive(empire)} original capital. You score 1 VP while you hold it.`;
+  if (mark.scored === 'teammate') return `${possessive(empire)} original capital. Your teammate scores 1 VP while holding it.`;
+  return `${possessive(empire)} original capital. Hold it to score 1 VP.`;
 }
 
 /** Convenience for surfaces that hold a city: its line, or null for any other city. */
@@ -60,7 +58,7 @@ export function capitalLineOf(view: MarkView, city: MarkCity): string | null {
   return mark && capitalLine(view, mark);
 }
 
-/** What the map draws: a filled star in the founder's ink, outlined only once you yourself have scored it. */
+/** What the map draws: a filled star in the founder's ink, outlined while you hold its point. */
 export interface CapitalStar { ink: string; scored: boolean }
 
 export function capitalStar(view: MarkView, city: MarkCity): CapitalStar | null {

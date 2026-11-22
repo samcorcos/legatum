@@ -261,16 +261,16 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
         break;
       case 'EraObjectiveScored': {
         const era = after.eras?.find((x) => x.era === e.era);
-        const card = after.rule_experiments?.objectives_deck ? era?.objectives.find((o) => o.slot === e.slot)?.objective : undefined;
-        if (card && era) {
+        const card = era?.objectives.find((o) => o.slot === e.slot)?.objective;
+        if (era) {
           push(i, e.player, { tier: 'major', at: capital(e.player), kicker: 'Age card scored', title: `The ${era.name} Age`,
             effect: '+1 VP, kept for good', lore: 'A claim made lasting in the chronicle.', deltas: [{ counter: 'vp', amount: 1 }], emblem: 'milestone',
-            details: [`Scored with ${cardName(e.objective)}`, after.eras.length === 1 ? `${era.name} Age scored` : `${after.eras.filter((x) => x.scored_by.some((s) => s.player === e.player)).length} of ${after.eras.length} Ages scored`] });
+            details: [card ? `Scored with ${cardName(e.objective)}` : e.objective, after.eras.length === 1 ? `${era.name} Age scored` : `${after.eras.filter((x) => x.scored_by.some((s) => s.player === e.player)).length} of ${after.eras.length} Ages scored`] });
           break;
         }
-        push(i, e.player, { tier: 'major', at: capital(e.player), kicker: 'Era objective met', title: era ? `The ${era.name} era` : `Era ${e.era}`,
-          effect: '+1 permanent VP', lore: 'A claim made lasting in the chronicle.', deltas: [{ counter: 'vp', amount: 1 }], emblem: 'milestone',
-          details: [e.objective, ...(after.eras?.length ? [`${after.eras.filter((x) => x.scored_by.some((s) => s.player === e.player)).length} of ${after.eras.length} era VP scored`] : [])] }); break;
+        push(i, e.player, { tier: 'major', at: capital(e.player), kicker: 'Age card scored', title: `Age ${e.era}`,
+          effect: '+1 VP, kept for good', lore: 'A claim made lasting in the chronicle.', deltas: [{ counter: 'vp', amount: 1 }], emblem: 'milestone',
+          details: [e.objective] }); break;
       }
       // A Live goal regained is a normal report line, not the legendary first completion.
       // The Byzantium's held goal changes hands: capturing the Heir is a big moment for the captor, losing him a sober card
@@ -374,7 +374,7 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
           deltas: [{ counter: 'vp', amount: -e.vp }], loss: true, emblem: 'captured' }); break;
       }
       case 'CityCaptured': {
-        // The permanent capital point has its own Tier A card for every viewer.
+        // The held capital point has its own Tier A card for every viewer.
         if (events.some((x) => x.type === 'CapitalTaken' && x.capital === e.city) && team.has(e.to)) break;
         // The Courier Hall's city is told by the Hall's own moment (the road and the points went with it).
         if (after.courier_halls?.some((h) => h.city === e.city)) break;
@@ -480,11 +480,10 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
           ?? cities.get(e.capital)?.original_capital_of ?? null;
         const from = victim !== null ? empireOfPlayer(after, victim) : null;
         const card = { tier: ours ? 'legendary' as const : 'major' as const, at, title: e.name, kicker: from ? `Original capital taken from ${from}` : 'Original capital taken',
-          effect: `${ours ? '+1 VP, kept for good' : `${who} scores +1 VP, kept for good`}${workVp ? ` · +${workVp} held VP from ${works.map((x) => BUILDING_NAME[x.building]).join(' and ')}` : ''}`,
+          effect: `${ours ? '+1 VP while you hold it' : `${who} scores 1 VP while holding it`}${workVp ? ` · +${workVp} held VP from ${works.map((x) => BUILDING_NAME[x.building]).join(' and ')}` : ''}`,
           lore: ours ? `${e.name}’s gates are yours.` : `${e.name} has fallen to ${who}.`,
-          details: ['Taking it again later scores nothing more.',
-            ...(workVp ? [`${works.map((x) => BUILDING_NAME[x.building]).join(' and ')} scores ${workVp} VP only while held.`] : []),
-            ...(events.some((x) => x.type === 'CityRazed' && x.city === e.capital && !x.ordered) ? ['The Celts sacked and burned the capital on capture.'] : [])],
+          details: ['The point is lost if anyone takes the city or it is razed.',
+            ...(workVp ? [`${works.map((x) => BUILDING_NAME[x.building]).join(' and ')} scores ${workVp} VP only while held.`] : [])],
           deltas: ours ? [{ counter: 'vp' as const, amount: 1 + workVp }] : [], emblem: 'captured' as const,
           ...(victim !== null && faction(victim) ? { frame: faction(victim)! } : {}), seal: 1, ...(ours ? {} : { loss: true }) };
         if (ours) push(i, e.captor, card);
