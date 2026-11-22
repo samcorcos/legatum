@@ -2,7 +2,7 @@
 
 Save: `~/LegatumRuns/bug-saves/swiss-win-2026-10-28/autosave.legatum`. Engine `060f78ef4` (tag `playtest-8.9.15`; 8.9.15.1 has the same AI). Four empires (Switzerland, Japan, Sparta, the Mongols) on a 40x26 map, every AI on Hard. Replayed at the tag with 0 hash mismatches in 180 turns; the AI plan trace (`p881_trace`) matches all 513 recorded AI order lists. A logging copy of the door defense printed every front it saw. What-ifs: 40 branches, 32 or 64 runs each, on the box (about 6 minutes). Tools and data: `~/LegatumRuns/coach-tools/coach-8915-swiss/`.
 
-![VP race and army size](2026-10-28-swiss-review.png)
+VP race and army size (archived outside the repository)
 
 ## Coach's verdict
 
