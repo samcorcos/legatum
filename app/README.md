@@ -20,7 +20,7 @@ npm test                          # Vitest; also needs python3 (the art check ru
 
 ```sh
 scripts/build-web.sh         # from the repo root: WASM, licence notices, the UI with VITE_LEGATUM_HOSTED=1, host files
-cd app && npm run e2e:hosted # plays a short game against dist/ on a plain static server (e2e-hosted/)
+cd app && npm run e2e:hosted # plays a short game against dist/ on a plain static server (e2e-hosted/); with LEGATUM_GAMES_URL set it answers the upload requests itself and checks one was sent
 ```
 
 This is what `.github/workflows/deploy-web.yml` publishes to Cloudflare Pages. `src/platform/hosted.ts` is the one switch: the hosted build asks no server for anything except the optional game upload (`src/platform/gameUpload.ts`, on when `scripts/build-web.sh` is given `LEGATUM_GAMES_URL`; see [infra/games](../infra/games/README.md)), and the Multiplayer menu explains that network games need the host program. `hosted/_headers` and `hosted/404.html` are copied into `dist/`. See [docs/ops/releasing.md](../docs/ops/releasing.md).

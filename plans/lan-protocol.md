@@ -1,48 +1,36 @@
-# LAN play: server and protocol
+# Online play: the game protocol
 
-How human players play on **their own computers on the same network**, each entering their own orders. (Single player and one-screen hot seat run locally in WASM.)
+The messages between a player's UI and the authoritative game, for **two or more humans on one team plus AI, each entering their own orders**. (Single player and one-screen hot seat run locally in WASM.) The file keeps its old name; since 2026-11-22 there is no LAN server and no native program. `plans/online-play.md` is the contract for where the game runs and how guests reach it; this file is the protocol on top.
 
 ## Shape
 
-- **One Mac hosts:** `legatum-server` (Rust, `crates/server`) runs the authoritative game with `legatum-core` + `legatum-ai` natively, serves the built UI (`app/dist`) over HTTP, and talks to players over a WebSocket.
-- **Everyone plays in a browser** at `http://<host-ip>:7878` (the host can use `http://localhost:7878`). Nothing to install on the joining Mac.
-- **Each browser is bound to one seat.** A client only ever receives its own seat's `PlayerView` (fog and privacy stay server-side, like the AI).
-- The turn resolves when at least one living human seat is connected and every connected living human seat is Ready. New or explicitly loaded games also wait for each living human seat to join once; startup restoration skips that initial join barrier. Eliminated players never block turns. AI orders are computed on the server from each AI's own view.
-- Later, the Tauri app embeds this same server; no redesign.
+- **The host's browser tab hosts.** `BrowserHost` (`app/src/net/browserHost.ts`) drives the engine's `NetHost` (`crates/wasm/src/host/`, the old `legatum-server`'s host, staging, protocol and admission logic with no I/O) with `legatum-core` + `legatum-ai` as WASM, and tunnels guest connections through the Cloudflare relay (`infra/relay`). Closing the host's tab ends the game.
+- **Everyone plays in a browser** on the web build. Nothing to install, no address to type: guests pick the game from the relay's lobby.
+- **Each browser is bound to one seat.** A client only ever receives its own seat's `PlayerView` (fog and privacy stay in the host, like the AI).
+- The turn resolves when at least one living human seat is connected and every connected living human seat is Ready. New or explicitly loaded games also wait for each living human seat to join once; a resumed game skips that initial join barrier. Eliminated players never block turns. AI orders are computed in the host from each AI's own view.
+- **"Loopback" and `is_local` below mean the host's own tab** (the in-tab connection, `connect(local = true)`); every guest through the relay is a non-local connection. There are no TCP peers, `Host`/`Origin` checks, per-IP limits or `--static`/`--saves` flags any more; the relay carries up to 8 guests per room, 64 KiB per guest message (`net.rs::MAX_GUESTS`, `MAX_GUEST_MESSAGE`). Texts over 256 KiB reach guests as `chunk` messages (`app/src/net/tunnel.ts`, reassembled by `app/src/relaySocket.ts`).
+- **Saving:** the host's tab keeps the latest save in `sessionStorage` (`app/src/net/hosting.ts`), so reloading that tab resumes the same room. There is no autosave directory and no `turn-<n>.json`.
+- Imports and resumes reject science histories longer than `SCIENCE_HISTORY_TURNS` (5), tile memories longer than the map, and explored bitsets whose word count does not match their declared map-sized length (`check_state`, `crates/wasm/src/host/mod.rs`). Shorter/omitted tile memories remain compatible with older saves.
 
-## Server CLI
+## Host admin calls
 
-```
-legatum-server [--port 7878] [--static app/dist] [--saves <dir>] [--relay <url> --name <host name> --build <label>]
-```
-
-- Binds `0.0.0.0:<port>`. Prints the LAN URL(s) to share (non-loopback IPv4 addresses).
-- Default saves dir: `~/Library/Application Support/Legatum/saves/` (create if missing). Autosaves after every turn to `autosave.json` plus `turn-<n>.json` (keep the last 10). On start, if `autosave.json` exists, load it (game continues where it left off).
-- Save commit order: write the turn snapshot, prune snapshots, then write/flush a temporary autosave and atomically rename it to `autosave.json` as the final fallible operation. A failed new/load leaves both the live game and restart autosave unchanged. Snapshots may already reflect an attempted save; `autosave.json` is the committed restart state.
-- `--relay <url> --name <host name> --build <label>` also opens an online relay room (`plans/online-play.md`). Relayed guests are ordinary non-loopback connections that share one admission peer (`100::1`), so the admission limits below apply to them as one remote IP. Only they may receive `chunk` messages (texts over 256 KiB, split by the host and reassembled by `app/src/relaySocket.ts`).
-- Imports and startup restoration reject science histories longer than `SCIENCE_HISTORY_TURNS` (5), tile memories longer than the map, and explored bitsets whose word count does not match their declared map-sized length. Shorter/omitted tile memories remain compatible with older saves. Setup/player vectors and map tiles must match the bounded setup; unit and city counts cannot exceed two and one per map tile respectively. Core history maintenance also drops excess entries in one bulk operation.
-
-## HTTP
+There is no HTTP server. The host's own UI reaches the engine through `BrowserHost.fetch`, which answers these paths in the tab (`app/src/net/browserHost.ts`); a guest's `GET <room>/api/status` is answered by the relay from the host's last pushed status, with `is_local` forced to `false`.
 
 | Method | Path | Body / response |
 | --- | --- | --- |
-| GET | `/` and static files | the built UI (`index.html`, assets, `wasm-pkg` not needed in server mode) |
-| GET | `/api/status` | `{ "mode": "server", "has_game": bool, "turn": n, "seats": [SeatStatus], "lan_urls": ["http://<lan-ip>:7878"], "is_local": bool, "staging": StagingState | null }` (`is_local` = request came from loopback) |
-| POST | `/api/game` | Body: `GameSetup` JSON (seed as decimal string or number). Creates a new game (replacing any current one). Allowed only from loopback (the host). Response: `/api/status` payload. |
-| POST | `/api/load` | Body: a save string. Loopback only. |
-| GET | `/api/save` | Current save string (opaque; never re-serialize it in JS). Loopback only. |
+| GET | `/api/status` | `{ "mode": "server", "has_game": bool, "turn": n, "seats": [SeatStatus], "is_local": bool, "staging": StagingState | null }` (`is_local` = the host's own tab). `lan_urls` is gone. |
+| POST | `/api/game` | Body: `GameSetup` JSON (seed as decimal string or number). Creates a new game. Host's tab only. Response: the status payload. |
+| POST | `/api/load` | Body: a save string. Host's tab only. |
+| POST / DELETE | `/api/staging`, POST `/api/staging/start` | Open, configure or close the staging room; start the game (see Staging room below). Host's tab only. |
 
-`/api/status`, `/api/game`, `/api/load`, `/api/save`, all `/api/staging` routes, and the `/ws` upgrade require a single trusted `Host`, including the actual listener port. Allowed hosts are `localhost`, `127.0.0.1`, and the IPv4 addresses in the server's startup `lan_urls`. When `Origin` is present, it must be a single exact HTTP origin for one of those URLs; a missing Origin is allowed for native clients. HTTP port 80 may be omitted. Unknown hosts (including DNS names resolving to the server), different ports/schemes, `Origin: null`, and multiple origins are rejected with 403 before processing the body or upgrading the socket. Forwarded headers do not grant trust. Admin routes additionally require a loopback TCP peer.
+`/api/save` and `/api/archive` no longer exist; the app saves from the engine's own save call. The status never carries the seed or any seat credential.
 
-`/api/status` reads a bounded cached public snapshot and never spawns blocking work or waits for the game mutex. Every completed game/room/connection operation refreshes the cache, including error paths that evict sockets. During generation or resolution it may show the last completed operation. Responses use `Cache-Control: no-store`; only `is_local` varies with the TCP peer. The seed and all seat credentials are absent, including for loopback requests and admin status responses.
-
-POSTs require `Content-Type: application/json` (parameters such as `charset=utf-8` are allowed); missing or other media types return 415. `/api/load` accepts the opaque save JSON itself or a JSON string containing it. Browser clients should use the UI served by the Rust server at one of its printed URLs; an unrelated development origin is not trusted.
 
 ## WebSocket `/ws`
 
 JSON text frames. Every message has `"type"`.
 
-Admission is limited to 32 WebSocket connections, including unjoined peers and sockets still closing; excess upgrades receive HTTP 503 before blocking game work. A remote TCP IP (IPv4-mapped IPv6 normalized) may hold at most eight sockets. Remote sockets together may use only 28 slots, reserving four for loopback; loopback may use all 32. TCP ports and forwarded headers do not create new peers. At most 16 remote sockets may be unjoined/watchers at once. Successful staging occupancy or gameplay join releases that watcher permit; losing/leaving the seat reacquires one or closes the socket if the pool is full. All permits are released when the socket task finishes.
+Admission (`NetHost::connect`): at most 32 connections including unjoined ones, at most 8 of them guests. The per-IP and HTTP 503 rules of the old server no longer apply (all guests arrive through the relay). Excess connections are refused with "The game is full".
 
 Unjoined sockets, including `staging_watch` subscribers, must occupy a staging seat or join a game within 30 seconds. Ping, Pong, application messages and repeated watches never extend that deadline. Losing/leaving a seat starts a new 30-second deadline. Joined sockets retain the usual 60-second heartbeat timeout. Each connection has a reliable queue of at most 16 deliveries and an 8 MiB serialized byte budget, including an in-flight delivery. Welcome/view and turn/view pairs each form one delivery and stay adjacent on the wire. Seat broadcasts and staging broadcasts each use one replaceable latest snapshot per connection, with identical updates suppressed; intermediate states can be skipped. Staging snapshots are bounded by eight slots, 80-character names and a 20-digit seed. Closing or starting a room clears pending staging snapshots before sending the reliable terminal message. Seat names are capped at 80 characters, including names from saves.
 
@@ -97,10 +85,10 @@ Events filtering uses the union of pre- and post-turn visible tiles. Team events
   - Title screen: **Multiplayer → Host Game** (`is_local` only) opens the staging room described below. **Join Game** opens an available room, or lists the human seats of the running game when no room is open. Servers without staging support, or an explicit staging opt-out, use the direct `POST /api/game` flow; it accepts any valid lobby-built setup with 1-8 humans first.
   - After joining: the normal game screen for that one seat. No seat switcher. The seat panel lists every human seat (connected, orders count, ready). Ready = send `ready`; the button shows "Waiting for <names>…" until the turn resolves, omitting eliminated players from the waiting names.
   - Only the loopback host (`status.is_local`) sees **Open seat** on other disconnected reserved human seats. Confirmation asks **Let another device take over <name>'s empire?** and sends `game_release` on the existing socket. The UI waits for the server's seat snapshot before showing the seat as open. The action is disabled while reconnecting and is never queued for replay. A guest sees **Reserved** and **Ask the host to open this seat**; after release, the Join screen polls the open status and offers **Rejoin as <name>**.
-  - Host screen shows the LAN URL to share ("Players on your network can join at http://<lan-ip>:7878").
+  - The host screen shows no address to share: the game appears in the relay's lobby (`plans/online-play.md`).
   - Reconnect automatically on disconnect (exponential backoff) and re-join the same seat (remember its credential and seat in per-tab sessionStorage), unless the socket received `error` with `code: "seat_taken"`. Reload auto-rejoins a reserved seat with that tab's credential even if status still sees its previous socket connected; credential authentication permits replacing the stale socket. A new browser context has no credential. Ready stays disabled until welcome orders and the corresponding view are restored. Leaving a running game keeps its credential with `autoJoin: false`, so a later reload stays at the title and an explicit rejoin can still reclaim the reservation.
   - A join rejected with `invalid_seat_credential` offers **Reclaim my seat** only to the loopback host (`status.is_local`), on the Join screen or in the running game's connection banner. This deliberate action sends one `game_take`, then saves the returned `seat_token` before joining with it. It lets a remembered host tab recover after a restart rotates credentials. Ordinary Join and automatic reconnect keep using the saved credential; reconnect never sends `game_take`, even if a claim's acknowledgment was lost. An interrupted claim without any credential requires another explicit Join. A guest must ask the host to open the seat. The server still enforces loopback reassignment.
-  - Starting or loading a local game, leaving, or going Back to title from a finished LAN game disconnects the LAN session; a stale socket's messages are ignored.
+  - Starting or loading a local game, leaving, or going Back to title from a finished online game disconnects the online session; a stale socket's messages are ignored.
 - If `/api/status` fails, the UI runs locally via WASM as today (hot-seat or solo).
 
 ---

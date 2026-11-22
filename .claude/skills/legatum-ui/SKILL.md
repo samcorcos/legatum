@@ -267,7 +267,7 @@ Pillars 5 (no hidden math) and 9 (the next action is always obvious) from CLAUDE
 - **Names beat tokens:** an empire's name in the race panel is never truncated to fit tokens; the tokens wrap or collapse first.
 - **One chip, one sign:** never put good news and a cost in the same coloured pill.
 - **Moment cards (8.9.27 release review, 2026-11-07):** a card announcing an event that leaves a decision carries that decision's button as its primary (a lost wonder race offers "Choose production", not only "Show on map" and "Turn report"); its art matches the event (no sacked-city art for a non-destruction loss); its full body (refund and next-step lines) is checked at 1000x600, not only the title; and it joins the tour with its report line and city-panel state.
-- **A background failure (archive upload, save, network) never covers a decision:** a small corner notice, never a centre-bottom Error card over gameplay. Tours run against a freshly built `legatum-server` and a clean archive dir, so no console error lands in the shots.
+- **A background failure (archive upload, save, network) never covers a decision:** a small corner notice, never a centre-bottom Error card over gameplay. Tours run against a fresh e2e web build and a clean archive dir, so no console error lands in the shots.
 - **Tour hygiene:** when a lobby control is renamed, grep `e2e/tour` for the old label (a stale "Hard + Search" click silently dropped about 36 shots at 8.9.27); new Scenario Lab cards get a shot scrolled into view, since the first-screen shot shows only 3 of about 29.
 - **A status chip with a count says what it counts, and a progress card replaces its chip** (Training review, 2026-11-07): "Training · 1 battle" where the cell has room; a compact "Training · 1" (the Turn cell at 1000x600) needs a tooltip that names the count (the turn cell's `TrainingTip`). A transient progress card never covers the top bar or the primary dock button, and while it shows, the chip for the same state hides.
 
@@ -540,7 +540,7 @@ Verify UI changes with Playwright screenshots at the three sizes and attach them
 - **A state that changes a stat changes the shown stat everywhere.** An idle unit shows its effective strength with its breakdown, the same number the forecast uses, and its token carries the alert mark.
 - **Every "short" or "idle" state has a locator and a fix:** a map mark, "Show on map" on the report line, and one fix clause.
 - **A refusal is one shared string** on the build card, the upgrade card and the tooltip; the tooltip only adds detail.
-- **Remote tours rebuild `app/dist` first** (the fixtures serve it through the release server, so a stale build shows old text).
+- **Remote tours rebuild `app/dist` first** (the fixtures serve it statically, so a stale build shows old text).
 
 ## From the 8.9.7 UI review (2026-10-21)
 - **A locked-by-faction unlock keeps its truth everywhere.** When a faction can't use a tech's unlock until later (Mongols and Walls), the tech card, hovercard, unlock moment and build list all say so ("Walls for the Mongols from the Medieval era"), with no price.
@@ -857,3 +857,12 @@ Verify UI changes with Playwright screenshots at the three sizes and attach them
 - A notice about data leaving the player's device says "uploaded" or "sent to us", never "saved": players read "saved" as their own local save. Storage words such as "bucket" stay out of anything a player reads.
 - Small centred notes that can wrap to two lines use `text-wrap: balance`, so a link or a lone word doesn't dangle on the second line.
 - The hosted title screen (with `VITE_LEGATUM_GAMES_URL` set) has about 10px to spare at 1000x600: any further hosted-only line on the main menu needs a layout change, not just another line.
+
+## From the browser co-op review (2026-11-22, the host's tab runs the game)
+
+- A menu item that ends a shared game says so and asks first. When "leave" means different things for the host and a guest, the label branches on the role ("End the game for everyone" for the host, with a confirmation; "Leave the game" for a guest).
+- Connection and status text is written from the viewer's role (host, guest or observer). The host's connection tooltip never says "Connected to the host".
+- A name the player types before a room opens appears in the room and in the game, on both sides.
+- When a branch retires a concept (LAN, host address, "network player"), grep the whole Guide and app/src for the old words: a Guide paragraph the diff never touched stayed false.
+- A branch that deletes tour shots adds replacements in the same change. Every online state (menu, game list states, host and guest rooms, turn one on each side, host gone) has a shot at both sizes (app/e2e/tour/online.spec.ts).
+- Durability text matches the storage behind it: don't write "saves" for a copy that lives only as long as the tab.

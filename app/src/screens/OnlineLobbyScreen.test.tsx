@@ -120,7 +120,7 @@ it('polls every 3 seconds while open and stops when closed', async () => {
 });
 
 it('Join points the app at that room and continues as a guest', async () => {
-  const status = { mode: 'server', has_game: false, turn: 0, seats: [], lan_urls: [], is_local: false, staging: null };
+  const status = { mode: 'server', has_game: false, turn: 0, seats: [], is_local: false, staging: null };
   vi.stubGlobal('fetch', vi.fn(async (url: string) => {
     calls.push(url);
     if (url.startsWith(`${RELAY}/lobby`)) return { ok: true, json: async () => ({ rooms: [room()] }) };
