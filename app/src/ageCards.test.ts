@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { cardHint, cardMeter, cardName } from './ageCards';
+import { cardHint, cardMeter, cardName, cardNameAndAsk } from './ageCards';
 
 describe('World Age cards', () => {
   it('names a card shortly', () => {
     expect(cardName('Veterans: earn 4 promotions in battle (a promotion is a level a unit gains from combat experience after this Age began)')).toBe('Veterans');
     expect(cardName('Humble the mighty: capture a city from an empire ahead of you on VP')).toBe('Humble the mighty');
-    expect(cardName('Gain 3 cities')).toBe('Gain 3 cities');
+    expect(cardName('Dominion: gain 3 cities')).toBe('Dominion');
   });
 
   it('words the Veterans meter, never a count above the target', () => {
@@ -16,5 +16,8 @@ describe('World Age cards', () => {
 
   it('words the meters of the capture kinds', () => {
     expect(cardMeter({ kind: 'Breach' }, 0, 1)?.label).toBe('Walled cities captured since the Age began: 0 of 1');
+    expect(cardMeter({ kind: 'Population', n: 9 }, 6, 9)?.label).toBe('Population grown since the Age began: 6 of 9');
+    expect(cardMeter({ kind: 'Cities', n: 4 }, 3, 4)?.label).toBe('Cities gained since the Age began: 3 of 4');
+    expect(cardNameAndAsk('Dominion: gain 4 cities')).toBe('Dominion, gain 4 cities');
   });
 });

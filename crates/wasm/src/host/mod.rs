@@ -141,7 +141,11 @@ const MAX_VALIDATION_ERRORS: usize = 100;
 
 struct Game {
     session: Session,
+    /// Random, so it reveals nothing about the state (a state-derived id let a guest test guesses
+    /// at a short map seed offline).
     id: String,
+    /// Secret key for the hash sent with each turn report; see `credentials::masked_hash`.
+    hash_key: (u64, u64),
     seats: Vec<Seat>,
 }
 
@@ -169,7 +173,8 @@ impl Game {
             })
             .collect();
         Ok(Self {
-            id: format!("{}-{}", state.hash(), now_nanos()),
+            id: credentials::game_id()?,
+            hash_key: credentials::hash_key()?,
             session: {
                 if let Some(h) = &mut session.history {
                     // A networked game (the archive's name for it predates online play).
@@ -899,7 +904,8 @@ impl Host {
             self.recordings
                 .push(serde_json::to_string(history).expect("recordings serialize"));
         }
-        let hash = state.hash().to_string();
+        // Guests never get the real state hash: it would let them test guesses at hidden state.
+        let hash = credentials::masked_hash(game.hash_key, state.hash()).to_string();
         let mut messages = Vec::new();
         for (seat, before) in game.seats.iter().zip(&before) {
             if let Some(connection) = seat.connection {
@@ -1886,7 +1892,9 @@ mod tests {
             .position(|m| m["type"] == "turn")
             .expect("a turn report");
         assert_eq!(written[at]["turn"], 2);
-        assert_eq!(written[at]["hash"], native.state.hash().to_string());
+        // The turn report carries a masked value, never the state hash itself.
+        let sent: u64 = written[at]["hash"].as_str().unwrap().parse().unwrap();
+        assert_ne!(sent, native.state.hash());
         assert_eq!(written[at + 1]["type"], "view");
         assert_eq!(written[at + 1]["view"]["me"], 0);
         assert_eq!(written[at + 1]["view"]["turn"], 2);

@@ -12,15 +12,44 @@ export const PRIVACY_URL = 'https://github.com/samcorcos/legatum#privacy';
 export const uploadsGames = (): boolean => GAMES_URL !== '';
 
 /**
- * The record to keep and upload: names removed when uploads are on, and the player's coach-question answers
- * added as `coach_answers`. Only this upload copy carries them: the engine's `Recording` refuses unknown keys,
- * so exports and anything fed back to the engine strip them (archive.ts).
+ * The record to keep and upload: names removed when uploads are on, the player's coach-question answers added as
+ * `coach_answers`, and the times the player went back to an earlier turn as `rewinds` (store.ts Rewind: the tape
+ * holds only the line kept, so analysis learns nothing from the turns discarded). Only this upload copy carries
+ * them: the engine's `Recording` refuses unknown keys, so exports and anything fed back to the engine strip them
+ * (archive.ts).
  */
-export function historyToRecord(client: { archive(): string; publicArchive?(): string }, answers: readonly unknown[] = []): string {
+export function historyToRecord(client: { archive(): string; publicArchive?(): string }, answers: readonly unknown[] = [], rewinds: readonly unknown[] = []): string {
   if (!uploadsGames()) return client.archive();
   const json = client.publicArchive ? client.publicArchive() : client.archive();
-  if (!answers.length) return json;
-  return JSON.stringify({ ...(JSON.parse(json) as object), coach_answers: answers });
+  if (!answers.length && !rewinds.length) return json;
+  return JSON.stringify({
+    ...(JSON.parse(json) as object),
+    ...(answers.length ? { coach_answers: answers } : {}),
+    ...(rewinds.length ? { rewinds } : {}),
+  });
+}
+
+const KEYS = 'legatum.uploadKeys.v1';
+const MAX_KEYS = 200;
+
+/**
+ * The upload key of one game: a random secret made in this browser the first time the game is uploaded and
+ * sent with each of its checkpoints. The server remembers its hash and refuses a checkpoint for that game id
+ * under any other key, so someone who learns a game's id (it is inside every exported save) cannot replace the
+ * record. It names a game, never a player: each game gets its own. Null where the browser keeps no storage;
+ * the upload then goes without a key, as older builds do.
+ */
+export function uploadKey(id: string): string | null {
+  try {
+    const kept = JSON.parse(localStorage.getItem(KEYS) ?? '[]') as [string, string][];
+    const found = kept.find(([game]) => game === id);
+    if (found) return found[1];
+    const key = Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, '0')).join('');
+    localStorage.setItem(KEYS, JSON.stringify([...kept, [id, key]].slice(-MAX_KEYS)));
+    return key;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -31,17 +60,20 @@ export async function uploadGameHistory(json: string): Promise<boolean> {
   if (!uploadsGames()) return false;
   const id = (JSON.parse(json) as { metadata: { game_id: string } }).metadata.game_id;
   if (!id.startsWith('web-')) return true;
+  const key = uploadKey(id);
   let body: Blob = new Blob([json], { type: 'application/json' });
   if (typeof CompressionStream === 'undefined') return false;
   body = await new Response(body.stream().pipeThrough(new CompressionStream('gzip'))).blob();
   try {
     const response = await fetch(`${GAMES_URL}/v1/games/${encodeURIComponent(id)}`, {
-      method: 'PUT', body, headers: { 'Content-Type': 'application/octet-stream' }, signal: AbortSignal.timeout(30000),
+      method: 'PUT', body, signal: AbortSignal.timeout(30000),
+      headers: { 'Content-Type': 'application/octet-stream', ...(key ? { 'X-Upload-Key': key } : {}) },
     });
     if (response.ok) return true;
-    // 400/404/413/422: this record will never be accepted; retrying cannot help. A 403 means this site is missing
-    // from the Worker's ALLOWED_ORIGINS, a setup mistake that a fix can cure, so the game stays queued.
-    return [400, 404, 413, 422].includes(response.status);
+    // 400/404/409/413/422: this record will never be accepted; retrying cannot help (409: the game is stored
+    // under another upload key, for example after this browser's storage was cleared). A 403 means this site is
+    // missing from the Worker's ALLOWED_ORIGINS, a setup mistake that a fix can cure, so the game stays queued.
+    return [400, 404, 409, 413, 422].includes(response.status);
   } catch {
     return false;
   }

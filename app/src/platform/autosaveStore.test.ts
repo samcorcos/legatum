@@ -1,7 +1,7 @@
 import { IDBFactory, IDBObjectStore } from 'fake-indexeddb';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import {
-  AUTOSAVE_DB, AUTOSAVE_SLOTS, LEGACY_AUTOSAVE_KEY, SKIPPED_SLOTS_KEY, autosavesSettled, listAutosaves, readPendingOrders,
+  AUTOSAVE_DB, AUTOSAVE_SLOTS, LEGACY_AUTOSAVE_KEY, SKIPPED_SLOTS_KEY, autosavesSettled, listAutosaves, listCampaignTurns, readAutosaveText, readPendingOrders,
   resetAutosaveStoreForTests, skipAutosave, writeAutosave, writePendingOrders, type AutosaveDraft,
 } from './autosaveStore';
 
@@ -35,12 +35,39 @@ it('keeps the latest turn and lists the older ones, newest first, with what the 
   for (const turn of [1, 2, 3]) expect(await writeAutosave(draft(turn))).toBe('database');
   const [newest, ...older] = await listAutosaves();
   expect(newest).toMatchObject({ id: 'game-a:3', campaign: 'game-a', turn: 3, label: 'Ann & Bo' });
-  expect(older.map((r) => r.turn)).toEqual([2, 1]);
+  expect(older.map((r) => r.turn)).toEqual([2]);
+  expect((await listCampaignTurns('game-a')).map((r) => r.turn)).toEqual([3, 2, 1]);
 });
 
-it('keeps five turns of a game and drops the oldest', async () => {
+it('keeps ten turns of a game and drops the oldest: the newest two as text, the rest gzipped', async () => {
   for (let turn = 1; turn <= AUTOSAVE_SLOTS + 3; turn++) await writeAutosave(draft(turn));
-  expect(await turns()).toEqual([8, 7, 6, 5, 4]);
+  // Continue, the crash screen and older builds see the plain slots only.
+  expect(await turns()).toEqual([13, 12]);
+  const kept = await listCampaignTurns('game-a');
+  expect(kept.map((t) => t.turn)).toEqual([13, 12, 11, 10, 9, 8, 7, 6, 5, 4]);
+  expect(kept[0]).not.toHaveProperty('text');
+  // A compacted turn reads back exactly.
+  expect(await readAutosaveText('game-a:5')).toBe(draft(5).text);
+  expect(await readAutosaveText('game-a:13')).toBe(draft(13).text);
+  expect(await readAutosaveText('game-a:1')).toBeNull();
+  const db = await new Promise<IDBDatabase>((resolve) => { const r = indexedDB.open(AUTOSAVE_DB, 1); r.onsuccess = () => resolve(r.result); });
+  const stored = await new Promise<{ text?: string; gz?: ArrayBuffer }>((resolve) => {
+    const req = db.transaction('saves').objectStore('saves').get('game-a:5');
+    req.onsuccess = () => { db.close(); resolve(req.result); };
+  });
+  expect(stored.text).toBeUndefined();
+  expect(stored.gz).toBeInstanceOf(ArrayBuffer);
+});
+
+it('going back to an earlier turn drops the later turns once that turn is saved again', async () => {
+  for (let turn = 1; turn <= 6; turn++) await writeAutosave(draft(turn));
+  // The player reopened turn 3: it is saved again on opening, and turns 4 to 6 belong to a line they left.
+  await writeAutosave({ ...draft(3), savedAt: '2026-11-22T12:00:00Z' });
+  expect((await listCampaignTurns('game-a')).map((t) => t.turn)).toEqual([3, 2, 1]);
+  expect(await turns()).toEqual([3, 2]);
+  await writeAutosave({ ...draft(4), savedAt: '2026-11-22T12:01:00Z' });
+  expect((await listCampaignTurns('game-a')).map((t) => t.turn)).toEqual([4, 3, 2, 1]);
+  expect(await listCampaignTurns('other')).toEqual([]);
 });
 
 it('writing the same turn again replaces that slot', async () => {
@@ -52,8 +79,8 @@ it('writing the same turn again replaces that slot', async () => {
 });
 
 it('another game replaces the old slots only once its first save is in', async () => {
-  await writeAutosave(draft(10, 'old'));
   await writeAutosave(draft(9, 'old'));
+  await writeAutosave(draft(10, 'old'));
   // The new game's first write fails everywhere: the old game is still there.
   vi.spyOn(IDBObjectStore.prototype, 'put').mockImplementationOnce(() => { throw new Error('Quota exceeded'); });
   local.failWrites = true;
@@ -70,7 +97,7 @@ it('serialises writes: the order they were asked in is the order they land', asy
   void writeAutosave(draft(2));
   void writeAutosave(draft(3));
   await autosavesSettled();
-  expect(await turns()).toEqual([3, 2, 1]);
+  expect((await listCampaignTurns('game-a')).map((r) => r.turn)).toEqual([3, 2, 1]);
 });
 
 it('uses the old single slot when there is no database, and says so when nothing works', async () => {

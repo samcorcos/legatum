@@ -253,7 +253,7 @@ impl Objective {
                 "Humble the mighty: capture a city from an empire ahead of you on VP".into()
             }
             Objective::Breach => "Breach: capture a walled city".into(),
-            Objective::Cities { .. } => format!("Gain {n} {cities}"),
+            Objective::Cities { .. } => format!("Dominion: gain {n} {cities}"),
             Objective::Population { .. } => format!("Prosperity: grow your population by {n}"),
             Objective::Territory { .. } => format!("Frontier: gain {n} tiles of territory"),
             Objective::Buildings { building, .. } => format!(

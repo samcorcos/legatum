@@ -878,7 +878,7 @@ describe('objectiveCloseLines', () => {
     const lines = objectiveCloseLines(before, after);
     expect(lines).toHaveLength(1);
     expect(lines[0]).toMatchObject({ category: 'victory', tone: 'good', weight: 2, players: [after.me] });
-    expect(lines[0].text).toBe('Close to the Classical Age’s VP: Gain 4 cities (3 of 4, 1 to go)');
+    expect(lines[0].text).toBe('Close to the Classical Age’s VP: Dominion, gain 4 cities (3 of 4, 1 to go)');
     expect(lines[0].details[0]).toContain('Meet the Classical Age’s card to score its 1 VP');
     // The next turn it is still one away: the line does not repeat.
     expect(objectiveCloseLines(after, after)).toEqual([]);

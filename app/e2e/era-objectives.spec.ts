@@ -123,12 +123,16 @@ for (const size of SIZES) {
       await expect(header.getByTestId('era-objective')).toHaveCount(0);
       await shot(page, 'research-ancient', size);
       await page.keyboard.press('Escape');
-      await stage(page, { era: 2, scored: [], progress: { '2:0': [6, 9], '2:1': [3, 4], '2:2': [0, 1] } });
+      // The Medieval Age in focus shows real progress: one card part way, one met.
+      await stage(page, { era: 2, scored: [], progress: { '2:0': [6, 9], '2:1': [3, 4], '2:2': [0, 1], '3:0': [9, 14], '3:1': [40, 40], '3:2': [0, 1] } });
       await page.locator('.topbar .research-chip').click();
       // The fixture's rival began the Medieval Age, so it is the Age in focus.
       await expect(header.getByTestId('research-objectives-current')).toContainText(/\w+ Age: score 1 VP/);
       await expect(header.getByTestId('research-objectives-current').getByTestId('era-objective')).toHaveCount(3);
       await expect(header.getByTestId('research-objectives-next')).toContainText('The next Age begins when any empire enters the Renaissance era.');
+      await expect(header.getByTestId('research-objectives-current').locator('.eo-line.met')).toHaveCount(1);
+      // The seal stamps in and the met card flashes the first time this Age is shown; let both finish before the shot.
+      await header.evaluate((el) => Promise.all(el.getAnimations({ subtree: true }).map((a) => a.finished)));
       await shot(page, 'research-classical', size);
     });
   });

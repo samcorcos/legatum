@@ -27,7 +27,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-async function renderCity(faction: Faction = 'Switzerland') {
+async function renderCity(faction: Faction = 'Switzerland', gold?: number) {
   const client = new FixtureClient();
   await client.newGame(await client.standardSetup('42', faction, 'India', 'Ada', 'Bo'));
   client.endTurn({});
@@ -36,6 +36,7 @@ async function renderCity(faction: Faction = 'Switzerland') {
   city.population = 1;
   for (const h of neighbors(city.pos)) state.terrain[tileIndex(h, state.width, state.height)] = 'Grassland';
   state.terrain[tileIndex(neighbors(city.pos)[0], state.width, state.height)] = 'Hills';
+  if (gold !== undefined) state.players[0].gold = gold;
   const view = client.view(0);
   const c = view.cities.find((c) => c.id === city.id)!;
   useGame.setState({ client, views: [view], humans: [0], orders: [[]], errors: [[]], seat: 0 });
@@ -314,6 +315,18 @@ it('shows every Buy price as a spend chip on the button, and the chosen buy agai
   // This fixture's treasury is short: the chosen card shows the spend against the treasury.
   const after = view.economy.gold - price;
   expect(chosen.textContent).toBe(`Costs ${price} Gold (${view.economy.gold} → ${after < 0 ? `−${-after}, debt` : after})`);
+});
+
+it('a Buy names the city in a notice with Undo, and Undo takes the purchase back (misclick guard)', async () => {
+  const { city } = await renderCity('Switzerland', 5000);
+  const buy = container.querySelector<HTMLButtonElement>('.production-choice[data-item="u:Spearman"] .btn-buy')!;
+  act(() => buy.click());
+  const s = useGame.getState();
+  expect(s.orders[0]).toContainEqual({ type: 'BuyItem', city: city.id, item: { kind: 'Unit', unit: 'Spearman' } });
+  expect(s.notice?.text).toMatch(new RegExp(`^Buying Spearman in ${city.name} for \\d+ Gold\\.$`));
+  const { undoNotice } = await import('../notice');
+  act(() => undoNotice());
+  expect(useGame.getState().orders[0].some((o) => o.type === 'BuyItem')).toBe(false);
 });
 
 it.each([false, true])('disables production and Buy after the game ends, including a pending purchase (%s)', async (buying) => {

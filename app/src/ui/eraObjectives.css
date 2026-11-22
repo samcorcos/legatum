@@ -23,8 +23,10 @@
 .eo-lines.preview .eo-bar i { background: color-mix(in srgb, var(--ink-2) 70%, transparent); }
 .eo-lines.preview .eo-text { color: var(--ink-2); }
 /* The bar beside the text (wide places: the research screen): one row per objective. */
-.eo-lines.inline .eo-line { grid-template-columns: 70px minmax(0, 1fr) 84px minmax(46px, auto); align-items: center; }
-.eo-lines.inline .eo-fam { display: inline-flex; align-items: center; gap: 4px; }
+.eo-lines.inline .eo-line { grid-template-columns: 18px minmax(0, 1fr) 84px minmax(46px, auto); align-items: center; }
+.eo-lines.inline .eo-fam { display: inline-flex; align-items: center; justify-content: center; color: var(--ink-2); }
+.eo-lines.inline .eo-ask { color: var(--ink-2); font-weight: 400; }
+.eo-lines.inline .eo-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .eo-lines.inline .eo-bar { grid-column: 3; grid-row: 1; height: 5px; margin: 0; }
 .eo-lines.inline .eo-num { grid-column: 4; grid-row: 1; }
 
@@ -144,7 +146,15 @@
   .era-objectives-research { margin-bottom: 6px; }
   .eor-col { padding-block: 3px 4px; }
   .eor-col .eor-seal { zoom: .85; }
-  .eor-col .eo-lines.inline .eo-line { grid-template-columns: 70px minmax(0, 1fr) 56px minmax(40px, auto); }
+  .eor-col .eo-lines.inline .eo-line { grid-template-columns: 18px minmax(0, 1fr) 56px minmax(40px, auto); }
   /* The first era's header keeps the instruction and drops the aside: a card's name, art and buttons need the room. */
   .eor-col .eo-by-design { display: none; }
 }
+
+/* An Age newly opened or scored stamps its seal in once; a card newly met flashes once (EraObjectivesResearch; never under reduced motion or with animations off). */
+@media (prefers-reduced-motion: no-preference) {
+  .eor-col .eor-seal.stamp { animation: eor-stamp 520ms cubic-bezier(.2, .9, .25, 1.15) both; }
+  .eor-col .eo-line.met.flash { animation: eor-flash 900ms ease-out 260ms both; }
+}
+@keyframes eor-stamp { 0% { transform: scale(1.6) rotate(-8deg); opacity: 0; } 60% { transform: scale(.94) rotate(1deg); opacity: 1; } 100% { transform: none; } }
+@keyframes eor-flash { 0% { background: color-mix(in srgb, var(--good) 26%, transparent); } 100% { background: transparent; } }

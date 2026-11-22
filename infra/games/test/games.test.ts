@@ -49,6 +49,17 @@ describe("game uploads", () => {
     expect((await put({ ...record(), coach_answers: Array.from({ length: 2001 }, () => ({})) })).status).toBe(422);
   });
 
+  it("accepts rewinds as a short list of earlier-turn jumps and refuses anything else", async () => {
+    const rewind = { at: "2026-11-22T19:10:00.000Z", from_turn: 42, to_turn: 39 };
+    expect((await put({ ...record(), rewinds: [rewind] })).status).toBe(200);
+    expect((await put({ ...record(), rewinds: "42" })).status).toBe(422);
+    expect((await put({ ...record(), rewinds: [{ ...rewind, to_turn: 42 }] })).status).toBe(422);
+    expect((await put({ ...record(), rewinds: [{ ...rewind, from_turn: 1.5 }] })).status).toBe(422);
+    expect((await put({ ...record(), rewinds: [{ ...rewind, at: "yesterday" }] })).status).toBe(422);
+    expect((await put({ ...record(), rewinds: [{ ...rewind, note: "misclick" }] })).status).toBe(422);
+    expect((await put({ ...record(), rewinds: Array.from({ length: 1001 }, () => rewind) })).status).toBe(422);
+  });
+
   it("refuses typed names, other sites, bad ids and non-gzip bodies", async () => {
     const typed = record();
     typed.metadata.seats[0]!.name = "Dana";
@@ -73,10 +84,51 @@ describe("game uploads", () => {
     expect(get.status).toBe(405);
   });
 
+  it("locks a game to the upload key it was first stored with", async () => {
+    const id = "web-1795310626070-0000000000000001-0000000000000002";
+    const body = { ...record(), metadata: { ...record().metadata, game_id: id } };
+    const keyed = async (key?: string) =>
+      call(`/v1/games/${id}`, {
+        method: "PUT",
+        headers: { Origin: ORIGIN, ...(key === undefined ? {} : { "X-Upload-Key": key }) },
+        body: await gzip(JSON.stringify(body)),
+      });
+    const mine = "a".repeat(32);
+    expect((await keyed("not hex")).status).toBe(400);
+    expect((await keyed(mine)).status).toBe(200);
+    const stored = await env.GAMES.head(`games/2026-11/${id}.json.gz`);
+    expect(stored?.customMetadata?.key).toMatch(/^[0-9a-f]{64}$/);
+    expect(stored?.customMetadata?.key).not.toContain(mine);
+    // Someone who knows the id but not the key cannot replace the record, with another key or with none.
+    const other = await keyed("b".repeat(32));
+    expect(other.status).toBe(409);
+    expect(other.headers.get("Access-Control-Allow-Origin")).toBe(ORIGIN);
+    expect((await keyed()).status).toBe(409);
+    expect((await keyed(mine)).status).toBe(200);
+    expect((await env.GAMES.head(`games/2026-11/${id}.json.gz`))?.customMetadata?.key).toBe(stored?.customMetadata?.key);
+  });
+
+  it("keeps a game from an older build open until a keyed checkpoint locks it", async () => {
+    const id = "web-1795310626071-0000000000000003-0000000000000004";
+    const body = { ...record(), metadata: { ...record().metadata, game_id: id } };
+    const send = async (key?: string) =>
+      call(`/v1/games/${id}`, {
+        method: "PUT",
+        headers: { Origin: ORIGIN, ...(key === undefined ? {} : { "X-Upload-Key": key }) },
+        body: await gzip(JSON.stringify(body)),
+      });
+    expect((await send()).status).toBe(200);
+    expect((await send()).status).toBe(200);
+    expect((await env.GAMES.head(`games/2026-11/${id}.json.gz`))?.customMetadata?.key).toBeUndefined();
+    expect((await send("c".repeat(32))).status).toBe(200);
+    expect((await send()).status).toBe(409);
+  });
+
   it("answers the CORS preflight for allowed pages only", async () => {
     const ok = await call(`/v1/games/${ID}`, { method: "OPTIONS", headers: { Origin: "http://localhost:5173" } });
     expect(ok.status).toBe(204);
     expect(ok.headers.get("Access-Control-Allow-Methods")).toContain("PUT");
+    expect(ok.headers.get("Access-Control-Allow-Headers")).toContain("X-Upload-Key");
     expect((await call(`/v1/games/${ID}`, { method: "OPTIONS", headers: { Origin: "https://x.example" } })).status).toBe(403);
   });
 });
@@ -228,6 +280,8 @@ describe("private read API", () => {
     const body = await list.json() as { games: { key: string; outcome: string; turns: string }[]; cursor: string | null };
     expect(body.games.find((g) => g.key === key)).toMatchObject({ outcome: "abandoned", turns: "145" });
     expect(body.cursor).toBeNull();
+    // A keyed game's stored key hash must not take the place of the object's name in the listing.
+    expect(body.games.every((g) => g.key.startsWith("games/"))).toBe(true);
     const got = await read(`/v1/read/games/${encodeURIComponent(key)}`);
     expect(got.status).toBe(200);
     const text = await new Response((await got.blob()).stream().pipeThrough(new DecompressionStream("gzip"))).text();

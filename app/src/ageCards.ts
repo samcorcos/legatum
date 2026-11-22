@@ -14,8 +14,11 @@ export function cardHint(kind: string | undefined): string {
   }
 }
 
-/** A card's short name for compact places: "Veterans", "Humble the mighty", "Breach", "Gain 3 cities". */
+/** A card's short name for compact places: "Veterans", "Humble the mighty", "Breach", "Dominion". */
 export const cardName = (text: string): string => text.split(':')[0];
+
+/** A card's name and its plain ask, for places where the ask is not on screen nearby: "Dominion, gain 4 cities". */
+export const cardNameAndAsk = (text: string): string => (text.includes(':') ? `${cardName(text)}, ${text.slice(text.indexOf(':') + 1).trim()}` : text);
 
 /** The meter of a card that counts something done in play: how far the Age's own count has come, in words. */
 export function cardMeter(objective: CardRule, current: number, target: number): { value: number; target: number; label: string } | null {
@@ -23,6 +26,9 @@ export function cardMeter(objective: CardRule, current: number, target: number):
     case 'Veterans': return { value: current, target, label: `Promotions earned since the Age began: ${Math.min(current, target)} of ${target}` };
     case 'Breach': return { value: current, target, label: `Walled cities captured since the Age began: ${Math.min(current, target)} of ${target}` };
     case 'HumbleTheMighty': return { value: current, target, label: `Cities captured from an empire ahead of you on VP since the Age began: ${Math.min(current, target)} of ${target}` };
+    case 'Population': return { value: current, target, label: `Population grown since the Age began: ${Math.min(current, target)} of ${target}` };
+    case 'Cities': return { value: current, target, label: `Cities gained since the Age began: ${Math.min(current, target)} of ${target}` };
+    case 'Territory': return { value: current, target, label: `Tiles of territory gained since the Age began: ${Math.min(current, target)} of ${target}` };
     default: return null;
   }
 }

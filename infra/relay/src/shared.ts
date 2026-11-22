@@ -63,7 +63,14 @@ export const msgTooManyRooms = (n: number): string =>
  * digits with spaces and punctuation removed. A name containing one is replaced by "Game <id>".
  * Add entries here; nothing else needs to change.
  */
-export const BLOCKED_NAME_TERMS: readonly string[] = [];
+export const BLOCKED_NAME_TERMS: readonly string[] = [
+  // A first filter for the words that make a public list unpleasant, not a complete one. A term is matched
+  // anywhere in the name, so leave out any that sits inside ordinary words ("ass" is in "Assyria", "rape" in
+  // "grape", "coon" in "tycoon"). A host can still be removed from the lobby by closing the room.
+  "fuck", "fuk", "fck", "shit", "cunt", "bitch", "whore", "slut", "pussy", "penis", "vagina", "dildo", "jizz",
+  "wank", "porn", "rapist", "nigger", "nigga", "faggot", "tranny", "kike", "retard", "hitler", "nazi", "kkk",
+  "killyourself",
+];
 
 export const KIND_OPEN = 0;
 export const KIND_DATA = 1;

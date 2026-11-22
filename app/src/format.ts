@@ -10,7 +10,7 @@ import { improvementTitle } from './improvements';
 import type { Breakdown, CityView, Event, Faction, Hex, PlayerId, PlayerView, ProductionItem, Resource, TechId, UnitKind, UpkeepPreview } from './types';
 import { techCardUnlocks, techUnlockSummary } from './ui/techCardUnlocks';
 import { eraName } from './ui/eraResearch';
-import { cardName } from './ageCards';
+import { cardName, cardNameAndAsk } from './ageCards';
 import { CITY_HEAL, CITY_HP, cityCanFire } from './combat';
 import { BUILDING_NAME, unitIconName, FACTION_ADJECTIVE, FACTION_GOAL, factionGoalVp, RULES, TECH_NAME, CAPTURE_RESISTANCE_TURNS, eraScaled, factionGoalRule, UNIT_NAME, itemName, pluralUnit } from './data';
 import { closeObjectives } from './eraObjectives';
@@ -1677,11 +1677,11 @@ export function releasedGarrisonLines(before: PlayerView | null, after: PlayerVi
 
 /**
  * Age cards you have just come close to (one short of the target, or within a tenth of it), in an Age you have not scored:
- * "Close to the Classical Age's VP: Gain 4 cities (3 of 4, 1 to go)". Only the turn it first gets that close.
+ * "Close to the Classical Age's VP: Dominion, gain 4 cities (3 of 4, 1 to go)". Only the turn it first gets that close.
  */
 export function objectiveCloseLines(before: PlayerView | null, after: PlayerView): ReportLine[] {
   return closeObjectives(before, after).map(({ era, line: o }) => line('victory',
-    `Close to the ${era.name} Age’s VP: ${o.text} (${o.current} of ${o.target}, ${o.remaining} to go)`, {
+    `Close to the ${era.name} Age’s VP: ${cardNameAndAsk(o.text)} (${o.current} of ${o.target}, ${o.remaining} to go)`, {
       players: [after.me], weight: 2, tone: 'good',
       details: [`Meet the ${era.name} Age’s card to score its 1 VP, kept for good.`],
     }));
