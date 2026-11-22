@@ -13,7 +13,7 @@ Legatum looks like Civ 6 but differs in ways that matter. Recommendations reason
 
 ## Before recommending anything
 
-1. Read `references/game-rules.md`: at least the sections for the mechanics involved, and always section 9, "Systems that do NOT exist".
+1. Open `references/index.md`, then read only the system files for the mechanics involved (for example `combat.md`, `economy-and-purchases.md`), and always `references/not-in-game.md` ("Systems that do NOT exist"). Do not load the whole folder: the AI files alone are about 250 KB.
 2. Check feasibility against it:
    - **Order model.** Can a player express this with one order per unit or city per turn, under simultaneous resolution? Does it need a new order type or new UI?
    - **Availability.** Is every building, unit or tech it relies on available when the plan uses it? Check unlock techs and costs at the relevant speed.
@@ -24,4 +24,4 @@ Legatum looks like Civ 6 but differs in ways that matter. Recommendations reason
 
 ## Keeping it true (mandatory)
 
-Any change to rules, mechanics, factions, costs, orders, defaults or AI architecture must update `references/game-rules.md` in the same change. That covers changes by Claude, Astra (Codex) or any agent. Correct wrong entries immediately, and keep citations (file:line or file:function) current. Astra write tasks that change rules must include "update .claude/skills/legatum-rules/references/game-rules.md" in their prompt, and the review checks it.
+Any change to rules, mechanics, factions, costs, orders, defaults or AI architecture must update the matching system file under `references/` (see `references/index.md`) in the same change, and `references/history.md` for a rules-version bump. That covers changes by Claude, Astra (Codex) or any agent. Correct wrong entries immediately, and keep citations current as `file::function`, never line numbers. Astra write tasks that change rules must include "update the matching file under .claude/skills/legatum-rules/references/" in their prompt, and the review checks it.

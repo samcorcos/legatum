@@ -2,7 +2,7 @@
 
 | Read | For |
 | --- | --- |
-| [../.claude/skills/legatum-rules/references/game-rules.md](../.claude/skills/legatum-rules/references/game-rules.md) | How the game works, verified against the code: orders, turn resolution, what is available when, and the systems that do not exist. Start here before proposing a mechanic. |
+| [../.claude/skills/legatum-rules/references/index.md](../.claude/skills/legatum-rules/references/index.md) | How the game works, verified against the code: orders, turn resolution, what is available when, and the systems that do not exist. Start here before proposing a mechanic. |
 | [../ARCHITECTURE.md](../ARCHITECTURE.md) | Crate graph, turn pipeline, determinism, clients, saves, AI layers. |
 | [engineering-notes.md](engineering-notes.md) | Dated engine, determinism, AI measurement, testing, and UI boundary lessons from development. |
 | [game-archive.md](game-archive.md) | The game-recording format used for analysis. |
@@ -14,4 +14,4 @@
 
 Build and contribution instructions are in [../CONTRIBUTING.md](../CONTRIBUTING.md).
 
-The development layer is public too: `CLAUDE.md` and `.claude/` (skills, agents, hooks) record how the project is run with AI agents; `docs/learnings.md` is the full engineering log (`engineering-notes.md` is the curated version); `docs/ops/`, `docs/status/` and `tools/` hold the operations side (cloud build box, spot simulations, test gates).
+The development layer is public too: `CLAUDE.md` and `.claude/` (skills, agents, hooks) record how the project is run with AI agents; `docs/learnings.md` is a short digest of the engineering log, whose full monthly archive is `docs/learnings/` (`engineering-notes.md` is the curated version); `docs/ops/`, `docs/status/` and `tools/` hold the operations side (cloud build box, spot simulations, test gates).

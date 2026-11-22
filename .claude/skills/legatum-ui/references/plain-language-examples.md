@@ -1,0 +1,30 @@
+# UI: plain language, before and after, enforcement and the Scenario Lab screen
+
+The 2026-10-17 copy audit's before/after table, how the copy lint enforces the guide, and the Scenario Lab screen rules.
+
+Moved verbatim from SKILL.md on 2026-11-22 (original order kept). The current rules are in SKILL.md; where this file disagrees with SKILL.md, SKILL.md wins.
+
+
+**Before and after (2026-10-17 audit, full table in `docs/design/copy-audit-2026-10-17.md`):**
+
+| Before | After |
+| --- | --- |
+| Each city earns +1 Gold per complete pair of population each turn. | Each city earns +1 Gold a turn for every 2 population. |
+| Every 100 Gold held adds +1 Gold per turn, up to +5. | Every 100 Gold in your treasury earns +1 Gold a turn in interest. |
+| Settler: Needs population 2; costs 1 pop. | A city needs 2 population to train one, and loses 1 population when it does. |
+| An Industry project replaces a city's production for Gold (50% of Production) or Science (25%), rounded down. | A city can run an Industry project instead of building: each turn it turns 50% of its Production into Gold, or 25% into Science. |
+| All units, Settlers included, move 1 less (minimum 1). | Every unit, Settlers too, has 1 less move (never fewer than 1). |
+| Live: the 2 VP is lost while the treasury is below it. | You lose the VP while your treasury is below 1,000 Gold, and regain it when you are back above. |
+| Moving and firing remain mutually exclusive. | A unit can move or fire in a turn, not both. |
+| Military units (Scouts excepted) heal only 2 HP a turn. (superseded 2026-11-06: Sparta's slow heal is cut and resting heal is uniform; no such sentence exists now.) | Your military units (not Scouts) heal only 2 HP a turn by resting. (superseded 2026-11-06, same reason) |
+| Each level adds 10% base strength. | Each level adds 10% to the unit's strength. |
+| (Germany, user 2026-10-17: "is it +3 beyond the Workshop or +1?") The Ruhr Foundry replaces the Forge and gives +6 Production per turn. | Ruhr Foundry: +6 Production (a Forge gives +3). |
+| (user: "what is a new building family?") New building families cost 90% Production. (rule cut 2026-11-07; the line no longer exists, the lesson stands) | Your first building of each kind costs 10% less Production (upgrades and Great Works cost the usual price). |
+| (user: "what does the 'while it runs' thing even mean?") Drawback: While it runs, the city cannot produce a unit or building. | Removed: it only restated "instead of building" in the ability. The project row has no drawback. |
+| Bo's Scout moved 2 hexes to 2 tiles NE of Lugano | Bo's Scout moved 2 tiles, now 2 tiles NE of Lugano |
+| (Settle lens hover, user 2026-10-17) "+23 Food, +36 Production from the land within 3 tiles, outer ring at half (Food counts 4, Production 3, Gold 2: +200 points)" | A plain sentence first ("Rich farmland and good Production"), the arithmetic behind Details |
+| Each other Japanese city within 5 hexes gives the city +7% Food and +7% Production per turn. | A city gains 7% Food and Production for every other Japanese city within 5 tiles. |
+
+**Enforced:** the copy lint (`app/src/test/copyRules.ts` holds the banned phrases, the glossary synonyms and the sentence limits; one data file, add a row to grow it). `ui/textArtifacts.test.tsx` runs it, with the artifact guard, over every string the game prints from data (faction sheets, goals, the Guide, production and technology text, victory and diplomacy rules, a mock game's turn report), and `ui/copySource.test.ts` runs its phrase rules over string literals in `app/src` and `crates/core/src`. A real exception goes in `EXCEPTIONS` with its reason. The UI reviewer reviews copy on every screen it tours; the `legatum-plain-language-reviewer` reads every changed player string on each PR (gate marker `.progress/plain-review/`).
+
+- **Scenario Lab (user, 2026-10-18; `ScenariosScreen.tsx`, `ScenarioHud.tsx`, `scenarios/README.md`):** the title screen's Scenarios is a wall of cards for questions only a human can answer. Each card has the seat's era painting with the leader's roundel, the title, the question in bold, a two-line blurb, "About N min · M turns", "Your best: ..." and "Hard AI: ...". A card opens its briefing (the question, the briefing, the objective, your best and the Hard AI's result), and Begin is the one primary. A question waiting on a feature is a dashed "Coming soon" card that cannot be started. The result card sets "You" beside "Hard AI, same start" in words (turns taken, or cities held) and one verdict line; its primary is "How did it feel?", which opens Fun 1-5, Fair 1-5, "It felt" (too easy, about right, too hard, confusing) and a free-text box that asks the scenario's own question. The answers are written into the run file the coach reads. The run file downloads when the run ends (again with feedback, and as `abandoned: true` when the player leaves part-way), one file named by its start time. A new scenario is made with `tools/scenarios/cut.sh`, not by hand; the folder drop-in and its "Added file" and "Cannot be played" cards went with the desktop app (2026-11-22). **Review rules (UI review, 2026-10-18):** a card that opens a detail screen opens on one click (a select-only click is two steps and looks like nothing happened); a primary's key badge is true for the control that has focus (Return saves from a rating, "⌘ Return" in the text box, a disabled primary can't take focus); a result moment carries art (your leader's frame and a ribbon) and colour plus word for good or bad; never print a file path, "host" or other storage detail in player text (short name, full path in a tooltip); one word for the objective's verb everywhere (the core's condition labels say "Take", never "Capture"); a card blurb wraps to its last line or is rewritten (no ellipsis in the stake); a list with held-back entries needs tour shots of its longest entry and of won, lost and window-complete results (still to add: the held-back Hold Athens and Therapne cards while they stay out of the list).
