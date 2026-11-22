@@ -57,7 +57,7 @@ describe('a lost wonder race', () => {
     expect(formatEvents([queuedOnly], contextFromViews(view, view))[0].text).toContain("so it was taken out of");
     const cards = momentsForTurn([queuedOnly, event], view.me, view, view);
     expect(cards).toHaveLength(1);
-    expect(cards[0]).toMatchObject({ tier: 'major', title: 'Hagia Sophia', kicker: 'A wonder race lost', loss: true });
+    expect(cards[0]).toMatchObject({ tier: 'major', title: 'Hagia Sophia', kicker: 'Wonder race lost', place: city.name, choose: city.id, loss: true });
     expect(cards[0].details.join(' ')).toContain(`Choose what ${city.name} builds next.`);
   });
 

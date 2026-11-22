@@ -90,8 +90,8 @@ export function handleOverlayKey(e: KeyboardEvent): void {
   const modal = doc.querySelector('dialog[open]');
   const tipAbove = modal ? !!modal.querySelector('.tip-bubble.tip-pinned, .unlock-card.pinned') : tipOpen();
   if (e.key === 'Escape' && (tipAbove || (!modal && doc.querySelector('.moment-lane .moment-card, .moment-lane .era-takeover')))) return;
-  // A tech unlock card or the era-up takeover owns Return (its primary action) until it is dismissed.
-  if (e.key === 'Enter' && doc.querySelector('.moment-lane .moment-card.unlock, .moment-lane .era-takeover')) return;
+  // A moment card (tech unlock, wonder, reward) or the era-up takeover owns Return (its primary action) until it ends.
+  if (e.key === 'Enter' && doc.querySelector('.moment-lane .moment-card, .moment-lane .era-takeover')) return;
   if (e.key === 'Enter' && target && target !== doc.body) {
     // A focused target that acts on Return itself (a tech card: Return researches it) keeps it.
     if (ownsKeys(target) || target.closest('[data-enter-activates]')) return;
