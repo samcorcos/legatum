@@ -17,8 +17,8 @@ function NearbyWonders({ site }: { site: SettlementSite }) {
 }
 
 /** The hover: one plain sentence, the key numbers, then the relative half (top-three marker, travel). */
-function SettlementSummary({ site }: { site: SettlementSite }) {
-  const verdict = siteVerdict(site);
+function SettlementSummary({ site, faction }: { site: SettlementSite; faction?: string }) {
+  const verdict = siteVerdict(site, faction);
   return <>
     <p className="settlement-summary" data-settle-band={site.band} title={bandTitle(site)}><i className={`settle-swatch band-${site.band.toLowerCase()}`} aria-hidden="true" /><span><b>{verdict.head}:</b> {verdict.rest}</span></p>
     <ul className="settlement-reasons" aria-label="Key numbers for this spot">{qualityLines(site).map((line) => <li key={line.id} data-settle-line={line.id}><Amounts text={line.text} /></li>)}</ul>
@@ -28,10 +28,10 @@ function SettlementSummary({ site }: { site: SettlementSite }) {
 }
 
 const YieldLine = ({ yields }: { yields: Yields }) => <span className="settlement-yields">{(['food', 'production', 'gold', 'science'] as const).filter((k) => yields[k] !== 0).map((k) => <span key={k}><YieldIcon k={k} /> {yields[k]}</span>)}</span>;
-export function SettlementDetails({ site }: { site: SettlementSite }) {
+export function SettlementDetails({ site, faction }: { site: SettlementSite; faction?: string }) {
   const [expanded, setExpanded] = useState(false);
   return <>
-    <SettlementSummary site={site} />
+    <SettlementSummary site={site} faction={faction} />
     <details className="settlement-breakdown" open={expanded} onToggle={(e) => setExpanded(e.currentTarget.open)}>
     <summary>Details</summary>
     <div className="settlement-score"><b>Site quality: {site.quality} ({site.band}, {bandRange(site.band)})</b></div>
@@ -51,10 +51,10 @@ export function SettlementDetails({ site }: { site: SettlementSite }) {
     </details>
   </>;
 }
-export function SettlementCard({ site, anchor }: { site: SettlementSite; anchor: CardAnchor }) {
+export function SettlementCard({ site, anchor, faction }: { site: SettlementSite; anchor: CardAnchor; faction?: string }) {
   const placed = usePlacedCard<HTMLDivElement>(anchor);
   return <div className="tilecard settlement-card" ref={placed.ref} style={placed.style} aria-label="Settlement suitability">
-    <SettlementSummary site={site} />
+    <SettlementSummary site={site} faction={faction} />
     <p className="muted">Click the tile for details.</p>
   </div>;
 }

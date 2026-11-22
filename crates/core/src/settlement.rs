@@ -387,9 +387,7 @@ pub fn site_potential(view: &PlayerView, pos: Hex) -> (Yields, i32) {
             continue;
         }
         if let Some(terrain) = t.terrain.filter(|t| t.is_land()) {
-            let tile = data::terrain_yields(view.faction_of(view.me), terrain)
-                + t.resource
-                    .map_or(Yields::ZERO, |r| resources::stats(r).bonus);
+            let tile = site_tile_yields(view, view.faction_of(view.me), terrain, t.resource);
             yields += if h.distance(pos) >= CITY_WORK_RADIUS {
                 Yields::new(
                     tile.food / 2,
@@ -403,6 +401,26 @@ pub fn site_potential(view: &PlayerView, pos: Hex) -> (Yields, i32) {
         }
     }
     (yields, foreign)
+}
+
+/// One land tile's part in a site's potential: the faction's terrain yields plus a known
+/// resource's bonus. Under the Nile (`economy::nile`) Egypt's Food is doubled and it has no
+/// Production, so an Egyptian Settler values land by its Food (designer, 2026-11-22: Egypt
+/// doesn't see Production).
+fn site_tile_yields(
+    view: &PlayerView,
+    faction: Faction,
+    terrain: Terrain,
+    resource: Option<resources::Resource>,
+) -> Yields {
+    let y = data::terrain_yields(faction, terrain)
+        + resource.map_or(Yields::ZERO, |r| resources::stats(r).bonus);
+    if faction == Faction::Egypt && view.rule_experiments.egypt_nile() {
+        let pct = view.rule_experiments.egypt_nile_food_percent();
+        Yields::new(y.food * pct / 100, 0, y.gold, y.science)
+    } else {
+        y
+    }
 }
 
 /// Known strategic deposits a city here could claim: within the work radius, not foreign.
@@ -639,11 +657,7 @@ impl SiteBasics {
                     } else if t.owner.is_some_and(|o| o != view.me) {
                         Contribution::Foreign
                     } else if let Some(terrain) = t.terrain.filter(|t| t.is_land()) {
-                        Contribution::Land(
-                            data::terrain_yields(faction, terrain)
-                                + t.resource
-                                    .map_or(Yields::ZERO, |r| resources::stats(r).bonus),
-                        )
+                        Contribution::Land(site_tile_yields(view, faction, terrain, t.resource))
                     } else {
                         Contribution::None
                     },
@@ -1083,8 +1097,8 @@ fn analyze_sites(
                 if !explain {
                     continue;
                 }
-                let yields = data::terrain_yields(faction, terrain);
-                terrain_bonus += yields - terrain.yields();
+                terrain_bonus += data::terrain_yields(faction, terrain) - terrain.yields();
+                let yields = site_tile_yields(view, faction, terrain, None);
                 if h != pos && h.distance(pos) <= 1 {
                     worked.push(WorkedTile {
                         pos: h,
@@ -1119,7 +1133,7 @@ fn analyze_sites(
                 wonders: if explain { site_wonders_near(view, pos) } else { Vec::new() },
                 breakdown,
                 potential_yields,
-                center_yields: data::terrain_yields(faction, terrain),
+                center_yields: site_tile_yields(view, faction, terrain, None),
                 ring_one: worked,
                 terrain_bonus,
                 defense_bonus: data::terrain_defense_rules(
