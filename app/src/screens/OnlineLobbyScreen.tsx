@@ -107,8 +107,10 @@ export function OnlineLobbyScreen() {
                 <li key={room.room} className={`online-room ${mismatch ? 'blocked' : ''}`}>
                   <div className="online-room-main">
                     {note && (
-                      <div className="online-room-note" role="alert">
-                        <span className="online-room-mark" aria-hidden>!</span>
+                      <div className="online-room-note" role={other && !mismatch && joinError?.room !== room.room ? 'status' : 'alert'}>
+                        {other && !mismatch && joinError?.room !== room.room
+                          ? <span className="online-room-mark info" aria-hidden>→</span>
+                          : <span className="online-room-mark" aria-hidden>!</span>}
                         {note}
                       </div>
                     )}

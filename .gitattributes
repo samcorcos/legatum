@@ -1,3 +1,2 @@
-docs/learnings.md merge=union
 docs/sim-results/perf/ledger.csv merge=union
 docs/sim-results/ai-quality/ledger.jsonl merge=union

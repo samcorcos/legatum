@@ -175,7 +175,7 @@ function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
         <ResumeButton />
         <button className={`btn big ${newGamePrimary ? 'primary' : ''}`} onClick={startSolo}>
           Single Player
-          <span className="btn-sub">You against {MIN_SEATS - 1} to {MAX_PLAYERS - 1} AI empires</span>
+          <span className="btn-sub">{behind ? 'A new version is ready: new games start on it' : `You against ${MIN_SEATS - 1} to ${MAX_PLAYERS - 1} AI empires`}</span>
         </button>
         <button className="btn big" onClick={openMultiplayer}>
           Multiplayer
@@ -199,12 +199,6 @@ function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
         <button className="btn big quiet" onClick={openGuide}>How to Play <span className="btn-sub">The field guide · ?</span></button>
         <Settings />
       </div>
-      {behind && (
-        <p className="title-hosted-note title-upload-note title-update-note">
-          A new version of Legatum is ready. New games start on it.{' '}
-          <a href={newestUrl()}>Open it</a>
-        </p>
-      )}
       {uploadsGames() && (
         <p className="title-hosted-note title-upload-note">
           Games you play here are uploaded, without player names, to help improve the AI.{' '}

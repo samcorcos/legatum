@@ -12,7 +12,7 @@ have in mind.
 
 - [README.md](README.md): what the game is and how to run it.
 - [ARCHITECTURE.md](ARCHITECTURE.md): the crates, the turn pipeline and the determinism rules.
-- [The rules reference](.claude/skills/legatum-rules/references/game-rules.md): how the game works and
+- [The rules reference](.claude/skills/legatum-rules/references/index.md) (one file per system): how the game works and
   which systems do not exist. It is the engineering reference: long, dated and checked against the code.
   The in-app Guide is the short version.
 - [docs/README.md](docs/README.md): an index of everything else.
@@ -89,7 +89,7 @@ ready for review.
 
 `CLAUDE.md` describes further gates before anything lands on `master`: `tools/gates/check.py`, an AI
 documentation review and, for UI changes, an AI UI review and, for art changes, an AI art review. The maintainer runs those himself on your
-branch. You do not need to run them or produce their marker files, and a pull request is not held up for
+branch. You do not need to run them or post their verdicts, and a pull request is not held up for
 lacking them. They may lead to follow-up commits or requests.
 
 - Keep a change focused, with tests that fail before and pass after.
@@ -120,7 +120,8 @@ lacking them. They may lead to follow-up commits or requests.
    seat at Easy, Normal or Hard plans from its own `PlayerView` and plays under the same rules as a
    human: a level may change how it decides, never its yields, costs, combat strength or sight.
 6. **Delete, don't comment out.** Remove dead code and old experiments; git has the history.
-7. **Rules docs follow code.** If you change a rule or mechanic, update `.claude/skills/legatum-rules/references/game-rules.md` in the same change.
+7. **Rules docs follow code.** If you change a rule or mechanic, update the matching file under `.claude/skills/legatum-rules/references/` (`index.md` lists them) in the same change.
+8. **Branches cut before the 2026-11-22 split.** If your branch conflicts on `docs/learnings.md` or `.claude/skills/legatum-rules/references/game-rules.md`, take master's version of that file (`git checkout origin/master -- <file>`), then either re-add your entry by hand (a learning goes at the top of the current month's `docs/learnings/<YYYY-MM>.md`; a rule goes in the matching per-system file) or carry your learnings over with `python3 tools/docs/split_learnings.py <your branch> --base $(git merge-base origin/master <your branch>) --write`. The hygiene gate fails while `docs/learnings.md` is over 30 KB or the `game-rules.md` stub over 5 KB.
 
 ## Licence of contributions
 

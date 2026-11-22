@@ -1506,7 +1506,7 @@ export const useGame = create<State>((set, get) => {
         if (!saveHasCurrentRules(save.game)) {
           // The site may still serve the build that made it: the game continues there, on its own rules.
           if (await openInOwnBuild(save, resumeCampaign)) {
-            set({ busy: 'Opening the version this game was saved with…' });
+            set({ busy: 'Opening the version this game started on…' });
             return;
           }
           throw new Error(olderRulesMessage(save.playtest));

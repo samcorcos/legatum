@@ -126,12 +126,13 @@ test('a kept build plays from its own address, and sends new games to the newest
   const mine = list.builds[0];
   await page.goto(`/v/${mine.id}/`);
   await expect(page.getByRole('heading', { name: 'Legatum', exact: true })).toBeVisible({ timeout: 60_000 });
-  await expect(page.locator('.title-update-note')).toHaveCount(0);
+  const solo = page.getByRole('button', { name: /^Single Player/ });
+  await expect(solo).not.toContainText('A new version is ready');
   // A newer deploy lands while this tab sits on the title: it says so, and a new game opens on the newest version.
   await page.route('**/versions.json', (route) => route.fulfill({ json: { builds: [{ ...mine, id: 'newer00', label: 'Newer' }, { ...mine, retiredAt: new Date().toISOString() }] } }));
   await page.reload();
-  await expect(page.locator('.title-update-note')).toContainText('A new version of Legatum is ready.');
-  await page.getByRole('button', { name: /^Single Player/ }).click();
+  await expect(solo).toContainText('A new version is ready: new games start on it');
+  await solo.click();
   await expect(page.getByRole('button', { name: /^Start game/ })).toBeVisible({ timeout: 60_000 });
   expect(new URL(page.url()).pathname).toBe('/');
   expect(problems).toEqual([]);
