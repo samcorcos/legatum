@@ -50,7 +50,7 @@ export function TreatyEmblem({ kind, size = 40 }: { kind: TreatyKind; size?: num
   const bad = kind === 'War';
   const label = kind;
   return (
-    <span className={`te ${kind.toLowerCase()}${bad ? ' bad' : ''}`} style={{ '--te': `${size}px` } as CSSProperties} role="img" aria-label={`${label} emblem`}>
+    <span className={`te ${kind.toLowerCase()}${bad ? ' bad' : ''}${size < 22 ? ' sm' : ''}`} style={{ '--te': `${size}px` } as CSSProperties} role="img" aria-label={`${label} emblem`}>
       <span className="te-ring a" />
       {kind === 'Alliance' && <span className="te-ring b" />}
       <Star size={Math.round(size * 0.38)} className="te-star" />

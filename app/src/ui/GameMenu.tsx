@@ -140,7 +140,7 @@ export function GameMenu() {
           <button onClick={() => (trigger.current?.focus(), set({ techOpen: true }), setOpen(false))}>Technologies (T)</button>
           <button onClick={() => (trigger.current?.focus(), set({ citiesOpen: true }), setOpen(false))}>Cities (C)</button>
           {/* A loaded save has no report until the next turn resolves: don't offer a no-op. */}
-          <button disabled={!hasReport} onClick={() => (trigger.current?.focus(), set({ reportOpen: true, reportTurn: null }), setOpen(false))}>Last turn report (L)</button>
+          <button disabled={!hasReport} onClick={() => (trigger.current?.focus(), set({ reportOpen: true, reportTurn: null }), setOpen(false))}>Turn report (L)</button>
           <hr />
           {kind === 'remote' ? (
             hostHere ? (

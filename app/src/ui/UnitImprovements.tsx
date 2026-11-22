@@ -11,6 +11,7 @@ import { tileIndex } from '../hex';
 import { Amounts } from './Amounts';
 import { goldOnHand } from './productionPurchases';
 import { BreakdownTable, Icon, Kbd, Tip } from './index';
+import { NotMetMark } from './bits';
 import { ResourceReason } from './ResourceReason';
 import { RingMedallion } from './ringMedallion';
 import { Star } from '../brand/ornaments';
@@ -96,7 +97,7 @@ export function UnitImprovements({ unit, view, check, primary, pending, gold, si
           {check.need && n.label.includes(check.need)
             ? <ResourceReason text={n.label} resource={check.need} />
             : <Amounts text={n.label} />}{' '}
-          <Icon name={n.met ? 'ui-check' : 'ui-cross'} size={11} className="ui-mark" label={n.met ? 'done' : 'missing'} />
+          {n.met ? <Icon name="ui-check" size={11} className="ui-mark" label="done" /> : <NotMetMark />}
         </span>)}</span>
     </p>}
     {reasons.map((reason, i) => <p className="act-reason improve-reason" id={`${id}-${i}`} key={reason}>

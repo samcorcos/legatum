@@ -7,6 +7,7 @@ import { attacksInMelee, itemName } from '../data';
 import { distance } from '../hex';
 import { moveSelected, promptWar, rangedSelected, warDeclaration } from '../commands';
 import { feel } from '../feel';
+import { TreatyEmblem } from './ringMedallion';
 import { cityFireStatus } from '../format';
 
 /** Where you stand with a rival city's empire and whether the selected unit can attack it; null for other cities. */
@@ -69,7 +70,7 @@ export function ForeignCityActions({ city, view, compact = false }: { city: City
     feel.select();
     rangedSelected(city.pos);
   };
-  const badge = <span className={`empire-relation ${(declared ? 'war' : state).toLowerCase()}`}>{declared ? 'War declared' : state}</span>;
+  const badge = <span className={`empire-relation ${(declared ? 'war' : state).toLowerCase()}`}><TreatyEmblem kind={declared ? 'War' : state} size={16} />{declared ? 'War declared' : state}</span>;
   // The phone sheet's peek: one line of facts and one row of buttons; More ↑ shows the full card.
   if (compact) return <div className="foreign-city compact" data-testid="foreign-city-actions">
     <p className="foreign-city-relation">{badge} {name}{city.visible ? <> · Pop {city.population} · Strength {city.strength}{fire && <> · <span data-testid="city-fire">{fire.fires ? 'Fires: has Walls' : fire.text.replace('Cannot fire: ', '')}</span></>}</> : ' · out of sight'}</p>
