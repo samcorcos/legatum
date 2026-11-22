@@ -1,6 +1,8 @@
 import { CALENDAR_NOTE, calendarLabel } from '../data';
-import { useId, useLayoutEffect, useRef, useState } from 'react';
-import { readAutosave, useGame, type SaveFile } from '../store';
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { parseAutosave, useGame, type SaveFile } from '../store';
+import { listAutosaves, type AutosaveRecord } from '../platform/autosaveStore';
+import { ReplaceGameDialog } from '../ui/ReplaceGameDialog';
 import { pickSaveFile } from '../ui/GameMenu';
 import { DecoRule, Fan, Wordmark } from '../brand/ornaments';
 import { openGuide } from '../ui/guideState';
@@ -86,23 +88,46 @@ function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
   const error = useGame((s) => s.error);
   const busy = useGame((s) => s.busy);
   const views = useGame((s) => s.views);
-  const [auto] = useState<SaveFile | null>(readAutosave);
+  const continueAutosave = useGame((s) => s.continueAutosave);
+  const [records, setRecords] = useState<AutosaveRecord[] | null>(null);
+  useEffect(() => {
+    let live = true;
+    void listAutosaves().then((list) => { if (live) setRecords(list); });
+    return () => { live = false; };
+  }, []);
   const [, refresh] = useState(0);
+  // Newest first. A turn that will not open is skipped, so Continue offers the turn before it, never a dead end.
+  const slots = (records ?? []).map((record) => ({ record, save: parseAutosave(record.text) }));
+  const usable = slots.filter((slot) => slot.save && !unreadableAutosaves.has(slot.record.id));
+  const auto = usable[0]?.save ?? null;
+  const skipped = auto && slots[0].record !== usable[0].record ? slots[0].record.turn : null;
   const olderAuto = !!auto && (!saveHasCurrentRules(auto.game) || olderAutosaves.has(auto.savedAt));
-  const unreadableAuto = !!auto && unreadableAutosaves.has(auto.savedAt);
-  const continueAuto = async (save: SaveFile) => {
-    await loadSave(save);
+  const unreadableAuto = slots.length > 0 && !auto;
+  const continueAuto = async (record: AutosaveRecord, save: SaveFile) => {
+    await continueAutosave(record, save);
     const failure = useGame.getState().error;
     if (isOlderVersionMessage(failure)) olderAutosaves.add(save.savedAt);
-    else if (failure) unreadableAutosaves.add(save.savedAt);
+    else if (failure) {
+      unreadableAutosaves.add(record.id);
+      if (slots.some((slot) => slot.save && !unreadableAutosaves.has(slot.record.id))) set({ error: null });
+    }
     if (failure) refresh((n) => n + 1);
   };
+  // A file chosen with Load Game replaces the saved game in progress, so it asks first, like a new game does.
+  const [chosen, setChosen] = useState<{ save: SaveFile; saved: { label: string; turn: number } } | null>(null);
+  const askThenLoad = async (save: SaveFile) => {
+    const [newest] = await listAutosaves();
+    if (newest) setChosen({ save, saved: { label: newest.faction || newest.label, turn: newest.turn } });
+    else await loadSave(save, true);
+  };
   // While a message shows, starting a new game is the way forward, so it takes the primary slot.
-  const newGamePrimary = !views && (!auto || !!error || olderAuto || unreadableAuto);
+  const newGamePrimary = !views && records !== null && (!auto || !!error || olderAuto || unreadableAuto);
   const continuePrimary = !views && !!auto && !error && !olderAuto && !unreadableAuto;
   return (
     <>
-      <TitleNotice error={error ?? (olderAuto ? olderAutosaveMessage(auto?.playtest) : null)} />
+      {chosen && <ReplaceGameDialog file saved={chosen.saved} onCancel={() => setChosen(null)}
+        onStart={() => { const { save } = chosen; setChosen(null); void loadSave(save, true); }} />}
+      <TitleNotice error={error ?? (olderAuto ? olderAutosaveMessage(auto?.playtest) : skipped !== null ? `Your latest save (turn ${skipped}) could not be opened. Continue opens turn ${auto?.turn} instead.` : null)} />
       <div className="title-actions">
         <ResumeButton />
         <button className={`btn big ${newGamePrimary ? 'primary' : ''}`} onClick={() => openSetup('solo')}>
@@ -114,14 +139,14 @@ function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
           <span className="btn-sub">{online?.relay ? 'Hot seat on this computer, or a game online' : 'Hot seat on this computer'}</span>
 
         </button>
-        <button className={`btn big ${continuePrimary ? 'primary' : ''}`} disabled={!auto || !!busy || olderAuto || unreadableAuto} onClick={() => auto && continueAuto(auto)}>
+        <button className={`btn big ${continuePrimary ? 'primary' : ''}`} disabled={!auto || !!busy || olderAuto || unreadableAuto} onClick={() => auto && usable[0] && continueAuto(usable[0].record, auto)}>
           {olderAuto ? 'Saved game (older version)' : unreadableAuto ? 'Saved game (unreadable)' : 'Continue'}
           <span className="btn-sub">
             {olderAuto ? 'Cannot continue with these rules' : unreadableAuto ? "This save file is damaged"
-              : auto ? `${auto.names.join(' & ')} · turn ${auto.turn} · ${calendarLabel(auto.turn)} · ${new Date(auto.savedAt).toLocaleString()}` : 'No autosave yet'}
+              : auto ? `${auto.names.join(' & ')} · turn ${auto.turn} · ${calendarLabel(auto.turn)} · ${new Date(auto.savedAt).toLocaleString()}` : records === null ? 'Looking for your game…' : 'No autosave yet'}
           </span>
         </button>
-        <button className="btn big quiet" onClick={() => pickSaveFile((save) => loadSave(save, true), (m) => set({ error: m }))}>
+        <button className="btn big quiet" onClick={() => pickSaveFile(askThenLoad, (m) => set({ error: m }))}>
           Load Game…
         </button>
         <button className="btn big quiet" onClick={() => { set({ error: null }); goto('scenarios'); }}>
