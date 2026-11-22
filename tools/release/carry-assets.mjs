@@ -8,7 +8,7 @@
 //
 // Usage: node tools/release/carry-assets.mjs <dist> [--from <site>] [--crawl <site>]... [--from-dir <dir>]... [--keep-days N]
 //   --from <site>    the live site. Its asset-history.json lists every file it serves and the day each was first
-//                    deployed; each file younger than --keep-days (default 30) that this build lacks is downloaded
+//                    last used by a deployed build; each file used within --keep-days (default 30) that this build lacks is downloaded
 //                    into <dist>/assets. A site with no history yet is crawled instead (see --crawl).
 //   --crawl <site>   also carry every file a deployment's pages point to, found by reading its index.html, scripts
 //                    and styles (for example an older deployment's own address, https://<id>.<project>.pages.dev).
@@ -90,7 +90,8 @@ async function download(base, names) {
 }
 
 mkdirSync(join(dist, 'assets'), { recursive: true });
-/** assets/<file> -> the day it was first deployed. */
+const ownFiles = readdirSync(join(dist, 'assets'));
+/** assets/<file> -> the last day a deployed build used it. */
 const history = new Map();
 
 if (from) {
@@ -102,10 +103,10 @@ if (from) {
   }
   if (prior) {
     const cutoff = Date.now() - keepDays * DAY;
-    const keep = Object.entries(prior).filter(([n, d]) => ok(n) && Date.parse(d) >= cutoff);
+    const keep = Object.entries(prior).filter(([n, d]) => ok(n) && Date.parse(d) >= cutoff && !ownFiles.includes(n.slice(7)));
     for (const [n, d] of keep) history.set(n, d);
     const { carried, failed } = await download(base, keep.map(([n]) => n));
-    console.log(`carry-assets: ${carried} files carried from ${from} (${keep.length} younger than ${keepDays} days)`);
+    console.log(`carry-assets: ${carried} files carried from ${from} (${keep.length} used in the last ${keepDays} days)`);
     for (const n of failed) history.delete(n);
     if (failed.length) console.warn(`carry-assets: ${failed.length} listed files were not on ${from}, e.g. ${failed[0]}`);
   } else {
@@ -136,18 +137,18 @@ for (const d of dirs) {
     if (!/\.(png|webp|jpe?g|svg|gif|woff2?|ttf|otf)$/i.test(f) || existsSync(join(dist, 'assets', f))) continue;
     copyFileSync(join(d, 'assets', f), join(dist, 'assets', f));
     carried++;
+    if (!history.has(`assets/${f}`)) history.set(`assets/${f}`, today);
   }
   console.log(`carry-assets: ${carried} images and fonts carried from ${d}`);
 }
 
-// This build's own files are new today unless an earlier deploy already had them.
-for (const f of readdirSync(join(dist, 'assets'))) {
-  const n = `assets/${f}`;
-  if (!history.has(n)) history.set(n, today);
-}
+// The date is the last day a deployed build itself used the file, so a file leaves the site 30 days after the
+// last build that needed it, not 30 days after it first shipped. This build's own files are dated today; carried
+// files keep their date. Read this build's files before anything is carried in.
+for (const f of ownFiles) history.set(`assets/${f}`, today);
 const files = Object.fromEntries([...history].filter(([n]) => existsSync(join(dist, n))).sort(([a], [b]) => (a < b ? -1 : 1)));
 // Cloudflare Pages takes at most 20,000 files a deployment.
 const total = Object.keys(files).length;
 if (total > 18_000) { console.error(`carry-assets: ${total} files is near Cloudflare Pages' 20,000 limit; deploy with a smaller --keep-days`); process.exit(1); }
-writeFileSync(join(dist, 'asset-history.json'), JSON.stringify({ note: 'Written by tools/release/carry-assets.mjs: every file this site serves under assets/ and the day it was first deployed.', files }, null, 1) + '\n');
+writeFileSync(join(dist, 'asset-history.json'), JSON.stringify({ note: 'Written by tools/release/carry-assets.mjs: every file this site serves under assets/ and the last day a deployed build used it.', files }, null, 1) + '\n');
 console.log(`carry-assets: ${Object.keys(files).length} files in asset-history.json`);

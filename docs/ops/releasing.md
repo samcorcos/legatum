@@ -61,8 +61,8 @@ Every built file is named by its content, and Pages serves only the newest deplo
 the art (and lazy code) that a tab opened before it still asks for: the player sees broken images. The build keeps
 them instead. With `LEGATUM_CARRY_ASSETS_FROM` set (the deploy workflow sets the live site; `scripts/deploy-preview.sh`
 sets the preview's own address), `scripts/build-web.sh` runs `tools/release/carry-assets.mjs`, which copies into
-`app/dist/assets` every file the site served in the last 30 days (listed in the site's `asset-history.json`, which the
-build writes for the next deploy). A production deploy run by hand must set it too:
+`app/dist/assets` every file a deployed build used in the last 30 days (listed with that day in the site's
+`asset-history.json`, which the build writes for the next deploy). A production deploy run by hand must set it too:
 `LEGATUM_CARRY_ASSETS_FROM=https://legatum-game.pages.dev scripts/build-web.sh`.
 
 Every web build, and CI's app build, also runs `tools/release/check-dist-refs.mjs`: it fails if the JS, CSS or HTML

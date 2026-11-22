@@ -1,6 +1,7 @@
 // tools/release/check-dist-refs.mjs (every file the web build points to is in it) and carry-assets.mjs (earlier
 // builds' files stay on the site, so an open tab keeps its art after a deploy).
-import { execFileSync, spawnSync } from 'node:child_process';
+import { execFile, execFileSync, spawnSync } from 'node:child_process';
+import { createServer } from 'node:http';
 import { mkdtempSync, mkdirSync, writeFileSync, existsSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -59,5 +60,29 @@ describe('carry-assets', () => {
     expect(existsSync(join(dist, 'assets/index-OLD.js'))).toBe(false);
     const history = JSON.parse(readFileSync(join(dist, 'asset-history.json'), 'utf8')).files;
     expect(Object.keys(history)).toEqual(['assets/tank-NEW.webp', 'assets/tank-OLD.png']);
+  });
+
+  it('dates a file by the last build that used it, so long-lived art stays 30 days after its last build', async () => {
+    const day = (n) => new Date(Date.now() - n * 86_400_000).toISOString().slice(0, 10);
+    const prior = { files: { 'assets/tank-NEW.webp': day(40), 'assets/gone-OLD.png': day(40), 'assets/kept-RECENT.png': day(5) } };
+    const server = createServer((q, r) => {
+      if (q.url === '/asset-history.json') return r.end(JSON.stringify(prior));
+      if (q.url === '/assets/kept-RECENT.png') { r.setHeader('content-type', 'image/png'); return r.end('png'); }
+      r.statusCode = 404; r.end();
+    });
+    await new Promise((ok) => server.listen(0, '127.0.0.1', ok));
+    const dist = site({ 'index.html': '<p>', 'assets/tank-NEW.webp': 'new' });
+    try {
+      const out = await new Promise((ok, fail) => execFile(process.execPath, [join(tools, 'carry-assets.mjs'), dist, '--from', `http://127.0.0.1:${server.address().port}`],
+        { env: { ...process.env, NO_PROXY: '127.0.0.1', no_proxy: '127.0.0.1' } }, (e, stdout) => (e ? fail(e) : ok(stdout))));
+      expect(out).toContain('1 files carried');
+    } finally {
+      server.close();
+    }
+    const history = JSON.parse(readFileSync(join(dist, 'asset-history.json'), 'utf8')).files;
+    expect(readFileSync(join(dist, 'assets/kept-RECENT.png'), 'utf8')).toBe('png');
+    expect(history['assets/tank-NEW.webp']).toBe(day(0));
+    expect(history['assets/kept-RECENT.png']).toBe(day(5));
+    expect(history['assets/gone-OLD.png']).toBeUndefined();
   });
 });
