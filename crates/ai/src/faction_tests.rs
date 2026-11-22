@@ -51,6 +51,8 @@ fn hard_military_personality_keeps_funding_its_field_force() {
         option.turns = if option.item == soldier { 70 } else { 1 };
     }
     let mut hard = ScriptedBrain::with_difficulty(Faction::Sparta, 7, ME, AiDifficulty::Hard);
+    // Gene `capital_market_first` would start this guarded city's Market: test the floor alone.
+    hard.decisions.capital_market_first = 0;
     let orders = hard.orders(&v);
     assert_valid(&v, &orders);
     assert!(orders.contains(&Order::SetProduction {

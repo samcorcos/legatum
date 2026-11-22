@@ -7,10 +7,10 @@ fn h(q: i32, r: i32) -> Hex {
     Hex::new(q, r)
 }
 fn brain(opening: Opening) -> OpeningBrain {
-    let b = OpeningBrain::new(
-        ScriptedBrain::with_difficulty(Faction::Switzerland, 7, ME, AiDifficulty::Hard),
-        OpeningPolicy::builtin(opening),
-    );
+    let mut hard = ScriptedBrain::with_difficulty(Faction::Switzerland, 7, ME, AiDifficulty::Hard);
+    // The opening identities are measured without gene `capital_market_first`.
+    hard.decisions.capital_market_first = 0;
+    let b = OpeningBrain::new(hard, OpeningPolicy::builtin(opening));
     assert!(b.primitives_enabled);
     b
 }

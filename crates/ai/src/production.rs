@@ -2894,6 +2894,7 @@ impl Planner<'_> {
             chosen
         };
         let chosen = self.egypt_nile_choice(c, chosen);
+        let chosen = self.market_first(c, chosen);
         if let Some(trace) = &self.production_trace
             && let Some(last) = trace.borrow_mut().last_mut()
         {

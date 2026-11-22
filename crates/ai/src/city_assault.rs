@@ -270,7 +270,8 @@ impl Planner<'_> {
                     .collect(),
             );
             for (u, to) in arrivals {
-                if fires_from(u, to, target.pos) {
+                // A shot the terrain blocks is not an order (core `battle.rs` line of sight).
+                if fires_from(u, to, target.pos) && self.ranged_unit_clear(u, u.pos, target.pos) {
                     self.mil_dest.insert(u.pos);
                     self.unit_order(
                         u.id,
