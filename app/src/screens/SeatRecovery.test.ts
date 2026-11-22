@@ -10,6 +10,10 @@ import type { PlayerView } from '../types';
 import { FakeSocket } from '../test/fakeSocket';
 import { JoinScreen } from './JoinScreen';
 import { StagingScreen } from './StagingScreen';
+import { hostThisTab, joinedFromThisTab } from '../test/fakeHosting';
+import { setOnlineApi } from '../platform/online';
+
+vi.mock('../net/hosting', async () => (await import('../test/fakeHosting')).fakeHostingModule());
 
 vi.mock('./HexBackdrop', () => ({ HexBackdrop: () => null }));
 
@@ -17,7 +21,7 @@ let container: HTMLDivElement;
 let root: Root;
 let sockets: FakeSocket[];
 const status: ServerStatus = {
-  mode: 'server', has_game: true, turn: 5, lan_urls: [], is_local: true, staging: null,
+  mode: 'server', has_game: true, turn: 5, is_local: true, staging: null,
   seats: [{ seat: 0, player: 0, name: 'Host', faction: 'India', connected: false, reserved: true, ready: false, orders: 0 }],
 };
 
@@ -39,9 +43,10 @@ afterEach(async () => {
   await act(async () => {
     root.unmount();
     useGame.getState().exitStaging();
-    useGame.getState().leaveLan();
+    useGame.getState().leaveOnline();
   });
   container.remove();
+  setOnlineApi();
   vi.useRealTimers();
   vi.unstubAllGlobals();
 });
@@ -52,16 +57,17 @@ it.each([true, false])('offers explicit reclaim after an invalid saved credentia
   rememberSeat({ seat: 0, name: 'Host', gameId: 'old-game', token: 'expired-token' });
   const currentStatus = { ...status, is_local: isLocal };
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, text: async () => JSON.stringify(currentStatus) }));
+  if (isLocal) hostThisTab(); else joinedFromThisTab();
   await useGame.getState().boot();
   sockets[0].open();
   expect(sockets[0].sent).toEqual([{ type: 'join', seat: 0, name: 'Host', token: 'expired-token' }]);
-  useGame.getState().reclaimLanSeat();
+  useGame.getState().reclaimOnlineSeat();
   expect(sockets).toHaveLength(1); // No rejection, no reassignment.
   sockets[0].push({ type: 'error', code: 'invalid_seat_credential', message: 'Invalid seat credential.' });
   expect(useGame.getState().screen).toBe('join');
   await act(async () => root.render(createElement(JoinScreen)));
   // The Join screen's status refresh must not forget the rejection.
-  expect(useGame.getState().lan?.credentialRejected).toBe(true);
+  expect(useGame.getState().net?.credentialRejected).toBe(true);
   expect(!!button('Reclaim my seat')).toBe(isLocal);
 
   await act(async () => {
@@ -71,7 +77,7 @@ it.each([true, false])('offers explicit reclaim after an invalid saved credentia
   });
   expect(sockets[1].sent).toEqual([{ type: 'join', seat: 0, name: 'Host', token: 'expired-token' }]);
   if (!isLocal) {
-    useGame.getState().reclaimLanSeat();
+    useGame.getState().reclaimOnlineSeat();
     expect(sockets).toHaveLength(2);
     expect(rememberedSeat()?.token).toBe('expired-token');
     return;
@@ -88,13 +94,14 @@ it.each([true, false])('offers explicit reclaim after an invalid saved credentia
   });
   expect(sockets[2].sent.at(-1)).toEqual({ type: 'join', seat: 0, name: 'Host', token: 'fresh-token' });
   expect(rememberedSeat()).toEqual({ seat: 0, name: 'Host', gameId: 'restarted', token: 'fresh-token' });
-  expect(useGame.getState()).toMatchObject({ screen: 'game', busy: null, error: null, lan: { conn: 'open', credentialRejected: false } });
+  expect(useGame.getState()).toMatchObject({ screen: 'game', busy: null, error: null, net: { conn: 'open', credentialRejected: false } });
   expect(button('Reclaim my seat')).toBeUndefined();
 });
 
 it('does not offer reclaim for an unrelated error or an ordinary explicit Join', async () => {
   rememberSeat({ seat: 0, name: 'Host', gameId: 'old-game', token: 'expired-token' });
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, text: async () => JSON.stringify(status) }));
+  hostThisTab();
   await useGame.getState().boot();
   sockets[0].open();
   sockets[0].push({ type: 'error', code: 'bad_request', message: 'Invalid seat credential.' });
@@ -110,7 +117,7 @@ it('disables Leave with a reason while disconnected, then retains UI ownership u
   const state: StagingState = { room_id: 'room', config, occupants: config.seats.map((s, i) => i < 2
     ? { name: i === 0 ? 'Host' : 'Alice', faction: s.faction, ready: false, connected: true, is_host: i === 0 } : null) };
   rememberSeat({ seat: 1, name: 'Alice', gameId: null, roomId: 'room', token: 'secret' });
-  useGame.setState({ screen: 'staging', lan: { status: { ...status, is_local: false, staging: state }, seats: [], mySeat: null, conn: 'closed' } });
+  useGame.setState({ screen: 'staging', net: { status: { ...status, is_local: false, staging: state }, seats: [], mySeat: null, conn: 'closed' } });
   await act(async () => root.render(createElement(StagingScreen)));
   await act(async () => {
     sockets[0].open();

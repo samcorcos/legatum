@@ -1,7 +1,7 @@
 # Releasing Legatum
 
-Two things reach players: the web build ("Play in your browser") and the signed Mac app. Both are built by
-GitHub Actions from this repository. No secret value is written here or anywhere in the repository; secrets live
+One thing reaches players: the web build ("Play in your browser") at https://legatum-game.pages.dev, with the
+online lobby's relay (`infra/relay`) beside it. Both are deployed by GitHub Actions from this repository. No secret value is written here or anywhere in the repository; secrets live
 only in the repository's Actions settings (Settings → Secrets and variables → Actions).
 
 ## The web build (Cloudflare Pages)
@@ -35,9 +35,11 @@ a notice and deploys nothing, so forks stay green.
 
 ### What the hosted build is
 
-Static files only. `VITE_LEGATUM_HOSTED=1` (`app/src/platform/hosted.ts`) makes the UI skip every request to
-`legatum-server`, and the Multiplayer menu says that Host Game and Join Game need the host program. Single
-player, hot seat, scenarios, autosave (browser storage) and Save to file / Load Game (download and upload) work.
+Static files only; there is no game server: the engine runs in the player's browser as WebAssembly. Online play
+runs in the host player's tab and goes through the relay (`infra/relay`, `plans/online-play.md`):
+`scripts/build-web.sh` bakes the relay's address in (`LEGATUM_RELAY_URL`, default the live relay, `none` for a build
+without online play) and writes it into the page's `connect-src`. Single player, hot seat, online co-op, scenarios,
+autosave (browser storage) and Save to file / Load Game (download and upload) work.
 `app/hosted/_headers` sets the security headers and long caching for the hashed files; `app/hosted/404.html`
 answers unknown addresses. The title screen shows `Version <app version> · web <commit>`.
 
@@ -51,70 +53,18 @@ scripts/build-web.sh
 cd app && npm run e2e:hosted
 ```
 
-## The Mac app (signed and notarized)
-
-`.github/workflows/release-mac.yml` builds a universal app (Apple Silicon and Intel), signs it with a Developer
-ID Application certificate under the hardened runtime, has Apple notarize the app and the disk image, staples
-both, verifies them (`codesign --verify --deep --strict`, `spctl`, `stapler validate`, both architectures, the
-app inside the mounted image) and attaches `Legatum-<version>-mac-universal.dmg` to a **draft** GitHub release.
-It never publishes. If any signing secret is missing it stops at the start with a message naming it.
-
-### One-time setup
-
-1. Enrol in the Apple Developer Program.
-2. Create a **Developer ID Application** certificate (Xcode → Settings → Accounts → Manage Certificates, or
-   developer.apple.com → Certificates). "Apple Development" and "Mac App Distribution" certificates do not work
-   for a download outside the App Store.
-3. In Keychain Access, export that certificate together with its private key as a `.p12` with a password, then
-   base64-encode it: `base64 -i certificate.p12 | pbcopy`.
-4. Create an app-specific password for your Apple ID at account.apple.com (Sign-In and Security → App-Specific
-   Passwords).
-5. Add the five secrets.
-
-| Secret | What it is |
-| --- | --- |
-| `APPLE_CERTIFICATE` | The Developer ID Application certificate and its private key: the `.p12` file, base64-encoded. |
-| `APPLE_CERTIFICATE_PASSWORD` | The password chosen when exporting the `.p12`. |
-| `APPLE_ID` | The Apple ID (email) that submits the app for notarization. |
-| `APPLE_PASSWORD` | An app-specific password for that Apple ID. Not the account password. |
-| `APPLE_TEAM_ID` | The 10-character team identifier (developer.apple.com → Membership details). |
-
-The signing identity is read from the certificate during the run; no name is stored in the repository.
-
-### Cutting a release
-
-1. Set the same version in `app/src-tauri/tauri.conf.json`, `app/package.json` and `app/src-tauri/Cargo.toml`
-   (`app/src/version.test.ts` fails when they differ), and merge that to `master`.
-2. Either push a tag (`git tag v0.1.0 && git push origin v0.1.0`) or run the workflow by hand with the version.
-   A manual run builds the commit it is started on and creates the tag when the draft is published.
-3. When the run is green, open the draft release, download the disk image, and try it on a Mac that has never
-   run the app: it should open with no Gatekeeper warning beyond "downloaded from the internet".
-4. Publish the draft by hand.
-5. First release only: check that the Mac line in `README.md` (at the `<!-- mac-download -->` marker) links to
-   `https://github.com/samcorcos/legatum/releases/latest`. It already does; the link works once this release is published.
-
-Re-running for the same version replaces the files on the draft. It refuses to touch a published release.
-
-### What the app is signed with
-
-- Hardened runtime on, and `app/src-tauri/Entitlements.plist`, which is empty on purpose: the WebAssembly
-  engine runs inside WKWebView's own process, so the app needs no JIT entitlement. The file says what would
-  justify adding one.
-- Bundle identifier `com.legatum.game`. It names the folder saves live in
-  (`~/Library/Application Support/com.legatum.game/`), so changing it after a release orphans players' autosaves.
-- No updater is configured: players get a new version by downloading it.
+When the build has `LEGATUM_GAMES_URL`, the hosted test answers requests to that Worker itself (no test game reaches the real bucket) and fails if no upload was sent. To check that path locally, build with any URL, for example `LEGATUM_GAMES_URL=https://legatum-games.example.workers.dev scripts/build-web.sh`, then run `npm run e2e:hosted`.
 
 ## Third-party licence notices
 
 Every distributed build carries `THIRD_PARTY_LICENSES.txt`, written by `tools/release/third-party-licenses.mjs`
 from the locked dependency graph: the crates in the build, the production npm packages and the two bundled fonts
-with their SIL Open Font License texts. The web build serves it at `/THIRD_PARTY_LICENSES.txt`; the Mac app has
-it in `Contents/Resources/`; both show it in the game under How to Play → Credits → Open-source licences. A
+with their SIL Open Font License texts. The web build serves it at `/THIRD_PARTY_LICENSES.txt` and shows it in
+the game under How to Play → Credits → Open-source licences. A
 crate that ships no licence file gets the standard text from `tools/release/license-texts/`; the script fails
 and names the crate when that folder has no text for its licence.
 
-## Local, unsigned builds
+## Playtest builds
 
-`scripts/build-mac-app.sh [--dmg]` still builds an unsigned app for development and playtests; Gatekeeper asks
-for right-click → Open on another Mac. Playtest builds and their checks are described in the
-`legatum-workflow` skill and `tools/release/check.sh`.
+A playtest is the web build of a branch; its checks are described in the `legatum-workflow` skill and
+`tools/release/check.sh`.

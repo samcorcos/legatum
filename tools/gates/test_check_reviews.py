@@ -22,6 +22,17 @@ class Reviews(unittest.TestCase):
         docs_only = dict(KINDS, code=[], copy=[], ui=[])
         self.assertEqual(check.required_reviews(docs_only), [])
 
+    def test_art_and_art_related_code_need_the_art_reviewer(self):
+        art = dict(KINDS, code=[], copy=[], ui=[], art=["app/src/assets/units/tank.png"])
+        self.assertEqual([r for _, r, _ in check.required_reviews(art)], ["legatum-art-reviewer"])
+        impact = dict(KINDS, code=["crates/core/src/data.rs"], copy=[], ui=[], artimpact=["crates/core/src/data.rs"])
+        self.assertEqual([r for _, r, _ in check.required_reviews(impact)],
+                         ["legatum-docs-reviewer", "legatum-art-reviewer"])
+        files = ["app/src/unitArt.ts", "app/public/terrain/grass.png", "app/src/unitArt.test.ts"]
+        kinds = check.classify(".", "HEAD", "HEAD", files)
+        self.assertEqual(kinds["artimpact"], ["app/src/unitArt.ts"])
+        self.assertEqual(kinds["art"], ["app/public/terrain/grass.png"])
+
     def test_a_comment_must_name_the_reviewer_and_the_head_sha(self):
         reviews = check.required_reviews(KINDS)
         comments = ["legatum-docs-reviewer: PASS at 8d5a6c66c",

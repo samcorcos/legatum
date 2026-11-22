@@ -18,7 +18,7 @@ export async function pieceFixture(faction: Faction, moreTechs: TechId[] = []): 
   const city = view.cities.find((c) => c.owner === 0)!;
   useGame.setState({ client, humans: [0], views: [view], screen: 'game', booted: true, seat: 0,
     orders: [[]], errors: [[]], ready: [false], selection: { kind: 'city', id: city.id }, mode: 'normal',
-    reportOpen: false, techOpen: false, vpExpanded: false, busy: null, error: null, anim: null, lan: null });
+    reportOpen: false, techOpen: false, vpExpanded: false, busy: null, error: null, anim: null, net: null });
   return city.id;
 }
 

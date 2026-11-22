@@ -27,6 +27,8 @@ By changed path:
                                                instead the fast scenario check (rules version, baseline doc, state
                                                loads on master's engine, copy lint; seconds)
   UI                      legatum-ui-reviewer
+  art, or art-related code  legatum-art-reviewer  (art files, or the names/kinds/wiring that art depends on:
+                                               ART_IMPACT)
 Exit 1 when a check fails, or (with --pr-comments) a required review is missing or failed.
 """
 import argparse
@@ -46,6 +48,7 @@ REVIEWERS = {
     "docs": "legatum-docs-reviewer",
     "plain": "legatum-plain-language-reviewer",
     "ui": "legatum-ui-reviewer",
+    "art": "legatum-art-reviewer",
 }
 
 TESTS = re.compile(r"^crates/[^/]+/tests/|_tests\.rs$|/tests\.rs$|^app/e2e/|\.test\.tsx?$|^app/src/test/|/__snapshots__/")
@@ -64,8 +67,12 @@ PROSE = re.compile(r"(['\"`]|>)\s*[A-Z][a-z']*(?:[ ,;:]+[A-Za-z0-9'$%{}.+-]+){4,
 COMMENT = re.compile(r"^\s*(//|/?\*)")
 SCENARIO_COPY = re.compile(r'^\s*"(title|briefing|tests|summary|question)"\s*:')
 ENGINE = re.compile(r"^crates/(core|ai)/(src/|Cargo\.toml$)")
-ART = re.compile(r"^app/src/assets/.*\.(png|svg|jpe?g|webp)$|^app/public/wonders/"
+ART = re.compile(r"^app/src/assets/.*\.(png|svg|jpe?g|webp)$|^app/public/(wonders|terrain)/"
                  r"|^tools/art/(distinctness\.(py|json)|render-sets\.mjs)$")
+# Code that can make existing art stale or missing: names and kinds of things that have pictures, and the art wiring.
+ART_IMPACT = re.compile(r"^crates/core/src/(data|eras|units|buildings|factions?)\.rs$"
+                        r"|^app/src/(unitArt|unlockArt|resourceIcons|landmarks|portraits|siegeProps|icons|wonders)\.ts$"
+                        r"|^app/src/map/(cityArt|landmarks|improvementArt)\.ts$")
 
 
 def load(name):
@@ -76,10 +83,10 @@ def load(name):
 
 
 def classify(repo, base, tip, files=None):
-    """{'code','ui','copy','engine','art','scenario': [paths]} for BASE..TIP. A branch whose only code is Lab scenario
+    """{'code','ui','copy','engine','art','artimpact','scenario': [paths]} for BASE..TIP. A branch whose only code is Lab scenario
     files is `scenario`: those files are not `code` or `copy` (the scenario check covers them instead)."""
     files = files if files is not None else [p for s, p in changed_files(repo, base, tip)]
-    out = {k: [] for k in ("code", "ui", "copy", "engine", "art", "scenario")}
+    out = {k: [] for k in ("code", "ui", "copy", "engine", "art", "artimpact", "scenario")}
     scen = [f for f in files if f.startswith("scenarios/") and f.endswith(".json")]
     lab_only = bool(scen) and all(LAB_SCENARIO.match(f) for f in files if not NON_CODE.search(f))
     if lab_only:
@@ -103,6 +110,8 @@ def classify(repo, base, tip, files=None):
             out["engine"].append(f)
         if ART.search(f):
             out["art"].append(f)
+        if ART_IMPACT.search(f) and not test:
+            out["artimpact"].append(f)
     return out
 
 
@@ -141,6 +150,10 @@ def required_reviews(kinds):
         out.append(("plain", REVIEWERS["plain"], "player text changed: " + ", ".join(kinds["copy"][:4])))
     if kinds["ui"]:
         out.append(("ui", REVIEWERS["ui"], "UI changed"))
+    if kinds["art"] or kinds.get("artimpact"):
+        # Art, and changes that may make art stale (user, 2026-11-22): the art reviewer judges both.
+        out.append(("art", REVIEWERS["art"], "art or art-related code changed: "
+                    + ", ".join((kinds["art"] + kinds.get("artimpact", []))[:4])))
     return out
 
 

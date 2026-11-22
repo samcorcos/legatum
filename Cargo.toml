@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/core", "crates/ai", "crates/sim", "crates/wasm", "crates/server", "crates/archive", "crates/analysis"]
+members = ["crates/core", "crates/ai", "crates/sim", "crates/wasm", "crates/archive", "crates/analysis"]
 
 [workspace.package]
 edition = "2024"
@@ -35,7 +35,7 @@ inherits = "release"
 lto = "fat"
 codegen-units = 1
 
-# Shipped browser and Tauri engine. Keep native release builds and correctness tests separate.
+# Shipped browser engine. Keep native release builds and correctness tests separate.
 [profile.wasm-release]
 inherits = "release"
 lto = "fat"

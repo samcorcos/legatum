@@ -17,6 +17,7 @@ This file holds the current rules, one line each. The user's words, dates, as-bu
 - Test layouts with two humans as well as one; test controls with their longest label.
 - A rewrite that drops an established interaction (click targets, shortcuts) is a regression: list a screen's interactions before rewriting it (user, 2026-10-11).
 - Never override a stated user preference for a general guideline; satisfy both or ask (user, 2026-10-17).
+- Question every requirement on every screen: review each screen and map piece for what can be removed or merged without losing a decision, and before each release check one icon, word, colour and component per concept (user, 2026-11-22). Art quality belongs to `legatum-art-reviewer`.
 
 ## The next action is always obvious (pillar 9)
 
@@ -25,6 +26,7 @@ This file holds the current rules, one line each. The user's words, dates, as-bu
 - Invalid choices are greyed out with the reason next to them, in one line, where the price would be; never accept an order that will fail (offer "Declare war on X?" instead); a broken order is the next decision ("Fix order").
 - A card held until the player acts closes only by its own controls; acting on a decision card closes it; a card that announces a finished mechanic offers the next idle decision as a button.
 - A background failure (upload, save, network) is a small corner notice, never a card over a decision (2026-11-07).
+- Online: an action that ends a shared game says so and asks first, with the label branching on host or guest; status text is written from the viewer's role; durability text matches the storage behind it (no "saved" for a tab-lifetime copy) (co-op review, 2026-11-22).
 - Big moments get a full interstitial: war declared on you, entering an era, the end of the game; a rival closing on victory and a city under attack are never a surprise (user, 2026-10-08, 2026-11-11).
 
 ## No hidden math (pillar 5)

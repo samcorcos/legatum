@@ -56,6 +56,7 @@ Don't copy those rules here; extend them there and keep this skill to direction 
 - **No real-world insignia or makers:** no national insignia on shared unit art (2026-11-02); never name or model a figure on a real maker's product (2026-11-21).
 - **Deleting art** removes every reference in the same change (distinctness entry, icon preview), after a search that includes computed names like `building-${kind}` (2026-11-06, 2026-11-21). A retired people leaves no files behind.
 - **Provenance** has one home: `app/src/assets/PROVENANCE.md` (2026-11-21).
+- **Map grade is not card art:** a landmark graded for the map is not reused on research cards; every unlock piece stands on a ground patch; thin parts survive every size (key after enlarging, check islands with `art-review.py impact`); each people's portrait faces are distinct people (art audit, 2026-11-22).
 - **Marketing:** trailers make you want to play: real gameplay from real games, combat and empire at scale, and the whole game, not only war; smooth 60 fps capture; epic orchestral music, no harpsichord (user, 2026-10-24, 2026-11-02). The tagline is "Empires rise and fall. Some are remembered." Launch media is recorded from the running game (`docs/media/src/refresh.sh`).
 
 ## Decided and rejected
@@ -71,10 +72,10 @@ Don't copy those rules here; extend them there and keep this skill to direction 
 
 1. Mocks first for any new visual feature: 2-3 variants as screenshots in context at 1000x600 and 1440x900.
 2. Build to the house style, reusing tokens, pen weights and the icon grid.
-3. Review from headless Playwright screenshots against this skill, plus `tools/gates/art.py`; Codex-built art is never final until a Claude agent has looked at it.
+3. Review from headless Playwright screenshots against this skill, plus `tools/gates/art.py`; Codex-built art is never final until a Claude agent has looked at it. Every branch that changes art, or the names, kinds or wiring art depends on, gets the `legatum-art-reviewer` agent before it merges (user, 2026-11-22): it judges changed art beside its set (`tools/art/art-review.py sheet`) and lists art the branch should have changed (`art-review.py impact`).
 4. Record any new rule here (one line) and its detail in the matching reference file in the same change.
 
-Run the consistency audit (`references/process-and-audit.md`) before a playtest that adds art.
+Run the consistency audit (`references/process-and-audit.md`) once per release (since 2026-11-22 every art PR gets the art reviewer).
 
 ## References (open only when needed)
 

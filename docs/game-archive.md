@@ -1,16 +1,19 @@
 # Game archive
 
 Legatum records full owner histories so balance analysis does not depend on replaying an old
-engine. Native storage defaults to `~/LegatumData/archive`. `LEGATUM_ARCHIVE` overrides the
-default, and `--archive-dir <directory>` overrides the environment in the simulator, server,
-and Mac app. Archive roots inside **any Git checkout** are rejected, including symlink aliases.
-The archive is private local data, outside the repository; the native apps and the LAN host never upload it. The one upload is the hosted web build's: with `LEGATUM_GAMES_URL` set it sends each game's recording, every seat renamed to its default (`Recording::anonymized`, replayed so the hashes still match), to the R2 bucket behind `infra/games` (see `infra/games/README.md` and the README's Privacy section).
+engine. The simulator's native archive defaults to `~/LegatumData/archive`. `LEGATUM_ARCHIVE`
+overrides the default, and `--archive-dir <directory>` overrides the environment. Archive roots inside **any Git checkout** are rejected, including symlink aliases.
+The archive is private local data, outside the repository. Games played in the browser stay in that
+browser (below) until they are exported. Histories from the Mac app, before it was dropped on
+2026-11-22, are in the same `~/LegatumData/archive` on that Mac.
+The one upload is the hosted web build's: with `LEGATUM_GAMES_URL` set it sends each game's recording, every
+seat renamed to its default (`Recording::anonymized`, replayed so the hashes still match), to the R2 bucket behind
+`infra/games` (see `infra/games/README.md` and the README's Privacy section).
 
 ```sh
 export PATH="$HOME/.cargo/bin:/opt/homebrew/bin:$PATH"
 cargo run --release -p legatum-sim -- --games 100 --archive
 cargo run --release -p legatum-sim -- --games 100 --archive --archive-dir /path/to/archive
-cargo run --release -p legatum-server -- --archive-checkpoint-turns 5
 scripts/archive-stats
 scripts/archive-stats --csv /tmp/legatum-analysis
 cargo run --release -p legatum-sim -- --replay ~/LegatumData/archive/2026/09/<game_id>.tape.json.zst
@@ -31,7 +34,6 @@ archive/
   in-progress/2026/09/<game_id>.tape.json.zst
   index.jsonl
   archive.lock
-  incoming/                       # temporary Mac app plugin-fs writes
 ```
 
 The UTC creation date determines the year/month directories. Native writers use zstd level 9
@@ -39,7 +41,7 @@ with a frame checksum (a throughput/compression tradeoff); readers also accept g
 and uncompressed `.json` exports. There is one final file per game and one metadata-only JSON
 line per finished/stopped game in `index.jsonl`. Checkpoints are not counted as finished games.
 Finishing removes that game's in-progress checkpoint. Index appends and file replacement share
-an OS file lock across simulator threads, server processes and the desktop app. Files are
+an OS file lock across simulator threads and processes. Files are
 flushed and renamed atomically; repeated uploads/finish recovery do not duplicate index lines.
 Finished files are immutable. Earlier checkpoints cannot replace later ones.
 
@@ -58,7 +60,7 @@ Metadata fields:
 | --- | --- |
 | `schema_version`, `game_id` | Envelope version and collision-resistant, path-safe identity |
 | `created_at`, `finished_at` | RFC3339 UTC timestamps; finish is null while in progress |
-| `source` | `human-local`, `human-hotseat`, `lan`, or `sim`; server Host games use `lan` |
+| `source` | `human-local`, `human-hotseat`, `lan`, or `sim`; online Host games use `lan` (`history::Source::Lan`, a historical name) |
 | `speed`, `map`, `seed` | Economic speed, generator plus width/height, decimal-string u64 seed |
 | `seats` | Player id, entered name, faction, team, difficulty, human flag, final/current VP and held titles |
 | `winner`, `outcome` | Winning **team id**, or null; `vp`, `elimination`, `turn-limit`, `draw`, `stalled`, `panic`, `abandoned`, or `in-progress` |
@@ -68,11 +70,10 @@ Metadata fields:
 | `first_turn`, `complete_history` | Where recording starts, and whether orders cover the game from setup |
 | `parent_game_id` | Original identity when an explicitly loaded save forks another play |
 
-Names stay as entered, including LAN join names, independently of hashed engine state (they are in the state hash, which is why an anonymized recording replays its orders to recompute every hash). The only exception is the recording the hosted web build uploads and queues: seat names are "Player N" / "AI N".
+Names stay as entered, including the names online guests join with, independently of hashed engine state (they are in the state hash, which is why an anonymized recording replays its orders to recompute every hash). The only exception is the recording the hosted web build uploads and queues: seat names are "Player N" / "AI N".
 No seat credentials, authorization headers, tokens, pending socket messages or connection
 addresses enter the recording. Archives intentionally contain full game information for the
-owner's analysis, including information hidden by fog in the player UI. The server does not
-provide LAN download access to full archives.
+owner's analysis, including information hidden by fog in the player UI.
 
 Each telemetry snapshot has `turn` and `players`. Player rows contain `player`, `vp`, `cities`,
 `population`, `science` (produced in that resolved turn), `science_stored`, `gold` (treasury),
@@ -87,11 +88,11 @@ describe active relationships after resolution, not counts of declarations or ag
 ## Saves, checkpoints and browser delivery
 
 Session save JSON retains its existing state fields and adds `archive`, carrying the entire
-recording and stable identity. Native/WASM state hashes do not include the recording. Server
-autosaves persist it every turn; a standalone compressed checkpoint is written at game creation,
+recording and stable identity. Native/WASM state hashes do not include the recording. The
+browser's per-turn autosave keeps it; a standalone compressed checkpoint is written at game creation,
 every five turns by default, and at finish. A restart restores the same history and retries
-the archive write, including a finish interrupted before indexing. Lost LAN credentials are
-still handled by the existing host-controlled seat recovery; credentials are never restored
+the archive write, including a finish interrupted before indexing. Lost online-seat credentials are
+still handled by the host-controlled seat recovery; credentials are never restored
 from a tape. Explicit file loads fork the archive identity rather than overwriting another play.
 Replacing an unfinished game preserves its final recorded turns and indexes it as `abandoned`.
 
@@ -101,37 +102,19 @@ design. A loadable legacy save gets an `initial_state` anchor and `complete_hist
 records subsequent turns. The replay command verifies from that anchor. Earlier turns are never
 invented.
 
-For local single-player and hot-seat WASM sessions, the app captures history at setup, every
-five turns, and finish. The complete tape is also in the ordinary per-turn autosave.
-Pending deliveries are retained in IndexedDB, gzip-compressed where browser compression is
-available, before attempting delivery. Uploads retry after reload, when the browser comes
-online, at the next checkpoint, or through **Retry history archive** in the game menu.
-The current game can be exported even if browser storage is denied/full; failures surface in
-the existing error UI. Do not clear browser storage before exporting undelivered histories.
+In the browser, the app captures each game's history at setup, every five turns, and at the finish,
+and keeps it in IndexedDB (gzip-compressed where browser compression is available) until it is
+delivered; a newer checkpoint of a game replaces the older one. The complete tape is also in the
+ordinary per-turn autosave. With an upload address, uploads retry after a reload, when the browser
+comes online, and at the next checkpoint; without one, histories stay in the browser.
+**Export game history** in the game menu (Advanced) downloads the current game and every retained
+one, one gzip file per game (plain JSON if CompressionStream is unavailable); the browser may ask to
+allow multiple downloads. The current game can be exported even if browser storage is denied or
+full. Do not clear browser storage before exporting.
 
-When served by `legatum-server`, the app sends JSON to `POST /api/archive`. The route uses the
-same explicit Host/Origin allowlist and JSON content-type requirement as other server APIs.
-Loopback TCP peers may write; LAN peers must present an existing seat/staging token in
-`Authorization: Bearer …`. The token is transport-only. Requests have the existing 16 MiB body
-limit; native decompression is bounded at 64 MiB. LAN games themselves are recorded by the
-authoritative server, never reconstructed from player views. A LAN visitor without a seat
-credential retains local games for export until an authorized upload is possible.
-
-On Mac, `tauri-plugin-fs` writes the compressed payload under the resolved archive root.
-Native commands prepare checksum-enabled zstd and finalize the staged file/index under the
-shared lock. The plugin's added runtime scope is limited to that archive directory; existing
-user-selected save permissions and the single app-data autosave remain. macOS may not inherit
-shell variables when launched from Finder; launch the executable with `--archive-dir` or an
-environment variable to override the default.
-
-A plain static host retains histories locally and offers **Export game history** in the game
-menu. It exports the current game and retained games, one gzip file per game (plain JSON if
-CompressionStream is unavailable). The browser may ask to allow multiple downloads. Exported
-files can be analyzed/replayed without access to the original browser. Automatic writes to
-arbitrary Mac directories are unavailable to ordinary static web pages.
-
-Mobile storage in app data and syncing to an authorized server are follow-up work; no mobile
-archive transport is implemented here.
+An online game's host is the engine in the host's browser tab (`crates/wasm/src/host`); it hands its
+checkpoints and final history to that tab, which files them like a local game (`app/src/net/hosting.ts`,
+`recordGameHistory`). There is no archive server (the native `legatum-server` is gone, 2026-11-22).
 
 ## Analysis, replay and recovery
 
@@ -155,8 +138,7 @@ Checksums and bounded decompression reject truncated/corrupt zstd files. Corrupt
 never silently replaced by a new game. There is no destructive automatic cleanup of completed
 games. If a crash committed a finished file but not its index line, retrying that game repairs
 the line. `scripts/archive-stats --repair-index` can also scan finished files and append missing
-metadata under the same lock; a torn final index line is discarded before recovery. Retained
-`incoming` Mac files are staging artifacts; browser retry can complete interrupted deliveries.
+metadata under the same lock; a torn final index line is discarded before recovery.
 
 The original 2026-09-27 tape-only measurements were 245–614 KB raw, 12–32 KB with gzip -9 and
 10–26 KB with zstd -19 per Standard game (roughly 25 GB per million). This envelope adds

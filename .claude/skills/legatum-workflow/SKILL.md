@@ -14,7 +14,7 @@ Current rules only, one line each with the date and who. Detail, the user's full
 - GitHub `samcorcos/legatum` is the source of truth, one line on `master`: branch from a freshly fetched `origin/master`, PR into `master`, CI, merge on GitHub; never push to `master` directly (user, 2026-11-21).
 - While GitHub Actions is unavailable, "CI is green" means a passing `tools/ci/local-ci.sh` run on the PR's head, with its summary table posted as a PR comment (user, 2026-11-21).
 - Claude merges a PR it made at the user's request once CI is green and the reviewers its paths need have passed; never merge an outside contributor's PR without the user (user, 2026-11-21).
-- Reviewer gate: `tools/gates/check.py <branch> --base origin/master` runs the static checks and names the reviewers the changed paths need (`legatum-docs-reviewer` for code, `legatum-plain-language-reviewer` for player text, `legatum-ui-reviewer` for UI, `legatum-art` plus `tools/gates/art.py` for art). Each required reviewer posts its verdict as a PR comment that names the reviewer and the head commit SHA; the merger checks those comments are present for the PR's head before merging (2026-11-22; replaces the local marker files and the `merge-gates.sh` hook).
+- Reviewer gate: `tools/gates/check.py <branch> --base origin/master` runs the static checks and names the reviewers the changed paths need (`legatum-docs-reviewer` for code, `legatum-plain-language-reviewer` for player text, `legatum-ui-reviewer` for UI, `legatum-art-reviewer` for art and for code art depends on (names, kinds, art wiring), plus `tools/gates/art.py`) (art reviewer: user, 2026-11-22). Each required reviewer posts its verdict as a PR comment that names the reviewer and the head commit SHA; the merger checks those comments are present for the PR's head before merging (2026-11-22; replaces the local marker files and the `merge-gates.sh` hook).
 - Pre-merge gates are static only; no simulations as a merge gate (user, 2026-11-07).
 - Never land on a red verify, even under time pressure; a fixed red still needs a green verify before the merge (2026-10-24, 2026-11-07).
 - One code landing at a time; re-gate the merged result when both sides changed crates (2026-11-07, 2026-10-06).
@@ -30,6 +30,9 @@ Current rules only, one line each with the date and who. Detail, the user's full
 - AI fixes ship before they are measured; every finished fix gets its own build; measure after and back out a bad one (user, 2026-11-15).
 - A decided feature is not done until it is on master (2026-10-31).
 - Check release notes against the actual diff: never list cut rules as new (2026-10-11, 2026-11-07).
+- Playtest build: `tools/release/check.sh <worktree> <log> "Playtest N"`, then `LEGATUM_BUILD_LABEL="Playtest N" scripts/deploy-preview.sh playtest-n` publishes a Pages preview (2026-11-22).
+- Two-player online game: both open the web build, Multiplayer; the host's tab runs the game and must stay open; both need the same build (2026-11-22).
+- Local Playwright runs need a build made for the e2e relay: `LEGATUM_RELAY_URL=http://127.0.0.1:8787 scripts/build-web.sh` (`--skip-wasm` to reuse the engine); online tests start `infra/relay` under `wrangler dev` (2026-11-22).
 - After every playtest he finishes, run `legatum-game-coach` on a copy of the save (user, 2026-10-17).
 
 ## Working with the user
@@ -87,7 +90,7 @@ Current rules only, one line each with the date and who. Detail, the user's full
 - Supervisors that only report to the lead: rejected; long-running work moved to a Claude project with GitHub as the source of truth (user, 2026-11-21).
 - Training mode is Hard plus "why did you do that?", at most one question per turn, during play (user, 2026-11-15). The Training level is hidden from players (2026-11-21).
 - `gpt-6.1-sol` is rejected on this account.
-- Never disturb a live game (historical: installed Mac app; now do not replace a preview he is playing).
+- Never disturb a live game: renice background work while he plays, and publish a playtest to a new preview label rather than over the one he is playing.
 
 ## References (open only when needed)
 

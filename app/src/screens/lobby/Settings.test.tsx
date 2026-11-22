@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-// The Rule experiments section: two switches, off by default, carried into the game setup and the LAN room
+// The Rule experiments section: two switches, off by default, carried into the game setup and the online room
 // config, and read-only for a guest.
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';

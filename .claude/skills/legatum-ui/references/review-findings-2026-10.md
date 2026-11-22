@@ -21,7 +21,7 @@ Moved verbatim from SKILL.md on 2026-11-22 (original order kept). The current ru
 - **A state that changes a stat changes the shown stat everywhere.** An idle unit shows its effective strength with its breakdown, the same number the forecast uses, and its token carries the alert mark.
 - **Every "short" or "idle" state has a locator and a fix:** a map mark, "Show on map" on the report line, and one fix clause.
 - **A refusal is one shared string** on the build card, the upgrade card and the tooltip; the tooltip only adds detail.
-- **Remote tours rebuild `app/dist` first** (the fixtures serve it through the release server, so a stale build shows old text).
+- **Remote tours rebuild `app/dist` first** (the fixtures serve it statically, so a stale build shows old text).
 
 ## From the 8.9.7 UI review (2026-10-21)
 - **A locked-by-faction unlock keeps its truth everywhere.** When a faction can't use a tech's unlock until later (Mongols and Walls), the tech card, hovercard, unlock moment and build list all say so ("Walls for the Mongols from the Medieval era"), with no price.
@@ -131,7 +131,7 @@ Moved verbatim from SKILL.md on 2026-11-22 (original order kept). The current ru
 - **Each number once per tooltip:** don't print "4 moves" twice in one card.
 - **Tour fixtures that depend on turn resolution pin their outcome** (garrison HP, seeds) and assert the payoff line (e.g. "captured"), so AI or rule changes fail loudly instead of quietly losing the payoff shots.
 - **After a rebalance, grep the skills and the Guide for the old numbers.**
-- **Archive every release's tour on release day** (`~/LegatumRuns/tours/playtest-<version>-review/`). 8.9.18 wasn't archived, which cost an extra tour run.
+- **Archive every release's tour on release day** (`/mnt/project-files/ui-tours/<release>/` since 2026-11-22; `~/LegatumRuns/tours/playtest-<version>-review/` on the Mac before that). 8.9.18 wasn't archived, which cost an extra tour run.
 - **A unit-panel tooltip goes beside the panel**, so it doesn't cover the Lens switcher at the left edge.
 - **Mounted surfaces agree:** card, forecast, tooltip and Guide show the same three numbers (130% strength, +40% against ranged, −33% against a city) in the same words. Review all four together.
 

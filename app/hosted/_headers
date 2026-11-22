@@ -1,13 +1,14 @@
 # Response headers for the hosted web build (Cloudflare Pages reads this file from the site root;
 # scripts/build-web.sh copies it into app/dist, and e2e-hosted/serve.mjs applies it in the smoke test).
-# The Content-Security-Policy is the desktop app's (src-tauri/tauri.conf.json) without the Tauri IPC
-# sources: 'wasm-unsafe-eval' lets the engine compile, 'unsafe-inline' styles are React's style attributes.
+# Content-Security-Policy: 'wasm-unsafe-eval' lets the engine compile, 'unsafe-inline' styles are React's
+# style attributes, and connect-src names the online-play relay (scripts/build-web.sh swaps in another one
+# when the build sets one).
 /*
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://legatum-relay.sam-1e7.workers.dev wss://legatum-relay.sam-1e7.workers.dev; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'
 
 # Vite names everything under /assets/ by content hash, so a changed file gets a new address.
 /assets/*

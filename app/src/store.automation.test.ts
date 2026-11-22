@@ -18,7 +18,7 @@ vi.mock('./client', async (original) => ({ ...await original<typeof import('./cl
 vi.mock('./feel', async (original) => ({ ...await original<typeof import('./feel')>(), feel: { select: vi.fn(), ready: vi.fn(), invalid: vi.fn() }, playTurnFeedback: vi.fn(), cancelTurnFeedback: vi.fn() }));
 
 beforeEach(() => { useGame.setState(useGame.getInitialState(), true); vi.clearAllMocks(); });
-afterEach(() => { useGame.getState().leaveLan(); vi.useRealTimers(); vi.unstubAllGlobals(); });
+afterEach(() => { useGame.getState().leaveOnline(); vi.useRealTimers(); vi.unstubAllGlobals(); });
 async function start() {
   const s = explorationFixture();
   await useGame.getState().loadSave({ format: 'legatum-save', version: 1, client: 'wasm', savedAt: '', turn: 1, names: ['Explorer'], game: explorationCoreSave(s) });
@@ -68,14 +68,14 @@ it('stops on a finite frontier, reports the ruin and stop, and returns the scout
   expect(unitsNeedingOrders(s.views![0], []).some((u) => u.id === 0)).toBe(true);
 });
 
-it('LAN submits client-planned orders before Ready using only the joined seat view', async () => {
+it('Online submits client-planned orders before Ready using only the joined seat view', async () => {
   const client = await start();
   const view = client.view(0); view.units.find((u) => u.id === 0)!.automation = 'Explore';
   const foreign = { ...view.units.find((u) => u.id === 0)!, id: 99, owner: 1, pos: { q: 15, r: 4 } };
   view.units.push(foreign);
   const sockets: FakeSocket[] = [];
   vi.stubGlobal('WebSocket', class extends FakeSocket { constructor(url: string) { super(url); sockets.push(this); } });
-  useGame.setState({ client: null, views: null, lan: { status: { mode: 'server', has_game: true, turn: 1, seats: [], lan_urls: [], is_local: false }, seats: [], mySeat: null, conn: 'connecting' } });
+  useGame.setState({ client: null, views: null, net: { status: { mode: 'server', has_game: true, turn: 1, seats: [], is_local: false }, seats: [], mySeat: null, conn: 'connecting' } });
   useGame.getState().joinSeat(0, 'Explorer');
   const socket = sockets[0]; socket.open();
   socket.push({ type: 'welcome', seat: 0, game_id: 'auto', orders: [] });

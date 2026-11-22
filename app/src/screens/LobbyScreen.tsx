@@ -13,6 +13,7 @@ import {
   buildSetup,
   mapSizeLabel,
   newLobby,
+  setSlot,
   slotColorFactions,
   problems,
   rememberDifficulty,
@@ -27,7 +28,7 @@ import { Amount } from '../ui/Amounts';
 import { SeatsTable } from './lobby/SeatsTable';
 import { Settings } from './lobby/Settings';
 import { randomSeed } from './lobby/randomSeed';
-import { rememberPlayerName } from '../platform/online';
+import { rememberPlayerName, savedPlayerName } from '../platform/online';
 import { HOST_AWAY } from '../platform/relayLobby';
 import '../lobby.css';
 
@@ -37,9 +38,16 @@ function forgetHostRoom(roomId: string | undefined) {
   if (roomId && saved?.seat === 0 && saved.roomId === roomId) rememberSeat(null);
 }
 
+
+/** An online host's first seat carries the name typed for the game list. */
+function hostNamed(lobby: Lobby, mode: LobbyMode): Lobby {
+  const name = mode === 'host' ? savedPlayerName() : null;
+  return name ? setSlot(lobby, 0, { name }) : lobby;
+}
+
 export function LobbyScreen() {
   const mode = useGame((s) => s.setupMode);
-  const status = useGame((s) => s.lan?.status);
+  const status = useGame((s) => s.net?.status);
   const startGame = useGame((s) => s.startGame);
   const hostNewGame = useGame((s) => s.hostNewGame);
   const goto = useGame((s) => s.goto);
@@ -52,7 +60,7 @@ export function LobbyScreen() {
   });
   const room = mode === 'host' && (!!restoringRoomId || stagingEnabled(status));
   const [draft, setDraft] = useState<{ lobby: Lobby | null; writeSettings: boolean }>(() => ({
-    lobby: restoringRoomId ? null : newLobby(mode, randomSeed()),
+    lobby: restoringRoomId ? null : hostNamed(newLobby(mode, randomSeed()), mode),
     writeSettings: !restoringRoomId,
   }));
   const { lobby, writeSettings } = draft;
@@ -82,7 +90,7 @@ export function LobbyScreen() {
       useGame.getState().exitStaging();
       if (stagingEnabled(status)) useGame.getState().enterStaging(true);
       setRestoringRoomId(undefined);
-      setDraft({ lobby: newLobby(mode, randomSeed()), writeSettings: true });
+      setDraft({ lobby: hostNamed(newLobby(mode, randomSeed()), mode), writeSettings: true });
       set({ error: null });
     }
   }, [lobby, mode, restoringRoomId, staging, status, set]);
@@ -118,7 +126,7 @@ export function LobbyScreen() {
   const blockers = problems(lobby);
   if (room && !staging) blockers.push('Opening the game room…');
   else if (room && !synced) blockers.push('Saving the latest settings…');
-  else if (room && staging && !everyoneReady(staging)) blockers.push('Waiting for every network seat to be taken and Ready.');
+  else if (room && staging && !everyoneReady(staging)) blockers.push('Waiting for every online seat to be taken and Ready.');
 
   const start = () => {
     if (blockers.length || busy) return;

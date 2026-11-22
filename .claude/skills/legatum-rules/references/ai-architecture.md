@@ -542,7 +542,7 @@ Moved verbatim from `game-rules.md` on 2026-11-22, in the original order; the or
   (`legatum-sim --search`, the examples). It was a Hard AI seat with `PlayerSetup::search`
   (omitted when false, so saves, tapes and hashes are unchanged; the flag now means Training;
   the in-app budget below, `SearchConfig::in_app(player count)`, is history). The in-app budget depends on the
-  player count only, never on the platform, so native, WASM and LAN play the same game:
+  player count only, never on the platform, so native, WASM and online play the same game:
   2 players k3 h20 d4 w, 3-4 players k3 h20 d2 w, 5-8 players k3 h10 d2 w, all with `z`
   (stagger: the first plan's review is delayed by the seat number modulo the review interval so
   seats don't all search on one turn). The WASM engine is single-threaded (rayon rollouts are

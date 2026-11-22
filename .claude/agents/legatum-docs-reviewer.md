@@ -48,7 +48,7 @@ You are the documentation reviewer for Legatum, a Civ-6-like 4X (Rust core in `c
    | Player counts and modes (solo against one to seven AI, five by default, co-op two humans against six, hot seat, LAN) | `app/src/screens/TitleScreen.tsx`, `MAP_SIZES` and `applyPreset` in `app/src/lobby.ts`, `GameSetup::standard` in `crates/core/src/state.rs` |
    | Victory rules: VP target, hold turns, VP sources, last-capital win | `VP_HOLD_TURNS` in `crates/core/src/data.rs`, `solo_vp_target` in `crates/core/src/experiments.rs`, `crates/core/src/scoring.rs`, the Guide's Victory section |
    | Rules stated as always on (tech diffusion, coalitions, decadence) | the defaults in `crates/core/src/experiments.rs` and `crates/core/src/data.rs` |
-   | Platforms and how to run it | `scripts/`, `app/README.md`, `app/src-tauri/tauri.conf.json`, `.github/workflows/ci.yml` |
+   | Platforms and how to run it | `scripts/`, `app/README.md`, `app/hosted/_headers`, `.github/workflows/ci.yml`, `.github/workflows/deploy-web.yml` |
    | "The AI gets no bonuses" and its scope (Easy, Normal and Hard plan from a `PlayerView`; they are the only levels a production build offers; the rules do not branch on level or on a seat being human; which tools read the true state) | `Brain` in `crates/ai/src/lib.rs`, `Session::ai_orders` in `crates/wasm/src/session.rs`, `rg -n "difficulty\|is_human" crates/core/src`, `crates/ai/src/training.rs`, `PLAYER_LEVELS` and `trainingSwitch` in `app/src/lobby.ts` (Training is listed only in a development build with `?training=1`), `SearchConfig::omniscient` |
    | Licence and how the art was made | `LICENSE`, `LICENSE-ART`, `THIRD_PARTY_NOTICES.md` |
 

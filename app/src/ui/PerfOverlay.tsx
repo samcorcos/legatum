@@ -1,5 +1,5 @@
-// Opt-in frame-rate readout, for checking the renderer in the desktop app's webview (WKWebView
-// on macOS) where there is no devtools by default. On with ?perf=1 or the Settings toggle
+// Opt-in frame-rate readout, for checking the renderer on a machine or browser without devtools
+// at hand (Safari, a tablet). On with ?perf=1 or the Settings toggle
 // (stored in localStorage). Reports display fps from requestAnimationFrame, frame-time average,
 // p95 and worst over the last second, the map's own draw cost, and which blur path is active.
 import { useEffect, useRef, useState } from 'react';

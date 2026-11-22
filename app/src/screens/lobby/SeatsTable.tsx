@@ -77,7 +77,7 @@ export function SeatsTable({
 }
 
 function Occupancy({ room, seat }: { room: RoomView; seat: number }) {
-  const local = useGame((s) => s.lan?.status.is_local);
+  const local = useGame((s) => s.net?.status.is_local);
   const mySeat = useGame((s) => s.stagingSeat);
   const busy = useGame((s) => s.busy);
   const releaseSeat = useGame((s) => s.releaseStagingSeat);
@@ -119,7 +119,7 @@ function SeatRow({
 }) {
   const closed = slot.kind === 'closed';
   const kinds = slotKinds(mode);
-  const kindLabel = (k: SlotKind) => (mode === 'host' && k === 'human' ? 'Network player' : KIND_LABEL[k]);
+  const kindLabel = (k: SlotKind) => (mode === 'host' && k === 'human' ? 'Online player' : KIND_LABEL[k]);
   const readOnly = !onChange;
   const networkSeat = !!room && (slot.kind === 'human' || slot.kind === 'you');
   const youLabel = room?.guest ? 'Host' : mode === 'host' ? 'You · host' : mode === 'hotseat' ? 'Human' : 'You';
@@ -171,7 +171,7 @@ function SeatRow({
           <FactionPicker
             value={slot.faction}
             label={`Seat ${index + 1} faction`}
-            // Network players pick their own faction.
+            // Online players pick their own faction.
             disabled={readOnly || (networkSeat && slot.kind === 'human')}
             onChange={(faction) => onChange?.({ faction })}
           />

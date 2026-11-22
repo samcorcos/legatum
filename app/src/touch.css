@@ -1,4 +1,4 @@
-/* M1 tablet controls. Hover rules in styles/lobby/lan/Guide only change decoration;
+/* M1 tablet controls. Hover rules in styles/lobby/online/Guide only change decoration;
    explanations use Tip, and selecting research traces the same prerequisite path. */
 :root .touch-only { display: none; }
 .map-touch-card {
@@ -178,7 +178,6 @@
   .topbar .menu { padding: 0 4px; }
   .topbar .menu > button { padding: 4px 6px; min-width: 48px; letter-spacing: .04em; }
   .topbar .net { position: absolute; right: 8px; top: var(--hud-height, 52px); font-size: 10px; }
-  .topbar .invite-chip { display: none; }
 }
 
 /* Compact game overlay reservations, independent of celebration component styling. */

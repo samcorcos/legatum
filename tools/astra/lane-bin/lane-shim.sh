@@ -36,13 +36,13 @@ first_word() { # first argument that is not a flag or a +toolchain
 case "$tool" in
   cargo)
     case "$(first_word "$@")" in test|nextest|clippy|check) ;; *) run_local "$@";; esac
-    # The macOS-only Tauri crate and Apple targets cannot build on the Linux box.
-    case "$PWD $*" in *src-tauri*|*apple*|*darwin*|*-ios*) run_local "$@";; esac
+    # Apple targets cannot build on the Linux box.
+    case "$PWD $*" in *apple*|*darwin*) run_local "$@";; esac
     exec "$offload" -- cargo "$@" ;;
   npx)
     case "$(first_word "$@")" in
       vitest|tsc) exec "$offload" --prep wasm -- npx "$@" ;;
-      playwright) exec "$offload" --prep server --artifact app/test-results -- npx "$@" ;;
+      playwright) exec "$offload" --prep web --artifact app/test-results -- npx "$@" ;;
       *) run_local "$@" ;;
     esac ;;
   npm)
@@ -56,7 +56,7 @@ case "$tool" in
         done
         case "$script" in
           build|test) exec "$offload" --prep wasm -- npm "$@" ;;
-          e2e|test:e2e) exec "$offload" --prep server --artifact app/test-results -- npm "$@" ;;
+          e2e|test:e2e) exec "$offload" --prep web --artifact app/test-results -- npm "$@" ;;
           *) run_local "$@" ;;
         esac ;;
       *) run_local "$@" ;;

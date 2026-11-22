@@ -42,6 +42,7 @@ To find the full entry for a line, search its month file for the words in the li
 - Different thresholds for starting and ending a relationship (war, Peace, Alliance) make AIs oscillate; use hysteresis on both sides. An AI that sues for Peace and attacks again is usually a candidate-list gap. [2026-09, 2026-10]
 - An AI-only ablation can call a faction drawback "backwards" when the AI overspends; read it against human play. [2026-11]
 - Describe what the AI actually does from a recorded tape, not from its configured priority list. [2026-10]
+- A gate keyed on a state the action itself changes closes mid-action: Rome's one-city war gate keyed on "no veteran" shut as soon as the siege promoted its units, and the army walked home. Key gates on the campaign, not on its side effects. [2026-11]
 
 ## Simulations and measurement
 
@@ -66,6 +67,7 @@ To find the full entry for a line, search its month file for the words in the li
 - Splitting JSX text runs moves glyphs; amounts need the sans, not the display italic. [2026-09, 2026-10]
 - A solo lobby defaults to 6 empires, so e2e specs that start from defaults get that map. [2026-11]
 - A recolour passes the distinctness score and is still a placeholder (see `legatum-art`). [2026-11]
+- Art goes stale the way docs do: a rename, a new kind or new art wiring can leave a picture wrong or missing, and the lookalike check (`tools/art/distinctness.py`) judges neither style nor staleness. `legatum-art-reviewer` and `tools/art/art-review.py impact` cover both. Map-graded art must not be reused on cards. [2026-11]
 
 ## Web build, tests and deploy
 
@@ -75,6 +77,9 @@ To find the full entry for a line, search its month file for the words in the li
 - `scripts/build-wasm.sh` keys its cache on everything under `crates/`; a stale `app/src/wasm-pkg` fails WASM parity tests, so rebuild it after engine changes. [2026-10]
 - Run Playwright from `app/`, not with `--prefix`; any Playwright run wipes `app/test-results/` (including screen-tour shots); JSON imported by modules that e2e specs load needs `with { type: 'json' }`. [2026-09, 2026-10]
 - Vitest once matched only `.test.ts`; check that a new test file pattern actually runs. [2026-09]
+- Fake timers freeze `performance.now()`, so a time-capped loop never ends under `vi.useFakeTimers()`, and `runAllTimersAsync` never ends while an interval runs: use real timers or advance a fixed time. [2026-11]
+- `npm run e2e:hosted` is not in `tools/ci/local-ci.sh`; run it by hand after changing the title screen or online flows. [2026-11]
+- Online co-op runs the host in the host's browser tab (WASM) through the Cloudflare relay. Browsers cannot send WebSocket pings or see why an upgrade failed, and background tabs throttle timers to about once a minute: liveness uses app-level ping frames and generous timeouts. Relay limits and the `LOBBY_OPEN=0` kill switch live in the Worker. [2026-11]
 - The public tree is exported; an exporter must be checked by building and testing its output, not by scanning it. Scrub lists hold generic patterns only: never write a value to hide in a tracked file, test, comment or commit message. [2026-11, 2026-10]
 - Public copy (README counts of peoples, eras, techs) is checked by `tools/gates/public-claims.py`; universal claims ("every number", "never cheats") need a stated scope. [2026-11]
 

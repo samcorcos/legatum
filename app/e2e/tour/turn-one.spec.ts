@@ -242,6 +242,11 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await page.getByRole('button', { name: 'Menu', exact: true }).click();
     await expect(page.locator('#game-menu')).toBeVisible();
     await shot(page, size, '14-menu');
+    // The troubleshooting tools under Advanced (Export game history, the engine and state hash).
+    await page.locator('#game-menu .menu-advanced summary').click();
+    await expect(page.getByRole('button', { name: 'Export game history', exact: true })).toBeVisible();
+    await page.locator('#game-menu .menu-advanced').scrollIntoViewIfNeeded();
+    await shot(page, size, '14b-menu-advanced');
     await page.keyboard.press('Escape');
   });
 

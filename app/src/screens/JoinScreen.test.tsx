@@ -29,14 +29,14 @@ beforeEach(() => {
   root = createRoot(host);
   useGame.setState(useGame.getInitialState(), true);
   const seats = [{ seat: 0, player: 0, name: 'Ada', faction: 'India' as const, connected: false, reserved: false, ready: false, orders: 0 }];
-  useGame.setState({ screen: 'join', lan: {
-    status: { mode: 'server', has_game: true, turn: 1, seats, lan_urls: [], is_local: false },
+  useGame.setState({ screen: 'join', net: {
+    status: { mode: 'server', has_game: true, turn: 1, seats, is_local: false },
     mySeat: null, seats, conn: 'closed',
   } });
   act(() => root.render(<JoinScreen />));
 });
 afterEach(() => {
-  act(() => { root.unmount(); useGame.getState().leaveLan(); });
+  act(() => { root.unmount(); useGame.getState().leaveOnline(); });
   vi.useRealTimers();
   vi.unstubAllGlobals();
 });
@@ -51,7 +51,7 @@ it.each(['connecting', 'welcomed'] as const)('Back cancels a %s join, clears bus
   expect(useGame.getState().busy).toBe('Joining…');
   act(() => host.querySelector<HTMLButtonElement>('.setup-top button')!.click());
   expect(socket.readyState).toBe(3);
-  expect(useGame.getState()).toMatchObject({ screen: 'title', busy: null, client: null, views: null, lan: { conn: 'closed', mySeat: null } });
+  expect(useGame.getState()).toMatchObject({ screen: 'title', busy: null, client: null, views: null, net: { conn: 'closed', mySeat: null } });
 
   const lateView = { me: 0, turn: 1, units: [], cities: [], finished: true } as unknown as PlayerView;
   act(() => {

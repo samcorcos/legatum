@@ -177,22 +177,33 @@ test('Hot Seat: both humans plan before the shared turn resolves', async ({ page
   }
 });
 
-test('LAN: host a staging room, a guest takes a seat and Readies, then both Ready reach turn 2', async ({ page: host, guestPage: guest }) => {
-  test.setTimeout(90_000);
+// Online co-op end to end: the host's tab runs the game (the WASM host) and reaches the guest's browser
+// through the real relay under wrangler dev. No game server anywhere.
+test('Online: host in one browser, a guest joins from the game list, both Ready reach turn 2', async ({ page: host, guestPage: guest, relay }) => {
+  test.setTimeout(150_000);
+  const tunnel: string[] = [];
+  host.on('websocket', (ws) => tunnel.push(ws.url()));
   await host.goto('/');
   await host.getByRole('button', { name: /^Multiplayer/ }).click();
+  await host.getByLabel('Your name in the game list').fill('Ada');
   await host.getByRole('button', { name: /^Host Game/ }).click();
   await expect(host.getByRole('heading', { name: 'Host Game', exact: true })).toBeVisible();
+  // The host holds one tunnel to the relay, and plays its own seat inside the tab.
+  expect(tunnel.filter((u) => u.startsWith(relay.replace(/^http/, 'ws')))).toEqual([expect.stringMatching(/\/rooms\/[^/]+\/host\?key=/)]);
   await configureLobby(host, '20240926');
   const start = host.getByRole('button', { name: /^Start game/ });
-  // The room is open and synced, but the open network seat blocks the start.
-  await expect(host.getByText('Waiting for every network seat to be taken and Ready.', { exact: true })).toBeVisible();
+  // The room is open and synced, but the open online seat blocks the start.
+  await expect(host.getByText('Waiting for every online seat to be taken and Ready.', { exact: true })).toBeVisible();
   await expect(start).toBeDisabled();
 
   await guest.goto('/');
   await guest.getByRole('button', { name: /^Multiplayer/ }).click();
   await guest.getByRole('button', { name: /^Join Game/ }).click();
+  const row = guest.locator('.online-room').filter({ hasText: 'Ada' });
+  await expect(row).toHaveCount(1, { timeout: 20_000 });
+  await row.getByRole('button', { name: /^Join/ }).click();
   await expect(guest.getByRole('heading', { name: 'Join Game', exact: true })).toBeVisible();
+
   // The guest sees the host's settings: Seat 2 is the one open seat.
   await expect(guest.getByLabel('Map seed', { exact: true })).toHaveValue('Hidden');
   await guest.getByRole('row').nth(2).getByRole('button', { name: 'Take seat', exact: true }).click();
@@ -203,15 +214,15 @@ test('LAN: host a staging room, a guest takes a seat and Readies, then both Read
   await start.click();
   await expectTurn(host, 1);
   await expectTurn(guest, 1);
-  await expect(host.getByTestId('lan-seat-1')).toContainText('Alice');
-  await expect(host.getByTestId('lan-seat-1')).toContainText('online');
-  await expect(guest.getByTestId('lan-seat-0')).toContainText('online');
+  await expect(host.getByTestId('online-seat-1')).toContainText('Alice');
+  await expect(host.getByTestId('online-seat-1')).toContainText('online');
+  await expect(guest.getByTestId('online-seat-0')).toContainText('online');
 
   await chooseCapitalProduction(host);
   await chooseCapitalProduction(guest);
   await endPlanning(host);
   await expect(host.getByRole('button', { name: /^Waiting for Alice/ })).toBeVisible();
-  await expect(guest.getByTestId('lan-seat-0')).toContainText('Ready');
+  await expect(guest.getByTestId('online-seat-0')).toContainText('Ready');
   await expectTurn(host, 1);
   await expectTurn(guest, 1);
   await endPlanning(guest);
@@ -227,8 +238,8 @@ test('LAN: host a staging room, a guest takes a seat and Readies, then both Read
       const v = s.views![s.seat];
       return v.cities.find((c) => c.owner === v.me)?.detail?.producing ?? null;
     })).toEqual(expect.any(Object));
-    await expect(page.getByTestId('lan-seat-0')).toContainText('Planning');
-    await expect(page.getByTestId('lan-seat-1')).toContainText('Planning');
+    await expect(page.getByTestId('online-seat-0')).toContainText('Planning');
+    await expect(page.getByTestId('online-seat-1')).toContainText('Planning');
     await expect(page.getByRole('region', { name: 'Victory race', exact: true })).toBeVisible();
   }
 });

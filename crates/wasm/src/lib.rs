@@ -5,6 +5,7 @@
 //! the `#[wasm_bindgen]` methods only convert errors to `JsError`.
 
 pub mod history;
+pub mod host;
 pub mod json;
 pub mod rusher;
 pub mod scenario;
@@ -686,18 +687,7 @@ impl Game {
         to_json(&self.session.training_run.as_ref().map(|r| r.progress()))
     }
 
-    /// The native path: everything the desktop app's search thread needs, as a
-    /// `legatum_ai::training::TrainingRequest` in plain serde JSON (the desktop app reads it
-    /// with plain serde). Call after `training_begin_json`.
-    pub fn training_request_json(&mut self) -> Result<String, String> {
-        let request = legatum_ai::training::TrainingRequest {
-            hard: self.session.training_hard_orders(),
-            state: self.session.state.clone(),
-        };
-        serde_json::to_string(&request).map_err(|e| e.to_string())
-    }
-
-    /// The WASM path: run up to `max_rollouts` rollouts. `elapsed_ms` since the turn began.
+    /// Run up to `max_rollouts` rollouts. `elapsed_ms` since the turn began.
     pub fn training_step_json(
         &mut self,
         max_rollouts: u32,
@@ -710,22 +700,13 @@ impl Game {
         to_json(&run.progress())
     }
 
-    /// The WASM path: stop, play the best orders found and return the result (log lines
+    /// Stop, play the best orders found and return the result (log lines
     /// as JSON strings in `lines`).
     pub fn training_finish_json(&mut self, elapsed_ms: f64) -> Result<String, String> {
         let Some(run) = self.session.training_run.take() else {
             return Ok("null".into());
         };
         let result = run.finish(elapsed_ms.max(0.0) as u64);
-        self.apply_training(result)
-    }
-
-    /// The native path: play a result the desktop app's search thread returned.
-    pub fn training_apply_json(&mut self, result_json: &str) -> Result<String, String> {
-        json::check_json_size(result_json)?;
-        let result: legatum_ai::training::TrainingResult =
-            serde_json::from_str(result_json).map_err(|e| e.to_string())?;
-        self.session.training_run = None;
         self.apply_training(result)
     }
 
@@ -1014,10 +995,6 @@ impl Game {
         js(guard(|| self.training_begin_json(cap_ms)))
     }
 
-    pub fn training_request(&mut self) -> Result<String, JsError> {
-        js(guard(|| self.training_request_json()))
-    }
-
     pub fn training_step(&mut self, max_rollouts: u32, elapsed_ms: f64) -> Result<String, JsError> {
         js(guard(|| self.training_step_json(max_rollouts, elapsed_ms)))
     }
@@ -1038,10 +1015,6 @@ impl Game {
         }))
     }
 
-    pub fn training_apply(&mut self, result_json: &str) -> Result<String, JsError> {
-        js(guard(|| self.training_apply_json(result_json)))
-    }
-
     /// Per-seat planning time of the last End Turn (measurement builds, `seat-timing`).
     #[cfg(feature = "seat-timing")]
     pub fn seat_timings(&self) -> String {
@@ -1053,7 +1026,7 @@ impl Game {
         js(guard(|| Ok(self.save_json())))
     }
 
-    /// Portable full-information archive for the owner. This never includes LAN tokens.
+    /// Portable full-information archive for the owner. This never includes online seat tokens.
     pub fn archive(&self) -> Result<String, JsError> {
         js(guard(|| {
             to_json(self.session.history.as_ref().ok_or("No recorded history")?)
@@ -1142,28 +1115,6 @@ impl Game {
 mod tests {
     use super::*;
     use serde_json::Value;
-
-    /// Playtest 8.9.27, T44 (designer, 2026-11-07): the desktop app's native search read the
-    /// request with plain serde, but the request held the save encoding (`setup.seed` as a
-    /// string), so every native Training search failed to start. The request must round-trip
-    /// through the same type the desktop app reads, with a seed past JavaScript's 2^53.
-    #[test]
-    fn the_native_training_request_reads_back_with_plain_serde() {
-        let mut setup = GameSetup::standard(
-            5_392_327_568_844_170,
-            [Faction::Switzerland, Faction::Byzantium],
-        );
-        setup.players[1].is_human = false;
-        setup.players[1].difficulty = legatum_core::AiDifficulty::Hard;
-        setup.players[1].search = true;
-        let mut game = Game::from_setup_json(&json::setup_to_value(&setup).to_string()).unwrap();
-        assert!(game.session.has_training());
-        let request = game.training_request_json().unwrap();
-        let read: legatum_ai::training::TrainingRequest = serde_json::from_str(&request).unwrap();
-        assert_eq!(read.state.setup.seed, 5_392_327_568_844_170);
-        assert_eq!(read.state.hash(), game.session.state.hash());
-        assert!(read.hard.contains_key(&PlayerId(1)));
-    }
 
     #[test]
     fn view_json_exposes_a_locked_building_predecessor() {
@@ -2013,7 +1964,7 @@ pub fn scenario_targets_json(scenario_json: &str) -> Result<String, String> {
     ))
 }
 
-/// Stateless planning for local and LAN clients. The only input is the seat's fogged view.
+/// Stateless planning for local and online clients. The only input is the seat's fogged view.
 #[wasm_bindgen]
 pub fn explore_step(view_json: &str, unit: u32) -> Result<String, JsError> {
     js(explore_step_json(view_json, unit))

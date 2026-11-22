@@ -183,7 +183,7 @@ export function borderSteps(view: PlayerView, kind: UnitKind, from: Hex): (a: He
   return (a, b) => open(b) || (!open(a) && index(a) >= 0 && index(b) >= 0 && dist[index(b)] < dist[index(a)]);
 }
 
-/** Merge only local human teammates' diplomatic plans into the same contract LAN publishes. */
+/** Merge only local human teammates' diplomatic plans into the same contract online publishes. */
 export function withLocalDiplomacy(view: PlayerView, humans: number[], orders: Order[][]): PlayerView {
   const local = new Set(humans);
   const queued = [...view.diplomacy.queued.filter((q) => !local.has(q.player)), ...orders.flatMap((os, seat) => view.players.some((p) => p.id === humans[seat] && p.team === view.team) ? os.filter((o) => otherTeam(view, o) !== null).map((order) => ({ player: humans[seat], order })) : [])];

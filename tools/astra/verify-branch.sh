@@ -112,7 +112,7 @@ JOBS="${LEGATUM_VERIFY_JOBS:-$(clamp $((ncpu / 4)) 4 32)}"
 TEST_THREADS="${LEGATUM_VERIFY_TEST_THREADS:-$(clamp $((ncpu / 2)) 4 32)}"
 SIM_THREADS="${LEGATUM_VERIFY_SIM_THREADS:-$(clamp $((ncpu / 8)) 4 8)}"
 # The screen tour is 89% of Playwright time and every one of its tests is independent, so workers scale with the cores
-# (each worker spawns its own legatum-server on port 0 and its own Chromium). On a machine that is already busy the
+# (each worker has its own Chromium; the static e2e dist and the relay are shared). On a machine that is already busy the
 # count also shrinks with the load: extra workers there only make every test slower (three tour tests hit the
 # 45 s limit at load 100 with five workers) and add no throughput.
 load0="$(load_average | awk '{printf "%d", $1}')"; [ -n "$load0" ] || load0=0
@@ -251,8 +251,6 @@ cutoff = time.time() - 14 * 24 * 60 * 60
 for path in pathlib.Path(sys.argv[1]).glob('*.pass'):
     try:
         if path.stat().st_mtime < cutoff:
-            if 'step=app-server\n' in path.read_text(errors='replace'):
-                (path.parent / 'artifacts' / f"app-server-{path.stem}").unlink(missing_ok=True)
             path.unlink()
     except OSError:
         pass
@@ -304,7 +302,6 @@ MASTER_CODE_KEY="$( { git rev-parse "$MASTER_SHA:crates" "$MASTER_SHA:Cargo.toml
 step_tree() {
   case "$1" in
     sim-build-master|smoke-master|duel-build-master|duel-master) printf '%s' "$MASTER_CODE_KEY" ;;
-    app-server) printf '%s' "$SERVER_INPUT_KEY" ;;
     *) printf '%s' "$TREE_MERGED" ;;
   esac
 }
@@ -325,15 +322,6 @@ write_cache_record() {
   artifact_patch=""
   case "$cache_name" in
     repin|repin-merge) artifact_patch="$(git -C "$WT" diff --binary -- crates/sim/tests/fixtures crates/sim/tests/pins.json | base64 | tr -d '\n')" ;;
-    app-server)
-      server_bin="$WT/target/release/legatum-server"
-      server_artifact="$GATE_CACHE/artifacts/app-server-$cache_key_value"
-      mkdir -p "$GATE_CACHE/artifacts"
-      [ -f "$server_bin" ] || return 1
-      cp -f "$server_bin" "$server_artifact.tmp.$$" || return 1
-      mv -f "$server_artifact.tmp.$$" "$server_artifact" || return 1
-      artifact_patch="$(key_hash < "$server_artifact")"
-      ;;
   esac
   {
     printf 'key=%s\nstep=%s\ntree=%s\ncommand=%s\nrustc=%s\nnode=%s\napp_lock=%s\ntime=%s\nbranch=%s\nlog=%s\n' \
@@ -345,17 +333,6 @@ write_cache_record() {
 restore_cached_artifact() {
   cache_name="$1"; cache_file_value="$2"
   case "$cache_name" in
-    app-server)
-      server_artifact="$GATE_CACHE/artifacts/app-server-$(sed -n 's/^key=//p' "$cache_file_value")"
-      expected_hash="$(sed -n 's/^artifact_patch=//p' "$cache_file_value")"
-      [ -n "$expected_hash" ] && [ -f "$server_artifact" ] || return 1
-      actual_hash="$(key_hash < "$server_artifact")"
-      [ "$actual_hash" = "$expected_hash" ] || return 1
-      mkdir -p "$WT/target/release"
-      cp -f "$server_artifact" "$WT/target/release/legatum-server" || return 1
-      chmod +x "$WT/target/release/legatum-server" || return 1
-      [ "$(key_hash < "$WT/target/release/legatum-server")" = "$expected_hash" ]
-      return ;;
     repin|repin-merge) ;;
     *) return 0 ;;
   esac
@@ -379,8 +356,7 @@ step() {
   cache_lock="$GATE_CACHE/locks/$key.lock"
   # Steps whose product is files in THIS worktree (the WASM package and app/dist) never skip on a cache hit: a PASS record
   # made in another slot or worktree leaves this one without them (CL6). The WASM build has its own exact-input cache that
-  # restores the package and hash-checks it against its manifest (scripts/build-wasm.sh). app-server instead restores its
-  # exact-input executable from the gate cache and verifies its hash before marking the step complete.
+  # restores the package and hash-checks it against its manifest (scripts/build-wasm.sh).
   use_cache="$((1 - NO_CACHE))"
   case "$name" in app-wasm|app-build) use_cache=0 ;; esac
   if [ "$use_cache" -eq 1 ]; then
@@ -419,7 +395,6 @@ step() {
     if [ "${VERIFY_STEP_FAIL_STEP:-}" = "$name" ]; then (cd "$WT" && false) >>"$log" 2>&1
     else
       (cd "$WT" && true) >>"$log" 2>&1
-      if [ "$name" = app-server ]; then mkdir -p "$WT/target/release"; printf 'stub server executable\n' > "$WT/target/release/legatum-server"; chmod +x "$WT/target/release/legatum-server"; fi
     fi
   else
     (cd "$WT" && "$@") >>"$log" 2>&1
@@ -503,20 +478,6 @@ else
   exit 1
 fi
 TREE_MERGED="$(git -C "$WT" rev-parse 'HEAD^{tree}')"
-# The release server cache is shared across verifier worktrees. Include every tracked Rust source and Cargo/build
-# input in the workspace, plus the exact installed toolchain identity, so changes to a transitive path dependency
-# or build configuration cannot restore a stale executable.
-SERVER_INPUT_KEY="$(
-  {
-    git -C "$WT" ls-files -z -- 'Cargo.toml' 'Cargo.lock' 'rust-toolchain*' '.cargo/**' 'crates/**/Cargo.toml' 'crates/**/*.rs' 'crates/**/build.rs' \
-      | while IFS= read -r -d '' f; do printf '%s\0' "$f"; cat "$WT/$f"; done
-    rustc -Vv 2>/dev/null || true
-    cargo -V 2>/dev/null || true
-    rustc -vV 2>/dev/null | sed -n 's/^host: /host=/p' || true
-    env | LC_ALL=C sort | grep -E '^(RUSTFLAGS|CARGO_ENCODED_RUSTFLAGS|CARGO_BUILD_TARGET|CARGO_PROFILE_RELEASE_[A-Z_]+)=' || true
-  } | key_hash
-)"
-
 # Heavy cargo steps queue in the machine-wide build pool. Only the outermost command takes a slot: build-slot is
 # not re-entrant, so the scripts it runs (repin.sh, build-wasm.sh) must not wrap their own cargo calls in it.
 SLOT="tools/sim/build-slot.sh --"
@@ -750,12 +711,10 @@ PY
   [ -z "$duel_pid" ] || wait "$duel_pid"
 }
 
-# Release profile: lints, then the server the Playwright fixtures spawn. Both lock target/release.
-lane_server() { step app-server $SLOT cargo build --release -p legatum-server; }
+# Release profile: lints.
 lane_release() {
   step fmt cargo fmt --all --check
   step clippy $SLOT cargo clippy --workspace --all-targets --release -- -D warnings
-  if [ "$RUN_APP" -eq 1 ] && [ "$RUN_PW" -eq 1 ]; then lane_server; fi
 }
 
 # Master side: the baseline binary and results come from the shared cache.
@@ -770,7 +729,7 @@ lane_master() {
   fi
 }
 
-# App: the WASM package feeds tsc, vitest and the app build; Playwright also needs the release server.
+# App: the WASM package feeds tsc, vitest and the app build; Playwright runs against the static e2e web dist built by app-build (relay at 127.0.0.1:8787).
 lane_app() {
   # app/src/wasm-pkg and app/dist are git-ignored: build them. node_modules comes from the main checkout.
   if [ ! -e "$WT/app/node_modules" ] && [ -d "$ROOT/app/node_modules" ]; then ln -s "$ROOT/app/node_modules" "$WT/app/node_modules"; fi
@@ -785,15 +744,15 @@ lane_app() {
     vitest_pid=$!
   fi
   if [ "$RUN_PW" -eq 1 ]; then
-    step app-build bash -c 'cd app && npm run build'
-    if wait_step app-server && [ "$(step_state app-build)" != FAIL ]; then
+    step app-build env LEGATUM_RELAY_URL=http://127.0.0.1:8787 scripts/build-web.sh --skip-wasm
+    if [ "$(step_state app-build)" != FAIL ]; then
       # What runs comes from the profile (fast smoke set, extended: every spec but the tour, release: everything).
       # The specs are command arguments, so they are part of the step's cache key and profiles never share a PASS record.
       read -r -a pw_args <<< "$(cd "$WT" && pw_spec_args)"
       step app-playwright playwright_run "${pw_args[@]}"
       playwright_slowest
     else
-      skip_step app-playwright "the app build or the release server failed"
+      skip_step app-playwright "the e2e web build failed"
     fi
   fi
   [ -z "$vitest_pid" ] || wait "$vitest_pid"
@@ -806,10 +765,10 @@ if [ "$RUN_RUST" -eq 0 ]; then
   if [ "$DO_DUEL" -eq 1 ]; then for n in duel-branch duel-build-master duel-master; do skip_step "$n" "$RUST_WHY"; done; fi
 fi
 if [ "$RUN_APP" -eq 0 ] && [ "$DO_APP" -eq 1 ]; then
-  for n in app-wasm app-vitest app-build app-server app-playwright; do skip_step "$n" "no crates or app changes"; done
+  for n in app-wasm app-vitest app-build app-playwright; do skip_step "$n" "no crates or app changes"; done
 elif [ "$RUN_APP" -eq 1 ] && [ "$RUN_PW" -eq 0 ]; then
-  PW_WHY="only ai/sim/analysis/archive crates changed; wasm, core, server, app and scenarios are untouched"; [ "$SKIP_PW" -eq 0 ] || PW_WHY="the Playwright shard jobs run the app build, server and Playwright"
-  for n in app-build app-server app-playwright; do skip_step "$n" "$PW_WHY"; done
+  PW_WHY="only ai/sim/analysis/archive crates changed; wasm, core, app and scenarios are untouched"; [ "$SKIP_PW" -eq 0 ] || PW_WHY="the Playwright shard jobs run the app build and Playwright"
+  for n in app-build app-playwright; do skip_step "$n" "$PW_WHY"; done
 fi
 [ "$RUN_TOOLS" -eq 0 ] || step tools-check tools_check
 
@@ -817,8 +776,6 @@ if [ "$RUN_RUST" -eq 1 ]; then
   lane lane_checked
   lane lane_release
   lane lane_master
-elif [ "$RUN_APP" -eq 1 ] && [ "$RUN_PW" -eq 1 ]; then
-  lane lane_server
 fi
 [ "$RUN_APP" -eq 0 ] || lane lane_app
 join_lanes

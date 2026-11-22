@@ -19,7 +19,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   useGame.getState().stopResolving();
-  useGame.getState().leaveLan();
+  useGame.getState().leaveOnline();
   vi.useRealTimers();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
@@ -166,8 +166,8 @@ async function joinObserver(humans = 2, dead = [0], localSeat = 0) {
   const seats = view.players.filter((p) => p.is_human).map((p, seat) => ({
     seat, player: p.id, name: p.name, faction: p.faction, connected: true, ready: false, orders: 0,
   }));
-  useGame.setState({ lastHash: 'previous-game-hash', lan: {
-    status: { mode: 'server', has_game: true, turn: view.turn, seats, lan_urls: [], is_local: false },
+  useGame.setState({ lastHash: 'previous-game-hash', net: {
+    status: { mode: 'server', has_game: true, turn: view.turn, seats, is_local: false },
     mySeat: null, seats, conn: 'closed',
   } });
   useGame.getState().joinSeat(localSeat, seats[localSeat].name);
@@ -191,7 +191,7 @@ it('clears the previous hash on the first remote view and readies an observer fo
   expect(socket.sent.at(-1)).toMatchObject({ type: 'ready', turn: 2, ready: true });
 });
 
-it('advances a LAN observer using empty orders, waits for each view and stops on disconnect', async () => {
+it('advances an online observer using empty orders, waits for each view and stops on disconnect', async () => {
   const { socket, view } = await joinObserver(1);
   useGame.getState().resolveToEnd();
   await vi.advanceTimersByTimeAsync(1000);
@@ -205,7 +205,7 @@ it('advances a LAN observer using empty orders, waits for each view and stops on
   expect(useGame.getState().resolvingToEnd).toBe(false);
 });
 
-it('lets one LAN observer set the pace while the other dead seats automatically acknowledge turns', async () => {
+it('lets one online observer set the pace while the other dead seats automatically acknowledge turns', async () => {
   const { socket, view } = await joinObserver(2, [0, 1], 1);
   expect(useGame.getState().ready).toEqual([true]);
   expect(socket.sent.at(-1)).toMatchObject({ type: 'ready', turn: 1, ready: true });
@@ -216,7 +216,7 @@ it('lets one LAN observer set the pace while the other dead seats automatically 
   await Promise.resolve();
   expect(socket.sent.at(-1)).toMatchObject({ type: 'ready', turn: 2, ready: true });
   // If the controlling observer leaves, the next connected seat gets explicit pacing control.
-  socket.push({ type: 'seats', seats: useGame.getState().lan!.seats.map((s) => ({ ...s, connected: s.seat === 1, ready: false })) });
+  socket.push({ type: 'seats', seats: useGame.getState().net!.seats.map((s) => ({ ...s, connected: s.seat === 1, ready: false })) });
   await Promise.resolve();
   expect(useGame.getState().ready).toEqual([false]);
   useGame.getState().resolveToEnd();

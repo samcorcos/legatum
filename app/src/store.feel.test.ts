@@ -25,7 +25,7 @@ beforeEach(() => {
   useGame.setState(useGame.getInitialState(), true);
 });
 afterEach(() => {
-  useGame.getState().leaveLan();
+  useGame.getState().leaveOnline();
   useGame.setState(useGame.getInitialState(), true);
   vi.useRealTimers();
   vi.restoreAllMocks();
@@ -142,7 +142,7 @@ it('uses purchase only after local Buy validation, and never when cancelling or 
   expect(feel.invalid).toHaveBeenCalledTimes(1);
 });
 
-async function lanGame(): Promise<{ socket: FakeSocket; view: PlayerView }> {
+async function onlineGame(): Promise<{ socket: FakeSocket; view: PlayerView }> {
   const client = await localGame();
   const view = client.view(0);
   useGame.setState(useGame.getInitialState(), true);
@@ -150,8 +150,8 @@ async function lanGame(): Promise<{ socket: FakeSocket; view: PlayerView }> {
   vi.stubGlobal('WebSocket', class extends FakeSocket {
     constructor(url: string) { super(url); sockets.push(this); }
   });
-  const status = { mode: 'server' as const, has_game: true, turn: 1, seats: [], lan_urls: [], is_local: false };
-  useGame.setState({ lan: { status, mySeat: null, seats: [], conn: 'closed' } });
+  const status = { mode: 'server' as const, has_game: true, turn: 1, seats: [], is_local: false };
+  useGame.setState({ net: { status, mySeat: null, seats: [], conn: 'closed' } });
   useGame.getState().joinSeat(0, 'Ada');
   const socket = sockets[0];
   socket.open();
@@ -160,8 +160,8 @@ async function lanGame(): Promise<{ socket: FakeSocket; view: PlayerView }> {
   return { socket, view };
 }
 
-it('applies LAN feedback only with the new view, using the server-filtered event list', async () => {
-  const { socket, view } = await lanGame();
+it('applies online feedback only with the new view, using the server-filtered event list', async () => {
+  const { socket, view } = await onlineGame();
   socket.push({ type: 'turn', turn: 2, events: [{ type: 'TechResearched', player: 0, tech: 'BronzeWorking' }],
     hash: '2', finished: false, winner: null });
   expect(playTurnFeedback).not.toHaveBeenCalled();
@@ -169,8 +169,8 @@ it('applies LAN feedback only with the new view, using the server-filtered event
   expect(playTurnFeedback).toHaveBeenCalledWith(['turnResolved', 'techComplete'], expect.any(Function), { techComplete: 'sting.major' });
 });
 
-it('waits for the exact LAN Buy validation and ignores stale and cancelled requests', async () => {
-  const { socket } = await lanGame();
+it('waits for the exact online Buy validation and ignores stale and cancelled requests', async () => {
+  const { socket } = await onlineGame();
   useGame.getState().editOrders(() => [{ type: 'SleepUnit', unit: 1 }]);
   useGame.getState().editOrders((o) => [...o, { type: 'BuyItem', city: 1, item: { kind: 'Unit', unit: 'Soldier' } }], 'purchase');
   expect(feel.purchase).not.toHaveBeenCalled();

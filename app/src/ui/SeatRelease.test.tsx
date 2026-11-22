@@ -10,7 +10,7 @@ import { FakeSocket } from '../test/fakeSocket';
 import type { PlayerView } from '../types';
 import { JoinScreen } from '../screens/JoinScreen';
 import { SeatsTable } from '../screens/lobby/SeatsTable';
-import { LanSeats } from './SeatBar';
+import { OnlineSeats } from './SeatBar';
 
 vi.mock('../screens/HexBackdrop', () => ({ HexBackdrop: () => null }));
 
@@ -34,8 +34,8 @@ beforeEach(() => {
   });
   useGame.setState(useGame.getInitialState(), true);
   useGame.setState({
-    lan: {
-      status: { mode: 'server', has_game: true, turn: 1, seats, lan_urls: [], is_local: true, staging: null },
+    net: {
+      status: { mode: 'server', has_game: true, turn: 1, seats, is_local: true, staging: null },
       seats, mySeat: null, conn: 'closed',
     },
     refreshStatus: vi.fn().mockResolvedValue(null),
@@ -49,7 +49,7 @@ afterEach(async () => {
   await act(async () => {
     root.unmount();
     useGame.getState().exitStaging();
-    useGame.getState().leaveLan();
+    useGame.getState().leaveOnline();
   });
   container.remove();
   vi.restoreAllMocks();
@@ -71,9 +71,9 @@ it('only opens another disconnected reserved empire after host confirmation and 
   connectGame();
   const confirm = vi.fn().mockReturnValue(false);
   vi.stubGlobal('confirm', confirm);
-  await act(async () => root.render(<LanSeats />));
+  await act(async () => root.render(<OnlineSeats />));
   expect(openButtons()).toHaveLength(1);
-  expect(openButtons()[0].closest('[data-testid]')?.getAttribute('data-testid')).toBe('lan-seat-1');
+  expect(openButtons()[0].closest('[data-testid]')?.getAttribute('data-testid')).toBe('online-seat-1');
   await act(async () => openButtons()[0].click());
   expect(confirm).toHaveBeenCalledWith("Let another device take over Alice's empire?");
   expect(sockets[0].types()).toEqual(['join']);
@@ -84,33 +84,33 @@ it('only opens another disconnected reserved empire after host confirmation and 
   expect(openButtons()).toHaveLength(1); // No optimistic release before the server accepts it.
   await act(async () => sockets[0].push({ type: 'seats', seats: seats.map((s) => s.seat === 1 ? { ...s, reserved: false, orders: 0 } : s) }));
   expect(openButtons()).toHaveLength(0);
-  expect(container.querySelector('[data-testid="lan-seat-1"]')?.textContent).toContain('open');
+  expect(container.querySelector('[data-testid="online-seat-1"]')?.textContent).toContain('open');
 });
 
-it('hides release for LAN guests and disables it while the host reconnects', async () => {
+it('hides release for online guests and disables it while the host reconnects', async () => {
   connectGame();
-  const lan = useGame.getState().lan!;
-  useGame.setState({ lan: { ...lan, status: { ...lan.status, is_local: false } } });
-  await act(async () => root.render(<LanSeats />));
+  const net = useGame.getState().net!;
+  useGame.setState({ net: { ...net, status: { ...net.status, is_local: false } } });
+  await act(async () => root.render(<OnlineSeats />));
   expect(openButtons()).toHaveLength(0);
-  useGame.getState().releaseLanSeat(1);
+  useGame.getState().releaseOnlineSeat(1);
   expect(sockets[0].types()).toEqual(['join']);
   await act(async () => {
-    useGame.setState({ lan });
+    useGame.setState({ net });
     sockets[0].drop();
   });
   expect(openButtons()[0].disabled).toBe(true);
-  useGame.getState().releaseLanSeat(1);
+  useGame.getState().releaseOnlineSeat(1);
   expect(sockets[0].types()).toEqual(['join']);
   expect(useGame.getState().error).toContain('connected again');
 });
 
 it('rechecks live seat ownership and connection state before sending a release', () => {
   connectGame();
-  for (const seat of [0, 2, 3, 8]) useGame.getState().releaseLanSeat(seat);
+  for (const seat of [0, 2, 3, 8]) useGame.getState().releaseOnlineSeat(seat);
   expect(sockets[0].types()).toEqual(['join']);
   sockets[0].push({ type: 'seats', seats: seats.map((s) => ({ ...s, connected: true })) });
-  useGame.getState().releaseLanSeat(1);
+  useGame.getState().releaseOnlineSeat(1);
   expect(sockets[0].types()).toEqual(['join']);
 });
 
@@ -154,15 +154,15 @@ it('does not expose staging release to guests or allow it for connected, own, or
   const state = connectStaging();
   await act(async () => root.render(<StagingSeats guest />));
   expect(openButtons()).toHaveLength(0);
-  const lan = useGame.getState().lan!;
+  const net = useGame.getState().net!;
   await act(async () => {
-    useGame.setState({ lan: { ...lan, status: { ...lan.status, is_local: false } } });
+    useGame.setState({ net: { ...net, status: { ...net.status, is_local: false } } });
     root.render(<StagingSeats />);
   });
   expect(openButtons()).toHaveLength(0);
   useGame.getState().releaseStagingSeat(1);
   await act(async () => {
-    useGame.setState({ lan });
+    useGame.setState({ net });
     sockets[0].push({ type: 'staging', state: { ...state, occupants: state.occupants.map((o) => o && { ...o, connected: true }) } });
   });
   expect(openButtons()).toHaveLength(0);
@@ -171,15 +171,15 @@ it('does not expose staging release to guests or allow it for connected, own, or
 });
 
 it('tells a fresh guest to ask the host, then offers Rejoin as the empire when opened', async () => {
-  const lan = useGame.getState().lan!;
-  useGame.setState({ lan: { ...lan, status: { ...lan.status, is_local: false } } });
+  const net = useGame.getState().net!;
+  useGame.setState({ net: { ...net, status: { ...net.status, is_local: false } } });
   await act(async () => root.render(<JoinScreen />));
   const alice = () => [...container.querySelectorAll<HTMLButtonElement>('.join-seat')].find((b) => b.textContent?.includes('Alice'))!;
   expect(alice().disabled).toBe(true);
   expect(alice().textContent).toContain('Reserved');
   expect(alice().textContent).toContain('Ask the host to open this seat');
   expect(alice().querySelector('.join-status')?.textContent).not.toContain('Open');
-  await act(async () => useGame.setState({ lan: { ...lan, status: { ...lan.status, is_local: false, seats: seats.map((s) => s.seat === 1 ? { ...s, reserved: false } : s) } } }));
+  await act(async () => useGame.setState({ net: { ...net, status: { ...net.status, is_local: false, seats: seats.map((s) => s.seat === 1 ? { ...s, reserved: false } : s) } } }));
   expect(alice().disabled).toBe(false);
   expect(alice().textContent).toContain('Rejoin as Alice');
   await act(async () => alice().click());

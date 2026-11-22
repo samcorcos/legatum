@@ -1,10 +1,10 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { RemoteClient, defaultWsUrl, fetchStatus, serverBase, setServerBase, wsUrlFor } from './remote';
+import { RemoteClient, defaultWsUrl, fetchStatus, hostingHere, serverBase, setLocalEndpoint, setServerBase, wsUrlFor, type FetchLike, type SocketLike } from './remote';
 import { StagingClient } from './staging';
 import { FakeSocket } from './test/fakeSocket';
 import { roomBase, versionProblem, type RoomInfo } from './platform/relayLobby';
-import { inHostedWindow, online, openHostedWindow, setOnlineApi, type OnlineApi } from './platform/online';
+import { RULES_VERSION, online, setOnlineApi, type OnlineApi } from './platform/online';
 import { useGame } from './store';
 
 const ROOM = 'https://relay.example/rooms/abc';
@@ -18,10 +18,11 @@ afterEach(() => {
 });
 
 describe('server base', () => {
-  it('is same-origin by default, exactly as before', () => {
+  it('is empty outside an online game, and there is then no game to ask about', async () => {
     expect(serverBase()).toBe('');
-    expect(defaultWsUrl()).toBe(`ws://${location.host}/ws`);
-    expect(wsUrlFor('')).toBe(`ws://${location.host}/ws`);
+    const get = vi.fn();
+    expect(await fetchStatus(undefined, get)).toBeNull();
+    expect(get).not.toHaveBeenCalled();
   });
 
   it('turns https into wss and http into ws, and trims slashes', () => {
@@ -34,11 +35,28 @@ describe('server base', () => {
 
   it('reads status from <base>/api/status, defaulting to the current base', async () => {
     const get = vi.fn(async (_url: string) => ({ ok: true, status: 200, text: async () => JSON.stringify({ mode: 'server', seats: [] }) }));
-    await fetchStatus('', get);
-    expect(get.mock.calls[0][0]).toBe('/api/status');
     setServerBase(ROOM);
     await fetchStatus(undefined, get);
-    expect(get.mock.calls[1][0]).toBe(`${ROOM}/api/status`);
+    expect(get.mock.calls[0][0]).toBe(`${ROOM}/api/status`);
+  });
+
+  it('a hosting tab asks its own game, and its sockets are the in-tab connection', async () => {
+    const local = vi.fn<FetchLike>(async () => ({ ok: true, status: 200, text: async () => JSON.stringify({ mode: 'server', seats: [], is_local: true }) }));
+    const sock = new FakeSocket('local') as unknown as SocketLike;
+    const made = vi.fn();
+    vi.stubGlobal('WebSocket', made);
+    setLocalEndpoint({ fetch: local, socket: () => sock });
+    try {
+      expect(hostingHere()).toBe(true);
+      expect(await fetchStatus()).toMatchObject({ is_local: true });
+      expect(local.mock.calls[0][0]).toBe('/api/status');
+      const rc = new RemoteClient(0, 'Ada');
+      rc.connect();
+      expect(made).not.toHaveBeenCalled();
+    } finally {
+      setLocalEndpoint(null);
+    }
+    expect(hostingHere()).toBe(false);
   });
 
   it('points RemoteClient and the staging watcher at the room, through the chunk reassembler', () => {
@@ -64,14 +82,6 @@ describe('server base', () => {
     expect(rc.view().turn).toBe(3);
   });
 
-  it('keeps plain same-origin sockets unwrapped', () => {
-    const made: FakeSocket[] = [];
-    vi.stubGlobal('WebSocket', class extends FakeSocket {
-      constructor(url: string) { super(url); made.push(this); }
-    });
-    new RemoteClient(0, 'Ada').connect();
-    expect(made[0].url).toBe(`ws://${location.host}/ws`);
-  });
 });
 
 describe('relay lobby helpers', () => {
@@ -83,55 +93,19 @@ describe('relay lobby helpers', () => {
     expect(versionProblem({ ...room, build: '8.9.70' }, info)).toBe('This game is on version 8.9.70 and you have 8.9.74. Update the older one to play together.'));
 });
 
-describe('host start and return', () => {
-  const api = (over: Partial<OnlineApi> = {}): OnlineApi => ({
-    info: async () => ({ relay: 'https://r', build: 'b', rules_version: 1, protocol: 1 }),
-    hostStart: async () => ({ url: 'http://127.0.0.1:5555/', room: 'room1' }),
-    hostStop: async () => {},
-    ...over,
-  });
-
+describe('online info', () => {
   it('can be replaced for tests and restored', async () => {
-    const fake = api();
+    const fake: OnlineApi = { info: async () => ({ relay: 'https://r', build: 'b', rules_version: 1, protocol: 1 }) };
     setOnlineApi(fake);
     expect(online()).toBe(fake);
     setOnlineApi();
-    expect(await online().info()).toBeNull(); // not in the desktop app
+    expect(await online().info()).toBeNull(); // the test build bakes in no relay
   });
 
-  it('opens the host window on the loopback server with ?host=1', () => {
-    const assign = vi.fn();
-    vi.stubGlobal('location', { ...location, assign, search: '', hostname: 'localhost' });
-    openHostedWindow('http://127.0.0.1:5555/');
-    expect(assign).toHaveBeenCalledWith('http://127.0.0.1:5555/?host=1');
-  });
-
-  it('boot lands the host in the game room, and Leave returns to the bundled app', async () => {
-    const stop = vi.fn(async () => { throw new Error('refused'); });
-    setOnlineApi(api({ hostStop: stop }));
-    const loc = { ...location, assign: vi.fn(), href: '', search: '?host=1', hostname: '127.0.0.1', host: '127.0.0.1:5555', protocol: 'http:' };
-    vi.stubGlobal('location', loc);
-    const status = { mode: 'server', has_game: false, turn: 0, seats: [], lan_urls: [], is_local: true, staging: null };
-    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, status: 200, text: async () => JSON.stringify(status) })));
-    await useGame.getState().boot();
-    expect(useGame.getState()).toMatchObject({ screen: 'setup', setupMode: 'host' });
-    expect(inHostedWindow()).toBe(true);
-    useGame.getState().goto('title');
-    await Promise.resolve();
-    await Promise.resolve();
-    expect(stop).toHaveBeenCalled();
-    expect(loc.href).toBe('tauri://localhost/'); // only because the stop call failed
-    expect(useGame.getState().screen).toBe('setup');
-    expect(inHostedWindow()).toBe(false);
-  });
-
-  it('a plain LAN browser on the host machine is untouched', async () => {
-    const assign = vi.fn();
-    vi.stubGlobal('location', { ...location, assign, search: '', hostname: '127.0.0.1', host: '127.0.0.1:7878', protocol: 'http:' });
-    expect(inHostedWindow()).toBe(false);
-    useGame.getState().goto('title');
-    expect(assign).not.toHaveBeenCalled();
-    expect(useGame.getState().screen).toBe('title');
+  it('knows the engine rules version without loading the engine, and it matches the engine', async () => {
+    const { loadWasmModule } = await import('./wasmClient');
+    const mod = (await loadWasmModule()) as unknown as { online_rules_version: () => number };
+    expect(RULES_VERSION).toBe(mod.online_rules_version());
   });
 
   beforeEach(() => {
@@ -140,7 +114,8 @@ describe('host start and return', () => {
 });
 
 describe('a relayed game that goes away', () => {
-  const status = { mode: 'server', has_game: false, turn: 0, seats: [], lan_urls: [], is_local: false, staging: null };
+  const status = { mode: 'server', has_game: false, turn: 0, seats: [], is_local: false, staging: null };
+
   async function joined(codeAfter: () => number) {
     vi.useFakeTimers();
     vi.stubGlobal('fetch', vi.fn(async () => {
@@ -158,7 +133,7 @@ describe('a relayed game that goes away', () => {
     code = 404;
     await vi.advanceTimersByTimeAsync(4100);
     expect(serverBase()).toBe('');
-    expect(useGame.getState()).toMatchObject({ screen: 'title', error: 'This game has ended.', lan: null });
+    expect(useGame.getState()).toMatchObject({ screen: 'title', error: 'This game has ended.', net: null });
   });
 
   it('says the host is away on 503 and keeps waiting', async () => {

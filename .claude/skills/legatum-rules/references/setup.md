@@ -22,16 +22,16 @@ and score ledger (`app/src/lobby.ts::newLobby,rememberDifficulty,buildSetup`,
 **AI levels (2026-11-21):** players are offered **Easy, Normal and Hard**, and all three plan only
 from the seat's own `PlayerView`. **Training is a research tool, not a level a player can choose:**
 its battle study reads the true state, including units the seat cannot see, so no production build
-lists it in any picker (solo lobby, per-seat list, LAN staging). A development build (`npm run dev`)
+lists it in any picker (solo lobby, per-seat list, online staging). A development build (`npm run dev`)
 offers it with `?training=1` in the URL (remembered under `localStorage['legatum.dev.training']`;
 `?training=0` forgets it; `app/src/lobby.ts::trainingSwitch,offeredLevels`), and there its
 description says it uses the true positions of nearby units. With the switch off, a stored lobby
-preference of `Training` or the older `HardSearch`, and a lobby or LAN room whose seats carry the
+preference of `Training` or the older `HardSearch`, and a lobby or online room whose seats carry the
 `search` flag, read as Hard and start a game without the flag (`levelOf`, `levelFields`,
 `readDifficultyPreference`, `app/src/staging.ts`). Nothing changed in the core, the save shape or
 the hashes: a save or tape recorded with Training still loads, is labelled Training in Diplomacy
-and the race, and keeps running its battle study. The server relays the `search` flag unchanged
-(`crates/server/src/staging.rs`); it offers no picker of its own.
+and the race, and keeps running its battle study. The online host relays the `search` flag unchanged
+(`crates/wasm/src/host/staging.rs`); it offers no picker of its own.
 
 **Training (2026-11-07):** replaced "Hard + Search" and is saved as the same `PlayerSetup::search`
 flag on a Hard AI seat (no rules change, no save-shape change). A Training seat
@@ -48,14 +48,13 @@ scored by rollouts of up to 20 turns (Hard continues for the seat; the enemy alt
 sortie policy; common dice for every candidate), `crates/ai/src/training.rs`. The searched orders
 replace Hard's only for the battle's units; nothing else changes, and the human seat is never
 searched live (his battle positions are logged with his orders instead). The search runs while
-the human plans (natively on all cores but one in the desktop app, `app/src-tauri/src/lib.rs`
-`training_start`; in WASM slices in the browser) and is capped at 15 s a turn
+the human plans (in WASM slices in the browser) and is capped at 15 s a turn
 (`localStorage['legatum.training.capMs']`); at the cap the best orders found so far are played.
 The UI: a top-bar chip while it runs, a progress card if End Turn has to wait, and a turn-report
 line on what changed (`app/src/training.ts`, `app/src/ui/Training.tsx`). Every searched battle,
-every human battle position and each one's realised outcome are logged as JSON lines to
-`<app data>/training/<archive game id>.jsonl` (schema 1, with the arena embedded so any line can be
-searched again: `legatum-sim --retrain LOG`); a Training game's archive is marked `mode: training`
+every human battle position and each one's realised outcome become JSON log lines (schema 1, with
+the arena embedded so any line can be searched again: `legatum-sim --retrain LOG`), kept in memory
+for the session as `globalThis.legatumTrainingLog` (the latest 5,000, `app/src/training.ts`); a Training game's archive is marked `mode: training`
 (`crates/wasm/src/history.rs::Metadata`). Headless: `legatum-sim --training DIR` (every Hard seat),
 `combat_lab --training-compare OUT`, `war_suite --brain training`; summarise with
 `tools/sim/training-report.py`.
