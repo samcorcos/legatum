@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BUILDING_NAME, FACTIONS, GREAT_WORK_ICON, buildingIconName, itemIcon, unitIconName, UNIT_STATS } from './data';
+import { BUILDING_NAME, FACTION_GOAL, FACTIONS, GREAT_WORK_ICON, buildingIconName, itemIcon, unitIconName, UNIT_STATS } from './data';
 import { iconUrl, resourceArtUrl } from './icons';
 import type { BuildingKind, UnitKind } from './types';
 
@@ -38,6 +38,10 @@ describe('icon set', () => {
     expect(itemIcon({ kind: 'Unit', unit: 'Cataphract' }, 'Mongols')).toBe('unit-keshig');
     expect(itemIcon({ kind: 'Building', building: 'Walls' }, 'Switzerland')).toBe('building-customsbastion');
     expect(itemIcon({ kind: 'Building', building: 'Walls' }, 'India')).toBe('building-walls');
+  });
+
+  it('draws every faction goal (the score check boxes show them)', () => {
+    for (const f of FACTIONS) expect(iconUrl(FACTION_GOAL[f].icon), `${f}: ${FACTION_GOAL[f].icon}`).not.toBeNull();
   });
 
   it('has the icons the UI swaps in for text glyphs and map order badges', () => {

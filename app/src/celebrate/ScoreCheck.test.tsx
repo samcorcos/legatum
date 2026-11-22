@@ -8,7 +8,7 @@ import { FixtureClient } from '../test/fixtureEngine';
 import { useGame } from '../store';
 import { withScoreCheck, withWorldAges } from '../test/vpV2Fixture';
 import { momentsForTurn, planMoments } from './moments';
-import { scoreCheckFor } from './scoreCheck';
+import { scoreCheckFor } from './scoreCheckCards';
 import { ScoreCheck } from './ScoreCheck';
 import { EraUpTakeover } from './EraUpTakeover';
 import type { PlayerView } from '../types';
@@ -51,7 +51,14 @@ describe('the score check model', () => {
     expect(capitals.boxes).toHaveLength(view.players.filter((p) => p.team !== view.team).length);
     expect(capitals.how).toBe('Take a rival’s original capital');
     const wonders = card.lines.find((l) => l.key === 'wonders')!;
-    expect(wonders.boxes.filter((b) => b.state === 'held')).toHaveLength(2);
+    // One box per wonder, two cells wide (2 VP), drawing the wonder's icon; capitals draw their star.
+    const held = wonders.boxes.filter((b) => b.state === 'held');
+    expect(held).toHaveLength(1);
+    expect(held[0]).toMatchObject({ span: 2, icon: expect.stringMatching(/^building-/) });
+    expect(capitals.boxes.every((b) => b.star)).toBe(true);
+    const goal = card.lines.find((l) => l.key === 'goal')!;
+    expect(goal.boxes.reduce((n, b) => n + (b.span ?? 1), 0)).toBe(2);
+    expect(goal.boxes[0].icon).toBeTruthy();
     expect(wonders.detail).toContain('Great Library');
   });
 
@@ -121,6 +128,10 @@ describe('the takeover', () => {
     expect(t.querySelectorAll('[data-testid=score-track] li')).toHaveLength(11);
     expect([...t.querySelectorAll('.sc-row[data-line] .sc-name b')].map((b) => b.textContent)).toEqual(['Age cards', 'Rival capitals', 'World wonders', 'Faction goal']);
     expect(t.querySelector('.sc-row.fresh')?.getAttribute('data-line')).toBe('ages');
+    // The boxes draw the thing that scores: the wonder's icon, the capital's star.
+    expect(t.querySelector('.sc-row[data-line=wonders] .sc-box.held .mask-icon')).not.toBeNull();
+    expect(t.querySelector('.sc-row[data-line=capitals] .sc-box svg path')).not.toBeNull();
+    expect(t.querySelector('.sc-row[data-line=wonders] .sc-box.held')?.getAttribute('data-span')).toBe('2');
     expect(t.querySelectorAll('[data-primary-action]')).toHaveLength(1);
     act(() => t.querySelector<HTMLButtonElement>('[data-primary-action]')!.click());
     expect(dismiss).toHaveBeenCalledOnce();
