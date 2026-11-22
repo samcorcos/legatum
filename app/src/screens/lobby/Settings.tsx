@@ -1,9 +1,5 @@
-import { offeredLevels, DIFFICULTY_INFO, MAP_SIZES, MAX_TURN_LIMIT, levelOf, mapSizeLabel, notes, setDifficulty, setMapSize, type AiLevel, type Lobby, type LobbyRules, type MapSizeId, validTurnLimit } from '../../lobby';
+import { offeredLevels, DIFFICULTY_INFO, MAP_SIZES, MAX_TURN_LIMIT, levelOf, mapSizeLabel, notes, setDifficulty, setMapSize, type AiLevel, type Lobby, type MapSizeId, validTurnLimit } from '../../lobby';
 import { randomSeed } from './randomSeed';
-
-const RULE_EXPERIMENTS: { key: keyof LobbyRules; label: string; description: string }[] = [
-  { key: 'objectives_deck', label: 'World Ages (experiment)', description: 'Each era opens one randomly drawn card to every empire. Score it for 1 VP, kept for good.' },
-];
 
 const LEVEL_SUB: Record<AiLevel, string> = { Easy: 'Forgiving', Normal: 'Standard', Hard: 'Ruthless', Training: 'Research tool' };
 
@@ -114,20 +110,6 @@ export function Settings({ lobby, onChange }: { lobby: Lobby; onChange?: (l: Lob
           )}
         </div>
       </div>
-    </section>
-    <section className="lobby-card" data-testid="rule-experiments">
-      <div className="lobby-card-head">
-        <h3>Rule experiments</h3>
-      </div>
-      {RULE_EXPERIMENTS.map((r) => (
-        <div key={r.key}>
-          <Segmented label={r.label} value={lobby.rule_experiments?.[r.key] ? 'On' : 'Off'} options={[
-            { id: 'Off', label: 'Off', sub: 'Standard rules' },
-            { id: 'On', label: 'On' },
-          ]} onChange={change && ((value: 'On' | 'Off') => change({ rule_experiments: { ...lobby.rule_experiments, [r.key]: value === 'On' } }))} />
-          <div className="muted lobby-level-note">{r.description}</div>
-        </div>
-      ))}
     </section>
     </>
   );

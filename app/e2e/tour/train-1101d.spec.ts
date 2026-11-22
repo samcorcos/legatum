@@ -227,9 +227,9 @@ for (const size of SIZES) test.describe(`train 1101d ${size.name}`, () => {
     await page.getByRole('button', { name: /^Every way to score/ }).click();
     const sheet = page.getByTestId('objective-sheet');
     await expect(sheet.locator('.sl-table')).toBeVisible();
-    await sheet.locator('[data-row="capitals-taken"]').scrollIntoViewIfNeeded();
+    await sheet.locator('[data-row="capitals-held"]').scrollIntoViewIfNeeded();
     await park(page, size);
-    await shot(page, size, 'd34-ledger-capitals-taken');
+    await shot(page, size, 'd34-ledger-capitals-held');
   });
 
   test('capital VP: the forecast line on a rival original capital', async ({ page }) => {

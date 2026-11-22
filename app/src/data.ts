@@ -266,9 +266,9 @@ export const BUILDING_STATS: Record<
   StockExchange: { cost: 360, yields: { gold: 6 }, cityStrength: 0, requires: 'Electricity', predecessor: 'Clearinghouse', minPopulation: 8, summary: '+6 Gold; upgrades your Bank', blurb: '+6 Gold, on top of the Market and Bank' },
   Autoworks: { cost: 440, yields: { production: 5 }, cityStrength: 0, requires: 'Industrialization', predecessor: 'MachineShop', minPopulation: 6, summary: '+5 Production; upgrades your Forge', blurb: '+5 Production' },
   Castle: { cost: 240, yields: {  }, cityStrength: 5, requires: 'Chivalry', predecessor: 'Walls', warBuilding: true, summary: '+5 city strength; upgrades your Walls', blurb: '+5 city strength, more each era' },
-  StarFort: { cost: 320, yields: {  }, cityStrength: 5, requires: 'MilitaryEngineering', predecessor: 'Castle', warBuilding: true, summary: '+5 city strength; upgrades your Castle', blurb: '+5 city strength, more each era' },
-  RelayUplink: { cost: 600, yields: {}, cityStrength: 0, requires: 'Philosophy', summary: 'World wonder: whoever holds its tile scores +2 VP', blurb: 'World wonder: whoever holds its tile scores +2 VP. Requires a Library in this city.' },
-  Pyramids: { cost: 240, yields: { production: 1 }, cityStrength: 0, requires: 'Masonry', summary: 'World wonder: +1 Production and +2 held VP', blurb: 'The Pyramids can be completed once in the world. The holder gains +1 Production in its city and +2 VP.' },
+  StarFort: { cost: 320, yields: {  }, cityStrength: 5, requires: 'Machinery', predecessor: 'Castle', warBuilding: true, summary: '+5 city strength; upgrades your Castle', blurb: '+5 city strength, more each era' },
+  RelayUplink: { cost: 400, yields: {}, cityStrength: 0, requires: 'Philosophy', summary: 'World wonder: whoever holds its tile scores +2 VP', blurb: 'World wonder: whoever holds its tile scores +2 VP. Requires a Library in this city.' },
+  Pyramids: { cost: 360, yields: { production: 1 }, cityStrength: 0, requires: 'Masonry', summary: 'World wonder: +1 Production and +2 held VP', blurb: 'The Pyramids can be completed once in the world. The holder gains +1 Production in its city and +2 VP.' },
   HagiaSophia: { cost: 400, yields: { science: 2 }, cityStrength: 0, requires: 'Machinery', summary: 'World wonder: +2 Science and +2 held VP', blurb: 'Hagia Sophia can be completed once in the world. The holder gains +2 Science in its city and +2 VP.' },
   EiffelTower: { cost: 720, yields: { gold: 3 }, cityStrength: 0, requires: 'Steel', summary: 'World wonder: +3 Gold and +2 held VP', blurb: 'One Eiffel Tower can be completed in the world. The holder gains +3 Gold in its city and +2 VP.' },
   IterReactor: { cost: 900, yields: { science: 4 }, cityStrength: 0, requires: 'FusionPower', summary: 'World wonder: +4 Science and +2 held VP', blurb: 'The ITER Fusion Reactor can be completed once in the world. The holder gains +4 Science in its city and +2 VP.' },
@@ -291,13 +291,13 @@ const TECH_BLURB: Record<TechId, string> = {
   CodeOfLaws: "Each city claims its best tile 2 tiles out",
   Philosophy: "Unlocks the Great Library; +1 Science in every city",
   Feudalism: "Unlocks Pikeman and Mill; Phalangites can upgrade",
-  Machinery: "Unlocks Crossbowman and Hagia Sophia. Workshops gain 1 Production. Siege ignores Castles",
+  Machinery: "Unlocks Crossbowman, Hagia Sophia and Star Fort. Workshops gain 1 Production. Siege ignores Castles",
   Chivalry: "Unlocks Knight, Castle and Agoge for Sparta; Cataphracts can upgrade",
   Education: "Library → University",
   CropRotation: "Farms and Pastures upgrade; Granaries +1 Food",
   Gunpowder: "Unlocks Musketman and Arquebusier; Pikemen and Crossbowmen can upgrade. Reveals Niter",
   Metallurgy: "Unlocks Cuirassier; Knights can upgrade. Siege units now ignore Star Forts too",
-  MilitaryEngineering: "Unlocks Star Fort; upgrading units costs half the Gold",
+  MilitaryEngineering: "Upgrading units costs half the Gold",
   Banking: "Market → Bank; unlocks Grand Bazaar",
   PrintingPress: "+1 Science per Library; +1 Gold per Market",
   Rifling: "Unlocks Rifleman; Musketmen can upgrade",
@@ -443,7 +443,6 @@ export const DECADENCE_FOOD_RULE = 'Food itself is never cut, so no city starves
 export const POWER_RULE = `Power is an empire's total yields (Food, Production, Gold and Science) per turn, averaged over the last ${RULES.decadence.powerWindowTurns} turns, so a conquest raises it gradually. The average empire's Power is the mean of everyone still alive, you included. Decadence compares you with it.`;
 
 /** The era rule in plain words, one wording on every surface. */
-export const ERA_RULE = 'Meet any one of three objectives to score this era: 1 VP, kept for good.';
 
 export interface FactionInfo {
   name: string;
@@ -693,7 +692,7 @@ export const FACTION_INFO: Record<Faction, FactionInfo> = {
   India: factionInfo("india", "India", "Akbar's regional courts bind a populous empire.", `Cities can be founded 3 tiles apart. +1 Food in every city. Each other Indian city within ${RULES.indiaNetworkRadius} tiles adds ${RULES.indiaNetworkPercentPerCity}% to Food and Production.`, uniquePieceText(UNIQUE_PIECE.India), goalLine('India'), `Non-capital cities send no Gold to your treasury until they have a Revenue Office, then half the Gold they make. Corruption cuts all four city yields by ${RULES.indiaYieldPercentPerHex}% per tile beyond ${RULES.indiaCapitalRadius} from the capital, up to 100%. Production never falls below 3.`),
   Byzantium: factionInfo("byzantium", "Byzantium", "Hold Constantinople. Hire the swords.", companyRule(), BYZANTIUM_LEGIONARY, goalLine('Byzantium'), THIN_LEVIES),
   Germany: factionInfo("germany", "Germany", "Coal, steel, and skilled hands.", `Your strategic deposits supply twice as much. A city can run an Industry project instead of building, turning ${RULES.germanyProjectGoldPercent}% of its Production into Gold or ${RULES.germanyProjectSciencePercent}% into Science each turn.`, uniquePieceText(UNIQUE_PIECE.Germany), goalLine('Germany'), 'Each Production building in a German city costs 1 Food.'),
-  Celts: factionInfo("celts", "Celts", "Raid, burn and move on.", `A sack carries off ${RULES.celtsSackGoldPerPopulation} Gold per population and raises a warband camp near the ruins. Barbarians don't attack the Celts.`, '', goalLine('Celts'), "Celts can't keep cities they capture: they sack and burn them. A city you founded comes home intact when you retake it."),
+  Celts: factionInfo("celts", "Celts", "Raid, burn and move on.", `A sack takes ${RULES.celtsSackGoldPerPopulation} Gold per population and raises a warband camp. A sacked rival capital scores 1 VP for good. Barbarians don't attack the Celts.`, '', goalLine('Celts'), "Celts can't keep cities they capture: they sack and burn them. A city you founded comes home intact when you retake it."),
   Mongols: factionInfo("mongols", "Mongols", "Across the steppe, news travels.", "Military units, Scouts too, get +1 move. Settlers keep 2 moves. A city with a Market at least 8 tiles from your capital earns +2 Gold.", uniquePieceText(UNIQUE_PIECE.Mongols), goalLine('Mongols'), "Mongol military units get no defence bonus from terrain, though fortifying still works. Mongol cities raise no Walls, Castles or Star Forts and buy no Siege before the Medieval era. Walls in a city they capture still defend it."),
   Sparta: factionInfo("sparta", "Sparta", "Train in the agoge. Hold the line.", `Spartan military units start at level 1, gain XP 50% faster, and alone can reach level 6, Spartan Veteran. Each level adds ${RULES.promotion.strengthPercent}% to a unit's strength. Hoplites gain +${HOPLITE_PHALANX_STRENGTH} strength next to another Hoplite. The melee line fights at full strength when wounded. Destroying an enemy military unit restores up to 100 HP, shared among the Spartan units that hit it that turn and survived. Capturing a city fully heals Spartan military units within 2 tiles.`, uniquePieceText(UNIQUE_PIECE.Sparta), goalLine('Sparta'), `Settlers and non-military buildings cost 50% more Production, except Walls, Castles, Star Forts and the Agoge.`),
   Athens: factionInfo("athens", "Athens", "Debate in the agora. Study at the Lyceum.", "Every ruin also gives you 20 Science.", uniquePieceText(UNIQUE_PIECE.Athens), goalLine('Athens'), `Markets yield only +1 Gold instead of +3, at the normal ${RULES.buildingStats.Market.cost} Production cost. A rival that captures one of your cities gets one free technology (once per city for each rival).`),

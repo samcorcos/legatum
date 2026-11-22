@@ -50,9 +50,9 @@ for (const [width, height] of [[1000, 600], [1440, 900]] as const) {
     await expect(sheet.locator('.sl-row.k-heldGoal')).toHaveCount(1);
     await expect(sheet.locator('.sl-row.k-capital')).toHaveCount(1);
     await expect(sheet.locator('.sl-row.k-work')).toHaveCount(1);
-    await expect(sheet.locator('.sl-row.k-era')).toHaveCount(6);
+    await expect(sheet.locator('.sl-row.k-era')).toHaveCount(2);
     await expect(sheet.locator('.sl-row.k-work .sl-socket').first()).toBeVisible();
-    await expect(sheet.locator('.sl-row.k-era .sl-socket.faint').first()).toBeVisible();
+    await expect(sheet.locator('.sl-row.k-era .sl-socket').first()).toBeVisible();
     const last = sheet.locator('.sl-row.k-era').last();
     await last.scrollIntoViewIfNeeded();
     const bounds = await Promise.all([last.boundingBox(), body.boundingBox()]);

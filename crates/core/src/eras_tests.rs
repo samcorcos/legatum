@@ -445,7 +445,11 @@ fn two_empires_finishing_the_same_turn_resolve_in_id_order() {
             _ => None,
         })
         .collect();
-    assert_eq!(entered, [(P1, true), (P2, false)], "the lower id is first");
+    assert_eq!(
+        entered,
+        [(P1, true), (P2, false)],
+        "research runs in id order"
+    );
     assert_eq!(s.era_firsts.get(&1), Some(&P1));
     assert_eq!(s.era_of(P0), 0);
 }
@@ -793,7 +797,7 @@ fn the_buildings_and_their_unlock_techs_follow_the_new_tree() {
         (B::WarShrine, TechId::Chivalry),
         (B::College, TechId::Education),
         (B::Hydroponics, TechId::Feudalism),
-        (B::StarFort, TechId::MilitaryEngineering),
+        (B::StarFort, TechId::Machinery),
         (B::Clearinghouse, TechId::Banking),
         (B::WorldExchange, TechId::Banking),
         (B::Autoworks, TechId::Industrialization),
@@ -1282,11 +1286,9 @@ fn a_star_fort_needs_a_castle_which_needs_walls() {
 
     let mut s = game(&[0, 1]);
     let id = city(&mut s, 0, hex(3, 3), 3);
-    s.player_mut(P0).techs.extend([
-        TechId::Masonry,
-        TechId::Chivalry,
-        TechId::MilitaryEngineering,
-    ]);
+    s.player_mut(P0)
+        .techs
+        .extend([TechId::Masonry, TechId::Chivalry, TechId::Machinery]);
     let can = |s: &GameState, b| {
         economy::can_produce(s, &s.cities[&id], ProductionItem::Building { building: b })
     };
@@ -1321,9 +1323,9 @@ fn a_star_fort_needs_a_castle_which_needs_walls() {
     assert!(!can(&s, Walls) && !can(&s, Castle));
     assert!(can(&s, StarFort));
     // Techs gate the tiers.
-    s.player_mut(P0).techs.remove(&TechId::MilitaryEngineering);
+    s.player_mut(P0).techs.remove(&TechId::Machinery);
     assert!(!can(&s, StarFort));
-    assert_eq!(blocker(&s, StarFort), "Requires Military Engineering");
+    assert_eq!(blocker(&s, StarFort), "Requires Machinery");
     s.player_mut(P0).techs.remove(&TechId::Chivalry);
     s.cities.get_mut(&id).unwrap().buildings = [Walls].into();
     assert!(!can(&s, Castle));
@@ -1370,11 +1372,7 @@ fn mongols_raises_no_walls_tier_before_the_medieval_era_and_every_tier_after() {
     }
     // In a game: with every Ancient and Classical technology and the Walls techs it is the
     // Medieval era and the line opens; with fewer it stays shut, whatever else is known.
-    let walls_techs = [
-        TechId::Masonry,
-        TechId::Feudalism,
-        TechId::MilitaryEngineering,
-    ];
+    let walls_techs = [TechId::Masonry, TechId::Feudalism, TechId::Machinery];
     s.player_mut(P0).techs.extend(walls_techs);
     assert!(s.era_of(P0) < 2);
     for building in [Walls, Castle, StarFort] {
@@ -1564,4 +1562,49 @@ fn a_full_turn_learns_the_tech_enters_the_era_and_keeps_the_event_order() {
     // Everyone's view carries it.
     assert_eq!(player_view(&next, P1).players[0].era, 2);
     assert_eq!(player_view(&next, P1).research.era_firsts, [(1, P0)]);
+}
+
+#[test]
+fn two_empires_entering_an_era_the_same_turn_have_the_first_drawn_by_seed() {
+    let setup = |seed: u64, earlier: Option<PlayerId>| {
+        let mut s = game(&[0, 1, 2]);
+        s.dice_seed = Some(seed);
+        for p in [P0, P1, P2] {
+            know_eras_before(&mut s, p, 1);
+            s.player_mut(p).techs.remove(&TechId::Writing);
+        }
+        if let Some(p) = earlier {
+            s.era_firsts.insert(1, p);
+        }
+        about_to_finish(&mut s, P2, TechId::Writing);
+        about_to_finish(&mut s, P1, TechId::Writing);
+        let mut events = Vec::new();
+        process_research(&mut s, &mut events);
+        crate::eras::draw_same_turn_firsts(&mut s, &mut events);
+        (s, events)
+    };
+    let mut firsts = std::collections::BTreeSet::new();
+    for seed in 0..40 {
+        let (s, events) = setup(seed, None);
+        let first = *s.era_firsts.get(&1).unwrap();
+        assert!(first == P1 || first == P2);
+        firsts.insert(first);
+        // Exactly one entrant is flagged first, and it is the recorded one.
+        let flagged: Vec<PlayerId> = events
+            .iter()
+            .filter_map(|e| match e {
+                Event::EraEntered {
+                    player,
+                    era: 2,
+                    first: true,
+                } => Some(*player),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(flagged, [first]);
+    }
+    assert_eq!(firsts.len(), 2, "either seat can be first");
+    // An era with a first from an earlier turn is never redrawn.
+    let (s, _) = setup(5, Some(P0));
+    assert_eq!(s.era_firsts.get(&1), Some(&P0));
 }

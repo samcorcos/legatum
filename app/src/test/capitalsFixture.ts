@@ -1,14 +1,14 @@
 // Original capitals in every state the map must tell apart, staged by the rules (city founder, owner and the
-// original-capital flag; scored capitals in `capitals_taken`). Injected visual fixture only.
+// original-capital flag; the holder of a rival's capital scores it while it holds it). Injected visual fixture only.
 // You are India (0) with a teammate, the Aztecs (4). The rivals are Byzantium (1), Switzerland (2), Germany (3), the Mongols (5).
 //   A  yours, still held by you and garrisoned (original capital, filled star in your ink)
 //   B  Byzantium's original capital, held by its founder and garrisoned (filled star in its ink)
 //   C  Switzerland's original capital, captured by Byzantium (the star stays in Switzerland's ink)
 //   D  Switzerland's replacement capital: the current capital, no star and no VP
-//   E  Germany's original capital, captured by you, who scored it (hollow star)
+//   E  Germany's original capital, captured by you, who holds its point (hollow star)
 //   G  Germany's replacement capital: no star
 //   H  your teammate's own original capital (filled star in the Aztec ink)
-//   T  the Mongols' original capital, captured by your teammate, who scored it: you can still score it (filled star)
+//   T  the Mongols' original capital, captured by your teammate, who holds its point (filled star)
 //   U  the Mongols' replacement capital
 import { fromOffset } from '../hex';
 import { FixtureClient, createState, makeStandardSetup, refreshVision, spawnUnit } from './fixtureEngine';
@@ -45,9 +45,6 @@ export function capitalsFixture() {
   retake(c, 1); c.isCapital = false; d.isCapital = true;
   retake(e, 0); e.isCapital = false; g.isCapital = true;
   retake(t, 4); t.isCapital = false; u.isCapital = true;
-  f.players[0].capitalsTaken = [[e.id, e.name]];
-  f.players[1].capitalsTaken = [[c.id, c.name]];
-  f.players[4].capitalsTaken = [[t.id, t.name]];
   for (const city of [a, b, c, d, e, g, h, t, u]) city.population = 3;
   // Garrisons: your Soldier in your capital, Byzantium's in its own.
   spawnUnit(f, 0, 'Soldier', a.pos, false);

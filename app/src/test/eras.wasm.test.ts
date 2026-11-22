@@ -116,7 +116,11 @@ describe.skipIf(!available)('eras: core behavior', () => {
       }
     }
     expect(research(core, 0).era).toBe(1);
-    expect(research(core, 0).era_firsts).toEqual([[1, 0]]);
+    // Both entered on the same turn: the first is drawn by seed, so either seat can hold it.
+    const firsts = research(core, 0).era_firsts;
+    expect(firsts).toHaveLength(1);
+    expect(firsts[0][0]).toBe(1);
+    expect([0, 1]).toContain(firsts[0][1]);
   });
 
   it('Railways, Code of Laws, Printing Press and the Castle tiers resolve the same', () => {

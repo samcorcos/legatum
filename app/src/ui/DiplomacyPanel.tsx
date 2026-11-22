@@ -19,6 +19,7 @@ import { YIELD_COLORS } from '../theme';
 import { PortraitFrame, PortraitRoundel } from './premium';
 import { RingMedallion, TreatyEmblem } from './ringMedallion';
 import { Amount, Amounts } from './Amounts';
+import { TeamGifts } from './GiveGold';
 import { RivalLevy } from './Levy';
 import { aiLevel } from '../aiLevel';
 import { publicRelationsModel } from '../relations';
@@ -647,6 +648,7 @@ export function DiplomacyPanel() {
         </article>)}
         {queued.map((s, i) => <p key={`queued-${i}`}>Teammate queued: {name(s.player)} · <Amounts text={describeOrder(s.order, view)} /></p>)}
         {(d.replies??[]).length > 0 && <details className="diplomatic-replies" open><summary>Recent diplomatic replies</summary>{[...(d.replies??[])].reverse().slice(0,8).map((r)=><article className="diplomacy-item" key={`${r.proposal.id}-${r.effective_turn}`}><strong>{teamName(view,r.proposal.to)} {r.accepted?'accepted':'declined'} {treatyName(r.proposal)} · turn {r.effective_turn}</strong>{r.proposal.explanation?.reasons.map((reason,i)=><p key={i}>{reason}</p>)}</article>)}</details>}
+        <TeamGifts view={view} />
         <h4 ref={relationRef} className="diplomacy-section">Empires</h4>
         <ul className="empire-list" aria-label="Empires">
           {teams.map((s) => {

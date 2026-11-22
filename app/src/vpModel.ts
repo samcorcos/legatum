@@ -7,7 +7,7 @@
 // held, by whom, and what each empire's public number is.
 import type { Faction, Hex, ObjectiveFamily, PlayerId, PlayerView, UnitView } from './types';
 import {
-  BUILDING_NAME, ERA_RULE, FACTION_GOAL, FACTION_INFO, GREAT_WORK_ICON, GREAT_WORK_NAME, GREAT_WORK_RULE,
+  BUILDING_NAME, FACTION_GOAL, FACTION_INFO, GREAT_WORK_ICON, GREAT_WORK_NAME, GREAT_WORK_RULE,
   factionGoalRule, factionGoalTerms, factionGoalVp, decadenceRules, factionObjectiveText, isGreatWork, type DecadenceRules,
 } from './data';
 import { roman } from './brand/ornaments';
@@ -58,7 +58,9 @@ interface EraInfo {
   objectives: EraObjective[];
   /** The viewer has entered the era (can score it). */
   myEntered: boolean;
-  /** The viewer has scored it. */
+  /** Living empires that scored it, whichever card they used (a save may name a card no longer drawn). */
+  scored: PlayerId[];
+  /** The viewer has scored it: `scored` includes the viewer. */
   myScored: boolean;
 }
 
@@ -150,9 +152,8 @@ export interface VpRow {
 }
 
 export interface VpModel {
-  /** Public permanent points for each empire's first captures of original capitals. */
+  /** Public held points: the rival original capitals each empire holds now. */
   capitals: { owner: PlayerId; names: string[] }[];
-  deck?: boolean;
   gold?: number;
   me: PlayerId;
   turn: number;
@@ -239,10 +240,15 @@ export function buildVpModel(view: PlayerView): VpModel {
   const works = [baseWork, ...extraWorks];
   const capitalSources: Source[] = alive.flatMap((p) => (p.capitals_taken ?? []).map(([id, name]) => ({
     id: `capital-${p.id}-${id}`, kind: 'capital' as const, name, icon: 'city', vp: 1,
-    rule: `${p.name}’s first capture of the original capital ${name}: +1 VP, kept for good`,
-    terms: 'Kept for good · once per capital per captor', live: false,
+    rule: `${p.name} holds the original capital ${name}: 1 VP while holding it`,
+    terms: 'Held · follows the city', live: true, held: true,
     owners: [p.id], own: own([p.id]), facts: [{ id: p.id, value: 1, label: name }], unit: '',
-  })));
+  })).concat((p.capitals_sacked ?? []).map(([id, name]) => ({
+    id: `capital-sacked-${p.id}-${id}`, kind: 'capital' as const, name, icon: 'city', vp: 1,
+    rule: `${p.name} sacked the original capital ${name}: 1 VP, kept for good`,
+    terms: 'Kept · the city is gone', live: false, held: false,
+    owners: [p.id], own: own([p.id]), facts: [{ id: p.id, value: 1, label: name }], unit: '',
+  }))));
 
   // VP v2 eras: the public objectives drawn at game start. An era is a way to score for every empire that enters it.
   const myEra = mePublic?.era ?? 1;
@@ -258,12 +264,12 @@ export function buildVpModel(view: PlayerView): VpModel {
     });
     const info: EraInfo = {
       era: ev.era, eraName: ev.name, entered: ev.entered_by.filter(isAlive), objectives,
-      myEntered: !!view.rule_experiments?.objectives_deck || ev.entered_by.includes(me), myScored: scored.some((x) => x.player === me),
+      myEntered: true, scored: owners, myScored: owners.includes(me),
     };
     return {
-      id: eraId(ev.era), kind: 'era', name: `${view.rule_experiments?.objectives_deck ? 'Age' : 'Era'} ${roman(ev.era)}: ${ev.name}`, icon: ERA_ICON, vp: 1, rule: view.rule_experiments?.objectives_deck ? 'Score this Age’s card whenever you like; 1 VP, kept for good' : ERA_RULE,
-      terms: view.rule_experiments?.objectives_deck ? 'Kept for good · once per Age · the cards never expire' : 'Kept for good · once each · stays open until you score it', live: false, owners, own: own(owners),
-      facts: alive.map((p) => ({ id: p.id, value: owners.includes(p.id) ? 2 : ev.entered_by.includes(p.id) ? 1 : 0, label: owners.includes(p.id) ? 'Scored' : view.rule_experiments?.objectives_deck ? 'Open' : ev.entered_by.includes(p.id) ? 'Entered' : 'Not entered' })),
+      id: eraId(ev.era), kind: 'era', name: `Age ${roman(ev.era)}: ${ev.name}`, icon: ERA_ICON, vp: 1, rule: 'Score this Age’s card whenever you like; 1 VP, kept for good',
+      terms: 'Kept for good · once per Age · the card never expires', live: false, owners, own: own(owners),
+      facts: alive.map((p) => ({ id: p.id, value: owners.includes(p.id) ? 2 : ev.entered_by.includes(p.id) ? 1 : 0, label: owners.includes(p.id) ? 'Scored' : 'Open' })),
       unit: '', era: info,
     };
   });
@@ -309,7 +315,7 @@ export function buildVpModel(view: PlayerView): VpModel {
     const goal = byId.get(goalId(p.id))!;
     // A held goal sits with its holder, not its faction: any goal the empire's colours score for counts as its own token.
     const kept = [...works, ...capitalSources, ...eras, ...goals].filter((s) => s.owners.includes(p.id) && !s.live);
-    const live = [...works, ...goals].filter((s) => s.owners.includes(p.id) && s.live);
+    const live = [...works, ...capitalSources, ...goals].filter((s) => s.owners.includes(p.id) && s.live);
     return {
       id: p.id, team: p.team, name: nameOf(p.id), faction: p.faction, aiLevel: aiLevel(p), color: playerColor(p.id), ink: playerInk(p.id),
       isMe: p.id === me, isMine: team.has(p.id), power: p.power ?? 0, lead: p.lead_percent ?? 0, decadence: p.decadence_percent ?? 0, gold: p.gold ?? 0, capitalStands: p.capital_stands ?? true, sakoku: sakokuStatus(p), held: [...kept, ...live], goal,
@@ -339,8 +345,8 @@ export function buildVpModel(view: PlayerView): VpModel {
   const all = [...works, ...capitalSources, ...raceEras, ...ordered];
   const open = [...works, ...raceEras].filter((s) => s.own === 'open');
   return { me, turn: view.turn, rows, empires, works, eras, capitalSources,
-    capitals: view.players.map((p) => ({ owner: p.id, names: (p.capitals_taken ?? []).map(([, name]) => name) })),
-    deck: !!view.rule_experiments?.objectives_deck, gold: view.economy.gold, raceRules: { era: myEra, decadence: mePublic?.decadence_percent ?? 0, rules: decadenceRules(view.rule_experiments) },
+    capitals: view.players.map((p) => ({ owner: p.id, names: [...(p.capitals_taken ?? []).map(([, name]) => name), ...(p.capitals_sacked ?? []).map(([, name]) => `${name} (sacked)`)] })),
+    gold: view.economy.gold, raceRules: { era: myEra, decadence: mePublic?.decadence_percent ?? 0, rules: decadenceRules(view.rule_experiments) },
     goals, all, open, byId,
     holds: rows.filter((r) => r.hold).sort((a, b) => a.hold!.left - b.hold!.left || Number(b.isMine) - Number(a.isMine)) };
 }

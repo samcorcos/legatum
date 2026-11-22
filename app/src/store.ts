@@ -63,7 +63,7 @@ import { currentActivePlaySeconds, currentPlaySessionId, resetActivePlayTurn } f
 import { cancelTurnFeedback, feel, feedbackForTurn, playTurnFeedback } from './feel';
 import { newRun, saveRecord, type ScenarioEntry, type ScenarioFeedback, type ScenarioRun, type ScenarioStatus } from './scenarios/scenarios';
 import { saveScenarioRun, type SavedRun } from './platform/scenarioRuns';
-import { NO_WHY, answerLine, remember as rememberWhy, writeAnswer, type WhyEngine, type WhyMemory, type WhyQuestion } from './why';
+import { NO_WHY, answerLine, remember as rememberWhy, MAX_SAVED_ANSWERS, withAnswer, writeAnswer, type WhyEngine, type WhyMemory, type WhyQuestion } from './why';
 import { TrainingDriver, reportLine as trainingReportLine, trainingCapMs, writeTrainingLog, type TrainingEngine, type TrainingProgress, type TrainingUi } from './training';
 import { setSeatFactions } from './theme';
 
@@ -169,6 +169,8 @@ interface State {
   errors: OrderError[][];
   ready: boolean[];
   endTurnConfirmation: { seat: Seat; view: PlayerView; orders: Order[]; pass: boolean } | null;
+  /** The turn failed to resolve twice in a row from the same state: the recovery dialog. `cleared` is true once the try without the player's orders failed too. */
+  turnFailure: { cleared: boolean } | null;
   /**
    * Open "Declare War?" dialog: a military unit was ordered to attack (by moving, or `ranged`) a unit
    * or city of a team at Peace, or (`unit` null) War was chosen from a foreign city's card.
@@ -347,6 +349,8 @@ interface State {
   /** Put an aircraft to sleep: it asks nothing until an enemy is in reach. */
   sleepAir(plane: number): void;
   toggleReady(seat?: Seat): Promise<void>;
+  /** After a repeated failure: resolve the turn with every human's orders emptied (the AI seats plan as usual). */
+  endTurnWithoutOrders(): void;
   resolveToEnd(): void;
   stopResolving(): void;
   jumpTo(hex: Hex, clear?: boolean): void;
@@ -371,6 +375,7 @@ function humanIds(view: PlayerView): number[] {
 
 const emptySeats = (n: number) => ({
   endTurnConfirmation: null,
+  turnFailure: null,
   warPrompt: null,
   attacker: null,
   notice: null,
@@ -471,7 +476,7 @@ let noticedCampaign: string | null = null;
 function writeAutosave(client: GameClient, views: PlayerView[]) {
   if (client.archive && (views[0].finished || (views[0].turn - 1) % 5 === 0)) {
     try {
-      void recordGameHistory(historyToRecord(client as { archive(): string })).catch((error) => useGame.getState().set({ error: String(error) }));
+      void recordGameHistory(historyToRecord(client as { archive(): string }, useGame.getState().why.answers)).catch((error) => useGame.getState().set({ error: String(error) }));
     } catch (error) { useGame.getState().set({ error: `Could not record game history: ${String(error)}` }); }
   }
   const game = campaign;
@@ -542,6 +547,10 @@ export const useGame = create<State>((set, get) => {
   // The last good save string, to recover after a WASM panic (which leaves the module unusable
   // until the game is recreated). Kept outside the store: it's large and never rendered.
   let lastGood: string | null = null;
+  // How many times in a row this same turn, from this same state, failed to resolve.
+  let failedTurn: { key: string; count: number } | null = null;
+  // Set for one resolution: submit every human's orders empty.
+  let submitEmpty = false;
   let observerTimer: ReturnType<typeof setTimeout> | null = null;
   const stopResolving = () => {
     if (observerTimer !== null) clearTimeout(observerTimer);
@@ -578,7 +587,7 @@ export const useGame = create<State>((set, get) => {
     // A scenario's history is saved with its run, never in the game archive.
     if (previous !== client && previous?.archive && !get().scenario) {
       try {
-        const history = historyToRecord(previous as { archive(): string });
+        const history = historyToRecord(previous as { archive(): string }, get().why.answers);
         const replacingSameGame = client.archive && JSON.parse(client.archive()).metadata.game_id === JSON.parse(history).metadata.game_id;
         if (!replacingSameGame) void abandonGameHistory(history).catch((error) => set({ error: String(error) }));
       }
@@ -1024,7 +1033,9 @@ export const useGame = create<State>((set, get) => {
       if (!client || !views || get().client !== client) return;
       if (get().screen !== 'game') { set({ busy: null }); return; }
       let result: TurnResult;
-      const submitted = humans.map((_, i) => isEliminated(views[i]) ? [] : orders[i]);
+      const withoutOrders = submitEmpty;
+      submitEmpty = false;
+      const submitted = humans.map((_, i) => isEliminated(views[i]) || withoutOrders ? [] : orders[i]);
       // Coach questions: compare his orders with what Hard would have ordered in his seat.
       let asked: WhyQuestion | null = null;
       const why = get().why;
@@ -1052,6 +1063,15 @@ export const useGame = create<State>((set, get) => {
         }
         console.error('legatum: end turn failed', e);
         if (recovered) startTraining();
+        // The engine is deterministic: the same orders from the same state fail the same way. The second
+        // failure on one turn offers a way out instead of the same message again.
+        const key = `${views[0].turn}:${lastGood ?? ''}`;
+        const count = failedTurn?.key === key ? failedTurn.count + 1 : 1;
+        failedTurn = { key, count };
+        if (count >= 2 && recovered) {
+          set({ busy: null, ready: humans.map(() => false), error: null, turnFailure: { cleared: withoutOrders } });
+          return;
+        }
         set({
           busy: null,
           ready: humans.map(() => false),
@@ -1059,6 +1079,8 @@ export const useGame = create<State>((set, get) => {
         });
         return;
       }
+      failedTurn = null;
+      if (get().turnFailure) set({ turnFailure: null });
       if (asked) {
         // A question he never answered counts as skipped when the next one arrives.
         if (priorQuestion) get().answerWhy(null);
@@ -1147,7 +1169,9 @@ export const useGame = create<State>((set, get) => {
       });
       const client = get().client;
       const game = (client as unknown as Partial<WhyEngine> | null)?.trainingGameId?.() ?? 'unknown';
-      writeAnswer(answerLine(game, q, answer));
+      const line = answerLine(game, q, answer);
+      writeAnswer(line);
+      set({ why: withAnswer(get().why, line) });
     },
     showWhy: () => {
       // Reopened from the turn report: the report closes so the card never covers it.
@@ -1459,7 +1483,7 @@ export const useGame = create<State>((set, get) => {
         measureTurn('loadClient', () => client.load(save.game));
         if (forkHistory) client.forkArchive?.();
         measureTurn('afterLoad', () => afterLoad(client));
-        if (save.why?.enabled) set({ why: { enabled: true, asked: save.why.asked ?? [], last: save.why.last ?? null, skipped: save.why.skipped ?? [] } });
+        if (save.why?.enabled) set({ why: { enabled: true, asked: save.why.asked ?? [], last: save.why.last ?? null, skipped: save.why.skipped ?? [], answers: Array.isArray(save.why.answers) ? save.why.answers.slice(-MAX_SAVED_ANSWERS) : [] } });
         campaign = resumeCampaign ?? newCampaignId();
         resumeCampaign = null;
         if (get().views) measureTurn('loadAutosave', () => writeAutosave(client, get().views!));
@@ -1702,6 +1726,14 @@ export const useGame = create<State>((set, get) => {
       if (r[s]) e[s] = observer ? [] : validateSeat(s, submitted[s]);
       set({ ready: r, errors: e });
       if (allReady(views, r)) resolveTurn();
+    },
+
+    endTurnWithoutOrders: () => {
+      const { client, views, busy } = get();
+      if (!client || !views || busy || client.kind === 'remote') return;
+      submitEmpty = true;
+      set({ turnFailure: null });
+      resolveTurn();
     },
 
     resolveToEnd: () => {

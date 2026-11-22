@@ -16,6 +16,8 @@ import { RewardEmblem } from './RewardEmblem';
 import { DURATION, momentsForTurn, planMoments, type Counter, type Emblem, type Moment } from './moments';
 import { UnlockMomentCard, activateUnlock } from './UnlockMoment';
 import { EraUpTakeover, activateEraUp } from './EraUpTakeover';
+import { settleResearch } from './researchSettled';
+import { effectiveResearchQueue } from '../orders';
 import './celebrate.css';
 
 const vignettes: Partial<Record<Emblem, string>> = {
@@ -99,7 +101,10 @@ export function CelebrationProvider({ children }: { children: ReactNode }) {
     if (!alarmUp) setPlay({ report, seat, client, index: 0, started: performance.now(), released: !!useGame.getState().unlockReopen || !!useGame.getState().eraReopen });
   }, [report, seat, client, alarmUp, reopenSeq]);
   const current = !alarmUp && play?.report === report && play?.seat === seat && play?.client === client;
-  const active = current ? batch.shown[play.index] ?? null : null;
+  // Research picked while a held card waited (behind the research screen) settles the card's "Choose research".
+  const researchChosen = useGame((s) => { const v = s.views?.[s.seat]; return !!v && effectiveResearchQueue(s.orders[s.seat] ?? [], v.research).length > 0; });
+  const planned = current ? batch.shown[play.index] ?? null : null;
+  const active = useMemo(() => settleResearch(planned, researchChosen), [planned, researchChosen]);
   const release = useCallback(() => setPlay((p) => p && !p.released ? { ...p, released: true } : p), []);
   const unlockUp = useRef(false);
   const dismiss = useCallback(() => {

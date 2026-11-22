@@ -219,7 +219,7 @@ function timelineEntry(c: Chronicle, view: PlayerView, nameOf: (id: PlayerId | n
       return { ...base, icon: 'emblem-ruin', text: `${nameOf(c.player)} discovered ${WONDER_INFO[c.wonder]?.name ?? c.wonder}`, who: [c.player], tone: yoursP(c.player) ? 'mine' : 'neutral', yours: yoursP(c.player) };
     case 'Objective': {
       const name = ERA_NAMES[c.era - 1] ?? `era ${c.era}`;
-      return { ...base, icon: 'emblem-milestone', text: `${nameOf(c.player)} met the ${name} era objective: ${c.objective} (+1 VP)`, who: [c.player], tone: yoursP(c.player) ? 'mine' : 'neutral', yours: yoursP(c.player) };
+      return { ...base, icon: 'emblem-milestone', text: `${nameOf(c.player)} scored the ${name} Age: ${c.objective} (+1 VP)`, who: [c.player], tone: yoursP(c.player) ? 'mine' : 'neutral', yours: yoursP(c.player) };
     }
     case 'Goal': {
       const faction = view.players.find((p) => p.id === c.player)?.faction;

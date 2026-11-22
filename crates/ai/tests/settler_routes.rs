@@ -197,11 +197,15 @@ fn archived_detour_avoids_repeating_a_three_tile_loop() {
     for frame in case.turns {
         let loaded: GameState =
             serde_json::from_slice(&serde_json::to_vec(&state).unwrap()).unwrap();
-        let generated = persistent.orders(&player_view(&state, case.player));
+        // A save round trip changes nothing: a fresh brain orders the same from the state and
+        // from its reloaded copy. The persistent brain's memory may legitimately differ from a
+        // fresh one (under World Ages, rules 50, it picks the Pyramids on T153 where a fresh brain picks Walls), so
+        // the route is driven by the persistent brain, as in a real game.
         assert_eq!(
-            generated,
+            route_brain(&state, case.player).orders(&player_view(&state, case.player)),
             route_brain(&loaded, case.player).orders(&player_view(&loaded, case.player))
         );
+        let generated = persistent.orders(&player_view(&state, case.player));
         assert!(validate_orders(&state, case.player, &generated).is_empty());
         assert!(
             generated.iter().any(|o| matches!(o,

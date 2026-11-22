@@ -127,6 +127,7 @@ impl Tape {
                                     | "UpgradeAircraft"
                                     | "SetScienceConversion"
                                     | "SetCityAutomation"
+                                    | "GiveGold"
                             )
                         );
                         if !known {
@@ -554,10 +555,14 @@ mod tests {
             Order::Action {
                 action: Action::Broadcast,
             },
+            Order::GiveGold {
+                to: PlayerId(1),
+                amount: 25,
+            },
         ]
     }
 
-    const ORDER_VARIANTS: usize = 31;
+    const ORDER_VARIANTS: usize = 32;
 
     fn variant_index(order: &Order) -> usize {
         match order {
@@ -592,6 +597,7 @@ mod tests {
             Order::Action { .. } => 28,
             Order::AirRecon { .. } => 29,
             Order::BuyTile { .. } => 30,
+            Order::GiveGold { .. } => 31,
         }
     }
 

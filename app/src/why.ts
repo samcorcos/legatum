@@ -1,7 +1,7 @@
 // Coach questions (designer, 2026-11-15): Hard plus "why did you do that?". With the toggle on,
 // End Turn asks the engine what Hard would have ordered in his seat (`crates/ai/src/why.rs`); a
 // material difference comes back as one question, shown at the start of the next turn. Answers are
-// kept in memory for the session (`unwrittenAnswers`). The toggle, the asked keys and the last category
+// kept in `WhyMemory.answers` (saved with the game and uploaded with it, see gameUpload.ts) and in memory for the session (`unwrittenAnswers`). The toggle, the asked keys and the last category
 // live in the save file wrapper, never in the game state, so hashes and rules do not change.
 import { buildLabel } from './buildLabel';
 import type { Order } from './types';
@@ -27,6 +27,15 @@ export interface WhyMemory {
   last: [number, WhyCategory] | null;
   /** Categories the player skipped, once per unanswered question. */
   skipped: WhyCategory[];
+  /** The answer lines so far, newest last (a later line for the same question wins). Old saves have none. */
+  answers?: WhyAnswerLine[];
+}
+
+export const MAX_SAVED_ANSWERS = 500;
+
+/** Add one answer line to the memory, keeping the last MAX_SAVED_ANSWERS. */
+export function withAnswer(memory: WhyMemory, line: WhyAnswerLine): WhyMemory {
+  return { ...memory, answers: [...(memory.answers ?? []), line].slice(-MAX_SAVED_ANSWERS) };
 }
 
 export const NO_WHY: WhyMemory = { enabled: false, asked: [], last: null, skipped: [] };

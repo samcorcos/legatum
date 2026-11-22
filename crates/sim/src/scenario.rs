@@ -497,6 +497,13 @@ pub fn describe(state: &GameState, order: &Order) -> (String, String) {
         Order::BuyItem { city: c, item: i } => (city(c), format!("buy {}", item(i))),
         Order::BuyTile { city: c, tile } => (city(c), format!("buy the tile at {}", place(tile))),
         Order::Action { action } => ("Empire".into(), format!("{action:?}")),
+        Order::GiveGold { to, amount } => (
+            "Empire".into(),
+            format!(
+                "give {amount} Gold to {}",
+                legatum_core::scenario::empire_name(state, *to)
+            ),
+        ),
         Order::AirStrike { plane, target } => (
             format!("aircraft {}", plane.0),
             format!("strike {}", place(target)),

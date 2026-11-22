@@ -36,7 +36,7 @@ export const BANNED: CopyRule[] = [
   { pattern: /\bunknown owner\b|\boff the map\b/i, reason: 'engine validation detail in a load failure (UI review, 2026-11-10)', instead: 'This save file is damaged and can\'t be loaded. Your save file is kept; ...' },
   { pattern: /\bat the defen[cs]e ratio\b|\bscaled by the ratio\b/i, reason: 'the pooled city overflow rule was replaced by a per-hit carry in rules 27 (UI review, 2026-11-11)', instead: '"The hit that empties the city\'s HP carries on to the garrison with the part of its damage the city did not absorb. Later hits strike the garrison in full."', source: true },
   { pattern: /\bPlayerId\b/, reason: 'engine identifier', instead: 'seat number' },
-  { pattern: /first capture of it/i, reason: 'the original-capital rule said it as a count of captures (UI review, 2026-11-05)', instead: '"Capture it to score +1 VP, kept for good. Each empire scores it once."', source: true },
+  { pattern: /first capture of it/i, reason: 'the original-capital rule said it as a count of captures (UI review, 2026-11-05)', instead: '"Hold it to score 1 VP."', source: true },
   { pattern: /\bbinds? (allies|you)\b/i, reason: 'unclear diplomacy effect', instead: 'changes how wars work' },
   { pattern: /(?:^|\s)Live ·/, reason: 'internal VP label', instead: 'Held only while you lead' },
   { pattern: /\bsuperseded\b/i, reason: 'engine report term', instead: 'dropped' },

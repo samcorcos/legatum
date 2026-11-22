@@ -10,6 +10,39 @@ determinism tests. The runner pin tests read that file and name the command when
 a digest differs. Keep `pins.json` outside this directory: replay import and the
 WASM checker treat every JSON file here as a tape.
 
+## Final rules-50 tree: master merged again, Gold gifts, wonder prices, Star Fort (2026-11-22)
+
+After merging `origin/master` again (Egypt's Settler values) and adding the Gold gift order, the
+wonder price curve (Pyramids 360, Great Library 400) and the Star Fort at Machinery,
+`LEGATUM_REPIN_THREADS=4 tools/sim/repin.sh` rewrote all three mixed-AI tapes. Against
+`origin/master` (rules 49), `pins.json` moved: `8858327448064776127` to `8490559115788180378`,
+`16340034733011875483` to `10053475625268228984`, `7765247304216437743` to `7018178352511085109`,
+and the city-fire digest `3483322890443682319` to `5506138808811481219`. The AI never gives Gold,
+so the gift order is not a cause; the wonder prices and the Star Fort tech change AI build choices.
+No scenario state hash changed. The pin tests and all 12 determinism tests passed.
+
+## World Ages only, Celtic sack point, master merged; still rules 50 (2026-11-22)
+
+On the combined tree (the rules batch, the Celtic sack exception, `origin/master` merged in and World
+Ages as the only era scoring with three peaceful cards per Age), `LEGATUM_REPIN_THREADS=4
+tools/sim/repin.sh` rewrote all three mixed-AI tapes and the fixed-order tape
+`city-strike-awareness.json`. In `pins.json`, all three 80-turn mixed digests moved
+(`6795863348978152354` to `4630297540251091882`, `5356065880517054856` to `7388004569627699792`,
+`7765247304216437743` to `11442789816384383562`). The 160-turn scripted-Hard city-fire digest also
+moved (`9439788634490833228` to `12822712017351877491`). The causes are a different card per Age
+(the draw is over the new pool) and the AI chasing the peaceful cards. The pin tests and all 12
+determinism tests passed after regeneration.
+
+## Fable review batch, rules 50 (2026-11-22)
+
+`LEGATUM_REPIN_THREADS=4 tools/sim/repin.sh` regenerated the mixed-AI tapes. Only
+`game-00002-seed-18446744073709551615.json` changed. Every fixed-order replay hash stayed the same.
+In `pins.json`, the first two 80-turn mixed digests moved (`8858327448064776127` to
+`6795863348978152354`, `16340034733011875483` to `5356065880517054856`), and so did the 160-turn
+scripted-Hard city-fire digest (`3483322890443682319` to `9439788634490833228`). These moves come
+from held capital VP, the Alliance upkeep waiver and the seeded same-turn ties. The pin tests and
+all 12 determinism tests passed after regeneration.
+
 ## Neighbour warning on the rules-43 calendar line (2026-11-16)
 
 `tools/sim/repin.sh` kept all three mixed-AI tapes and all fixed-order replay

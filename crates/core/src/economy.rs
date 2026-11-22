@@ -848,7 +848,8 @@ fn yields_base<const FULL: bool>(
 }
 
 /// Gold paid each turn by this empire for its team's active Alliances, by partner. Every empire
-/// on both teams pays until the Alliance ends.
+/// on both teams pays until the Alliance ends, except on a turn its members are at War with a
+/// team close to winning (`diplomacy::upkeep_waived_by`): the waiver is its own line.
 pub fn treaty_upkeep(state: &GameState, p: PlayerId) -> Breakdown {
     let mut b = Breakdown::default();
     let Some(d) = state.diplomacy.as_ref() else {
@@ -862,10 +863,18 @@ pub fn treaty_upkeep(state: &GameState, p: PlayerId) -> Breakdown {
     {
         let other = if r.a == team { r.b } else { r.a };
         let kind = crate::diplomacy::TreatyKind::Alliance;
-        b.add(
-            format!("{kind:?} with {}", crate::scoring::team_label(state, other)),
-            kind.upkeep_for_cities(state.cities_of(p).count()),
-        );
+        let upkeep = kind.upkeep_for_cities(state.cities_of(p).count());
+        let partner = crate::scoring::team_label(state, other);
+        b.add(format!("{kind:?} with {partner}"), upkeep);
+        if let Some(winner) = crate::diplomacy::upkeep_waived_by(state, team, other) {
+            b.add(
+                format!(
+                    "{kind:?} with {partner} (free while at War with {}, close to winning)",
+                    crate::scoring::team_label(state, winner)
+                ),
+                -upkeep,
+            );
+        }
     }
     b
 }
@@ -1415,6 +1424,23 @@ pub enum BuyBlock {
     /// No strategic supply to spare for the item (`resources::buy_blocker`).
     Resource,
     NotEnoughGold,
+    /// Experiment `no_purchase_under_threat`: an enemy military unit stands within
+    /// `THREAT_BUY_RADIUS` tiles of the city, so it cannot buy a military unit.
+    UnderThreat,
+}
+
+/// Experiment `no_purchase_under_threat`: how close (in tiles from the city centre) an enemy
+/// military unit at War must stand to stop the city buying military units.
+pub const THREAT_BUY_RADIUS: i32 = 2;
+
+/// Whether an at-War military unit stands within `THREAT_BUY_RADIUS` tiles of `city`
+/// (barbarians count, except against the Celts: `rules::is_threat`).
+pub fn enemy_near_city(state: &GameState, city: &City) -> bool {
+    state.units.values().any(|u| {
+        u.pos.distance(city.pos) <= THREAT_BUY_RADIUS
+            && data::unit_stats(u.kind).military
+            && crate::rules::is_threat(state, city.owner, u.owner)
+    })
 }
 
 /// The first rule that blocks buying `item` in `city` now, if any (see `buy_blocker`).
@@ -1491,6 +1517,20 @@ pub(crate) fn buy_check_with_supply<R: Reason>(
         return Some((
             BuyBlock::Resistance,
             R::word(|| format!("{} is resisting occupation", city.name)),
+        ));
+    }
+    if state.setup.rule_experiments.no_purchase_under_threat
+        && matches!(item, ProductionItem::Unit { unit } if data::unit_stats(unit).military)
+        && enemy_near_city(state, city)
+    {
+        return Some((
+            BuyBlock::UnderThreat,
+            R::word(|| {
+                format!(
+                    "{} can't buy military units while an enemy unit is within {THREAT_BUY_RADIUS} tiles",
+                    city.name
+                )
+            }),
         ));
     }
     if item

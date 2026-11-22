@@ -556,6 +556,70 @@ pub fn validate_city_orders_projected(
     (errors, sim)
 }
 
+/// Orders split by [`defer_contested_tile_buys`]: each empire's kept list, then the deferred
+/// losing tile buys in drawn order.
+pub(crate) type ContestedTileBuys = (BTreeMap<PlayerId, Vec<Order>>, Vec<(PlayerId, Order)>);
+
+/// City orders are applied one empire at a time, so without this the lower id would win every
+/// tile two empires buy in the same turn. For each tile that several empires order `BuyTile` on,
+/// a seeded draw (`purpose::TILE_CONTEST`) picks the order they are tried in: the winner's order
+/// keeps its place, each loser's (its first order for that tile) is taken out of its list and
+/// returned to be tried after every empire's city orders, in drawn order. A loser then fails the
+/// ordinary way ("already owned") unless the winner's own order failed. None when nothing is
+/// contested.
+pub(crate) fn defer_contested_tile_buys(
+    state: &GameState,
+    orders: &BTreeMap<PlayerId, &[Order]>,
+) -> Option<ContestedTileBuys> {
+    let mut bids: BTreeMap<Hex, Vec<(PlayerId, usize)>> = BTreeMap::new();
+    for (p, os) in orders {
+        for (i, order) in os.iter().enumerate() {
+            if let Order::BuyTile { tile, .. } = order {
+                let tile_bids = bids.entry(*tile).or_default();
+                if !tile_bids.iter().any(|(q, _)| q == p) {
+                    tile_bids.push((*p, i));
+                }
+            }
+        }
+    }
+    let mut removed: BTreeSet<(PlayerId, usize)> = BTreeSet::new();
+    let mut deferred = Vec::new();
+    for (tile, tile_bids) in bids.iter().filter(|(_, b)| b.len() > 1) {
+        let players: Vec<PlayerId> = tile_bids.iter().map(|(p, _)| *p).collect();
+        let ranked = rng::seeded_order(
+            state.dice_seed(),
+            &[
+                u64::from(state.turn),
+                rng::purpose::TILE_CONTEST,
+                tile.q as u64,
+                tile.r as u64,
+            ],
+            &players,
+        );
+        for loser in &ranked[1..] {
+            let (_, i) = *tile_bids.iter().find(|(p, _)| p == loser).expect("bidder");
+            removed.insert((*loser, i));
+            deferred.push((*loser, orders[loser][i].clone()));
+        }
+    }
+    if deferred.is_empty() {
+        return None;
+    }
+    let kept = orders
+        .iter()
+        .map(|(p, os)| {
+            let list = os
+                .iter()
+                .enumerate()
+                .filter(|(i, _)| !removed.contains(&(*p, *i)))
+                .map(|(_, o)| o.clone())
+                .collect();
+            (*p, list)
+        })
+        .collect();
+    Some((kept, deferred))
+}
+
 /// Apply a player's SetProduction, SetResearch and BuyItem orders in list order
 /// (other orders are ignored). Invalid orders are skipped and reported as `OrderFailed`.
 /// Runs before movement.
@@ -998,7 +1062,8 @@ pub fn process_cities(state: &mut GameState, events: &mut Vec<Event>) {
         .map(|c| (c.id, economy::city_totals(state, c)))
         .collect();
 
-    for (id, y) in &yields {
+    for id in &wonder_race_order(state, &yields) {
+        let y = &yields[id];
         if state.cities[id].resistance > 0 {
             continue;
         }
@@ -1083,6 +1148,73 @@ pub fn process_cities(state: &mut GameState, events: &mut Vec<Event>) {
     crate::scoring::refresh_decadence(state);
 
     heal_cities(state);
+}
+
+/// The order cities produce in this phase: by city id, except that cities about to finish the
+/// same world wonder this turn go in the order that settles the race (otherwise the lower city
+/// id would always win it). Most overflow Production first; an exact tie is drawn
+/// (`purpose::WONDER_RACE`). Only the racing cities swap places among themselves.
+fn wonder_race_order(state: &GameState, yields: &BTreeMap<CityId, Yields>) -> Vec<CityId> {
+    let mut order: Vec<CityId> = yields.keys().copied().collect();
+    let mut races: BTreeMap<BuildingKind, Vec<(CityId, i32)>> = BTreeMap::new();
+    for (id, y) in yields {
+        let c = &state.cities[id];
+        if c.resistance > 0 || super::occupation::city_freeze(state, c).is_some() {
+            continue;
+        }
+        let Some(
+            item
+            @ (ProductionItem::Building { building } | ProductionItem::Wonder { building, .. }),
+        ) = c.producing
+        else {
+            continue;
+        };
+        if !data::is_great_work(building) {
+            continue;
+        }
+        // The Production `process_cities` will add (Egypt builds from surplus Food).
+        let production = if egypt_building(state, c, item) {
+            let surplus = (y.food - FOOD_PER_POP * c.population).max(0);
+            if surplus == 0 || economy::production_blocker(state, c, item, false).is_some() {
+                continue;
+            }
+            surplus.saturating_mul(2)
+        } else {
+            y.production
+        };
+        let overflow = crate::validation::add_stored(c.production_stored, production)
+            - economy::city_production_cost(state, c, item);
+        if overflow >= 0 {
+            races.entry(building).or_default().push((*id, overflow));
+        }
+    }
+    for (building, racers) in races.into_iter().filter(|(_, r)| r.len() > 1) {
+        let ids: Vec<CityId> = racers.iter().map(|(id, _)| *id).collect();
+        let drawn = rng::seeded_order(
+            state.dice_seed(),
+            &[
+                u64::from(state.turn),
+                rng::purpose::WONDER_RACE,
+                building as u64,
+            ],
+            &ids,
+        );
+        let mut ranked: Vec<(CityId, i32)> = drawn
+            .iter()
+            .map(|id| *racers.iter().find(|(r, _)| r == id).expect("racer"))
+            .collect();
+        // Stable: equal overflow keeps the drawn order.
+        ranked.sort_by_key(|(_, overflow)| std::cmp::Reverse(*overflow));
+        let mut slots: Vec<usize> = ids
+            .iter()
+            .map(|id| order.iter().position(|o| o == id).expect("city in order"))
+            .collect();
+        slots.sort_unstable();
+        for (slot, (id, _)) in slots.into_iter().zip(ranked) {
+            order[slot] = id;
+        }
+    }
+    order
 }
 
 pub(crate) fn grow(state: &mut GameState, id: CityId, food: i32, events: &mut Vec<Event>) {

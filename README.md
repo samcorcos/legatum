@@ -50,7 +50,7 @@ These are the design rules the project holds itself to. Where the game falls sho
 - **Familiar on purpose.** If you have played Civilization VI you already know the basics: found cities, pick research, queue production, fight on hexes. Where Legatum differs, the change is deliberate.
 - **Nobody waits.** Turns are simultaneous. Every empire, human or AI, plans at the same time, and the engine resolves all the orders together in fixed stages.
 - **No hidden maths.** Yields, costs and combat strengths open into a breakdown. Attacks, advances and Peace offers show a forecast before you commit.
-- **The race is always visible.** Victory points (VP) are public from turn one. Era objectives, faction goals, world wonders and captured capitals are on one screen, with who holds each. A team that holds its target for ten turns wins, so a leader is on a clock everyone can see.
+- **The race is always visible.** Victory points (VP) are public from turn one. World Age cards, faction goals, world wonders and held rival capitals are on one screen, with who holds each. A team that holds its target for ten turns wins, so a leader is on a clock everyone can see.
 - **Eleven peoples, nine of them finished.** Switzerland, India, Byzantium, Germany, the Celts, the Mongols, Sparta, Athens and the Aztecs each have a signature strength, a drawback that pays for it and a faction goal worth 2 VP. Egypt and Rome are playable early designs with no faction goal yet. <!-- peoples-count -->
 - **An AI that plays by your rules.** Easy, Normal and Hard get no extra yields, no cheaper costs, no stronger units and no extra sight. Each AI empire plans from the same fogged view a player in its seat would have. A harder level decides better. The exact scope is under [What the AI can see and do](#what-the-ai-can-see-and-do).
 - **Strategy with a counter.** Rushing, expanding wide, turtling, building an economy and playing diplomatically are each designed to have an answer, so the best plan depends on your people, the map and your neighbours. Expansion, by settling or by conquest, is the core loop. Staying small is deliberately weak.
@@ -78,7 +78,7 @@ These clips are recorded from the running game.
 
 <p align="center">
   <img src="docs/media/loop-era.webp" alt="Finishing Printing Press opens a card, and entering the Industrial era takes over the screen." width="880">
-  <br><sub><b>Eras you feel.</b> Entering one is a celebrated moment: new units and buildings, the three objectives that score its victory point, and your cities rebuilt in the new style.</sub>
+  <br><sub><b>Eras you feel.</b> Entering one is a celebrated moment: new units and buildings, the Age card that scores its victory point, and your cities rebuilt in the new style.</sub>
 </p>
 
 <table align="center">
@@ -87,7 +87,7 @@ These clips are recorded from the running game.
     <td width="50%"><img src="docs/media/loop-research.webp" alt="The research screen with illustrated unlock cards and a unit hovercard." width="100%"></td>
   </tr>
   <tr>
-    <td valign="top"><sub><b>The race is always visible.</b> Who holds which wonder, who has scored which era, and one ledger for every point in the game.</sub></td>
+    <td valign="top"><sub><b>The race is always visible.</b> Who holds which wonder, who has scored which Age, and one ledger for every point in the game.</sub></td>
     <td valign="top"><sub><b>Technologies worth wanting.</b> Every unlock is illustrated, and a hover shows what it beats, what it loses to and how it compares with what it replaces.</sub></td>
   </tr>
   <tr>
@@ -107,7 +107,7 @@ These clips are recorded from the running game.
 - **Three land unit classes and aircraft.** Until the World War era the melee line beats mounted units and mounted units beat ranged units, each by a bonus the forecast shows. Aircraft arrive with Flight in the Machine Age.
 - **Diplomacy with Peace, Alliance and War.** An Alliance fights as one side, a call to arms is one decision card, and a public warning shows when rivals line up against a leader.
 - **Asymmetric peoples.** Each has its own rules, units or buildings, and a drawback that pays for them.
-- **A public victory race.** A team wins by holding its VP target for ten turns: 10 VP for one empire, 20 for a team of two. VP come from era objectives (1 VP in each era after the first, with three ways to score it), captured original capitals, world wonders and faction goals. A team also wins when it is the only one still holding an original capital of its own.
+- **A public victory race.** A team wins by holding its VP target for ten turns: 10 VP for one empire, 20 for a team of two. VP come from World Age cards (one random card per Age, 1 VP each, kept for good), rival original capitals while you hold them, world wonders and faction goals. A team also wins when it is the only one still holding an original capital of its own.
 - **Solo or together.** Single Player is you against one to seven AI empires (five by default). Multiplayer is hot seat on one computer or an online game: Host Game lists your game for others and Join Game shows the games that are open (all games are public for now). The co-op setup puts two humans on one team against six AI empires.
 - **Scenarios.** Short positions that each ask one question ("can you hold this city?"), with the Hard AI's result from the same start to compare against.
 - **Art and sound.** All of the art is AI-generated (see [How it was made](#how-it-was-made)). The music and sound effects are CC0 recordings by Kenney and others, credited in the game.
@@ -122,6 +122,7 @@ These clips are recorded from the running game.
 Every game played in the browser version is uploaded to us, so we can measure how well the AI plays and find bugs.
 
 - **What is sent:** the game's record: the setup, every turn's orders, the score each turn and how long turns took. Player names are replaced with "Player 1", "AI 2" and so on before anything leaves your browser, and the server refuses a record with any other name.
+- **Coach questions:** if coach questions are on, your typed answers are uploaded with the game.
 - **What is not sent:** no account, no email, no cookies and no tracking. Legatum keeps no IP addresses or request logs.
 - **Who can read it:** the records are stored privately and only the maintainer can read them. They may be used to train and test the game's AI.
 - **Turning it off:** uploads cannot be turned off in the browser version. Builds from source upload nothing.

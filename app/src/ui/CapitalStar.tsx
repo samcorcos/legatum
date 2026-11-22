@@ -9,13 +9,13 @@ const starPath = (r: number, waist: number) => {
 };
 
 /**
- * An original capital's star as the map draws it: filled in the founder's ink, outlined once you have
- * scored it yourself. The shape differs, so colour is never the only cue.
+ * An original capital's star as the map draws it: filled in the founder's ink, outlined while you
+ * hold it yourself (its 1 VP is yours while you do). The shape differs, so colour is never the only cue.
  */
 export function CapitalStarGlyph({ mark, size = 12 }: { mark: CapitalMark; size?: number }) {
   const scored = mark.scored === 'you';
   return (
-    <svg className="capital-star" width={size} height={size} viewBox="-6 -6 12 12" role="img" aria-label={scored ? 'Original capital, already scored' : 'Original capital'}>
+    <svg className="capital-star" width={size} height={size} viewBox="-6 -6 12 12" role="img" aria-label={scored ? 'Original capital, its VP held by you' : 'Original capital'}>
       <path d={starPath(5.4, scored ? 0.45 : 0.3)} fill={scored ? 'none' : mark.ink} stroke={mark.ink} strokeWidth={scored ? 1.1 : 0.6} strokeLinejoin="round" />
     </svg>
   );

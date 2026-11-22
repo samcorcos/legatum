@@ -974,6 +974,54 @@ fn alliance_upkeep_is_a_gold_cost_in_income_and_bankruptcy_forecasts() {
 }
 
 #[test]
+fn alliance_upkeep_is_waived_while_at_war_with_a_team_close_to_winning() {
+    let s = alliance(&rich(game(&[0, 1, 2])), 0, 1);
+    // Team 0 goes to War with team 2; nobody is close to winning yet, so the Alliance pays.
+    let (mut s, _) = step(&s, &[(0, vec![war(2)])]);
+    assert!(s.teams_at_war(TeamId(0), TeamId(2)));
+    let target = scoring::team_target(&s, TeamId(2));
+    assert!(target > scoring::NEAR_VICTORY_VP);
+    assert!(!scoring::near_victory(&s, TeamId(2)));
+    assert_eq!(economy::upkeep(&s, PlayerId(0)), 1);
+    assert_eq!(diplomacy::upkeep_waived_by(&s, TeamId(0), TeamId(1)), None);
+    // Within 2 VP of its target: the Alliance pays nothing, for both allies, and the Gold
+    // breakdown shows the waiver as its own line.
+    s.setup.rule_experiments.vp_target = Some(scoring::NEAR_VICTORY_VP as u8);
+    assert!(scoring::near_victory(&s, TeamId(2)));
+    assert_eq!(
+        diplomacy::upkeep_waived_by(&s, TeamId(0), TeamId(1)),
+        Some(TeamId(2))
+    );
+    assert_eq!(economy::upkeep(&s, PlayerId(0)), 0);
+    assert_eq!(economy::upkeep(&s, PlayerId(1)), 0);
+    let gold = economy::player_income(&s, PlayerId(0)).gold;
+    assert!(gold.parts.iter().any(|(label, n)| *n == 1
+        && label.starts_with("Treaty upkeep: Alliance with")
+        && label.contains("free while at War with")));
+    let before = s.player(PlayerId(0)).gold;
+    let (next, _) = step(&s, &[]);
+    let (control, _) = {
+        let mut paying = s.clone();
+        paying.setup.rule_experiments.vp_target = None;
+        step(&paying, &[])
+    };
+    assert_eq!(
+        next.player(PlayerId(0)).gold - before,
+        control.player(PlayerId(0)).gold - before + 1,
+        "the waived Gold stays in the treasury"
+    );
+    // On a victory hold counts too, whatever the VP.
+    s.setup.rule_experiments.vp_target = None;
+    assert!(!scoring::near_victory(&s, TeamId(2)));
+    s.vp_holds.insert(TeamId(2), 1);
+    assert_eq!(economy::upkeep(&s, PlayerId(0)), 0);
+    // A near-winner the Alliance is not at War with waives nothing.
+    s.vp_holds.clear();
+    s.vp_holds.insert(TeamId(1), 1);
+    assert_eq!(economy::upkeep(&s, PlayerId(0)), 1);
+}
+
+#[test]
 fn leaving_inside_the_window_costs_gold_and_is_a_visible_betrayal() {
     use legatum_core::diplomacy::BETRAYAL_TURNS;
     let s = alliance(&rich(game(&[0, 1])), 0, 1);

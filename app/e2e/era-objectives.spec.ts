@@ -1,6 +1,6 @@
-// Era objectives are how you win, so they are always in view (legatum-ui "era objectives are always visible with progress"):
-// the race panel's block in the first era (Classical as a preview, "the Ancient era has no objective"), mid-era with live
-// progress, and once scored; and the research screen's era header. The numbers that need a long game are staged render-only
+// World Ages are how you win, so they are always in view (legatum-ui "era objectives are always visible with progress"):
+// the race panel's block and the sidebar line with live progress, the ledger, and the research screen's Age header (before
+// any Age begins, and once one has). The numbers that need a long game are staged render-only
 // on the live view with `withV2`. Set ERA_OBJ_SHOTS to a folder to keep screenshots at both laptop sizes.
 import { join } from 'node:path';
 import type { Page } from '@playwright/test';
@@ -41,7 +41,7 @@ async function shot(page: Page, name: string, size: { width: number }) {
 }
 
 for (const size of SIZES) {
-  test.describe(`era objectives at ${size.width}x${size.height}`, () => {
+  test.describe(`World Ages at ${size.width}x${size.height}`, () => {
     test.use({ viewport: size });
 
     test('World Age cards and hidden next Age', async ({ page }) => {
@@ -51,7 +51,6 @@ for (const size of SIZES) {
         const store = (window as unknown as GameWindow).legatum;
         const s = store.getState();
         const v = structuredClone(s.views![s.seat]);
-        v.rule_experiments = { ...v.rule_experiments, objectives_deck: true };
         v.eras = v.eras.filter(e => e.era === 2);
         v.eras[0].objectives = [
           { slot: 0, family: 'Fight', text: 'Veterans: earn 4 promotions in battle (a promotion is a level a unit gains from combat experience after this Age began)', target: 4, objective: { kind: 'Veterans', n: 4 } },
@@ -113,22 +112,23 @@ for (const size of SIZES) {
       await shot(page, 'objective-ledger', size);
     });
 
-    test('the research screen header: this era’s objectives and the next era’s preview', async ({ page }) => {
+    test('the research screen header: no Age before the first begins, then the Age in focus and when the next begins', async ({ page }) => {
       await start(page);
       await page.locator('.topbar .research-chip').click();
       const dialog = page.locator('dialog.tech-modal[open]');
       const header = dialog.getByTestId('research-objectives');
       await expect(header).toBeVisible();
-      await expect(header.getByTestId('research-objectives-current')).toContainText('no objective');
-      await expect(header.getByTestId('research-objectives-next')).toContainText('Next: Classical era');
-      await expect(header.getByTestId('era-objective')).toHaveCount(3);
+      await expect(header.getByTestId('research-objectives-current')).toContainText('No Age has begun');
+      await expect(header.getByTestId('research-objectives-next')).toHaveCount(0);
+      await expect(header.getByTestId('era-objective')).toHaveCount(0);
       await shot(page, 'research-ancient', size);
       await page.keyboard.press('Escape');
       await stage(page, { era: 2, scored: [], progress: { '2:0': [6, 9], '2:1': [3, 4], '2:2': [0, 1] } });
       await page.locator('.topbar .research-chip').click();
-      await expect(header.getByTestId('research-objectives-current')).toContainText('Score 1 VP this era');
+      // The fixture's rival began the Medieval Age, so it is the Age in focus.
+      await expect(header.getByTestId('research-objectives-current')).toContainText('Score 1 VP this Age');
       await expect(header.getByTestId('research-objectives-current').getByTestId('era-objective')).toHaveCount(3);
-      await expect(header.getByTestId('research-objectives-next')).toContainText('Next: Medieval era');
+      await expect(header.getByTestId('research-objectives-next')).toContainText('Next: Renaissance Age');
       await shot(page, 'research-classical', size);
     });
   });

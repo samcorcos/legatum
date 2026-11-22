@@ -1,6 +1,5 @@
-// Era objectives as the HUD, the era-up takeover, the research screen and the report show them: the three public
-// objectives of an era with the viewer's own live progress, and "how you win" (the VP sources that make up the
-// target). Everything is read from the viewer's PlayerView (`eras`, `objective_progress`, `research`) and the VP
+// World Age cards as the HUD, the era-up takeover, the research screen and the report show them: each Age's one
+// public card with the viewer's own live progress, and "how you win" (the VP sources that make up the target). Everything is read from the viewer's PlayerView (`eras`, `objective_progress`, `research`) and the VP
 // model; nothing here is a rule, and nothing suggests a route: it says what each objective asks and how far along you are.
 import type { VpModel } from './vpModel';
 import { factionObjectiveText } from './data';
@@ -10,7 +9,7 @@ import type { Faction, ObjectiveFamily, PlayerView } from './types';
 export interface ObjectiveLine {
   slot: number;
   family: ObjectiveFamily;
-  /** The core's rule text, "Add a Market to 6 more cities". */
+  /** The core's rule text, "Patrons: add a Library to 4 more cities". */
   text: string;
   current: number;
   target: number;
@@ -31,7 +30,7 @@ export interface ObjectiveLine {
   restartEras: number[];
 }
 
-/** `open`: entered, unscored. `scored`: you took its VP. `preview`: you have not entered it yet. */
+/** `open`: begun, unscored. `scored`: you took its VP. `preview`: no Age has begun yet. */
 type EraState = 'open' | 'scored' | 'preview';
 
 export interface EraObjectives {
@@ -52,34 +51,29 @@ interface EraEntry {
 }
 
 export interface EraHud {
-  deck: boolean;
-  /** The era the block leads with: the current era while it is open, its scored state, or (first era) Classical as a preview. */
+  /** The Age the block leads with: the newest Age you have not scored (else the newest), or Classical as a preview before any Age begins. */
   focus: EraObjectives;
-  /** After a scored era: the next era's objectives as a preview. */
+  /** Always null: the next Age stays hidden until it begins. */
   next: EraObjectives | null;
-  /** Earlier eras you entered and have not scored: they stay open for good. */
+  /** Earlier Ages you have not scored: they stay open for good. */
   older: { era: number; name: string }[];
-  /** World Ages: the oldest Age whose card you have not scored. It scores first at turn end (one Age per turn, oldest first), so the standing line follows it. */
+  /** The oldest Age whose card you have not scored. It scores first at turn end (one Age per turn, oldest first), so the standing line follows it. */
   oldest: EraObjectives | null;
   /** How far you are from entering the next era, whenever a preview is showing. */
   entry: EraEntry | null;
-  /** Your own era, by name ("Ancient"), and whether it has no objectives of its own (the first era). */
+  /** Your own era, by name ("Ancient"), and whether no Age has begun yet. */
   myEraName: string;
   noObjective: boolean;
 }
 
 export const FAMILY_LABEL: Record<ObjectiveFamily, string> = { Build: 'Build', Expand: 'Expand', Fight: 'Fight' };
 
-const myEraOf = (view: PlayerView) => view.players.find((p) => p.id === view.me)?.era ?? 1;
-
-/** The era's three objectives with your progress, or null when the era is absent. */
+/** The Age's card with your progress, or null when the Age has not begun. */
 export function eraObjectivesFor(view: PlayerView, era: number): EraObjectives | null {
   const ev = view.eras?.find((x) => x.era === era);
   if (!ev) return null;
   const progress = view.objective_progress ?? [];
   const mine = ev.scored_by.find((x) => x.player === view.me);
-  // A World Age is open to every empire from the turn it begins; in the original rules you score an era once you enter it.
-  const entered = !!view.rule_experiments?.objectives_deck || ev.entered_by.includes(view.me);
   const faction = view.players.find((p) => p.id === view.me)?.faction;
   const lines: ObjectiveLine[] = ev.objectives.map((o) => {
     const p = progress.find((x) => x.era === era && x.slot === o.slot);
@@ -98,51 +92,31 @@ export function eraObjectivesFor(view: PlayerView, era: number): EraObjectives |
       restartEras: accounting?.restart_eras ?? [],
     };
   });
-  const state: EraState = mine ? 'scored' : entered ? 'open' : 'preview';
+  // An Age is open to every empire from the turn it begins.
+  const state: EraState = mine ? 'scored' : 'open';
   const open = state === 'open' ? lines.filter((l) => l.target > 0 && l.current > 0) : [];
   const closest = open.sort((a, b) => b.shown / b.target - a.shown / a.target || a.target - b.target)[0] ?? null;
   return { era, name: ev.name, state, lines, closest };
 }
 
-/** What the HUD block shows for the viewer, or null when the game has no era objectives. */
-export function eraHud(view: PlayerView): EraHud | null {
-  const myEra = myEraOf(view);
-  const first = view.eras?.[0]?.era;
-  const deck = view.rule_experiments?.objectives_deck;
-  if (first === undefined && !deck) return null;
+/** What the HUD block shows for the viewer. */
+export function eraHud(view: PlayerView): EraHud {
   const known = view.research;
-  const entry: EraEntry = { eraName: known.era_name, known: known.era_known, total: known.era_total };
-  if (deck) return ageHud(view, entry, known.era_name);
-  const older = (view.eras ?? [])
-    .filter((e) => e.era < myEra && e.entered_by.includes(view.me) && !e.scored_by.some((x) => x.player === view.me))
-    .map((e) => ({ era: e.era, name: e.name }));
-  // The first era has no objective: lead with the next one as a preview.
-  if (myEra < (first ?? 2)) {
-    const focus = eraObjectivesFor(view, first ?? 2)!;
-    return { deck: false, focus: { ...focus, state: 'preview' }, next: null, older: [], oldest: null, entry, myEraName: known.era_name, noObjective: true };
-  }
-  const current = eraObjectivesFor(view, myEra);
-  if (!current) return null;
-  // An entered era you have scored: say so, then show the next era as a preview.
-  const next = current.state === 'scored' ? eraObjectivesFor(view, myEra + 1) : null;
-  return {
-    deck: false, focus: current, next: next && { ...next, state: next.state === 'open' ? 'open' : 'preview' }, older, oldest: null,
-    entry: next ? entry : null, myEraName: current.name, noObjective: false,
-  };
+  return ageHud(view, { eraName: known.era_name, known: known.era_known, total: known.era_total }, known.era_name);
 }
 
 /**
- * World Ages: every empire sees the Age the turn the first empire enters it, so the focus is the newest Age you have not scored
+ * Every empire sees the Age the turn the first empire enters it, so the focus is the newest Age you have not scored
  * (else the newest), earlier unscored Ages stay open, and the next Age is hidden until it begins.
  */
 function ageHud(view: PlayerView, entry: EraEntry, myEraName: string): EraHud {
   const revealed = [...(view.eras ?? [])].sort((a, b) => a.era - b.era);
-  if (!revealed.length) return { deck: true, focus: { era: 2, name: 'Classical', state: 'preview', lines: [], closest: null }, next: null, older: [], oldest: null, entry, myEraName, noObjective: true };
+  if (!revealed.length) return { focus: { era: 2, name: 'Classical', state: 'preview', lines: [], closest: null }, next: null, older: [], oldest: null, entry, myEraName, noObjective: true };
   const open = revealed.filter((e) => !e.scored_by.some((x) => x.player === view.me));
   const focusEra = (open[open.length - 1] ?? revealed[revealed.length - 1]).era;
   const focus = eraObjectivesFor(view, focusEra)!;
   const older = open.filter((e) => e.era !== focusEra).map((e) => ({ era: e.era, name: e.name }));
-  return { deck: true, focus, next: null, older, oldest: open[0] ? eraObjectivesFor(view, open[0].era) : null, entry, myEraName, noObjective: false };
+  return { focus, next: null, older, oldest: open[0] ? eraObjectivesFor(view, open[0].era) : null, entry, myEraName, noObjective: false };
 }
 
 /** The one line the compact "How you win" block keeps: the era in focus and its objective nearest done (null once the era is scored). */
@@ -157,7 +131,7 @@ export function glance(hud: EraHud, members = 1): Glance {
   const { focus } = hud;
   // The stake stays in the line: what the objective scores, and which era it is in.
   const vp = members > 1 ? '1 VP each' : '1 VP';
-  const tag = focus.state === 'preview' ? `Next: ${vp} in ${focus.name}` : focus.state === 'scored' ? focus.name : hud.deck ? `Age of ${focus.name} · ${vp}` : `${vp} in ${focus.name}`;
+  const tag = focus.state === 'preview' ? `Next: ${vp} in ${focus.name}` : focus.state === 'scored' ? focus.name : `Age of ${focus.name} · ${vp}`;
   if (focus.state === 'scored') return { tag, line: null };
   const line = focus.lines.reduce<ObjectiveLine | null>((best, l) => (!best || suggestionRank(l) > suggestionRank(best) ? l : best), null);
   return { tag, line };
@@ -179,18 +153,18 @@ export interface HowYouWin {
 
 export function howYouWin(model: VpModel): HowYouWin | null {
   const row = model.rows.find((r) => r.isMine);
-  if (!row || (!model.eras.length && !model.deck)) return null;
+  if (!row) return null;
   const members = row.members.length;
   const sum = (kind: 'era' | 'goal' | 'work') => row.tokens.filter((t) => t.source.kind === kind).reduce((a, t) => a + t.source.vp, 0);
   const goalVp = Math.max(0, ...row.members.map((m) => m.goal.vp));
-  const eraMax = (model.deck ? 6 : model.eras.length) * members;
+  const eraMax = 6 * members;
   const me = row.members.find((m) => m.isMe) ?? row.members[0];
   // An eliminated empire has no member left to show.
   if (!me) return null;
   return {
     deck: !!model.deck, faction: me.faction, ink: me.ink, vp: row.vp, target: row.target, members,
     parts: [
-      { key: 'eras', label: model.deck ? 'Ages' : 'Eras', title: `${model.deck ? 'Age cards: 1 VP for each Age you score' : 'Era objectives: 1 VP for each era you score'}, kept for good (${eraMax} available${members > 1 ? ' to your team' : ''})`, have: sum('era'), max: eraMax },
+      { key: 'eras', label: 'Ages', title: `World Ages: 1 VP for each Age card you complete, kept for good (${eraMax} available${members > 1 ? ' to your team' : ''})`, have: sum('era'), max: eraMax },
       { key: 'goal', label: 'Faction', title: `Your faction goal: ${goalVp} VP${members > 1 ? ' for each of you' : ''}`, have: sum('goal'), max: goalVp * members },
       { key: 'work', label: 'World wonder', title: 'Each held world wonder gives 2 VP. Each empire may complete one; conquest can hold more.', have: sum('work'), max: null },
     ],
@@ -200,8 +174,8 @@ export function howYouWin(model: VpModel): HowYouWin | null {
 /** "N more", "1 more" for a bar's caption. */
 
 /**
- * Report lines for objectives you have just come close to: one short of the target, or within a tenth of it, in an era you
- * have entered and not scored. Only the turn it first gets that close, so the line never repeats.
+ * Report lines for cards you have just come close to: one short of the target, or within a tenth of it, in an Age you
+ * have not scored. Only the turn it first gets that close, so the line never repeats.
  */
 export interface CloseObjective { era: EraObjectives; line: ObjectiveLine }
 export function closeObjectives(before: PlayerView | null, after: PlayerView): CloseObjective[] {

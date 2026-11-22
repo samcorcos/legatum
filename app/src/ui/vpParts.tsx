@@ -52,9 +52,9 @@ export function SourceMedal({ model, s, size = 32 }: { model: Pick<VpModel, 'emp
 }
 
 export const FAMILY_ICON: Record<ObjectiveFamily, string> = { Build: 'building-workshop', Expand: 'city', Fight: 'unit-soldier' };
-const COUNT_UNIT: Record<string, string> = { Cities: 'cities', Population: 'population', Territory: 'tiles', Techs: 'techs', Buildings: 'buildings', Captures: 'captures', CapturesFromAhead: 'qualifying captures', CapturesFromLeader: 'leader captures', CaptureCapital: 'capital captures', Kills: 'kills' };
+const COUNT_UNIT: Record<string, string> = { Cities: 'cities', Population: 'population', Territory: 'tiles', Buildings: 'buildings' };
 
-/** One of an era's three objectives: its family, the rule, your own progress, and who has scored the era with it. */
+/** An Age's card: its family, the rule, your own progress, and who has scored the Age with it. */
 function EraObjectiveRow({ model, o, scored, era }: { model: VpModel; o: EraObjective; scored: boolean; era: number }) {
   const view = useGame((s) => (s.views ? s.views[s.seat] : null));
   const by = o.scorers.map((id) => model.empires.find((e) => e.id === id)).filter((e): e is VpEmpire => !!e);
@@ -62,12 +62,12 @@ function EraObjectiveRow({ model, o, scored, era }: { model: VpModel; o: EraObje
   const mineDone = o.scorers.includes(model.me);
   const have = o.mine;
   // An Age you scored with another card has nothing left to count on this one: no meter.
-  const idle = model.deck && scored && !mineDone;
-  const rule = model.deck ? o.objective : undefined;
+  const idle = scored && !mineDone;
+  const rule = o.objective;
   const meter = have && !idle && (rule && cardMeter(rule, have.current, have.target)
     || { value: have.current, target: have.target, label: have.current >= have.target ? (scored ? 'Met' : 'Met: scores at turn end') : `${have.current} of ${have.target}` });
   const turn = mineDone && view ? scoredCard(view, era)?.turn : undefined;
-  const ownCount = !model.deck || !['Breach', 'HumbleTheMighty', 'Veterans'].includes(o.kind ?? '');
+  const ownCount = !['Breach', 'HumbleTheMighty', 'Veterans'].includes(o.kind ?? '');
   return <li className={`vh-obj fam-${o.family.toLowerCase()}${mineDone ? ' mine' : ''}${by.length && !mineDone ? ' theirs' : ''}${idle ? ' idle' : ''}`} data-objective={o.slot}>
     <span className="vh-obj-fam"><Icon name={FAMILY_ICON[o.family]} size={11} />{o.family}</span>
     <span className="vh-obj-text">{o.text}</span>
@@ -77,19 +77,19 @@ function EraObjectiveRow({ model, o, scored, era }: { model: VpModel; o: EraObje
     {have && !scored && (have.ready ?? have.current >= have.target) && (have.restartEras?.length ?? 0) > 0 &&
       <span className="vh-obj-restart" data-testid="era-count-restart">When this scores, your {have.restartEras!.map((e) => eraName(e - 1)).join(' and ')} progress goes back to zero.</span>}
     <span className="vh-obj-by">
-      {by.length ? by.map((e) => <Marker key={e.id} e={e} size={15} title={`${e.isMe ? 'You' : e.name} scored this ${model.deck ? 'Age' : 'era'} with it`} />) : <Socket size={15} />}
+      {by.length ? by.map((e) => <Marker key={e.id} e={e} size={15} title={`${e.isMe ? 'You' : e.name} scored this Age with it`} />) : <Socket size={15} />}
       <small>{mineDone && turn !== undefined ? `Scored on turn ${turn} with this` : by.length ? 'Scored with this' : 'Nobody yet'}</small>
     </span>
   </li>;
 }
 
-/** An era's objectives as a list (one card per Age in a World Age game, shown full width); the card and the sheet both render it. */
+/** An Age's card as a list (one card, shown full width); the card and the sheet both render it. */
 export function EraObjectives({ model, s }: { model: VpModel; s: Source }) {
   const e = s.era;
   if (!e) return null;
-  return <ul className={`vh-objs${model.deck ? ' single' : ''}`} aria-label={`${s.name}: objectives`}>
+  return <ul className="vh-objs single" aria-label={`${s.name}: card`}>
     {e.objectives.map((o) => <EraObjectiveRow key={o.slot} model={model} o={o} scored={e.myScored} era={e.era} />)}
-    {model.deck && e.era === Math.max(...model.eras.map((x) => x.era?.era ?? 0)) && e.era < ERA_COUNT && <li className="vh-obj-next">The next Age begins when any empire enters the {eraName(e.era)} era; its card stays hidden until then.</li>}
+    {e.era === Math.max(...model.eras.map((x) => x.era?.era ?? 0)) && e.era < ERA_COUNT && <li className="vh-obj-next">The next Age begins when any empire enters the {eraName(e.era)} era; its card stays hidden until then.</li>}
   </ul>;
 }
 
@@ -168,7 +168,7 @@ export function SourceCard({ model, s, compact, terms = true, as: As = 'article'
     <p className="vh-rule">{s.rule}</p>
     {terms && <p className="vh-terms">{s.terms}</p>}
     {s.kind === 'era' && <EraObjectives model={model} s={s} />}
-    {s.kind === 'era' && s.era && <p className="vh-private">{s.era.myScored ? `You have scored this ${model.deck ? 'Age' : 'era'}.` : model.deck ? 'The card never expires.' : s.era.myEntered ? 'You have entered it.' : `Not entered yet: finish the ${eraName(s.era.era - 2)} era's last technology.`}</p>}
+    {s.kind === 'era' && s.era && <p className="vh-private">{s.era.myScored ? 'You have scored this Age.' : 'Every empire sees this card the turn the first empire enters the era, and it never expires.'}</p>}
     {(s.kind === 'work' || s.kind === 'era') && <ControlRow model={model} s={s} size={sockets} />}
     {s.kind === 'work' && <WorkLines model={model} s={s} />}
     {s.kind === 'goal' && s.progress && <Meter p={s.progress} color={goalOwner?.ink} />}

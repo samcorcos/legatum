@@ -1,4 +1,4 @@
-import { RESOURCE_INFO, fixClause, idleCountText, idleEntries, withArticle } from './resources';
+import { RESOURCE_INFO, fixClause, idleCountText, idleEntries, withArticle, withThe } from './resources';
 import { WONDER_INFO, wonderBonusSentence } from './wonders';
 import { diplomaticTeams, offerLabel } from './diplomacy';
 import { ALLIANCE_SHARES, allianceTerms } from './treaties';
@@ -174,7 +174,7 @@ export function contextFromViews(before: PlayerView | null, after: PlayerView): 
     me: after.me,
     playerFaction: (id) => players.get(id)?.faction,
     eraName: (era) => after.eras?.find((x) => x.era === era)?.name,
-    ageCard: after.rule_experiments?.objectives_deck ? (era, slot) => after.eras?.find((x) => x.era === era)?.objectives.find((o) => o.slot === slot)?.objective : undefined,
+    ageCard: (era, slot) => after.eras?.find((x) => x.era === era)?.objectives.find((o) => o.slot === slot)?.objective,
     techUnlocks: (tech) => techCardUnlocks(after.research, tech, players.get(after.me)?.faction ?? 'India').filter((u) => u.kind !== 'Effect').map(techUnlockSummary),
     team,
     teamId: after.team,
@@ -1193,15 +1193,29 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
         details: [wonderBonusSentence(e.wonder)],
       });
     case 'CapitalTaken':
-      return line('victory', `${who(ctx, e.captor)} captured the original capital ${e.name}: +1 VP, kept for good`, {
+      return line('victory', `${who(ctx, e.captor)} took the original capital ${e.name}: +1 VP while holding it`, {
         at: ctx.cityPos(e.capital), players: [e.captor], weight: 2, tone: toneFor(e.captor),
+      });
+    case 'CapitalSacked':
+      return line('victory', `${who(ctx, e.captor)} sacked the original capital ${e.name}: +1 VP, kept for good`, {
+        players: [e.captor], weight: 2, tone: e.captor === ctx.me ? 'good' : 'neutral',
+      });
+    case 'GoldGiven':
+      return line('economy', e.from === ctx.me
+        ? `You gave ${withThe(who(ctx, e.to))} ${e.amount} Gold`
+        : e.to === ctx.me ? `${cap(withThe(who(ctx, e.from)))} gave you ${e.amount} Gold` : `${cap(withThe(who(ctx, e.from)))} gave ${withThe(who(ctx, e.to))} ${e.amount} Gold`, {
+        players: [e.from, e.to], weight: 2, tone: e.to === ctx.me ? 'good' : 'neutral',
+      });
+    case 'CapitalLost':
+      return line('victory', `${who(ctx, e.player)} no longer ${e.player === ctx.me ? 'hold' : 'holds'} the original capital ${e.name}: −1 VP`, {
+        at: ctx.cityPos(e.capital), players: [e.player], weight: 2, tone: e.player === ctx.me ? 'bad' : 'neutral',
       });
     case 'EraEntered': {
       // Public, 1-based era (2 Classical .. 8 Future), sent the turn the previous era's last technology landed: every
-      // player sees it, the first empire into an era is a notable line for all. In a VP v2 game the era also posts its objectives.
+      // player sees it, the first empire into an era is a notable line for all; the Age it begins has its own line (`AgeBegan`).
       const named = ctx.eraName?.(e.era);
       const era = named ?? eraName(e.era - 1);
-      const text = `${e.player === ctx.me ? 'You' : who(ctx, e.player)} entered the ${era} era${e.first ? ' first' : ''}${named && !ctx.ageCard ? `: its three objectives are open to ${e.player === ctx.me ? 'you' : 'them'}` : ''}`;
+      const text = `${e.player === ctx.me ? 'You' : who(ctx, e.player)} entered the ${era} era${e.first ? ' first' : ''}`;
       return line(named ? 'victory' : 'science', text, {
         players: [e.player],
         weight: e.first || mine(e.player) ? 2 : 1,
@@ -1222,15 +1236,8 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
     case 'EraObjectiveScored': {
       const name = ctx.eraName?.(e.era);
       const card = ctx.ageCard?.(e.era, e.slot);
-      if (card && name) {
-        return line('victory', `${who(ctx, e.player)} scored the ${name} Age with ${cardName(e.objective)}: +1 VP`, {
-          players: [e.player], weight: 2, tone: toneFor(e.player),
-        });
-      }
-      return line('victory', `${who(ctx, e.player)} scored ${name ? `the ${name} era` : `era ${e.era}`} (+1 VP): ${e.objective}`, {
-        players: [e.player],
-        weight: 2,
-        tone: toneFor(e.player),
+      return line('victory', `${who(ctx, e.player)} scored ${name ? `the ${name} Age` : `Age ${e.era}`} with ${card ? cardName(e.objective) : e.objective}: +1 VP`, {
+        players: [e.player], weight: 2, tone: toneFor(e.player),
       });
     }
     case 'GreatWorkCompleted':
@@ -1655,14 +1662,14 @@ export function releasedGarrisonLines(before: PlayerView | null, after: PlayerVi
 }
 
 /**
- * Era objectives you have just come close to (one short of the target, or within a tenth of it), in an era you have entered and
- * not scored: "Close to the Classical era's VP: Have a Market in 6 of your cities (5 of 6)". Only the turn it first gets that close.
+ * Age cards you have just come close to (one short of the target, or within a tenth of it), in an Age you have not scored:
+ * "Close to the Classical Age's VP: Gain 4 cities (3 of 4, 1 to go)". Only the turn it first gets that close.
  */
 export function objectiveCloseLines(before: PlayerView | null, after: PlayerView): ReportLine[] {
   return closeObjectives(before, after).map(({ era, line: o }) => line('victory',
-    `Close to the ${era.name} era’s VP: ${o.text} (${o.current} of ${o.target}, ${o.remaining} to go)`, {
+    `Close to the ${era.name} Age’s VP: ${o.text} (${o.current} of ${o.target}, ${o.remaining} to go)`, {
       players: [after.me], weight: 2, tone: 'good',
-      details: [`Meet any one of the ${era.name} era’s three objectives to score its 1 VP, kept for good.`],
+      details: [`Meet the ${era.name} Age’s card to score its 1 VP, kept for good.`],
     }));
 }
 

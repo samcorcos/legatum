@@ -21,9 +21,8 @@ function useEraNotices(): EraNoticeLine[] {
   return useMemo(() => {
     if (!report || !view) return [];
     const team = new Set(view.players.filter((p) => p.team === view.team).map((p) => p.id));
-    // In a World Age game the first empire into an era is announced by the Age banner, which is this notice for it.
-    const ages = !!view.rule_experiments?.objectives_deck;
-    return (report.events[seat] ?? []).flatMap((e, i) => e.type === 'EraEntered' && !team.has(e.player) && !(ages && e.first)
+    // The first empire into an era is announced by the Age banner, which is this notice for it.
+    return (report.events[seat] ?? []).flatMap((e, i) => e.type === 'EraEntered' && !team.has(e.player) && !e.first
       ? [{ key: `${report.turn}:${i}`, era: e.era, first: e.first,
         text: `${empireOfPlayer(view, e.player)} entered the ${eraName(e.era - 1)} era${e.first ? ' first' : ''}` }] : []);
     // The first empire into an era leads; the rest follow.

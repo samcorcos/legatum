@@ -396,8 +396,30 @@ pub enum Event {
         from: PlayerId,
         to: PlayerId,
     },
-    /// Public, permanent VP awarded on this empire's first capture of this original capital.
+    /// Public: this empire now holds a rival's original capital and scores its 1 VP while it
+    /// holds it (reported at the end of the turn it changed hands, like a world wonder).
     CapitalTaken {
+        captor: PlayerId,
+        capital: CityId,
+        name: String,
+    },
+    /// Public: this empire no longer holds a rival's original capital it scored (retaken by
+    /// anyone, or razed), so its 1 VP is gone the same turn.
+    CapitalLost {
+        player: PlayerId,
+        capital: CityId,
+        name: String,
+    },
+    /// Team only: Gold one empire gave a teammate (`Order::GiveGold`), after this turn's
+    /// purchases. `amount` is what moved, capped at the Gold the giver had left.
+    GoldGiven {
+        from: PlayerId,
+        to: PlayerId,
+        amount: i32,
+    },
+    /// Public: a Celtic empire burned a rival's original capital in a sack and keeps its 1 VP
+    /// for the rest of the game.
+    CapitalSacked {
         captor: PlayerId,
         capital: CityId,
         name: String,
@@ -567,15 +589,15 @@ pub enum Event {
         building: BuildingKind,
         vp: u32,
     },
-    /// VP v2: an empire meets one of an era's public objectives and earns that era's 1 permanent
-    /// VP. `slot` is the objective's family index (Build, Expand, Fight). Public.
+    /// An empire completes an Age's card and earns that Age's 1 permanent VP. `slot` is the
+    /// card's slot in its Age (always 0). Public.
     EraObjectiveScored {
         player: PlayerId,
         era: u8,
         slot: u8,
         objective: String,
     },
-    /// World Ages (`objectives_deck`): an Age began, so its card is open to every empire.
+    /// World Ages: an Age began, so its card is open to every empire.
     /// `era` is 1-based like `EraEntered`; `first` is the empire that entered the era first (it may
     /// be you). Emitted once per Age, the turn `objectives::update` opens it. Public.
     AgeBegan {
