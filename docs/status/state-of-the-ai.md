@@ -1,3 +1,5 @@
+> **Dated 2026-11-22:** this page predates the current rules (it was written on `RULES_VERSION` 14) and its numbers are stale. AI strength is now measured by the hill-climb suite (`tools/hill-climb/`): two engine builds compared on recorded decision points with paired salts. Read the content below as history.
+
 # State of the AI (index)
 
 - **Designer vs Hard, last 10 finished games:** 10/10 (100% as of 2026-11-09; source: `~/LegatumData/archive/index.jsonl`; run `python3 tools/decision-audit/designer_win_rate.py --write` to refresh).
@@ -75,7 +77,7 @@ Defaults on in master. Effects are the measured ones in the cited place.
 | Aztec Spearmen rush as AI plan; Celts light garrisons and soft targets | -1.32 pp; neutral | [aztecs-playbook-1105](sim-results/aztecs-playbook-1105/), [celts-playbook-1105](sim-results/celts-playbook-1105/) |
 | `start-lean` for weak factions | lifted none (6,000 games per variant) | progress 11-02 16:10 |
 | Era-rule bundle 10-24 to 10-26 | all-seats gate failed; revived in pieces 10-31 | [ledger](sim-results/ai-quality/ledger.jsonl) |
-| Strategy Lab r1 to r6 | no strategy promoted | `astra/strategy-lab-r5`, [triage](branch-triage-2026-11-07.md) |
+| Strategy Lab r1 to r6 | no strategy promoted | `astra/strategy-lab-r5`, [triage](../archive/branch-triage-2026-11-07.md) |
 | Tactical search at city attacks (`search/tactics.rs` option `x`, 2026-10-06) | deviated from Hard in 36% of 4,666 decisions but gained only +0.4 pp [−1.6, +2.3] over 512 games: its four candidate moves were the cap. Revived as Training mode with a wider move generator and distillation (`docs/design/training-mode/fable.md`) | learnings 2026-10-06 |
 | Search AI, Laya learned model | search is capped by its candidate set and too slow (2.3 to 5.0 s p95); Laya removed 10-06 | learnings 2026-10-06; [plans/ai-war.md](../plans/ai-war.md) |
 | `conquest_alarm` 100 | public conquest response raised captures +0.70 a game but did not contain the conqueror; scenario objectives 0/50, human-seat gate +0.39 pp (CI -1.17 to +1.95); gene left at 0 | [report](sim-results/ai-quality/conquest-alarm-1107/README.md); ideas #48; tag `archive/astra/conquest-alarm` |
@@ -129,7 +131,7 @@ STALE = last ran before a rules change that affects what it measures. `RULES_VER
 | Where did his decisions beat Hard's? (decision diff) | `tools/decision-audit/designer-diff.sh SAVE TAG REPORT`, `designer-diff-v2.sh` | `docs/playtests/diffs/` | 11-06, `06366dcc7` (Mongols); 23 games | current (replays on each game's own engine) |
 | Takeover curve and window diff | coach what-if runner (`~/LegatumRuns/coach-tools/`), `tools/decision-audit/` (`*-window10.md`) | `docs/playtests/diffs/*-window10.md`, coach reviews | window diffs 11-04 (`caa989755`) | current per game; absolute levels need the dice-seed fix (coach skill, 8.9.7) |
 | Why did Hard choose X on that turn? (decision tracer) | `legatum-sim --decision-trace` | traces | `a85e24b67`, 11-06, branch `astra/decision-trace`; `claude/land-decision-trace` is landing it | not on master |
-| Can an LLM (Luna via Codex) choose, propose or set posture for Hard's operations? | `python3 tools/llm-teacher/teacher.py run` / `score` (`crates/sim/examples/teacher_render.rs` renders the prompt) | `docs/sim-results/ai-quality/llm-teacher-1110/README.md`, `calls.jsonl` | 11-07, branch `claude/llm-teacher` | current; chooser killed (22% consistency), proposer and strategist open; Haiku not run (`claude -p` logged out) |
+| Can an LLM (Luna via Codex) choose, propose or set posture for Hard's operations? | removed 2026-11-22 (the harness lived in `tools/llm-teacher/`, now only in git history) | `docs/sim-results/ai-quality/llm-teacher-1110/README.md`, `calls.jsonl` | 11-07, branch `claude/llm-teacher` | current; chooser killed (22% consistency), proposer and strategist open; Haiku not run (`claude -p` logged out) |
 | One-on-one combat results by era | `cargo run -p legatum-sim --example era_duels` | learnings 10-18 | file last changed 11-01 (`d1f699f4e`); no dated run | STALE (era step table, mounted rebalance) |
 | Does deeper search beat Hard? (headroom, deep search) | `crates/sim/examples/deep_search.rs` | `docs/sim-results/ai-quality/headroom-decomposition.md` | 10-23, on 8.8 code | STALE |
 | Blunders and exploits in AI games | `crates/sim/examples/blunder_audit.rs` | `docs/sim-results/ai-quality/blunder-audit.md`, `exploits.md` | 10-23 | STALE |

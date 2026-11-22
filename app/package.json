@@ -33,6 +33,7 @@
     "@vitejs/plugin-react": "^6.1.1",
     "fake-indexeddb": "^6.2.5",
     "happy-dom": "^21.0.4",
+    "sharp": "^0.35.5",
     "typescript": "5.9",
     "vite": "^8.3.4",
     "vitest": "^5.0.5"

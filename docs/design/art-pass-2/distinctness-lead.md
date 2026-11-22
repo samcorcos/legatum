@@ -4,7 +4,7 @@
 
 Thirteen failures are figure **gist-only**: their colour/appearance scores are all below the 0.60 bar, but upright-body gist exceeds 0.77. Two are unlock paintings crossing the 0.66 colour bar. No new SVG fails. This pass does not mirror or repose a figure to evade the score.
 
-[Full generated report](distinctness.md). Review the failing pairs, not just the default top-score sheet (which mostly shows intentionally shared class roundels): [pairs 1–5](distinctness-review-01.png), [6–10](distinctness-review-02.png), [11–15](distinctness-review-03.png). Each shows native colour, native greyscale, and a nearest-neighbour enlargement; these local Pillow previews are visual evidence, while scores came from fresh Chromium renders.
+[Full generated report](distinctness.md). Review the failing pairs, not just the default top-score sheet (which mostly shows intentionally shared class roundels): [pairs 1–5](distinctness-review-01.png), 6–10 (archived outside the repository), 11–15 (archived outside the repository). Each shows native colour, native greyscale, and a nearest-neighbour enlargement; these local Pillow previews are visual evidence, while scores came from fresh Chromium renders.
 
 `distinctness-proposed-entries.json` contains the exact `accepted`-entry shape the lead can add, with one reason per pair. They are **proposals, not applied approvals**. The red Arquebusier/Reisläufer pair and brown Barbarian Crossbowman/Settler pair deserve particular in-map confirmation; if their equipment cannot be read, keep those entries out and improve real kit/contrast rather than change stance. Other proposed pairs have visibly distinct subjects/props despite a shared occupied box.
 

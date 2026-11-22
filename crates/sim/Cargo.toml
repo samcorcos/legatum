@@ -46,7 +46,3 @@ test = true
 [[example]]
 name = "settler_scenarios"
 test = true
-
-[[example]]
-name = "teacher_render"
-test = true

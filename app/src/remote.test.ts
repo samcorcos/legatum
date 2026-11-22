@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { RemoteClient, fetchStatus, hostGame } from './remote';
+import { MSG_STILL_TOO_FAST, MSG_TOO_FAST, MSG_TOO_MANY_WINDOWS, RemoteClient, fetchStatus, hostGame } from './remote';
 import { FakeSocket } from './test/fakeSocket';
 import type { PlayerView } from './types';
 
@@ -575,5 +575,70 @@ describe('online game status', () => {
     await expect(hostGame({ seed: '7', width: 48, height: 32, players: [], turn_limit: null }, '', res(false, 'loopback only'))).rejects.toThrow(
       'loopback only',
     );
+  });
+
+  describe('relay close codes', () => {
+    beforeEach(() => vi.useFakeTimers());
+    afterEach(() => vi.useRealTimers());
+    const joined = () => {
+      const t = setup();
+      t.client.connect();
+      t.sockets[0].open();
+      t.sockets[0].push({ type: 'welcome', seat: 1, game_id: 'g1', orders: [] });
+      t.sockets[0].push({ type: 'view', view: view(1) });
+      return t;
+    };
+
+    it('stops and says why on 1013 for too many connections from this address', () => {
+      const { client, sockets, log } = joined();
+      sockets[0].drop(1013, 'too many connections from one address');
+      expect(log).toContain(`error ${MSG_TOO_MANY_WINDOWS}`);
+      expect(client.state).toBe('closed');
+      vi.advanceTimersByTime(60_000);
+      expect(sockets).toHaveLength(1);
+    });
+
+    it('keeps reconnecting on 1013 for a host that is away', () => {
+      const { client, sockets } = joined();
+      sockets[0].drop(1013, 'host not connected');
+      expect(client.state).toBe('reconnecting');
+      vi.advanceTimersByTime(500);
+      expect(sockets).toHaveLength(2);
+    });
+
+    it('pauses 30 seconds after 4029, retries once, then stops', () => {
+      const { client, sockets, log } = joined();
+      sockets[0].drop(4029, 'too many messages');
+      expect(log).toContain(`error ${MSG_TOO_FAST}`);
+      vi.advanceTimersByTime(29_999);
+      expect(sockets).toHaveLength(1);
+      vi.advanceTimersByTime(1);
+      expect(sockets).toHaveLength(2);
+      sockets[1].open();
+      sockets[1].drop(4029, 'too many messages');
+      expect(log).toContain(`error ${MSG_STILL_TOO_FAST}`);
+      expect(client.state).toBe('closed');
+      vi.advanceTimersByTime(120_000);
+      expect(sockets).toHaveLength(2);
+    });
+
+    it('allows a new pause after the game has been flowing again', () => {
+      const { sockets } = joined();
+      sockets[0].drop(4029, 'too many messages');
+      vi.advanceTimersByTime(30_000);
+      sockets[1].open();
+      sockets[1].push({ type: 'welcome', seat: 1, game_id: 'g1', orders: [] });
+      sockets[1].push({ type: 'view', view: view(2) });
+      sockets[1].drop(4029, 'too many messages');
+      vi.advanceTimersByTime(30_000);
+      expect(sockets).toHaveLength(3);
+    });
+
+    it('reconnects as usual on other codes', () => {
+      const { sockets } = joined();
+      sockets[0].drop(1006);
+      vi.advanceTimersByTime(500);
+      expect(sockets).toHaveLength(2);
+    });
   });
 });

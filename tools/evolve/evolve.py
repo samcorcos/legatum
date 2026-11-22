@@ -4,8 +4,8 @@
     python3 tools/evolve/evolve.py [--hours 7] [--population 6] ...   # new run
     python3 tools/evolve/evolve.py --resume docs/sim-results/evolve-<run-id>
 
-See docs/ai-evolution.md for the design, the overnight command and the budget, and
-docs/ai-evolution-log.md for the run log this writes. The genome combines faction personalities
+See docs/archive/ai-evolution.md for the design, the overnight command and the budget, and
+docs/archive/ai-evolution-log.md for the run log this writes. The genome combines faction personalities
 with bounded tactical and macro decisions (pillar 6); fitness is the Proxy benchmark plus league games, with
 guardrails for faction balance (pillar 8) and strategic diversity (pillar 10).
 """

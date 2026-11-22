@@ -1,7 +1,7 @@
 // Two unit kinds must never share one piece of art (UI review of train-1101d: the Hunter-Killer drew as the
 // Infantry's grenade thrower, and the Stealth Fighter and Stealth Bomber as the Modern Fighter and Bomber).
 // A pair that really is one unit under two names goes in SHARED with its reason; the list starts empty.
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { FACTIONS, UNIT_STATS } from './data';
 import { unitArtSlug } from './unitArt';
@@ -9,6 +9,9 @@ import type { Faction, UnitKind } from './types';
 
 const KINDS = Object.keys(UNIT_STATS) as UnitKind[];
 const dir = new URL('./assets/units/', import.meta.url).pathname;
+// The `-source.png` masters live outside git: a slug's source counts as present when it is in the tree or listed in the
+// art-sources manifest (tools/art/sources-manifest.json, fetched with tools/art/fetch-sources.py).
+const archived = new Set<string>((JSON.parse(readFileSync(new URL('../../tools/art/sources-manifest.json', import.meta.url), 'utf8')) as { files: { path: string }[] }).files.map((f) => f.path));
 
 /** Pairs of kinds allowed to share a slug, as "KindA+KindB" (sorted) with the reason. */
 const SHARED: Record<string, string> = {};
@@ -44,7 +47,7 @@ describe('unit art is one-to-one with unit kinds', () => {
     for (const faction of [undefined, ...FACTIONS] as (Faction | undefined)[]) for (const kind of KINDS) slugs.add(unitArtSlug(kind, faction));
     const missing: string[] = [];
     for (const slug of slugs) for (const file of ['256.png', '64.png', '48.png', 'card.png', 'panel.png', 'source.png', 'roundel.svg']) {
-      if (!existsSync(`${dir}${slug}-${file}`)) missing.push(`${slug}-${file}`);
+      if (!existsSync(`${dir}${slug}-${file}`) && !archived.has(`app/src/assets/units/${slug}-${file}`)) missing.push(`${slug}-${file}`);
     }
     expect(missing).toEqual([]);
   });

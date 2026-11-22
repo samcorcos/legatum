@@ -73,3 +73,7 @@
   .crash-card h1 { font-size: 28px; }
   .crash-text { margin: 10px auto 16px; }
 }
+/* With a third button the card widens, and Copy error details sits under the row, so no button strands alone. */
+.crash-card.wide { width: min(640px, 100%); padding-left: 24px; padding-right: 24px; }
+.crash-more { margin: 12px 0 0; }
+.crash-more .btn.quiet { min-height: 32px; padding: 4px 12px; }

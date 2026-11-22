@@ -1,4 +1,4 @@
-// Evolution panel data. Reads only the run log (docs/ai-evolution-log.md) through tools/film's
+// Evolution panel data. Reads only the run log (docs/archive/ai-evolution-log.md) through tools/film's
 // reader. Everything here runs in the dashboard's 15-second background refresh; requests only
 // read the cached result. Showcase and evidence games are exported to the replay viewer in the
 // same background pass (a few per cycle), so "watch" links open the existing Replays section.

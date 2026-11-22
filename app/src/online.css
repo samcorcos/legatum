@@ -136,6 +136,12 @@ div.seat {
   letter-spacing: 0;
   text-transform: none;
 }
+.host-name .host-name-note {
+  font: 400 12px/11px var(--sans);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink-2);
+}
 .title-actions .btn-sub .spinner {
   display: inline-block;
   vertical-align: middle;

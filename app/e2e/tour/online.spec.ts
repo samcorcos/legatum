@@ -56,6 +56,108 @@ for (const size of SIZES) testWithFailingRequests.describe(`online screens ${siz
     await shot(bad, size, '23-online-menu-failed');
   });
 
+  // Every refusal the relay can give to a new game, as the Multiplayer menu shows it. The relay's real answers are
+  // staged, with Retry-After readable only where the relay exposes it (a cross-origin page sees no other header).
+  const REFUSALS = [
+    { id: '24a-refused-too-fast', status: 429, error: 'You are opening games too quickly. Try again in a few minutes.', headers: { 'retry-after': '300', 'access-control-expose-headers': 'Retry-After' }, sub: 'Try again in 5 minutes', retry: false },
+    { id: '24b-refused-too-many', status: 429, error: 'You already have 2 games open. Close one before hosting another.', headers: {}, sub: 'Close one of your games first', retry: false },
+    { id: '24c-refused-full', status: 503, error: 'This lobby is full. Try again in a few minutes.', headers: {}, sub: 'Try again', retry: true },
+    { id: '24d-refused-closed', status: 503, error: 'Hosting new games is paused. Try again later.', headers: {}, sub: 'Paused for now', retry: false },
+  ] as const;
+  const refuse = (page: Page, r: { status: number; error: string; headers: Record<string, string> }) =>
+    page.route(`${E2E_RELAY}/rooms`, (route: Route) => route.request().method() === 'OPTIONS'
+      ? route.fulfill({ status: 204, headers: { ...cors, 'access-control-allow-headers': 'content-type', 'access-control-allow-methods': 'POST, OPTIONS' } })
+      : route.fulfill({ status: r.status, contentType: 'application/json', headers: { ...cors, ...r.headers }, body: JSON.stringify({ error: r.error }) }));
+  /** The menu stays inside the window and above the title footer, whatever lines are showing. */
+  const expectMenuAboveFooter = async (page: Page, what: string) => {
+    const box = await page.evaluate(() => ({
+      menu: document.querySelector('.title-menu')!.getBoundingClientRect().bottom,
+      foot: document.querySelector('.title-foot')!.getBoundingClientRect().top,
+      height: window.innerHeight,
+    }));
+    console.log(`[tour] ${what}: menu bottom ${Math.round(box.menu)}, footer top ${Math.round(box.foot)}, window ${box.height}`);
+    expect(box.menu, `${what}: the menu ends above the title footer`).toBeLessThanOrEqual(box.foot);
+    expect(box.menu, `${what}: the menu is inside the window`).toBeLessThanOrEqual(box.height);
+  };
+
+  testWithFailingRequests('multiplayer menu: five host refusals, and the worst case with a game open', async ({ page }) => {
+    await noHints(page);
+    for (const r of REFUSALS) {
+      const p = await page.context().newPage();
+      await refuse(p, r);
+      await multiplayer(p);
+      await p.getByRole('button', { name: /^Host Game/ }).click();
+      await expect(p.locator('.title-notice')).toHaveText(r.error.includes('2 games') ? 'Your internet connection already has 2 games open. Close one before hosting another.' : /.+/);
+      expect(await p.getByRole('button', { name: /^Host Game/ }).evaluate((b) => b.classList.contains('primary'))).toBe(r.retry);
+      expect(await p.getByRole('button', { name: /^Join Game/ }).evaluate((b) => b.classList.contains('primary'))).toBe(!r.retry);
+      await expect(p.getByRole('button', { name: /^Host Game/ })).toContainText(r.sub);
+      await p.mouse.move(5, 5);
+      await expectMenuAboveFooter(p, r.id);
+      await shot(p, size, r.id);
+    }
+    // The relay is unreachable: Try again is true, and Host Game stays the primary.
+    const off = await page.context().newPage();
+    await off.route(`${E2E_RELAY}/rooms`, (r: Route) => r.abort());
+    await multiplayer(off);
+    await off.getByRole('button', { name: /^Host Game/ }).click();
+    await expect(off.getByRole('button', { name: /^Host Game/ })).toContainText('Try again');
+    await off.mouse.move(5, 5);
+    await shot(off, size, '24e-refused-offline');
+
+    // Worst case: a game is open (Resume row), a two-line notice, and the name note, all at once.
+    const worst = await page.context().newPage();
+    await refuse(worst, REFUSALS[0]);
+    await multiplayer(worst);
+    await worst.evaluate(() => { (window as unknown as GameWindow).legatum.setState({ views: [{ turn: 14 }] as never }); });
+    await worst.getByLabel('Your name in the game list').fill('Ada \u{1F600}');
+    await worst.getByRole('button', { name: /^Host Game/ }).click();
+    await expect(worst.locator('.title-notice')).toBeVisible();
+    await worst.mouse.move(5, 5);
+    await expect(worst.locator('.host-name .host-name-note')).toHaveText('Shown in the game list as “Ada”.');
+    await expectMenuAboveFooter(worst, '25a worst case (Resume + notice + name note)');
+    await shot(worst, size, '25a-menu-worst-case');
+    await worst.getByLabel('Your name in the game list').fill('\u{1F600}\u{1F600}');
+    await expect(worst.locator('.host-name .host-name-note')).toHaveText('The game list will show “Game” and four characters.');
+    await expectMenuAboveFooter(worst, '25b worst case, nothing showable');
+    await shot(worst, size, '25b-menu-name-note-empty');
+
+    // The name note with a game open and no other message.
+    const note = await page.context().newPage();
+    await multiplayer(note);
+    await note.evaluate(() => { (window as unknown as GameWindow).legatum.setState({ views: [{ turn: 14 }] as never }); });
+    await note.getByLabel('Your name in the game list').fill('Ada \u{1F600} of Rome');
+    await note.mouse.move(5, 5);
+    await expectMenuAboveFooter(note, '25c name note, game open');
+    await shot(note, size, '25c-menu-name-note-game-open');
+  });
+
+  // The two ways a guest's connection can be stopped, on the Join screen with six seats: the notice sits under the
+  // header at scroll 0, never below the seats.
+  for (const [id, message] of [
+    ['26a-join-too-many', 'Too many people on your internet connection have joined this game. Close any extra windows, then pick your seat again.'],
+    ['26b-join-still-too-fast', 'You are still sending too much, too fast. Wait a minute, then pick your seat again.'],
+  ] as const) testWithFailingRequests(`join screen, six seats: ${id}`, async ({ page }) => {
+    await noHints(page);
+    await page.goto('/');
+    await page.evaluate((error) => {
+      const factions = ['Athens', 'Byzantium', 'Celts', 'Mongols', 'India', 'Germany'] as const;
+      const seats = factions.map((faction, i) => ({ seat: i, player: i, name: `Player ${i + 1}`, faction, connected: i === 1, reserved: false, ready: false, orders: 0 }));
+      (window as unknown as GameWindow).legatum.setState({
+        screen: 'join', error,
+        net: { status: { mode: 'server', has_game: true, turn: 1, seats, is_local: false }, mySeat: null, seats, conn: 'closed' },
+      } as never);
+    }, message);
+    await expect(page.getByRole('heading', { name: 'Choose your seat' })).toBeVisible();
+    await page.mouse.move(5, 5);
+    const alert = page.getByRole('alert').filter({ hasText: message });
+    await expect(alert).toBeVisible();
+    const box = (await alert.boundingBox())!;
+    const first = (await page.locator('.join-seat').first().boundingBox())!;
+    expect(box.y + box.height, 'the notice is in the window at scroll 0').toBeLessThanOrEqual(size.height);
+    expect(box.y + box.height, 'the notice sits above the seats').toBeLessThanOrEqual(first.y);
+    await shot(page, size, id);
+  });
+
   testWithFailingRequests('game list: loading, empty, error, with rooms', async ({ page }) => {
     let rooms: unknown[] = [];
     let mode: 'ok' | 'fail' | 'hang' = 'hang';
