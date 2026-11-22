@@ -17,7 +17,7 @@ export function PingControl() {
   return (
     <div className="ping-row" data-testid="ping-control">
       <button type="button" className={`btn ping-btn${mode ? ' on' : ''}`} aria-pressed={mode} data-testid="ping-button"
-        title="Mark a tile for your teammate: click Ping, then click the map. Shortcut P. Esc cancels."
+        title="Mark a tile for your teammate: click Ping, then the map. Shortcut P; Esc cancels."
         onClick={() => set(!mode)}>
         {mode ? 'Click a tile' : 'Ping'}
       </button>

@@ -1016,6 +1016,8 @@ export const useGame = create<State>((set, get) => {
         if (!active()) return;
         const view = get().views?.[0];
         if (!view || turn !== view.turn || view.players.find((p) => p.id === from)?.team !== view.team) return;
+        // The host is another player's browser: a ping whose tile is not two whole numbers is dropped, not drawn.
+        if (!Number.isSafeInteger(hex?.q) || !Number.isSafeInteger(hex?.r)) return;
         set({ pings: withPing(get().pings, { from, team: view.team, hex, turn, seq: ++pingSeq }) });
       },
       validation: (errs, validatedOrders) => {
