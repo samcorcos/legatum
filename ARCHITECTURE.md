@@ -1,15 +1,15 @@
 # Architecture
 
-Legatum is a deterministic Rust simulation with thin hosts around it. The rules live in one crate, `crates/core`. Everything else (AI, the WASM API, the batch runner, the UI) drives that crate and never reimplements it. This document explains how the pieces fit. For build and run commands see [README.md](README.md).
+Legatum is a deterministic Rust simulation with thin hosts around it. The rules live in one crate, `crates/core`. Everything else (AI, the WASM API, the LAN server, the batch runner, the UI) drives that crate and never reimplements it. This document explains how the pieces fit. For build and run commands see [README.md](README.md).
 
 ## Crate graph
 
 Dependencies are taken from each crate's `Cargo.toml`. An arrow means "depends on".
 
 ```
-  hosts            app (WASM in browser / Tauri)   crates/sim   crates/analysis
-                            |                           |              |
-                            v                           v              v
+  hosts            app (WASM in browser / Tauri)   crates/server   crates/sim   crates/analysis
+                            |                           |              |              |
+                            v                           v              v              v
   shared loop       crates/wasm  (Session, saves, tapes, scenarios)  <- crates/archive
                          |
                          v
@@ -30,12 +30,13 @@ Direct dependencies, from the manifests:
 | `wasm` | `core`, `ai` |
 | `archive` | `wasm` |
 | `analysis` | `core`, `wasm`, `archive` |
+| `server` | `core`, `wasm`, `archive` |
 | `sim` | `core`, `ai`, `wasm`, `archive`, `analysis` |
 
 Notes:
 
 - `crates/core` has only `serde` and `serde_json` as dependencies. Outside tests it does no file I/O, spawns no threads and never reads the clock. `lib.rs` also sets `#![deny(clippy::float_arithmetic)]`.
-- `crates/wasm` is both a `cdylib` (for `wasm-pack`) and an `rlib`. The native crates (`sim`, `archive`, `analysis`) link it as a plain Rust library to share the `Session` game loop and the save and tape code. On native targets it adds `rayon` so AI seats plan in parallel; on `wasm32` it stays single-threaded.
+- `crates/wasm` is both a `cdylib` (for `wasm-pack`) and an `rlib`. The native crates (`sim`, `server`, `archive`, `analysis`) link it as a plain Rust library to share the `Session` game loop and the save and tape code. On native targets it adds `rayon` so AI seats plan in parallel; on `wasm32` it stays single-threaded.
 - `crates/ai` has an optional `parallel-search` feature (rayon) used only by the simulation runner's forward search (`--search`).
 - `app/src-tauri` is a separate workspace, not a member of the root one. It wraps `app/dist` in a native window and adds a few commands that write to the local game archive and save scenario runs.
 
@@ -98,20 +99,20 @@ How the rules are enforced by tests:
 
 ## How the UI talks to the engine
 
-The UI depends on one interface, `GameClient` in `app/src/client.ts`. Local games use WASM; online seats use the remote client:
+The UI depends on one interface, `GameClient` in `app/src/client.ts`. Local games use WASM; LAN and online seats use the remote client:
 
 | Client | File | Used for |
 | --- | --- | --- |
 | WASM | `app/src/wasmClient.ts` | Single player, hot seat and scenarios. The engine runs in the page, loaded from `app/src/wasm-pkg` (built by `scripts/build-wasm.sh`). Views, validation, forecasts, saves and turn resolution are JSON strings across the WASM boundary. |
-| Remote | `app/src/remote.ts` | Online play. The client is bound to one human seat and talks over a WebSocket: the host's own UI to the engine in its tab (`setLocalEndpoint`), a guest to the relay's room URL (`setServerBase`); `app/src/relaySocket.ts` reassembles `chunk` messages. |
+| Remote | `app/src/remote.ts` | LAN and online play. The client is bound to one human seat and talks to `crates/server` over a WebSocket at `/ws`; online, the base is the relay's room URL (`setServerBase`) and `app/src/relaySocket.ts` reassembles `chunk` messages. |
 
 The game state lives in a Zustand store (`app/src/store.ts`); the map is drawn on a 2D canvas (`app/src/map/`, entry points `MapCanvas.tsx` and `render.ts`). Test fixtures in `app/src/test/` start from Rust-generated saves and resolve turns through WASM.
 
-**Game host.** The authoritative game of an online match is `BrowserHost` in `crates/wasm/src/host` (staging, protocol and admission logic with no I/O), running in the host's browser tab. Clients send tagged JSON messages (`protocol.rs`: `Join`, `Orders`, `Ready`, `Forecast` and others). When every connected human seat is Ready, the host asks the session for AI orders, steps the turn, writes an autosave and sends per-seat views; each socket only ever receives its own seat's view. Admin actions are allowed only for the host's own in-tab connection. The host contains no game rules.
+**LAN server.** `crates/server` hosts one authoritative game. `lib.rs` defines the routes (`/api/game`, `/api/load`, `/api/save`, `/api/staging`, `/api/status`, `/ws`) and serves the built UI as static files; `host.rs` owns the `Session` behind a single mutex. Clients send tagged JSON messages (`protocol.rs`: `Join`, `Orders`, `Ready`, `Forecast` and others). When every connected human seat is Ready, `Host::resolve_if_ready` asks the session for AI orders, steps the turn, writes an autosave and broadcasts per-seat views. Each socket only ever receives its own seat's view. The server also enforces loopback-only admin routes, host and origin checks, and connection limits (`auth.rs`, `admission.rs`); `crates/server/README.md` documents these. The server contains no game rules.
 
 **Game uploads.** The hosted web build (`scripts/build-web.sh` with `LEGATUM_GAMES_URL`) uploads each game's recording every five turns and at the end (`app/src/platform/gameUpload.ts`, called from `deliver()` in `archive.ts`). The engine's `Recording::anonymized` (exposed as `Game::public_archive` in `crates/wasm/src/lib.rs`) renames every seat to its default and replays the orders to recompute the hashes; the `infra/games` Worker stores the file in a private R2 bucket and refuses any other seat name. Other builds upload nothing.
 
-**Online relay.** Online play (`plans/online-play.md`) adds no game code. The host's tab announces its room to a Cloudflare Worker (`infra/relay`: a `Lobby` Durable Object listing rooms and one `Room` Durable Object per game) and holds one tunnel WebSocket (`app/src/net/browserHost.ts`, `hosting.ts`) that carries every guest's connection. The relay pipes frames between the host's tunnel and up to 8 guests and parses none of the game messages; the host stays authoritative, and a guest is an ordinary non-local connection. The lobby screen is `app/src/screens/OnlineLobbyScreen.tsx` (`app/src/platform/relayLobby.ts`). The game lives in the host's tab: closing it ends the game for everyone.
+**Online relay.** Online play (`plans/online-play.md`) adds no game code. The desktop app starts the server in-process (`crates/server/src/embedded.rs`, bound to `127.0.0.1`, commands in `app/src-tauri/src/online.rs`) and `relay.rs` dials out to a Cloudflare Worker (`infra/relay`: a `Lobby` Durable Object listing rooms and one `Room` Durable Object per game). The relay pipes frames between the host's tunnel and up to 8 guests and parses none of the game messages; the host stays authoritative, and a relayed guest is an ordinary non-loopback connection. The lobby screen is `app/src/screens/OnlineLobbyScreen.tsx` (`app/src/platform/relayLobby.ts`). Setting `LEGATUM_ONLINE_SELFTEST=<log file>` makes the desktop app check online hosting in a real window without anyone clicking (`app/src-tauri/src/selftest.rs`: navigation to `127.0.0.1`, IPC from that page, the way back); without the variable it does nothing.
 
 **Desktop shell.** `app/src-tauri` loads the same `app/dist` bundle in a webview. The engine still runs there as WASM. The shell adds native file dialogs for save and load and a local archive writer.
 
@@ -154,10 +155,10 @@ Scenarios are start states with a briefing, a measurable objective and predictio
 | Layer | Location | Command |
 | --- | --- | --- |
 | Rust unit tests | Inline `#[cfg(test)]` modules and `*_tests.rs` files in each crate | `cargo test --workspace` |
-| Rust integration tests | `crates/*/tests/`: determinism and pins (`sim`), playtest saves and scenarios (`wasm`), the host protocol, driven synchronously (`wasm`), property and privacy tests (`core`), AI behaviour (`ai`) | `cargo test --workspace` |
+| Rust integration tests | `crates/*/tests/`: determinism and pins (`sim`), playtest saves and scenarios (`wasm`), protocol with real ephemeral servers (`server`), property and privacy tests (`core`), AI behaviour (`ai`) | `cargo test --workspace` |
 | TypeScript unit tests | `app/src/**/*.test.ts(x)` (Vitest, Node environment) | `cd app && npm test` |
 | WASM behavior tests | `app/src/**/*.wasm.test.ts`: core-backed fixtures and browser-facing engine APIs | `cd app && npm test` (needs `scripts/build-wasm.sh` first) |
-| Browser end-to-end | `app/e2e/*.spec.ts` (Playwright, Chromium) against the production UI build | `cd app && npm run e2e` |
+| Browser end-to-end | `app/e2e/*.spec.ts` (Playwright, Chromium) against a real server binary and the production UI build | `cd app && npm run e2e` |
 | Cross-target determinism | `scripts/wasm-tape-check.mjs`, `scripts/wasm-search-check.mjs` | see the headers of those scripts |
 
 `cargo fmt --all` and `cargo clippy --workspace --all-targets -- -D warnings` are the expected lint gates for Rust; `npm run build` type-checks the TypeScript, including the Playwright specs.

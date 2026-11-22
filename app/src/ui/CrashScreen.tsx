@@ -160,7 +160,7 @@ export function CrashCard({ error, kind = 'crash', handlers }: { error: unknown;
   const engine = kind === 'engine';
   const heading = engine ? 'The game could not load' : 'Something went wrong';
   const sentence = engine
-    ? 'The game engine did not finish downloading. Check your connection and reload.'
+    ? 'The game did not finish loading. Check your connection, then reload the page.'
     : hasSave
       ? 'The game hit an error. Your last finished turn is saved in this browser.'
       : 'The game hit an error. Reload to start again.';

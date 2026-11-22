@@ -41,7 +41,7 @@
 
 Legatum is a turn-based strategy game in the tradition of Civilization VI. You found cities, research through nine eras, raise armies, make and break alliances, and race your rivals for victory points. A full game is paced for about 300 turns.
 
-It is an open-source project in active development. The game runs today in a browser and as a Mac app, and two or more players can play online. There is no stable release yet; see [Status](#status).
+It is an open-source project in active development. The game runs today in a browser, as a Mac app, and on a local network for two or more players. There is no stable release yet; see [Status](#status).
 
 ## Why it's different
 
@@ -108,14 +108,14 @@ These clips are recorded from the running game.
 - **Diplomacy with Peace, Alliance and War.** An Alliance fights as one side, a call to arms is one decision card, and a public warning shows when rivals line up against a leader.
 - **Asymmetric peoples.** Each has its own rules, units or buildings, and a drawback that pays for them.
 - **A public victory race.** A team wins by holding its VP target for ten turns: 10 VP for one empire, 20 for a team of two. VP come from era objectives (1 VP in each era after the first, with three ways to score it), captured original capitals, world wonders and faction goals. A team also wins when it is the only one still holding an original capital of its own.
-- **Solo or together.** Single Player is you against one to seven AI empires (five by default). Multiplayer is hot seat on one computer or an online game: Host Game lists your game for others and Join Game shows the games that are open (all games are public for now). The game runs in the host's browser tab, so it ends for everyone if the host closes the tab. The co-op setup puts two humans on one team against six AI empires.
+- **Solo or together.** Single Player is you against one to seven AI empires (five by default). Multiplayer is hot seat on one computer, a game on your local network, or an online game from the desktop app: Host Game lists your game for others and Join Game shows the games that are open (all games are public for now). The co-op setup puts two humans on one team against six AI empires.
 - **Scenarios.** Short positions that each ask one question ("can you hold this city?"), with the Hard AI's result from the same start to compare against.
 - **Art and sound.** All of the art is AI-generated (see [How it was made](#how-it-was-made)). The music and sound effects are CC0 recordings by Kenney and others, credited in the game.
 - **A post-game report.** The victory race over time, empires over time, an event timeline and a statistics table.
 
 ## Play it
 
-**[Play in your browser](https://legatum-game.pages.dev).** Nothing to install. Single player against the AI, hot seat on one computer and the scenarios all work there; online games work there too. It is made for a laptop or desktop with a keyboard and mouse and a current browser (it is tested in Chrome); the phone is not a target. The first load is about 7 MB. Your game is autosaved in that browser, and Menu → Save to file gives you a copy to keep. The game's record is also uploaded to the project, without player names; see [Privacy](#privacy).
+**[Play in your browser](https://legatum-game.pages.dev).** Nothing to install. Single player against the AI, hot seat on one computer and the scenarios all work there; a network game needs the host program, built from source below. It is made for a laptop or desktop with a keyboard and mouse and a current browser (it is tested in Chrome); the phone is not a target. The first load is about 7 MB. Your game is autosaved in that browser, and Menu → Save to file gives you a copy to keep. The game's record is also uploaded to the project, without player names; see [Privacy](#privacy).
 
 **Mac app.** [Download the latest release](https://github.com/samcorcos/legatum/releases/latest) (macOS 11 or later, Apple silicon and Intel). It is signed and notarized with Apple. Open the disk image and drag Legatum to Applications.
 <!-- mac-download -->
@@ -153,18 +153,26 @@ open app/src-tauri/target/release/bundle/macos/Legatum.app
 
 An app you build yourself is unsigned, so on another Mac Gatekeeper asks you to right-click and choose Open the first time.
 
-**Online** (no addresses or Terminal): Host Game runs the game inside the host's browser tab and lists it on a small Cloudflare relay (`infra/relay`); guests choose it from Join Game. The game, the AI and the saves stay in the host's tab; the relay only lists games and passes messages. Everyone needs the same build. The contract is [plans/online-play.md](plans/online-play.md).
+**On a local network** (trusted networks only: the host speaks plain HTTP and WebSocket):
+
+```sh
+./scripts/lan-host.sh            # builds WASM and the UI (installing app dependencies if needed), then serves on port 7878
+```
+
+The host opens `http://localhost:7878`, chooses Multiplayer and Host Game; everyone else opens `http://<host-ip>:7878` in a browser, takes a seat and picks a people. Details are in [crates/server/README.md](crates/server/README.md).
+
+**Online** (desktop app, no addresses or Terminal): Host Game starts the server inside your app and lists the game on a small Cloudflare relay (`infra/relay`); guests choose it from Join Game. The game, the AI and the saves stay on the host's computer; the relay only lists games and passes messages. Everyone needs the same build. The contract is [plans/online-play.md](plans/online-play.md).
 
 New to the game? The in-app Guide covers the rules, and [docs/rules/](docs/rules/) is the code-checked reference for how everything works.
 
 ## How it works
 
-Legatum is one deterministic Rust engine with thin hosts around it. The app (including the host of an online game) and the simulation runner all drive the same code, so there is only one copy of the rules.
+Legatum is one deterministic Rust engine with thin hosts around it. The app, the LAN server and the simulation runner all drive the same code, so there is only one copy of the rules.
 
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/media/diagrams/architecture-dark.svg">
-    <img src="docs/media/diagrams/architecture-light.svg" alt="Architecture: the app (WebAssembly, in a browser or the Mac app) sits on legatum-core, a deterministic Rust engine; the headless runner, the climb and the AI sit beneath it." width="880">
+    <img src="docs/media/diagrams/architecture-light.svg" alt="Architecture: the Mac app (WebAssembly) and the LAN server sit on legatum-core, a deterministic Rust engine; the headless runner, the climb and the AI sit beneath it." width="880">
   </picture>
 </p>
 
