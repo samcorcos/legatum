@@ -24,6 +24,8 @@ By changed path:
                                                instead the fast scenario check (rules version, baseline doc, state
                                                loads on master's engine, copy lint; seconds)
   UI                      legatum-ui-reviewer marker    .progress/ui-review/<branch>.ok
+  art, or art-related code  legatum-art-reviewer marker  .progress/art-review/<branch>.ok
+                                               (art files, or the names/kinds/wiring that art depends on: ART_IMPACT)
 Exit 1 when a check fails or a marker is missing.
 """
 import argparse
@@ -54,8 +56,12 @@ PROSE = re.compile(r"(['\"`]|>)\s*[A-Z][a-z']*(?:[ ,;:]+[A-Za-z0-9'$%{}.+-]+){4,
 COMMENT = re.compile(r"^\s*(//|/?\*)")
 SCENARIO_COPY = re.compile(r'^\s*"(title|briefing|tests|summary|question)"\s*:')
 ENGINE = re.compile(r"^crates/(core|ai)/(src/|Cargo\.toml$)")
-ART = re.compile(r"^app/src/assets/.*\.(png|svg|jpe?g|webp)$|^app/public/wonders/"
+ART = re.compile(r"^app/src/assets/.*\.(png|svg|jpe?g|webp)$|^app/public/(wonders|terrain)/"
                  r"|^tools/art/(distinctness\.(py|json)|render-sets\.mjs)$")
+# Code that can make existing art stale or missing: names and kinds of things that have pictures, and the art wiring.
+ART_IMPACT = re.compile(r"^crates/core/src/(data|eras|units|buildings|factions?)\.rs$"
+                        r"|^app/src/(unitArt|unlockArt|resourceIcons|landmarks|portraits|siegeProps|icons|wonders)\.ts$"
+                        r"|^app/src/map/(cityArt|landmarks|improvementArt)\.ts$")
 
 
 def load(name):
@@ -69,7 +75,7 @@ def classify(repo, base, tip, files=None):
     """{'code','ui','copy','engine','art','scenario': [paths]} for BASE..TIP. A branch whose only code is Lab scenario
     files is `scenario`: those files are not `code` or `copy` (the scenario check covers them instead)."""
     files = files if files is not None else [p for s, p in changed_files(repo, base, tip)]
-    out = {k: [] for k in ("code", "ui", "copy", "engine", "art", "scenario")}
+    out = {k: [] for k in ("code", "ui", "copy", "engine", "art", "artimpact", "scenario")}
     scen = [f for f in files if f.startswith("scenarios/") and f.endswith(".json")]
     lab_only = bool(scen) and all(LAB_SCENARIO.match(f) for f in files if not NON_CODE.search(f))
     if lab_only:
@@ -93,6 +99,8 @@ def classify(repo, base, tip, files=None):
             out["engine"].append(f)
         if ART.search(f):
             out["art"].append(f)
+        if ART_IMPACT.search(f) and not test:
+            out["artimpact"].append(f)
     return out
 
 
@@ -107,6 +115,7 @@ CLASSES = {
     "ui": lambda f: bool(UI.search(f)) and not TESTS.search(f),
     # Any later change to app source or a scenario may change player text: a fresh plain-language review.
     "copy": lambda f: bool(APP_SOURCE.match(f) or f.startswith("scenarios/")) and not TESTS.search(f),
+    "art": lambda f: bool(ART.search(f) or ART_IMPACT.search(f)) and not TESTS.search(f),
 }
 
 
