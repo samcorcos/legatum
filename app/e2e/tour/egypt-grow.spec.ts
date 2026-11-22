@@ -6,7 +6,10 @@ import { test, expect } from '../fixtures';
 import { coreFixture } from '../../src/test/coreFixture';
 import { improvementCity } from '../../src/test/improvementsFixture';
 import type { ProductionItem } from '../../src/types';
-import { SIZES, loadFixture, selectThing, shot } from './helpers';
+import { SIZES, aim, loadFixture, selectThing, shot, type GameWindow } from './helpers';
+import { setOverlay } from '../overlayHelpers';
+import { ring, within } from '../../src/hex';
+import { idxOf } from '../../src/test/fixtureEngine';
 
 test.describe.configure({ mode: 'parallel' });
 
@@ -54,5 +57,48 @@ for (const size of SIZES) test.describe(`egypt-grow ${size.name}`, () => {
     const growth = page.getByTestId('city-growth').first();
     if (await growth.count()) { await growth.scrollIntoViewIfNeeded(); await growth.hover(); await page.waitForTimeout(700); await shot(page, size, `${st.name}-growth-tip`);
       await growth.click(); await page.waitForTimeout(500); await shot(page, size, `${st.name}-growth-breakdown`); }
+  });
+});
+
+// The Nile on the map (2026-11-22): Egypt sees double Food and no Production on the Yields overlay and the tile card,
+// Stone says a Quarry gives it nothing, and its build list offers no Quarry. India is the control.
+const MAP_CASES: { name: string; faction: 'Egypt' | 'India' }[] = [
+  { name: 'e10-egypt-map', faction: 'Egypt' },
+  { name: 'e11-india-map-control', faction: 'India' },
+];
+for (const size of SIZES) test.describe(`egypt-grow map ${size.name}`, () => {
+  test.use({ viewport: { width: size.width, height: size.height } });
+  for (const mc of MAP_CASES) test(mc.name, async ({ page }) => {
+    test.setTimeout(150_000);
+    const s = improvementCity({ improved: false });
+    s.players[0].faction = mc.faction;
+    const c = s.cities[0];
+    const wheat = ring(c.pos, 1)[0], stone = ring(c.pos, 2)[7], forest = within(c.pos, 3).find((h) => s.terrain[idxOf(s, h)] === 'Forest')!;
+    await loadFixture(page, coreFixture(s), 12);
+    const look = async (h: { q: number; r: number }, label: string) => {
+      await page.evaluate((h) => { const st = (window as unknown as GameWindow).legatum.getState(); st.set({ techOpen: false }); st.select(null); st.jumpTo(h); }, h);
+      await aim(page, h, page.locator('.tilecard'));
+      await page.waitForTimeout(400);
+      await shot(page, size, `${mc.name}-${label}`);
+    };
+    await look(wheat, 'tile-wheat');
+    await look(stone, 'tile-stone');
+    await look(forest, 'tile-forest');
+    await setOverlay(page, 'Yields', true);
+    await page.evaluate((h) => { const st = (window as unknown as GameWindow).legatum.getState(); st.select(null); st.jumpTo(h); }, c.pos);
+    await park(page); await page.waitForTimeout(600);
+    await shot(page, size, `${mc.name}-yields-overlay`);
+    await setOverlay(page, 'Yields', false);
+    await selectThing(page, 'city', c.id);
+    await expect(page.locator('.city-panel')).toBeVisible();
+    const imp = page.locator('.city-panel .production-choice[data-item^="i:"]');
+    if (await imp.count()) {
+      await imp.first().scrollIntoViewIfNeeded(); await park(page);
+      await shot(page, size, `${mc.name}-improvements`);
+      await imp.first().hover(); await page.waitForTimeout(700);
+      await shot(page, size, `${mc.name}-improvement-tip`);
+    }
+    const quarries = await page.locator('.city-panel .production-choice[data-item^="i:Quarry"]').count();
+    if (mc.faction === 'Egypt') expect(quarries).toBe(0); else expect(quarries).toBeGreaterThan(0);
   });
 });

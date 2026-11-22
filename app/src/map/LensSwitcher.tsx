@@ -101,7 +101,7 @@ export function LensSwitcher({ lens, onChange, sites, onInspect, settlerId, play
     <div id={contentId} className="lens-content" data-overlay-slot={phone && open ? 'map-inspector' : undefined} hidden={compact && !open} role={compact ? 'region' : undefined} aria-label={compact ? 'Choose map options' : undefined}>
     {compact && <div className="lens-sheet-head"><b>Choose map options</b><button className="btn quiet" aria-label="Close map options" onClick={close}>Close</button></div>}
     <div className="lens-group-label" id={`${contentId}-overlays`}>Overlays {overlays.yields
-      ? <Tip placement="right" content={OVERLAY_HINTS.yields}><small className="lens-yield-line"><span className="lens-yield-key">{(['food', 'production', 'gold', 'science'] as const).map((k) => <YieldIcon key={k} k={k} size={13} />)}</span> {OVERLAY_LEGENDS.yields}</small></Tip>
+      ? <Tip placement="right" content={OVERLAY_HINTS.yields}><small className="lens-yield-line"><span className="lens-yield-key">{(['food', 'production', 'gold', 'science'] as const).filter((k) => k !== 'production' || players.find((p) => p.id === me)?.faction !== 'Egypt').map((k) => <YieldIcon key={k} k={k} size={13} />)}</span> {OVERLAY_LEGENDS.yields}</small></Tip>
       : <small>stay on over any lens</small>}</div>
     <div role="group" aria-labelledby={`${contentId}-overlays`} className="overlay-toggles">
       {OVERLAYS.map((o) => <Tip key={o} className="overlay-tip" placement="top" content={OVERLAY_HINTS[o]}>
