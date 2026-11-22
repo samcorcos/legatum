@@ -10,7 +10,7 @@ const available = existsSync(fileURLToPath(new URL('../wasm-pkg/legatum.js', imp
 
 describe.skipIf(!available)('host save round trip (WASM)', () => {
   const load = async () => (await import('../wasm-pkg/legatum.js')) as unknown as {
-    BrowserHost: new (save?: string | null) => { new_game(setup: string): void; save_game(): string; status(local: boolean): string; free(): void };
+    BrowserHost: new (save?: string | null) => { new_game(setup: string): void; save_game(): string; open_guest_seats(): void; status(local: boolean): string; free(): void };
     Game: { standard_setup(...args: string[]): string; load(save: string): { free(): void } };
   };
 
@@ -36,6 +36,10 @@ describe.skipIf(!available)('host save round trip (WASM)', () => {
     expect(second.save_game()).toBe(game);
     expect(names(second)).toEqual(names(first));
     expect(names(second)).toEqual(['Ada', 'Bo']);
+    const reserved = () => (JSON.parse(second.status(true)).seats as { reserved: boolean }[]).map((s) => s.reserved);
+    expect(reserved()).toEqual([true, true]);
+    second.open_guest_seats();
+    expect(reserved()).toEqual([true, false]);
     // The same engine save is a normal solo game.
     Game.load(read.game).free();
     expect(() => new BrowserHost('not a save')).toThrow();

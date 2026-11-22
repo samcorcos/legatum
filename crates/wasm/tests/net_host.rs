@@ -1773,9 +1773,27 @@ fn host_save_file_resumes_on_a_fresh_browser_and_loads_solo() {
     };
     assert_eq!(names(&after), names(&before));
     assert_eq!(resumed.save(), file);
-    // The host reclaims its own seat, as after a reload.
+    // A resume alone keeps every seat reserved; hosting from a file opens the guests' seats.
+    assert_eq!(after["seats"][1]["reserved"], true);
+    {
+        let mut world = resumed.world.borrow_mut();
+        world.host.open_guest_seats();
+        world.pump();
+    }
+    let opened = resumed.status();
+    assert_eq!(opened["seats"][0]["reserved"], true, "the host's own seat stays its own");
+    assert_eq!(opened["seats"][1]["reserved"], false);
+    assert_eq!(names(&opened), names(&before), "seat names carry over");
+    // The host takes seat 0 and a guest takes seat 1, each with a new credential.
     let (_, view) = resumed.join(0);
     assert_eq!(view.turn, 2);
+    let mut guest = resumed.guest();
+    guest.send(json!({"type": "game_take", "seat": 0}));
+    assert!(guest.until("error")["message"].as_str().unwrap().contains("reserved"));
+    guest.send(json!({"type": "game_take", "seat": 1}));
+    let token = guest.until("seat_token")["token"].as_str().unwrap().to_owned();
+    guest.send(json!({"type": "join", "seat": 1, "name": "Human 1", "token": token}));
+    assert_eq!(guest.until("welcome")["seat"], 1);
 
     let solo = legatum_wasm::Game::from_save_json(&file);
     assert!(solo.is_ok(), "an online save is a normal engine save");

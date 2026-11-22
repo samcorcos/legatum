@@ -118,8 +118,8 @@ already). The host's own in-tab connection never sees chunks.
   same format as a solo save, so Load from file opens it as a solo game too. Title > Multiplayer > Host from a
   save picks a file and calls `hostOnlineFromSave`, which starts a new room with `new BrowserHost(save)`
   (`startHosting`'s `fromSave`; an unreadable chosen save is an error, never a fresh game). Seat names carry
-  over. Seat credentials are not saved, so every seat starts reserved: the host takes seat 0 on the seat screen
-  and opens the other seats from the seat bar, then guests join from the list. A new room has a new id and key.
+  over. Seat credentials are not saved. `open_guest_seats` opens every seat but seat 0 (the host's, which
+  `hostOnlineFromSave` takes at once), so guests join from the list and take their old seat with its saved name. A new room has a new id and key.
 - Seat credentials are 256-bit random hex from `crypto.getRandomValues`.
 
 ## Build (`scripts/build-web.sh`)

@@ -22,6 +22,8 @@ export interface HostEngine {
   close_staging(): void;
   start_staging(): string;
   take_save(): string | undefined;
+  /** Hosting from a save file: opens every seat but the host's own for guests. */
+  open_guest_seats(): void;
   /** The live game's save right now; throws when there is no game. */
   save_game(): string;
   take_recordings(): string;

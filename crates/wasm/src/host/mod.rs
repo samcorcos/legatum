@@ -299,6 +299,19 @@ impl Host {
         Ok(game.session.save_json())
     }
 
+    /// Opens every seat but the first for guests to take, as in a game just hosted from a save file
+    /// (a guest sees its saved name and takes the seat; the host's own seat 0 stays its own).
+    pub(crate) fn open_guest_seats(&mut self) {
+        if let Some(game) = &mut self.game {
+            for seat in game.seats.iter_mut().skip(1) {
+                seat.token = None;
+                seat.ready = false;
+                seat.orders.clear();
+            }
+            self.broadcast_seats();
+        }
+    }
+
     /// The live game's save, once per change, for the browser to keep.
     pub(crate) fn take_save(&mut self) -> Option<String> {
         self.save.take()

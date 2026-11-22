@@ -29,6 +29,7 @@ class FakeEngine implements HostEngine {
   summary() { return '{"players":1}'; }
   new_game() { this.save = 'saved'; }
   load_game() {}
+  open_guest_seats() {}
   save_game() { if (!this.live) throw new Error('No game in progress'); return 'live save'; }
   live = true;
   configure_staging() {}

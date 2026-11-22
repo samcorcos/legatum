@@ -74,6 +74,8 @@ export async function startHosting(relay: string, announce: RoomAnnounce, resume
   if (fromSave) {
     // A save the player chose: say so when this build cannot host it, never start a different game.
     engine = new mod.BrowserHost(fromSave);
+    // Guests take their old seats from the list; the host's own seat is taken for it.
+    engine.open_guest_seats();
   } else {
     try {
       engine = new mod.BrowserHost(save);

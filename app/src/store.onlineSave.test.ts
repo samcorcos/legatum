@@ -39,8 +39,9 @@ it('Host from a save hands the exact engine save to the host and opens the seat 
   const file = parseSaveFile(hostedSaveText()!);
   expect(await useGame.getState().hostOnlineFromSave('Ada', file)).toBeNull();
   expect(fakeHost.fromSave).toBe(game);
-  expect(useGame.getState().screen).toBe('join');
   expect(useGame.getState().lan?.status.is_local).toBe(true);
+  // The host takes its own seat 0 at once (as in a new game), without the seat screen.
+  expect(useGame.getState().busy).toBe('Joining…');
 });
 
 it('refuses a save from older rules or a build with no online play without starting a host', async () => {
