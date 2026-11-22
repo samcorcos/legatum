@@ -168,7 +168,12 @@ async function readApi(request: Request, env: Env, path: string): Promise<Respon
       cursor: page.truncated ? page.cursor : null,
     });
   }
-  const key = decodeURIComponent(path.slice("/v1/read/games/".length));
+  let key = "";
+  try {
+    key = decodeURIComponent(path.slice("/v1/read/games/".length));
+  } catch {
+    // A malformed escape such as "%E0%A4%A" is a bad key, not a server error.
+  }
   if (!path.startsWith("/v1/read/games/") || !KEY_RE.test(key)) return json({ error: "not found" }, 404);
   const object = await env.GAMES.get(key);
   if (!object) return json({ error: "not found" }, 404);

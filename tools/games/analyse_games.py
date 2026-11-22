@@ -23,6 +23,7 @@ import datetime as dt
 import gzip
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -209,8 +210,10 @@ NOISE_EVENTS = {"UnitMoved", "MoveBlocked", "Battle", "UnitHealed", "CityGrew", 
 
 
 def clip(value, limit: int = 500) -> str:
-    """Player-written or uploaded text, cut to a length and to one line."""
-    return " ".join(str(value if value is not None else "").split())[:limit]
+    """Player-written or uploaded text, cut to a length and to one line. Runs of "=" are thinned so a player
+    cannot fake the review prompt's "=== FACTS END ===" marker."""
+    text = " ".join(str(value if value is not None else "").split())
+    return re.sub(r"={2,}", "=", text)[:limit]
 
 
 def seat_label(seats: list[dict], p) -> str:
@@ -520,8 +523,9 @@ def poll(args) -> int:
         budget = min(PER_RUN, max(0, PER_DAY - done_today)) if not args.force else len(todo)
         if len(todo) > budget:
             log(f"{len(todo)} game(s) due, analysing {budget} now (per-run {PER_RUN}, per-day {PER_DAY})")
-            # Finished games first, then the longest: the most to learn from.
-            todo.sort(key=lambda x: (x[2] != "final", -int(x[1].get("turns") or 0)))
+            # Finished games first, then the newest upload. Not by length: an upload can claim any turn count.
+            todo.sort(key=lambda x: x[1].get("uploaded", ""), reverse=True)
+            todo.sort(key=lambda x: x[2] != "final")  # stable: newest first within each group
             todo = todo[:budget]
         if not todo:
             return 0

@@ -123,6 +123,7 @@ describe("private read API", () => {
     expect((await read("/v1/read/games", "x".repeat(40))).status).toBe(404);
     expect((await call("/v1/read/games", { headers: { Origin: ORIGIN } })).status).toBe(404);
     expect((await read("/v1/read/games/games%2F..%2Fsecret")).status).toBe(404);
+    expect((await read("/v1/read/games/%E0%A4%A")).status).toBe(404);
   });
 
   it("is off without a long enough secret", () => {

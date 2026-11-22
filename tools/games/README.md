@@ -36,11 +36,15 @@ Anyone can upload a game, so everything in an upload is treated as hostile:
 - The macOS notification gets the text as an argument, never inside AppleScript source. The Worker accepts
   only plain-word faction and difficulty names.
 - At most 3 analyses per run and 12 per day (`LEGATUM_ANALYSE_PER_RUN`, `LEGATUM_ANALYSE_PER_DAY`), and only
-  games with a human seat, so junk uploads cannot spend the Mac's model budget.
+  games with a human seat, so junk uploads cannot spend the Mac's model budget. When more are due, finished games go first, then the
+  newest uploads (never the longest: an upload can claim any turn count).
 - The reviewer gets `facts.md` pasted into its prompt and no tools at all (`claude -p --tools ""`), so text a
   player typed cannot make it read files, run commands or reach the network. Player text is cut to one line
-  of 500 characters in `facts.md`, and `review.md` starts with an "untrusted" line for whoever reads it next.
+  of 500 characters in `facts.md` (with runs of `=` thinned, so nobody can fake the prompt's end-of-data
+  marker), and `review.md` starts with an "untrusted" line for whoever reads it next.
   Codex cannot turn its shell off, so it is opt-in (`LEGATUM_REVIEWER=codex,claude`) and runs `-s read-only`.
+- `install-mac.sh --token` hands the token to `wrangler` and `security` on stdin, never as an argument, so it
+  never shows in the process list.
 - Every command has a timeout, so a crafted tape or a stuck model cannot hold the job's lock.
 
 ## Install
