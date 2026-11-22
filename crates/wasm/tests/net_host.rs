@@ -1769,7 +1769,12 @@ fn host_save_file_resumes_on_a_fresh_browser_and_loads_solo() {
     assert_eq!(after["turn"], before["turn"]);
     assert_eq!(after["has_game"], true);
     let names = |status: &Value| -> Vec<Value> {
-        status["seats"].as_array().unwrap().iter().map(|s| s["name"].clone()).collect()
+        status["seats"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|s| s["name"].clone())
+            .collect()
     };
     assert_eq!(names(&after), names(&before));
     assert_eq!(resumed.save(), file);
@@ -1781,7 +1786,10 @@ fn host_save_file_resumes_on_a_fresh_browser_and_loads_solo() {
         world.pump();
     }
     let opened = resumed.status();
-    assert_eq!(opened["seats"][0]["reserved"], true, "the host's own seat stays its own");
+    assert_eq!(
+        opened["seats"][0]["reserved"], true,
+        "the host's own seat stays its own"
+    );
     assert_eq!(opened["seats"][1]["reserved"], false);
     assert_eq!(names(&opened), names(&before), "seat names carry over");
     // The host takes seat 0 and a guest takes seat 1, each with a new credential.
@@ -1789,9 +1797,17 @@ fn host_save_file_resumes_on_a_fresh_browser_and_loads_solo() {
     assert_eq!(view.turn, 2);
     let mut guest = resumed.guest();
     guest.send(json!({"type": "game_take", "seat": 0}));
-    assert!(guest.until("error")["message"].as_str().unwrap().contains("reserved"));
+    assert!(
+        guest.until("error")["message"]
+            .as_str()
+            .unwrap()
+            .contains("reserved")
+    );
     guest.send(json!({"type": "game_take", "seat": 1}));
-    let token = guest.until("seat_token")["token"].as_str().unwrap().to_owned();
+    let token = guest.until("seat_token")["token"]
+        .as_str()
+        .unwrap()
+        .to_owned();
     guest.send(json!({"type": "join", "seat": 1, "name": "Human 1", "token": token}));
     assert_eq!(guest.until("welcome")["seat"], 1);
 
