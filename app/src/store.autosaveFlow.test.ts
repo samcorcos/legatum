@@ -84,9 +84,9 @@ it('Continue keeps the same game\'s slots', async () => {
   reload();
   await continueNewest();
   await endTurn();
-  const list = await listAutosaves();
-  expect(list.map((r) => r.turn)).toEqual([3, 2, 1]);
-  expect(list.every((r) => r.campaign === before)).toBe(true);
+  const { listCampaignTurns } = await import('./platform/autosaveStore');
+  expect((await listCampaignTurns(before)).map((r) => r.turn)).toEqual([3, 2, 1]);
+  expect((await listAutosaves()).every((r) => r.campaign === before)).toBe(true);
 });
 
 it('a failed save shows the notice once per game, and a later success takes it away', async () => {
@@ -168,4 +168,36 @@ it('warns before closing only while orders sit unsaved because the browser would
   useGame.getState().editOrders(() => []); // nothing pending any more, and that write works
   await new Promise((r) => setTimeout(r, 600));
   expect(closing()).toBe(false);
+});
+
+it('Load an earlier turn opens that turn, records the rewind, and drops the turns after it', async () => {
+  await start();
+  await endTurn();
+  await endTurn();
+  await endTurn();
+  const game = await campaign();
+  const now = useGame.getState().views![0].turn;
+  const { listCampaignTurns, readAutosaveText } = await import('./platform/autosaveStore');
+  const target = (await listCampaignTurns(game)).find((t) => t.turn === now - 2)!;
+  await useGame.getState().rewindTo(game, parseAutosave(await readAutosaveText(target.id))!);
+  await autosavesSettled();
+  expect(useGame.getState().error).toBeNull();
+  expect(useGame.getState().views![0].turn).toBe(now - 2);
+  expect(useGame.getState().rewinds).toMatchObject([{ from_turn: now, to_turn: now - 2 }]);
+  expect((await listCampaignTurns(game)).map((t) => t.turn)).toEqual([now - 2, now - 3]);
+  // The rewind is saved with the game, so a reload and a second rewind (from the title) keep the first one.
+  const [newest] = await listAutosaves();
+  expect(newest.campaign).toBe(game);
+  expect(parseAutosave(newest.text)!.rewinds).toMatchObject([{ from_turn: now, to_turn: now - 2 }]);
+  await endTurn();
+  reload();
+  const first = (await listCampaignTurns(game)).find((t) => t.turn === now - 3)!;
+  await useGame.getState().rewindTo(game, parseAutosave(await readAutosaveText(first.id))!);
+  expect(useGame.getState().rewinds).toMatchObject([{ from_turn: now, to_turn: now - 2 }, { from_turn: now - 1, to_turn: now - 3 }]);
+});
+
+it('a new game starts with no rewinds', async () => {
+  useGame.setState({ rewinds: [{ at: '2026-11-22T19:10:00.000Z', from_turn: 4, to_turn: 2 }] });
+  await start();
+  expect(useGame.getState().rewinds).toEqual([]);
 });

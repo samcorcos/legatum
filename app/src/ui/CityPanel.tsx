@@ -32,6 +32,7 @@ import { capitalLine, capitalMark, replacementKickerLine } from '../capitalMark'
 import { hallCardText, hallStands } from './goalText';
 import { isPermanentlyUnavailable, nestBuildingUpgrades, progressText, unavailableText, unitLines, withUnavailable, type BuildingLineNode } from './productionChoices';
 import { feel } from '../feel';
+import { answerDecision } from '../notice';
 import { RESOURCE_INFO, isStrategic, needText, nileYields, supplyPerMine, supplyRuleText, withArticle } from '../resources';
 import { CostChip } from './CostChip';
 import { Amount, Amounts, Quantity } from './Amounts';
@@ -439,11 +440,22 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     clearTimeout(flashTimer.current);
     flashTimer.current = setTimeout(() => setFlash(null), 1500);
   };
-  const buildNow = (item: ProductionItem, from?: Element | null) => {
+  /** True when it replaced the current build: that shows the G17 notice, which must not be hidden by the next decision. */
+  const buildNow = (item: ProductionItem, from?: Element | null): boolean => {
     setNotice(null);
     keepInPlace(from);
-    changeQueue(queueAfterBuild(queue, producing, item));
+    const next = queueAfterBuild(queue, producing, item);
+    // Misclick guard: replacing the current build names both, with Undo (G17).
+    if (producing && !sameItem(producing, item)) {
+      answerDecision(`${city.name} now builds ${itemName(item, faction)} instead of ${itemName(producing, faction)}.`, (o) => setProductionQueue(o, city.id, next), undefined, 'queue');
+      return true;
+    }
+    changeQueue(next);
+    return false;
   };
+  /** Buying names the city, with Undo (G17): a buy in the wrong city is easy to miss before End Turn. */
+  const buy = (item: ProductionItem, price: number | null) => answerDecision(
+    `Buying ${itemName(item, faction)} in ${city.name}${price === null ? '' : ` for ${price} Gold`}.`, (ord) => toggleBuy(ord, city.id, item), undefined, 'purchase');
   /** A greyed-out item never adds an order; clicking it says why, on the card (never a silent bounce). */
   const refuse = (u: UnavailableOption) => {
     const why = whyUnavailable(u);
@@ -512,7 +524,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     useGame.getState().set({ place: null });
     if (!o) return;
     if (place.intent === 'queue') append(o.item);
-    else if (place.intent === 'buy') editOrders((ord) => toggleBuy(ord, city.id, o.item), 'purchase');
+    else if (place.intent === 'buy') buy(o.item, null);
     else buildNow(o.item);
   };
   // Short of a strategic resource, the newest buildings that need it yield nothing: say so beside the building list.
@@ -538,7 +550,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
       <button className="btn primary" data-primary-action disabled={view.finished || !choice || choiceBlocked}
         aria-label={choice ? `Build ${itemName(choice.item, owner?.faction)}` : 'Build'}
         aria-description={choiceBlocked ? choice!.resource_blocker! : undefined}
-        onClick={() => { if (choice) { buildNow(choice.item); advanceAfterBuild(); } }}><span>{choice?.item.kind === 'Project' ? 'Run project' : 'Build'}</span></button>
+        onClick={() => { if (choice && !buildNow(choice.item)) advanceAfterBuild(); }}><span>{choice?.item.kind === 'Project' ? 'Run project' : 'Build'}</span></button>
       {choiceBlocked && <small className="phone-action-why prod-blocked" role="note"><ResourceReason text={choice!.resource_blocker!} resource={choice!.supply_need!} /></small>}
     </div>;
   }
@@ -623,7 +635,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
         aria-disabled={resourceBlocked || undefined}
         aria-description={resourceBlocked ? `${o.resource_blocker}${o.supply_need ? ` Open ${o.supply_need} supply.` : ''}` : undefined}
         title={imp || site ? detail : undefined}
-        disabled={view.finished} onClick={(event) => { if (unplaced) { startPlace(site!.building, event.shiftKey ? 'queue' : 'build'); return; } if (resourceBlocked) { if (headOnly) { if (o.supply_need) openResourceChip(o.supply_need); return; } if (!duplicate && queue.length < 50) append(o.item, event.currentTarget); return; } if (event.shiftKey) { if (!duplicate && queue.length < 50) append(o.item, event.currentTarget); } else { buildNow(o.item, event.currentTarget); advanceAfterBuild(); } }}>
+        disabled={view.finished} onClick={(event) => { if (unplaced) { startPlace(site!.building, event.shiftKey ? 'queue' : 'build'); return; } if (resourceBlocked) { if (headOnly) { if (o.supply_need) openResourceChip(o.supply_need); return; } if (!duplicate && queue.length < 50) append(o.item, event.currentTarget); return; } if (event.shiftKey) { if (!duplicate && queue.length < 50) append(o.item, event.currentTarget); } else if (!buildNow(o.item, event.currentTarget)) advanceAfterBuild(); }}>
         <span className="prod-icons"><ItemArt item={o.item} faction={owner?.faction} size={20} />{imp && preview && <Icon name={`resource-${preview.resource.toLowerCase()}`} size={18} label={RESOURCE_INFO[preview.resource].name} />}</span>
         <span className="prod-name">{imp ? <><span className="prod-what">{improvementName(imp.improvement, preview?.resource)}</span><span className="prod-where">{improvementWhere(imp, city.pos)}</span></> : site ? <><span className="prod-what">{baseItemName(site, owner?.faction)}</span>{unplaced && !isGreatWork(site.building) && <span className="prod-where place-where">{placingHere ? 'Click a lit tile on the map' : 'Choose its tile on the map'}</span>}{!unplaced && <><span className="prod-where">{sitePlace(site.tile)}</span>{o.wonder && <span className="prod-where site-cost"><Amounts text={`gives up ${yieldsText(o.wonder.lost)}`} /></span>}</>}</> : name} {positions.length > 1
           ? <span className="queue-badge queue-count" title={`In the queue ${positions.length} times (positions ${positions.join(', ')})`}>×{positions.length}</span>
@@ -647,7 +659,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
           <button className={`btn-buy ${selectedBuy ? 'active' : ''}`} aria-pressed={selectedBuy}
             aria-label={`Buy ${name}${price === null ? '' : ` for ${price} Gold`}`}
             aria-describedby={`purchase-status-${city.id}`}
-            disabled={view.finished || (!selectedBuy && !!reason)} onClick={() => unplaced && !selectedBuy ? startPlace(site!.building, 'buy') : editOrders((ord) => toggleBuy(ord, city.id, o.item), selectedBuy ? undefined : 'purchase')}>
+            disabled={view.finished || (!selectedBuy && !!reason)} onClick={() => unplaced && !selectedBuy ? startPlace(site!.building, 'buy') : selectedBuy ? editOrders((ord) => toggleBuy(ord, city.id, o.item)) : buy(o.item, price)}>
             {/* G16: the price is a spend chip; a chosen buy keeps it, with ✓ (clicking again cancels). */}
             {selectedBuy ? <Icon name="ui-check" size={13} className="ui-mark" label="Buying" /> : 'Buy'} {price === null ? '—' : resourceBlocked && !selectedBuy ? null : <CostChip spends={[selectedBuy ? { unit: 'Gold', amount: price, from: purchase.gold, to: purchase.gold - price } : { unit: 'Gold', amount: price }]} />}
           </button>

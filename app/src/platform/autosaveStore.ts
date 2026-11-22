@@ -3,7 +3,10 @@
 // title screen needs to show it. ui/CrashScreen.tsx keeps a tiny duplicate of the read side (it must not
 // use anything from the game), so keep AUTOSAVE_DB, the store names and the record shape in step with it.
 //
-// - Rolling: each campaign (one game) keeps its newest AUTOSAVE_SLOTS turns, one record per turn.
+// - Rolling: each campaign (one game) keeps its newest AUTOSAVE_SLOTS turns, one record per turn. Writing a turn drops
+//   that game's records for later turns: they belong to a line of play the player went back from.
+// - Compact: the newest PLAIN_SLOTS records keep their text (Continue, the crash screen and older builds read only
+//   those); older ones are gzipped into `gz` with no `text`, about a tenth of the size. "Load an earlier turn" reads them.
 // - Atomic per record: the new record is written first, the old ones pruned after, so a failed or cut-off
 //   write never costs the saves that were already there. Another game's records go only after the new
 //   game's first record is in.
@@ -27,9 +30,15 @@ export interface AutosaveRecord {
   text: string;
 }
 export type AutosaveDraft = Omit<AutosaveRecord, 'id'>;
+/** An older turn as stored: its text gzipped into `gz`. Older builds and the crash screen skip it (no `text`). */
+type CompactRecord = Omit<AutosaveRecord, 'text'> & { gz: ArrayBuffer };
+/** One kept turn of a game, for "Load an earlier turn": what the list shows, without the save's text. */
+export type AutosaveTurn = Omit<AutosaveRecord, 'text'>;
 export type SaveBackend = 'database' | 'local';
 
-export const AUTOSAVE_SLOTS = 5;
+export const AUTOSAVE_SLOTS = 10;
+/** The newest records of a game that keep their text uncompressed. */
+export const PLAIN_SLOTS = 2;
 /** The single slot older builds wrote, and the fallback when there is no database. */
 export const LEGACY_AUTOSAVE_KEY = 'legatum.autosave.v1';
 /** Slots the player stepped back from ("Load the previous turn"): ids, hidden until a newer save lands. */
@@ -56,8 +65,14 @@ const isRecord = (r: unknown): r is AutosaveRecord => {
     typeof x.savedAt === 'string' && typeof x.label === 'string' && Number.isInteger(x.turn);
 };
 
-const when = (r: AutosaveRecord) => { const t = Date.parse(r.savedAt); return Number.isFinite(t) ? t : 0; };
-const newestFirst = (a: AutosaveRecord, b: AutosaveRecord) => when(b) - when(a) || b.turn - a.turn;
+const isCompact = (r: unknown): r is CompactRecord => {
+  const x = r as Partial<CompactRecord> | null;
+  return !!x && typeof x.id === 'string' && typeof x.campaign === 'string' && x.gz instanceof ArrayBuffer &&
+    typeof x.savedAt === 'string' && typeof x.label === 'string' && Number.isInteger(x.turn);
+};
+
+const when = (r: { savedAt: string }) => { const t = Date.parse(r.savedAt); return Number.isFinite(t) ? t : 0; };
+const newestFirst = (a: AutosaveTurn, b: AutosaveTurn) => when(b) - when(a) || b.turn - a.turn;
 
 // ---------- The database ----------
 
@@ -105,12 +120,59 @@ const readAll = () => transact('readonly', (saves) => {
 
 const putRecord = (record: AutosaveRecord) => transact('readwrite', (saves) => { saves.put(record); return () => undefined; });
 
-/** Keeps this campaign's newest AUTOSAVE_SLOTS records and drops every other campaign's. */
+/** Every record, compacted ones included, without their text: what pruning and the turn list need. */
+const readAllTurns = () => transact('readonly', (saves) => {
+  const request = saves.getAll();
+  return () => (request.result as unknown[]).filter((r): r is AutosaveRecord | CompactRecord => isRecord(r) || isCompact(r))
+    .map((r): AutosaveTurn & { plain: boolean } => {
+      const { id, campaign, turn, savedAt, label, faction } = r;
+      return { id, campaign, turn, savedAt, label, ...(faction === undefined ? {} : { faction }), plain: isRecord(r) };
+    });
+});
+
+/**
+ * Keeps this campaign's newest AUTOSAVE_SLOTS records, drops every other campaign's and any of this campaign's for a
+ * turn after the one just written (a line of play the player went back from), and gzips the ones past PLAIN_SLOTS.
+ */
 async function prune(kept: AutosaveRecord) {
-  const all = await readAll();
-  const mine = all.filter((r) => r.campaign === kept.campaign).sort((a, b) => b.turn - a.turn || newestFirst(a, b));
-  const doomed = [...all.filter((r) => r.campaign !== kept.campaign), ...mine.slice(AUTOSAVE_SLOTS)];
+  const all = await readAllTurns();
+  const mine = all.filter((r) => r.campaign === kept.campaign && r.turn <= kept.turn).sort((a, b) => b.turn - a.turn || newestFirst(a, b));
+  const doomed = [
+    ...all.filter((r) => r.campaign !== kept.campaign || r.turn > kept.turn),
+    ...mine.slice(AUTOSAVE_SLOTS),
+  ];
   if (doomed.length) await transact('readwrite', (saves) => { for (const r of doomed) saves.delete(r.id); return () => undefined; });
+  for (const r of mine.slice(PLAIN_SLOTS, AUTOSAVE_SLOTS)) if (r.plain) await compact(r.id);
+  // After going back, the turn before may be a gzipped one: unpack it, so Continue and the crash screen can fall back to it.
+  for (const r of mine.slice(1, PLAIN_SLOTS)) if (!r.plain) await expand(r.id);
+}
+
+async function gzip(text: string): Promise<ArrayBuffer | null> {
+  if (typeof CompressionStream === 'undefined') return null;
+  return new Response(new Blob([text]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer();
+}
+
+async function gunzip(bytes: ArrayBuffer): Promise<string> {
+  return new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
+}
+
+/** Gzips one stored record in place. A browser that cannot compress keeps it as text. */
+async function compact(id: string) {
+  const record = await transact('readonly', (saves) => { const request = saves.get(id); return () => request.result as unknown; });
+  if (!isRecord(record)) return;
+  const gz = await gzip(record.text);
+  if (!gz) return;
+  const { text: _text, ...rest } = record;
+  await transact('readwrite', (saves) => { saves.put({ ...rest, gz } satisfies CompactRecord); return () => undefined; });
+}
+
+/** Unpacks one gzipped record in place. */
+async function expand(id: string) {
+  const record = await transact('readonly', (saves) => { const request = saves.get(id); return () => request.result as unknown; });
+  if (!isCompact(record)) return;
+  const { gz, ...rest } = record;
+  const text = await gunzip(gz);
+  await transact('readwrite', (saves) => { saves.put({ ...rest, text } satisfies AutosaveRecord); return () => undefined; });
 }
 
 // ---------- The old single slot ----------
@@ -161,6 +223,27 @@ export async function listAutosaves(): Promise<AutosaveRecord[]> {
 }
 
 export const hasAutosave = async () => (await listAutosaves()).length > 0;
+
+/** Every turn kept for one game, compacted ones included, newest first, without their text. Never throws. */
+export async function listCampaignTurns(campaign: string): Promise<AutosaveTurn[]> {
+  try {
+    const skipped = readSkipped();
+    return (await readAllTurns()).filter((r) => r.campaign === campaign && !skipped.includes(r.id))
+      .map(({ plain: _plain, ...turn }) => turn).sort((a, b) => b.turn - a.turn || newestFirst(a, b));
+  } catch {
+    return [];
+  }
+}
+
+/** One kept turn's save text, unpacking a compacted one; null when it is gone or cannot be read. */
+export async function readAutosaveText(id: string): Promise<string | null> {
+  try {
+    const record = await transact('readonly', (saves) => { const request = saves.get(id); return () => request.result as unknown; });
+    if (isRecord(record)) return record.text;
+    if (isCompact(record)) return await gunzip(record.gz);
+  } catch { /* gone, or no database */ }
+  return (await listAutosaves()).find((r) => r.id === id)?.text ?? null;
+}
 
 // ---------- Writing ----------
 

@@ -12,15 +12,21 @@ export const PRIVACY_URL = 'https://github.com/samcorcos/legatum#privacy';
 export const uploadsGames = (): boolean => GAMES_URL !== '';
 
 /**
- * The record to keep and upload: names removed when uploads are on, and the player's coach-question answers
- * added as `coach_answers`. Only this upload copy carries them: the engine's `Recording` refuses unknown keys,
- * so exports and anything fed back to the engine strip them (archive.ts).
+ * The record to keep and upload: names removed when uploads are on, the player's coach-question answers added as
+ * `coach_answers`, and the times the player went back to an earlier turn as `rewinds` (store.ts Rewind: the tape
+ * holds only the line kept, so analysis learns nothing from the turns discarded). Only this upload copy carries
+ * them: the engine's `Recording` refuses unknown keys, so exports and anything fed back to the engine strip them
+ * (archive.ts).
  */
-export function historyToRecord(client: { archive(): string; publicArchive?(): string }, answers: readonly unknown[] = []): string {
+export function historyToRecord(client: { archive(): string; publicArchive?(): string }, answers: readonly unknown[] = [], rewinds: readonly unknown[] = []): string {
   if (!uploadsGames()) return client.archive();
   const json = client.publicArchive ? client.publicArchive() : client.archive();
-  if (!answers.length) return json;
-  return JSON.stringify({ ...(JSON.parse(json) as object), coach_answers: answers });
+  if (!answers.length && !rewinds.length) return json;
+  return JSON.stringify({
+    ...(JSON.parse(json) as object),
+    ...(answers.length ? { coach_answers: answers } : {}),
+    ...(rewinds.length ? { rewinds } : {}),
+  });
 }
 
 /**
