@@ -495,6 +495,8 @@ const UNIQUE_PIECE: Record<Exclude<Faction, 'Aztecs' | 'Celts'>, UniquePiece> & 
   Egypt: { name: 'Royal Granary', replaces: 'Granary', cost: 50, effect: '+3 Food total', rules: [] },
   Rome: { name: 'Castrum', replaces: 'Walls', cost: 100, effect: '+10 city strength', requires: 'Masonry', rules: ['Upgrading a melee unit in this city restores 50 HP, up to full health.'] },
 };
+/** Egypt's Grow project (the Nile): the city grows with its surplus Food instead of building. */
+export const isGrow = (item: ProductionItem | null | undefined): boolean => item?.kind === 'Project' && item.project === 'Grow';
 /** The yield a faction pays its build costs in: Egypt has no Production, so its surplus Food builds (the Nile). */
 export const costYield = (faction: Faction): 'Food' | 'Production' => (faction === 'Egypt' ? 'Food' : 'Production');
 /** A build cost as the faction pays it: Egypt pays in surplus Food at its conversion rate (one for one by default). */
