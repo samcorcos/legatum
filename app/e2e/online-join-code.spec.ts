@@ -112,7 +112,7 @@ test('Online: removing a player in a running game does not hold up the turn', as
 
   // Remove is rare, so it waits behind Turn details (the fold opens by itself only for a lost seat).
   const fold = host.locator('.sidebar-turn-more');
-  if (!(await fold.evaluate((el) => (el as HTMLDetailsElement).open))) await fold.locator('summary').click();
+  if (!(await fold.evaluate((el) => (el as HTMLDetailsElement).open))) await fold.locator('summary').first().click();
   const seat = host.getByTestId('online-seat-1');
   await expect(seat).toContainText('online');
   await snap(host, 'host-game-seats-remove', seat.getByRole('button', { name: /^Remove / }));
