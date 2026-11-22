@@ -61,7 +61,7 @@ step "App dependencies" bash -c 'cd app && npm ci'
 if [ -z "${PLAYWRIGHT_BROWSERS_PATH:-}" ] && [ ! -d /opt/pw-browsers ]; then
   step "Chromium for art render tests" bash -c 'cd app && npx playwright install chromium'
 fi
-step "App tests" bash -c 'cd app && npm test'
+step "App tests" bash -c 'cd app && CI=true npm test'
 step "App build" bash -c 'cd app && npm run build'
 step "App build references" node tools/release/check-dist-refs.mjs app/dist
 

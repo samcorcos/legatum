@@ -26,13 +26,6 @@ exports[`WASM diplomacy behavior > auto-explore avoids a peaceful foreign Settle
 }
 `;
 
-exports[`WASM diplomacy behavior > auto-explore avoids a peaceful foreign Soldier without treating it as a threat 1`] = `
-{
-  "q": 0,
-  "r": 5,
-}
-`;
-
 exports[`WASM diplomacy behavior > auto-explore avoids a peaceful foreign Spearman without treating it as a threat 1`] = `
 {
   "q": 0,
