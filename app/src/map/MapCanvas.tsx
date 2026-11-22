@@ -11,7 +11,7 @@ import type { AlongsideAttack, BattleForecast, CityAssaultForecast, CityBuildFoc
 import { cityAutomationFocus, cityAutomationPreview } from '../automation';
 import { distance, hexEq, hexToPixel, pixelToHex, tileIndex, within } from '../hex';
 import { planTurns, previewRoute, roadBonusNote, routeTurnsText, routeRiskText, routeDangerText, isCalmRouteNote, type PathStep, type RouteRisk } from '../path';
-import { draw, HEX_SIZE, perf, screenToWorld, terrainStats, worldBounds, ringClipRect, type Camera, type SelectionRing, type ImproveOverlay, type PendingMark, type TerritoryOverlay } from './render';
+import { draw, HEX_SIZE, perf, screenToWorld, terrainStats, worldBounds, ambientClipRects, idleClipBoxes, type Camera, type SelectionRing, type ImproveOverlay, type PendingMark, type TerritoryOverlay } from './render';
 import { fontEpoch } from './sprites';
 import { onIconLoad } from '../icons';
 import { onMapFeatureLoad } from './mapFeatures';
@@ -63,6 +63,17 @@ import { setBorderVariant, type BorderVariant } from './borderVariant';
 import { aircraftAsUnit, airOverlayFor, pickerCandidates } from '../airWing';
 import { productionQueue, setAirOrder, toggleBuyTile } from '../orders';
 import { tilePurchasePreview } from '../ui/productionPurchases';
+
+/** Whether a field the draw loop reads changed between two renders (by identity; the effects flag by value). */
+export function frameChanged<T extends Record<string, unknown>>(prev: T, next: T): boolean {
+  for (const key of Object.keys(next)) {
+    const a = prev[key], b = next[key];
+    if (key === 'combatFx') {
+      if ((a as { enabled: boolean } | undefined)?.enabled !== (b as { enabled: boolean }).enabled) return true;
+    } else if (!Object.is(a, b)) return true;
+  }
+  return false;
+}
 
 interface Hover {
   hex: Hex;
@@ -120,6 +131,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
   const [tapPreview, setTapPreview] = useState<TapOrder | null>(null);
   const [touchInfo, setTouchInfo] = useState<{ hex: Hex; context: boolean; placement: 'top' | 'bottom' } | null>(null);
   const inspectorRef = useRef<HTMLElement>(null);
+  const bannerTipRef = useRef<HTMLDivElement>(null);
 
   const views = useGame((s) => s.views);
   const seat = useGame((s) => s.seat);
@@ -576,8 +588,10 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
     scenarioTargets,
     siege,
   });
-  frame.current = { anchoringPreview: !!activePreview, lens, lensTiles, overlays, yieldTiles: overlayTiles.yields, borderTiles: overlayTiles.borders, view, selUnit, selection, pathInfo, pathAttack, pendingLines, pendingMarks, cityFocuses, rangedTiles, goalPreview, territoryOverlay, tileBuys, improveOverlay, placeOverlay, airOverlay, hover, hoverSelect: intent === 'select', cues, arrow, anim, seat, reducedMotion, combatFx: { enabled: combatFx.enabled }, celebration, scenarioTargets, siege };
-  dirty.current = true;
+  const nextFrame = { anchoringPreview: !!activePreview, lens, lensTiles, overlays, yieldTiles: overlayTiles.yields, borderTiles: overlayTiles.borders, view, selUnit, selection, pathInfo, pathAttack, pendingLines, pendingMarks, cityFocuses, rangedTiles, goalPreview, territoryOverlay, tileBuys, improveOverlay, placeOverlay, airOverlay, hover, hoverSelect: intent === 'select', cues, arrow, anim, seat, reducedMotion, combatFx: { enabled: combatFx.enabled }, celebration, scenarioTargets, siege };
+  // Redraw only when something the map draws changed: a render for a card or a panel leaves the canvas alone.
+  if (frameChanged(frame.current, nextFrame)) dirty.current = true;
+  frame.current = nextFrame;
 
   // The panels that can cover a tile: a tile the player is sent to must be left clear of them.
   const hudObstacles = (canvas: HTMLCanvasElement, game: Element) => {
@@ -835,6 +849,11 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
     let lastIdle = -Infinity;
     // The selection ring as the last frame drew it, and the clock of the last frame that drew more than the ring.
     let lastRing: SelectionRing | null = null;
+    // The smoke and siege-ring boxes the last full frame drew: what an ambient-only frame repaints.
+    let lastAmbient: Rect[] = [];
+    // Idle life's clock, and where it painted last (an idle tick repaints those boxes and the new ones).
+    let lastIdleT = 0;
+    let lastIdleBoxes: Rect[] = [];
     let lastFullT = 0;
     let flightDrawn = false;
     // Whether the last drawn frame had anything for idle life to move (smoke, water) in view.
@@ -878,11 +897,19 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
       const smoulderTick = smoulder && t - lastSmoulder > 50;
       if (!dirty.current && !animating && !pulse && !cueLive && !arrowLive && !celebrating && !siegePulse && !smoulderTick && !idleTick) return;
       if (pulse || siegePulse) lastPulse = t;
-      // Nothing but the selection pulse wants a frame: repaint just the ring's box, with the rest of the map's clock held.
-      const pulseOnly = pulse && !!lastRing && !dirty.current && !animating && !cueLive && !arrowLive && !celebrating && !siegePulse && !smoulderTick && !idleTick
-        && !f.scenarioTargets?.length;
+      // Nothing but the ambient motion wants a frame (the selection pulse, a siege ring breathing, a damaged city's
+      // smoke, idle life): repaint just their boxes, with the rest of the map's clock held. A full redraw of a crowded
+      // late-game map 20 to 30 times a second only for these kept the main thread busy and made hover and clicks lag.
+      const pulseOnly = (pulse || siegePulse || smoulderTick || idleTick) && !dirty.current && !animating && !cueLive && !arrowLive && !celebrating
+        && !f.scenarioTargets?.length && (!pulse || !!lastRing) && (!(siegePulse || smoulderTick) || lastAmbient.length > 0);
       const drawT = pulseOnly ? lastFullT : t;
       if (!pulseOnly) lastFullT = t;
+      // Idle life keeps its own clock: it moves on a full frame or an idle tick, and holds through the other clipped frames.
+      const idleT = !pulseOnly || idleTick ? t : lastIdleT;
+      lastIdleT = idleT;
+      const idleNow = !idleLife ? [] : idleTick || !pulseOnly ? idleClipBoxes(f.view, cam.current, size.current.w, size.current.h, idleT) : lastIdleBoxes;
+      const clipBoxes = pulseOnly ? ambientClipRects(lastRing, idleTick ? [...lastAmbient, ...lastIdleBoxes, ...idleNow] : lastAmbient, size.current.dpr) : [];
+      lastIdleBoxes = idleNow;
       if (smoulder) lastSmoulder = t;
       dirty.current = false;
       clampCamera(cam.current, f.view, size.current.w, size.current.h);
@@ -942,15 +969,15 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
         const a = hexToPixel(gift.at, HEX_SIZE), b = hexToPixel(gift.scout.to, HEX_SIZE);
         unitPos.set(gift.scout.unit, { x: a.x + (b.x - a.x) * e, y: a.y + (b.y - a.y) * e });
       }
-      if (pulseOnly && lastRing) {
+      if (pulseOnly) {
+        perf.partialFrames++;
         ctx.save();
-        const box = ringClipRect(lastRing, size.current.dpr);
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.beginPath();
-        ctx.rect(box.x, box.y, box.w, box.h);
+        for (const box of clipBoxes) ctx.rect(box.x, box.y, box.w, box.h);
         ctx.clip();
       }
-      const { pending, labelRects, bannerRects, bannerHits: hits, liftedHits: lifted, idle: idleSeen, ring } = draw(ctx, {
+      const { pending, labelRects, bannerRects, bannerHits: hits, liftedHits: lifted, idle: idleSeen, ring, ambient } = draw(ctx, {
         view: f.view,
         cam: cam.current,
         width: size.current.w,
@@ -993,7 +1020,8 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
         idle: idleLife,
         fx: plan && fxRunning ? { plan, t: fxT } : null,
         moments: mplan && momentsRunning ? { plan: mplan, t: mT, hold: holdAt(mplan, mT) } : null,
-        ambientT: still ? null : drawT,
+        ambientT: still ? null : t,
+        idleT,
         seatColor: mapPlayerColor(f.view?.me),
         scenarioTargets: f.scenarioTargets,
         siege: f.siege,
@@ -1001,6 +1029,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
       });
       if (pulseOnly) ctx.restore();
       lastRing = ring ?? null;
+      if (!pulseOnly) lastAmbient = ambient;
       const flightCtx = flightRef.current?.getContext('2d');
       const flightLive = !!f.celebration.active?.at && t >= celebStarted;
       if (flightCtx && (flightLive || flightDrawn)) {
@@ -1255,8 +1284,10 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
   const stepGesture = (event: GestureEvent) => {
     const result = gestureStep(gesture.current, event, cam.current, size.current);
     gesture.current = result.state;
-    Object.assign(cam.current, result.camera);
-    dirty.current = true;
+    // Only a camera that moved needs a redraw: a plain mouse move over the map changes nothing drawn by itself.
+    const c = cam.current;
+    if (result.camera.x !== c.x || result.camera.y !== c.y || result.camera.zoom !== c.zoom) dirty.current = true;
+    Object.assign(c, result.camera);
     if (result.state.phase !== 'pending' || result.state.contacts.length !== 1) {
       if (holdTimer.current) clearTimeout(holdTimer.current);
     }
@@ -1302,10 +1333,21 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
     }
   };
 
+  // The map re-renders (and redraws) only when the hovered tile or city banner changes, never for each pixel the mouse
+  // moves inside them: on a crowded late-game map that per-pixel work made hover and clicks lag. The banner tooltip
+  // follows the pointer by moving its element directly.
+  const bannerAt = (point: Point) =>
+    bannerHits.current.findLast(({ rect }) => point.x >= rect.x && point.x <= rect.x + rect.w && point.y >= rect.y && point.y <= rect.y + rect.h)?.city.id ?? null;
   const updateMouseHover = (point: Point) => {
     const h = targetAtScreen(point.x, point.y);
-    if (!hover || !hexEq(hover.hex, h) || Math.abs(hover.sx - point.x) > 2 || Math.abs(hover.sy - point.y) > 2) {
+    if (!hover || !hexEq(hover.hex, h) || bannerAt({ x: hover.sx, y: hover.sy }) !== bannerAt(point)) {
       setHover({ hex: h, sx: point.x, sy: point.y });
+      return;
+    }
+    const tip = bannerTipRef.current;
+    if (tip) {
+      tip.style.left = `${bannerTipLeft(point.x)}px`;
+      tip.style.top = `${bannerTipTop(point.y)}px`;
     }
   };
 
@@ -1356,8 +1398,10 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
   const hoveredBanner = hover && lastPointerType.current === 'mouse' && !gesture.current.contacts.length
     ? bannerHits.current.findLast(({ rect }) => hover.sx >= rect.x && hover.sx <= rect.x + rect.w && hover.sy >= rect.y && hover.sy <= rect.y + rect.h)
     : undefined;
-  const sidebarLeft = raceRect.current && canvasRef.current
+  const sidebarLeft = () => raceRect.current && canvasRef.current
     ? raceRect.current.left - canvasRef.current.getBoundingClientRect().left : size.current.w;
+  const bannerTipLeft = (sx: number) => Math.min(Math.max(8, sx + 12), Math.max(8, sidebarLeft() - 328));
+  const bannerTipTop = (sy: number) => Math.min(sy + 16, size.current.h - 64);
   // Settle lens: explored land that is not tinted says why (the core's rule, not a local copy), so no legal-looking tile is a mystery.
   const blockedSiteNote = useMemo(() => {
     if (lens !== 'settle' || !view || !hover || !hoverTile?.explored || !hoverTile.terrain || !scoreUnit || siteAt(hover.hex)) return undefined;
@@ -1405,8 +1449,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
       />
       <canvas ref={flightRef} className="counter-flight-layer" data-overlay-slot="counter-flight" aria-hidden="true" />
       {!touchInfo && hoveredBanner && view && <div className="map-banner-tip" role="tooltip" data-testid="banner-tooltip"
-        style={{ left: Math.min(Math.max(8, hover!.sx + 12), Math.max(8, sidebarLeft - 328)),
-          top: Math.min(hover!.sy + 16, size.current.h - 64) }}>
+        ref={bannerTipRef} style={{ left: bannerTipLeft(hover!.sx), top: bannerTipTop(hover!.sy) }}>
         {bannerTooltip(view, hoveredBanner.city)}
       </div>}
       <CompassRose ref={compassRef} />

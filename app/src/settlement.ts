@@ -59,5 +59,20 @@ export const settlementSites = (view: PlayerView, unit: UnitView, reserved: Hex[
   only ? [settlementSite(view, unit, only, reserved)].filter((site): site is SettlementSite => site !== null)
     : JSON.parse(Game.settlement_sites_full(JSON.stringify(view), unit.id, JSON.stringify(reserved)));
 export const knownThreats = (view: PlayerView): number[] => JSON.parse(Game.known_threats(JSON.stringify(view)));
-export const unitCanReach = (view: PlayerView, unit: UnitView, pos: Hex): boolean =>
-  Game.unit_can_reach(JSON.stringify(view), unit.id, pos.q, pos.r);
+const reachCache = new WeakMap<PlayerView, Map<string, Set<number>>>();
+/**
+ * Which of these known enemies can reach `pos` by moving next turn. One engine call for all of them, remembered per view:
+ * asking per enemy sent the whole view to the engine each time, and a late-game battle forecast stalled hover for 100 ms+.
+ */
+export function unitsCanReach(view: PlayerView, units: readonly UnitView[], pos: Hex): Set<number> {
+  if (!units.length) return new Set();
+  const ids = units.map((u) => u.id).sort((a, b) => a - b);
+  const key = `${pos.q},${pos.r}:${ids.join(',')}`;
+  let cache = reachCache.get(view);
+  if (!cache) reachCache.set(view, cache = new Map());
+  const hit = cache.get(key);
+  if (hit) return hit;
+  const reach = new Set<number>(JSON.parse(Game.units_can_reach(JSON.stringify(view), JSON.stringify(ids), pos.q, pos.r)));
+  cache.set(key, reach);
+  return reach;
+}

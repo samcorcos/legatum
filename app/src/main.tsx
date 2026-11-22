@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import './brand/tokens.css';
 import './brand/fonts';
 import './styles.css';
+import { startFrameTelemetry } from './frameTelemetry';
 import './online.css';
 import './touch.css';
 import { App } from './App';
@@ -50,6 +51,8 @@ void Promise.all([
     </StrictMode>,
   );
 });
+
+startFrameTelemetry();
 
 // Handy for debugging and scripted play-throughs.
 (window as unknown as { legatum: typeof useGame }).legatum = useGame;

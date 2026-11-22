@@ -241,6 +241,24 @@ def relation_pair(rel) -> str:
     return str(rel)
 
 
+def frame_summary(frames: list[dict]) -> str | None:
+    """One line on how smoothly the browser ran (archive `frame_times`, one row per turn; the perf supervisor reads it)."""
+    frames = [f for f in frames if f.get("frames")]
+    if not frames:
+        return None
+    worst = max(frames, key=lambda f: f["frame_p95_ms10"])
+    laggy = max(frames, key=lambda f: f["input_p95_ms"])
+    slow = sum(f["slow_frames"] for f in frames)
+    total = sum(f["frames"] for f in frames)
+    long_ms = sum(f["long_task_ms"] for f in frames)
+    draws = sum(f["map_draws"] for f in frames)
+    draw_mean = sum(f["map_draw_mean_ms10"] * f["map_draws"] for f in frames) / max(1, draws) / 10
+    return (f"- Smoothness ({len(frames)} turns): {slow}/{total} frames over 50 ms; worst turn {worst['turn']} "
+            f"(frame p95 {worst['frame_p95_ms10'] / 10:.0f} ms, {worst['units']} units in view); input lag p95 worst "
+            f"{laggy['input_p95_ms']} ms on turn {laggy['turn']}; long tasks {long_ms / 1000:.1f} s; "
+            f"map draw mean {draw_mean:.1f} ms")
+
+
 def build_facts(record: dict, events: list[dict] | None = None, narrative: str | None = None,
                 replay_note: str = "not replayed") -> str:
     m = record["metadata"]
@@ -261,6 +279,9 @@ def build_facts(record: dict, events: list[dict] | None = None, narrative: str |
         sessions = len({t.get("session_id") for t in times})
         L.append(f"- Play time: {secs // 3600}h{(secs % 3600) // 60:02d}m active over {sessions} session(s), "
                  f"{secs / max(1, len(times)) / 60:.1f} min/turn")
+    perf = frame_summary(record.get("frame_times") or [])
+    if perf:
+        L.append(perf)
     L.append("")
 
     # Standings over time (telemetry is per resolved turn, recorded without replaying).

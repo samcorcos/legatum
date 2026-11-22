@@ -7,9 +7,10 @@ import { coreFixture } from '../../src/test/coreFixture';
 import { researchFixture } from '../../src/test/researchFixture';
 import { improvementCity } from '../../src/test/improvementsFixture';
 import { siegeFixture } from '../../src/test/siegeFixture';
+import { withWorldAges } from '../../src/test/vpV2Fixture';
 import { momentsForTurn } from '../../src/celebrate/moments';
 import { contextFromViews, formatEvents } from '../../src/format';
-import { TECHS, TECH_ERA, unitStatsFor } from '../../src/data';
+import { ERA_NAMES, TECHS, TECH_ERA, unitStatsFor } from '../../src/data';
 import type { TechId, UnitKind } from '../../src/types';
 import { SIZES, frameHall, loadFixture, shot, type GameWindow } from './helpers';
 
@@ -77,16 +78,30 @@ for (const size of SIZES) test.describe(`future unit art ${size.name}`, () => {
     const future = TECH_ERA.Robotics;
     f.players[0].techs = TECHS.filter((t) => TECH_ERA[t] < future && !FUTURE_TECHS.includes(t));
     await loadFixture(page, coreFixture(f), 2);
+    // A Future-era empire is long past the first Age, so stage the last two Ages open (render only): the one before the Future
+    // era and the Future Age itself, with their names, instead of "No Age has begun". The empire's own era stays as loaded.
+    const base = await page.evaluate(() => { const st = (window as unknown as GameWindow).legatum.getState(); return structuredClone(st.views![st.seat]); });
+    const aged = withWorldAges(base);
+    const shift = future - 2; // withWorldAges opens Ages 2 and 3 (1-based); the Future era is `future + 1`.
+    const staged = {
+      ...aged, players: base.players,
+      eras: aged.eras.map((e) => ({ ...e, era: e.era + shift, name: ERA_NAMES[e.era + shift - 1] })),
+      objective_progress: aged.objective_progress.map((o) => ({ ...o, era: o.era + shift })),
+    };
+    await page.evaluate((view) => {
+      const store = (window as unknown as GameWindow).legatum, st = store.getState();
+      store.setState({ views: st.views!.map((x, i) => (i === st.seat ? view : x)) });
+    }, staged);
     const nav = page.locator('.topbar .tb-nav-tech');
     const opener = (await nav.isVisible()) ? nav : page.locator('.topbar .research-chip');
     await opener.click();
     await expect(page.locator('dialog.tech-modal')).toBeVisible();
-    for (const [tech, name] of [['Robotics', 'robotics'], ['StealthTechnology', 'stealth']] as const) {
-      const card = page.locator(`dialog.tech-modal .era-card[data-tech="${tech}"]`);
-      await card.scrollIntoViewIfNeeded();
-      await page.mouse.move(5, size.height / 2);
-      await shot(page, size, `b-research-${name}`);
-    }
+    await expect(page.locator('dialog.tech-modal').getByTestId('research-objectives')).not.toHaveClass(/\bno-obj\b/);
+    // Both cards sit side by side in the Future era's row, so one shot shows them both.
+    for (const tech of FUTURE_TECHS) await expect(page.locator(`dialog.tech-modal .era-card[data-tech="${tech}"]`)).toBeVisible();
+    await page.locator('dialog.tech-modal .era-card[data-tech="Robotics"]').scrollIntoViewIfNeeded();
+    await page.mouse.move(5, size.height / 2);
+    await shot(page, size, 'b-research-future-cards');
     await page.keyboard.press('Escape');
     for (const [tech, name] of [['Robotics', 'robotics'], ['StealthTechnology', 'stealth']] as const) {
       await page.evaluate((current) => {

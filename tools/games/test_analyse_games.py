@@ -31,6 +31,20 @@ def record():
             "coach_answers": [{"turn": 14, "category": "war_peace", "question": "Why war?", "answer": "Their capital was empty."}]}
 
 
+class Smoothness(unittest.TestCase):
+    def test_frame_times_summarised_in_one_line(self):
+        row = {"turn": 126, "frames": 1000, "frame_p50_ms10": 167, "frame_p95_ms10": 900, "frame_max_ms": 300,
+               "slow_frames": 80, "inputs": 400, "input_p95_ms": 140, "input_max_ms": 400, "long_tasks": 30,
+               "long_task_ms": 4000, "map_draws": 500, "map_draw_mean_ms10": 120, "map_draw_max_ms": 40,
+               "units": 60, "cities": 14, "zoom100": 200, "canvas_mp10": 52}
+        calm = dict(row, turn=20, frame_p95_ms10=170, slow_frames=0, input_p95_ms=20, long_task_ms=0, units=12)
+        line = ag.frame_summary([calm, row])
+        self.assertIn("80/2000 frames over 50 ms", line)
+        self.assertIn("worst turn 126 (frame p95 90 ms, 60 units in view)", line)
+        self.assertIn("input lag p95 worst 140 ms on turn 126", line)
+        self.assertIsNone(ag.frame_summary([]))
+
+
 class Due(unittest.TestCase):
     def test_finished_once_per_upload(self):
         self.assertEqual(ag.due(entry(), NOW), "final")

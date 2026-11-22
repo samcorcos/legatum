@@ -1,4 +1,5 @@
 // The UI talks to the Rust core through WASM, or to the same core on the online host.
+import type { TurnFrameTime } from './frameTelemetry';
 import type {
   AttackMode,
   AlongsideAttack,
@@ -39,6 +40,8 @@ export interface GameClient {
   /** The same history with every seat under its default name, for upload. */
   publicArchive?(): string;
   recordTurnTime?(turn: number, endedAt: string, activeSeconds: number, era: number, sessionId: string): void;
+  /** Attach a turn's browser frame and input timing (frameTelemetry.ts) to the archive. */
+  recordFrameTime?(time: TurnFrameTime): void;
   forkArchive?(): void;
   /** Start a scenario from its file JSON (the real local engine only). */
   loadScenario?(scenarioJson: string): void;

@@ -63,6 +63,8 @@ import { listAutosaves, newCampaignId, readPendingOrders, writeAutosave as keepA
 import { abandonGameHistory, recordGameHistory } from './platform/archive';
 import { historyToRecord } from './platform/gameUpload';
 import { currentActivePlaySeconds, currentPlaySessionId, resetActivePlayTurn } from './activePlayTime';
+import { takeTurnFrameTime } from './frameTelemetry';
+import { mapViewport } from './map/camera';
 import { cancelTurnFeedback, feel, feedbackForTurn, playTurnFeedback } from './feel';
 import { newRun, saveRecord, type ScenarioEntry, type ScenarioFeedback, type ScenarioRun, type ScenarioStatus } from './scenarios/scenarios';
 import { saveScenarioRun, type SavedRun } from './platform/scenarioRuns';
@@ -509,7 +511,8 @@ async function openInOwnBuild(save: SaveFile, campaign: string | null): Promise<
   return true;
 }
 
-function writeAutosave(client: GameClient, views: PlayerView[]) {
+/** Writes the autosave. Returns the engine save it holds (null if it could not be made), so the caller need not ask the engine again. */
+function writeAutosave(client: GameClient, views: PlayerView[]): string | null {
   if (client.archive && (views[0].finished || (views[0].turn - 1) % 5 === 0)) {
     try {
       void recordGameHistory(historyToRecord(client as { archive(): string }, useGame.getState().why.answers)).catch((error) => useGame.getState().set({ error: String(error) }));
@@ -529,8 +532,10 @@ function writeAutosave(client: GameClient, views: PlayerView[]) {
     void keepAutosave({ campaign: game, turn: save.turn, savedAt: save.savedAt, label: save.names.join(' & '), faction: views[0].players.filter((p) => p.is_human).map((p) => p.faction).join(' & '), text: contents })
       .then(() => { if (useGame.getState().autosaveNotice) useGame.getState().set({ autosaveNotice: false }); })
       .catch(failed);
+    return save.game;
   } catch {
     failed();
+    return null;
   }
 }
 
@@ -610,9 +615,10 @@ export const useGame = create<State>((set, get) => {
       if (!s.busy && !s.ready[s.seat]) s.toggleReady();
     }, 150);
   };
-  const remember = (client: GameClient) => {
+  // The engine save is the biggest thing a turn makes (1.7 MB by turn 220), so a caller that just made one passes it in.
+  const remember = (client: GameClient, saved: string | null = null) => {
     try {
-      lastGood = client.save();
+      lastGood = saved ?? client.save();
     } catch {
       // keep the previous one
     }
@@ -1141,13 +1147,23 @@ export const useGame = create<State>((set, get) => {
           console.error('legatum: turn play time was not recorded', e);
         }
       }
+      if (!get().scenario && client.recordFrameTime) {
+        try {
+          const map = mapViewport();
+          client.recordFrameTime(takeTurnFrameTime(views[0].turn, { units: views[0].units.length, cities: views[0].cities.length,
+            zoom: map?.zoom ?? 0, canvasPixels: map ? map.w * map.h * (globalThis.devicePixelRatio || 1) ** 2 : 0 }));
+        } catch (e) {
+          console.error('legatum: turn frame times were not recorded', e);
+        }
+      }
       resetActivePlayTurn();
       const nextViews = measureTurn('readViews', () => readViews(client, humans));
       measureTurn('applyTurn', () => applyTurn(views, nextViews, result));
       // Scenarios never replace the campaign autosave; their runs are saved when they end.
+      let saved: string | null = null;
       if (get().scenario) recordScenarioTurn(client, submitted[0], result);
-      else measureTurn('writeAutosave', () => writeAutosave(client, get().views!));
-      measureTurn('remember', () => remember(client));
+      else saved = measureTurn('writeAutosave', () => writeAutosave(client, get().views!));
+      measureTurn('remember', () => remember(client, saved));
       startTraining();
     }
   };

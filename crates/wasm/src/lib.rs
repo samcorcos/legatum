@@ -13,13 +13,14 @@ pub mod session;
 pub mod tape;
 
 use legatum_core::{
-    AlongsideAttack, AttackMode, Faction, GameSetup, Hex, Order, PlayerId, UnitId,
+    AlongsideAttack, AttackMode, Faction, GameSetup, Hex, Order, PlayerId, PlayerView, UnitId,
     forecast_attack_mode, forecast_city_assault, player_view, validate_orders,
 };
 use serde::{Deserialize, Serialize};
 use session::{BrainKind, OrderMap, Session};
 use std::cell::RefCell;
 use std::panic::{AssertUnwindSafe, catch_unwind};
+use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 
 /// Primitive UI what-if queries. Every answer delegates to the same core function used by
@@ -414,6 +415,21 @@ impl Game {
     fn invalidate_view(&mut self) {
         self.state_change = self.state_change.wrapping_add(1);
         self.view_cache.get_mut().take();
+        self.forecast_view.get_mut().take();
+    }
+
+    /// The viewer's view for forecasts, built once per state.
+    fn forecast_view(&self, p: PlayerId) -> Rc<PlayerView> {
+        if let Some((player, change, view)) = self.forecast_view.borrow().as_ref()
+            && *player == p
+            && *change == self.state_change
+        {
+            return Rc::clone(view);
+        }
+        let view = Rc::new(player_view(&self.session.state, p));
+        self.forecast_view
+            .replace(Some((p, self.state_change, Rc::clone(&view))));
+        view
     }
 
     fn check_player(&self, player: u8) -> Result<PlayerId, String> {
@@ -432,6 +448,8 @@ impl Game {
 
             state_change: 0,
             view_cache: RefCell::new(None),
+            forecast_view: RefCell::new(None),
+            anonymized: RefCell::new(None),
         })
     }
 
@@ -443,6 +461,8 @@ impl Game {
 
             state_change: 0,
             view_cache: RefCell::new(None),
+            forecast_view: RefCell::new(None),
+            anonymized: RefCell::new(None),
         })
     }
 
@@ -456,6 +476,8 @@ impl Game {
 
             state_change: 0,
             view_cache: RefCell::new(None),
+            forecast_view: RefCell::new(None),
+            anonymized: RefCell::new(None),
         })
     }
 
@@ -513,7 +535,7 @@ impl Game {
             "Ranged" => AttackMode::Ranged,
             _ => return Err(format!("unknown attack mode {mode:?} (Melee, Ranged)")),
         };
-        let view = player_view(&self.session.state, p);
+        let view = self.forecast_view(p);
         to_json(&forecast_attack_mode(
             &view,
             UnitId(unit),
@@ -541,7 +563,7 @@ impl Game {
         };
         let alongside: Vec<AlongsideAttack> = serde_json::from_str(alongside_json)
             .map_err(|e| format!("invalid alongside attacks: {e}"))?;
-        let view = player_view(&self.session.state, p);
+        let view = self.forecast_view(p);
         to_json(&forecast_city_assault(
             &view,
             UnitId(unit),
@@ -786,6 +808,11 @@ pub struct Game {
     scenario: Option<scenario::ActiveScenario>,
     state_change: u64,
     view_cache: RefCell<Option<CachedView>>,
+    /// The viewer's `PlayerView` for hover forecasts, kept until the state changes: hovering a fight asks for
+    /// two or three forecasts per tile, and rebuilding the whole view for each made late-game hover lag.
+    forecast_view: RefCell<Option<(PlayerId, u64, Rc<PlayerView>)>>,
+    /// Where the last `public_archive` stopped, so the next upload replays only the turns since.
+    anonymized: RefCell<Option<history::AnonymizedResume>>,
 }
 
 #[wasm_bindgen]
@@ -902,20 +929,35 @@ impl Game {
         }))
     }
 
-    /// Whether this one known enemy can reach a tile by moving next turn. Used for aftermath text.
-    pub fn unit_can_reach(view_json: &str, unit: u32, q: i32, r: i32) -> Result<bool, JsError> {
+    /// Which of these known enemies (`[id, ...]`) can reach a tile by moving next turn, as a JSON id list: the view is
+    /// parsed once for all of them (aftermath text asked per enemy, and a late-game view is large).
+    pub fn units_can_reach(
+        view_json: &str,
+        units_json: &str,
+        q: i32,
+        r: i32,
+    ) -> Result<String, JsError> {
         js(guard(|| {
-            let mut view: legatum_core::PlayerView =
+            let view: legatum_core::PlayerView =
                 serde_json::from_str(view_json).map_err(|e| e.to_string())?;
-            view.units.retain(|u| u.id == UnitId(unit));
-            if view.units.is_empty() {
-                return Ok(false);
-            }
-            view.units[0].ranged = 0;
+            let ids: Vec<u32> = serde_json::from_str(units_json).map_err(|e| e.to_string())?;
             let Some(index) = view.index(Hex::new(q, r)) else {
-                return Ok(false);
+                return to_json(&Vec::<u32>::new());
             };
-            Ok(legatum_core::settlement::known_threats(&view)[index] > 0)
+            let mut alone = view.clone();
+            let reach: Vec<u32> = ids
+                .into_iter()
+                .filter(|&id| {
+                    let Some(unit) = view.units.iter().find(|u| u.id == UnitId(id)) else {
+                        return false;
+                    };
+                    let mut unit = unit.clone();
+                    unit.ranged = 0;
+                    alone.units = vec![unit].into();
+                    legatum_core::settlement::known_threats(&alone)[index] > 0
+                })
+                .collect();
+            to_json(&reach)
         }))
     }
 
@@ -1037,7 +1079,7 @@ impl Game {
     pub fn public_archive(&self) -> Result<String, JsError> {
         js(guard(|| {
             let history = self.session.history.as_ref().ok_or("No recorded history")?;
-            to_json(&history.anonymized()?)
+            to_json(&history.anonymized_resuming(&mut self.anonymized.borrow_mut())?)
         }))
     }
 
@@ -1064,6 +1106,21 @@ impl Game {
                     era,
                     session_id: session_id.to_owned(),
                 })
+        }))
+    }
+
+    /// Attach a turn's browser frame and input timing (`TurnFrameTime` JSON) to the archive, outside GameState.
+    pub fn record_frame_time(&mut self, time_json: &str) -> Result<(), JsError> {
+        self.invalidate_view();
+        self.session.invalidate_state_hash();
+        js(guard(|| {
+            let time: history::TurnFrameTime =
+                serde_json::from_str(time_json).map_err(|e| format!("invalid frame time: {e}"))?;
+            self.session
+                .history
+                .as_mut()
+                .ok_or("No recorded history")?
+                .record_frame_time(time)
         }))
     }
 
@@ -1534,6 +1591,22 @@ mod tests {
         assert_eq!(game.view_json(0).unwrap(), fresh(&game));
     }
 
+    #[test]
+    fn forecast_view_is_reused_until_the_state_changes() {
+        let setup = standard_setup_json("7", "India", "Byzantium", "A", "B").unwrap();
+        let mut game = Game::from_setup_json(&setup).unwrap();
+        let first = game.forecast_view(PlayerId(0));
+        assert!(Rc::ptr_eq(&first, &game.forecast_view(PlayerId(0))));
+        assert!(!Rc::ptr_eq(&first, &game.forecast_view(PlayerId(1))));
+        game.end_turn_json("{}").unwrap();
+        let after = game.forecast_view(PlayerId(0));
+        assert_eq!(
+            to_json(&*after).unwrap(),
+            to_json(&player_view(&game.session.state, PlayerId(0))).unwrap()
+        );
+        assert_ne!(to_json(&*first).unwrap(), to_json(&*after).unwrap());
+    }
+
     /// Lobby setups: solo on a small map with per-AI difficulty. Normal is omitted from JSON (old
     /// hashes unchanged), other difficulties survive save/load, and difficulty changes AI play.
     #[test]
@@ -1699,6 +1772,8 @@ mod tests {
 
             state_change: 0,
             view_cache: RefCell::new(None),
+            forecast_view: RefCell::new(None),
+            anonymized: RefCell::new(None),
         };
         let result: Value =
             serde_json::from_str(&game.end_turn_json(&to_json(&orders).unwrap()).unwrap()).unwrap();
