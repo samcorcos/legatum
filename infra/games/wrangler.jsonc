@@ -1,0 +1,13 @@
+{
+  // Legatum game uploads: the hosted web build sends each game's record here, and it lands in a private R2 bucket.
+  // No account id or secrets live here. Set CLOUDFLARE_API_TOKEN (and CLOUDFLARE_ACCOUNT_ID if the token sees
+  // several accounts) when deploying. Create the bucket once: npx wrangler r2 bucket create legatum-games
+  "name": "legatum-games",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "r2_buckets": [{ "binding": "GAMES", "bucket_name": "legatum-games" }],
+  // Pages that may upload, comma separated. "*.legatum-game.pages.dev" covers preview deploys.
+  "vars": { "ALLOWED_ORIGINS": "https://legatum-game.pages.dev,*.legatum-game.pages.dev,http://localhost:*,http://127.0.0.1:*" },
+  // Off on purpose: request logs would hold players' IP addresses.
+  "observability": { "enabled": false }
+}

@@ -2,6 +2,12 @@
 
 Newest first. One entry per non-obvious finding: what we learned, the evidence, and what we changed. Correct or delete entries that turn out to be wrong.
 
+## 2026-11-22: Web games upload to R2; player names are inside the state hash
+
+- **The hosted web build kept every game only in the browser.** Histories queue in IndexedDB (`legatum-game-archive-v1`) and `deliver()` returned false on the hosted build, so they sat there until the player used Export game history. A designer's Hard game (Athens, 145 turns) was still recoverable from that queue after he left it, but a cleared browser would have lost it. Now `deliver()` uploads to the `infra/games` Worker when the build has `LEGATUM_GAMES_URL`, and a success acknowledges (deletes) the local copy.
+- **Removing names from a recording needs a replay.** `GameState::hash` hashes the serialized state, which includes `players[].name` and `setup.players[].name`, so renaming seats breaks every tape hash. `Recording::anonymized` renames to the defaults ("Player N", "AI N") and re-resolves each turn's recorded orders to recompute the hashes (no AI search, so it is fast). A recording already on default names skips the replay. Orders carry no free text (diplomacy explanations are AI-generated), so names are the only typed text in a tape.
+- **The hosted page's CSP allows `connect-src 'self'` only**, so any off-site endpoint must be added to `app/hosted/_headers`; `scripts/build-web.sh` adds the upload Worker there when the variable is set.
+
 ## 2026-11-22: Performance checks lapsed inside the ops supervisor; a separate nightly supervisor (`perf-supervisor`)
 
 - **The old performance watcher was a few sections of `legatum-ops-supervisor`, and they quietly stopped.** The ops check kept running every 6 hours on the Mac, but its runs grew into fleet, disk and budget checks; the last sim-speed baseline is 2026-10-31, the AI turn budget 2026-10-27, app size 2026-10-23, and the `ledger.csv` it was told to compare against never existed. A check buried in a long checklist with heavier duties gets dropped first. Performance and tech debt now belong to `legatum-perf-supervisor`, which only measures, flags and makes one improvement a week.

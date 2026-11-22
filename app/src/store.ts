@@ -52,6 +52,7 @@ import { HOST_AWAY, connectionFirst, roomBase } from './platform/relayLobby';
 import { readNativeAutosave, writeNativeAutosave } from './platform/files';
 import { checkSaveText } from './platform/saveLimits';
 import { abandonGameHistory, recordGameHistory } from './platform/archive';
+import { historyToRecord } from './platform/gameUpload';
 import { currentActivePlaySeconds, currentPlaySessionId, resetActivePlayTurn } from './activePlayTime';
 import { cancelTurnFeedback, feel, feedbackForTurn, playTurnFeedback } from './feel';
 import { newRun, saveRecord, type ScenarioEntry, type ScenarioFeedback, type ScenarioRun, type ScenarioStatus } from './scenarios/scenarios';
@@ -420,7 +421,7 @@ export async function readAutosave(): Promise<SaveFile | null> {
 function writeAutosave(client: GameClient, views: PlayerView[]) {
   if (client.archive && (views[0].finished || (views[0].turn - 1) % 5 === 0)) {
     try {
-      void recordGameHistory(client.archive()).catch((error) => useGame.getState().set({ error: String(error) }));
+      void recordGameHistory(historyToRecord(client as { archive(): string })).catch((error) => useGame.getState().set({ error: String(error) }));
     } catch (error) { useGame.getState().set({ error: `Could not record game history: ${String(error)}` }); }
   }
   try {
@@ -500,7 +501,7 @@ export const useGame = create<State>((set, get) => {
     // A scenario's history is saved with its run, never in the game archive.
     if (previous !== client && previous?.archive && !get().scenario) {
       try {
-        const history = previous.archive();
+        const history = historyToRecord(previous as { archive(): string });
         const replacingSameGame = client.archive && JSON.parse(client.archive()).metadata.game_id === JSON.parse(history).metadata.game_id;
         if (!replacingSameGame) void abandonGameHistory(history).catch((error) => set({ error: String(error) }));
       }

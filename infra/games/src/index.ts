@@ -1,0 +1,134 @@
+/**
+ * Legatum game uploads. The hosted web build posts each game's record (gzipped JSON, every seat under its
+ * default name) to `PUT /v1/games/<game id>`, at least every five turns and when the game ends. The Worker
+ * checks the shape and stores it in R2 as `games/<YYYY-MM>/<game id>.json.gz`, replacing the previous
+ * checkpoint of the same game. It keeps nothing about the sender: no IP address, no headers, no logs.
+ */
+
+export interface Env {
+  GAMES: R2Bucket;
+  ALLOWED_ORIGINS: string;
+}
+
+/** A 300-turn game is a few hundred KB gzipped; this bounds what a stranger can store per request. */
+export const MAX_GZIP_BYTES = 4 * 1024 * 1024;
+export const MAX_JSON_BYTES = 64 * 1024 * 1024;
+export const GAME_ID_RE = /^web-\d{13}-[0-9a-f]{16}-[0-9a-f]{16}$/;
+const DEFAULT_NAME_RE = /^(Player|AI) ([1-9])$/;
+const OUTCOMES = ["in-progress", "vp", "draw", "elimination", "turn-limit", "stalled", "panic", "abandoned"];
+
+interface Seat { player: number; name: string; faction: string; difficulty: string; human: boolean }
+interface Metadata {
+  schema_version: number; game_id: string; created_at: string; outcome: string; turn_count: number;
+  engine_commit: string; seats: Seat[]; winner: number | null;
+}
+
+/** Origin patterns: exact, `*.host` for any subdomain, `http://host:*` for any port. */
+export function originAllowed(origin: string | null, allowed: string): boolean {
+  if (!origin) return false;
+  return allowed.split(",").map((p) => p.trim()).filter(Boolean).some((pattern) => {
+    if (pattern === origin) return true;
+    if (pattern.startsWith("*.")) {
+      try { const u = new URL(origin); return u.protocol === "https:" && u.hostname.endsWith(pattern.slice(1)); } catch { return false; }
+    }
+    if (pattern.endsWith(":*")) return new RegExp(`^${pattern.slice(0, -2).replace(/[.]/g, "\\.")}:\\d{1,5}$`).test(origin);
+    return false;
+  });
+}
+
+function cors(origin: string, resp: Response): Response {
+  const out = new Response(resp.body, resp);
+  out.headers.set("Access-Control-Allow-Origin", origin);
+  out.headers.set("Vary", "Origin");
+  out.headers.set("Cache-Control", "no-store");
+  return out;
+}
+
+const json = (body: unknown, status = 200): Response =>
+  new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
+
+async function gunzip(bytes: ArrayBuffer): Promise<string | null> {
+  try {
+    const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"));
+    const reader = stream.getReader();
+    const parts: Uint8Array[] = [];
+    let size = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > MAX_JSON_BYTES) { await reader.cancel(); return null; }
+      parts.push(value);
+    }
+    const all = new Uint8Array(size);
+    let at = 0;
+    for (const p of parts) { all.set(p, at); at += p.byteLength; }
+    return new TextDecoder("utf-8", { fatal: true, ignoreBOM: false }).decode(all);
+  } catch {
+    return null;
+  }
+}
+
+/** The record's shape, and the rule that matters most: no seat carries a name a player typed. */
+export function checkRecord(id: string, record: unknown): Metadata | string {
+  if (!record || typeof record !== "object") return "not a game record";
+  const r = record as { metadata?: Metadata; tape?: unknown };
+  const m = r.metadata;
+  if (!m || typeof m !== "object" || !r.tape || typeof r.tape !== "object") return "not a game record";
+  if (m.schema_version !== 1) return "unknown schema version";
+  if (m.game_id !== id) return "game id does not match the address";
+  if (!OUTCOMES.includes(m.outcome)) return "unknown outcome";
+  if (!Number.isInteger(m.turn_count) || m.turn_count < 0 || m.turn_count > 10_000) return "bad turn count";
+  if (typeof m.created_at !== "string" || !/^\d{4}-\d{2}-\d{2}T/.test(m.created_at)) return "bad created_at";
+  if (!Array.isArray(m.seats) || m.seats.length < 1 || m.seats.length > 9) return "bad seats";
+  for (const [i, s] of m.seats.entries()) {
+    const name = DEFAULT_NAME_RE.exec(String(s?.name));
+    if (!name || name[1] !== (s.human ? "Player" : "AI") || Number(name[2]) !== i + 1) return "seat names must be the defaults";
+  }
+  return m;
+}
+
+async function putGame(request: Request, env: Env, id: string): Promise<Response> {
+  const declared = Number(request.headers.get("content-length") ?? "0");
+  if (declared > MAX_GZIP_BYTES) return json({ error: "too large" }, 413);
+  const bytes = await request.arrayBuffer();
+  if (bytes.byteLength > MAX_GZIP_BYTES) return json({ error: "too large" }, 413);
+  const text = await gunzip(bytes);
+  if (text === null) return json({ error: "body must be gzipped JSON" }, 400);
+  let record: unknown;
+  try { record = JSON.parse(text); } catch { return json({ error: "body must be gzipped JSON" }, 400); }
+  const m = checkRecord(id, record);
+  if (typeof m === "string") return json({ error: m }, 422);
+  const key = `games/${m.created_at.slice(0, 7)}/${id}.json.gz`;
+  await env.GAMES.put(key, bytes, {
+    httpMetadata: { contentType: "application/json", contentEncoding: "gzip" },
+    // For listing without downloading: who played what, how it ended.
+    customMetadata: {
+      outcome: m.outcome,
+      turns: String(m.turn_count),
+      engine: String(m.engine_commit ?? "").slice(0, 40),
+      winner: m.winner == null ? "" : String(m.winner),
+      seats: m.seats.map((s) => `${s.faction}${s.human ? "*" : ""}:${s.difficulty}`).join(" ").slice(0, 512),
+    },
+  });
+  return json({ stored: key });
+}
+
+export default {
+  async fetch(request: Request, env: Env): Promise<Response> {
+    const url = new URL(request.url);
+    const origin = request.headers.get("Origin");
+    const match = /^\/v1\/games\/([^/]+)$/.exec(url.pathname);
+    if (!originAllowed(origin, env.ALLOWED_ORIGINS)) return json({ error: "origin not allowed" }, 403);
+    const allowedOrigin = origin as string;
+    if (request.method === "OPTIONS") {
+      return cors(allowedOrigin, new Response(null, {
+        status: 204,
+        headers: { "Access-Control-Allow-Methods": "PUT, OPTIONS", "Access-Control-Allow-Headers": "Content-Type", "Access-Control-Max-Age": "86400" },
+      }));
+    }
+    if (!match || !GAME_ID_RE.test(match[1] ?? "")) return cors(allowedOrigin, json({ error: "not found" }, 404));
+    if (request.method !== "PUT") return cors(allowedOrigin, json({ error: "method not allowed" }, 405));
+    return cors(allowedOrigin, await putGame(request, env, match[1] as string));
+  },
+};

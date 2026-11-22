@@ -120,6 +120,10 @@ These clips are recorded from the running game.
 **Mac app.** [Download the latest release](https://github.com/samcorcos/legatum/releases/latest) (macOS 11 or later, Apple silicon and Intel). It is signed and notarized with Apple. Open the disk image and drag Legatum to Applications.
 <!-- mac-download -->
 
+### Privacy
+
+Every game played in the browser version is uploaded to the project, so we can measure how well the AI plays and find bugs. What is sent is the game's record: the setup, every turn's orders, the score each turn and how long turns took. Player names are replaced with "Player 1", "AI 2" and so on before anything leaves your browser, and the server refuses a record with any other name. Nothing else is sent: no account, no email, no cookies and no tracking. The server does not keep IP addresses or request logs. The records are stored in a private bucket that only the maintainer can read; they may be used to train and test the game's AI. Uploads cannot be turned off in the browser version. The Mac app and builds from source upload nothing.
+
 ### Build it from source
 
 You need [rustup](https://rustup.rs/) (the checked-in toolchain file installs Rust 1.98.1, rustfmt, clippy and the WebAssembly target), [`wasm-pack`](https://wasm-bindgen.github.io/wasm-pack/installer/) 0.15.0, Node.js 22 (see `.nvmrc`), npm and Python 3 (the build and test scripts use it). The Mac app also needs the Xcode command line tools.
