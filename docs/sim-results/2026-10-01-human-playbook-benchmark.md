@@ -5,7 +5,7 @@ The requested human calibration is **not achieved**: it falls well below 40%,
 and never reaches the human's eight-city position at the turn-136 observation.
 The implementation is opt-in, deterministic and restricted to `PlayerView`.
 Default Proxy v4, the seven scripted Hard opponents, engine rules and app code
-are unchanged. [Usage and policy](../human-playbook-benchmark.md).
+are unchanged. [Usage and policy](../archive/human-playbook-benchmark.md).
 
 ## Matched results
 
