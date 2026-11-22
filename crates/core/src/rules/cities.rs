@@ -155,8 +155,18 @@ fn check_order(
         return Err(format!("{} has been eliminated", p.name));
     }
     match *order {
-        Order::SetCityAutomation { city, .. } => {
+        Order::SetCityAutomation { city, picked, .. } => {
             owned_city(state, player, city)?;
+            // The pick is kept on the city as it is, so a tile off the map would make the next save
+            // unloadable (`validation::check_state`). In an online game the order comes from a guest.
+            if let Some(
+                ProductionItem::Wonder { tile, .. } | ProductionItem::Improvement { tile, .. },
+            ) = picked
+            {
+                if !state.map.contains(tile) {
+                    return Err("that tile is off the map".to_string());
+                }
+            }
         }
         Order::Raze { city } => {
             let c = owned_city(state, player, city)?;

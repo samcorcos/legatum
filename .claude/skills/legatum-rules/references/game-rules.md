@@ -388,7 +388,8 @@ The Settle lens, settler preview, Found City blocker and AI site scoring use the
 
 **City building automation (2026-10-31).** A human may set each owned city's saved
 `City.build_automation` to Balanced, Science, Gold or Military with
-`Order::SetCityAutomation`. This is separate from the city's
+`Order::SetCityAutomation`. Its optional `picked` item is refused when it names a tile off the map
+(2026-11-22: the pick is stored on the city as sent, and an online guest could otherwise make the save unloadable). This is separate from the city's
 tile claim focus. At Ready the client sends its own fogged `PlayerView` to WASM and
 `ai::city_automation_choice_with_pipeline`, which values available production using Hard's chooser.
 A focus builds its own kind first (2026-11-01, after a Military capital built a Granary and a Farm): any available
