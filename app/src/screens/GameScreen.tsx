@@ -21,6 +21,7 @@ import { GoalActionDialog, useGoalActionKey } from '../ui/GoalActions';
 import { FreeTechPicker, FreeTechsPrompt } from '../ui/FreeTechs';
 import { DecisionNotice } from '../ui/DecisionNotice';
 import { SaveNotice } from '../ui/SaveNotice';
+import { TurnFailureDialog } from '../ui/TurnFailureDialog';
 import { EraNotice } from '../ui/EraNotice';
 import { TurnReport } from '../ui/TurnReport';
 import { HandoffScreen } from '../ui/HandoffScreen';
@@ -107,6 +108,7 @@ export function GameScreen() {
       <FreeTechPicker />
       <DecisionNotice />
       <SaveNotice />
+      <TurnFailureDialog />
       <EraNotice />
       <TechPanel />
       <CitiesOverview />

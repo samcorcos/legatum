@@ -11,9 +11,16 @@ export const PRIVACY_URL = 'https://github.com/samcorcos/legatum#privacy';
 
 export const uploadsGames = (): boolean => GAMES_URL !== '';
 
-/** The record to keep and upload: names removed when uploads are on. */
-export function historyToRecord(client: { archive(): string; publicArchive?(): string }): string {
-  return uploadsGames() && client.publicArchive ? client.publicArchive() : client.archive();
+/**
+ * The record to keep and upload: names removed when uploads are on, and the player's coach-question answers
+ * added as `coach_answers`. Only this upload copy carries them: the engine's `Recording` refuses unknown keys,
+ * so exports and anything fed back to the engine strip them (archive.ts).
+ */
+export function historyToRecord(client: { archive(): string; publicArchive?(): string }, answers: readonly unknown[] = []): string {
+  if (!uploadsGames()) return client.archive();
+  const json = client.publicArchive ? client.publicArchive() : client.archive();
+  if (!answers.length) return json;
+  return JSON.stringify({ ...(JSON.parse(json) as object), coach_answers: answers });
 }
 
 /**
