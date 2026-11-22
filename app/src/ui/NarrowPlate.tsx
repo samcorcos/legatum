@@ -1,7 +1,7 @@
 // A plate before the game on a phone-sized touch screen: Legatum is built for a laptop or desktop
 // (legatum-ui: phone is not a target). "Continue anyway" opens the game and is remembered, so the plate
 // shows once per browser. The phone layout code stays; this only says what to expect.
-// Not shown in the desktop or mobile app (Tauri) or under automation (navigator.webdriver), so the
+// Not shown under automation (navigator.webdriver), so the
 // e2e specs that emulate phones keep testing the layout behind it.
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import './crash.css';
@@ -20,7 +20,7 @@ function remember() {
 /** Whether this window should see the plate before the game. */
 export function wantsNarrowPlate(win: Window = window): boolean {
   try {
-    if ('__TAURI_INTERNALS__' in win || win.navigator.webdriver) return false;
+    if (win.navigator.webdriver) return false;
     return typeof win.matchMedia === 'function' && win.matchMedia(NARROW_QUERY).matches && !remembered();
   } catch {
     return false;

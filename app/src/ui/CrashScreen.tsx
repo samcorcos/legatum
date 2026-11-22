@@ -41,15 +41,6 @@ export async function downloadAutosave(): Promise<boolean> {
   const save = readAutosaveText();
   if (!save) return false;
   try {
-    if ('__TAURI_INTERNALS__' in window) {
-      // The desktop app has no browser downloads: use its own save dialog, as platform/files.ts does.
-      const { save: pick } = await import('@tauri-apps/plugin-dialog');
-      const path = await pick({ defaultPath: `Legatum - Turn ${save.turn ?? 'autosave'}.legatum`, filters: [{ name: 'Legatum save (JSON)', extensions: ['legatum'] }] });
-      if (path === null) return false;
-      const { writeTextFile } = await import('@tauri-apps/plugin-fs');
-      await writeTextFile(path, save.text);
-      return true;
-    }
     const url = URL.createObjectURL(new Blob([save.text], { type: 'application/json' }));
     const a = document.createElement('a');
     a.href = url;
