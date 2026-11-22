@@ -16,8 +16,8 @@ import { Amount, Amounts, YieldAmounts } from './Amounts';
 import { EraCard, EraRows } from './EraCards';
 import { UnlockDetail } from './TechDetail';
 import { EraObjectivesResearch } from './EraObjectives';
-import { steppingStone, techCardUnlocks } from './techCardUnlocks';
-import { appendToQueue, costParts, currentEraTechs, diffusionLine, eraFirst, eraRows, eraName, eraNumeral, queueSchedule, researchFirst, type QueueSlot } from './eraResearch';
+import { techCardUnlocks } from './techCardUnlocks';
+import { appendToQueue, costParts, currentEraTechs, diffusionLine, eraFirst, eraRows, eraName, eraNumeral, queueSchedule, researchCatalog, researchFirst, type QueueSlot } from './eraResearch';
 import './research.css';
 import { pendingSpend } from './productionPurchases';
 
@@ -120,8 +120,11 @@ export function TechPanel() {
   ], 'queue');
   const noScience = firstScienceForecast(view);
   const cards = currentEraTechs(r);
+  // The techs this faction researches: a skipped one (it gives the faction nothing) is not counted.
+  const catalog = researchCatalog(r);
+  const knownCount = catalog.filter((t) => r.known.includes(t.tech)).length;
   const schedule = queueSchedule(r, queue, science, view.turn);
-  const selected = inspected && r.catalog.some((t) => t.tech === inspected) ? inspected : null;
+  const selected = inspected && catalog.some((t) => t.tech === inspected) ? inspected : null;
   const toggleDetails = (tech: TechId) => { feel.select(); inspect(selected === tech ? null : tech); };
   // editQueue commits the order, which carries its own feedback: a select first would swallow it (80 ms debounce).
   const announce = (tech: TechId) => setPicked({ tech, n: ++pickCount.current });
@@ -158,14 +161,14 @@ export function TechPanel() {
       else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); }
     }}>
       <div className="modal-head">
-        <div className="research-head-main"><h2 id={titleId}>Research</h2><div className="muted"><Amount n={science} unit="Science" /> per turn · <Amount n={r.progress} unit="Science" /> stored · {r.known.length} of {r.catalog.length} technologies known</div>
+        <div className="research-head-main"><h2 id={titleId}>Research</h2><div className="muted"><Amount n={science} unit="Science" /> per turn · <Amount n={r.progress} unit="Science" /> stored · {knownCount} of {catalog.length} technologies known</div>
           {noScience && <p className="research-no-science"><Amounts text={noScience} /></p>}</div>
         <EraBadge view={view} />
         <div className="research-head-actions"><button ref={closeButton} className="btn quiet" onClick={() => set({ techOpen: false })} aria-label="Close research">Close <kbd>Esc</kbd></button></div>
       </div>
       <ResearchQueue view={view} orders={orders} slotCount={cards.filter((c) => c.researchable && !r.known.includes(c.tech)).length} landed={picked?.tech} />
       <div className="research-scroll">
-        {r.known.length === r.catalog.length && <section className="science-conversion" aria-label="Science after research">
+        {knownCount === catalog.length && <section className="science-conversion" aria-label="Science after research">
           <h3>After the last technology</h3>
           <p>Every technology is known. Half your Science now becomes Gold, Food or Production: choose which. You can change it every turn.</p>
           <div className="science-conversion-options" role="group" aria-label="What half your Science becomes">
@@ -221,7 +224,6 @@ function TechDetails({ ref, view, tech, faction, slot, gold }: { ref?: Ref<HTMLE
         {known && <p>Already researched.</p>}
       </div>
       <div className="research-impact">
-        {!unlock && !effects.length && <p className="research-stepping"><strong>{steppingStone(tech, faction).headline}.</strong></p>}
         {effects.length > 0 && <p><Amounts text={effects.join('; ')} />. Applies on turns after research.</p>}
         {revealedByTech(tech).map((resource) => <p key={resource} className="research-reveal"><img src={resourceArtUrl(resource, 64) ?? ''} width={24} height={24} alt="" /> Reveals {resource} on the map.</p>)}
         {(option.income_change ?? []).map((part) => <p key={part.label}>{part.label}: <YieldAmounts yields={part.yields} /> per turn, after faction penalties.</p>)}

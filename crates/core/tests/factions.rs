@@ -1254,6 +1254,99 @@ fn germany_industry_runs_each_turn_without_completion_or_purchase() {
     ));
 }
 
+/// The gate behind the user's rule (2026-11-22): "every tech card that you get should have at
+/// least something". A faction researches only technologies that give it something in the era it
+/// researches them; any other technology is skipped (known from the start). A new skip must be a
+/// reviewed design choice, so the list of skips is pinned here.
+#[test]
+fn no_faction_ever_researches_a_tech_that_gives_it_nothing() {
+    let rules = Default::default();
+    let mut skips = Vec::new();
+    for f in Faction::ALL {
+        for tech in TechId::ALL {
+            if data::tech_skipped(rules, f, tech) {
+                skips.push((f, tech));
+                continue;
+            }
+            // Researched in its own era: the state-aware test (the Mongols' Walls wait for the
+            // Medieval era) must still find something.
+            let era = legatum_core::eras::era_of_tech(tech);
+            assert!(
+                data::tech_has_player_benefit(rules, f, era, tech),
+                "{f:?} would research {tech:?} for nothing in era {era}: give it a benefit or skip it"
+            );
+        }
+    }
+    assert_eq!(skips, vec![(Faction::Egypt, TechId::BronzeWorking)]);
+    // The Nile takes all Production, so Egypt's cards drop the lines that only add Production
+    // (a Deep Mine's Gold and cheaper land units still help it).
+    for tech in TechId::ALL {
+        for line in data::tech_card_effects_for(Faction::Egypt, tech) {
+            assert!(
+                !line.contains("Production") || line.contains("cost") || line.contains("Gold"),
+                "{tech:?}: Egypt sees {line:?}"
+            );
+        }
+    }
+    assert_eq!(
+        data::tech_card_effects_for(Faction::Egypt, TechId::Masonry),
+        Vec::<&str>::new()
+    );
+    assert_eq!(
+        data::tech_card_effects_for(Faction::India, TechId::Masonry),
+        vec!["Quarries upgrade: Deep Quarry (+1 Production)"]
+    );
+}
+
+#[test]
+fn a_new_game_gives_each_faction_its_skipped_techs() {
+    let mut setup = GameSetup::all_ai(5);
+    setup.players.truncate(3);
+    setup.players[0].faction = Faction::Egypt;
+    setup.players[1].faction = Faction::India;
+    setup.players[2].faction = Faction::Mongols;
+    let s = game::try_new_game(&setup).unwrap();
+    assert_eq!(
+        s.player(P).techs.iter().copied().collect::<Vec<_>>(),
+        vec![TechId::BronzeWorking]
+    );
+    assert!(s.player(PlayerId(1)).techs.is_empty());
+    assert!(s.player(PlayerId(2)).techs.is_empty());
+    // Egypt's research screen counts four Ancient technologies, without Bronze Working.
+    let v = legatum_core::view::player_view(&s, P);
+    assert_eq!(v.research.skipped, vec![TechId::BronzeWorking]);
+    assert_eq!(
+        (v.research.era, v.research.era_total, v.research.era_known),
+        (0, 4, 0)
+    );
+    assert!(
+        !v.research
+            .available
+            .iter()
+            .any(|o| o.tech == TechId::BronzeWorking)
+    );
+    let india = legatum_core::view::player_view(&s, PlayerId(1));
+    assert_eq!((india.research.era_total, india.research.era_known), (5, 0));
+    // Egypt never researched it, so it gives no one a diffusion discount.
+    assert_eq!(
+        economy::tech_cost(&s, PlayerId(1), TechId::BronzeWorking).total,
+        data::tech_stats(TechId::BronzeWorking).cost
+    );
+    // Off the Nile, Egypt builds Workshops and researches Bronze Working like everyone else.
+    let mut classic = setup.clone();
+    classic
+        .rule_experiments
+        .faction_rules_off
+        .insert(legatum_core::experiments::FactionRule::EgyptNile);
+    assert!(
+        game::try_new_game(&classic)
+            .unwrap()
+            .player(P)
+            .techs
+            .is_empty()
+    );
+}
+
 #[test]
 fn research_cards_show_only_what_helps_the_faction() {
     let rules = Default::default();
@@ -1263,9 +1356,9 @@ fn research_cards_show_only_what_helps_the_faction() {
             // the Aztecs benefit despite having no mounted line.
             let has = data::tech_has_benefit(rules, f, tech);
             // The Nile: Egypt has no Production, so Bronze Working (Workshops) gives it nothing.
-            // Industrialization still reveals Coal, which its Industrial-era buildings need.
-            let stepping_stone = f == Faction::Egypt && tech == TechId::BronzeWorking;
-            assert_eq!(has, !stepping_stone, "{f:?} {tech:?}");
+            // Industrialization still reveals Coal, which its Industrial-era units need.
+            let skipped = f == Faction::Egypt && tech == TechId::BronzeWorking;
+            assert_eq!(has, !skipped, "{f:?} {tech:?}");
         }
     }
     assert_eq!(
