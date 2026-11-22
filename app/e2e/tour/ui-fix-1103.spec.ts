@@ -41,29 +41,34 @@ for (const size of SIZES) test.describe(`ui fix 1103 ${size.name}`, () => {
   test('World Age cards say what they cost in plain words', async ({ page }) => {
     const s = improvementCity({ techs: ['Masonry'] });
     await loadFixture(page, coreFixture(s), 12);
+    // One card per Age, as a real game draws: Breach for Age II, Veterans for Age III.
     await stage(page, (v) => {
-      v.eras = v.eras!.filter((e) => e.era === 2);
-      v.eras[0].objectives = [
-        { slot: 0, family: 'Fight', text: 'Veterans: earn 4 promotions in battle (a promotion is a level a unit gains from combat experience after this Age began)', target: 4, objective: { kind: 'Veterans', n: 4 } },
-        { slot: 1, family: 'Fight', text: 'Breach: capture a walled city', target: 1, objective: { kind: 'Breach' } },
-        { slot: 2, family: 'Fight', text: 'Humble the mighty: capture a city from an empire ahead of you on VP', target: 1, objective: { kind: 'HumbleTheMighty' } },
-      ];
+      v.eras = v.eras!.filter((e) => e.era === 2 || e.era === 3);
+      v.eras[0].objectives = [{ slot: 0, family: 'Fight', text: 'Breach: capture a walled city', target: 1, objective: { kind: 'Breach' } }];
+      v.eras[1].objectives = [{ slot: 0, family: 'Fight', text: 'Veterans: earn 4 promotions in battle (a promotion is a level a unit gains from combat experience after this Age began)', target: 4, objective: { kind: 'Veterans', n: 4 } }];
+      for (const e of v.eras) e.scored_by = [];
       v.objective_progress = [
-        { era: 2, slot: 0, current: 2, target: 4, entered: true, era_scored: false, ready: false },
-        { era: 2, slot: 1, current: 0, target: 1, entered: true, era_scored: false, ready: false },
-        { era: 2, slot: 2, current: 0, target: 1, entered: true, era_scored: false, ready: false },
+        { era: 2, slot: 0, current: 0, target: 1, entered: true, era_scored: false, ready: false },
+        { era: 3, slot: 0, current: 2, target: 4, entered: true, era_scored: false, ready: false },
       ];
     });
     await page.getByRole('region', { name: 'Victory race', exact: true }).getByRole('button', { name: 'All objectives', exact: true }).click();
     const sheet = page.getByTestId('objective-sheet');
-    const era = sheet.locator('.sl-row[data-row="era-2"] button');
-    if (await era.getAttribute('aria-expanded') === 'false') await era.click();
-    const detail = sheet.locator('#sl-detail-era-2');
+    const open = async (era: number) => {
+      const row = sheet.locator(`.sl-row[data-row="era-${era}"] button`);
+      if (await row.getAttribute('aria-expanded') === 'false') await row.click();
+      return sheet.locator(`#sl-detail-era-${era}`);
+    };
+    const veterans = await open(3);
+    await expect(veterans).toContainText('Veterans: earn 4 promotions in battle (a promotion is a level a unit gains from combat experience after this Age began)');
+    // The capital and wonder exception is printed only under the two capture cards.
+    await expect(veterans).not.toContainText('never count capitals or wonder cities');
+    const detail = await open(2);
     // The status line states the rule once; the fine print no longer repeats it in the plural.
     await expect(detail).toContainText('Every empire sees this card the turn the first empire enters the era, and it never expires.');
     await expect(detail).not.toContainText('and they never expire');
     await expect(detail).toContainText('Each card counts only what you do after its Age begins');
-    await expect(detail).toContainText('Veterans: earn 4 promotions in battle (a promotion is a level a unit gains from combat experience after this Age began)');
+    await expect(detail).toContainText('Humble the mighty and Breach never count capitals or wonder cities.');
     await expect(detail).toContainText('Walled cities captured since the Age began: 0 of 1');
     await page.mouse.move(4, size.height / 2);
     await shot(page, size, 'd1-objective-deck-cards');

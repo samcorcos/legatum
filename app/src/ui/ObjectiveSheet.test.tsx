@@ -85,3 +85,18 @@ it('shows team VP over its first member and hold turns in that head', () => {
   for (const other of mine.slice(1)) expect(other.querySelector('.sl-col-vp')!.textContent).toBe(`${team.target}/${team.target} VP`);
 });
 
+it('an Age scored with a card no longer drawn shows a token beside "scored", never an empty socket', () => {
+  // A turn-203 save: you scored Age II with a card whose slot is gone; the status word and the token use one check.
+  const view = structuredClone(useGame.getState().views![0]);
+  view.eras = view.eras.map((ev) => ev.era === 2
+    ? { ...ev, objectives: ev.objectives.slice(0, 1), scored_by: ev.scored_by.map((s) => s.player === view.me ? { ...s, slot: 7 } : s) }
+    : ev);
+  useGame.setState({ views: [view] });
+  act(() => root.render(<ObjectiveSheet />));
+  const era2 = row('era-2');
+  expect(era2.textContent).toContain('scored');
+  const mine = era2.querySelector('.sl-token.mine')!;
+  expect(mine.getAttribute('aria-label')).toBe('You scored the Classical Age');
+  expect(era2.querySelector('.sl-socket[aria-label^="You"]')).toBeNull();
+});
+

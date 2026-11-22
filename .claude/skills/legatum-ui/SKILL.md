@@ -884,3 +884,9 @@ Verify UI changes with Playwright screenshots at the three sizes and attach them
 - A flow that resumes a shared game tells the host who still has to come back, and how.
 - The seat screen describes the host's own seat from the guest's side ("The host's seat"), never with a call to action the guest can't take.
 - Troubleshooting footers name things the player can act on (a game id, a state hash), never internal runtimes or engine builds (the menu once said "Core (WASM)" after the desktop runtime was gone).
+
+## From the PR 31 UI review (2026-11-22, co-op Gold gift, rules-50 ledger)
+- A new order kind goes into `ORDER_KINDS` in `app/src/orderDecoding.ts` in the same change, and its tour shot includes the pending-orders line. A missing kind reads "Unknown order (X)" in the order list, and `decodeOrders` drops it from online and saved turns without an error.
+- Number inputs are measured with the largest legal value (four digits for Gold): about 7ch wide, with 8px gaps to the label and button. A cleared field stays empty and never snaps to 0. Out of range is the red alert line (`order-error`, `role="alert"`).
+- A teammate's row uses the same PortraitRoundel and faction name as the Empires rows ("Aztecs", never the seat name "AI 3"), and the same name in its forecast and aria-label. In a sentence a people takes "the" ("You gave the Aztecs 120 Gold"; `resources.ts::withThe`).
+- A ledger row's status word and its token come from one check (`EraInfo.scored`), so "scored" never sits beside an empty socket. A note that belongs to one card (the capture cards' capital exception) shows only under that card.

@@ -58,7 +58,9 @@ interface EraInfo {
   objectives: EraObjective[];
   /** The viewer has entered the era (can score it). */
   myEntered: boolean;
-  /** The viewer has scored it. */
+  /** Living empires that scored it, whichever card they used (a save may name a card no longer drawn). */
+  scored: PlayerId[];
+  /** The viewer has scored it: `scored` includes the viewer. */
   myScored: boolean;
 }
 
@@ -262,7 +264,7 @@ export function buildVpModel(view: PlayerView): VpModel {
     });
     const info: EraInfo = {
       era: ev.era, eraName: ev.name, entered: ev.entered_by.filter(isAlive), objectives,
-      myEntered: true, myScored: scored.some((x) => x.player === me),
+      myEntered: true, scored: owners, myScored: owners.includes(me),
     };
     return {
       id: eraId(ev.era), kind: 'era', name: `Age ${roman(ev.era)}: ${ev.name}`, icon: ERA_ICON, vp: 1, rule: 'Score this Age’s card whenever you like; 1 VP, kept for good',

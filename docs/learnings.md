@@ -2,6 +2,11 @@
 
 Newest first. One entry per non-obvious finding: what we learned, the evidence, and what we changed. Correct or delete entries that turn out to be wrong.
 
+## 2026-11-22: A new order kind is dropped silently unless the app's decoder knows it (PR 31 UI review)
+
+- **`ORDER_KINDS` in `app/src/orderDecoding.ts` is a hand-kept copy of `core::orders::Order`.** `decodeOrders` runs on every order list that comes from storage or the relay (`remote.ts`). It drops a kind it doesn't know, with only a console warning, and `describeOrder` shows "Unknown order (GiveGold)". `GiveGold` was added to the core, the TypeScript union and `describeOrder`, but not to the set. So a queued gift showed as unknown, and an online guest's gift would never have reached the host. tsc can't catch this, because the set is typed `Set<Order['type']>` and a missing member is legal. A test now checks that a `GiveGold` order survives `decodeOrders`, and the give-gold tour asserts the pending-orders line.
+- **`withThe` gave "the Athens".** It added "the" to any name ending in "s". It now adds it only to a people's name (`PEOPLE_NAME`: the Aztecs, the Mongols, the Celts), never to Athens or Switzerland.
+
 ## 2026-11-22: Rules-49 states upgrade for sims; co-op Gold gifts (rules 50, `claude/review-world-ages`)
 
 - **A rules-49 state can be upgraded faithfully, with two known differences.** `wasm::json::upgrade_from_49` drops each player's `capitals_taken`. A Celtic entry whose city no longer exists becomes `capitals_sacked`, which is exactly the rules-50 exception. Held-capital VP is derived live from current holders. Every scored Age card's `slot` is set to 0, since only one card per Age exists now. The two differences: the slot rename (display only), and a non-Celtic capital razed by order loses its point, which is what rules 50 intends. The app still refuses 49. Only sims opt in (`hill_suite --accept-rules 49`). The checked-in fixture is the owner's "India: strike the leader" T148 state (`crates/sim/tests/fixtures-rules49/`), which plays 10 all-Hard turns after the upgrade.

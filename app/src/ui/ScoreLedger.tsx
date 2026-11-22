@@ -78,10 +78,13 @@ function CapitalCell({ model, e }: { model: VpModel; e: VpEmpire }) {
 
 function EraCell({ s, e }: { s: Source; e: VpEmpire }) {
   const info = s.era!;
-  const scoredWith = info.objectives.find((o) => o.scorers.includes(e.id));
   const who = e.isMe ? 'You' : e.name;
-  if (scoredWith) return <div className="sl-cell"><Token e={e} icon={FAMILY_ICON[scoredWith.family as ObjectiveFamily]} title={`${who} scored the ${info.eraName} Age with: ${scoredWith.text}`} /></div>;
-  return <div className="sl-cell"><Socket title={`${who} ${e.isMe ? 'have' : 'has'} not scored the ${info.eraName} Age yet`} /></div>;
+  // One check for the token and the row's status word: has this empire scored the Age (`info.scored`)?
+  // The card it used names the token; a save whose card is no longer drawn gets the Age's own mark.
+  if (!info.scored.includes(e.id)) return <div className="sl-cell"><Socket title={`${who} ${e.isMe ? 'have' : 'has'} not scored the ${info.eraName} Age yet`} /></div>;
+  const scoredWith = info.objectives.find((o) => o.scorers.includes(e.id));
+  if (!scoredWith) return <div className="sl-cell"><Token e={e} icon={s.icon} title={`${who} scored the ${info.eraName} Age`} /></div>;
+  return <div className="sl-cell"><Token e={e} icon={FAMILY_ICON[scoredWith.family as ObjectiveFamily]} title={`${who} scored the ${info.eraName} Age with: ${scoredWith.text}`} /></div>;
 }
 
 /** An Age's status for the viewer, in one line. */
@@ -136,8 +139,10 @@ function RowDetail({ model, s, kind }: { model: VpModel; s?: Source; kind: 'work
     </div>;
   }
   const info = s.era!;
+  // The capital and wonder exception belongs only to the two capture cards.
+  const captureCard = info.objectives.some((o) => o.kind === 'HumbleTheMighty' || o.kind === 'Breach');
   return <div className={`sl-detail sl-era${info.myScored ? ' scored' : ''}`}>
-    <p className="sl-detail-rule">{eraLine(s)} <span className="sl-detail-fine">{`${info.myScored ? 'Every empire sees this card the turn the first empire enters the era, and it never expires. ' : ''}Each card counts only what you do after its Age begins. Humble the mighty and Breach never count capitals or wonder cities.`}</span></p>
+    <p className="sl-detail-rule">{eraLine(s)} <span className="sl-detail-fine">{`${info.myScored ? 'Every empire sees this card the turn the first empire enters the era, and it never expires. ' : ''}Each card counts only what you do after its Age begins.${captureCard ? ' Humble the mighty and Breach never count capitals or wonder cities.' : ''}`}</span></p>
     <EraObjectives model={model} s={s} />
   </div>;
 }

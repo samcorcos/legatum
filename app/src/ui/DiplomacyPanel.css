@@ -118,6 +118,14 @@
 /* Empires: one row each (mark, name, relation, VP, where); the chosen one opens its actions. */
 .empire-list { list-style: none; margin: 0; padding: 0; }
 .empire-row, .gift-row { border-top: 1px solid var(--rule); padding: 6px 0 8px; }
+/* A teammate's row: the same roundel and faction name as an empire row, then the gift control. */
+.gift-row { border-left: 4px solid var(--empire, var(--rule-2)); padding-left: 10px; }
+.gift-who { display: flex; align-items: center; gap: 8px; }
+.gift-control { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 6px; }
+.gift-control label { display: inline-flex; align-items: center; gap: 8px; }
+/* Measured with the largest legal amount: four digits plus the spinner fit. */
+.gift-control input[type=number] { width: 7ch; box-sizing: content-box; padding: 2px 4px; }
+.gift-control .gift-forecast { flex-basis: 100%; margin: 0; }
 .empire-row.open { border-left: 4px solid var(--empire, var(--rule-2)); padding-left: 10px; background: color-mix(in srgb, var(--empire, transparent) 6%, transparent); }
 .empire-pick { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; gap: 10px; width: 100%; min-height: 40px; padding: 4px 0; border: 0; background: none; color: var(--ink); text-align: left; cursor: pointer; font: inherit; }
 .empire-pick-identity { min-width: 0; }

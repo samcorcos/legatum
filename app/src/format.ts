@@ -1,4 +1,4 @@
-import { RESOURCE_INFO, fixClause, idleCountText, idleEntries, withArticle } from './resources';
+import { RESOURCE_INFO, fixClause, idleCountText, idleEntries, withArticle, withThe } from './resources';
 import { WONDER_INFO, wonderBonusSentence } from './wonders';
 import { diplomaticTeams, offerLabel } from './diplomacy';
 import { ALLIANCE_SHARES, allianceTerms } from './treaties';
@@ -1206,8 +1206,8 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
       });
     case 'GoldGiven':
       return line('economy', e.from === ctx.me
-        ? `You gave ${who(ctx, e.to)} ${e.amount} Gold`
-        : e.to === ctx.me ? `${who(ctx, e.from)} gave you ${e.amount} Gold` : `${who(ctx, e.from)} gave ${who(ctx, e.to)} ${e.amount} Gold`, {
+        ? `You gave ${withThe(who(ctx, e.to))} ${e.amount} Gold`
+        : e.to === ctx.me ? `${cap(withThe(who(ctx, e.from)))} gave you ${e.amount} Gold` : `${cap(withThe(who(ctx, e.from)))} gave ${withThe(who(ctx, e.to))} ${e.amount} Gold`, {
         players: [e.from, e.to], weight: 2, tone: e.to === ctx.me ? 'good' : 'neutral',
       });
     case 'CapitalLost':
