@@ -27,7 +27,7 @@ args = ap.parse_args()
 out = os.path.abspath(args.out)
 missing = {p for p in (line.strip() for line in sys.stdin) if p and not os.path.lexists(os.path.join(out, p))}
 
-CODE_DIRS = ('crates', 'app/src', 'app/e2e', 'app/src-tauri/src', 'scripts', 'tools', '.github')
+CODE_DIRS = ('crates', 'app/src', 'app/e2e', 'scripts', 'tools', '.github')
 CODE_EXT = ('.rs', '.ts', '.tsx', '.js', '.mjs', '.py', '.sh', '.yml', '.yaml', '.toml')
 LITERAL = re.compile(r'["\'`]([^"\'`\s$]*/[^"\'`\s$]+\.[A-Za-z0-9]+)["\'`]')
 

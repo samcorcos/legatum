@@ -18,7 +18,7 @@ The gap is running a war: getting an army to arrive together, fight as one, keep
 
 ## How we make sure this lands
 
-- **Every increment ends in a playtest build installed on the Mac**, with release notes saying what to look for. No increment is done until it's been played.
+- **Every increment ends in a playtest build on a Pages preview**, with release notes saying what to look for. No increment is done until it's been played.
 - **Every AI change sits behind a gene** (off by default). It lands only through the three gates:
   - the frozen-control human-seat gate;
   - the war suite and attack check;

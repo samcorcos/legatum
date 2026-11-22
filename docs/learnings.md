@@ -2,6 +2,15 @@
 
 Newest first. One entry per non-obvious finding: what we learned, the evidence, and what we changed. Correct or delete entries that turn out to be wrong.
 
+## 2026-11-22: Dropping the desktop app: what the browser build had been leaning on (`web-only`)
+
+- **Most "desktop-only" code was a second copy of a browser path, not a feature.** Autosave, game history, training logs, why-answers, scenario runs and haptics each had a Tauri branch that wrote to `~/LegatumData` and a browser branch (localStorage, IndexedDB, download, Vibration API). Removing Tauri meant deleting the native branch and making the browser branch the only one, plus making `readAutosave` synchronous (the title screen no longer waits on "Checking autosaves…").
+- **Native training ran the AI search on threads in Rust; the browser runs it in slices on the main thread.** `TrainingDriver` lost its native mode; the sim keeps the parallel `search_turn` feature for itself.
+- **A fake-timer test hung vitest for 12 minutes.** `vi.useFakeTimers()` freezes `performance.now()`, so the training slice loop (`do { … } while (performance.now() < deadline)`) never ended. Time-capped loops need real timers in tests (a 100 ms cap is enough).
+- **The online host could not stay native.** The Mac app embedded `legatum-server`, which dialed the Cloudflare relay. In the browser the authoritative host (game, staging, AI) runs in the host's tab as WASM and a JS tunnel speaks the relay's frame format; the LAN server is gone, since the relay replaces it and the designer's firewall blocked LAN anyway.
+- **Scenario folder drop-ins existed only because the app could read a folder.** On the web a scenario ships by merging to master (the Pages deploy), and playtests are Pages previews (`scripts/deploy-preview.sh <label>`).
+- **`npm run e2e:hosted` is not in `tools/ci/local-ci.sh`,** so its title assertions went stale when co-op moved into the browser (it still expected a disabled Host Game). Run it by hand (`scripts/build-web.sh --skip-wasm && cd app && npm run e2e:hosted`) whenever the title or multiplayer menu changes.
+
 ## 2026-11-22: Art audit pass: map grade on card art, floating unlock pieces, converging faces (`claude/art-pass-1122`)
 
 - **The washed-out wonder cards were the map's palette grade.** `landmark-atlas-edit.py` grades wonders and Great Works so they sit beside the towns on the map, and the same 256/128/64 files served the research cards. The map now reads `assets/landmarks/<slug>-256.png` (`landmarkArtUrl`) and the cards get the ungraded copy (`tools/art/card-grade.py`), no regeneration needed.

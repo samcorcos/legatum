@@ -1,9 +1,8 @@
 //! `legatum-sim scenario-check FILE...`: the fast check for scenario files, on this engine. Each
 //! file must be a Lab scenario made for the current rules version whose state loads (hash),
-//! is legal and has an objective that parses (`legatum_wasm::scenario::check_file`, the same
-//! check the desktop app runs on its scenarios folder). Prints `ok<TAB>FILE` or
+//! is legal and has an objective that parses (`legatum_wasm::scenario::check_file`). Prints `ok<TAB>FILE` or
 //! `FAIL<TAB>FILE<TAB>reason` per file; exits 1 when any fails. Takes under a second a file.
-//! Used by the pre-merge gate (`tools/gates/scenario.py`) and `tools/scenarios/publish.sh`.
+//! Used by the pre-merge gate (`tools/gates/scenario.py`).
 
 use legatum_wasm::scenario::check_file;
 

@@ -6,7 +6,7 @@
   <a href="LICENSE"><img alt="Code: MIT" src="https://img.shields.io/badge/code-MIT-2b2419?style=flat-square&labelColor=8f6f1c"></a>
   <a href="LICENSE-ART"><img alt="Art: CC BY 4.0" src="https://img.shields.io/badge/art-CC%20BY%204.0-2b2419?style=flat-square&labelColor=8f6f1c"></a>
   <img alt="Engine: Rust" src="https://img.shields.io/badge/engine-Rust-2b2419?style=flat-square&labelColor=9a3322">
-  <img alt="App: macOS" src="https://img.shields.io/badge/app-macOS-2b2419?style=flat-square&labelColor=9a3322">
+  <img alt="Plays in: the browser" src="https://img.shields.io/badge/plays%20in-the%20browser-2b2419?style=flat-square&labelColor=9a3322">
   <img alt="Status: pre-release" src="https://img.shields.io/badge/status-pre--release-2b2419?style=flat-square&labelColor=5b503f">
 </p>
 
@@ -41,7 +41,7 @@
 
 Legatum is a turn-based strategy game in the tradition of Civilization VI. You found cities, research through nine eras, raise armies, make and break alliances, and race your rivals for victory points. A full game is paced for about 300 turns.
 
-It is an open-source project in active development. The game runs today in a browser (single player, hot seat and online games through a relay) and as a Mac app. There is no stable release yet; see [Status](#status).
+It is an open-source project in active development. The game runs in a browser, on a laptop, tablet or phone, and online for two or more players. There is no stable release yet; see [Status](#status).
 
 ## Why it's different
 
@@ -108,17 +108,14 @@ These clips are recorded from the running game.
 - **Diplomacy with Peace, Alliance and War.** An Alliance fights as one side, a call to arms is one decision card, and a public warning shows when rivals line up against a leader.
 - **Asymmetric peoples.** Each has its own rules, units or buildings, and a drawback that pays for them.
 - **A public victory race.** A team wins by holding its VP target for ten turns: 10 VP for one empire, 20 for a team of two. VP come from era objectives (1 VP in each era after the first, with three ways to score it), captured original capitals, world wonders and faction goals. A team also wins when it is the only one still holding an original capital of its own.
-- **Solo or together.** Single Player is you against one to seven AI empires (five by default). Multiplayer is hot seat on one computer or an online game in the browser: Host Game lists your game for others, Join Game shows the games that are open (all games are public for now), and Host from a save carries on a game saved earlier. The co-op setup puts two humans on one team against six AI empires.
+- **Solo or together.** Single Player is you against one to seven AI empires (five by default). Multiplayer is hot seat on one computer or an online game: Host Game lists your game for others and Join Game shows the games that are open (all games are public for now). The co-op setup puts two humans on one team against six AI empires.
 - **Scenarios.** Short positions that each ask one question ("can you hold this city?"), with the Hard AI's result from the same start to compare against.
 - **Art and sound.** All of the art is AI-generated (see [How it was made](#how-it-was-made)). The music and sound effects are CC0 recordings by Kenney and others, credited in the game.
 - **A post-game report.** The victory race over time, empires over time, an event timeline and a statistics table.
 
 ## Play it
 
-**[Play in your browser](https://legatum-game.pages.dev).** Nothing to install. Single player against the AI, hot seat on one computer and the scenarios all work there; online games run through a relay. It is made for a laptop or desktop with a keyboard and mouse and a current browser (it is tested in Chrome); the phone is not a target. The first load is about 7 MB. Your game is autosaved in that browser, and Menu → Save to file gives you a copy to keep. The game's record is also uploaded to the project, without player names; see [Privacy](#privacy).
-
-**Mac app.** [Download the latest release](https://github.com/samcorcos/legatum/releases/latest) (macOS 11 or later, Apple silicon and Intel). It is signed and notarized with Apple. Open the disk image and drag Legatum to Applications.
-<!-- mac-download -->
+**[Play in your browser](https://legatum-game.pages.dev).** Nothing to install. Single player against the AI, hot seat on one computer, the scenarios and online games all work there. It runs on a laptop or desktop and in a phone or tablet browser; it is tested most in Chrome. The first load is about 7 MB. Your game is autosaved in that browser, and Menu → Save to file gives you a copy to keep. The game's record is also uploaded to the project, without player names; see [Privacy](#privacy).
 
 ### Privacy
 
@@ -127,13 +124,11 @@ Every game played in the browser version is uploaded to us, so we can measure ho
 - **What is sent:** the game's record: the setup, every turn's orders, the score each turn and how long turns took. Player names are replaced with "Player 1", "AI 2" and so on before anything leaves your browser, and the server refuses a record with any other name.
 - **What is not sent:** no account, no email, no cookies and no tracking. Legatum keeps no IP addresses or request logs.
 - **Who can read it:** the records are stored privately and only the maintainer can read them. They may be used to train and test the game's AI.
-- **Turning it off:** uploads cannot be turned off in the browser version. The Mac app and builds from source upload nothing.
+- **Turning it off:** uploads cannot be turned off in the browser version. Builds from source upload nothing.
 
 ### Build it from source
 
-You need [rustup](https://rustup.rs/) (the checked-in toolchain file installs Rust 1.98.1, rustfmt, clippy and the WebAssembly target), [`wasm-pack`](https://wasm-bindgen.github.io/wasm-pack/installer/) 0.15.0, Node.js 22 (see `.nvmrc`), npm and Python 3 (the build and test scripts use it). The Mac app also needs the Xcode command line tools.
-
-**In a browser:**
+You need [rustup](https://rustup.rs/) (the checked-in toolchain file installs Rust 1.98.1, rustfmt, clippy and the WebAssembly target), [`wasm-pack`](https://wasm-bindgen.github.io/wasm-pack/installer/) 0.15.0, Node.js 22 (see `.nvmrc`), npm and Python 3 (the build and test scripts use it).
 
 ```sh
 git clone https://github.com/samcorcos/legatum && cd legatum
@@ -142,29 +137,24 @@ scripts/build-wasm.sh            # builds the engine as WebAssembly into app/src
 cd app && npm ci && npm run dev  # serves the game at http://localhost:5173; open that in your browser
 ```
 
-The first engine build compiles the whole Rust engine with full optimisation and takes several minutes (often 5 to 15); later builds are much faster. `scripts/build-wasm.sh --dev` gives a slower-running engine sooner, for a quick look. If the build fails while downloading `wasm-opt`, run `LEGATUM_WASM_NO_OPT=1 scripts/build-wasm.sh` to skip that optimisation step.
+The first engine build compiles the whole Rust engine with full optimisation and takes several minutes (often 5 to 15); later builds are much faster. `scripts/build-web.sh` builds the static site into `app/dist`, the same files Cloudflare Pages serves. `scripts/build-wasm.sh --dev` gives a slower-running engine sooner, for a quick look. If the build fails while downloading `wasm-opt`, run `LEGATUM_WASM_NO_OPT=1 scripts/build-wasm.sh` to skip that optimisation step.
 
-**As a Mac app:**
+### Online games
 
-```sh
-scripts/build-mac-app.sh         # add --dmg for a disk image
-open app/src-tauri/target/release/bundle/macos/Legatum.app
-```
+Online games need no server program. When a player picks Multiplayer > Host Game, the game runs in that player's browser tab, in the same engine as single-player games. The tab lists the game on the Legatum relay, a small Cloudflare Worker (`infra/relay`) that only keeps the list of open games and passes messages between players. Other players pick Join Game, see the open games, and join one. The host's tab makes every decision, runs the AI empires and keeps the save. Everyone needs the same version of the game. Keep the host's tab open while you play: closing it ends the game for everyone unless the host saved it (Menu → Save to file, then Multiplayer > Host from a save to carry on; players rejoin their old seats from Join Game). Reloading it resumes the game, and a guest who reloads goes back to their seat. A game holds up to 8 players. The contract is [plans/online-play.md](plans/online-play.md).
 
-An app you build yourself is unsigned, so on another Mac Gatekeeper asks you to right-click and choose Open the first time.
-
-**Online** (a browser, no addresses or Terminal): Host Game runs the game in the host's browser tab and lists it on a small Cloudflare relay (`infra/relay`); guests choose it from Join Game. The game and the AI stay in the host's tab; the relay only lists games and passes messages. Closing the host's tab ends the game for everyone, so the host can use Menu → Save to file and later Multiplayer → Host from a save; guests join from the list and take their old seats. Everyone needs the same build. The contract is [plans/online-play.md](plans/online-play.md).
+To try a branch with other people, `scripts/deploy-preview.sh <label>` publishes it at `https://<label>.legatum-game.pages.dev`.
 
 New to the game? The in-app Guide covers the rules, and [docs/rules/](docs/rules/) is the code-checked reference for how everything works.
 
 ## How it works
 
-Legatum is one deterministic Rust engine with thin hosts around it. The app (in the browser, and the host's tab for online games) and the simulation runner all drive the same code, so there is only one copy of the rules.
+Legatum is one deterministic Rust engine with thin hosts around it. The browser game, the online host and the simulation runner all drive the same code, so there is only one copy of the rules.
 
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/media/diagrams/architecture-dark.svg">
-    <img src="docs/media/diagrams/architecture-light.svg" alt="Architecture: the app (WebAssembly) sits on legatum-core, a deterministic Rust engine; the headless runner, the climb and the AI sit beneath it." width="880">
+    <img src="docs/media/diagrams/architecture-light.svg" alt="Architecture: the browser game and the online host (both WebAssembly) sit on legatum-core, a deterministic Rust engine; the headless runner, the climb and the AI sit beneath it." width="880">
   </picture>
 </p>
 
@@ -223,7 +213,7 @@ Legatum is built largely with AI coding agents, and all of its art is AI-generat
 
 ## Status
 
-Pre-release and moving fast. Rules, content and balance change often, and a save from an older rules version is refused with a clear message instead of being migrated. The Mac app is the target that is exercised most. The web build is played through a short game in Chromium before every deploy; other browsers and the Rust crates on other systems should work but are not routinely tested. An iPad and iPhone build runs in the iOS Simulator; it is experimental and unsupported.
+Pre-release and moving fast. Rules, content and balance change often, and a save from an older rules version is refused with a clear message instead of being migrated. The web build is the only way to play. It is played through a short game in Chromium before every deploy; other browsers and the Rust crates on other systems should work but are not routinely tested.
 
 ## Roadmap
 
@@ -234,7 +224,6 @@ Direction, in rough order of how soon it matters:
 - **Faction balance.** The aim is that the best people's win rate is at most 1.5 times the worst's, checked on about 2,000 games plus held-out seeds. Balance changes add drawbacks or deepen a weak identity; they do not flatten strengths.
 - **A late-game way to score for stalemated games.** A stalled game should have a hard path to two more points in the Future era. It waits until simulations show it is needed.
 - **Delegation for the mid-game.** War across a big empire is tedious by hand. Generals who run a campaign for you are planned once the AI's own campaign logic is good enough to trust.
-- **More platforms.** Windows and Linux builds of the app, from the same web UI, are open for contribution.
 
 ## Contributing
 

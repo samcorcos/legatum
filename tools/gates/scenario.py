@@ -14,8 +14,7 @@ instead (designer, 2026-11-07: scenarios should ship without a full test and rel
   copy       title, briefing, objective, card and opponent text pass the plain-language copy lint
              (`npx vitest run --config vitest.lint.config.ts`, about 1 s)
 
-`tools/scenarios/publish.sh` runs the same checks against the INSTALLED app's rules version before it drops a file
-into the app's scenarios folder. Overrides: LEGATUM_SCENARIO_ROOT names the checkout whose engine and lint to use; for tests, LEGATUM_SCENARIO_ENGINE and LEGATUM_SCENARIO_LINT name a command
+Overrides: LEGATUM_SCENARIO_ROOT names the checkout whose engine and lint to use; for tests, LEGATUM_SCENARIO_ENGINE and LEGATUM_SCENARIO_LINT name a command
 (run with the files as arguments / LEGATUM_LINT_SCENARIOS set) in place of the cargo and vitest defaults.
 
   tools/gates/scenario.py [--repo DIR] FILE...     check scenario files on disk against this checkout's engine

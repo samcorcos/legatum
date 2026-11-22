@@ -88,7 +88,7 @@ export function requestReady(seat: Seat, pass = false) {
   const s = useGame.getState();
   const view = s.views?.[seat];
   if (!view || view.finished || s.busy || s.resolvingToEnd) return;
-  if (s.client?.kind === 'remote' && s.lan?.conn !== 'open') return;
+  if (s.client?.kind === 'remote' && s.net?.conn !== 'open') return;
   if (!s.ready[seat] && pendingDecisions(view, s.orders[seat], s.errors[seat], s).length) {
     s.set({ endTurnConfirmation: { seat, view, orders: s.orders[seat], pass } });
     feel.select();
@@ -110,8 +110,8 @@ function commitReady(seat: Seat, passSeat: boolean) {
   const s = useGame.getState();
   const view = s.views?.[seat];
   if (!view || view.finished || s.busy || s.resolvingToEnd) return;
-  if (s.client?.kind === 'remote' && s.lan?.conn !== 'open') return;
-  if (isEliminated(view) && !canResolveToEnd(view, s.client?.kind === 'remote' ? s.lan : null)) {
+  if (s.client?.kind === 'remote' && s.net?.conn !== 'open') return;
+  if (isEliminated(view) && !canResolveToEnd(view, s.client?.kind === 'remote' ? s.net : null)) {
     const next = nextPlanningSeat(seat, s.ready, s.views!);
     if (s.client?.kind !== 'remote' && next !== null) s.setSeat(next);
     return;
@@ -156,7 +156,7 @@ export function SeatBar({ phoneDetails = false, onOpenDetails, race }: { phoneDe
   const empiresBelow = useRowsBelow(sidebarScroll, '.vp-row');
   const phone = usePhoneLayout();
   const touch = useCoarsePointer();
-  const lan = useGame((s) => s.lan);
+  const net = useGame((s) => s.net);
   const siegeSeen = useGame((s) => s.siegeSeen);
   const airHeld = useGame((s) => s.airHeld);
   const goalDecisionSeen = useGame((s) => s.goalDecisionSeen);
@@ -164,18 +164,18 @@ export function SeatBar({ phoneDetails = false, onOpenDetails, race }: { phoneDe
   const report = useGame((s) => s.report);
   const scenario = useGame((s) => s.scenario);
   const remote = useGame((s) => s.client?.kind === 'remote');
-  const disconnected = remote && lan?.conn !== 'open';
-  const hostCanOpenSeat = remote && lan?.status.is_local && lan.seats.some((st) =>
-    st.seat !== lan.mySeat && !st.connected && st.reserved !== false);
+  const disconnected = remote && net?.conn !== 'open';
+  const hostCanOpenSeat = remote && net?.status.is_local && net.seats.some((st) =>
+    st.seat !== net.mySeat && !st.connected && st.reserved !== false);
   if (!views) return null;
   const view = views[seat];
   const eliminated = isEliminated(view);
-  const observerCanAdvance = canResolveToEnd(view, remote ? lan : null);
-  const controller = remote && lan && canResolveToEnd(view) ? observerController(lan) : null;
+  const observerCanAdvance = canResolveToEnd(view, remote ? net : null);
+  const controller = remote && net && canResolveToEnd(view) ? observerController(net) : null;
   const nameOf = (id: number) => view.players.find((p) => p.id === id)?.name ?? `Player ${id + 1}`;
-  // Who we're waiting on: living LAN seats that aren't Ready, or local seats still planning.
+  // Who we're waiting on: living online seats that aren't Ready, or local seats still planning.
   const waitingOn = remote
-    ? (lan?.seats ?? []).filter((x) => x.seat !== lan?.mySeat && !x.ready && view.players.find((p) => p.id === x.player)?.alive !== false).map((x) => x.name)
+    ? (net?.seats ?? []).filter((x) => x.seat !== net?.mySeat && !x.ready && view.players.find((p) => p.id === x.player)?.alive !== false).map((x) => x.name)
     : humans.filter((_, i) => i !== seat && !ready[i] && !isEliminated(views[i])).map(nameOf);
   const automated = automatedUnits(view, orders[seat]).filter((u) => !orders[seat].some((o) => orderUnit(o) === u.id));
   const decisions = pendingDecisions(view, orders[seat], errors[seat], { humans, orders, errors, siegeSeen, airHeld, seat, report, goalDecisionSeen });
@@ -272,8 +272,8 @@ export function SeatBar({ phoneDetails = false, onOpenDetails, race }: { phoneDe
       {!race && <><GoalActionRow /><FactionGoalProgressLine view={view} /></>}
       <details className="sidebar-turn-more" open={!race || hostCanOpenSeat || undefined}><summary hidden={!race}>Turn details · {counted(orders[seat].length + automated.length, 'order')}</summary>
       <AirWatch view={view} />
-      {remote && lan ? (
-        <LanSeats />
+      {remote && net ? (
+        <OnlineSeats />
       ) : humans.length > 1 ? (
       <div className="seats">
         {humans.map((id, s) => {
@@ -401,16 +401,16 @@ export function SeatBar({ phoneDetails = false, onOpenDetails, race }: { phoneDe
   );
 }
 
-/** LAN: every human seat, each on its own computer. */
-export function LanSeats() {
-  const lan = useGame((s) => s.lan)!;
+/** Online: every human seat, each on its own computer. */
+export function OnlineSeats() {
+  const net = useGame((s) => s.net)!;
   const view = useGame((s) => (s.views ? s.views[s.seat] : null));
   const ready = useGame((s) => s.ready[s.seat]);
   const orders = useGame((s) => s.orders[s.seat]);
-  const releaseSeat = useGame((s) => s.releaseLanSeat);
-  const conn = lan.conn;
-  const mySeat = lan.mySeat;
-  const rows = lan.seats.map((st) => {
+  const releaseSeat = useGame((s) => s.releaseOnlineSeat);
+  const conn = net.conn;
+  const mySeat = net.mySeat;
+  const rows = net.seats.map((st) => {
     const p = view?.players.find((x) => x.id === st.player);
     return { seat: st.seat, st, p };
   });
@@ -422,7 +422,7 @@ export function LanSeats() {
         const connected = me ? conn === 'open' : !!st?.connected;
         const count = me ? orders.length : (st?.orders ?? 0);
         return (
-          <div key={seat} data-testid={`lan-seat-${seat}`} className={`seat ${me ? 'on' : ''} ${isReady ? 'ready' : ''}`} style={{ ['--pc' as string]: playerInk(st?.player ?? seat) }}>
+          <div key={seat} data-testid={`online-seat-${seat}`} className={`seat ${me ? 'on' : ''} ${isReady ? 'ready' : ''}`} style={{ ['--pc' as string]: playerInk(st?.player ?? seat) }}>
             {p && <CrestMedallion faction={p.faction} color={playerColor(st?.player ?? seat)} size={36} />}
             <span className="seat-name">
               {me ? 'You' : st?.name ?? p?.name ?? 'Player'}
@@ -434,7 +434,7 @@ export function LanSeats() {
               {count} order{count === 1 ? '' : 's'}
             </span>
             <span className={`seat-ready ${isReady ? 'on' : ''}`}>{p?.alive === false ? 'Observing' : isReady ? <><Icon name="ui-check" size={12} className="ui-mark" /> Ready</> : 'Planning'}</span>
-            {lan.status.is_local && !me && !connected && st.reserved !== false && (
+            {net.status.is_local && !me && !connected && st.reserved !== false && (
               <OpenSeatButton name={st.name} disabled={conn !== 'open'} onOpen={() => releaseSeat(seat)} />
             )}
           </div>

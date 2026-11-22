@@ -12,7 +12,7 @@ trap 'rm -rf "$tmp"' EXIT
 vulnerabilities=0
 
 echo '=== Vulnerabilities ==='
-for lockfile in Cargo.lock app/src-tauri/Cargo.lock; do
+for lockfile in Cargo.lock; do
   echo "--- cargo audit: $lockfile ---"
   out="$tmp/audit-${lockfile//\//_}.json"
   cargo audit --file "$lockfile" --json >"$out" 2>"$tmp/cargo.err" || true
@@ -56,7 +56,7 @@ if not found:
 PY
 
 echo '=== Unmaintained crates ==='
-for lockfile in Cargo.lock app/src-tauri/Cargo.lock; do
+for lockfile in Cargo.lock; do
   echo "--- cargo audit: $lockfile ---"
   out="$tmp/audit-${lockfile//\//_}.json"
   python3 - "$out" <<'PY'
