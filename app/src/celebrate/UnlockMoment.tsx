@@ -6,7 +6,7 @@ import type { Moment } from './moments';
 import type { UnlockCard, UnlockTile } from './unlockCard';
 import { itemArtUrl, slugUrl, unlockEntryArt } from '../unlockArt';
 import { resourceArtUrl } from '../icons';
-import { isGreatWork } from '../data';
+import { costInFactionYield, costYield, isGreatWork } from '../data';
 import { parseUpgradeEffect } from '../ui/unlockCardModel';
 
 /** A tile's painted miniature (null while unpainted: the tile keeps its icon). */
@@ -76,7 +76,7 @@ export function UnlockMomentCard({ moment, dismiss }: { moment: Moment; dismiss(
             <TileIllustration tile={t} multiple={card.tiles.length > 1} />
             <span className="unlock-text">
               <span className="unlock-name" title={t.name}>{t.name}</span>
-              {t.kind !== 'Effect' && (t.cost !== null || t.turns !== null || t.upgradeFrom) && <span className="unlock-cost">{t.cost !== null && <Amount n={t.cost} unit="Production" />}{t.turns !== null && t.inCity && ` · ${turnsText(t.turns)} in ${t.inCity}`}{t.upgradeFrom && `${t.cost !== null || t.turns !== null ? ' · ' : ''}From ${t.upgradeFrom}`}</span>}
+              {t.kind !== 'Effect' && (t.cost !== null || t.turns !== null || t.upgradeFrom) && <span className="unlock-cost">{t.cost !== null && <Amount n={costInFactionYield(t.faction, t.cost)} unit={costYield(t.faction)} />}{t.turns !== null && t.inCity && ` · ${turnsText(t.turns)} in ${t.inCity}`}{t.upgradeFrom && `${t.cost !== null || t.turns !== null ? ' · ' : ''}From ${t.upgradeFrom}`}</span>}
               {t.sentence && <span className="unlock-sentence" title={t.sentence}><Amounts text={t.sentence} /></span>}
               {t.notes.length > 0 && <span className="unlock-cost unlock-notes">{t.notes.join(' · ').replace(/^./, (c) => c.toUpperCase())}</span>}
             </span>

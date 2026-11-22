@@ -98,6 +98,11 @@ describe('faction-accurate tech cards', () => {
     const noBenefit = new Set<string>(['Egypt BronzeWorking']);
     // Egypt's cards drop the lines that only add Production.
     expect(techCardUnlocks(research, 'Masonry', 'Egypt')).toEqual([]);
+    // ...and its building and wonder tiles drop their Production yield (the Pyramids' +1 Production).
+    const pyramids = { unlocks: [{ tech: 'Masonry', item: { kind: 'Building', building: 'Pyramids' }, name: 'Pyramids', cost: 240, buy_cost: null,
+      yields: { food: 0, production: 1, gold: 0, science: 0 }, city_strength: 0, unit_strength: 0, upgrade_cost: null }] } as unknown as ResearchView;
+    expect(techCardUnlocks(pyramids, 'Masonry', 'Egypt')[0].yields).toEqual([]);
+    expect(techCardUnlocks(pyramids, 'Masonry', 'India')[0].yields).toEqual([['production', 1]]);
     expect(techCardUnlocks(research, 'Machinery', 'Egypt').map((u) => u.label)).not.toContain('+1 Production for each Workshop, Forge and Factory');
     for (const faction of FACTIONS) for (const tech of TECHS) expect(techHasBenefit(faction, tech), `${faction} ${tech}`).toBe(!noBenefit.has(`${faction} ${tech}`));
   });

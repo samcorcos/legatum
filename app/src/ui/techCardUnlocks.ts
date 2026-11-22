@@ -72,7 +72,8 @@ export function techCardUnlocks(research: ResearchView, tech: TechId, faction: F
         ? buildingIconName(unlock.item.building, faction)
         : 'yield-production',
     kind: unlock.item.kind,
-    yields: YIELD_KEYS.filter((k) => unlock.yields[k]).map((k) => [k, unlock.yields[k]]),
+    // The Nile: Egypt has no Production, so a building's or wonder's Production is not shown to it.
+    yields: YIELD_KEYS.filter((k) => unlock.yields[k] && !(k === 'production' && faction === 'Egypt')).map((k) => [k, unlock.yields[k]]),
     unlock,
     strength: unlock.unit_ranged ? `${unlock.unit_ranged} ranged` : unlock.unit_strength ? `${unlock.unit_strength} strength` : unlock.city_strength ? `+${unlock.city_strength} city strength` : null,
     upgradeFrom: null,
