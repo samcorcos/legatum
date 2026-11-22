@@ -74,6 +74,11 @@ Newest first. One entry per non-obvious finding: what we learned, the evidence, 
 - **Balance: no measurable shift.** Eight-seat scripted Hard, both Egypt pools of `docs/sim-results/egypt-nile-2026-11-21.md` (seeds 7000-7199 and 9000-9199, `--rotate-factions`, 400 Egypt seats an arm): Egypt wins 17.2% on master and 17.8% on the branch (CI about ±3.7 pp), eliminated 40 against 33 times, 4.77 against 4.85 cities at T100.
 - **The gate:** `factions.rs::no_faction_ever_researches_a_tech_that_gives_it_nothing` pins the skip list and requires every other pair to give something in its own era. A faction change that empties a tech fails it; prefer giving the tech something real, and skip only on purpose.
 
+## 2026-11-22: First weekly lean pass: 55 dead examples deleted (`perf-dead-examples`)
+
+- **55 of 134 example programs (10,775 lines, 3.9% of the Rust) were named by nothing**: no script, tool, CI step, test group, Cargo.toml entry or current doc. They were one-off investigation scripts for finished AI and balance studies. Historical docs (learnings, sim-results, playtests) still name them, so treat those names as gone; the old history keeps the files (legatum-private). Before deleting tooling, ask the threads that run long jobs (the hill climb uses only `duel`, `hc_duel` and `hill_suite`).
+- **Deleting examples did not speed up CI here**: cold `cargo clippy --workspace --all-targets` took 50 s with them and 54 s without, because sccache serves most of the work and the test groups never built examples. The gain is code to maintain, not CI minutes; measure before claiming a speedup.
+
 ## 2026-11-22: Performance checks lapsed inside the ops supervisor; a separate nightly supervisor (`perf-supervisor`)
 
 - **The old performance watcher was a few sections of `legatum-ops-supervisor`, and they quietly stopped.** The ops check kept running every 6 hours on the Mac, but its runs grew into fleet, disk and budget checks; the last sim-speed baseline is 2026-10-31, the AI turn budget 2026-10-27, app size 2026-10-23, and the `ledger.csv` it was told to compare against never existed. A check buried in a long checklist with heavier duties gets dropped first. Performance and tech debt now belong to `legatum-perf-supervisor`, which only measures, flags and makes one improvement a week.
