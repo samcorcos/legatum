@@ -127,13 +127,9 @@ test('opening', async ({ page }) => {
   await expect(page.locator('.loading-screen')).toHaveCount(0);
   await page.waitForTimeout(1200);
   const rec = await startRecording(page, 'opening');
-  // Open on the map in motion: the Settle lens is lit, the camera eases in on the Settler.
+  // Open on the map in motion: the camera eases in on the capital, founded on turn 1 (rules 45).
   await moveCamera(page, { zoom: 1.5 }, 2200);
-  await page.waitForTimeout(1500);
-  const found = page.getByRole('button', { name: /^Found City/ });
-  await glide(page, found, true);
-  await expect(found).toHaveCount(0);
-  await page.waitForTimeout(1300);
+  await page.waitForTimeout(2800);
   const auto = page.getByRole('button', { name: /^Auto-explore/ });
   if (await auto.count()) await glide(page, auto.first(), true);
   await page.waitForTimeout(700);
@@ -223,6 +219,8 @@ test('war', async ({ page }) => {
   test.skip(!wanted('war'));
   const fx = assaultFixture();
   fx.fixture.players.forEach((p: any, i: number) => { p.isHuman = i === 0; });
+  // The save check matches each player against the setup, so the setup's seats change too.
+  fx.fixture.setup.players.forEach((p: any, i: number) => { p.is_human = i === 0; });
   // A city on its last legs: two Spearmen can take it this turn, so the clip ends on the capture.
   fx.fixture.cities.find((c: any) => c.id === fx.open.city)!.hp = 6;
   (fx.fixture.units.find((u: any) => u.id === fx.garrison) as any).hp = 12;
@@ -307,9 +305,8 @@ test('turns', async ({ page }) => {
   await page.getByLabel('Map seed', { exact: true }).fill('20261023');
   await page.getByRole('button', { name: /^Start game/ }).click();
   await expect(page.getByTestId('turn-number')).toHaveText('1', { timeout: 90_000 });
-  await page.waitForTimeout(1500);
-  await page.getByRole('button', { name: /^Found City/ }).click();
-  await page.waitForTimeout(800);
+  // The capital is founded on turn 1 (rules 45): no Found City step.
+  await page.waitForTimeout(2300);
   const rec = await startRecording(page, 'turns');
   for (let turn = 2; turn <= 13; turn++) {
     for (let i = 0; i < 6; i++) { if (await page.locator('.moment-card, [data-testid="era-takeover"]').count()) await page.keyboard.press('Escape'); }
