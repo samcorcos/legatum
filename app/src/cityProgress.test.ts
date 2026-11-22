@@ -71,6 +71,19 @@ it('banners carry growth and production meters only for your own cities', () => 
   if (rival) expect(bannerMeters(rival)).toEqual([]);
 });
 
+it('a city told what to build this turn shows that item on its banner at once, not the red Build prompt', () => {
+  const { capital } = fixtureView();
+  const idle = { ...capital, detail: { ...capital.detail!, producing: null, production_queue: [] } };
+  expect(bannerMeters(idle).find((m) => m.kind === 'production')).toMatchObject({ text: 'Build', bad: true });
+  const option = idle.detail.options[0];
+  const chosen = bannerMeters(idle, undefined, null, option.item).find((m) => m.kind === 'production')!;
+  expect(chosen.text).toBe(String(option.turns));
+  expect(chosen.bad).toBeUndefined();
+  expect(chosen.icon).toBeTruthy();
+  // Re-choosing what the city already builds keeps the live meter.
+  expect(bannerMeters(capital, undefined, null, capital.detail!.producing)).toEqual(bannerMeters(capital));
+});
+
 it('a city frozen by the occupation lock shows Held on its banner, not the red Build prompt', () => {
   const { capital } = fixtureView();
   const idle = { ...capital, occupation_lock: 1, detail: { ...capital.detail!, producing: null, production_queue: [] } };
