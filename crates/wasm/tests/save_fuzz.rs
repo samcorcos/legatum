@@ -98,7 +98,7 @@ fn every_state_of_full_all_hard_games_round_trips_through_save_validation() {
             );
         };
         while !session.state.finished && session.state.turn < CAP {
-            if session.state.turn % EVERY == 0 {
+            if session.state.turn.is_multiple_of(EVERY) {
                 check(&session.state);
             }
             let orders = session.ai_orders();
