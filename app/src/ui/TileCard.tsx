@@ -61,6 +61,7 @@ export function TileCard({ view, hex, anchor, routeWarning, blockedReason, reinf
   const y0 = faction ? tileYields(faction, t) : base;
   const terrainOnly = faction ? terrainYields(faction, t.terrain) : base;
   const adjusted = YIELD_KEYS.some((k) => terrainOnly[k] !== base[k]);
+  const nile = faction === 'Egypt';
   const resource = t.resource ?? null;
   const mc = moveCost(t.terrain);
   const def = defenseBonus(t.terrain);
@@ -142,9 +143,9 @@ export function TileCard({ view, hex, anchor, routeWarning, blockedReason, reinf
         ))}
         {YIELD_KEYS.every((k) => y0[k] === 0) && <span className="muted">No yield</span>}
       </div>
-      {adjusted && (
-        <div className="tilecard-row muted">
-          Base {t.terrain}: <Amounts text={YIELD_KEYS.filter((k) => base[k] > 0).map((k) => `${base[k]} ${YIELD_LABEL[k]}`).join(', ') || 'none'} /> · {faction} terrain rule applied
+      {(adjusted || nile) && (
+        <div className="tilecard-row muted" data-testid="tile-base-yields">
+          Base {t.terrain}: <Amounts text={YIELD_KEYS.filter((k) => base[k] > 0).map((k) => `${base[k]} ${YIELD_LABEL[k]}`).join(', ') || 'none'} /> · {nile ? 'The Nile: double Food, no Production' : `${faction} terrain rule applied`}
         </div>
       )}
       <div className="tilecard-row">

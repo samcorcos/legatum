@@ -4,6 +4,7 @@
 import { sameItem, TERRAIN_NAME, WORK_RADIUS } from './data';
 import { bearing } from './empires';
 import { distance, tileIndex } from './hex';
+import { nileYields } from './resources';
 import type { CityDetail, CityView, Hex, PlayerView, ProductionItem, ProductionStall, Yields } from './types';
 
 type GrowthState = 'growing' | 'starving' | 'stagnant' | 'shortage' | 'resisting';
@@ -91,11 +92,13 @@ export function claimSummary(city: CityView, view: PlayerView): ClaimSummary | n
     .map((other) => ({ city: other, distance: distance(claim.tile, other.pos) }))
     .filter(({ distance: d }) => d <= WORK_RADIUS)
     .sort((a, b) => a.distance - b.distance || a.city.id - b.city.id)[0]?.city : undefined;
-  const yields = claim.worked ? claim.yields : { food: 0, production: 0, gold: 0, science: 0 };
+  // The core quotes the tile's own yields; Egypt's Nile doubles its Food and drops its Production.
+  const tileYields = nileYields(view.players.find((p) => p.id === city.owner)?.faction, claim.yields);
+  const yields = claim.worked ? tileYields : { food: 0, production: 0, gold: 0, science: 0 };
   return {
     tile: claim.tile, worked: claim.worked, handoffTo: recipient?.name ?? null, ring, place, yields,
     text: `claims ${place}`,
-    effect: claim.worked ? yieldsText(claim.yields) : recipient ? `worked by ${recipient.name} after Ready` : 'no yield · blocks rivals',
+    effect: claim.worked ? yieldsText(tileYields) : recipient ? `worked by ${recipient.name} after Ready` : 'no yield · blocks rivals',
   };
 }
 

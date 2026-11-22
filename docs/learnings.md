@@ -2,6 +2,12 @@
 
 Newest first. One entry per non-obvious finding: what we learned, the evidence, and what we changed. Correct or delete entries that turn out to be wrong.
 
+## 2026-11-22: Egypt's tiles still showed Production: the Nile lives on city totals, not tiles (`claude/project-thread-h0s4wd`)
+
+- **Cause.** Core applies the Nile in `economy::nile` to a city's totals, so every per-tile number (`economy::owner_tile_yields`, the view's `next_claim.yields`, `improvement_preview.gain`) is the plain tile yield. The app's map yield icons, tile card, "Next tile" claim and improvement cards read those and showed Egypt Production it never gets, and Food at half its real value.
+- **Fix (display only, no rules change, saves keep loading).** `resources.ts::nileYields` (double Food, no Production for Egypt) wraps `tileYields`, `resourceBenefitLines`, `cityProgress::claimSummary` and the city panel's improvement gains. The core view leaves the Quarry out of an Egyptian city's options (`view.rs`, test `egypt_is_not_offered_a_quarry_but_may_still_order_one`); the order itself stays legal, so no `RULES_VERSION` bump. Core per-tile numbers are left raw because the AI reads them.
+- **Not done.** The settle lens still scores and shows Production for an Egyptian Settler (core `SettlementSite` quality is Food x4 + Production x3); changing it changes the score the AI uses, so it needs its own change with sims.
+
 ## 2026-11-22: Performance checks lapsed inside the ops supervisor; a separate nightly supervisor (`perf-supervisor`)
 
 - **The old performance watcher was a few sections of `legatum-ops-supervisor`, and they quietly stopped.** The ops check kept running every 6 hours on the Mac, but its runs grew into fleet, disk and budget checks; the last sim-speed baseline is 2026-10-31, the AI turn budget 2026-10-27, app size 2026-10-23, and the `ledger.csv` it was told to compare against never existed. A check buried in a long checklist with heavier duties gets dropped first. Performance and tech debt now belong to `legatum-perf-supervisor`, which only measures, flags and makes one improvement a week.
