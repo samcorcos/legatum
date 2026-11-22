@@ -524,6 +524,67 @@ impl Recording {
     }
 }
 
+/// The name the lobby gives a seat by default: "Player N" for a human, "AI N" for an AI empire (N = seat + 1).
+pub fn default_seat_name(seat: usize, human: bool) -> String {
+    format!("{} {}", if human { "Player" } else { "AI" }, seat + 1)
+}
+
+impl Recording {
+    /// A copy that is safe to upload: every seat carries its default name, so names players typed never
+    /// leave the device. Names are part of the state hash, so a renamed copy replays its orders to recompute
+    /// every hash. A recording that already uses the default names comes back unchanged, with no replay.
+    pub fn anonymized(&self) -> Result<Recording, String> {
+        let mut out = self.clone();
+        let mut typed: Vec<String> = Vec::new();
+        let mut rename = |name: &mut String, seat: usize, human: bool| {
+            let default = default_seat_name(seat, human);
+            if *name != default {
+                typed.push(std::mem::replace(name, default));
+            }
+        };
+        for (i, p) in out.tape.setup.players.iter_mut().enumerate() {
+            rename(&mut p.name, i, p.is_human);
+        }
+        for seat in &mut out.metadata.seats {
+            rename(&mut seat.name, seat.player as usize, seat.human);
+        }
+        let mut state = match &self.initial_state {
+            Some(s) => {
+                let mut state = json::parse_state(s)?;
+                for (i, p) in state.setup.players.iter_mut().enumerate() {
+                    rename(&mut p.name, i, p.is_human);
+                }
+                for p in &mut state.players {
+                    rename(&mut p.name, p.id.0 as usize, p.is_human);
+                }
+                state
+            }
+            None => out.tape.initial_state(),
+        };
+        if typed.is_empty() {
+            return Ok(out);
+        }
+        if out.initial_state.is_some() {
+            out.initial_state = Some(json::state_to_json(&state));
+        }
+        out.tape.initial_hash = state.hash();
+        for t in &mut out.tape.turns {
+            state = legatum_core::resolve_turn(&state, &t.orders).0;
+            t.hash = state.hash().to_string();
+        }
+        // A partial recording's start state can quote a name elsewhere (a notice, a log line): never upload that.
+        let text = serde_json::to_string(&out).map_err(|e| e.to_string())?;
+        if typed
+            .iter()
+            .filter(|n| !n.trim().is_empty())
+            .any(|n| text.contains(&serde_json::to_string(n.as_str()).unwrap_or_default()))
+        {
+            return Err("a typed player name is still in the recording".into());
+        }
+        Ok(out)
+    }
+}
+
 pub fn snapshot(turn: u32, state: &GameState) -> TurnTelemetry {
     TurnTelemetry {
         turn,
@@ -673,5 +734,39 @@ mod tests {
             session.state.diplomacy.as_ref().unwrap().relations[0].state,
             legatum_core::diplomacy::RelationState::Peace
         );
+    }
+
+    #[test]
+    fn anonymized_recording_drops_typed_names_and_still_replays() {
+        let mut setup = GameSetup::standard(42, [Faction::India, Faction::Byzantium]);
+        setup.players.truncate(3);
+        setup.players[0].name = "Dana Smith".into();
+        setup.players[1].is_human = false;
+        setup.players[2].is_human = true;
+        setup.players[2].name = "Alex".into();
+        let mut session = Session::new(&setup, |_| BrainKind::Scripted);
+        for _ in 0..4 {
+            session.step(&OrderMap::new());
+        }
+        let history = session.history.as_ref().unwrap();
+        let public = history.anonymized().unwrap();
+        let text = serde_json::to_string(&public).unwrap();
+        assert!(!text.contains("Dana Smith") && !text.contains("\"Alex\""));
+        let names: Vec<_> = public
+            .metadata
+            .seats
+            .iter()
+            .map(|s| s.name.as_str())
+            .collect();
+        assert_eq!(names, ["Player 1", "AI 2", "Player 3"]);
+        // Same game, same orders: the replay ends in the original state except for the names.
+        let mut expected = public.replay().unwrap();
+        for (p, original) in expected.players.iter_mut().zip(&session.state.players) {
+            p.name = original.name.clone();
+        }
+        expected.setup.players = session.state.setup.players.clone();
+        assert_eq!(expected, session.state);
+        // Default names need no replay and change nothing.
+        assert_eq!(public.anonymized().unwrap(), public);
     }
 }

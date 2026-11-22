@@ -297,3 +297,9 @@ div.seat {
   .online-room { flex-wrap: wrap; gap: 12px; }
   .online-join { width: 100%; }
 }
+/* Hosted web build: the one line that says games are uploaded (gameUpload.ts). */
+.title-upload-note {
+  margin-top: 12px;
+  text-align: center;
+  text-wrap: balance;
+}
