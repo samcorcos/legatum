@@ -51,7 +51,8 @@ describe('faction sheet cards', () => {
       expect(FACTION_SHEETS[f].early, f).toBeUndefined();
       expect(host.querySelectorAll('.fs-goal'), f).toHaveLength(1);
       expect(host.querySelector('.fs-goal-head b')!.textContent).toBe(FACTION_GOAL[f].name);
-      expect(text.split(FACTION_GOAL[f].detail()).length - 1, `${f} goal text once`).toBe(1);
+      // The sheet prints the goal's short sheet line when it has one (`FactionGoal.sheet`), else its detail.
+      expect(text.split((FACTION_GOAL[f].sheet ?? FACTION_GOAL[f].detail)()).length - 1, `${f} goal text once`).toBe(1);
     }
   });
 

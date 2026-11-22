@@ -55,7 +55,7 @@ describe('the Hall in the race panel', () => {
     const card = document.querySelector('.vhc-pop')!;
     expect(card.querySelector('h3')!.textContent).toBe('The Yam Network');
     expect(card.querySelector('.vh-held')!.textContent).toContain(`You hold the Yam Relay Station in ${hallCity().name} · in view`);
-    expect(card.textContent).toContain('go with its city');
+    expect(card.textContent).toContain('whoever holds its tile scores');
   });
 
   it('a click on the token shows the Hall’s city on the map', () => {
