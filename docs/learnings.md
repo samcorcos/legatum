@@ -2,6 +2,11 @@
 
 Newest first. One entry per non-obvious finding: what we learned, the evidence, and what we changed. Correct or delete entries that turn out to be wrong.
 
+## 2026-11-22: The Mac could not build master: two files differed only in case (`claude/project-thread-7n64r8`)
+
+- **`celebrate/ScoreCheck.tsx` and `celebrate/scoreCheck.ts` (#34) are one file on a Mac's default case-insensitive disk**, so `tsc -b` failed there while Linux CI passed; the production deploy had to be built on a case-sensitive disk image. The model is now `scoreCheckCards.ts`, and `app/scripts/case-clash.test.mjs` fails on any two tracked paths that differ only in case (`.ts`/`.tsx` count as the same module, since imports leave the extension off).
+- **`check-dist-refs.mjs` flagged `404.html -> /`**: a link to a folder is served by its `index.html`, which the check now accepts.
+
 ## 2026-11-22: A deploy broke the art in games already open in a tab (`claude/project-thread-7n64r8`)
 
 - **Symptom:** after the WebP deploy (e9d1e50), Sam's open game showed broken images on late-era research cards (Stock Exchange, Tank, Fighter, Bomber, Research Lab) and missing city sprites on the map. The live build itself was fine: all 897 `new URL(...)` art references in its main script answered 200.
