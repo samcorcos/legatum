@@ -8,12 +8,12 @@ use crate::types::{CityId, StandingOrder};
 
 const AT: (i32, i32) = (5, 5);
 
-/// Player 0 captures player 1's city; a Soldier of player 0 holds it.
+/// Player 0 captures player 1's city; a Spearman of player 0 holds it.
 fn occupied() -> (GameState, CityId, UnitId) {
     let mut s = game(&[0, 1]);
     let c = city(&mut s, 1, hex(AT.0, AT.1), 3);
     capture_city(&mut s, c, PlayerId(0), &mut Vec::new());
-    let u = unit(&mut s, 0, UnitKind::Soldier, hex(AT.0, AT.1));
+    let u = unit(&mut s, 0, UnitKind::Spearman, hex(AT.0, AT.1));
     (s, c, u)
 }
 
@@ -61,9 +61,9 @@ fn disband_is_refused_so_it_cannot_dodge_the_lock() {
 #[test]
 fn fortify_heal_and_shoot_are_allowed() {
     let (mut s, _, soldier) = occupied();
-    let archer = unit(&mut s, 0, UnitKind::Ranger, hex(AT.0, AT.1));
+    let archer = unit(&mut s, 0, UnitKind::Archer, hex(AT.0, AT.1));
     s.units.get_mut(&soldier).unwrap().hp = 60;
-    let enemy = unit(&mut s, 1, UnitKind::Soldier, hex(AT.0 + 2, AT.1));
+    let enemy = unit(&mut s, 1, UnitKind::Spearman, hex(AT.0 + 2, AT.1));
     let ok = |os: Vec<Order>| validate_orders(&s, PlayerId(0), &os).is_empty();
     assert!(ok(vec![Order::SkipUnit { unit: soldier }]));
     assert!(ok(vec![Order::SleepUnit {
@@ -114,7 +114,7 @@ fn elimination_of_the_civ_releases_the_unit() {
 fn a_replacement_unit_that_moves_in_is_locked_too() {
     let (mut s, _, u) = occupied();
     s.units.remove(&u);
-    let relief = unit(&mut s, 0, UnitKind::Soldier, hex(AT.0 - 1, AT.1));
+    let relief = unit(&mut s, 0, UnitKind::Spearman, hex(AT.0 - 1, AT.1));
     goto(&mut s, relief, hex(AT.0, AT.1));
     let (next, _) = resolve_units(&s, &no_orders());
     assert_eq!(next.units[&relief].pos, hex(AT.0, AT.1));
@@ -128,7 +128,7 @@ fn a_city_the_civ_retakes_carries_no_record() {
     capture_city(&mut s, c, PlayerId(1), &mut Vec::new());
     assert_eq!(s.cities[&c].owner, PlayerId(1));
     assert_eq!(s.cities[&c].occupied_from, None);
-    let again = unit(&mut s, 1, UnitKind::Soldier, hex(AT.0, AT.1));
+    let again = unit(&mut s, 1, UnitKind::Spearman, hex(AT.0, AT.1));
     assert!(validate_orders(&s, PlayerId(1), &step(again)).is_empty());
 }
 
@@ -141,7 +141,7 @@ fn a_city_captured_onward_is_keyed_to_the_civ_just_taken_from() {
     capture_city(&mut s, c, PlayerId(2), &mut Vec::new());
     assert_eq!(s.cities[&c].occupied_from, Some(PlayerId(0)));
     // Peace with the founder frees nobody: player 2's unit is locked against player 0.
-    let u = unit(&mut s, 2, UnitKind::Soldier, hex(AT.0, AT.1));
+    let u = unit(&mut s, 2, UnitKind::Spearman, hex(AT.0, AT.1));
     make_peace(&mut s);
     assert!(validate_orders(&s, PlayerId(2), &step(u)).is_empty());
     for r in &mut s.diplomacy.as_mut().unwrap().relations {
@@ -160,7 +160,7 @@ fn the_views_warn_before_a_unit_enters_or_captures() {
     assert_eq!(held.occupation_lock, Some(PlayerId(1)));
     // A rival city the viewer could capture would lock the capturer.
     let rival = city(&mut s, 1, hex(2, 2), 3);
-    unit(&mut s, 0, UnitKind::Soldier, hex(2, 3));
+    unit(&mut s, 0, UnitKind::Spearman, hex(2, 3));
     let view = crate::view::player_view(&s, PlayerId(0));
     let target = view.cities.iter().find(|v| v.id == rival).unwrap();
     assert_eq!(target.occupation_lock, Some(PlayerId(1)));
@@ -178,7 +178,7 @@ fn building(s: &mut GameState, c: CityId) {
     let city = s.cities.get_mut(&c).unwrap();
     city.resistance = 0;
     city.producing = Some(crate::ProductionItem::Unit {
-        unit: UnitKind::Soldier,
+        unit: UnitKind::Spearman,
     });
     city.production_stored = 0;
     s.player_mut(PlayerId(0)).gold = 5000;
@@ -196,7 +196,7 @@ fn buy(c: CityId) -> Vec<Order> {
     vec![Order::BuyItem {
         city: c,
         item: crate::ProductionItem::Unit {
-            unit: UnitKind::Soldier,
+            unit: UnitKind::Spearman,
         },
     }]
 }
@@ -317,7 +317,7 @@ fn a_locked_unit_is_held_by_the_turn_and_never_asks_for_orders() {
     s.player_mut(PlayerId(0)).gold = 500;
     city(&mut s, 1, hex(AT.0 + 8, AT.1 + 8), 3);
     let archer = unit(&mut s, 0, UnitKind::CompositeArcher, hex(AT.0, AT.1));
-    let far = unit(&mut s, 0, UnitKind::Soldier, hex(AT.0 + 3, AT.1));
+    let far = unit(&mut s, 0, UnitKind::Spearman, hex(AT.0 + 3, AT.1));
     for id in [soldier, archer] {
         let u = s.units.get_mut(&id).unwrap();
         u.needs_orders = true;

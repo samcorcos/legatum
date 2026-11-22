@@ -39,8 +39,8 @@
 //!   and never explore ruins.
 //! - **Clearing**: an empire's military unit ending its move on a camp destroys it and its
 //!   owner gets [`CAMP_CLEAR_GOLD`] Gold (Civ 6's Prince value). Borders growing over a camp disperse it with no reward.
-//! - **Units by era**: barbarians field Troopers (and later Assault Troopers) once half of the
-//!   living empires know Feudalism (Gunpowder), and Marksmen once half know Machinery
+//! - **Units by era**: barbarians field Pikemen (and later Assault Pikemen) once half of the
+//!   living empires know Feudalism (Gunpowder), and Crossbowmen once half know Machinery
 //!   (Civ 6's `BARBARIAN_TECH_PERCENT` = 50).
 //! - **Experience** (`rules::promotion::combat_xp`): fighting barbarians earns a unit XP only
 //!   up to its first promotion ([`cap_barbarian_xp`], Civ 6's `EXPERIENCE_MAX_BARB_LEVEL` = 2,
@@ -195,16 +195,16 @@ pub fn unit_kinds(state: &GameState) -> (UnitKind, UnitKind) {
             && alive.iter().filter(|p| p.techs.contains(&t)).count() * 2 >= alive.len()
     };
     let melee = if known(TechId::Gunpowder) {
-        UnitKind::AssaultTrooper
+        UnitKind::Musketman
     } else if known(TechId::Feudalism) {
-        UnitKind::Trooper
+        UnitKind::Pikeman
     } else {
-        UnitKind::Soldier
+        UnitKind::Spearman
     };
     let ranged = if known(TechId::Machinery) {
-        UnitKind::Marksman
+        UnitKind::Crossbowman
     } else {
-        UnitKind::Ranger
+        UnitKind::Archer
     };
     (melee, ranged)
 }

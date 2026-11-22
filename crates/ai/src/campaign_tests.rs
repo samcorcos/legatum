@@ -11,8 +11,8 @@ fn fogged_campaign() -> PlayerView {
     let mut view = ViewBuilder::new(30, 16)
         .city(1, ME, Hex::new(3, 8), 3)
         .city(9, ENEMY, TARGET, 2)
-        .unit(1, ME, UnitKind::Soldier, Hex::new(6, 8))
-        .unit(2, ME, UnitKind::Soldier, Hex::new(6, 9))
+        .unit(1, ME, UnitKind::Spearman, Hex::new(6, 8))
+        .unit(2, ME, UnitKind::Spearman, Hex::new(6, 9))
         .build();
     for h in TARGET.within(3) {
         if let Some(i) = view.index(h) {
@@ -64,7 +64,7 @@ fn sparta_wall_force(count: usize) -> PlayerView {
         .take(count)
         .enumerate()
     {
-        b = b.unit(i as u32 + 1, ME, UnitKind::Soldier, pos);
+        b = b.unit(i as u32 + 1, ME, UnitKind::Spearman, pos);
     }
     b.build()
 }
@@ -107,8 +107,8 @@ fn hard_sparta_counts_a_two_turn_reinforcement_before_declaring_on_walls() {
         .city(1, ME, Hex::new(6, 8), 3)
         .city(9, ENEMY, TARGET, 3)
         .walled(9)
-        .unit(1, ME, UnitKind::Soldier, TARGET.neighbor(3))
-        .unit(2, ME, UnitKind::Soldier, far)
+        .unit(1, ME, UnitKind::Spearman, TARGET.neighbor(3))
+        .unit(2, ME, UnitKind::Spearman, far)
         .build();
     view.diplomacy.legacy = false;
     let enemy_team = view.team_of(ENEMY);
@@ -141,7 +141,7 @@ fn hard_sparta_prices_the_committed_march_instead_of_rejecting_a_distant_wall() 
         .city(9, ENEMY, TARGET, 3)
         .walled(9);
     for (i, pos) in TARGET.ring(4).into_iter().take(7).enumerate() {
-        b = b.unit(i as u32 + 1, ME, UnitKind::Soldier, pos);
+        b = b.unit(i as u32 + 1, ME, UnitKind::Spearman, pos);
     }
     let view = b.build();
     let mut p = planner(&view);
@@ -194,9 +194,9 @@ fn visible_assault() -> PlayerView {
     let view = ViewBuilder::new(30, 16)
         .city(1, ME, Hex::new(3, 8), 3)
         .city(9, ENEMY, TARGET, 2)
-        .unit(1, ME, UnitKind::Soldier, Hex::new(11, 8))
-        .unit(2, ME, UnitKind::Soldier, Hex::new(11, 9))
-        .unit(50, ENEMY, UnitKind::Soldier, TARGET)
+        .unit(1, ME, UnitKind::Spearman, Hex::new(11, 8))
+        .unit(2, ME, UnitKind::Spearman, Hex::new(11, 9))
+        .unit(50, ENEMY, UnitKind::Spearman, TARGET)
         .build();
     // City fire has dedicated group tests.
     view
@@ -284,8 +284,8 @@ fn assault_exposure_uses_arrival_terrain_and_clears_marching_fortification() {
             (p.ctx.own_units[1], spots[1]),
         ])
     };
-    // One defender gets one attack, not one attack per staged Soldier. The engine's
-    // expected 29 damage leaves one Soldier at 71 HP (12 power), the other at 20.
+    // One defender gets one attack, not one attack per staged Spearman. The engine's
+    // expected 29 damage leaves one Spearman at 71 HP (12 power), the other at 20.
     assert_eq!(remaining(&view), 32);
     for u in view.units.iter_mut().filter(|u| u.owner == ME) {
         u.fortify = data::FORTIFY_MAX;
@@ -305,7 +305,7 @@ fn assault_exposure_uses_arrival_terrain_and_clears_marching_fortification() {
 fn exposed_staging_does_not_count_troops_that_cannot_arrive_this_turn() {
     let mut view = visible_assault();
     let slow = view.units.iter_mut().find(|u| u.id == UnitId(2)).unwrap();
-    // Separate approaches keep the expensive terrain off the first Soldier's route.
+    // Separate approaches keep the expensive terrain off the first Spearman's route.
     slow.pos = TARGET.neighbor(0).neighbor(0).neighbor(0);
     let slow_pos = slow.pos;
     for pos in slow_pos.neighbors() {
@@ -376,8 +376,8 @@ fn movement_reconciliation_cancels_an_exposed_group_together() {
         b = b.terrain(pos, Terrain::Plains);
     }
     let view = b
-        .unit(1, ME, UnitKind::Soldier, left)
-        .unit(2, ME, UnitKind::Soldier, right)
+        .unit(1, ME, UnitKind::Spearman, left)
+        .unit(2, ME, UnitKind::Spearman, right)
         .build();
     let mut p = planner(&view);
     p.orders = vec![
@@ -404,8 +404,8 @@ fn movement_reconciliation_cancels_an_exposed_group_together() {
 #[test]
 fn movement_reconciliation_requires_every_assault_member_to_finish_its_route() {
     let view = ViewBuilder::new(24, 16)
-        .unit(1, ME, UnitKind::Soldier, Hex::new(6, 6))
-        .unit(2, ME, UnitKind::Soldier, Hex::new(6, 10))
+        .unit(1, ME, UnitKind::Spearman, Hex::new(6, 6))
+        .unit(2, ME, UnitKind::Spearman, Hex::new(6, 10))
         .build();
     let mut p = planner(&view);
     // No traffic collision: one arrival is merely beyond this turn's movement budget.
@@ -436,7 +436,7 @@ fn remembered_garrison_and_support_affect_campaign_estimates_until_expiry() {
         let mut view = fogged_campaign();
         assert_eq!(target(&view), Some(TARGET));
         view.observed_threats
-            .push(sighting(&view, pos, UnitKind::AssaultTrooper));
+            .push(sighting(&view, pos, UnitKind::Musketman));
         assert_eq!(target(&view), None, "recent defender at {pos:?}");
         assert!(
             planner(&view).targets(false).is_empty(),
@@ -467,10 +467,10 @@ fn remembered_garrison_and_support_affect_campaign_estimates_until_expiry() {
 #[test]
 fn live_units_and_reconnaissance_supersede_sightings_without_double_counting() {
     let mut view = fogged_campaign();
-    let old = sighting(&view, TARGET.neighbor(0), UnitKind::AssaultTrooper);
+    let old = sighting(&view, TARGET.neighbor(0), UnitKind::Musketman);
     view.units.extend(
         ViewBuilder::new(30, 16)
-            .unit(50, ENEMY, UnitKind::Soldier, TARGET.neighbor(3))
+            .unit(50, ENEMY, UnitKind::Spearman, TARGET.neighbor(3))
             .build()
             .units,
     );
@@ -501,7 +501,7 @@ fn live_units_and_reconnaissance_supersede_sightings_without_double_counting() {
 #[test]
 fn repeated_sightings_count_once_and_friendly_or_future_sightings_do_not_count() {
     let mut view = fogged_campaign();
-    let newest = sighting(&view, TARGET, UnitKind::Soldier);
+    let newest = sighting(&view, TARGET, UnitKind::Spearman);
     let older = ThreatObservation {
         pos: TARGET.neighbor(0),
         seen_turn: newest.seen_turn - 1,
@@ -532,7 +532,7 @@ fn repeated_sightings_count_once_and_friendly_or_future_sightings_do_not_count()
 fn peace_removes_foreign_sightings_from_campaign_danger() {
     let mut view = fogged_campaign();
     view.observed_threats
-        .push(sighting(&view, TARGET, UnitKind::Soldier));
+        .push(sighting(&view, TARGET, UnitKind::Spearman));
     assert!(!planner(&view).safe_campaign_tile(TARGET.neighbor(3)));
 
     // Legacy tactical fixtures start at War. A modern view without a War
@@ -549,12 +549,12 @@ fn peace_removes_foreign_sightings_from_campaign_danger() {
 fn reachable_reinforcements_reopen_campaign_but_do_not_erase_memory() {
     let mut view = fogged_campaign();
     view.observed_threats
-        .push(sighting(&view, TARGET, UnitKind::AssaultTrooper));
+        .push(sighting(&view, TARGET, UnitKind::Musketman));
     assert_eq!(target(&view), None);
     view.units.extend(
         ViewBuilder::new(30, 16)
-            .unit(3, ME, UnitKind::Trooper, Hex::new(7, 8))
-            .unit(4, ME, UnitKind::Trooper, Hex::new(7, 9))
+            .unit(3, ME, UnitKind::Pikeman, Hex::new(7, 8))
+            .unit(4, ME, UnitKind::Pikeman, Hex::new(7, 9))
             .build()
             .units,
     );
@@ -566,7 +566,7 @@ fn reachable_reinforcements_reopen_campaign_but_do_not_erase_memory() {
 fn fogged_campaign_stages_outside_remembered_reach() {
     let mut view = fogged_campaign();
     view.observed_threats
-        .push(sighting(&view, TARGET, UnitKind::Soldier));
+        .push(sighting(&view, TARGET, UnitKind::Spearman));
     let mut p = planner(&view);
     let army = p.ctx.own_units.clone();
     p.campaign(&army);
@@ -590,7 +590,7 @@ fn a_safe_destination_cannot_hide_an_exposed_arrival_on_expensive_terrain() {
     let end = Hex::new(11, 8);
     let mut b = ViewBuilder::new(24, 16)
         .patch(start, 20, Terrain::Mountains)
-        .unit(1, ME, UnitKind::Soldier, start);
+        .unit(1, ME, UnitKind::Spearman, start);
     for q in 6..=11 {
         b = b.terrain(Hex::new(q, 8), Terrain::Plains);
     }
@@ -600,7 +600,7 @@ fn a_safe_destination_cannot_hide_an_exposed_arrival_on_expensive_terrain() {
         tile.visible = false;
     }
     view.observed_threats
-        .push(sighting(&view, Hex::new(8, 8), UnitKind::Soldier));
+        .push(sighting(&view, Hex::new(8, 8), UnitKind::Spearman));
     let p = planner(&view);
     assert!(p.safe_campaign_tile(end));
     assert_eq!(p.campaign_approach(p.ctx.own_units[0], end), None);
@@ -610,8 +610,8 @@ fn a_safe_destination_cannot_hide_an_exposed_arrival_on_expensive_terrain() {
 fn favorable_melee_forecast_does_not_approve_an_unreachable_attack() {
     let target = Hex::new(10, 8);
     let view = ViewBuilder::new(24, 16)
-        .unit(1, ME, UnitKind::Soldier, Hex::new(8, 8))
-        .unit_hp(50, ENEMY, UnitKind::Ranger, target, 40)
+        .unit(1, ME, UnitKind::Spearman, Hex::new(8, 8))
+        .unit_hp(50, ENEMY, UnitKind::Archer, target, 40)
         .terrain(Hex::new(9, 8), Terrain::Hills)
         .build();
     let mut p = planner(&view);
@@ -642,7 +642,7 @@ fn visible_targets_still_include_recent_unseen_support_in_the_force_estimate() {
     };
     let baseline = estimate(&view);
     view.observed_threats
-        .push(sighting(&view, TARGET.neighbor(0), UnitKind::Soldier));
+        .push(sighting(&view, TARGET.neighbor(0), UnitKind::Spearman));
     assert!(estimate(&view) > baseline);
     assert_eq!(
         planner(&view).targets(false).len(),
@@ -668,8 +668,8 @@ fn rush_campaign_keeps_the_declared_city_even_with_low_aggression() {
         .city(1, ME, Hex::new(5, 5), 3)
         .city(9, ENEMY, TARGET, 2)
         .city(10, legatum_core::PlayerId(3), Hex::new(7, 6), 1)
-        .unit(1, ME, UnitKind::Soldier, Hex::new(6, 8))
-        .unit(2, ME, UnitKind::Ranger, Hex::new(6, 9))
+        .unit(1, ME, UnitKind::Spearman, Hex::new(6, 8))
+        .unit(2, ME, UnitKind::Archer, Hex::new(6, 9))
         .build();
     let mut p = planner(&view);
     p.knobs.aggression = 0;
@@ -695,7 +695,7 @@ fn wounded_rush_troops_leave_city_fire_before_healing() {
         .city(1, ME, Hex::new(5, 5), 3)
         .city(9, ENEMY, TARGET, 3)
         .walled(9)
-        .unit_hp(1, ME, UnitKind::Soldier, Hex::new(13, 8), 55)
+        .unit_hp(1, ME, UnitKind::Spearman, Hex::new(13, 8), 55)
         .build();
     let policy = OpeningPolicy::builtin(Opening::Rush);
     let mut p = planner(&view);
@@ -723,7 +723,7 @@ fn rush_rotates_an_archer_before_two_city_volleys_can_kill_it() {
         .city(1, ME, Hex::new(5, 5), 3)
         .city(9, ENEMY, TARGET, 1)
         .walled(9)
-        .unit(1, ME, UnitKind::Ranger, Hex::new(12, 8))
+        .unit(1, ME, UnitKind::Archer, Hex::new(12, 8))
         .build();
     // A worn Customs Bastion (pop 1, 60 HP) shoots with the old unwalled pop-5 strength of 20.
     view.cities[1].hp = 60;
@@ -756,8 +756,8 @@ fn siege_retreats_override_traffic_holds_and_leave_rough_terrain_in_stages() {
     let mut builder = ViewBuilder::new(30, 20)
         .city(9, ENEMY, TARGET, 3)
         .walled(9)
-        .unit(1, ME, UnitKind::Soldier, Hex::new(13, 8))
-        .unit_hp(2, ME, UnitKind::Soldier, Hex::new(13, 9), 50);
+        .unit(1, ME, UnitKind::Spearman, Hex::new(13, 8))
+        .unit_hp(2, ME, UnitKind::Spearman, Hex::new(13, 9), 50);
     for pos in TARGET.within(4) {
         builder = builder.terrain(pos, Terrain::Hills);
     }
@@ -792,10 +792,10 @@ fn rush_bombards_then_commits_one_capturer_with_archer_support() {
     let mut view = ViewBuilder::new(30, 20)
         .city(1, ME, Hex::new(5, 5), 3)
         .city(9, ENEMY, TARGET, 2)
-        .unit(1, ME, UnitKind::Soldier, Hex::new(13, 8))
-        .unit(2, ME, UnitKind::Soldier, Hex::new(13, 9))
-        .unit(3, ME, UnitKind::Ranger, Hex::new(12, 8))
-        .unit(4, ME, UnitKind::Ranger, Hex::new(12, 9))
+        .unit(1, ME, UnitKind::Spearman, Hex::new(13, 8))
+        .unit(2, ME, UnitKind::Spearman, Hex::new(13, 9))
+        .unit(3, ME, UnitKind::Archer, Hex::new(12, 8))
+        .unit(4, ME, UnitKind::Archer, Hex::new(12, 9))
         .build();
     let policy = OpeningPolicy::builtin(Opening::Rush);
     for (hp, capturers) in [(200, 2), (30, 1)] {
@@ -837,10 +837,10 @@ fn rush_occupies_a_defeated_city_with_one_survivor() {
     let mut view = ViewBuilder::new(30, 20)
         .city(1, ME, Hex::new(5, 5), 3)
         .city(9, ENEMY, TARGET, 2)
-        .unit_hp(1, ME, UnitKind::Soldier, Hex::new(13, 7), 30)
-        .unit(2, ME, UnitKind::Ranger, Hex::new(13, 8))
-        .unit(3, ME, UnitKind::Ranger, Hex::new(12, 8))
-        .unit(4, ME, UnitKind::Ranger, Hex::new(12, 9))
+        .unit_hp(1, ME, UnitKind::Spearman, Hex::new(13, 7), 30)
+        .unit(2, ME, UnitKind::Archer, Hex::new(13, 8))
+        .unit(3, ME, UnitKind::Archer, Hex::new(12, 8))
+        .unit(4, ME, UnitKind::Archer, Hex::new(12, 9))
         .build();
     view.cities[1].hp = 0;
     let policy = OpeningPolicy::builtin(Opening::Rush);
@@ -881,7 +881,7 @@ fn units_leave_a_firing_citys_range_once_no_plan_attacks_it() {
         .city(1, ME, Hex::new(6, 8), 3)
         .city(9, ENEMY, TARGET, 3)
         .walled(9)
-        .unit(1, ME, UnitKind::Soldier, TARGET.neighbor(0).neighbor(0))
+        .unit(1, ME, UnitKind::Spearman, TARGET.neighbor(0).neighbor(0))
         .build();
     let run = |gene: i32, campaigning: bool| {
         let mut p = planner(&view);

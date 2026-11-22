@@ -2,7 +2,7 @@ import { expect, it } from 'vitest';
 import { pointerIntent, previewDestination } from './intent';
 import type { PlayerView, UnitView } from '../types';
 
-const unit = (id: number, owner: number, q: number, r: number, military = true) => ({ id, owner, pos: { q, r }, military, kind: military ? 'Soldier' : 'Settler' }) as unknown as UnitView;
+const unit = (id: number, owner: number, q: number, r: number, military = true) => ({ id, owner, pos: { q, r }, military, kind: military ? 'Spearman' : 'Settler' }) as unknown as UnitView;
 const view = {
   me: 0,
   team: 0,

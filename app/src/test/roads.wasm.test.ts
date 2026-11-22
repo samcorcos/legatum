@@ -47,7 +47,7 @@ function city(s: MState, owner: number, col: number, row: number, extra: Partial
 
 function hallWorld() {
   const s = world();
-  const hall = city(s, 0, 5, 12, { buildings: ['CourierHall'] });
+  const hall = city(s, 0, 5, 12, { buildings: ['YamRelayStation'] });
   s.players[0].hallCity = hall.id;
   for (const [o, c, r] of [[0, 12, 5], [0, 12, 19], [1, 30, 4], [1, 31, 12], [1, 29, 20], [0, 24, 10], [1, 4, 3]] as const) city(s, o, c, r);
   spawnUnit(s, 0, 'Settler', fromOffset(1, 22), false);
@@ -108,7 +108,7 @@ describe.skipIf(!available)('roads: WASM behavior', () => {
     fixtureClient.endTurn({}); core.endTurn({});
     fixtureClient.load(fixtureClient.save()); core.load(core.save());
     const ms = stateFromCore(fixtureClient.save());
-    const a = spawnUnit(ms, 0, 'Soldier', ms.cities.find((c) => c.name === 'C1')!.pos, false);
+    const a = spawnUnit(ms, 0, 'Spearman', ms.cities.find((c) => c.name === 'C1')!.pos, false);
     const b = spawnUnit(ms, 1, 'Scout' as UnitKind, ms.cities.find((c) => c.name === 'C5')!.pos, false);
     a.goto = ms.cities.find((c) => c.name === 'C4')!.pos;
     b.goto = ms.cities.find((c) => c.name === 'C2')!.pos;

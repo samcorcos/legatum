@@ -13,7 +13,7 @@ fn scenario() -> (GameState, CityId, UnitId) {
     found_city(&mut s, home, &mut Vec::new()).unwrap();
     let enemy = spawn_unit(&mut s, PlayerId(1), UnitKind::Settler, Hex::new(12, 5));
     let city = found_city(&mut s, enemy, &mut Vec::new()).unwrap();
-    let ranger = spawn_unit(&mut s, PlayerId(0), UnitKind::Ranger, Hex::new(10, 5));
+    let ranger = spawn_unit(&mut s, PlayerId(0), UnitKind::Archer, Hex::new(10, 5));
     s.player_mut(PlayerId(0)).gold = 1000;
     s.cities.get_mut(&city).unwrap().hp = 70;
     (s, city, ranger)
@@ -32,7 +32,7 @@ fn counters_count_capture_direction_real_spending_and_turn_samples() {
         (c.escorted_settler_turns, c.unescorted_settler_turns),
         (0, 1)
     );
-    spawn_unit(&mut s, me, UnitKind::Soldier, Hex::new(8, 8));
+    spawn_unit(&mut s, me, UnitKind::Spearman, Hex::new(8, 8));
     observer.before(&mut c, &s, me);
     assert_eq!(
         (c.escorted_settler_turns, c.unescorted_settler_turns),
@@ -60,14 +60,14 @@ fn counters_count_capture_direction_real_spending_and_turn_samples() {
                 city,
                 owner: me,
                 item: ProductionItem::Unit {
-                    unit: UnitKind::Ranger,
+                    unit: UnitKind::Archer,
                 },
                 gold: 123,
             },
             Event::UnitUpgraded {
                 unit: settler,
                 owner: me,
-                to: UnitKind::Trooper,
+                to: UnitKind::Pikeman,
                 gold: 45,
             },
         ],

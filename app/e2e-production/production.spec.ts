@@ -85,7 +85,7 @@ for (const look of ['atlas']) test(`queue and independent purchase on WASM (${lo
     return { gold: view.economy.gold, units: view.units.filter((u: { owner: number }) => u.owner === 0), detail: city.detail, events, savedQueue: state.client.view(0).cities.find((c: { owner: number }) => c.owner === 0).detail.production_queue };
   });
   expect(after.gold).toBeLessThan(before.gold - 150);
-  expect(after.events).toContainEqual({ type: 'ItemBought', city: before.city, owner: 0, item: { kind: 'Unit', unit: 'Soldier' }, gold: 160 });
+  expect(after.events).toContainEqual({ type: 'ItemBought', city: before.city, owner: 0, item: { kind: 'Unit', unit: 'Spearman' }, gold: 160 });
   expect(after.units).toHaveLength(before.units + 1);
   expect(after.detail.producing).toEqual({ kind: 'Building', building: 'Market' });
   expect(after.detail.production_stored).toBeGreaterThan(0);

@@ -537,7 +537,7 @@ fn numeric_ranger_purchase_preserves_item() {
         Order::BuyItem {
             city: CityId(29),
             item: ProductionItem::Unit {
-                unit: UnitKind::Ranger,
+                unit: UnitKind::Archer,
             },
         }
     );
@@ -667,7 +667,7 @@ fn numeric_market_purchase_replays_identical_state_and_views() {
 fn numeric_ranger_purchase_replays_identical_state_and_views() {
     assert_numeric_purchase_matches_direct(
         ProductionItem::Unit {
-            unit: UnitKind::Ranger,
+            unit: UnitKind::Archer,
         },
         [0, 3],
     );

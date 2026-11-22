@@ -209,19 +209,19 @@ mod tests {
                 .unit(1, ME, kind, off(6, 5))
                 .build()
         };
-        for kind in [UnitKind::Soldier, UnitKind::Horseman, UnitKind::Ranger] {
+        for kind in [UnitKind::Spearman, UnitKind::Horseman, UnitKind::Archer] {
             let v = build(kind);
             let (path, stop) = plan(&v);
             assert!(stop.is_none(), "{kind:?}");
             assert_eq!(path.len(), v.units[0].max_moves as usize, "{kind:?}");
         }
-        for kind in [UnitKind::Settler, UnitKind::Heir] {
+        for kind in [UnitKind::Settler, UnitKind::HeirToTheThrone] {
             assert_eq!(explore_step(&build(kind), UnitId(1)), None, "{kind:?}");
         }
         // A damaged soldier still rests instead of walking, as a Scout does.
         let hurt = ViewBuilder::new(16, 10)
             .unexplored_from_col(13)
-            .unit_hp(1, ME, UnitKind::Soldier, off(6, 5), 59)
+            .unit_hp(1, ME, UnitKind::Spearman, off(6, 5), 59)
             .build();
         assert_eq!(plan(&hurt).1, Some(ExploreStopReason::Damaged));
     }
@@ -243,7 +243,7 @@ mod tests {
         let mut v = ViewBuilder::new(20, 12)
             .unexplored_from_col(15)
             .unit(1, ME, UnitKind::Scout, off(5, 5))
-            .unit(2, ENEMY, UnitKind::Ranger, off(10, 5))
+            .unit(2, ENEMY, UnitKind::Archer, off(10, 5))
             .ruin(off(9, 5))
             .build();
         v.units[1].range = 3;
@@ -259,7 +259,7 @@ mod tests {
             let v = ViewBuilder::new(16, 10)
                 .unexplored_from_col(13)
                 .unit_hp(1, ME, UnitKind::Scout, off(6, 5), hp)
-                .unit(2, ENEMY, UnitKind::Soldier, off(8, 5))
+                .unit(2, ENEMY, UnitKind::Spearman, off(8, 5))
                 .build();
             let (path, reason) = plan(&v);
             assert_eq!(
@@ -293,7 +293,7 @@ mod tests {
                 .unit(
                     2,
                     legatum_core::PlayerId::BARBARIAN,
-                    UnitKind::Soldier,
+                    UnitKind::Spearman,
                     off(8, 5),
                 )
                 .build();
@@ -321,7 +321,7 @@ mod tests {
         for hp in [100, 59] {
             let mut v = ViewBuilder::new(16, 10)
                 .unit_hp(1, ME, UnitKind::Scout, off(6, 5), hp)
-                .unit(2, ENEMY, UnitKind::Soldier, off(7, 5))
+                .unit(2, ENEMY, UnitKind::Spearman, off(7, 5))
                 .build();
             let (path, reason) = plan(&v);
             assert_eq!(

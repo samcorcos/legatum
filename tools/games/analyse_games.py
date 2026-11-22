@@ -243,9 +243,17 @@ def relation_pair(rel) -> str:
     return str(rel)
 
 
+FRAME_FIELDS = ("turn", "frames", "slow_frames", "frame_p95_ms10", "input_p95_ms", "long_task_ms", "map_draws",
+                "map_draw_mean_ms10", "units")
+
+
 def frame_summary(frames: list[dict]) -> str | None:
     """One line on how smoothly the browser ran (archive `frame_times`, one row per turn; the perf supervisor reads it)."""
-    frames = [f for f in frames if f.get("frames")]
+    # Uploaded data: keep only rows whose fields are all whole numbers in a sane range, so a crafted upload can
+    # neither crash facts.md (missing key) nor put text into the reviewer's prompt.
+    frames = [f for f in frames if isinstance(f, dict) and f.get("frames")
+              and all(isinstance(f.get(k), int) and not isinstance(f.get(k), bool) and 0 <= f[k] <= 10**9
+                      for k in FRAME_FIELDS)]
     if not frames:
         return None
     worst = max(frames, key=lambda f: f["frame_p95_ms10"])

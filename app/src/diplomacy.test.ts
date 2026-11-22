@@ -47,11 +47,11 @@ describe('diplomacy planning permissions', () => {
     const i = tileIndex(to, v.width, v.height);
     v.tiles[i].owner = 1;
     expect(previewPath(v, from, to)).toBeNull();
-    expect(reachTiles(v, { pos: from, kind: 'Soldier', max_moves: 2 }).has(i)).toBe(false);
+    expect(reachTiles(v, { pos: from, kind: 'Spearman', max_moves: 2 }).has(i)).toBe(false);
     v.tiles[i].owner = null;
     v.units.push({ id: 2, owner: 1, pos: to } as PlayerView['units'][number]);
     expect(previewPath(v, from, to)).toBeNull();
-    expect(reachTiles(v, { pos: from, kind: 'Soldier', max_moves: 2 }).has(i)).toBe(false);
+    expect(reachTiles(v, { pos: from, kind: 'Spearman', max_moves: 2 }).has(i)).toBe(false);
   });
   it('allows only decreasing exit distance for a unit left in foreign territory', () => {
     const v = view();

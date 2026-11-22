@@ -14,6 +14,7 @@ To find the full entry for a line, search its month file for the words in the li
 - Parallel branches silently pick the same `RULES_VERSION`; git merges the shared number with no conflict. Re-check the number against master after every merge, and re-encode scenarios cut on a branch when master bumped first. [2026-11, 2026-11 "scenario cut on a branch"]
 - New state fields must skip serializing their default (`skip_serializing_if`), or every archived fixture re-serializes and archive-hash pins fail. Removing or renaming an enum variant breaks every reader of old records, including the archive index. [2026-10, 2026-11]
 - `GameState::hash` covers player names; anonymizing a recording needs a replay (`Recording::anonymized`). [2026-11]
+- A unit or building identifier is the PascalCase of its display name (a test pins it). `GameState::hash` is FNV-1a over the JSON text, so renaming a variant moves every hash: keep the old name as `#[serde(alias)]`, bump `RULES_VERSION`, repin. After a variant rename run clippy with `-D warnings`: under `use UnitKind::*` a removed name silently becomes a catch-all binding. [2026-11 "Identifiers renamed"]
 - Every new `Order` variant needs a tape round-trip test in `crates/wasm/src/tape.rs`; a replay that reports hash mismatches is a bug, not noise. [2026-11]
 - Planning-time validation must apply the same phase order as resolution (surprise war in phase 0 makes a same-turn shot legal). A phase-1 order must not change anything the same turn's combat forecasts read. [2026-10, 2026-09]
 - A public fact that feeds passage or legality must be set in both `PlayerView` constructors (`player_view_cached` and `order_check_view`). [2026-10]
@@ -31,7 +32,7 @@ To find the full entry for a line, search its month file for the words in the li
 - A tech with nothing for a faction starts known (rules 49); `factions.rs::no_faction_ever_researches_a_tech_that_gives_it_nothing` pins the skip list. Prefer giving the tech something real. [2026-11]
 - `start-settlers=N` means N extra Settlers. [2026-10]
 - Rules 50 (2026-11-22): World Ages is the only era scoring, a rival's original capital is 1 VP only while held (the Celtic sack keeps its point), Alliance upkeep is waived at War with a near-winner. Grep player text and the Guide for the retired "era objectives" wording when touching scoring. [2026-11]
-- A World Age card judged against the standings (ahead of, behind) needs an answer for the leader and for ties: Humble the mighty was dead for the sole leader and froze a 2,000-game sim at turn 300 (no turn limit by default). Rules 52 counts the top rival when you lead (`objectives::humbles`, shared with the AI). [2026-11]
+- A World Age card judged against the standings (ahead of, behind) needs an answer for the leader and for ties: Humble the mighty was dead for the sole leader and froze a 2,000-game sim at turn 300 (no turn limit by default). Rules 53 counts the top rival when you lead (`objectives::humbles`, shared with the AI). [2026-11]
 - Before building a "new" idea, search the archive and the code: the designer's training-mode idea had been built a month earlier (`crates/ai/src/search/tactics.rs`). [2026-11]
 
 ## AI

@@ -159,7 +159,7 @@ fn closing_needs_no_alliance_and_no_courier_hall() {
         .get_mut(&hall_city)
         .unwrap()
         .buildings
-        .insert(BuildingKind::CourierHall);
+        .insert(BuildingKind::YamRelayStation);
     s.player_mut(P2).hall_city = Some(hall_city);
     assert!(holds_open_road(&s, P0));
     assert!(
@@ -269,9 +269,9 @@ fn a_closed_country_lets_nobody_in_at_peace_but_its_own_team() {
         relate(&mut s, a, b, RelationState::Peace);
     }
     // Before the vow: foreign units cannot cross at Peace.
-    assert!(!s.passage_allowed(byzantium, UnitKind::Soldier, Some(P0)));
+    assert!(!s.passage_allowed(byzantium, UnitKind::Spearman, Some(P0)));
     assert!(!s.passage_allowed(glass, UnitKind::Scout, Some(P0)));
-    assert!(!s.passage_allowed(toll, UnitKind::Soldier, Some(P0)));
+    assert!(!s.passage_allowed(toll, UnitKind::Spearman, Some(P0)));
     s.player_mut(P0).sakoku_turns = Some(0);
     for kind in UnitKind::ALL {
         assert!(!s.passage_allowed(byzantium, kind, Some(P0)), "{kind:?}");
@@ -296,11 +296,11 @@ fn a_closed_country_lets_nobody_in_at_peace_but_its_own_team() {
     }
     // At war an army still walks in: closing blocks the peaceful ways in.
     relate(&mut s, P0, toll, RelationState::War);
-    assert!(s.passage_allowed(toll, UnitKind::Soldier, Some(P0)));
+    assert!(s.passage_allowed(toll, UnitKind::Spearman, Some(P0)));
     // Reopening restores the old rule.
     s.player_mut(P0).sakoku_turns = None;
     assert!(!s.passage_allowed(glass, UnitKind::Scout, Some(P0)));
-    assert!(!s.passage_allowed(byzantium, UnitKind::Soldier, Some(P0)));
+    assert!(!s.passage_allowed(byzantium, UnitKind::Spearman, Some(P0)));
 }
 
 #[test]
@@ -363,7 +363,7 @@ fn enemy_units_in_indian_land_do_not_break_the_vow() {
     s.player_mut(P0).sakoku_turns = Some(sakoku_target());
     let tile = india_tile(&s);
     relate(&mut s, P0, P1, RelationState::War);
-    spawn_unit(&mut s, P1, UnitKind::Soldier, tile);
+    spawn_unit(&mut s, P1, UnitKind::Spearman, tile);
     let ev = run(&mut s);
     assert!(goal_vp(&s, P0));
     assert!(s.player(P0).faction_goal_done);
@@ -423,7 +423,7 @@ fn the_action_view_lists_what_india_sees() {
     s.player_mut(P0).sakoku_turns = Some(sakoku_target());
     relate(&mut s, P0, P1, RelationState::War);
     let tile = india_tile(&s);
-    spawn_unit(&mut s, P1, UnitKind::Soldier, tile);
+    spawn_unit(&mut s, P1, UnitKind::Spearman, tile);
     let v = crate::rules::actions::view(&s, P0).sakoku.unwrap();
     assert!(v.closed && v.holding);
     assert!(v.blocker.is_none(), "reopening is always possible");

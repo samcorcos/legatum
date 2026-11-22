@@ -13,19 +13,19 @@ import { SIZES, shot, type GameWindow } from './helpers';
 test.describe.configure({ mode: 'parallel' });
 
 type MapWindow = GameWindow & { legatumMap: { camera: { x: number; y: number; zoom: number }; redraw(): void } };
-const KINDS = ['Fighter', 'Bomber', 'StealthFighter', 'StealthBomber', 'Drone'] as const;
+const KINDS = ['Fighter', 'Bomber', 'StealthFighter', 'StealthBomber', 'CombatDrone'] as const;
 const ZOOMS = [{ name: 'normal', zoom: 1.0 }, { name: 'close', zoom: 1.8 }] as const;
 
 /** Waypost Seven with one aircraft in the hangar and enemy Soldiers three tiles out (the siege fixture's approach). */
 async function start(page: Page, kind: string) {
   const setup = siegeFixture({ approach: true });
   let game: string;
-  if (kind === 'Drone') {
+  if (kind === 'CombatDrone') {
     // A Drone Swarm two tiles from the nearest Soldier, ordered to shoot it.
     const f = setup.fixture;
     const foe = f.units.find((u) => u.owner !== 0)!;
     const free = ring(foe.pos, 2).find((h) => f.terrain[tileIndex(h, f.width, f.height)] === 'Plains' && !f.units.some((u) => hexEq(u.pos, h)));
-    spawnUnit(f, 0, 'Drone', free!, false);
+    spawnUnit(f, 0, 'CombatDrone', free!, false);
     game = coreFixture(f);
   } else {
     const aircraft = JSON.stringify([{ id: 900, kind, city: setup.own, hp: 100 }]);
@@ -56,7 +56,7 @@ for (const size of SIZES) test.describe(`painted aircraft ${size.name}`, () => {
       const home = v.cities.find((c) => c.owner === v.me)!.pos;
       const d = (a: { q: number; r: number }, b: { q: number; r: number }) => (Math.abs(a.q - b.q) + Math.abs(a.r - b.r) + Math.abs(a.q + a.r - b.q - b.r)) / 2;
       const foe = v.units.filter((u) => u.owner !== v.me && u.military).sort((a, b) => d(a.pos, home) - d(b.pos, home))[0];
-      const drone = kind === 'Drone' ? v.units.find((u) => u.kind === 'Drone')! : null;
+      const drone = kind === 'CombatDrone' ? v.units.find((u) => u.kind === 'CombatDrone')! : null;
       s.editOrders((o) => [...o, drone ? { type: 'RangedAttack' as const, unit: drone.id, target: foe.pos } : { type: 'AirStrike' as const, plane: 900, target: foe.pos }]);
       g.getState().select(null);
       return foe.pos;
@@ -87,10 +87,10 @@ for (const size of SIZES) test.describe(`painted aircraft ${size.name}`, () => {
     });
     await frame();
     const plan = await page.evaluate(() => (window as unknown as GameWindow).legatum.getState().anim?.plan?.shots.map((s) => ({ kind: s.kind, craft: s.craft, launch: s.launch, flight: s.flight })));
-    expect(plan?.some((s) => kind === 'Drone' ? s.kind === 'drone' : s.kind === 'bombs' && s.craft === kind)).toBe(true);
-    const bombs = plan!.find((s) => s.kind === (kind === 'Drone' ? 'drone' : 'bombs'))!;
+    expect(plan?.some((s) => kind === 'CombatDrone' ? s.kind === 'drone' : s.kind === 'bombs' && s.craft === kind)).toBe(true);
+    const bombs = plan!.find((s) => s.kind === (kind === 'CombatDrone' ? 'drone' : 'bombs'))!;
     // The pass runs from launch - 1.3 flights to launch + 1.3 flights; shoot it entering, over the target, and leaving.
-    const pass0 = kind === 'Drone' ? bombs.launch : bombs.launch - bombs.flight * 1.3, span = kind === 'Drone' ? bombs.flight : bombs.flight * 2.6;
+    const pass0 = kind === 'CombatDrone' ? bombs.launch : bombs.launch - bombs.flight * 1.3, span = kind === 'CombatDrone' ? bombs.flight : bombs.flight * 2.6;
     let t = 0;
     for (const [k, name] of [[0.22, '1-entering'], [0.5, '2-over-target'], [0.78, '3-leaving']] as const) {
       const to = pass0 + span * k;

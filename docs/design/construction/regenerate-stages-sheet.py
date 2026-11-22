@@ -9,7 +9,7 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parents[3]
 HERE = Path(__file__).resolve().parent
 ASSETS = ROOT / "app/src/assets/construction"
-MASTER = ROOT / "docs/design/unlock-art/masters/building-relayuplink.png"
+MASTER = ROOT / "docs/design/unlock-art/masters/building-greatlibrary.png"
 SHEET = HERE / "great-library-stages-sheet.png"
 PANEL_SIZE = 459
 PANEL_X = (31, 517, 1003, 1489)
@@ -22,7 +22,7 @@ master = Image.open(MASTER).convert("RGBA").resize(
 )
 for index, x in enumerate(PANEL_X, start=1):
     stage = (
-        Image.open(ASSETS / f"building-relayuplink-stage{index}.png")
+        Image.open(ASSETS / f"building-greatlibrary-stage{index}.png")
         .convert("RGBA")
         .resize((PANEL_SIZE, PANEL_SIZE), Image.Resampling.LANCZOS)
         if index < 4 else master

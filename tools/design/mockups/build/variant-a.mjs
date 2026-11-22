@@ -76,7 +76,7 @@ function banners() {
     const p = at(ci.pos);
     const col = PLAYERS[ci.owner].color;
     const fog = tile(...ci.pos).vis === 'explored';
-    const prodIcon = ci.prod && (['Settler', 'Soldier'].includes(ci.prod) ? 'unit-' : 'building-') + ci.prod.toLowerCase();
+    const prodIcon = ci.prod && (['Settler', 'Spearman'].includes(ci.prod) ? 'unit-' : 'building-') + ci.prod.toLowerCase();
     return `<div class="banner ${fog ? 'fog' : ''}" style="left:${f1(p.x)}px;top:${f1(p.y - R - 12)}px;--pc:${col}">
       <span class="b-pop">${ci.pop}</span>
       <span class="b-name">${ci.capital ? star(8, 'b-cap') : ''}${ci.name}</span>

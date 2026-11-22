@@ -694,7 +694,7 @@ mod tests {
         v
     }
 
-    /// Rules 52: a leading seat values the top rival's plain city for Humble the mighty, through
+    /// Rules 53: a leading seat values the top rival's plain city for Humble the mighty, through
     /// the core's own test, and never a lower rival's; a trailing seat still needs a team ahead.
     #[test]
     fn humble_the_mighty_targets_the_top_rival_when_leading() {
@@ -921,7 +921,7 @@ mod tests {
         v.great_works = vec![GreatWorkView {
             player: ENEMY,
             completed: None,
-            building: Some(legatum_core::BuildingKind::RelayUplink),
+            building: Some(legatum_core::BuildingKind::GreatLibrary),
             city: Some(v.cities[1].id),
             progress: 50,
             cost: 100,

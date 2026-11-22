@@ -54,7 +54,7 @@ fn economic_purchase_falls_through_to_the_next_market_tier_and_respects_gold_sav
     b.policy.numbers.settler_start = 300;
     let expected = Order::BuyItem {
         city: CityId(1),
-        item: building(BuildingKind::Clearinghouse),
+        item: building(BuildingKind::Bank),
     };
     let orders = b.orders(&v);
     assert_valid(&v, &orders);
@@ -143,7 +143,7 @@ fn greedy_none_escort_does_not_rendezvous_with_a_settler() {
     let mut v = ViewBuilder::new(28, 20)
         .city(1, ME, h(5, 5), 3)
         .unit(1, ME, UnitKind::Settler, h(6, 5))
-        .unit(2, ME, UnitKind::Soldier, h(5, 5))
+        .unit(2, ME, UnitKind::Spearman, h(5, 5))
         .gold(0)
         .build();
     // A high perceived threat would trigger the primitive even without an enemy.
@@ -179,11 +179,11 @@ fn greedy_optional_budget_counts_queues_and_losses_but_never_blocks_emergency_pr
         .known_techs(&[TechId::BronzeWorking])
         .city(1, ME, h(5, 5), 3)
         .city(2, ME, h(5, 12), 3)
-        .unit(1, ME, UnitKind::Soldier, h(5, 12))
+        .unit(1, ME, UnitKind::Spearman, h(5, 12))
         .gold(1000)
         .build();
     v.units[0].created_turn = Some(2);
-    v.cities[1].detail.as_mut().unwrap().production_queue = vec![unit(UnitKind::Ranger); 2];
+    v.cities[1].detail.as_mut().unwrap().production_queue = vec![unit(UnitKind::Archer); 2];
     quote(&mut v);
     let mut b = brain(Opening::GreedyExpand);
     b.policy.numbers.settler_target = 0;
@@ -191,22 +191,22 @@ fn greedy_optional_budget_counts_queues_and_losses_but_never_blocks_emergency_pr
         step.count = 0;
     }
     let optional = b.orders(&v);
-    for kind in [UnitKind::Soldier, UnitKind::Ranger] {
+    for kind in [UnitKind::Spearman, UnitKind::Archer] {
         assert!(!invests(&optional, unit(kind)), "{optional:?}");
     }
     v.units.clear(); // Previously completed investment still consumes the budget.
     v.turn += 1;
     let optional = b.orders(&v);
-    for kind in [UnitKind::Soldier, UnitKind::Ranger] {
+    for kind in [UnitKind::Spearman, UnitKind::Archer] {
         assert!(!invests(&optional, unit(kind)), "{optional:?}");
     }
     v = ViewBuilder { view: v }
-        .unit(99, ENEMY, UnitKind::Ranger, h(7, 5))
+        .unit(99, ENEMY, UnitKind::Archer, h(7, 5))
         .build();
     v.economy.gold = 0;
     v.turn += 1;
     let emergency = b.orders(&v);
-    assert!(invests(&emergency, unit(UnitKind::Ranger)), "{emergency:?}");
+    assert!(invests(&emergency, unit(UnitKind::Archer)), "{emergency:?}");
 }
 
 #[test]

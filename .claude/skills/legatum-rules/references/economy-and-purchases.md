@@ -23,7 +23,7 @@ leave ordinary game pacing unchanged while keeping long-run arithmetic within ra
 **Upkeep**: 2 free military units/empire; each extra costs 1 Gold/turn (3 for Switzerland).
 **Byzantine thin levies** count upkeep-paying land units except hired Companies, plus aircraft based in owned cities (`economy.rs::levy_count`, `production_check`). Aircraft count toward the levy cap but pay no Gold upkeep and use none of the two free upkeep slots (`economy.rs::upkeep_unit_count`, `upkeep_breakdown`, `forecast/cities.rs::forecast_cities`, `view.rs::unit_upkeep_preview`); Scouts, Settlers and the Heir count toward neither. The public `PlayerPublic.levy` drives the Armed counter and production blockers.
 **Scouts and civilians (Settlers) never pay upkeep and never use a free slot, in any faction
-(user decision 2026-10-06, after a Switzerland playtest where a Ranger, a Soldier and a ruin's free
+(user decision 2026-10-06, after a Switzerland playtest where an Archer, a Spearman and a ruin's free
 Scout bankrupted a 0 Gold treasury on turn 6; Civ 6 Scouts are free too)**
 (`data.rs::pays_upkeep`, used by `economy.rs::upkeep_breakdown`, the bankruptcy victim
 `rules/cities.rs::bankruptcy_victim`, the forecast and the build-card preview `view.rs::unit_upkeep_preview`,
@@ -85,9 +85,9 @@ For a rival city with Oil, the AI's capture score also counts visible rival airc
 increment 1, the Production line). Nothing is stored and nothing is paid:
 - **Supply:** each known deposit on a tile the empire owns supplies `SUPPLY_PER_DEPOSIT` = 2 of its resource, +`SUPPLY_PER_MINE` = 1 with the appropriate improvement or a city built on it (`resources::deposits`, `supplied`). Germany gets twice both amounts: 4 unimproved, 6 improved (`resources::deposit_supply`, `mine_supply_gain`), unless its `GermanyDoubleSupply` ablation switch is off. The supply chips, tile cards and improvement build cards use these owner-specific amounts. Worked or not, inside the work radius or not.
 - **Users:** every building tier or unit that needs a resource uses 1 for as long as it exists
-  (`building_need`, `unit_need`, `current_users`; table above): e.g. the **Forge** (`MachineShop`) uses 1 Iron; the
-  **Factory** (`Autoworks`) adds 1 Coal and keeps the Forge's Iron (a Factory city holds the Forge tier, so it
-  uses 1 Iron + 1 Coal); the **Pikeman** (`Trooper`) uses 1 Iron. The Workshop and Library, the Food line
+  (`building_need`, `unit_need`, `current_users`; table above): e.g. the **Forge** (`Forge`) uses 1 Iron; the
+  **Factory** (`Factory`) adds 1 Coal and keeps the Forge's Iron (a Factory city holds the Forge tier, so it
+  uses 1 Iron + 1 Coal); the **Pikeman** (`Pikeman`) uses 1 Iron. The Workshop and Library, the Food line
   (Granary, Mill), the Walls line and every other item need nothing. The Bank Silver / University Copper mapping of 2026-10-19 is superseded by the era rule.
 - **Starting needs spare supply:** setting production to, buying, or upgrading into a user needs
   `spare` ≥ 1 = supplied − in use − **held**, where builds in progress in *other* cities hold 1 each until

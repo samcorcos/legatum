@@ -51,7 +51,7 @@ mod fund_delivery_tests {
         let mut view = ViewBuilder::new(24, 16)
             .city(1, ME, Hex::new(4, 6), 3)
             .city(2, ME, Hex::new(10, 6), 3)
-            .unit(20, ME, UnitKind::Trooper, Hex::new(4, 6))
+            .unit(20, ME, UnitKind::Pikeman, Hex::new(4, 6))
             .build();
         view.turn = 11;
         view.units
@@ -69,7 +69,7 @@ mod fund_delivery_tests {
         p.campaigns.fund_deliveries.push(FundDelivery {
             ordered_turn: 10,
             bought_in: Some(CityId(1)),
-            kind: Some(UnitKind::Trooper),
+            kind: Some(UnitKind::Pikeman),
             unit: None,
             destination: CityId(2),
             offensive: false,
@@ -84,7 +84,7 @@ mod fund_delivery_tests {
         let mut view = ViewBuilder::new(24, 16)
             .city(1, ME, Hex::new(4, 6), 3)
             .city(3, ENEMY, Hex::new(12, 6), 3)
-            .unit(20, ME, UnitKind::Trooper, Hex::new(4, 6))
+            .unit(20, ME, UnitKind::Pikeman, Hex::new(4, 6))
             .build();
         view.turn = 11;
         view.units
@@ -102,7 +102,7 @@ mod fund_delivery_tests {
         p.campaigns.fund_deliveries.push(FundDelivery {
             ordered_turn: 10,
             bought_in: Some(CityId(1)),
-            kind: Some(UnitKind::Trooper),
+            kind: Some(UnitKind::Pikeman),
             unit: None,
             destination: CityId(3),
             offensive: true,
@@ -984,7 +984,7 @@ impl Planner<'_> {
                     && self.view().tile(*h).is_some_and(|t| {
                         self.view().passage_allowed(
                             self.view().me,
-                            legatum_core::UnitKind::Soldier,
+                            legatum_core::UnitKind::Spearman,
                             t.owner,
                         )
                     })
@@ -997,11 +997,11 @@ impl Planner<'_> {
     }
 
     /// Carry out the strike the forecast approved (`opportunity.rs`), from the turn war is
-    /// declared: committed units move to their assault tiles, Rangers in range shoot the city
+    /// declared: committed units move to their assault tiles, Archers in range shoot the city
     /// (its garrison first), and melee attacks when the whole-city assault forecast says the
     /// capture holds. Runs before routine garrisons and recovery, which would otherwise
-    /// scatter a winning force (rush-offense, 2026-10-04: a Ranger walked home to garrison
-    /// against the one Mongols Soldier that was busy holding its own city).
+    /// scatter a winning force (rush-offense, 2026-10-04: an Archer walked home to garrison
+    /// against the one Mongols Spearman that was busy holding its own city).
     fn press_strike(&mut self, army: &[&UnitView]) {
         let Some(strike) = self.opportunity_strike().cloned() else {
             return;
@@ -1115,7 +1115,7 @@ impl Planner<'_> {
         }
     }
 
-    /// Once four Soldiers are ready against a nearby open Byzantium city, bring the
+    /// Once four Spearmen are ready against a nearby open Byzantium city, bring the
     /// capital guard to the peace-side staging ring. A lone guard stays home, and
     /// this sortie stops if the capital is threatened or the city gains Walls.
     fn sparta_nearby_sortie(&mut self, army: &[&UnitView]) {
@@ -1125,7 +1125,7 @@ impl Planner<'_> {
             || v.turn > self.decisions.lone_city_sortie_turn as u32
             || army
                 .iter()
-                .filter(|u| u.kind == UnitKind::Soldier && u.hp >= 70)
+                .filter(|u| u.kind == UnitKind::Spearman && u.hp >= 70)
                 .count()
                 < 4
         {
@@ -1160,7 +1160,7 @@ impl Planner<'_> {
         let Some(guard) = self
             .free(army)
             .into_iter()
-            .find(|u| u.kind == UnitKind::Soldier && u.pos == home.pos && u.hp >= 70)
+            .find(|u| u.kind == UnitKind::Spearman && u.pos == home.pos && u.hp >= 70)
         else {
             return;
         };
@@ -1318,7 +1318,7 @@ impl Planner<'_> {
             .filter(|h| {
                 v.tile(*h).is_some_and(|t| {
                     t.terrain.and_then(|t| t.move_cost()).is_some()
-                        && v.passage_allowed(v.me, legatum_core::UnitKind::Soldier, t.owner)
+                        && v.passage_allowed(v.me, legatum_core::UnitKind::Spearman, t.owner)
                 }) && self.safe_campaign_tile(*h)
             })
             .min_by_key(|h| (h.distance(lead), *h))
@@ -1877,7 +1877,7 @@ impl Planner<'_> {
         }
     }
 
-    /// Rangers shoot the best visible target in range (`best_shot`). A unit that can also
+    /// Archers shoot the best visible target in range (`best_shot`). A unit that can also
     /// charge (the Keshig) charges instead when its best charge is worth more (`dual.rs`).
     fn ranged_fire(&mut self, army: &[&UnitView]) {
         self.fire_units(army, false);
@@ -3958,7 +3958,7 @@ impl Planner<'_> {
                     .iter()
                     .filter(|u| self.ctx.reachable(u.pos, t.pos))
                     .collect();
-                // A containment march may be all shooters (a Germany line of Rangers): it
+                // A containment march may be all shooters (a Germany line of Archers): it
                 // stages and fires; capture still needs melee through the assault forecast.
                 if reachable.len() < 2
                     || (!contain
@@ -4477,7 +4477,7 @@ mod military_scout_tests {
         let view = ViewBuilder::new(12, 12)
             .city(1, ME, off(3, 5), 3)
             .ruin(ruin)
-            .unit(1, ME, UnitKind::Soldier, off(5, 5))
+            .unit(1, ME, UnitKind::Spearman, off(5, 5))
             .build();
         let mut p = planner(&view, 7);
         p.difficulty = AiDifficulty::Hard;
@@ -4495,7 +4495,7 @@ mod military_scout_tests {
         let view = ViewBuilder::new(12, 12)
             .city(1, ME, off(3, 5), 3)
             .ruin(off(6, 5))
-            .unit(1, ME, UnitKind::Soldier, off(5, 5))
+            .unit(1, ME, UnitKind::Spearman, off(5, 5))
             .build();
         let mut p = planner(&view, 7);
         p.difficulty = AiDifficulty::Hard;
@@ -4519,7 +4519,7 @@ mod military_scout_tests {
     fn idle_soldier_moves_toward_nearby_unknown_land() {
         let view = ViewBuilder::new(12, 12)
             .city(1, ME, off(3, 5), 3)
-            .unit(1, ME, UnitKind::Soldier, off(6, 5))
+            .unit(1, ME, UnitKind::Spearman, off(6, 5))
             .unexplored_from_col(8)
             .build();
         let mut p = planner(&view, 7);

@@ -185,7 +185,7 @@ mod tests {
         let mut view = ViewBuilder::new(20, 20)
             .city(1, ME, off(4, 4), 3)
             .city(2, ME, off(8, 4), 3)
-            .unit(1, ME, UnitKind::Soldier, off(4, 4))
+            .unit(1, ME, UnitKind::Spearman, off(4, 4))
             .build();
         view.supply.push(resources::SupplyView {
             resource: Resource::Iron,
@@ -220,7 +220,7 @@ mod tests {
         let university = Order::SetProduction {
             city: legatum_core::CityId(2),
             item: ProductionItem::Building {
-                building: BuildingKind::College,
+                building: BuildingKind::University,
             },
         };
         assert_eq!(
@@ -234,8 +234,8 @@ mod tests {
     #[test]
     fn siege_purchase_cannot_spend_iron_reserved_by_a_unit_upgrade() {
         let mut view = ViewBuilder::new(12, 12)
-            .unit(1, ME, UnitKind::Soldier, off(5, 5))
-            .unit(2, ME, UnitKind::Soldier, off(6, 5))
+            .unit(1, ME, UnitKind::Spearman, off(5, 5))
+            .unit(2, ME, UnitKind::Spearman, off(6, 5))
             .build();
         view.units[0].upgrade_need = Some(Resource::Iron);
         view.supply.push(resources::SupplyView {
@@ -268,12 +268,12 @@ mod tests {
     #[test]
     fn an_unsupplied_unit_is_weighed_a_quarter_weaker() {
         let mut v = ViewBuilder::new(20, 20)
-            .unit(1, ENEMY, UnitKind::Trooper, off(5, 5))
-            .unit(2, ME, UnitKind::Soldier, off(6, 5))
+            .unit(1, ENEMY, UnitKind::Pikeman, off(5, 5))
+            .unit(2, ME, UnitKind::Spearman, off(6, 5))
             .build();
         let faction = v.faction_of(ENEMY);
         let supplied = v.units.iter().find(|u| u.id.0 == 1).unwrap().clone();
-        let base = data::unit_stats_for(faction, UnitKind::Trooper).strength;
+        let base = data::unit_stats_for(faction, UnitKind::Pikeman).strength;
         let mut short = supplied.clone();
         short.unsupplied = Some(Resource::Iron);
         assert_eq!(

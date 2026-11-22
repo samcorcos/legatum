@@ -44,7 +44,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     const none = forgeHeirFixture('Byzantium', 'none');
     await loadFixture(page, coreFixture(none.fixture), 2);
     await selectThing(page, 'city', none.capital);
-    const card = page.locator('.city-panel .production-choice[data-item="u:Heir"]');
+    const card = page.locator('.city-panel .production-choice[data-item="u:HeirToTheThrone"]');
     await card.scrollIntoViewIfNeeded();
     await expect(card).toBeVisible();
     await expect(card.locator('.btn-buy')).toBeDisabled();
@@ -79,7 +79,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
           await shot(p, size, '91d-heir-disband-confirm');
           await p.getByRole('button', { name: 'Keep him' }).click();
           await selectThing(p, 'city', fx.capital);
-          const blocked = p.locator('.city-panel .production-choice[data-item="u:Heir"]');
+          const blocked = p.locator('.city-panel .production-choice[data-item="u:HeirToTheThrone"]');
           await blocked.scrollIntoViewIfNeeded();
           await expect(blocked).toContainText('The Heir to the Throne still lives');
           await p.mouse.move(5, size.height / 2);
@@ -116,7 +116,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
       Object.assign(city, { population: 3, producing: null, prod: 0, productionQueue: [], productionBanked: [], buildings: [] });
       await loadFixture(p2, coreFixture(w.fixture), 2);
       await selectThing(p2, 'city', w.own);
-      const shrine = p2.locator('.city-panel .production-choice[data-item="b:WarShrine"]');
+      const shrine = p2.locator('.city-panel .production-choice[data-item="b:Agoge"]');
       await shrine.scrollIntoViewIfNeeded();
       await expect(shrine).toBeVisible();
       await shot(p2, size, '67-sparta-war-shrine-picker');

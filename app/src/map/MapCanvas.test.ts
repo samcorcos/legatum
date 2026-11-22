@@ -15,7 +15,7 @@ import { hexAt } from '../hex';
 import { setOverlay } from './overlays';
 import { Game } from '../wasm-pkg/legatum.js';
 
-vi.mock('./render', async (original) => ({ ...await original<typeof import('./render')>(), draw: vi.fn(() => ({ pending: false, labelRects: [] })) }));
+vi.mock('./render', async (original) => ({ ...await original<typeof import('./render')>(), draw: vi.fn(() => ({ pending: false, labelRects: [], ambient: [] })) }));
 
 let root: Root;
 let map: HTMLCanvasElement;
@@ -45,6 +45,9 @@ beforeEach(async () => {
   vi.stubGlobal('cancelAnimationFrame', (id: number) => frames.delete(id));
   preference = Object.assign(new EventTarget(), { matches: false }) as MediaQueryList;
   vi.spyOn(window, 'matchMedia').mockReturnValue(preference);
+  // A frame for the hover alone clips the map canvas before it draws (the draw itself is mocked): give that canvas a context to clip.
+  const clip = { save() {}, restore() {}, setTransform() {}, beginPath() {}, rect() {}, clip() {} } as unknown as CanvasRenderingContext2D;
+  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (this: HTMLCanvasElement) { return this.classList.contains('map-canvas') ? clip : null; });
   const client = new FixtureClient();
   const setup = await client.standardSetup('42', 'India', 'Byzantium', 'Ada', 'Bo');
   setup.rule_experiments = { ...setup.rule_experiments, start_settlers: 1 };
@@ -102,11 +105,11 @@ it.each(['normal', 'ranged'] as const)('forecasts the Ranger attack that right-c
   const client = useGame.getState().client as FixtureClient;
   const state = client.debugState();
   for (const r of state.diplomacy?.relations ?? []) r.state = 'War';
-  const ranger = state.units.find((u) => u.owner === 0 && u.kind === 'Soldier')!;
-  const defender = state.units.find((u) => u.owner === 2 && u.kind === 'Soldier')!;
+  const ranger = state.units.find((u) => u.owner === 0 && u.kind === 'Spearman')!;
+  const defender = state.units.find((u) => u.owner === 2 && u.kind === 'Spearman')!;
   state.units = [ranger, defender];
   state.terrain.fill('Grassland');
-  Object.assign(ranger, { kind: 'Ranger', hp: 20, pos: { q: 5, r: 5 } });
+  Object.assign(ranger, { kind: 'Archer', hp: 20, pos: { q: 5, r: 5 } });
   defender.pos = { q: 6, r: 5 };
   const forecast = vi.spyOn(client, 'forecast');
   act(() => useGame.setState({ views: [client.view(0)], mode, selection: { kind: 'unit', id: ranger.id } }));
@@ -252,7 +255,7 @@ function selectSoldierByCity() {
   client.endTurn({});
   const founded = client.debugState();
   const city = founded.cities.find((c) => c.owner === 0)!;
-  const unit = founded.units.find((u) => u.owner === 0 && u.kind === 'Soldier')!;
+  const unit = founded.units.find((u) => u.owner === 0 && u.kind === 'Spearman')!;
   unit.pos = neighbors(city.pos).find((h) => tileIndex(h, founded.width, founded.height) >= 0 && !founded.units.some((u) => hexEq(u.pos, h)))!;
   act(() => useGame.setState({ views: [client.view(0)], selection: { kind: 'unit', id: unit.id } }));
   return { client, unit, city };
@@ -422,10 +425,10 @@ it.each(['normal', 'ranged'] as const)('touch previews the same combat forecast 
   const client = useGame.getState().client as FixtureClient;
   const state = client.debugState();
   for (const r of state.diplomacy?.relations ?? []) r.state = 'War';
-  const ranger = state.units.find((u) => u.owner === 0 && u.kind === 'Soldier')!;
-  const defender = state.units.find((u) => u.owner === 2 && u.kind === 'Soldier')!;
+  const ranger = state.units.find((u) => u.owner === 0 && u.kind === 'Spearman')!;
+  const defender = state.units.find((u) => u.owner === 2 && u.kind === 'Spearman')!;
   state.units = [ranger, defender]; state.terrain.fill('Grassland');
-  Object.assign(ranger, { kind: 'Ranger', pos: { q: 5, r: 5 } }); defender.pos = { q: 6, r: 5 };
+  Object.assign(ranger, { kind: 'Archer', pos: { q: 5, r: 5 } }); defender.pos = { q: 6, r: 5 };
   const forecast = vi.spyOn(client, 'forecast');
   act(() => useGame.setState({ views: [client.view(0)], mode, selection: { kind: 'unit', id: ranger.id } }));
   tap(defender.pos);
@@ -503,7 +506,7 @@ const chosenLens = () => document.querySelector('[role="radio"][aria-checked="tr
 it('auto-enables Settle temporarily, remembers explicit choices, and restores them after leaving a Settler', () => {
   const v = useGame.getState().views![0];
   const settler = v.units.find((u) => u.owner === v.me && u.kind === 'Settler')!;
-  const soldier = v.units.find((u) => u.owner === v.me && u.kind === 'Soldier')!;
+  const soldier = v.units.find((u) => u.owner === v.me && u.kind === 'Spearman')!;
   act(() => useGame.setState({ selection: { kind: 'unit', id: soldier.id } }));
   chooseLens('Movement');
   // An overlay the player turned on rides through every automatic switch.
@@ -538,7 +541,7 @@ it('lens arrow keys select and focus the next radio without panning or ending th
 
 it('A4 draws selection without even a queued route when hovering another own unit', () => {
   const v = useGame.getState().views![0];
-  const soldier = v.units.find((u) => u.owner === v.me && u.kind === 'Soldier')!;
+  const soldier = v.units.find((u) => u.owner === v.me && u.kind === 'Spearman')!;
   const settler = v.units.find((u) => u.owner === v.me && u.kind === 'Settler')!;
   const order = { type: 'MoveUnit' as const, unit: soldier.id, to: emptyBeside(soldier, 2) };
   act(() => useGame.setState({ selection: { kind: 'unit', id: soldier.id }, orders: [[order]] }));
@@ -563,7 +566,7 @@ it('keeps a mouse drag route when an escort targets a friendly Settler tile', ()
   const state = client.debugState();
   state.terrain.fill('Grassland');
   const settler = state.units.find((u) => u.owner === 0 && u.kind === 'Settler')!;
-  const soldier = state.units.find((u) => u.owner === 0 && u.kind === 'Soldier')!;
+  const soldier = state.units.find((u) => u.owner === 0 && u.kind === 'Spearman')!;
   soldier.pos = neighbors(settler.pos).find((h) => tileIndex(h, state.width, state.height) >= 0)!;
   act(() => useGame.setState({ views: [client.view(0)], selection: { kind: 'unit', id: soldier.id } }));
   mouse('pointerdown', soldier.pos);
@@ -578,7 +581,7 @@ it('keeps the settlement card route over friendly units and gives mouse-specific
   capture();
   const v = useGame.getState().views![0];
   const settler = v.units.find((u) => u.owner === v.me && u.kind === 'Settler')!;
-  const soldier = v.units.find((u) => u.owner === v.me && u.kind === 'Soldier')!;
+  const soldier = v.units.find((u) => u.owner === v.me && u.kind === 'Spearman')!;
   act(() => useGame.setState({ selection: { kind: 'unit', id: settler.id } }));
   const recommendations = [...document.querySelectorAll<HTMLButtonElement>('[data-settle-rank]')];
   for (const button of recommendations) {
@@ -669,10 +672,10 @@ it('a ranged click on an enemy fires even when the Settle lens marks that tile a
   const state = client.debugState();
   state.terrain.fill('Grassland');
   const settler = state.units.find((u) => u.owner === 0 && u.kind === 'Settler')!;
-  const ranger = state.units.find((u) => u.owner === 0 && u.kind === 'Soldier')!;
-  const defender = state.units.find((u) => u.owner === 2 && u.kind === 'Soldier')!;
+  const ranger = state.units.find((u) => u.owner === 0 && u.kind === 'Spearman')!;
+  const defender = state.units.find((u) => u.owner === 2 && u.kind === 'Spearman')!;
   state.units = [settler, ranger, defender];
-  Object.assign(ranger, { kind: 'Ranger', pos: { q: 12, r: 10 } }); defender.pos = { q: 13, r: 10 };
+  Object.assign(ranger, { kind: 'Archer', pos: { q: 12, r: 10 } }); defender.pos = { q: 13, r: 10 };
   settler.pos = { q: 10, r: 10 };
   for (const r of state.diplomacy?.relations ?? []) r.state = 'War';
   // The enemy stands on a tile the Settle lens scores as a site (as on neutral land it can).
@@ -692,10 +695,10 @@ it('a ranged click on a unit of a team at Peace asks to declare War instead of q
   const client = useGame.getState().client as FixtureClient;
   const state = client.debugState();
   state.terrain.fill('Grassland');
-  const ranger = state.units.find((u) => u.owner === 0 && u.kind === 'Soldier')!;
-  const defender = state.units.find((u) => u.owner === 2 && u.kind === 'Soldier')!;
+  const ranger = state.units.find((u) => u.owner === 0 && u.kind === 'Spearman')!;
+  const defender = state.units.find((u) => u.owner === 2 && u.kind === 'Spearman')!;
   state.units = [ranger, defender];
-  Object.assign(ranger, { kind: 'Ranger', pos: { q: 12, r: 10 } }); defender.pos = { q: 13, r: 10 };
+  Object.assign(ranger, { kind: 'Archer', pos: { q: 12, r: 10 } }); defender.pos = { q: 13, r: 10 };
   act(() => useGame.setState({ views: [client.view(0)], selection: { kind: 'unit', id: ranger.id }, mode: 'ranged' }));
   mouse('pointerdown', defender.pos);
   mouse('pointerup', defender.pos);
@@ -706,7 +709,7 @@ it('a ranged click on a unit of a team at Peace asks to declare War instead of q
 
 it('the unit card movement picker accepts a left-click through the existing validated move command', () => {
   const v = useGame.getState().views![0];
-  const soldier = v.units.find((u) => u.owner === v.me && u.kind === 'Soldier')!;
+  const soldier = v.units.find((u) => u.owner === v.me && u.kind === 'Spearman')!;
   const destination = emptyBeside(soldier, 2);
   act(() => useGame.setState({ selection: { kind: 'unit', id: soldier.id }, mode: 'move' }));
   mouse('pointermove', destination);

@@ -19,9 +19,9 @@ fn signatures_survive_current_defaults() {
     let office = data::building_stats_for(Faction::India, BuildingKind::Market);
     assert_eq!((office.cost, office.yields.gold), (60, 3));
     assert_eq!(goals::spec(Faction::India).vp, 2);
-    let foundry = data::building_stats_for(Faction::Germany, BuildingKind::MachineShop);
+    let foundry = data::building_stats_for(Faction::Germany, BuildingKind::Forge);
     assert_eq!((foundry.cost, foundry.yields.production), (320, 6));
-    let legion = data::unit_stats_for(Faction::Byzantium, UnitKind::Trooper);
+    let legion = data::unit_stats_for(Faction::Byzantium, UnitKind::Pikeman);
     assert_eq!((legion.cost, legion.strength), (162, 36));
     assert_eq!(
         data::unit_stats_for(Faction::Germany, UnitKind::Settler).cost,
@@ -35,7 +35,7 @@ fn signatures_survive_current_defaults() {
         data::terrain_yields(Faction::Celts, Terrain::Hills),
         Yields::new(0, 2, 0, 0)
     );
-    let archer = data::unit_stats_for(Faction::Celts, UnitKind::Ranger);
+    let archer = data::unit_stats_for(Faction::Celts, UnitKind::Archer);
     assert_eq!((archer.ranged, archer.moves, archer.cost), (15, 2, 132));
     let scout = data::unit_stats_for(Faction::Mongols, UnitKind::Scout);
     assert_eq!((scout.cost, scout.strength, scout.moves), (60, 5, 4));
@@ -48,7 +48,7 @@ fn signatures_survive_current_defaults() {
         2
     );
     assert_eq!(
-        data::unit_stats_for(Faction::Sparta, UnitKind::Soldier).strength,
+        data::unit_stats_for(Faction::Sparta, UnitKind::Spearman).strength,
         20
     );
     assert_eq!(
@@ -56,7 +56,7 @@ fn signatures_survive_current_defaults() {
         2
     );
     assert_eq!(
-        data::unit_stats_for(Faction::Celts, UnitKind::Soldier).strength,
+        data::unit_stats_for(Faction::Celts, UnitKind::Spearman).strength,
         20
     );
 }
@@ -74,7 +74,7 @@ fn germany_forge_goal_needs_five_foundry_cities_and_scores_two_vp_while_it_holds
             .get_mut(id)
             .unwrap()
             .buildings
-            .insert(BuildingKind::MachineShop);
+            .insert(BuildingKind::Forge);
     }
     assert!(goals::reached(&s, P));
     // Foundries count even in resistance.
@@ -272,7 +272,7 @@ fn remote_commerce_requires_an_active_market_and_owned_capital_at_eight_hexes() 
         .get_mut(&remote)
         .unwrap()
         .buildings
-        .insert(BuildingKind::Clearinghouse);
+        .insert(BuildingKind::Bank);
     let bonus = |s: &GameState| {
         economy::city_yields(s, &s.cities[&remote])
             .sources
@@ -296,7 +296,7 @@ fn remote_commerce_requires_an_active_market_and_owned_capital_at_eight_hexes() 
 fn sparta_regiments_rest_heal_normally_at_home_in_field_or_fortified() {
     let mut s = state(Faction::Sparta);
     let home = city(&mut s, 4, 4);
-    let soldier = game::spawn_unit(&mut s, P, UnitKind::Soldier, Hex::from_offset(4, 4));
+    let soldier = game::spawn_unit(&mut s, P, UnitKind::Spearman, Hex::from_offset(4, 4));
     for (fortify, pos) in [
         (0, Hex::from_offset(4, 4)),
         (0, Hex::from_offset(14, 4)),
@@ -344,7 +344,7 @@ fn sparta_scouts_and_regiments_rest_heal_alike() {
     let home = city(&mut s, 4, 4);
     s.cities.get_mut(&home).unwrap().buildings.clear();
     let scout = game::spawn_unit(&mut s, P, UnitKind::Scout, Hex::from_offset(4, 4));
-    let hoplite = game::spawn_unit(&mut s, P, UnitKind::Soldier, Hex::from_offset(4, 4));
+    let hoplite = game::spawn_unit(&mut s, P, UnitKind::Spearman, Hex::from_offset(4, 4));
     let field = Hex::from_offset(14, 4);
     for (pos, scout_heal) in [(Hex::from_offset(4, 4), 20), (field, 10)] {
         for id in [scout, hoplite] {
@@ -420,7 +420,7 @@ fn upkeep_quote_matches_resolution_after_free_slots() {
                 s.player_mut(P).techs.extend(TechId::ALL);
             }
             for i in 0..military {
-                game::spawn_unit(&mut s, P, UnitKind::Soldier, Hex::from_offset(4 + i, 5));
+                game::spawn_unit(&mut s, P, UnitKind::Spearman, Hex::from_offset(4 + i, 5));
             }
             let paid = (military - 2).max(0);
             let expected = 3 * paid;
@@ -582,7 +582,7 @@ fn scouts_cost_no_upkeep_and_use_no_free_slot() {
         assert_eq!(economy::upkeep_breakdown(&s, P).total, 0, "{faction:?}");
         // Three armed units: only the third pays, however many Scouts stand beside them.
         for i in 0..3 {
-            game::spawn_unit(&mut s, P, UnitKind::Soldier, Hex::from_offset(4 + i, 6));
+            game::spawn_unit(&mut s, P, UnitKind::Spearman, Hex::from_offset(4 + i, 6));
         }
         assert_eq!(
             economy::upkeep_breakdown(&s, P).total,
@@ -594,11 +594,11 @@ fn scouts_cost_no_upkeep_and_use_no_free_slot() {
 
 #[test]
 fn switzerland_with_ranger_soldier_and_two_scouts_are_not_bankrupt() {
-    // The 2026-10-06 playtest: turn 6, 0 Gold, a Ranger, a Soldier and two Scouts.
+    // The 2026-10-06 playtest: turn 6, 0 Gold, an Archer, a Spearman and two Scouts.
     let mut s = state(Faction::Switzerland);
     city(&mut s, 4, 4);
-    game::spawn_unit(&mut s, P, UnitKind::Ranger, Hex::from_offset(5, 4));
-    game::spawn_unit(&mut s, P, UnitKind::Soldier, Hex::from_offset(3, 4));
+    game::spawn_unit(&mut s, P, UnitKind::Archer, Hex::from_offset(5, 4));
+    game::spawn_unit(&mut s, P, UnitKind::Spearman, Hex::from_offset(3, 4));
     game::spawn_unit(&mut s, P, UnitKind::Scout, Hex::from_offset(6, 6));
     game::spawn_unit(&mut s, P, UnitKind::Scout, Hex::from_offset(7, 6));
     s.player_mut(P).gold = 0;
@@ -620,7 +620,7 @@ fn bankruptcy_never_disbands_a_scout() {
     city(&mut s, 4, 4);
     let scout = game::spawn_unit(&mut s, P, UnitKind::Scout, Hex::from_offset(6, 6));
     for i in 0..3 {
-        game::spawn_unit(&mut s, P, UnitKind::Soldier, Hex::from_offset(3 + i, 7));
+        game::spawn_unit(&mut s, P, UnitKind::Spearman, Hex::from_offset(3 + i, 7));
     }
     s.player_mut(P).gold = 0;
     let (next, _) = resolve_turn(&s, &BTreeMap::new());

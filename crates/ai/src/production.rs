@@ -39,10 +39,10 @@ mod siege_deadline_tests {
         let view = player_view(&state, PlayerId(5));
         let city = view.cities.iter().find(|c| c.name == "Gergovia").unwrap();
         let ranger = ProductionItem::Unit {
-            unit: UnitKind::Ranger,
+            unit: UnitKind::Archer,
         };
         let soldier = ProductionItem::Unit {
-            unit: UnitKind::Soldier,
+            unit: UnitKind::Spearman,
         };
         let detail = city.detail.as_ref().unwrap();
         let ranger_turns = detail
@@ -106,7 +106,7 @@ mod wonder_tile_tests {
         let mut option = view.cities[0].detail.as_ref().unwrap().options[0].clone();
         let safe = off(5, 6);
         option.item = ProductionItem::Wonder {
-            building: BuildingKind::RelayUplink,
+            building: BuildingKind::GreatLibrary,
             tile: safe,
         };
         option.wonder = Some(WonderPreview {
@@ -171,10 +171,10 @@ mod purchase_scorer_tests {
                 .city(1, ME, Hex::new(6, 6), 4)
                 .build(),
             &[
-                UnitKind::Soldier,
+                UnitKind::Spearman,
                 UnitKind::Phalangite,
-                UnitKind::Trooper,
-                UnitKind::AssaultTrooper,
+                UnitKind::Pikeman,
+                UnitKind::Musketman,
             ],
         );
         let options = &mut v.cities[0].detail.as_mut().unwrap().options;
@@ -183,7 +183,7 @@ mod purchase_scorer_tests {
             .find(|o| {
                 o.item
                     == ProductionItem::Unit {
-                        unit: UnitKind::AssaultTrooper,
+                        unit: UnitKind::Musketman,
                     }
             })
             .unwrap()
@@ -191,18 +191,18 @@ mod purchase_scorer_tests {
         let mut p = planner(&v, 1);
         p.decisions.purchase_generation_floor = 1;
         assert_eq!(
-            p.purchase_generation(&v.cities[0], UnitKind::Soldier),
-            Some(UnitKind::Trooper)
+            p.purchase_generation(&v.cities[0], UnitKind::Spearman),
+            Some(UnitKind::Pikeman)
         );
-        p.gold_left = 800 - 2 * data::unit_stats(UnitKind::Soldier).cost;
+        p.gold_left = 800 - 2 * data::unit_stats(UnitKind::Spearman).cost;
         p.orders.push(Order::BuyItem {
             city: CityId(1),
             item: ProductionItem::Unit {
-                unit: UnitKind::Soldier,
+                unit: UnitKind::Spearman,
             },
         });
         p.enforce_purchase_generation();
-        assert_eq!(first_buy(&p), Some(UnitKind::Trooper));
+        assert_eq!(first_buy(&p), Some(UnitKind::Pikeman));
 
         let options = &mut v.cities[0].detail.as_mut().unwrap().options;
         options
@@ -210,18 +210,18 @@ mod purchase_scorer_tests {
             .find(|o| {
                 o.item
                     == ProductionItem::Unit {
-                        unit: UnitKind::Trooper,
+                        unit: UnitKind::Pikeman,
                     }
             })
             .unwrap()
             .buy_block = Some(legatum_core::economy::BuyBlock::Resource);
         let mut p = planner(&v, 1);
         p.decisions.purchase_generation_floor = 1;
-        p.gold_left = 800 - 2 * data::unit_stats(UnitKind::Soldier).cost;
+        p.gold_left = 800 - 2 * data::unit_stats(UnitKind::Spearman).cost;
         p.orders.push(Order::BuyItem {
             city: CityId(1),
             item: ProductionItem::Unit {
-                unit: UnitKind::Soldier,
+                unit: UnitKind::Spearman,
             },
         });
         p.enforce_purchase_generation();
@@ -236,19 +236,15 @@ mod purchase_scorer_tests {
                 .gold(200)
                 .city(1, ME, Hex::new(6, 6), 4)
                 .build(),
-            &[
-                UnitKind::Soldier,
-                UnitKind::Trooper,
-                UnitKind::AssaultTrooper,
-            ],
+            &[UnitKind::Spearman, UnitKind::Pikeman, UnitKind::Musketman],
         );
         let mut p = planner(&v, 1);
         p.decisions.purchase_generation_floor = 1;
-        p.gold_left = 200 - 2 * data::unit_stats(UnitKind::Soldier).cost;
+        p.gold_left = 200 - 2 * data::unit_stats(UnitKind::Spearman).cost;
         p.orders.push(Order::BuyItem {
             city: CityId(1),
             item: ProductionItem::Unit {
-                unit: UnitKind::Soldier,
+                unit: UnitKind::Spearman,
             },
         });
         p.enforce_purchase_generation();
@@ -270,16 +266,16 @@ mod purchase_scorer_tests {
         assert!(
             p.military_purchase_score(UnitKind::Tank, quote(UnitKind::Tank), v.cities[0].pos)
                 > p.military_purchase_score(
-                    UnitKind::AssaultTrooper,
-                    quote(UnitKind::AssaultTrooper),
+                    UnitKind::Musketman,
+                    quote(UnitKind::Musketman),
                     v.cities[0].pos
                 )
         );
         assert!(
             p.military_purchase_score(UnitKind::Tank, quote(UnitKind::Tank), v.cities[0].pos)
                 > p.military_purchase_score(
-                    UnitKind::Soldier,
-                    quote(UnitKind::Soldier),
+                    UnitKind::Spearman,
+                    quote(UnitKind::Spearman),
                     v.cities[0].pos
                 )
         );
@@ -292,13 +288,9 @@ mod purchase_scorer_tests {
                 .known_techs(&TechId::ALL)
                 .gold(544)
                 .city(1, ME, Hex::new(6, 6), 4)
-                .unit(2, ENEMY, UnitKind::Landship, Hex::new(12, 6))
+                .unit(2, ENEMY, UnitKind::EarlyTank, Hex::new(12, 6))
                 .build(),
-            &[
-                UnitKind::Soldier,
-                UnitKind::AssaultTrooper,
-                UnitKind::Landship,
-            ],
+            &[UnitKind::Spearman, UnitKind::Musketman, UnitKind::EarlyTank],
         );
         v.economy.gold_per_turn.total = 78;
         let city = &v.cities[0];
@@ -311,14 +303,14 @@ mod purchase_scorer_tests {
             .find(|o| {
                 o.item
                     == ProductionItem::Unit {
-                        unit: UnitKind::Soldier,
+                        unit: UnitKind::Spearman,
                     }
             })
             .unwrap()
             .buy_cost
             .unwrap();
-        assert!(planner(&v, 0).military_purchase_viable(city, UnitKind::Soldier, soldier_quote));
-        assert!(!planner(&v, 1).military_purchase_viable(city, UnitKind::Soldier, soldier_quote));
+        assert!(planner(&v, 0).military_purchase_viable(city, UnitKind::Spearman, soldier_quote));
+        assert!(!planner(&v, 1).military_purchase_viable(city, UnitKind::Spearman, soldier_quote));
     }
 
     #[test]
@@ -329,10 +321,10 @@ mod purchase_scorer_tests {
                 .gold(189)
                 .city(1, ME, Hex::new(6, 6), 4)
                 .unit(50, ENEMY, UnitKind::Artillery, Hex::new(10, 6))
-                .unit(51, ENEMY, UnitKind::Soldier, Hex::new(10, 5))
-                .unit(52, ENEMY, UnitKind::Soldier, Hex::new(11, 6))
+                .unit(51, ENEMY, UnitKind::Spearman, Hex::new(10, 5))
+                .unit(52, ENEMY, UnitKind::Spearman, Hex::new(11, 6))
                 .build(),
-            &[UnitKind::Soldier, UnitKind::Rifleman],
+            &[UnitKind::Spearman, UnitKind::Rifleman],
         );
         v.economy.gold_per_turn.total = 77;
         v.cities[0].walls = true;
@@ -362,7 +354,7 @@ mod purchase_scorer_tests {
             .find(|o| {
                 o.item
                     == ProductionItem::Unit {
-                        unit: UnitKind::Soldier,
+                        unit: UnitKind::Spearman,
                     }
             })
             .unwrap()
@@ -390,14 +382,14 @@ mod purchase_scorer_tests {
         assert!(rifle_quote <= v.economy.gold_per_turn.total * 5 + p.gold_left);
         assert!(
             p.military_purchase_score(UnitKind::Rifleman, rifle_quote, city.pos)
-                >= p.military_purchase_score(UnitKind::Soldier, soldier_quote, city.pos) * 2
+                >= p.military_purchase_score(UnitKind::Spearman, soldier_quote, city.pos) * 2
         );
         assert!(
             p.door_fronts()
                 .iter()
                 .any(|f| f.city == city.id && f.arrival <= 1 && f.gap() > 0)
         );
-        assert!(p.military_purchase_viable(city, UnitKind::Soldier, soldier_quote));
+        assert!(p.military_purchase_viable(city, UnitKind::Spearman, soldier_quote));
     }
 
     #[test]
@@ -407,7 +399,7 @@ mod purchase_scorer_tests {
             .researching(TechId::Rifling)
             .gold(1000)
             .city(1, ME, Hex::new(6, 6), 4)
-            .unit(1, ME, UnitKind::AssaultTrooper, Hex::new(6, 6))
+            .unit(1, ME, UnitKind::Musketman, Hex::new(6, 6))
             .unit(2, ENEMY, UnitKind::Cuirassier, Hex::new(10, 6))
             .build();
         v.research.turns_left = Some(2);
@@ -415,8 +407,8 @@ mod purchase_scorer_tests {
         let quote = |unit| 2 * data::unit_stats(unit).cost;
         assert!(
             p.military_purchase_score(
-                UnitKind::AssaultTrooper,
-                quote(UnitKind::AssaultTrooper),
+                UnitKind::Musketman,
+                quote(UnitKind::Musketman),
                 v.cities[0].pos
             ) > p.military_purchase_score(
                 UnitKind::CompositeArcher,
@@ -443,8 +435,8 @@ mod purchase_scorer_tests {
         assert!(
             p.military_purchase_score(UnitKind::Tank, quote(UnitKind::Tank), v.cities[0].pos)
                 > p.military_purchase_score(
-                    UnitKind::Soldier,
-                    quote(UnitKind::Soldier),
+                    UnitKind::Spearman,
+                    quote(UnitKind::Spearman),
                     v.cities[0].pos
                 )
         );
@@ -462,14 +454,19 @@ mod purchase_scorer_tests {
                 .unit(3, ENEMY, UnitKind::Cavalry, Hex::new(2, 4))
                 .unit(4, ENEMY, UnitKind::Cavalry, Hex::new(2, 5))
                 .build(),
-            &[UnitKind::Soldier, UnitKind::Trooper],
+            &[UnitKind::Spearman, UnitKind::Pikeman],
         );
         v.economy.gold_per_turn.total = 36;
         let mut old = planner(&v, 0);
         old.plan_door_defense();
         let mut new = planner(&v, 1);
         new.plan_door_defense();
-        assert_eq!(first_buy(&old), Some(UnitKind::Soldier), "{:?}", old.orders);
+        assert_eq!(
+            first_buy(&old),
+            Some(UnitKind::Spearman),
+            "{:?}",
+            old.orders
+        );
         assert_eq!(first_buy(&new), None, "{:?}", new.orders);
     }
 
@@ -481,14 +478,14 @@ mod purchase_scorer_tests {
                 .researching(TechId::Rifling)
                 .gold(684)
                 .city(1, ME, Hex::new(6, 6), 4)
-                .unit(1, ME, UnitKind::AssaultTrooper, Hex::new(4, 6))
+                .unit(1, ME, UnitKind::Musketman, Hex::new(4, 6))
                 .unit(2, ENEMY, UnitKind::Cavalry, Hex::new(9, 6))
                 .unit(3, ENEMY, UnitKind::Cavalry, Hex::new(10, 6))
                 .build(),
             &[
-                UnitKind::Soldier,
+                UnitKind::Spearman,
                 UnitKind::CompositeArcher,
-                UnitKind::AssaultTrooper,
+                UnitKind::Musketman,
             ],
         );
         v.research.turns_left = Some(2);
@@ -507,7 +504,7 @@ mod purchase_scorer_tests {
         assert!(first_buy(&old).is_some(), "{:?}", old.orders);
         assert_eq!(
             first_buy(&new),
-            Some(UnitKind::AssaultTrooper),
+            Some(UnitKind::Musketman),
             "{:?}",
             new.orders
         );
@@ -604,7 +601,7 @@ impl Tally {
                 unit: UnitKind::Scout,
             } => self.scouts += 1,
             ProductionItem::Unit {
-                unit: UnitKind::Heir,
+                unit: UnitKind::HeirToTheThrone,
             } => self.heir_pipeline += 1,
             ProductionItem::Unit { unit } if composition::is_ranged_line(unit) => {
                 self.army += 1;
@@ -1300,7 +1297,7 @@ impl Planner<'_> {
             return;
         }
         // Least valuable first; at equal value the weaker fighter goes (a Mongols
-        // Wayfinder costs a Soldier's 40 but can't hold anything).
+        // Wayfinder costs a Spearman's 40 but can't hold anything).
         let mut candidates: Vec<(bool, bool, bool, i32, i32, legatum_core::UnitId)> = self
             .ctx
             .own_units
@@ -2090,8 +2087,8 @@ impl Planner<'_> {
                     })
             })
             .unwrap_or((
-                UnitKind::Soldier,
-                rules.unit_stats_for(self.faction, UnitKind::Soldier).cost,
+                UnitKind::Spearman,
+                rules.unit_stats_for(self.faction, UnitKind::Spearman).cost,
             ));
         let troop_strength = rules.unit_stats_for(self.faction, troop.0).strength;
         let (near_count, seen_strength, siege) = self
@@ -2630,14 +2627,14 @@ impl Planner<'_> {
             let Some(d) = c.detail.as_ref() else {
                 continue;
             };
-            // A Soldier may be the city's defender; only Scout or food-building fillers wait.
+            // A Spearman may be the city's defender; only Scout or food-building fillers wait.
             let filler = matches!(
                 d.producing,
                 Some(
                     ProductionItem::Unit {
                         unit: UnitKind::Scout
                     } | ProductionItem::Building {
-                        building: BuildingKind::Granary | BuildingKind::BroodHall
+                        building: BuildingKind::Granary | BuildingKind::RiceStorehouse
                     }
                 )
             );
@@ -2669,7 +2666,7 @@ impl Planner<'_> {
 
     /// A Settler needs population 2 to be chosen (as in Civ 6). A population-1 city that
     /// wants one builds something short first (a Granary or Brood Hall, a Scout if it has none, or a
-    /// Soldier when exposed), so the Settler starts soon after the city grows.
+    /// Spearman when exposed), so the Settler starts soon after the city grows.
     fn pre_settler_build(&self, c: &CityView, tally: &Tally) -> Option<ProductionItem> {
         let d = c.detail.as_ref()?;
         let settler = ProductionItem::Unit {
@@ -2684,7 +2681,7 @@ impl Planner<'_> {
         }
         let option = |item: ProductionItem| d.options.iter().find(|o| o.item == item);
         let soldier = ProductionItem::Unit {
-            unit: UnitKind::Soldier,
+            unit: UnitKind::Spearman,
         };
         if self.opening_exposed(c) && tally.army < 2 {
             return option(soldier).map(|o| o.item);
@@ -2696,7 +2693,7 @@ impl Planner<'_> {
             building: BuildingKind::Granary,
         };
         let brood_hall = ProductionItem::Building {
-            building: BuildingKind::BroodHall,
+            building: BuildingKind::RiceStorehouse,
         };
         // A Scout only when none is left (extra units cost upkeep: 3 Gold each for the
         // Switzerland); otherwise a food building (Food builds population, and a claimed tile
@@ -2710,7 +2707,7 @@ impl Planner<'_> {
                 .min_by_key(|o| o.turns)
                 .map(|o| o.item)
         };
-        // A food building first: it costs no upkeep and a Soldier is only the last resort.
+        // A food building first: it costs no upkeep and a Spearman is only the last resort.
         cheapest(&[
             (scout, tally.scouts == 0),
             (granary, true),
@@ -2744,7 +2741,7 @@ impl Planner<'_> {
             return chosen;
         }
         if matches!(chosen, Some(ProductionItem::Unit { unit }) if unit == UnitKind::Settler
-            || unit == UnitKind::Heir
+            || unit == UnitKind::HeirToTheThrone
             || composition::is_combat(unit))
         {
             return chosen;
@@ -3558,7 +3555,7 @@ impl Planner<'_> {
             && match self.wing_target().filter(|_| early_sparta_prize) {
                 // Gene `assault_wing_forecast`: the wing is as big as the siege forecast says
                 // taking the prize needs (playtest 8.9.2: the user trained a Hoplite every 4 to
-                // 6 turns and stormed Nicaea with four; AI Sparta stopped at two and a Ranger).
+                // 6 turns and stormed Nicaea with four; AI Sparta stopped at two and an Archer).
                 Some(city) => !self.assault_wing_ready(city, None),
                 None => {
                     tally.army
@@ -3984,7 +3981,7 @@ impl Planner<'_> {
                     && !matches!(
                         opt.item,
                         ProductionItem::Building {
-                            building: BuildingKind::MachineShop | BuildingKind::Autoworks
+                            building: BuildingKind::Forge | BuildingKind::Factory
                         }
                     ) =>
             {
@@ -4034,7 +4031,7 @@ impl Planner<'_> {
 
     fn legacy_foundry_food_cost(&self, building: BuildingKind) -> i32 {
         if self.faction == Faction::Germany
-            && building == BuildingKind::MachineShop
+            && building == BuildingKind::Forge
             && !self
                 .view()
                 .rule_experiments
@@ -4323,10 +4320,10 @@ impl Planner<'_> {
                         0
                     }
                 }
-                UnitKind::Heir if t.heir_pipeline == 0 => {
+                UnitKind::HeirToTheThrone if t.heir_pipeline == 0 => {
                     self.heir_value(c, opt.turns, threatened, undefended)
                 }
-                UnitKind::Heir => 0,
+                UnitKind::HeirToTheThrone => 0,
                 unit if data::is_aircraft(unit)
                     && self.difficulty != legatum_core::AiDifficulty::Easy =>
                 {
@@ -4385,7 +4382,7 @@ impl Planner<'_> {
                         && self.best_mounted_option(c) == Some(unit);
                     let counter = if mounted {
                         self.early_counter_value(c, UnitKind::Horseman)
-                            .max(self.early_counter_value(c, UnitKind::Soldier))
+                            .max(self.early_counter_value(c, UnitKind::Spearman))
                     } else if self.mongol_horde() {
                         0
                     } else {
@@ -4447,8 +4444,8 @@ impl Planner<'_> {
                         + self.shrine_training_bonus(c, unit)
                         + self.composition_bonus(unit)
                         + match unit {
-                            UnitKind::Trooper => 150,
-                            UnitKind::AssaultTrooper => 380,
+                            UnitKind::Pikeman => 150,
+                            UnitKind::Musketman => 380,
                             UnitKind::Rifleman => 510,
                             UnitKind::TrenchInfantry => 575,
                             UnitKind::Infantry => 640,
@@ -4457,14 +4454,14 @@ impl Planner<'_> {
                             // The advanced shooters: a share of the army.
                             ranged
                                 if composition::is_ranged_line(ranged)
-                                    && ranged != UnitKind::Ranger
+                                    && ranged != UnitKind::Archer
                                     && t.rangers * ranged_divisor < t.army + 1 =>
                             {
                                 350 + k.military
                             }
                             ranged
                                 if composition::is_ranged_line(ranged)
-                                    && ranged != UnitKind::Ranger =>
+                                    && ranged != UnitKind::Archer =>
                             {
                                 if threatened {
                                     160
@@ -4472,15 +4469,15 @@ impl Planner<'_> {
                                     -40
                                 }
                             }
-                            // Rangers defend: favored under threat and as a third of the army.
-                            UnitKind::Ranger if threatened => 100,
-                            UnitKind::Ranger if t.rangers * ranged_divisor < t.army + 1 => 180,
-                            UnitKind::Ranger => -40,
+                            // Archers defend: favored under threat and as a third of the army.
+                            UnitKind::Archer if threatened => 100,
+                            UnitKind::Archer if t.rangers * ranged_divisor < t.army + 1 => 180,
+                            UnitKind::Archer => -40,
                             _ => 0,
                         };
                     // Ranged support can answer the bombardment that city strength cannot.
                     // One melee garrison plus two shooters is a useful force; repeatedly
-                    // choosing the cheaper Soldier fills a numerical quota without it.
+                    // choosing the cheaper Spearman fills a numerical quota without it.
                     if !self.mongol_horde()
                         && self.difficulty == legatum_core::AiDifficulty::Hard
                         && t.army > t.rangers
@@ -4555,7 +4552,7 @@ impl Planner<'_> {
                     }
                     if early
                         && t.army < 2
-                        && unit == UnitKind::Soldier
+                        && unit == UnitKind::Spearman
                         && (self.opening_exposed(c) || !self.first_settler_pending(c))
                     {
                         k.opening_defense_value()
@@ -4568,7 +4565,7 @@ impl Planner<'_> {
                         && self.first_settler_pending(c)
                         && (t.army >= 2 || !self.opening_exposed(c))
                     {
-                        // The starting garrison plus one trained Soldier protect expansion.
+                        // The starting garrison plus one trained Spearman protect expansion.
                         0
                     } else if t.army < self.desired_army() && solvent {
                         200 + k.military * 5 + kind_bonus + self.decisions.army_item_bonus
@@ -4590,14 +4587,14 @@ impl Planner<'_> {
                         0
                     }
                     + match building {
-                        BuildingKind::Hydroponics | BuildingKind::Supermarket => {
+                        BuildingKind::Mill | BuildingKind::Supermarket => {
                             if d.yields.total.food - 2 * c.population < 4 {
                                 180 + k.economy * 3 + k.expansion
                             } else {
                                 50 + k.economy
                             }
                         }
-                        BuildingKind::MachineShop | BuildingKind::Autoworks => {
+                        BuildingKind::Forge | BuildingKind::Factory => {
                             // Industry must earn back its construction before it can fund
                             // the next investment. Use the same 30-turn planning horizon
                             // as choose_item, and the quoted marginal yield (including
@@ -4627,7 +4624,7 @@ impl Planner<'_> {
                             // The supply it uses is spare (an option without it is removed), so
                             // its yield costs no one anything: priority by Production gained.
                             // A city whose growth has stalled feeds itself first (the same
-                            // test as Hydroponics).
+                            // test as Mill).
                             let supply = if threatened || d.yields.total.food - 2 * c.population < 4
                             {
                                 0
@@ -4638,8 +4635,8 @@ impl Planner<'_> {
                                 + supply
                                 - self.legacy_foundry_food_cost(building)
                         }
-                        BuildingKind::College => 140 + k.science * 5,
-                        BuildingKind::InferenceCore => {
+                        BuildingKind::University => 140 + k.science * 5,
+                        BuildingKind::ResearchLab => {
                             let window = 40;
                             if opt.turns >= 0 && opt.turns + window <= self.turns_remaining() {
                                 200 + k.science * 6
@@ -4647,10 +4644,10 @@ impl Planner<'_> {
                                 0
                             }
                         }
-                        BuildingKind::Clearinghouse | BuildingKind::StockExchange => {
+                        BuildingKind::Bank | BuildingKind::StockExchange => {
                             120 + k.economy * 4 + if !solvent { 300 } else { 0 }
                         }
-                        BuildingKind::WarShrine => {
+                        BuildingKind::Agoge => {
                             (if self.decisions.war_shrine_drive > 0
                                 && self.desired_army()
                                     > ctx.own_units.iter().filter(|u| u.military).count() as i32
@@ -4668,7 +4665,7 @@ impl Planner<'_> {
                             }
                         }
                         // The Rice Storehouse stays with Japan when it becomes playable again.
-                        BuildingKind::BroodHall => 0,
+                        BuildingKind::RiceStorehouse => 0,
                         // Valued with the Modern era's deliberate air-defence play (increment 3).
                         BuildingKind::AirDefence => 0,
                         BuildingKind::Granary => 100 + k.economy * 2 + k.expansion,
@@ -4732,8 +4729,8 @@ impl Planner<'_> {
                                 + remittance
                                 + goal
                         }
-                        BuildingKind::Laboratory => 80 + k.science * 4,
-                        BuildingKind::CourierHall => self.hall_value(c, opt.turns),
+                        BuildingKind::Library => 80 + k.science * 4,
+                        BuildingKind::YamRelayStation => self.hall_value(c, opt.turns),
                         BuildingKind::ImperialDiwan => {
                             if self.faction == Faction::India && self.goal_pending() {
                                 1200 + k.economy * 4
@@ -4783,13 +4780,13 @@ impl Planner<'_> {
                                 20
                             }
                         }
-                        BuildingKind::RelayUplink
+                        BuildingKind::GreatLibrary
                         | BuildingKind::Pyramids
                         | BuildingKind::HagiaSophia
                         | BuildingKind::EiffelTower
-                        | BuildingKind::IterReactor
-                        | BuildingKind::PlanetaryFoundry
-                        | BuildingKind::WorldExchange => {
+                        | BuildingKind::IterFusionReactor
+                        | BuildingKind::RoyalArsenal
+                        | BuildingKind::GrandBazaar => {
                             if !t.relay_started
                                 && !threatened
                                 && self.missing_great_work() > 0
@@ -5062,7 +5059,7 @@ impl Planner<'_> {
             .is_some_and(|p| p.faction_goal_done);
         (match (self.faction, b) {
             (Faction::Germany, _) => self.factory_goal_stage_value(c, b, turns),
-            (Faction::Athens, BuildingKind::Laboratory) => {
+            (Faction::Athens, BuildingKind::Library) => {
                 // Completing the third lab is a concrete goal investment, not another
                 // interchangeable science building. The earlier labs keep their usual value.
                 let labs = self
@@ -5074,7 +5071,7 @@ impl Planner<'_> {
                             d.resistance <= 0
                                 && legatum_core::data::has_building(
                                     &d.buildings,
-                                    BuildingKind::Laboratory,
+                                    BuildingKind::Library,
                                 )
                         })
                     })
@@ -5279,7 +5276,7 @@ impl Planner<'_> {
             }
             // Walls under way are the city's durable answer: finish them with Production,
             // never swap them for a unit (gene `keep_walls`; playtest
-            // 8.4: a Byzantium capital swapped Walls at 86 of 91 Production for a Ranger it
+            // 8.4: a Byzantium capital swapped Walls at 86 of 91 Production for an Archer it
             // never finished, and fell three turns later).
             if self.hard_defense()
                 && self.decisions.keep_walls > 0
@@ -5307,7 +5304,7 @@ impl Planner<'_> {
             }
             // A Settler well under way is finished, not swapped: it cost a citizen and most of
             // its Production, and a swapped one waits for the next quiet turn (gene
-            // `keep_settler`; playtest 8.4 swapped one at 80 of 163 for a Soldier). Only a city
+            // `keep_settler`; playtest 8.4 swapped one at 80 of 163 for a Spearman). Only a city
             // that is forecast to fall, or has a hostile armed unit within two hexes, gives it up.
             if self.keep_committed_settler(c) {
                 continue;
@@ -6121,7 +6118,7 @@ impl Planner<'_> {
                 let purchase_reserve = if matches!(
                     opt.item,
                     ProductionItem::Building {
-                        building: BuildingKind::Granary | BuildingKind::BroodHall,
+                        building: BuildingKind::Granary | BuildingKind::RiceStorehouse,
                     }
                 ) {
                     self.ordinary_gold_reserve()
@@ -6620,11 +6617,11 @@ mod automation_tests {
         let view = ViewBuilder::new(20, 20)
             .known_techs(&[TechId::Writing, TechId::Currency])
             .city(1, ME, off(8, 8), 4)
-            .unit(2, ME, UnitKind::Soldier, off(8, 8))
+            .unit(2, ME, UnitKind::Spearman, off(8, 8))
             .build();
         let pick = |focus| city_automation_choice(&view, CityId(1), focus);
         let science = ProductionItem::Building {
-            building: BuildingKind::Laboratory,
+            building: BuildingKind::Library,
         };
         let gold = ProductionItem::Building {
             building: BuildingKind::Market,
@@ -6635,8 +6632,8 @@ mod automation_tests {
         let threatened = ViewBuilder::new(20, 20)
             .known_techs(&[TechId::Writing, TechId::Currency])
             .city(1, ME, off(8, 8), 4)
-            .unit(2, ME, UnitKind::Soldier, off(8, 8))
-            .unit(3, ENEMY, UnitKind::Soldier, off(10, 8))
+            .unit(2, ME, UnitKind::Spearman, off(8, 8))
+            .unit(3, ENEMY, UnitKind::Spearman, off(10, 8))
             .build();
         assert!(
             matches!(city_automation_choice(&threatened, CityId(1), CityBuildFocus::Military), Some(item) if is_military_unit(item))
@@ -6650,7 +6647,7 @@ mod automation_tests {
         for pop in [1, 2, 4] {
             let view = ViewBuilder::new(20, 20)
                 .city(1, ME, off(8, 8), pop)
-                .unit(2, ME, UnitKind::Soldier, off(8, 8))
+                .unit(2, ME, UnitKind::Spearman, off(8, 8))
                 .build();
             assert!(
                 matches!(city_automation_choice(&view, CityId(1), CityBuildFocus::Military), Some(item) if is_military_unit(item)),
@@ -6671,15 +6668,15 @@ mod automation_tests {
                 .city(3, ME, off(20, 8), 4)
                 .city(4, ME, off(8, 14), 4);
             if garrison {
-                b = b.unit(10, ME, UnitKind::Soldier, off(8, 8));
+                b = b.unit(10, ME, UnitKind::Spearman, off(8, 8));
             }
             if enemy {
-                b = b.unit(11, ENEMY, UnitKind::Soldier, off(10, 8));
+                b = b.unit(11, ENEMY, UnitKind::Spearman, off(10, 8));
             }
             b.build()
         };
         let science = ProductionItem::Building {
-            building: BuildingKind::Laboratory,
+            building: BuildingKind::Library,
         };
         let gold = ProductionItem::Building {
             building: BuildingKind::Market,
@@ -6809,8 +6806,8 @@ mod bombardment_purchase_tests {
         let mut view = ViewBuilder::new(36, 20)
             .city(1, ME, Hex::new(6, 6), 3)
             .city(2, ME, Hex::new(16, 6), 3)
-            .unit(50, ENEMY, UnitKind::Soldier, Hex::new(10, 6))
-            .unit(51, ENEMY, UnitKind::Soldier, Hex::new(20, 6))
+            .unit(50, ENEMY, UnitKind::Spearman, Hex::new(10, 6))
+            .unit(51, ENEMY, UnitKind::Spearman, Hex::new(20, 6))
             .build();
         for c in &mut view.cities {
             let d = c.detail.as_mut().unwrap();
@@ -6820,7 +6817,7 @@ mod bombardment_purchase_tests {
             d.options.retain(|o| {
                 o.item
                     == (ProductionItem::Unit {
-                        unit: UnitKind::Soldier,
+                        unit: UnitKind::Spearman,
                     })
             });
             d.options[0].buy_cost = Some(100);
@@ -6897,10 +6894,10 @@ mod bombardment_purchase_tests {
             0
         );
         option.item = ProductionItem::Building {
-            building: BuildingKind::MachineShop,
+            building: BuildingKind::Forge,
         };
         assert_eq!(
-            planner.legacy_foundry_food_cost(BuildingKind::MachineShop),
+            planner.legacy_foundry_food_cost(BuildingKind::Forge),
             2 * (100 + planner.knobs.expansion * 2)
         );
         view.rule_experiments
@@ -6916,10 +6913,7 @@ mod bombardment_purchase_tests {
             planner.german_industry_food_cost(&view.cities[0], &option),
             0
         );
-        assert_eq!(
-            planner.legacy_foundry_food_cost(BuildingKind::MachineShop),
-            0
-        );
+        assert_eq!(planner.legacy_foundry_food_cost(BuildingKind::Forge), 0);
     }
 
     #[test]
@@ -6951,12 +6945,12 @@ mod bombardment_purchase_tests {
         assert!(switches(&view, 1, legatum_core::AiDifficulty::Normal));
         // An enemy near the capture retains relief builds, even far from home.
         let threatened = ViewBuilder { view: view.clone() }
-            .unit(50, ENEMY, UnitKind::Soldier, Hex::new(15, 5))
+            .unit(50, ENEMY, UnitKind::Spearman, Hex::new(15, 5))
             .build();
         assert!(switches(&threatened, 1, legatum_core::AiDifficulty::Hard));
         // Local bombardment still interrupts economy without the neighboring alarm.
         let direct = ViewBuilder { view }
-            .unit(50, ENEMY, UnitKind::Ranger, Hex::new(7, 5))
+            .unit(50, ENEMY, UnitKind::Archer, Hex::new(7, 5))
             .build();
         assert!(switches(&direct, 1, legatum_core::AiDifficulty::Hard));
     }
@@ -6972,7 +6966,7 @@ mod bombardment_purchase_tests {
                 .city(1, ME, home, 2)
                 .city(2, ME, Hex::new(20, 3), 2)
                 .gold(0)
-                .unit(1, ME, UnitKind::Soldier, home);
+                .unit(1, ME, UnitKind::Spearman, home);
             for (id, kind, at) in enemies {
                 b = b.unit(*id, ENEMY, *kind, *at);
             }
@@ -6996,17 +6990,17 @@ mod bombardment_purchase_tests {
                 .iter()
                 .any(|o| matches!(o, Order::SetProduction { item, .. } if is_military_unit(*item)))
         };
-        let standing = build(&[(50, UnitKind::Soldier, Hex::new(11, 8))]);
+        let standing = build(&[(50, UnitKind::Spearman, Hex::new(11, 8))]);
         assert!(fires(&standing, 0), "off: the standing want interrupts");
         assert!(!fires(&standing, 1), "on: it does not");
-        let bombarded = build(&[(50, UnitKind::Ranger, Hex::new(10, 8))]);
+        let bombarded = build(&[(50, UnitKind::Archer, Hex::new(10, 8))]);
         assert!(fires(&bombarded, 0));
         assert!(fires(&bombarded, 1), "bombardment still interrupts");
         let swarm = build(&[
-            (50, UnitKind::Soldier, Hex::new(10, 8)),
-            (51, UnitKind::Soldier, Hex::new(9, 8)),
-            (52, UnitKind::Soldier, Hex::new(9, 9)),
-            (53, UnitKind::Soldier, Hex::new(10, 9)),
+            (50, UnitKind::Spearman, Hex::new(10, 8)),
+            (51, UnitKind::Spearman, Hex::new(9, 8)),
+            (52, UnitKind::Spearman, Hex::new(9, 9)),
+            (53, UnitKind::Spearman, Hex::new(10, 9)),
         ]);
         assert!(fires(&swarm, 1), "threat above defence still interrupts");
     }
@@ -7018,23 +7012,23 @@ mod bombardment_purchase_tests {
         // choice; the siege matchup and old bombardment genes are explicit.
         let home = Hex::new(8, 8);
         let spear = ProductionItem::Unit {
-            unit: UnitKind::Soldier,
+            unit: UnitKind::Spearman,
         };
         let archer = ProductionItem::Unit {
-            unit: UnitKind::Ranger,
+            unit: UnitKind::Archer,
         };
         let mut view = ViewBuilder::new(24, 18)
             .faction(Faction::India)
             .city(1, ME, home, 3)
             .walled(1)
             .city(2, ME, Hex::new(20, 5), 2)
-            .unit(1, ME, UnitKind::Soldier, home)
-            .unit(50, ENEMY, UnitKind::Soldier, Hex::new(11, 8))
-            .unit(51, ENEMY, UnitKind::Soldier, Hex::new(8, 11))
-            .unit(52, ENEMY, UnitKind::Soldier, Hex::new(11, 7))
-            .unit(53, ENEMY, UnitKind::Soldier, Hex::new(10, 9))
-            .unit(54, ENEMY, UnitKind::Soldier, Hex::new(7, 11))
-            .unit(55, ENEMY, UnitKind::Soldier, Hex::new(9, 10))
+            .unit(1, ME, UnitKind::Spearman, home)
+            .unit(50, ENEMY, UnitKind::Spearman, Hex::new(11, 8))
+            .unit(51, ENEMY, UnitKind::Spearman, Hex::new(8, 11))
+            .unit(52, ENEMY, UnitKind::Spearman, Hex::new(11, 7))
+            .unit(53, ENEMY, UnitKind::Spearman, Hex::new(10, 9))
+            .unit(54, ENEMY, UnitKind::Spearman, Hex::new(7, 11))
+            .unit(55, ENEMY, UnitKind::Spearman, Hex::new(9, 10))
             .build();
         view.turn = 27;
         let d = view.cities[0].detail.as_mut().unwrap();
@@ -7097,12 +7091,12 @@ mod bombardment_purchase_tests {
 
     #[test]
     fn visible_threat_approach_does_not_resume_mongol_settler() {
-        // Rome 8.9.67 T42–T44: the threat pass started a Ranger in an open
+        // Rome 8.9.67 T42–T44: the threat pass started an Archer in an open
         // Mongol city, then routine resumed a Settler although the human army
         // was visible at the border. The threat model can read this before war.
         let home = Hex::new(8, 8);
         let ranger = ProductionItem::Unit {
-            unit: UnitKind::Ranger,
+            unit: UnitKind::Archer,
         };
         let settler = ProductionItem::Unit {
             unit: UnitKind::Settler,
@@ -7111,9 +7105,9 @@ mod bombardment_purchase_tests {
             .faction(Faction::Mongols)
             .city(1, ME, home, 4)
             .city(2, ENEMY, Hex::new(12, 8), 2)
-            .unit(1, ME, UnitKind::Soldier, home)
-            .unit(50, ENEMY, UnitKind::Soldier, Hex::new(11, 8))
-            .unit(51, ENEMY, UnitKind::Soldier, Hex::new(12, 7))
+            .unit(1, ME, UnitKind::Spearman, home)
+            .unit(50, ENEMY, UnitKind::Spearman, Hex::new(11, 8))
+            .unit(51, ENEMY, UnitKind::Spearman, Hex::new(12, 7))
             .build();
         view.turn = 43;
         view.diplomacy.legacy = false;
@@ -7175,10 +7169,10 @@ mod bombardment_purchase_tests {
             sites: 0,
         };
         let soldier = ProductionItem::Unit {
-            unit: UnitKind::Soldier,
+            unit: UnitKind::Spearman,
         };
         let ranger = ProductionItem::Unit {
-            unit: UnitKind::Ranger,
+            unit: UnitKind::Archer,
         };
         let pick = |view: &legatum_core::PlayerView| {
             let mut p = Planner::new(view, Knobs::for_faction(Faction::India), Faction::India, 7);
@@ -7216,9 +7210,9 @@ mod bombardment_purchase_tests {
         let mut view = ViewBuilder::new(24, 16)
             .city(1, ME, home, 2)
             .gold(700)
-            .unit_hp(1, ME, UnitKind::Soldier, home, 20)
-            .unit(2, ME, UnitKind::Ranger, Hex::new(5, 8))
-            .unit(50, ENEMY, UnitKind::Ranger, Hex::new(10, 8))
+            .unit_hp(1, ME, UnitKind::Spearman, home, 20)
+            .unit(2, ME, UnitKind::Archer, Hex::new(5, 8))
+            .unit(50, ENEMY, UnitKind::Archer, Hex::new(10, 8))
             .build();
         view.cities[0]
             .detail
@@ -7229,7 +7223,7 @@ mod bombardment_purchase_tests {
             .find(|o| {
                 o.item
                     == (ProductionItem::Unit {
-                        unit: UnitKind::Ranger,
+                        unit: UnitKind::Archer,
                     })
             })
             .unwrap()
@@ -7246,7 +7240,7 @@ mod bombardment_purchase_tests {
                 o,
                 Order::BuyItem {
                     item: ProductionItem::Unit {
-                        unit: UnitKind::Ranger
+                        unit: UnitKind::Archer
                     },
                     ..
                 }
@@ -7257,7 +7251,7 @@ mod bombardment_purchase_tests {
         view.economy.gold = 0;
         let d = view.cities[0].detail.as_mut().unwrap();
         d.producing = Some(ProductionItem::Unit {
-            unit: UnitKind::Soldier,
+            unit: UnitKind::Spearman,
         });
         d.turns_to_complete = Some(20);
         let mut p = Planner::new(
@@ -7272,7 +7266,7 @@ mod bombardment_purchase_tests {
                 o,
                 Order::SetProduction {
                     item: ProductionItem::Unit {
-                        unit: UnitKind::Ranger
+                        unit: UnitKind::Archer
                     },
                     ..
                 }
@@ -7302,11 +7296,11 @@ mod rush_tests {
         let mut view = ViewBuilder::new(20, 20)
             .known_techs(&[TechId::Irrigation, TechId::Currency])
             .city(1, ME, off(5, 5), 2)
-            .unit(1, ME, UnitKind::Soldier, off(5, 5))
-            .unit(2, ME, UnitKind::Soldier, off(5, 6))
+            .unit(1, ME, UnitKind::Spearman, off(5, 5))
+            .unit(2, ME, UnitKind::Spearman, off(5, 6))
             .build();
         let soldier = ProductionItem::Unit {
-            unit: UnitKind::Soldier,
+            unit: UnitKind::Spearman,
         };
         let market = ProductionItem::Building {
             building: BuildingKind::Market,
@@ -7384,7 +7378,7 @@ mod rush_tests {
         assert_eq!(
             p.rush_opening_item(&view.cities[0], &tally),
             Some(ProductionItem::Unit {
-                unit: UnitKind::Ranger
+                unit: UnitKind::Archer
             })
         );
         tally.rangers = 2;
@@ -7392,7 +7386,7 @@ mod rush_tests {
         assert_eq!(
             p.rush_opening_item(&view.cities[0], &tally),
             Some(ProductionItem::Unit {
-                unit: UnitKind::Trooper
+                unit: UnitKind::Pikeman
             })
         );
         tally.army = 5;
@@ -7435,7 +7429,7 @@ mod rush_tests {
                 .find(|o| {
                     o.item
                         == ProductionItem::Unit {
-                            unit: UnitKind::Soldier,
+                            unit: UnitKind::Spearman,
                         }
                 })
                 .unwrap();
@@ -7495,8 +7489,8 @@ mod rush_tests {
             )
         };
         assert_eq!(p.desired_army(), 6);
-        assert_eq!(value(UnitKind::Soldier), 0);
-        assert!(value(UnitKind::Ranger) > 0);
+        assert_eq!(value(UnitKind::Spearman), 0);
+        assert!(value(UnitKind::Archer) > 0);
         let ordinary = Planner::new(
             &view,
             Knobs::for_faction(Faction::Switzerland),
@@ -7659,10 +7653,10 @@ mod india_office_tests {
         assert!(planner.assessed_border_threat(city.pos));
         planner.decisions.india_prewar_guard = 0;
         assert!(!planner.funding_front(0, city));
-        assert!(planner.troop_unfunded(0, city, UnitKind::Soldier));
+        assert!(planner.troop_unfunded(0, city, UnitKind::Spearman));
         planner.decisions.india_prewar_guard = 1;
         assert!(planner.funding_front(0, city));
-        assert!(!planner.troop_unfunded(0, city, UnitKind::Soldier));
+        assert!(!planner.troop_unfunded(0, city, UnitKind::Spearman));
     }
 
     #[test]
@@ -7670,7 +7664,7 @@ mod india_office_tests {
         let mut view = ViewBuilder::new(24, 16)
             .faction(Faction::India)
             .city(1, ME, off(6, 6), 3)
-            .unit(5, crate::fixture::ENEMY, UnitKind::Soldier, off(8, 6))
+            .unit(5, crate::fixture::ENEMY, UnitKind::Spearman, off(8, 6))
             .gold(0)
             .build();
         view.economy.gold_per_turn.total = -5;
@@ -7680,9 +7674,9 @@ mod india_office_tests {
         planner.difficulty = legatum_core::AiDifficulty::Hard;
         assert!(planner.funding_front(0, city));
         planner.decisions.india_emergency_defense = 0;
-        assert!(planner.troop_unfunded(0, city, UnitKind::Soldier));
+        assert!(planner.troop_unfunded(0, city, UnitKind::Spearman));
         planner.decisions.india_emergency_defense = 1;
-        assert!(!planner.troop_unfunded(0, city, UnitKind::Soldier));
+        assert!(!planner.troop_unfunded(0, city, UnitKind::Spearman));
     }
 }
 
@@ -7695,18 +7689,18 @@ mod insolvency_tests {
     use legatum_core::{Breakdown, PlayerView, UnitId};
 
     /// Mongols (1 Gold upkeep per unit, as in rush-defense) with six military units: a
-    /// Soldier garrisoning a city still in resistance (just captured), three Soldiers and a
-    /// Ranger in the field, and a Scout.
+    /// Spearman garrisoning a city still in resistance (just captured), three Spearmen and a
+    /// Archer in the field, and a Scout.
     fn bankrupt(deficit: i32) -> PlayerView {
         let mut v = ViewBuilder::new(24, 16)
             .faction(Faction::Mongols)
             .city_with_detail(1, ME, off(4, 4), 2)
             .city_with_detail(2, ME, off(12, 8), 1)
-            .unit_hp(1, ME, UnitKind::Soldier, off(12, 8), 64)
-            .unit(2, ME, UnitKind::Soldier, off(8, 8))
-            .unit(3, ME, UnitKind::Soldier, off(9, 9))
-            .unit(4, ME, UnitKind::Ranger, off(10, 8))
-            .unit(5, ME, UnitKind::Soldier, off(6, 6))
+            .unit_hp(1, ME, UnitKind::Spearman, off(12, 8), 64)
+            .unit(2, ME, UnitKind::Spearman, off(8, 8))
+            .unit(3, ME, UnitKind::Spearman, off(9, 9))
+            .unit(4, ME, UnitKind::Archer, off(10, 8))
+            .unit(5, ME, UnitKind::Spearman, off(6, 6))
             .unit(6, ME, UnitKind::Scout, off(2, 2))
             .gold(0)
             .build();
@@ -7736,7 +7730,7 @@ mod insolvency_tests {
 
     #[test]
     fn a_one_gold_deficit_costs_the_least_valuable_unit_never_a_captured_citys_garrison() {
-        // The Wayfinder costs a Soldier's 40 but fights worst.
+        // The Wayfinder costs a Spearman's 40 but fights worst.
         assert_eq!(disbanded(&bankrupt(1)), vec![UnitId(6)]);
     }
 
@@ -7886,9 +7880,9 @@ mod raze_tests {
         let pos = Hex::new(8, 8);
         let mut view = ViewBuilder::new(20, 18)
             .city(1, ME, pos, 3)
-            .unit(20, ENEMY, UnitKind::Soldier, Hex::new(9, 8))
-            .unit(21, ENEMY, UnitKind::Soldier, Hex::new(9, 9))
-            .unit(22, ENEMY, UnitKind::Soldier, Hex::new(8, 9))
+            .unit(20, ENEMY, UnitKind::Spearman, Hex::new(9, 8))
+            .unit(21, ENEMY, UnitKind::Spearman, Hex::new(9, 9))
+            .unit(22, ENEMY, UnitKind::Spearman, Hex::new(8, 9))
             .build();
         view.cities[0].is_capital = false;
         let d = view.cities[0].detail.as_mut().unwrap();
@@ -7940,12 +7934,12 @@ mod purchase_savings_tests {
         view.economy.gold_per_turn.total = 50;
         for c in &mut view.cities[..2] {
             let d = c.detail.as_mut().unwrap();
-            d.buildings.push(BuildingKind::Laboratory);
+            d.buildings.push(BuildingKind::Library);
             d.options.clear();
         }
         let d = view.cities[2].detail.as_mut().unwrap();
         let lab = ProductionItem::Building {
-            building: BuildingKind::Laboratory,
+            building: BuildingKind::Library,
         };
         let granary = ProductionItem::Building {
             building: BuildingKind::Granary,
@@ -8005,7 +7999,7 @@ mod purchase_savings_tests {
         assert!(saving.orders.contains(&Order::BuyItem {
             city: CityId(3),
             item: ProductionItem::Building {
-                building: BuildingKind::Laboratory
+                building: BuildingKind::Library
             },
         }));
     }
@@ -8031,7 +8025,7 @@ mod buy_hold_tests {
         }
     }
 
-    /// The technology a Soldier's upgrade needs.
+    /// The technology a Spearman's upgrade needs.
     fn phalangite_tech() -> TechId {
         data::unit_stats(UnitKind::Phalangite)
             .requires
@@ -8039,7 +8033,7 @@ mod buy_hold_tests {
     }
 
     /// Athens researching the Phalangite's technology (due in 5 turns) and knowing every
-    /// other, four Soldiers, 50 Gold a turn, and one city offering only a Granary at 80 Gold.
+    /// other, four Spearmen, 50 Gold a turn, and one city offering only a Granary at 80 Gold.
     fn fixture(gold: i32) -> legatum_core::PlayerView {
         let known: Vec<_> = TechId::ALL
             .into_iter()
@@ -8054,7 +8048,7 @@ mod buy_hold_tests {
             .city(2, ME, Hex::from_offset(12, 5), 5)
             .city(3, ME, Hex::from_offset(19, 5), 5);
         for id in 0..4 {
-            b = b.unit(10 + id, ME, UnitKind::Soldier, Hex::from_offset(12, 5));
+            b = b.unit(10 + id, ME, UnitKind::Spearman, Hex::from_offset(12, 5));
         }
         let mut view = b.build();
         view.research.turns_left = Some(5);
@@ -8228,7 +8222,7 @@ mod buy_hold_tests {
                 .known_techs(&TechId::ALL)
                 .gold(gold)
                 .city(1, ME, Hex::new(6, 6), 5)
-                .unit(2, crate::fixture::ENEMY, UnitKind::Soldier, enemy)
+                .unit(2, crate::fixture::ENEMY, UnitKind::Spearman, enemy)
                 .build();
             for option in &mut view.cities[0].detail.as_mut().unwrap().options {
                 if matches!(option.item, ProductionItem::Unit { .. }) {
@@ -8274,8 +8268,13 @@ mod buy_hold_tests {
             .gold(5000)
             .city(1, ME, Hex::new(6, 6), 5)
             .city(2, ME, Hex::new(8, 6), 5)
-            .unit(4, ME, UnitKind::Soldier, Hex::new(14, 6))
-            .unit(3, crate::fixture::ENEMY, UnitKind::Soldier, Hex::new(11, 6))
+            .unit(4, ME, UnitKind::Spearman, Hex::new(14, 6))
+            .unit(
+                3,
+                crate::fixture::ENEMY,
+                UnitKind::Spearman,
+                Hex::new(11, 6),
+            )
             .build();
         view.units
             .iter_mut()
@@ -8352,7 +8351,7 @@ mod modernization_tests {
             .find(|c| c.id == legatum_core::CityId(24))
             .unwrap();
         let archer = ProductionItem::Unit {
-            unit: UnitKind::Ranger,
+            unit: UnitKind::Archer,
         };
         assert_eq!(city.detail.as_ref().unwrap().producing, Some(archer));
         for enabled in [0, 100] {
@@ -8402,7 +8401,7 @@ mod modernization_tests {
         };
         assert!(
             p.item_value(0, c, quote(UnitKind::Rifleman), &tally)
-                > p.item_value(0, c, quote(UnitKind::Soldier), &tally)
+                > p.item_value(0, c, quote(UnitKind::Spearman), &tally)
         );
     }
 }
@@ -8504,7 +8503,7 @@ mod aztecs_tests {
         assert!(p.walls_beat_arrival(city), "no army in sight: Walls first");
         // A rival army in sight two hexes off still comes first.
         let seen = ViewBuilder { view: v.clone() }
-            .unit(9, ENEMY, UnitKind::Soldier, off(7, 5))
+            .unit(9, ENEMY, UnitKind::Spearman, off(7, 5))
             .build();
         let city = seen.cities.iter().find(|c| c.owner == ME).unwrap();
         let mut p = planner(&seen, 7);
@@ -8561,7 +8560,7 @@ mod aztecs_tests {
             p.flower_wars_build_value(
                 &v.cities[0],
                 ProductionItem::Unit {
-                    unit: UnitKind::Soldier
+                    unit: UnitKind::Spearman
                 }
             ) > 0
         );
@@ -8569,7 +8568,7 @@ mod aztecs_tests {
             p.flower_wars_build_value(
                 &v.cities[0],
                 ProductionItem::Unit {
-                    unit: UnitKind::Ranger
+                    unit: UnitKind::Archer
                 }
             ),
             0
@@ -8592,7 +8591,7 @@ mod aztecs_tests {
             p.flower_wars_build_value(
                 &rival.cities[0],
                 ProductionItem::Unit {
-                    unit: UnitKind::Ranger
+                    unit: UnitKind::Archer
                 }
             ) > 0
         );
@@ -8622,7 +8621,7 @@ mod walls_garrison_tests {
                 .known_techs(&[TechId::Masonry])
                 .city(1, ME, off(5, 5), 3)
                 .city(2, ENEMY, off(13, 5), 3)
-                .unit(10, ENEMY, UnitKind::Soldier, off(9, 5))
+                .unit(10, ENEMY, UnitKind::Spearman, off(9, 5))
                 .build();
             view.diplomacy.legacy = false;
             let mut p = Planner::new(&view, Knobs::new(40, 35, 40, 70, 20), faction, 1);
@@ -8786,7 +8785,7 @@ mod unit_concentration_tests {
             .city(2, ME, off(12, 4), 4)
             .build();
         let soldier = ProductionItem::Unit {
-            unit: UnitKind::Soldier,
+            unit: UnitKind::Spearman,
         };
         for (city, turns) in view.cities.iter_mut().zip([8, 20]) {
             city.detail

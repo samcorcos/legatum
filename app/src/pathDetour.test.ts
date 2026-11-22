@@ -6,7 +6,7 @@ import { previewPath, previewRoute, routeRiskText } from './path';
 
 const from = { q: 20, r: 14 }, gap = { q: 21, r: 14 }, target = { q: 22, r: 14 };
 const unit = (id: number, owner: number, pos: typeof from): UnitView => ({
-  id, owner, pos, kind: 'Soldier', military: true, max_moves: 2, goto: null,
+  id, owner, pos, kind: 'Spearman', military: true, max_moves: 2, goto: null,
 } as UnitView);
 
 function tessitura(): PlayerView {

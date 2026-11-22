@@ -276,7 +276,7 @@ export function disbandSelected() {
   const u = selectedOwnUnit();
   if (!u || lockedRefusal(u)) return;
   // The Heir carries Byzantium's 2 VP: disbanding him forfeits it, so the panel asks first.
-  if (u.kind === 'Heir' && pendingUnitOrder(st().orders[st().seat], u.id)?.type !== 'DisbandUnit') { st().set({ heirDisbandAsk: u.id }); return; }
+  if (u.kind === 'HeirToTheThrone' && pendingUnitOrder(st().orders[st().seat], u.id)?.type !== 'DisbandUnit') { st().set({ heirDisbandAsk: u.id }); return; }
   issue({ type: 'DisbandUnit', unit: u.id });
 }
 

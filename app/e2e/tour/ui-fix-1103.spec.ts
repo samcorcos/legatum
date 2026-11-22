@@ -80,7 +80,7 @@ for (const size of SIZES) test.describe(`ui fix 1103 ${size.name}`, () => {
     await loadFixture(page, coreFixture(s), 12);
     await stage(page, (v) => {
       v.eras = v.eras!.filter((e) => e.era === 2);
-      v.eras[0].objectives[0] = { slot: 0, family: 'Build', text: 'Add a Factory to 3 more cities', target: 3, objective: { kind: 'Buildings', building: 'Autoworks', cities: 3 } };
+      v.eras[0].objectives[0] = { slot: 0, family: 'Build', text: 'Add a Factory to 3 more cities', target: 3, objective: { kind: 'Buildings', building: 'Factory', cities: 3 } };
       v.objective_progress = [{ era: 2, slot: 0, current: 1, target: 3, entered: true, era_scored: false }];
     });
     await page.getByRole('region', { name: 'Victory race', exact: true }).getByRole('button', { name: 'Score ledger', exact: true }).click();

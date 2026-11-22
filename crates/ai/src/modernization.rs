@@ -624,10 +624,10 @@ pub(crate) mod tests {
         let id = enemy.id;
         v.units.retain(|u| u.owner == v.me || u.id == id);
         let p = fixture::planner(&v, 1);
-        assert!(p.modernization_percent(UnitKind::Ranger, pos) < 10);
+        assert!(p.modernization_percent(UnitKind::Archer, pos) < 10);
         assert!(
             p.modernization_power(UnitKind::FieldCannon, 1, 100, false, pos)
-                > 10 * p.modernization_power(UnitKind::Ranger, 1, 100, false, pos)
+                > 10 * p.modernization_power(UnitKind::Archer, 1, 100, false, pos)
         );
     }
 
@@ -685,17 +685,17 @@ pub(crate) mod tests {
         let unit = v
             .units
             .iter()
-            .find(|u| u.owner == v.me && u.kind == UnitKind::Soldier)
+            .find(|u| u.owner == v.me && u.kind == UnitKind::Spearman)
             .unwrap()
             .clone();
         let neighbor = v
             .units
             .iter_mut()
-            .find(|u| u.owner == v.me && u.kind == UnitKind::Soldier && u.id != unit.id)
+            .find(|u| u.owner == v.me && u.kind == UnitKind::Spearman && u.id != unit.id)
             .unwrap();
         neighbor.pos = unit.pos.neighbors()[0];
         let p = fixture::planner(&v, 1);
-        let hoplite = p.modernization_power(UnitKind::Soldier, 0, 100, false, unit.pos);
+        let hoplite = p.modernization_power(UnitKind::Spearman, 0, 100, false, unit.pos);
         let phalangite = p.modernization_power(UnitKind::Phalangite, 0, 100, false, unit.pos);
         // With the class bonus a percentage of strength (2026-10-31) the Phalangite's larger bonus
         // against riders edges it ahead, but the phalanx keeps a Hoplite close.
@@ -704,8 +704,7 @@ pub(crate) mod tests {
             "{hoplite} vs {phalangite}"
         );
         assert!(
-            p.modernization_power(UnitKind::AssaultTrooper, unit.level, 100, false, unit.pos)
-                > hoplite
+            p.modernization_power(UnitKind::Musketman, unit.level, 100, false, unit.pos) > hoplite
         );
     }
     #[test]
@@ -715,7 +714,7 @@ pub(crate) mod tests {
         let id = v
             .units
             .iter()
-            .find(|u| u.owner == v.me && u.kind == UnitKind::Trooper)
+            .find(|u| u.owner == v.me && u.kind == UnitKind::Pikeman)
             .unwrap()
             .id;
         let home = v.units.iter().find(|u| u.id == id).unwrap().pos;

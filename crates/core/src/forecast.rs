@@ -910,7 +910,7 @@ mod tests {
             let mut s = test_state(24, 16);
             s.setup.rule_experiments.frontier_cities = true;
             s.setup.rule_experiments.wall_masonry = true;
-            let a = spawn_unit(&mut s, P0, UnitKind::Soldier, at(5, 5));
+            let a = spawn_unit(&mut s, P0, UnitKind::Spearman, at(5, 5));
             let c = add_city(&mut s, P2, at(6, 5), 1);
             s.cities.get_mut(&c).unwrap().population = 1;
             if walls {
@@ -941,13 +941,13 @@ mod tests {
         let mut s = test_state(24, 16);
         s.player_mut(P0).faction = Faction::Celts;
         s.player_mut(P2).gold = 103;
-        let a = spawn_unit(&mut s, P0, UnitKind::Soldier, at(5, 5));
+        let a = spawn_unit(&mut s, P0, UnitKind::Spearman, at(5, 5));
         let c = add_city(&mut s, P2, at(6, 5), 4);
         s.cities.get_mut(&c).unwrap().population = 4;
         let v = view0(&mut s);
         let melee = forecast_attack_mode(&v, a, at(6, 5), AttackMode::Melee).unwrap();
         assert_eq!(melee.sack_gold, Some(240));
-        let r = spawn_unit(&mut s, P0, UnitKind::Ranger, at(5, 6));
+        let r = spawn_unit(&mut s, P0, UnitKind::Archer, at(5, 6));
         let v = view0(&mut s);
         let ranged = forecast_attack_mode(&v, r, at(6, 5), AttackMode::Ranged).unwrap();
         assert_eq!(ranged.sack_gold, None);
@@ -957,7 +957,7 @@ mod tests {
     fn celtic_forecast_shows_no_sack_for_a_city_the_attacker_founded() {
         let mut s = test_state(24, 16);
         s.player_mut(P0).faction = Faction::Celts;
-        let a = spawn_unit(&mut s, P0, UnitKind::Soldier, at(5, 5));
+        let a = spawn_unit(&mut s, P0, UnitKind::Spearman, at(5, 5));
         let c = add_city(&mut s, P2, at(6, 5), 4);
         s.cities.get_mut(&c).unwrap().founder = P0;
         let v = view0(&mut s);
@@ -971,7 +971,7 @@ mod tests {
     #[test]
     fn city_strike_forecast_matches_the_shot_resolution_fires() {
         let mut s = test_state(24, 16);
-        let a = spawn_unit(&mut s, P0, UnitKind::Soldier, at(5, 5));
+        let a = spawn_unit(&mut s, P0, UnitKind::Spearman, at(5, 5));
         let c = add_city(&mut s, P2, at(7, 5), 3);
         s.units.get_mut(&a).unwrap().hp = 70;
         s.units.get_mut(&a).unwrap().fortify = 3;
@@ -1040,7 +1040,7 @@ mod tests {
     #[test]
     fn city_fire_forecast_applies_walls_to_the_return_shot() {
         let mut s = test_state(24, 16);
-        let a = spawn_unit(&mut s, P0, UnitKind::Ranger, at(5, 5));
+        let a = spawn_unit(&mut s, P0, UnitKind::Archer, at(5, 5));
         let c = add_city(&mut s, P2, at(6, 5), 1);
         s.cities.get_mut(&c).unwrap().population = 1;
         s.cities
@@ -1051,7 +1051,7 @@ mod tests {
         let f = forecast_attack_mode(&view0(&mut s), a, at(6, 5), AttackMode::Ranged)
             .expect("Archer can shoot the walled city");
         let fire =
-            city_fire_outcome(&f, s.player(P0).faction, UnitKind::Ranger).expect("the city fires");
+            city_fire_outcome(&f, s.player(P0).faction, UnitKind::Archer).expect("the city fires");
         assert_eq!(f.walls.unwrap().percent, 50);
         assert_eq!(f.expected_damage_to_defender, 11);
         assert_eq!(
@@ -1081,7 +1081,7 @@ mod tests {
     #[test]
     fn dying_melee_attacker_cannot_capture_a_fallen_city() {
         let mut s = test_state(24, 16);
-        let a = spawn_unit(&mut s, P0, UnitKind::Soldier, at(5, 5));
+        let a = spawn_unit(&mut s, P0, UnitKind::Spearman, at(5, 5));
         s.units.get_mut(&a).unwrap().hp = 1;
         let c = add_city(&mut s, P2, at(6, 5), 1);
         s.cities.get_mut(&c).unwrap().population = 1;
@@ -1106,8 +1106,8 @@ mod tests {
             .unwrap()
             .buildings
             .insert(BuildingKind::Walls);
-        let a = spawn_unit(&mut s, P0, UnitKind::Soldier, at(5, 5));
-        let b = spawn_unit(&mut s, P0, UnitKind::Soldier, at(6, 5));
+        let a = spawn_unit(&mut s, P0, UnitKind::Spearman, at(5, 5));
+        let b = spawn_unit(&mut s, P0, UnitKind::Spearman, at(6, 5));
         let civilian = spawn_unit(&mut s, P0, UnitKind::Settler, at(6, 6));
         s.units.get_mut(&a).unwrap().hp = 65;
         s.units.get_mut(&b).unwrap().hp = 65;
@@ -1166,11 +1166,11 @@ mod tests {
                 .unwrap()
                 .buildings
                 .insert(BuildingKind::Walls);
-            let unit_id = spawn_unit(&mut s, P0, UnitKind::Soldier, at(5, 5));
+            let unit_id = spawn_unit(&mut s, P0, UnitKind::Spearman, at(5, 5));
             s.map.get_mut(at(6, 5)).unwrap().terrain = blocker;
             spawn_unit(&mut s, P2, UnitKind::Settler, at(5, 4));
             spawn_unit(&mut s, P0, UnitKind::Settler, at(7, 4));
-            let approaching_id = spawn_unit(&mut s, P0, UnitKind::Soldier, at(4, 5));
+            let approaching_id = spawn_unit(&mut s, P0, UnitKind::Spearman, at(4, 5));
             let v = view0(&mut s);
             let city = v.cities.iter().find(|c| c.id == city_id).unwrap();
             let unit = v.units.iter().find(|u| u.id == unit_id).unwrap();
@@ -1192,9 +1192,9 @@ mod tests {
     fn promotions_are_their_own_forecast_lines_and_match_resolution() {
         use crate::rules::promotion;
         let mut s = test_state(24, 16);
-        let a = spawn_unit(&mut s, P0, UnitKind::Soldier, at(5, 5));
-        let d = spawn_unit(&mut s, P2, UnitKind::Soldier, at(6, 5));
-        let r = spawn_unit(&mut s, P0, UnitKind::Ranger, at(4, 5));
+        let a = spawn_unit(&mut s, P0, UnitKind::Spearman, at(5, 5));
+        let d = spawn_unit(&mut s, P2, UnitKind::Spearman, at(6, 5));
+        let r = spawn_unit(&mut s, P0, UnitKind::Archer, at(4, 5));
         s.units.get_mut(&a).unwrap().xp = promotion::threshold(2).unwrap();
         s.units.get_mut(&d).unwrap().xp = promotion::threshold(1).unwrap();
         s.units.get_mut(&r).unwrap().xp = promotion::threshold(3).unwrap();
@@ -1239,10 +1239,10 @@ mod tests {
 
     #[test]
     fn melee_matches_hand_checked_numbers() {
-        // Soldier (20) vs Soldier (20) on grassland: 30 base damage each way, rolls 80..=120.
+        // Spearman (20) vs Spearman (20) on grassland: 30 base damage each way, rolls 80..=120.
         let mut s = test_state(24, 16);
-        let a = spawn_unit(&mut s, P0, UnitKind::Soldier, at(5, 5));
-        spawn_unit(&mut s, P2, UnitKind::Soldier, at(6, 5));
+        let a = spawn_unit(&mut s, P0, UnitKind::Spearman, at(5, 5));
+        spawn_unit(&mut s, P2, UnitKind::Spearman, at(6, 5));
         let f = forecast_attack(&view0(&mut s), a, at(6, 5)).unwrap();
         assert_eq!(
             (f.attacker_strength.total, f.defender_strength.total),
@@ -1257,11 +1257,11 @@ mod tests {
             (80..=120).map(|r| combat::damage(20, 20, r)).sum::<i32>() / 41
         );
 
-        // Trooper (32 on the era curve) vs Soldier at 40 HP on hills, fortified +6: 20 + 5 + 6 - 6 = 25.
+        // Pikeman (32 on the era curve) vs Spearman at 40 HP on hills, fortified +6: 20 + 5 + 6 - 6 = 25.
         // Difference 7 -> kills when the roll is high enough: 51%.
         let mut s = test_state(24, 16);
-        let a = spawn_unit(&mut s, P0, UnitKind::Trooper, at(5, 5));
-        let d = spawn_unit(&mut s, P2, UnitKind::Soldier, at(6, 5));
+        let a = spawn_unit(&mut s, P0, UnitKind::Pikeman, at(5, 5));
+        let d = spawn_unit(&mut s, P2, UnitKind::Spearman, at(6, 5));
         s.map.get_mut(at(6, 5)).unwrap().terrain = Terrain::Hills;
         let du = s.units.get_mut(&d).unwrap();
         du.hp = 40;
@@ -1285,11 +1285,11 @@ mod tests {
         assert_eq!(f.expected_damage_to_attacker, 22);
         assert_eq!((f.attacker_hp, f.defender_hp), (100, 40));
 
-        // Wounded Scout (70 HP: 5 - 3 = 2) into a Soldier: dies when the roll >= 113: 8/41 = 19%.
+        // Wounded Scout (70 HP: 5 - 3 = 2) into a Spearman: dies when the roll >= 113: 8/41 = 19%.
         let mut s = test_state(24, 16);
         let a = spawn_unit(&mut s, P0, UnitKind::Scout, at(5, 5));
         s.units.get_mut(&a).unwrap().hp = 70;
-        spawn_unit(&mut s, P2, UnitKind::Soldier, at(6, 5));
+        spawn_unit(&mut s, P2, UnitKind::Spearman, at(6, 5));
         let f = forecast_attack(&view0(&mut s), a, at(6, 5)).unwrap();
         assert_eq!((f.win_chance, f.loss_chance), (0, 19));
         assert_eq!(f.expected_damage_to_attacker, 61);
@@ -1300,8 +1300,8 @@ mod tests {
     fn adjacent_ranger_melee_forecast_matches_its_movement_attack() {
         use crate::{AttackMode, forecast_attack_mode};
         let mut s = test_state(24, 16);
-        let a = spawn_unit(&mut s, P0, UnitKind::Ranger, at(5, 5));
-        spawn_unit(&mut s, P2, UnitKind::Soldier, at(6, 5));
+        let a = spawn_unit(&mut s, P0, UnitKind::Archer, at(5, 5));
+        spawn_unit(&mut s, P2, UnitKind::Spearman, at(6, 5));
         let v = view0(&mut s);
         let melee = forecast_attack_mode(&v, a, at(6, 5), AttackMode::Melee).unwrap();
         assert!(!melee.ranged);
@@ -1360,10 +1360,10 @@ mod tests {
     fn explicit_ranged_forecast_requires_a_ranged_unit_and_target_in_range() {
         use crate::{AttackMode, forecast_attack_mode};
         let mut s = test_state(24, 16);
-        let ranger = spawn_unit(&mut s, P0, UnitKind::Ranger, at(5, 5));
-        let soldier = spawn_unit(&mut s, P0, UnitKind::Soldier, at(6, 5));
-        spawn_unit(&mut s, P2, UnitKind::Soldier, at(7, 5));
-        spawn_unit(&mut s, P2, UnitKind::Soldier, at(8, 5));
+        let ranger = spawn_unit(&mut s, P0, UnitKind::Archer, at(5, 5));
+        let soldier = spawn_unit(&mut s, P0, UnitKind::Spearman, at(6, 5));
+        spawn_unit(&mut s, P2, UnitKind::Spearman, at(7, 5));
+        spawn_unit(&mut s, P2, UnitKind::Spearman, at(8, 5));
         let v = view0(&mut s);
         assert!(forecast_attack_mode(&v, soldier, at(7, 5), AttackMode::Ranged).is_none());
         assert!(forecast_attack_mode(&v, ranger, at(8, 5), AttackMode::Ranged).is_none());
@@ -1373,9 +1373,9 @@ mod tests {
     #[test]
     fn ranged_attack_deals_no_damage_to_attacker() {
         let mut s = test_state(24, 16);
-        let r = spawn_unit(&mut s, P0, UnitKind::Ranger, at(5, 5));
-        spawn_unit(&mut s, P2, UnitKind::Soldier, at(7, 5));
-        spawn_unit(&mut s, P2, UnitKind::Soldier, at(8, 5));
+        let r = spawn_unit(&mut s, P0, UnitKind::Archer, at(5, 5));
+        spawn_unit(&mut s, P2, UnitKind::Spearman, at(7, 5));
+        spawn_unit(&mut s, P2, UnitKind::Spearman, at(8, 5));
         // A spotter so the farther target is in sight.
         spawn_unit(&mut s, P0, UnitKind::Scout, at(10, 5));
         let v = view0(&mut s);
@@ -1386,7 +1386,7 @@ mod tests {
         assert_eq!(f.loss_chance, 0);
         assert_eq!((f.win_chance, f.expected_damage_to_defender), (0, 24));
 
-        // Out of range (3 hexes): the Ranger would have to walk in and fight in melee.
+        // Out of range (3 hexes): the Archer would have to walk in and fight in melee.
         let f = forecast_attack(&v, r, at(8, 5)).unwrap();
         assert!(!f.ranged);
         assert_eq!(f.attacker_strength.total, 8);
@@ -1396,7 +1396,7 @@ mod tests {
     #[test]
     fn a_city_with_hp_shields_its_garrison_and_a_fallen_one_does_not() {
         let mut s = test_state(24, 16);
-        let a = spawn_unit(&mut s, P0, UnitKind::Soldier, at(5, 5));
+        let a = spawn_unit(&mut s, P0, UnitKind::Spearman, at(5, 5));
         add_city(&mut s, P2, at(7, 5), 3);
         let target = at(7, 5);
 
@@ -1411,9 +1411,9 @@ mod tests {
         assert!(f.garrison.is_none());
         assert!(!serde_json::to_string(&f).unwrap().contains("garrison"));
 
-        // Garrisoned by a Soldier fortified +3: the city still takes the attack (Civ 6) with
+        // Garrisoned by a Spearman fortified +3: the city still takes the attack (Civ 6) with
         // the same numbers, and the forecast says the garrison is safe.
-        let g = spawn_unit(&mut s, P2, UnitKind::Soldier, target);
+        let g = spawn_unit(&mut s, P2, UnitKind::Spearman, target);
         s.units.get_mut(&g).unwrap().fortify = 3;
         let shielded = forecast_attack(&view0(&mut s), a, target).unwrap();
         assert_eq!(
@@ -1430,13 +1430,13 @@ mod tests {
             Some(GarrisonForecast {
                 unit: g,
                 owner: P2,
-                kind: UnitKind::Soldier,
+                kind: UnitKind::Spearman,
                 hp: 100,
                 shielded: true,
             })
         );
 
-        // At 0 HP the Soldier (23) defends; beating it captures the city.
+        // At 0 HP the Spearman (23) defends; beating it captures the city.
         s.cities.values_mut().for_each(|c| c.hp = 0);
         let f = forecast_attack(&view0(&mut s), a, target).unwrap();
         assert_eq!(f.defender_strength.total, 23);
@@ -1459,19 +1459,19 @@ mod tests {
 
     #[test]
     fn a_supported_assault_shares_the_damage_and_pools_the_reply_as_resolution_does() {
-        // Supported defence (designer, 2026-11-15): two Soldiers on a fallen city's fortified
-        // garrison, with two of its owner's Soldiers beside it ordered in.
+        // Supported defence (designer, 2026-11-15): two Spearmen on a fallen city's fortified
+        // garrison, with two of its owner's Spearmen beside it ordered in.
         let mut s = test_state(24, 16);
         let target = at(7, 5);
         let around = target.neighbors();
-        let a = spawn_unit(&mut s, P0, UnitKind::Soldier, around[3]);
-        let b = spawn_unit(&mut s, P0, UnitKind::Soldier, around[4]);
+        let a = spawn_unit(&mut s, P0, UnitKind::Spearman, around[3]);
+        let b = spawn_unit(&mut s, P0, UnitKind::Spearman, around[4]);
         let c = add_city(&mut s, P2, target, 3);
         s.cities.get_mut(&c).unwrap().hp = 0;
-        let g = spawn_unit(&mut s, P2, UnitKind::Soldier, target);
+        let g = spawn_unit(&mut s, P2, UnitKind::Spearman, target);
         s.units.get_mut(&g).unwrap().fortify = 3;
-        let s1 = spawn_unit(&mut s, P2, UnitKind::Soldier, around[0]);
-        let s2 = spawn_unit(&mut s, P2, UnitKind::Soldier, around[1]);
+        let s1 = spawn_unit(&mut s, P2, UnitKind::Spearman, around[0]);
+        let s2 = spawn_unit(&mut s, P2, UnitKind::Spearman, around[1]);
         let v = view0(&mut s);
         let with_b = [AlongsideAttack {
             unit: b,
@@ -1536,11 +1536,11 @@ mod tests {
         let mut s = test_state(24, 16);
         let target = at(7, 5);
         let around = target.neighbors();
-        let a = spawn_unit(&mut s, P0, UnitKind::Soldier, around[0]);
-        let b = spawn_unit(&mut s, P0, UnitKind::Soldier, around[1]);
+        let a = spawn_unit(&mut s, P0, UnitKind::Spearman, around[0]);
+        let b = spawn_unit(&mut s, P0, UnitKind::Spearman, around[1]);
         let c = add_city(&mut s, P2, target, 3);
         s.cities.get_mut(&c).unwrap().hp = 30;
-        let g = spawn_unit(&mut s, P2, UnitKind::Soldier, target);
+        let g = spawn_unit(&mut s, P2, UnitKind::Spearman, target);
         s.units.get_mut(&g).unwrap().fortify = 3;
         let v = view0(&mut s);
 
@@ -1601,11 +1601,11 @@ mod tests {
         let mut s = test_state(24, 16);
         let target = at(7, 5);
         let around = target.neighbors();
-        let archer = spawn_unit(&mut s, P0, UnitKind::Ranger, around[0]);
-        let soldier = spawn_unit(&mut s, P0, UnitKind::Soldier, around[1]);
+        let archer = spawn_unit(&mut s, P0, UnitKind::Archer, around[0]);
+        let soldier = spawn_unit(&mut s, P0, UnitKind::Spearman, around[1]);
         let c = add_city(&mut s, P2, target, 3);
         s.cities.get_mut(&c).unwrap().hp = 0;
-        let g = spawn_unit(&mut s, P2, UnitKind::Soldier, target);
+        let g = spawn_unit(&mut s, P2, UnitKind::Spearman, target);
         s.units.get_mut(&g).unwrap().hp = 1;
         let v = view0(&mut s);
 
@@ -1613,7 +1613,7 @@ mod tests {
         let shot = forecast_city_assault(&v, archer, target, AttackMode::Ranged, &[]).unwrap();
         assert!(!shot.can_capture);
         assert_eq!(shot.capture_chance, 0);
-        // The shot kills the 1 HP garrison; the Soldier's charge then walks into the city.
+        // The shot kills the 1 HP garrison; the Spearman's charge then walks into the city.
         let both = forecast_city_assault(
             &v,
             archer,
@@ -1633,12 +1633,12 @@ mod tests {
     #[test]
     fn nothing_attackable_is_none() {
         let mut s = test_state(24, 16);
-        let a = spawn_unit(&mut s, P0, UnitKind::Soldier, at(5, 5));
+        let a = spawn_unit(&mut s, P0, UnitKind::Spearman, at(5, 5));
         let settler = spawn_unit(&mut s, P0, UnitKind::Settler, at(5, 6));
-        let mate = spawn_unit(&mut s, P1, UnitKind::Soldier, at(6, 5));
-        let enemy = spawn_unit(&mut s, P2, UnitKind::Soldier, at(4, 5));
+        let mate = spawn_unit(&mut s, P1, UnitKind::Spearman, at(6, 5));
+        let enemy = spawn_unit(&mut s, P2, UnitKind::Spearman, at(4, 5));
         spawn_unit(&mut s, P2, UnitKind::Settler, at(6, 6));
-        spawn_unit(&mut s, P2, UnitKind::Soldier, at(20, 12));
+        spawn_unit(&mut s, P2, UnitKind::Spearman, at(20, 12));
         add_city(&mut s, P1, at(10, 10), 2);
         let v = view0(&mut s);
 

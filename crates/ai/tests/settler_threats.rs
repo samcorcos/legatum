@@ -35,7 +35,7 @@ fn scenario() -> (GameState, UnitId, UnitId) {
         }
     }
     let settler = spawn_unit(&mut state, ME, UnitKind::Settler, Hex::new(7, 8));
-    let defender = spawn_unit(&mut state, ENEMY, UnitKind::Soldier, Hex::new(9, 8));
+    let defender = spawn_unit(&mut state, ENEMY, UnitKind::Spearman, Hex::new(9, 8));
     state.units.get_mut(&settler).unwrap().goto = Some(Hex::new(12, 8));
     // Known terrain is legitimate earlier exploration; current enemy units remain fogged.
     for i in 0..state.map.len() {

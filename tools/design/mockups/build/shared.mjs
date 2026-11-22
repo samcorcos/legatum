@@ -150,18 +150,18 @@ export const PLAYERS = [
 export const CITIES = [
   { id: 'cantor', name: 'Cantor', owner: 0, pos: [22, 15], pop: 5, capital: true, prod: 'Settler', turns: 4, radius: 2 },
   { id: 'hymnal', name: 'Hymnal', owner: 0, pos: [18, 11], pop: 3, prod: 'Monument', turns: 2, radius: 1 },
-  { id: 'astra', name: 'Astra Prime', owner: 1, pos: [21, 21], pop: 4, capital: true, prod: 'Soldier', turns: 3, radius: 2 },
+  { id: 'astra', name: 'Astra Prime', owner: 1, pos: [21, 21], pop: 4, capital: true, prod: 'Spearman', turns: 3, radius: 2 },
   { id: 'lastlight', name: 'Last Light', owner: 1, pos: [27, 19], pop: 2, prod: 'Granary', turns: 6, radius: 1 },
   { id: 'brasshold', name: 'Brasshold', owner: 2, pos: [29, 8], pop: 6, capital: true, prod: null, turns: null, radius: 3, lastKnown: true },
 ];
 
 export const UNITS = [
   { id: 'settler', kind: 'Settler', owner: 0, pos: [25, 14], hp: 100, selected: true },
-  { id: 'soldier', kind: 'Soldier', owner: 0, pos: [23, 16], hp: 100, fortified: true },
+  { id: 'soldier', kind: 'Spearman', owner: 0, pos: [23, 16], hp: 100, fortified: true },
   { id: 'scout', kind: 'Scout', owner: 0, pos: [17, 7], hp: 100 },
-  { id: 'bo-soldier', kind: 'Soldier', owner: 1, pos: [20, 19], hp: 100 },
-  { id: 'bo-ranger', kind: 'Ranger', owner: 1, pos: [24, 20], hp: 64 },
-  { id: 'hc-soldier', kind: 'Soldier', owner: 2, pos: [27, 11], hp: 88 },
+  { id: 'bo-soldier', kind: 'Spearman', owner: 1, pos: [20, 19], hp: 100 },
+  { id: 'bo-ranger', kind: 'Archer', owner: 1, pos: [24, 20], hp: 64 },
+  { id: 'hc-soldier', kind: 'Spearman', owner: 2, pos: [27, 11], hp: 88 },
   { id: 'sv-scout', kind: 'Scout', owner: 3, pos: [17, 17], hp: 100 },
 ];
 export const RUINS = [[19, 6], [28, 16]];
@@ -364,7 +364,7 @@ export const GAME = {
   gold: 84,
   goldPt: 9,
   sciencePt: 11,
-  research: { name: 'Signal Theory', turns: 4, progress: 22, cost: 40, unlocks: 'Laboratory' },
+  research: { name: 'Signal Theory', turns: 4, progress: 22, cost: 40, unlocks: 'Library' },
   vp: [
     { label: 'Your team', members: [0, 1], vp: 6, target: 17, mine: true },
     { label: 'Hollow Crown', members: [2], vp: 5, target: 10 },
@@ -394,8 +394,8 @@ export const GAME = {
     options: [
       { kind: 'unit', key: 'Scout', icon: 'unit-scout', cost: 30, turns: 5 },
       { kind: 'unit', key: 'Settler', icon: 'unit-settler', cost: 80, turns: 4, active: true },
-      { kind: 'unit', key: 'Soldier', icon: 'unit-soldier', cost: 40, turns: 6 },
-      { kind: 'unit', key: 'Ranger', icon: 'unit-ranger', cost: 50, turns: 8 },
+      { kind: 'unit', key: 'Spearman', icon: 'unit-spearman', cost: 40, turns: 6 },
+      { kind: 'unit', key: 'Archer', icon: 'unit-archer', cost: 50, turns: 8 },
       { kind: 'building', key: 'Workshop', icon: 'building-workshop', cost: 60, turns: 9, note: '+2 Production' },
       { kind: 'building', key: 'Market', icon: 'building-market', cost: 60, turns: 9, note: '+3 Gold' },
       { kind: 'building', key: 'Walls', icon: 'building-walls', cost: 60, turns: 9, note: '+10 city strength' },

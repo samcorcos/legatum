@@ -65,7 +65,7 @@ test('E toggles auto-explore on a military unit, and it moves on the next turn',
   const context = await browser.newContext({ baseURL, viewport: { width: 1440, height: 900 } });
   watchErrors(context);
   const fixture = explorationFixture();
-  fixture.units[0].kind = 'Soldier';
+  fixture.units[0].kind = 'Spearman';
   await context.addInitScript((game) => {
     if (!location.protocol.startsWith('http')) return;
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 1, names: ['Explorer'], savedAt: new Date().toISOString(), game }));
@@ -90,7 +90,7 @@ test('E toggles auto-explore on a military unit, and it moves on the next turn',
     await expect(page.getByTestId('turn-number')).toHaveText('2');
     const after = await page.evaluate(() => JSON.parse(JSON.parse(localStorage.getItem('legatum.autosave.v1')!).game).units['0']);
     expect(JSON.stringify(after.pos)).not.toBe(start);
-    expect(after.kind).toBe('Soldier');
+    expect(after.kind).toBe('Spearman');
     expect(after.automation).toBe('Explore');
   } finally { await context.close(); }
 });

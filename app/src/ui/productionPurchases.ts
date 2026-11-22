@@ -133,7 +133,7 @@ export function purchasePreviews(client: GameClient | null, city: CityView, view
       : cost !== null && cost > gold ? `Not enough Gold: costs ${cost} Gold; you have ${gold}`
       : local ? local.validate(view.me, candidate).find((e) => e.index === index)?.message ?? null
       : (selected ? pendingErrors.find((e) => e.index === index)?.message : null) ?? viewBlocker
-        ?? (cost === null ? (o.item.kind === 'Unit' && o.item.unit === 'Heir' ? 'The Heir to the Throne cannot be bought: he is only trained' : 'World wonders cannot be bought') : cost > gold ? `Not enough Gold: costs ${cost} Gold; you have ${gold}` : null);
+        ?? (cost === null ? (o.item.kind === 'Unit' && o.item.unit === 'HeirToTheThrone' ? 'The Heir to the Throne cannot be bought: he is only trained' : 'World wonders cannot be bought') : cost > gold ? `Not enough Gold: costs ${cost} Gold; you have ${gold}` : null);
     const quote = o.buy_quote;
     const extra = quote ? quote.additional_settler_production * earlierSettlers(orders, pendingErrors, before) : 0;
     const breakdown = quote ? `${quote.gold_percent}% × (${quote.production.parts.map(([label, amount]) => `${amount} ${label}`).join(' + ')}${extra ? ` + ${extra} pending Settlers` : ''}) Production` : '';

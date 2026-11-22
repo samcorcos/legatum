@@ -14,7 +14,7 @@ it('ships a painted form for every resource improvement and every visible upgrad
   expect(missingImprovementArt()).toEqual([]);
   expect(['Farm', 'Pasture', 'Quarry', 'Mine'].map((kind) => improvementStem(kind as 'Farm' | 'Pasture' | 'Quarry' | 'Mine', false))).toEqual(['farm', 'pasture', 'quarry', 'mine']);
   expect(['Farm', 'Pasture', 'Quarry', 'Mine'].map((kind) => improvementStem(kind as 'Farm' | 'Pasture' | 'Quarry' | 'Mine', true))).toEqual(['irrigated-farm', 'ranch', 'deep-quarry', 'deep-mine']);
-  expect(['SaltpeterWorks', 'OilWell', 'QuartzMine'].map((kind) => improvementStem(kind as 'SaltpeterWorks' | 'OilWell' | 'QuartzMine', false))).toEqual(['saltpetre-works', 'oil-well', 'quartz-mine']);
+  expect(['SaltpetreWorks', 'OilWell', 'QuartzMine'].map((kind) => improvementStem(kind as 'SaltpetreWorks' | 'OilWell' | 'QuartzMine', false))).toEqual(['saltpetre-works', 'oil-well', 'quartz-mine']);
 });
 
 it('uses paintings at normal zoom and the existing badge tier farther out', () => {

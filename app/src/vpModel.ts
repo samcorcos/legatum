@@ -359,7 +359,7 @@ function ownGoalProgress(view: PlayerView): Progress | undefined {
 
 /** The Byzantium `of`'s Heir: his position is public, so he is in every view, in fog too. */
 function visibleHeir(view: PlayerView, of: PlayerId): UnitView | undefined {
-  return view.units.find((u) => u.kind === 'Heir' && u.heir_of === of);
+  return view.units.find((u) => u.kind === 'HeirToTheThrone' && u.heir_of === of);
 }
 
 /** Where a held goal's item stands, when the viewer can place it: the Heir's tile (public every turn; `seen` says whether it is in sight now); the Hall's city while it is on the viewer's map (`seen` says whether it is in sight now). Public facts only. */

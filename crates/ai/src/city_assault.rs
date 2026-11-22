@@ -679,11 +679,11 @@ mod tests {
     fn hard_reforecasts_without_a_blocked_follower_instead_of_canceling_the_siege() {
         let view = ViewBuilder::new(26, 18)
             .city(9, ENEMY, CITY, 3)
-            .unit(1, ME, UnitKind::Trooper, Hex::new(8, 8))
-            .unit(2, ME, UnitKind::Trooper, Hex::new(7, 9))
-            .unit(3, ME, UnitKind::Ranger, Hex::new(10, 6))
-            .unit(4, ME, UnitKind::Ranger, Hex::new(11, 6))
-            .unit(5, ME, UnitKind::Ranger, Hex::new(12, 6))
+            .unit(1, ME, UnitKind::Pikeman, Hex::new(8, 8))
+            .unit(2, ME, UnitKind::Pikeman, Hex::new(7, 9))
+            .unit(3, ME, UnitKind::Archer, Hex::new(10, 6))
+            .unit(4, ME, UnitKind::Archer, Hex::new(11, 6))
+            .unit(5, ME, UnitKind::Archer, Hex::new(12, 6))
             .build();
         let mut p = planner(&view);
         p.difficulty = legatum_core::AiDifficulty::Hard;
@@ -714,7 +714,7 @@ mod tests {
     fn hard_does_not_assign_a_ranged_unit_to_capture_an_empty_city() {
         let mut view = ViewBuilder::new(26, 18)
             .city(9, ENEMY, CITY, 3)
-            .unit(1, ME, UnitKind::Ranger, Hex::new(9, 8))
+            .unit(1, ME, UnitKind::Archer, Hex::new(9, 8))
             .build();
         view.cities[0].hp = 0;
         let mut p = planner(&view);
@@ -772,14 +772,14 @@ mod tests {
 
     #[test]
     fn relief_forecast_needs_a_second_attacker_for_the_unit_that_steps_in() {
-        // A fallen city with a nearly dead garrison and a fresh Soldier beside it that can
+        // A fallen city with a nearly dead garrison and a fresh Spearman beside it that can
         // relieve it (Fable seat, After the Riflemen: the swap-in beat every lone walk-in).
         let mut view = ViewBuilder::new(26, 18)
             .city(9, ENEMY, CITY, 3)
             .unit(1, ME, UnitKind::Rifleman, Hex::new(9, 8))
             .unit(2, ME, UnitKind::Rifleman, Hex::new(10, 7))
-            .unit_hp(50, ENEMY, UnitKind::Soldier, CITY, 5)
-            .unit(51, ENEMY, UnitKind::Soldier, Hex::new(11, 8))
+            .unit_hp(50, ENEMY, UnitKind::Spearman, CITY, 5)
+            .unit(51, ENEMY, UnitKind::Spearman, Hex::new(11, 8))
             .build();
         view.cities[0].hp = 0;
         let mut p = planner(&view);
@@ -808,9 +808,9 @@ mod tests {
     fn split_garrison_retaliation_allows_wounded_attackers_to_capture() {
         let mut view = ViewBuilder::new(26, 18)
             .city(9, ENEMY, CITY, 3)
-            .unit_hp(1, ME, UnitKind::Soldier, Hex::new(9, 8), 40)
-            .unit_hp(2, ME, UnitKind::Soldier, Hex::new(10, 7), 40)
-            .unit_hp(50, ENEMY, UnitKind::Trooper, CITY, 1)
+            .unit_hp(1, ME, UnitKind::Spearman, Hex::new(9, 8), 40)
+            .unit_hp(2, ME, UnitKind::Spearman, Hex::new(10, 7), 40)
+            .unit_hp(50, ENEMY, UnitKind::Pikeman, CITY, 1)
             .build();
         // A fallen city: its garrison defends (core `combat::city_tile_defender`).
         view.cities[0].hp = 0;
@@ -830,15 +830,15 @@ mod tests {
         assert!(!p.orders.is_empty(), "commit the shared assault");
     }
 
-    /// Round one breaks the 1-HP city (its garrison is shielded until then); the Soldier
+    /// Round one breaks the 1-HP city (its garrison is shielded until then); the Spearman
     /// arriving a round later fights the exposed garrison and captures.
     #[test]
     fn later_movement_round_can_capture_after_the_garrison_dies() {
         let mut view = ViewBuilder::new(26, 18)
             .city(9, ENEMY, CITY, 3)
-            .unit_hp(1, ME, UnitKind::Soldier, Hex::new(9, 8), 40)
-            .unit_hp(2, ME, UnitKind::Soldier, Hex::new(10, 6), 40)
-            .unit_hp(50, ENEMY, UnitKind::Trooper, CITY, 1)
+            .unit_hp(1, ME, UnitKind::Spearman, Hex::new(9, 8), 40)
+            .unit_hp(2, ME, UnitKind::Spearman, Hex::new(10, 6), 40)
+            .unit_hp(50, ENEMY, UnitKind::Pikeman, CITY, 1)
             .build();
         view.cities[0].hp = 1;
         view.units[2].fortify = 6;
@@ -857,11 +857,11 @@ mod tests {
     fn supporting_melee_defender_takes_retaliation_in_the_same_round() {
         let view = ViewBuilder::new(26, 18)
             .city(9, ENEMY, CITY, 3)
-            .unit(1, ME, UnitKind::Soldier, Hex::new(9, 8))
-            .unit(2, ME, UnitKind::Soldier, Hex::new(10, 7))
-            .unit(3, ME, UnitKind::Ranger, Hex::new(9, 7))
-            .unit(4, ME, UnitKind::Ranger, Hex::new(10, 6))
-            .unit_hp(50, ENEMY, UnitKind::Trooper, Hex::new(8, 8), 1)
+            .unit(1, ME, UnitKind::Spearman, Hex::new(9, 8))
+            .unit(2, ME, UnitKind::Spearman, Hex::new(10, 7))
+            .unit(3, ME, UnitKind::Archer, Hex::new(9, 7))
+            .unit(4, ME, UnitKind::Archer, Hex::new(10, 6))
+            .unit_hp(50, ENEMY, UnitKind::Pikeman, Hex::new(8, 8), 1)
             .build();
         let p = planner(&view);
         let arrivals: Vec<_> = p
@@ -878,9 +878,9 @@ mod tests {
         let mut view = ViewBuilder::new(26, 18)
             .city(1, ME, Hex::new(3, 8), 2)
             .city(9, ENEMY, CITY, 3)
-            .unit_hp(1, ME, UnitKind::Soldier, Hex::new(8, 8), 55)
-            .unit(2, ME, UnitKind::Ranger, Hex::new(9, 7))
-            .unit(3, ME, UnitKind::Ranger, Hex::new(10, 6))
+            .unit_hp(1, ME, UnitKind::Spearman, Hex::new(8, 8), 55)
+            .unit(2, ME, UnitKind::Archer, Hex::new(9, 7))
+            .unit(3, ME, UnitKind::Archer, Hex::new(10, 6))
             .build();
         view.cities[1].hp = 40;
         let mut p = planner(&view);
@@ -904,11 +904,11 @@ mod tests {
         let ring = CITY.ring(3);
         let view = ViewBuilder::new(26, 18)
             .city(9, ENEMY, CITY, 3)
-            .unit(1, ME, UnitKind::Soldier, ring[0])
-            .unit(2, ME, UnitKind::Soldier, ring[3])
-            .unit(3, ME, UnitKind::Soldier, ring[6])
-            .unit(4, ME, UnitKind::Ranger, ring[9])
-            .unit(5, ME, UnitKind::Ranger, ring[12])
+            .unit(1, ME, UnitKind::Spearman, ring[0])
+            .unit(2, ME, UnitKind::Spearman, ring[3])
+            .unit(3, ME, UnitKind::Spearman, ring[6])
+            .unit(4, ME, UnitKind::Archer, ring[9])
+            .unit(5, ME, UnitKind::Archer, ring[12])
             .build();
         let mut p = planner(&view);
         let army = p.ctx.own_units.clone();
@@ -924,7 +924,7 @@ mod tests {
         assert_eq!(p.assault_groups[0].len(), 5);
     }
 
-    /// Gene `finish_fallen` (8.9.25 Celts T93: Celts Colony 7 at 0 HP, its Marksman wounded,
+    /// Gene `finish_fallen` (8.9.25 Celts T93: Celts Colony 7 at 0 HP, its Crossbowman wounded,
     /// the Mongol campaign withdrawn): a broken city beside our units is assaulted even when the
     /// running campaign aims elsewhere.
     #[test]
@@ -934,10 +934,10 @@ mod tests {
             .city(9, ENEMY, CITY, 3)
             .walled(9)
             .city(10, ENEMY, Hex::new(20, 14), 3)
-            .unit(1, ME, UnitKind::Soldier, Hex::new(9, 8))
-            .unit(2, ME, UnitKind::Ranger, Hex::new(10, 6))
-            .unit(3, ME, UnitKind::Ranger, Hex::new(12, 8))
-            .unit_hp(50, ENEMY, UnitKind::Ranger, CITY, 40)
+            .unit(1, ME, UnitKind::Spearman, Hex::new(9, 8))
+            .unit(2, ME, UnitKind::Archer, Hex::new(10, 6))
+            .unit(3, ME, UnitKind::Archer, Hex::new(12, 8))
+            .unit_hp(50, ENEMY, UnitKind::Archer, CITY, 40)
             .build();
         view.cities[1].hp = 0;
         let mut p = planner(&view);
@@ -979,7 +979,7 @@ mod tests {
             .city(1, ME, Hex::new(3, 8), 2)
             .city(9, ENEMY, CITY, 3)
             .walled(9)
-            .unit_hp(1, ME, UnitKind::Soldier, Hex::new(8, 8), 55)
+            .unit_hp(1, ME, UnitKind::Spearman, Hex::new(8, 8), 55)
             .build();
         let mut p = planner(&view);
         p.plan_military();

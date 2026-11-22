@@ -35,7 +35,7 @@ impl Plan<'_> {
                 };
                 let value = match o.item {
                     ProductionItem::Building {
-                        building: BuildingKind::Laboratory,
+                        building: BuildingKind::Library,
                     } => 650,
                     ProductionItem::Building {
                         building: BuildingKind::Market,
@@ -47,7 +47,7 @@ impl Plan<'_> {
                         }
                     }
                     ProductionItem::Building {
-                        building: BuildingKind::College,
+                        building: BuildingKind::University,
                     } => 600,
                     ProductionItem::Building {
                         building: BuildingKind::Workshop,

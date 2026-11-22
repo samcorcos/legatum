@@ -161,9 +161,9 @@ function pieceStats(item: ProductionItem, faction: Faction): PieceStat[] {
     const stats: PieceStat[] = [
       { id: 'cost', ...costStat(faction, u.cost) },
       { id: 'moves', icon: 'mark-move', value: String(u.moves), label: u.moves === 1 ? 'move' : 'moves' },
-      { id: 'strength', icon: 'unit-soldier', value: String(u.strength), label: 'strength' },
+      { id: 'strength', icon: 'unit-spearman', value: String(u.strength), label: 'strength' },
     ];
-    if (u.ranged) stats.push({ id: 'ranged', icon: 'unit-ranger', value: String(u.ranged), label: `ranged · range ${u.range}` });
+    if (u.ranged) stats.push({ id: 'ranged', icon: 'unit-archer', value: String(u.ranged), label: `ranged · range ${u.range}` });
     return stats;
   }
   if (item.kind !== 'Building') return [];

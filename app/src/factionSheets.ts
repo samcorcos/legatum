@@ -66,16 +66,16 @@ export interface SheetCard {
 const SPECIAL_BUILDINGS: Partial<Record<Faction, BuildingKind[]>> = {
   Switzerland: ['Walls'],
   India: ['Market', 'ImperialDiwan'],
-  Germany: ['MachineShop'],
+  Germany: ['Forge'],
   Egypt: ['Granary'],
   Rome: ['Walls'],
-  Mongols: ['CourierHall'],
-  Sparta: ['WarShrine'],
-  Athens: ['Laboratory'],
+  Mongols: ['YamRelayStation'],
+  Sparta: ['Agoge'],
+  Athens: ['Library'],
 };
 
 /** Rules a card must state because its numbers cannot: the Agoge's levels (the Yam and Diwan are told by the goal block). */
-const BUILDING_RULE: Partial<Record<BuildingKind, string>> = { WarShrine: BUILDING_STATS.WarShrine.summary };
+const BUILDING_RULE: Partial<Record<BuildingKind, string>> = { Agoge: BUILDING_STATS.Agoge.summary };
 
 const requiresText = (tech: TechId | null): string[] => tech ? [`Needs ${TECH_NAME[tech]}.`] : [];
 
@@ -133,7 +133,7 @@ export const FACTION_SHEETS: Record<Faction, FactionSheet> = {
     lore: 'Swiss communities guarded Alpine passes and later developed strong traditions of banking and public finance. In play, that wealth buys buildings and units cheaply but is exposed when a city falls.',
     ratings: { aggression: 1, economy: 5, complexity: 3 },
     pairs: [
-      { strength: `${swissTollRule()} ${swissInterestRule()}`, price: 'Military unit upkeep is triple: 3 Gold a turn instead of 1.', strengthIcon: 'yield-gold', priceIcon: 'unit-soldier' },
+      { strength: `${swissTollRule()} ${swissInterestRule()}`, price: 'Military unit upkeep is triple: 3 Gold a turn instead of 1.', strengthIcon: 'yield-gold', priceIcon: 'unit-spearman' },
       { strength: SWISS_CHEAP_BUYS, price: SWISS_CAPTURE_RULE, strengthIcon: 'building-market', priceIcon: 'city' },
       specialRow('Switzerland', 'unit-reislaufer'),
     ],
@@ -156,7 +156,7 @@ export const FACTION_SHEETS: Record<Faction, FactionSheet> = {
     lore: 'The eastern Roman Empire held Constantinople for a thousand years. When its thin professional army could not win, it opened the treasury and hired other empires’ armies.',
     ratings: { aggression: 2, economy: 3, complexity: 3 },
     pairs: [
-      { strength: companyRule(), price: THIN_LEVIES, strengthIcon: 'fortify', priceIcon: 'unit-soldier' },
+      { strength: companyRule(), price: THIN_LEVIES, strengthIcon: 'fortify', priceIcon: 'unit-spearman' },
     ],
     counteredBy: 'Outlast every Company: its countdown is public, its upkeep drains the treasury, and an unpaid Company turns barbarian.',
   },

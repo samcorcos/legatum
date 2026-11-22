@@ -10,11 +10,11 @@ export function promotionFixture() {
   const xp = (level: number) => PROMOTION_XP[level - 1];
   const soldier = s.units.find((u) => u.id === 0)!;
   soldier.xp = xp(1) + 5;
-  const ranger = spawnUnit(s, 0, 'Ranger', fromOffset(5, 4), false);
+  const ranger = spawnUnit(s, 0, 'Archer', fromOffset(5, 4), false);
   ranger.xp = xp(2) + 3;
-  const trooper = spawnUnit(s, 0, 'Trooper', fromOffset(6, 4), false);
+  const trooper = spawnUnit(s, 0, 'Pikeman', fromOffset(6, 4), false);
   trooper.xp = xp(3) + 12;
-  const enemy = spawnUnit(s, 1, 'Soldier', fromOffset(7, 4), false);
+  const enemy = spawnUnit(s, 1, 'Spearman', fromOffset(7, 4), false);
   enemy.xp = xp(2);
   for (const r of s.diplomacy!.relations) r.state = 'War';
   for (const p of s.players) p.explored.fill(1);

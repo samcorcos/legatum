@@ -37,7 +37,7 @@ for (const size of SIZES) test(`delegated city cannot choose after Ready ${size.
     const store = (window as unknown as GameWindow).legatum;
     const s = store.getState();
     const view = s.views![s.seat];
-    store.setState({ views: [{ ...view, cities: view.cities.map((c) => c.id === id ? { ...c, detail: { ...c.detail!, options: c.detail!.options.filter((o) => o.item.kind === 'Unit' && o.item.unit === 'Soldier') } } : c) }] });
+    store.setState({ views: [{ ...view, cities: view.cities.map((c) => c.id === id ? { ...c, detail: { ...c.detail!, options: c.detail!.options.filter((o) => o.item.kind === 'Unit' && o.item.unit === 'Spearman') } } : c) }] });
   }, own);
   await endPlanning(page);
   await expect(page.locator('.seatbar .cta.todo')).toContainText('Choose production');
@@ -70,7 +70,7 @@ for (const size of SIZES) for (const state of ['early', 'mid', 'holding', 'rival
       v.actions = { ...v.actions, retire: { retired: 0, target: 3, level: 4, shrines: [], veterans: v.units.filter(u => u.owner === v.me).slice(0, 2).map(u => ({ unit: u.id, level: 4, blocker: 'Needs a city with an Agoge' })) } };
       const holder = v.standings.find(s => state === 'holding' ? s.team === v.team : s.team !== v.team)!;
       const owner = holder.members[0];
-      v.great_works = (v.great_works ?? []).map(w => w.player === owner ? { ...w, completed: 'RelayUplink' } : w);
+      v.great_works = (v.great_works ?? []).map(w => w.player === owner ? { ...w, completed: 'GreatLibrary' } : w);
       v.eras!.forEach(e => { e.entered_by = [...new Set([...e.entered_by, owner])]; e.scored_by = e.era < 7 ? [...e.scored_by.filter(x => x.player !== owner), { player: owner, slot: 0, turn: 190 }] : []; });
       v.players.forEach(p => {
         p.vp_sources = v.eras!.filter(e => e.scored_by.some(x => x.player === p.id)).map(e => [{ kind: 'EraObjective', era: e.era }, 1]);

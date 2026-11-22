@@ -22,7 +22,7 @@ it('warns when a visible barbarian can reach a civilian before a distant capture
   const enemy = v.players.find((p) => p.team !== v.team)!;
   v.diplomacy.relations.find((r) => [r.a, r.b].includes(enemy.team) && [r.a, r.b].includes(v.team))!.state = 'War';
   v.units.push({ ...mover, id: 900, owner: enemy.id, kind: 'Settler', military: false, pos: target });
-  v.units.push({ ...mover, id: 901, owner: 255, kind: 'Soldier', military: true, pos: { q: 4, r: 5 } });
+  v.units.push({ ...mover, id: 901, owner: 255, kind: 'Spearman', military: true, pos: { q: 4, r: 5 } });
   expect(civilianCaptureRace(v, mover, target, 2)).toBe('Reaches the Settler in 2 steps: barbarian Spearman is already next to it and may capture it first.');
   expect(civilianCaptureRace(v, mover, target, 1)).toBeNull();
   v.units[v.units.length - 1].owner = enemy.id;
@@ -43,7 +43,7 @@ describe('bankruptcy warnings', () => {
   it('names the exact unit and the negative treasury, not the per-turn income', () => {
     view.economy.gold_per_turn.total = -7;
     view.economy.bankruptcy = { gold: { total: -3, parts: [['Treasury', 4], ['Unit upkeep', -7]] },
-      disband: { unit: 12, kind: 'Trooper', pos: { q: 1, r: 2 }, city: null } };
+      disband: { unit: 12, kind: 'Pikeman', pos: { q: 1, r: 2 }, city: null } };
     expect(bankruptcyWarning(view)).toBe('Next turn −3 Gold: Reisläufer #12 will be disbanded');
     view.players.find((p) => p.id === view.me)!.faction = 'Byzantium';
     expect(disbandUnitLabel(view)).toBe('Tagmatic Soldier #12');
@@ -51,7 +51,7 @@ describe('bankruptcy warnings', () => {
 
   it('identifies a completing unit by its city without inventing a unit id', () => {
     view.economy.bankruptcy = { gold: { total: -2, parts: [] },
-      disband: { unit: null, kind: 'Ranger', pos: city.pos, city: city.id } };
+      disband: { unit: null, kind: 'Archer', pos: city.pos, city: city.id } };
     expect(bankruptcyWarning(view)).toBe(`Next turn −2 Gold: Archer (completing in ${city.name}) will be disbanded`);
   });
 
@@ -74,7 +74,7 @@ describe('city production warnings', () => {
     await loadWasmModule();
     city.detail!.build_automation = 'Science';
     city.detail!.production_queue = [];
-    city.detail!.options = city.detail!.options.filter((o) => o.item.kind === 'Unit' && o.item.unit === 'Soldier');
+    city.detail!.options = city.detail!.options.filter((o) => o.item.kind === 'Unit' && o.item.unit === 'Spearman');
     expect(city.detail!.options).toHaveLength(1);
     expect(cityProductionWarning(city, [], undefined, { ...view })).toBe("Nothing here fits its automation focus. Choose this turn's build.");
     expect(idleCitiesNeedingProduction({ ...view }, [])).toContain(city);
@@ -110,7 +110,7 @@ describe('city production warnings', () => {
     city.detail!.resistance = 1;
     expect(cityProductionWarning(city)).toBeNull();
     city.detail!.resistance = 0;
-    city.detail!.producing = { kind: 'Unit', unit: 'Soldier' };
+    city.detail!.producing = { kind: 'Unit', unit: 'Spearman' };
     expect(idleProductionWarning(city.detail)).toBeNull();
     expect(idleProductionWarning(null)).toBeNull();
   });
@@ -124,7 +124,7 @@ describe('city production warnings', () => {
   });
 
   it('clears an idle warning when production is queued and restores it on cancellation', () => {
-    const orders = [{ type: 'SetProduction', city: city.id, item: { kind: 'Unit', unit: 'Soldier' } } as const];
+    const orders = [{ type: 'SetProduction', city: city.id, item: { kind: 'Unit', unit: 'Spearman' } } as const];
     expect(cityProductionWarning(city, orders)).toBeNull();
     expect(idleCitiesNeedingProduction(view, orders)).not.toContain(city);
     expect(cityProductionWarning(city, [])).toContain('3 Production');
@@ -134,7 +134,7 @@ describe('city production warnings', () => {
     city.detail!.producing = { kind: 'Unit', unit: 'Settler' };
     city.detail!.production_stall = { kind: 'Population', required: 2, available: 1 };
     expect(cityProductionWarning(city)).toContain('Settler needs population 2');
-    expect(cityProductionWarning(city, [{ type: 'SetProduction', city: city.id, item: { kind: 'Unit', unit: 'Soldier' } }])).toBeNull();
+    expect(cityProductionWarning(city, [{ type: 'SetProduction', city: city.id, item: { kind: 'Unit', unit: 'Spearman' } }])).toBeNull();
     expect(cityProductionWarning({ ...city, detail: null })).toBeNull();
   });
 
@@ -157,8 +157,8 @@ describe('city production warnings', () => {
 
 it('explains city entry for ranged units even when using a move attack', async () => {
   const { cityEntryWarning } = await import('./forecastWarnings');
-  expect(cityEntryWarning({ kind: 'Ranger' })).toBe("Ranged units can't capture cities; move a melee unit in to take it.");
-  expect(cityEntryWarning({ kind: 'Soldier' })).toContain('most HP');
+  expect(cityEntryWarning({ kind: 'Archer' })).toBe("Ranged units can't capture cities; move a melee unit in to take it.");
+  expect(cityEntryWarning({ kind: 'Spearman' })).toContain('most HP');
   // A Keshig charges and captures; only its shot cannot.
   expect(cityEntryWarning({ kind: 'Cataphract' })).toContain('most HP');
   expect(cityEntryWarning({ kind: 'Cataphract' }, true)).toBe("A shot can't take a city. Charge it to capture it.");
@@ -179,7 +179,7 @@ describe('G18 combat warnings', () => {
   });
 
   it('flags own units under half HP standing next to enemy military, weakest first', () => {
-    const own = view.units.find((u) => u.owner === view.me && u.kind === 'Soldier')!;
+    const own = view.units.find((u) => u.owner === view.me && u.kind === 'Spearman')!;
     const unit = (id: number, owner: number, pos: UnitView['pos'], hp: number): UnitView => ({ ...own, id, owner, pos, hp });
     const near = neighbors(own.pos)[0];
     view.units = [unit(1, view.me, own.pos, 42), unit(2, view.me, neighbors(near)[0], 30), unit(3, 255, near, 100)];
@@ -218,8 +218,8 @@ describe('walled city fire folded into the forecast (playtest-6 H1)', () => {
   } as unknown as BattleForecast;
 
   it('takes the shot first, then fights at the wounded strength, over every roll', () => {
-    const out = cityFireOutcome(f, 'India', 'Soldier')!;
-    expect(out).toEqual(JSON.parse(Game.combat_projection(JSON.stringify({ op: 'cityFireOutcome', forecast: f, faction: 'India', kind: 'Soldier' }))));
+    const out = cityFireOutcome(f, 'India', 'Spearman')!;
+    expect(out).toEqual(JSON.parse(Game.combat_projection(JSON.stringify({ op: 'cityFireOutcome', forecast: f, faction: 'India', kind: 'Spearman' }))));
     // Mean shot over the city's 41 rolls.
     let shots = 0;
     for (let r = 80; r <= 120; r++) shots += damage(26, 20, r);
@@ -233,7 +233,7 @@ describe('walled city fire folded into the forecast (playtest-6 H1)', () => {
   });
 
   it('counts a shot that destroys the attacker before it attacks', () => {
-    const out = cityFireOutcome({ ...f, attacker_hp: 30 }, 'India', 'Soldier')!;
+    const out = cityFireOutcome({ ...f, attacker_hp: 30 }, 'India', 'Spearman')!;
     expect(out.canDie).toBe(true);
     expect(out.loss).toBeGreaterThan(0);
     expect(out.hpAfter).toBeGreaterThanOrEqual(0);
@@ -241,7 +241,7 @@ describe('walled city fire folded into the forecast (playtest-6 H1)', () => {
 
   it('leaves a ranged strike’s damage alone: it fires from the same snapshot as the city', () => {
     const ranged = { ...f, ranged: true, expected_damage_to_attacker: 0, expected_damage_to_defender: exactOdds(20, 26, 100, 200, true).expToDef };
-    const out = cityFireOutcome(ranged, 'India', 'Ranger')!;
+    const out = cityFireOutcome(ranged, 'India', 'Archer')!;
     expect(out.dealt).toBe(ranged.expected_damage_to_defender);
     expect(out.attack).toBe(0);
     expect(out.hpAfter).toBe(100 - out.fire);
@@ -249,7 +249,7 @@ describe('walled city fire folded into the forecast (playtest-6 H1)', () => {
 
   it('shows Wall-reduced fire damage in the card and derives the Siege hint from it', () => {
     const walled = { ...f, ranged: true, walls: { tier: 1, covered: 0, percent: 50, built_in: false } } as BattleForecast;
-    const out = cityFireOutcome(walled, 'India', 'Ranger')!;
+    const out = cityFireOutcome(walled, 'India', 'Archer')!;
     expect(out.dealt).toBe(exactOdds(20, 26, 100, 200, false, 50).expToDef);
     expect(wallsLine(walled, 'Athens', 'Archer', 1, out.dealt)?.text)
       .toBe(`Walls halve this attack on Athens: ${out.dealt} HP, or ${out.dealt * 2} with Siege.`);
@@ -261,16 +261,16 @@ describe('walled city fire folded into the forecast (playtest-6 H1)', () => {
   });
 
   it('ignores wounds for Sparta line infantry, and is null without a shot', () => {
-    const wounded = cityFireOutcome(f, 'India', 'Soldier')!, oath = cityFireOutcome(f, 'Sparta', 'Soldier')!;
+    const wounded = cityFireOutcome(f, 'India', 'Spearman')!, oath = cityFireOutcome(f, 'Sparta', 'Spearman')!;
     expect(oath.dealt).toBeGreaterThan(wounded.dealt);
-    expect(cityFireOutcome({ ...f, city_strike: undefined }, 'India', 'Soldier')).toBeNull();
+    expect(cityFireOutcome({ ...f, city_strike: undefined }, 'India', 'Spearman')).toBeNull();
   });
 
   it('names the city’s target: the weakest of your units in range, by HP then id', () => {
     const rival = { ...city, id: 77, owner: view.players.find((p) => p.team !== view.team)!.id };
     view.diplomacy = { ...view.diplomacy, legacy: true } as PlayerView['diplomacy'];
     const near = neighbors(city.pos);
-    const u = (id: number, hp: number, pos = near[0]) => ({ id, owner: view.me, kind: 'Soldier', pos, hp, military: true }) as unknown as UnitView;
+    const u = (id: number, hp: number, pos = near[0]) => ({ id, owner: view.me, kind: 'Spearman', pos, hp, military: true }) as unknown as UnitView;
     view.units = [u(5, 80), u(3, 80, near[1]), u(9, 100, near[2])];
     expect(cityShotTarget(view, rival)?.id).toBe(3);
     view.units = [u(5, 40), u(3, 80, near[1])];
@@ -286,7 +286,7 @@ describe('garrisoned city forecasts (core combat::city_tile_defender)', () => {
     attacker_hp: 100, defender_hp: 200, ranged: false };
 
   it('says city damage can overflow into the garrison', () => {
-    const f = { ...base, garrison: { unit: 9, owner: 1, kind: 'Ranger' as const, hp: 100, shielded: true } };
+    const f = { ...base, garrison: { unit: 9, owner: 1, kind: 'Archer' as const, hp: 100, shielded: true } };
     expect(garrisonHeadline(f, view, 'Epoch', false)).toBe(
       'Epoch absorbs damage first. The hit that empties its HP carries on to the Archer garrison with the part of its damage the city did not absorb; later hits strike the garrison in full. A melee attacker captures if the garrison falls.');
     expect(garrisonHeadline({ ...f, ranged: true }, view, 'Epoch', true)).toBe('Epoch absorbs damage first. The hit that empties its HP carries on to the Archer garrison with the part of its damage the city did not absorb; later hits strike the garrison in full. Ranged fire cannot capture.');
@@ -294,7 +294,7 @@ describe('garrisoned city forecasts (core combat::city_tile_defender)', () => {
   });
 
   it('names the exposed garrison of a fallen city and what destroying it does', () => {
-    const f = { ...base, defender_hp: 60, garrison: { unit: 9, owner: 1, kind: 'Soldier' as const, hp: 60, shielded: false } };
+    const f = { ...base, defender_hp: 60, garrison: { unit: 9, owner: 1, kind: 'Spearman' as const, hp: 60, shielded: false } };
     expect(garrisonHeadline(f, view, 'Epoch', false)).toBe('Epoch has fallen: you fight its Spearman garrison (60 HP), and destroying it captures the city.');
     expect(garrisonHeadline(f, view, 'Epoch', true)).toBe('Epoch has fallen: this shot hits its Spearman garrison (60 HP). Only a melee attack can capture the city.');
     expect(forecastWinLabel(f, true, false, false)).toBe('kill the garrison, capture');
@@ -336,9 +336,9 @@ it('the headline follows the whole fight at a city, never the walls alone (T187 
   const f: BattleForecast = { attacker_strength: { total: 20, parts: [] }, defender_strength: { total: 12, parts: [] },
     win_chance: 100, loss_chance: 0, expected_damage_to_attacker: 21, expected_damage_to_defender: 5,
     attacker_hp: 100, defender_hp: 5, ranged: false,
-    garrison: { unit: 999, owner: 1, kind: 'Soldier', hp: 100, shielded: true } };
+    garrison: { unit: 999, owner: 1, kind: 'Spearman', hp: 100, shielded: true } };
   const held = { attacks: 1, city_hp: 5, city_hp_after: 0, capture_chance: 0, can_capture: true,
-    garrison: { unit: 999, owner: 1, kind: 'Soldier' as const, hp: 100, hp_after: 61, destroyed_chance: 0 } };
+    garrison: { unit: 999, owner: 1, kind: 'Spearman' as const, hp: 100, hp_after: 61, destroyed_chance: 0 } };
   // The city drops (the old headline said Decisive) but the garrison under it holds: nothing is captured.
   const m = forecastModel(f, false, view, attacker, target, [], held);
   expect(m.win).toBe(0);
@@ -356,7 +356,7 @@ it('the headline follows the whole fight at a city, never the walls alone (T187 
 
 it('words the whole fight at a city from core numbers: city, garrison, capture, you', () => {
   const a = { attacks: 2, city_hp: 40, city_hp_after: 0, capture_chance: 0, can_capture: true,
-    garrison: { unit: 7, owner: 1, kind: 'Soldier' as const, hp: 100, hp_after: 61, destroyed_chance: 0 } };
+    garrison: { unit: 7, owner: 1, kind: 'Spearman' as const, hp: 100, hp_after: 61, destroyed_chance: 0 } };
   const s = assaultSummary(a, 'Lugano', 'Soldier');
   expect(s.title).toBe('The whole fight at Lugano: 2 attacks this turn');
   expect(s.rows.map((r) => [r.key, r.hp, r.after])).toEqual([['city', 40, 0], ['garrison', 100, 61]]);
@@ -384,7 +384,7 @@ it('ranged attacks never show a counterattack split', () => {
 });
 
 describe('reinforcement note', () => {
-  const own = (): UnitView => ({ ...view.units.find((u) => u.owner === view.me && u.military)!, kind: 'Soldier', ranged: 0, military: true });
+  const own = (): UnitView => ({ ...view.units.find((u) => u.owner === view.me && u.military)!, kind: 'Spearman', ranged: 0, military: true });
   const enemyNear = (pos: UnitView['pos']): UnitView => ({ ...own(), id: 900, owner: 255, pos });
 
   it('says your unit gets there first when an enemy could attack your ungarrisoned city', () => {
@@ -401,7 +401,7 @@ describe('reinforcement note', () => {
     const from = { ...own(), pos: neighbors(city.pos)[3] };
     const unit = from;
     view.units = [unit, enemyNear(neighbors(city.pos)[0])];
-    expect(reinforcementNote(view, { ...from, kind: 'Ranger', ranged: 18 }, city.pos)).toBeNull();
+    expect(reinforcementNote(view, { ...from, kind: 'Archer', ranged: 18 }, city.pos)).toBeNull();
     expect(reinforcementNote(view, from, neighbors(city.pos)[1])).toBeNull();
     view.units = [unit, { ...own(), id: 901, pos: city.pos }, enemyNear(neighbors(city.pos)[0])];
     expect(reinforcementNote(view, from, city.pos)).toBeNull();
@@ -436,7 +436,7 @@ describe('built-in Siege mirrors core data::siege_cover (designer, 2026-10-28)',
       expect(siegeCover(kind, false, []), kind).toBe(3);
       expect(wallDamagePercent(3, siegeCover(kind, false, [])), kind).toBe(100);
     }
-    for (const kind of ['Soldier', 'AssaultTrooper', 'Arquebusier', 'Cuirassier'] as const) {
+    for (const kind of ['Spearman', 'Musketman', 'Arquebusier', 'Cuirassier'] as const) {
       expect(builtInSiege(kind), kind).toBe(false);
       expect(canHaveSiege(kind), kind).toBe(true);
       expect(siegeCover(kind, false, ['Mathematics', 'Machinery', 'Metallurgy']), kind).toBe(0);
@@ -501,7 +501,7 @@ describe('occupation lock experiment', () => {
 describe('the carried hit at a city', () => {
   it('splits the hit between the city and the garrison from core numbers', () => {
     const a = { attacks: 1, city_hp: 12, city_hp_after: 0, capture_chance: 0, can_capture: true,
-      garrison: { unit: 7, owner: 1, kind: 'Soldier' as const, hp: 100, hp_after: 69, destroyed_chance: 0, carried: 31 } };
+      garrison: { unit: 7, owner: 1, kind: 'Spearman' as const, hp: 100, hp_after: 69, destroyed_chance: 0, carried: 31 } };
     const rows = assaultSummary(a, 'Lugano', 'Soldier').rows;
     expect(rows[0]).toMatchObject({ label: 'Lugano', hp: 12, after: 0, note: 'carries −31 to the garrison' });
     expect(rows[1].note).toBeUndefined();

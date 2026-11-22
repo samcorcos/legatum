@@ -55,10 +55,10 @@ export function companyState(gold = 400): CompanyState {
   for (const seller of [1, 2]) f.players[seller].techs = TECHS.filter((t) => TECH_ERA[t] <= 2);
   const capital = f.cities.find((c) => c.owner === 0)!;
   const at = (dq: number, dr: number) => ({ q: capital.pos.q + dq, r: capital.pos.r + dr });
-  const week = spawnUnit(f, 0, 'Soldier', at(1, 0), false);
+  const week = spawnUnit(f, 0, 'Spearman', at(1, 0), false);
   const last = spawnUnit(f, 0, 'Knight', at(0, 1), false);
-  const ordinary = spawnUnit(f, 0, 'Soldier', at(-1, 1), false);
-  const rival = spawnUnit(f, 3, 'Soldier', at(2, 0), false);
+  const ordinary = spawnUnit(f, 0, 'Spearman', at(-1, 1), false);
+  const rival = spawnUnit(f, 3, 'Spearman', at(2, 0), false);
   Object.assign(week, { contract_until: f.turn + 7, origin: 'Sparta' as const });
   Object.assign(last, { contract_until: f.turn, origin: 'India' as const });
   Object.assign(rival, { contract_until: f.turn + 19, origin: 'Sparta' as const });

@@ -54,13 +54,13 @@ it('gives an 8-point compass bearing with north up', () => {
 
 it('locates the nearest known city from our nearest city, else a unit in sight, else unknown', () => {
   const ours = [city(1, 0, 'Living Cairn', 5, 10), city(2, 0, 'Astra', 20, 10)];
-  const v = view({ cities: [...ours, city(3, 4, 'Harmonia', 24, 10), city(4, 4, 'Far', 40, 10)], units: [unit(9, 4, 'Soldier', 6, 10)] });
+  const v = view({ cities: [...ours, city(3, 4, 'Harmonia', 24, 10), city(4, 4, 'Far', 40, 10)], units: [unit(9, 4, 'Spearman', 6, 10)] });
   const loc = empireLocation(v, 4)!;
   // A known city beats a closer unit; it is measured from the closest of our cities.
   expect(loc).toMatchObject({ kind: 'city', name: 'Harmonia', tiles: 4, direction: 'E', from: 'Astra', at: fromOffset(24, 10) });
   expect(describeLocation(loc)).toBe('Nearest city Harmonia ~4 tiles E of Astra');
 
-  const unitOnly = empireLocation(view({ cities: ours, units: [unit(9, 4, 'Soldier', 5, 7)] }), 4)!;
+  const unitOnly = empireLocation(view({ cities: ours, units: [unit(9, 4, 'Spearman', 5, 7)] }), 4)!;
   expect(describeLocation(unitOnly)).toBe('City not seen yet; their Spearman ~3 tiles N of Living Cairn');
 
   expect(empireLocation(view({ cities: ours }), 5)).toBeNull();
@@ -70,7 +70,7 @@ it('locates the nearest known city from our nearest city, else a unit in sight, 
 it('lists their units in sight near ours, nearest first', () => {
   const v = view({
     cities: [city(1, 0, 'Astra', 5, 10)],
-    units: [unit(1, 0, 'Scout', 12, 10), unit(7, 4, 'Soldier', 13, 10), unit(8, 4, 'Scout', 8, 10), unit(9, 4, 'Settler', 30, 10)],
+    units: [unit(1, 0, 'Scout', 12, 10), unit(7, 4, 'Spearman', 13, 10), unit(8, 4, 'Scout', 8, 10), unit(9, 4, 'Settler', 30, 10)],
   });
   expect(unitsNearOurs(v, 4)).toEqual([
     { unit: 'Spearman', at: fromOffset(13, 10), tiles: 1, near: 'your Scout' },

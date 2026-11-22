@@ -137,7 +137,7 @@ export function drawHallBadge(ctx: Ctx, view: PlayerView, s2: S2, hexPx: number,
     ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = ATLAS.seat.plate; ctx.fill();
     ctx.strokeStyle = T.gold; ctx.lineWidth = P.line; ctx.stroke();
     const g = r * 1.7;
-    const icon = tintedIcon('building-courierhall', T.ink, Math.ceil(g * (window.devicePixelRatio || 1)));
+    const icon = tintedIcon('building-yamrelaystation', T.ink, Math.ceil(g * (window.devicePixelRatio || 1)));
     if (icon) ctx.drawImage(icon, x - g / 2, y - g / 2, g, g);
     ctx.restore();
   }

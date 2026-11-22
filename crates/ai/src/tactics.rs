@@ -108,7 +108,7 @@ impl Planner<'_> {
                 u.kind,
                 legatum_core::UnitKind::Artillery
                     | legatum_core::UnitKind::RocketArtillery
-                    | legatum_core::UnitKind::Drone
+                    | legatum_core::UnitKind::CombatDrone
             )
         };
         let walled_garrison = self
@@ -1334,7 +1334,7 @@ mod bombardment_tests {
         let mut view = ViewBuilder::new(24, 16)
             .city(9, ENEMY, city, 3)
             .walled(9)
-            .unit(1, ME, UnitKind::Ranger, Hex::new(8, 8))
+            .unit(1, ME, UnitKind::Archer, Hex::new(8, 8))
             .build();
         view.cities[0].hp = 0;
         let mut p = Planner::new(
@@ -1374,7 +1374,7 @@ mod bombardment_tests {
     fn spear_can_plan_a_ranged_charge_on_a_stationary_horse() {
         let target = Hex::new(10, 8);
         let view = ViewBuilder::new(24, 16)
-            .unit(1, ME, UnitKind::Soldier, Hex::new(8, 8))
+            .unit(1, ME, UnitKind::Spearman, Hex::new(8, 8))
             .unit_hp(50, ENEMY, UnitKind::Horseman, target, 1)
             .build();
         let p = Planner::new(
@@ -1393,7 +1393,7 @@ mod bombardment_tests {
     fn a_winning_duel_is_rejected_when_the_spear_screen_takes_the_attacker() {
         let view = ViewBuilder::new(24, 16)
             .unit(1, ME, UnitKind::Horseman, Hex::new(8, 8))
-            .unit_hp(50, ENEMY, UnitKind::Soldier, Hex::new(9, 8), 1)
+            .unit_hp(50, ENEMY, UnitKind::Spearman, Hex::new(9, 8), 1)
             .unit(51, ENEMY, UnitKind::Phalangite, Hex::new(10, 7))
             .unit(52, ENEMY, UnitKind::Phalangite, Hex::new(10, 9))
             .build();
@@ -1417,14 +1417,14 @@ mod bombardment_tests {
             let mut b = ViewBuilder::new(24, 16).city(1, ME, city, 2).unit(
                 50,
                 ENEMY,
-                UnitKind::Soldier,
+                UnitKind::Spearman,
                 Hex::new(9, 8),
             );
             if let Some(hp) = garrison_hp {
-                b = b.unit_hp(1, ME, UnitKind::Ranger, city, hp);
+                b = b.unit_hp(1, ME, UnitKind::Archer, city, hp);
             }
             if enemy_ranger {
-                b = b.unit(51, ENEMY, UnitKind::Ranger, Hex::new(10, 8));
+                b = b.unit(51, ENEMY, UnitKind::Archer, Hex::new(10, 8));
             }
             let mut v = b.build();
             v.cities.iter_mut().find(|c| c.pos == city).unwrap().hp = city_hp;
@@ -1445,14 +1445,14 @@ mod bombardment_tests {
                 .unwrap();
             p.enemy_threat(e, e.hp)
         };
-        // Ungarrisoned and nearly broken: the Soldier takes it.
+        // Ungarrisoned and nearly broken: the Spearman takes it.
         assert!(threat(&build(10, None, false)) >= data::CITY_HP);
-        // A full-HP garrisoned city: the Soldier's attack only hits the city.
+        // A full-HP garrisoned city: the Spearman's attack only hits the city.
         assert!(threat(&build(200, Some(100), false)) < data::CITY_HP);
-        // The enemy Ranger's volley can break the 10-HP city, exposing a 20-HP garrison that
-        // the Soldier can kill in the first movement round.
+        // The enemy Archer's volley can break the 10-HP city, exposing a 20-HP garrison that
+        // the Spearman can kill in the first movement round.
         assert!(threat(&build(10, Some(20), true)) >= data::CITY_HP);
-        // The same, but the garrison survives the Soldier's best roll.
+        // The same, but the garrison survives the Spearman's best roll.
         assert!(threat(&build(10, Some(100), true)) < data::CITY_HP);
     }
 
@@ -1466,8 +1466,8 @@ mod bombardment_tests {
         ] {
             let mut v = ViewBuilder::new(24, 16)
                 .city(1, ME, city, 2)
-                .unit(1, ME, UnitKind::Ranger, city)
-                .unit(50, ENEMY, UnitKind::Ranger, Hex::new(10, 8))
+                .unit(1, ME, UnitKind::Archer, city)
+                .unit(50, ENEMY, UnitKind::Archer, Hex::new(10, 8))
                 .terrain(Hex::new(9, 8), terrain)
                 .build();
             v.cities[0].hp = 10;
@@ -1484,7 +1484,7 @@ mod bombardment_tests {
     #[test]
     fn a_shot_at_a_shielded_garrison_is_capture_progress_when_a_captor_is_near() {
         // An enemy city with HP shields its garrison, so a shot at its tile damages the city.
-        // With our Soldier beside the city that damage is progress toward a capture and beats
+        // With our Spearman beside the city that damage is progress toward a capture and beats
         // a shot at a field unit; with no captor near, the field unit is worth more.
         let city = Hex::new(8, 8);
         let ranger = Hex::new(6, 8);
@@ -1493,11 +1493,11 @@ mod bombardment_tests {
             let mut b = ViewBuilder::new(24, 16)
                 .city(1, ME, Hex::new(2, 8), 2)
                 .city(2, ENEMY, city, 2)
-                .unit(50, ENEMY, UnitKind::Soldier, city)
-                .unit(51, ENEMY, UnitKind::Soldier, field)
-                .unit(1, ME, UnitKind::Ranger, ranger);
+                .unit(50, ENEMY, UnitKind::Spearman, city)
+                .unit(51, ENEMY, UnitKind::Spearman, field)
+                .unit(1, ME, UnitKind::Archer, ranger);
             if captor {
-                b = b.unit(2, ME, UnitKind::Soldier, Hex::new(7, 8));
+                b = b.unit(2, ME, UnitKind::Spearman, Hex::new(7, 8));
             }
             let mut v = b.build();
             v.cities.iter_mut().find(|c| c.pos == city).unwrap().hp = 40;
@@ -1529,9 +1529,9 @@ mod bombardment_tests {
         let enemy = Hex::new(10, 8);
         let view = ViewBuilder::new(24, 16)
             .city(1, ME, city, 2)
-            .unit_hp(1, ME, UnitKind::Soldier, city, 20)
-            .unit(2, ME, UnitKind::Marksman, Hex::new(7, 7))
-            .unit(50, ENEMY, UnitKind::Ranger, enemy)
+            .unit_hp(1, ME, UnitKind::Spearman, city, 20)
+            .unit(2, ME, UnitKind::Crossbowman, Hex::new(7, 7))
+            .unit(50, ENEMY, UnitKind::Archer, enemy)
             .build();
         let mut p = Planner::new(
             &view,
@@ -1562,8 +1562,8 @@ mod bombardment_tests {
         let city = Hex::new(8, 8);
         let mut view = ViewBuilder::new(24, 16)
             .city(1, ME, city, 2)
-            .unit(1, ME, UnitKind::Ranger, city)
-            .unit(50, ENEMY, UnitKind::Ranger, Hex::new(10, 8))
+            .unit(1, ME, UnitKind::Archer, city)
+            .unit(50, ENEMY, UnitKind::Archer, Hex::new(10, 8))
             .build();
         view.players[ENEMY.0 as usize].faction = Faction::Mongols;
         for difficulty in [
@@ -1595,8 +1595,8 @@ mod bombardment_tests {
         let city = Hex::new(8, 8);
         let mut view = ViewBuilder::new(24, 16)
             .city(1, ME, city, 2)
-            .unit_hp(1, ME, UnitKind::Marksman, city, 40)
-            .unit(50, ENEMY, UnitKind::Ranger, Hex::new(10, 8))
+            .unit_hp(1, ME, UnitKind::Crossbowman, city, 40)
+            .unit(50, ENEMY, UnitKind::Archer, Hex::new(10, 8))
             .build();
         let mut p = Planner::new(
             &view,
@@ -1611,8 +1611,8 @@ mod bombardment_tests {
                 .any(|o| matches!(o, Order::RangedAttack { unit, .. } if *unit == UnitId(1)))
         );
         view = ViewBuilder { view }
-            .unit(2, ME, UnitKind::Ranger, Hex::new(7, 7))
-            .unit(51, ENEMY, UnitKind::Marksman, Hex::new(10, 7))
+            .unit(2, ME, UnitKind::Archer, Hex::new(7, 7))
+            .unit(51, ENEMY, UnitKind::Crossbowman, Hex::new(10, 7))
             .build();
         let mut p = Planner::new(
             &view,

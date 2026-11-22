@@ -50,7 +50,7 @@ async function renderForecasts() {
 
 it('stacks the closed-territory warning with unit hints without promising healing', async () => {
   const s = client.debugState();
-  const unit = s.units.find((u) => u.owner === 0 && u.kind === 'Soldier')!;
+  const unit = s.units.find((u) => u.owner === 0 && u.kind === 'Spearman')!;
   unit.hp = 50;
   s.owner[tileIndex(unit.pos, s.width, s.height)] = 2;
   const view = client.view(0);
@@ -76,7 +76,7 @@ it('renders bankruptcy in the gold readout and review list, and waste in both pr
   const c = s.cities.find((c) => c.owner === 0)!;
   c.prod = 60;
   s.players[0].gold = 0;
-  for (let i = 0; i < 9; i++) spawnUnit(s, 0, 'Trooper', c.pos, false);
+  for (let i = 0; i < 9; i++) spawnUnit(s, 0, 'Pikeman', c.pos, false);
   const city = await renderForecasts();
   const warning = useGame.getState().views![0].economy.bankruptcy!;
   expect(container.querySelector('.gold-warning')?.textContent).toContain(`Treasury −${-warning.gold.total} Gold next turn Reisläufer will be disbanded`);
@@ -87,7 +87,7 @@ it('renders bankruptcy in the gold readout and review list, and waste in both pr
   expect(container.querySelector('.cta')?.textContent).toContain(`${city.detail!.idle_production_waste} Production wasted next turn`);
   expect(container.querySelector('.city-panel .production-warning')?.textContent).toContain(`${city.detail!.idle_production_waste} Production will be wasted`);
   await act(async () => useGame.getState().editOrders((orders) => [...orders,
-    { type: 'SetProduction', city: city.id, item: { kind: 'Unit', unit: 'Soldier' } }]));
+    { type: 'SetProduction', city: city.id, item: { kind: 'Unit', unit: 'Spearman' } }]));
   expect(container.querySelector('.city-panel .production-warning')).toBeNull();
   expect(container.querySelector('.cta')?.textContent).not.toContain('Choose production');
 });
@@ -112,9 +112,9 @@ it('renders the population stall on the current build and the city tooltip', asy
 it('renders a blocked spawn with an action to clear it', async () => {
   const s = client.debugState();
   const c = s.cities.find((c) => c.owner === 0)!;
-  c.producing = { kind: 'Unit', unit: 'Soldier' };
+  c.producing = { kind: 'Unit', unit: 'Spearman' };
   c.prod = 1_000;
-  for (const pos of [c.pos, ...neighbors(c.pos)]) spawnUnit(s, 0, 'Soldier', pos, false);
+  for (const pos of [c.pos, ...neighbors(c.pos)]) spawnUnit(s, 0, 'Spearman', pos, false);
   await renderForecasts();
   expect(container.querySelector('.city-panel .production-warning')?.textContent).toContain('Move a blocking unit to make room');
   expect(container.querySelector('.tilecard .production-warning')?.textContent).toContain('no free spawn tile');

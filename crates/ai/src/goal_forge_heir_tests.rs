@@ -6,10 +6,10 @@ use legatum_core::view::PlayerView;
 use legatum_core::{CityId, PlayerId, UnitId};
 
 const FOUNDRY: ProductionItem = ProductionItem::Building {
-    building: BuildingKind::MachineShop,
+    building: BuildingKind::Forge,
 };
 const HEIR: ProductionItem = ProductionItem::Unit {
-    unit: UnitKind::Heir,
+    unit: UnitKind::HeirToTheThrone,
 };
 
 fn planner(v: &PlayerView) -> Planner<'_> {
@@ -37,7 +37,7 @@ fn germany(n: u32, last_has_factory: bool) -> PlayerView {
         b = b.unit(
             i + 1,
             ME,
-            UnitKind::Soldier,
+            UnitKind::Spearman,
             off(4 + 6 * (i as i32 % 4), 4 + 6 * (i as i32 / 4)),
         );
     }
@@ -71,7 +71,7 @@ fn germany(n: u32, last_has_factory: bool) -> PlayerView {
             }
         }
         if i != last || last_has_factory {
-            d.buildings.push(BuildingKind::MachineShop);
+            d.buildings.push(BuildingKind::Forge);
             d.options.retain(|o| o.item != FOUNDRY);
         }
     }
@@ -94,7 +94,7 @@ fn the_last_missing_factory_is_worth_the_whole_goal_and_gets_started() {
     assert!(p.forge_open());
     assert_eq!(p.factories_missing(), 1);
     assert!(p.factory_goal_value(&v.cities[4], 40) >= 1500 * 2);
-    assert!(p.factory_completes_goal(&v.cities[4], BuildingKind::MachineShop));
+    assert!(p.factory_completes_goal(&v.cities[4], BuildingKind::Forge));
     // Only that city can use it.
     assert_eq!(p.factory_goal_value(&v.cities[0], 40), 0);
     // Several missing: each receives a share, even if Iron Working arrives early.
@@ -153,7 +153,7 @@ fn a_nearly_complete_forge_values_the_fifth_city_and_each_step() {
     let p = planner(&v);
     assert_eq!(p.factory_goal_expansion_cost(), -2400);
     assert!(p.factory_goal_stage_value(&v.cities[last], BuildingKind::Workshop, 10) > 0);
-    assert!(p.factory_goal_stage_value(&v.cities[last], BuildingKind::MachineShop, 10) > 0);
+    assert!(p.factory_goal_stage_value(&v.cities[last], BuildingKind::Forge, 10) > 0);
 
     assert!(p.factory_goal_supply_value(legatum_core::resources::Resource::Iron) > 0);
     // Earlier expansion gets a smaller benefit, proportional to held Foundries.
@@ -173,14 +173,14 @@ fn a_sixth_city_does_not_create_another_foundry_obligation() {
     assert_eq!(p.factory_goal_expansion_cost(), 0);
     assert_eq!(p.factory_goal_value(&v.cities[5], 40), 0);
     assert_eq!(
-        p.factory_goal_stage_value(&v.cities[5], BuildingKind::MachineShop, 40),
+        p.factory_goal_stage_value(&v.cities[5], BuildingKind::Forge, 40),
         0
     );
     assert_eq!(
         p.factory_goal_supply_value(legatum_core::resources::Resource::Iron),
         0
     );
-    assert!(!p.factory_completes_goal(&v.cities[5], BuildingKind::MachineShop));
+    assert!(!p.factory_completes_goal(&v.cities[5], BuildingKind::Forge));
 
     let mut four = v.clone();
     four.cities[4]
@@ -188,10 +188,10 @@ fn a_sixth_city_does_not_create_another_foundry_obligation() {
         .as_mut()
         .unwrap()
         .buildings
-        .retain(|b| *b != BuildingKind::MachineShop);
+        .retain(|b| *b != BuildingKind::Forge);
     let p = planner(&four);
     assert_eq!(p.factory_goal_value(&four.cities[5], 40), 3000);
-    assert!(p.factory_completes_goal(&four.cities[5], BuildingKind::MachineShop));
+    assert!(p.factory_completes_goal(&four.cities[5], BuildingKind::Forge));
 }
 
 #[test]
@@ -240,11 +240,11 @@ fn byzantium(threatened: bool) -> PlayerView {
         .city(1, ME, off(4, 4), 4)
         .city(2, ME, off(10, 4), 4)
         .city(3, ME, off(4, 10), 4)
-        .unit(1, ME, UnitKind::Soldier, off(4, 4))
-        .unit(2, ME, UnitKind::Soldier, off(10, 4))
-        .unit(3, ME, UnitKind::Soldier, off(4, 10));
+        .unit(1, ME, UnitKind::Spearman, off(4, 4))
+        .unit(2, ME, UnitKind::Spearman, off(10, 4))
+        .unit(3, ME, UnitKind::Spearman, off(4, 10));
     if threatened {
-        b = b.unit(9, ENEMY, UnitKind::Trooper, off(6, 4));
+        b = b.unit(9, ENEMY, UnitKind::Pikeman, off(6, 4));
     }
     let mut v = b.build();
     v.turn = 60;
@@ -324,7 +324,7 @@ fn with_heir(
     pos: legatum_core::Hex,
 ) -> PlayerView {
     let b = ViewBuilder::new(40, 24)
-        .unit(77, owner, UnitKind::Heir, pos)
+        .unit(77, owner, UnitKind::HeirToTheThrone, pos)
         .build();
     let mut u = b.units.into_iter().next().unwrap();
     u.heir_of = Some(of);
@@ -366,8 +366,8 @@ fn heir_waits_in_shelter_when_the_refuge_route_crosses_an_interceptor() {
         .city(1, ME, off(4, 4), 4)
         .city(2, ME, off(12, 4), 4)
         .walled(2)
-        .unit(1, ME, UnitKind::Soldier, off(4, 4))
-        .unit(2, ME, UnitKind::Soldier, off(12, 4))
+        .unit(1, ME, UnitKind::Spearman, off(4, 4))
+        .unit(2, ME, UnitKind::Spearman, off(12, 4))
         .unit(90, ENEMY, UnitKind::Horseman, off(7, 5))
         .build();
     let v = with_heir(v, ME, ME, off(4, 4));
@@ -397,9 +397,9 @@ fn rivals_hunt_a_visible_heir_and_price_the_war_that_takes_it() {
     let byzantium_id = PlayerId(3);
     let mut v = ViewBuilder::new(40, 24)
         .city(1, ME, off(4, 4), 4)
-        .unit(2, ME, UnitKind::Soldier, off(4, 4))
-        .unit(3, ME, UnitKind::Soldier, off(4, 5))
-        .unit(1, ME, UnitKind::Soldier, off(8, 4))
+        .unit(2, ME, UnitKind::Spearman, off(4, 4))
+        .unit(3, ME, UnitKind::Spearman, off(4, 5))
+        .unit(1, ME, UnitKind::Spearman, off(8, 4))
         .build();
     v.players
         .iter_mut()
@@ -408,7 +408,11 @@ fn rivals_hunt_a_visible_heir_and_price_the_war_that_takes_it() {
         .faction = Faction::Byzantium;
     let v = with_heir(v, ENEMY, byzantium_id, off(9, 4));
     let p = planner(&v);
-    let heir = v.units.iter().find(|u| u.kind == UnitKind::Heir).unwrap();
+    let heir = v
+        .units
+        .iter()
+        .find(|u| u.kind == UnitKind::HeirToTheThrone)
+        .unwrap();
     assert!(p.heir_capture_value(heir) > 0);
     let orders = brain(&v);
     assert!(
@@ -470,13 +474,13 @@ fn a_switched_off_goal_is_never_planned_around() {
     assert_eq!(p.factory_goal_value(&v.cities[4], 40), 0);
     assert_eq!(p.factory_goal_expansion_cost(), 0);
     assert_eq!(
-        p.factory_goal_stage_value(&v.cities[4], BuildingKind::MachineShop, 10),
+        p.factory_goal_stage_value(&v.cities[4], BuildingKind::Forge, 10),
         0
     );
     assert_eq!(
         p.factory_goal_supply_value(legatum_core::resources::Resource::Iron),
         0
     );
-    assert!(!p.factory_completes_goal(&v.cities[4], BuildingKind::MachineShop));
+    assert!(!p.factory_completes_goal(&v.cities[4], BuildingKind::Forge));
     assert_valid(&v, &brain(&v));
 }

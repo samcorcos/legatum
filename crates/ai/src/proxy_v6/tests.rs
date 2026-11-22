@@ -10,7 +10,7 @@ fn economy() -> PlayerView {
         .city(3, ME, off(10, 11), 3)
         .city(4, ENEMY, off(11, 5), 2)
         .city(5, ENEMY, off(17, 5), 2)
-        .unit(1, ME, UnitKind::Soldier, off(7, 5))
+        .unit(1, ME, UnitKind::Spearman, off(7, 5))
         .build()
 }
 
@@ -43,7 +43,7 @@ fn buys_a_funded_burst_in_multiple_cities_and_preserves_economic_builds() {
             if matches!(
                 o.item,
                 ProductionItem::Unit {
-                    unit: UnitKind::Ranger | UnitKind::Soldier
+                    unit: UnitKind::Archer | UnitKind::Spearman
                 }
             ) {
                 o.buy_cost = Some(350);
@@ -62,7 +62,7 @@ fn buys_a_funded_burst_in_multiple_cities_and_preserves_economic_builds() {
     assert!(buys.iter().all(|(_, item)| matches!(
         item,
         ProductionItem::Unit {
-            unit: UnitKind::Ranger | UnitKind::Soldier
+            unit: UnitKind::Archer | UnitKind::Spearman
         }
     )));
     let spent: i32 = buys
@@ -97,8 +97,8 @@ fn volley_then_melee_captures_instead_of_attacking_independently() {
     let mut view = ViewBuilder::new(20, 16)
         .city(1, ME, off(3, 5), 3)
         .city(2, ENEMY, target, 2)
-        .unit(1, ME, UnitKind::Ranger, off(6, 5))
-        .unit(2, ME, UnitKind::Soldier, off(7, 5))
+        .unit(1, ME, UnitKind::Archer, off(6, 5))
+        .unit(2, ME, UnitKind::Spearman, off(7, 5))
         .build();
     view.cities
         .iter_mut()
@@ -123,7 +123,7 @@ fn takes_exposed_settler_without_a_suicidal_melee_attack() {
     let target = off(7, 5);
     let view = ViewBuilder::new(20, 16)
         .city(1, ME, off(3, 5), 3)
-        .unit(1, ME, UnitKind::Soldier, off(6, 5))
+        .unit(1, ME, UnitKind::Spearman, off(6, 5))
         .unit(2, ENEMY, UnitKind::Settler, target)
         .build();
     let orders = HumanPlaybookV6Brain::default().orders(&view);
@@ -246,7 +246,7 @@ fn duel_marches_on_a_rival_city_beyond_the_crowded_lobby_range() {
     let view = ViewBuilder::new(48, 20)
         .city(1, ME, off(4, 5), 3)
         .city(2, ENEMY, off(36, 5), 3)
-        .unit(1, ME, UnitKind::Soldier, off(5, 5))
+        .unit(1, ME, UnitKind::Spearman, off(5, 5))
         .build();
     let mut brain = conquering();
     brain.orders(&duel(view.clone()));
@@ -260,9 +260,9 @@ fn duel_marches_on_a_rival_city_beyond_the_crowded_lobby_range() {
 fn duel_sends_one_infantryman_to_find_a_rival_nobody_has_seen() {
     let view = ViewBuilder::new(30, 16)
         .city(1, ME, off(4, 5), 3)
-        .unit(1, ME, UnitKind::Soldier, off(6, 5))
-        .unit(2, ME, UnitKind::Soldier, off(6, 6))
-        .unit(3, ME, UnitKind::Ranger, off(6, 7))
+        .unit(1, ME, UnitKind::Spearman, off(6, 5))
+        .unit(2, ME, UnitKind::Spearman, off(6, 6))
+        .unit(3, ME, UnitKind::Archer, off(6, 7))
         .unexplored_from_col(12)
         .build();
     // How far from the city each unit ends its move.
@@ -290,7 +290,7 @@ fn duel_sends_one_infantryman_to_find_a_rival_nobody_has_seen() {
 fn duel_replaces_a_lost_scout_while_the_rival_is_unknown() {
     let mut view = ViewBuilder::new(30, 16)
         .city(1, ME, off(4, 5), 3)
-        .unit(1, ME, UnitKind::Soldier, off(6, 5))
+        .unit(1, ME, UnitKind::Spearman, off(6, 5))
         .build();
     for c in view.cities.iter_mut().filter(|c| c.owner == ME) {
         c.detail.as_mut().unwrap().options.retain(|o| {

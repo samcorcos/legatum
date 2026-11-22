@@ -16,12 +16,12 @@ fn five_attackers_take_the_city_and_the_rest_are_ready_for_orders() {
     let at = hex(5, 4);
     let c = city(&mut s, 1, at, 3);
     s.cities.get_mut(&c).unwrap().hp = 0;
-    let garrison = unit(&mut s, 1, UnitKind::Soldier, at);
+    let garrison = unit(&mut s, 1, UnitKind::Spearman, at);
     s.units.get_mut(&garrison).unwrap().hp = 1;
     let attackers: Vec<UnitId> = at.neighbors()[..5]
         .iter()
         .map(|h| {
-            let id = unit(&mut s, 0, UnitKind::Soldier, *h);
+            let id = unit(&mut s, 0, UnitKind::Spearman, *h);
             goto(&mut s, id, at);
             id
         })
@@ -60,12 +60,12 @@ fn a_teammate_or_ally_capturing_the_city_ends_a_distant_route_into_it() {
         let target_owner = 2;
         let c = city(&mut s, target_owner, at, 3);
         s.cities.get_mut(&c).unwrap().hp = 0;
-        let g = unit(&mut s, target_owner, UnitKind::Soldier, at);
+        let g = unit(&mut s, target_owner, UnitKind::Spearman, at);
         s.units.get_mut(&g).unwrap().hp = 1;
-        let captor = unit(&mut s, 1, UnitKind::Soldier, hex(4, 4));
+        let captor = unit(&mut s, 1, UnitKind::Spearman, hex(4, 4));
         goto(&mut s, captor, at);
         // Far away, with a confirmed route ending at the city.
-        let far = unit(&mut s, 0, UnitKind::Soldier, hex(1, 4));
+        let far = unit(&mut s, 0, UnitKind::Spearman, hex(1, 4));
         let route = vec![hex(2, 4), hex(3, 4), at];
         {
             let u = s.units.get_mut(&far).unwrap();
@@ -89,11 +89,11 @@ fn an_enemy_of_the_captor_keeps_its_order_at_the_city() {
     let at = hex(5, 4);
     let c = city(&mut s, 2, at, 3);
     s.cities.get_mut(&c).unwrap().hp = 0;
-    let g = unit(&mut s, 2, UnitKind::Soldier, at);
+    let g = unit(&mut s, 2, UnitKind::Spearman, at);
     s.units.get_mut(&g).unwrap().hp = 1;
-    let captor = unit(&mut s, 0, UnitKind::Soldier, hex(4, 4));
+    let captor = unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
     goto(&mut s, captor, at);
-    let rival = unit(&mut s, 1, UnitKind::Soldier, hex(2, 4));
+    let rival = unit(&mut s, 1, UnitKind::Spearman, hex(2, 4));
     goto(&mut s, rival, at);
     let (next, _) = resolve_units(&s, &no_orders());
     assert_eq!(next.cities[&c].owner, PlayerId(0));
@@ -107,7 +107,7 @@ fn an_enemy_of_the_captor_keeps_its_order_at_the_city() {
 fn an_attack_on_a_unit_that_died_before_movement_ends_with_needs_orders() {
     let mut s = game(&[0, 1]);
     let victim = unit(&mut s, 1, UnitKind::Scout, hex(6, 4));
-    let a = unit(&mut s, 0, UnitKind::Soldier, hex(4, 4));
+    let a = unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
     {
         let u = s.units.get_mut(&a).unwrap();
         u.goto = Some(hex(6, 4));
@@ -125,8 +125,8 @@ fn an_attack_on_a_unit_a_teammate_destroys_this_turn_ends_with_needs_orders() {
     // The victim is at the edge of a teammate's reach: it dies in the first round.
     let victim = unit(&mut s, 2, UnitKind::Scout, hex(6, 4));
     s.units.get_mut(&victim).unwrap().hp = 1;
-    let killer = unit(&mut s, 1, UnitKind::Soldier, hex(5, 4));
-    let pursuer = unit(&mut s, 0, UnitKind::Soldier, hex(3, 4));
+    let killer = unit(&mut s, 1, UnitKind::Spearman, hex(5, 4));
+    let pursuer = unit(&mut s, 0, UnitKind::Spearman, hex(3, 4));
     {
         let u = s.units.get_mut(&pursuer).unwrap();
         u.goto = Some(hex(6, 4));

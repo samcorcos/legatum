@@ -90,7 +90,7 @@ impl Planner<'_> {
             }
             self.assault_attacks.insert(b.walker);
             // The walker's route is reserved: a later move that stops on it blocks the walker
-            // (war suite, tepid T223: a Trooper stepped onto the Soldier's path and the city
+            // (war suite, tepid T223: a Pikeman stepped onto the Spearman's path and the city
             // stood empty at the deadline).
             if let Some(u) = self
                 .ctx
@@ -656,10 +656,10 @@ mod tests {
         let mut view = ViewBuilder::new(26, 18)
             .city(1, ME, Hex::new(3, 8), 2)
             .city(9, ENEMY, CITY, 3)
-            .unit(1, ME, UnitKind::Soldier, Hex::new(9, 8))
-            .unit(2, ME, UnitKind::Ranger, Hex::new(9, 7))
-            .unit(3, ME, UnitKind::Ranger, Hex::new(10, 6))
-            .unit(4, ME, UnitKind::Ranger, Hex::new(11, 7))
+            .unit(1, ME, UnitKind::Spearman, Hex::new(9, 8))
+            .unit(2, ME, UnitKind::Archer, Hex::new(9, 7))
+            .unit(3, ME, UnitKind::Archer, Hex::new(10, 6))
+            .unit(4, ME, UnitKind::Archer, Hex::new(11, 7))
             .build();
         view.cities[1].hp = 30;
         let mut p = crate::fixture::planner(&view, 7);
@@ -687,16 +687,16 @@ mod tests {
     }
 
     /// The owner reinforces its attacked city before our walker moves: a Rifleman beside the
-    /// city would step in and beat the Soldier, so the breach is not worth it.
+    /// city would step in and beat the Spearman, so the breach is not worth it.
     #[test]
     fn no_breach_when_a_stronger_defender_can_step_into_the_city_first() {
         let mut view = ViewBuilder::new(26, 18)
             .city(1, ME, Hex::new(3, 8), 2)
             .city(9, ENEMY, CITY, 3)
-            .unit(1, ME, UnitKind::Soldier, Hex::new(9, 8))
-            .unit(2, ME, UnitKind::Ranger, Hex::new(9, 7))
-            .unit(3, ME, UnitKind::Ranger, Hex::new(10, 6))
-            .unit(4, ME, UnitKind::Ranger, Hex::new(11, 7))
+            .unit(1, ME, UnitKind::Spearman, Hex::new(9, 8))
+            .unit(2, ME, UnitKind::Archer, Hex::new(9, 7))
+            .unit(3, ME, UnitKind::Archer, Hex::new(10, 6))
+            .unit(4, ME, UnitKind::Archer, Hex::new(11, 7))
             .unit(50, ENEMY, UnitKind::Rifleman, Hex::new(11, 8))
             .build();
         view.cities[1].hp = 30;
@@ -720,8 +720,8 @@ mod tests {
             .city(1, ME, Hex::new(3, 8), 2)
             .city(9, ENEMY, CITY, 3)
             .walled(9)
-            .unit(1, ME, UnitKind::Soldier, Hex::new(9, 8))
-            .unit(2, ME, UnitKind::Ranger, Hex::new(9, 7))
+            .unit(1, ME, UnitKind::Spearman, Hex::new(9, 8))
+            .unit(2, ME, UnitKind::Archer, Hex::new(9, 7))
             .build();
         let mut p = crate::fixture::planner(&view, 7);
         p.difficulty = AiDifficulty::Hard;

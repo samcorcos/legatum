@@ -12,7 +12,7 @@ fn approach() -> PlayerView {
         .city(1, ME, Hex::new(6, 6), 3)
         .city(2, ENEMY, Hex::new(20, 6), 3)
         .unit(1, ME, UnitKind::Scout, Hex::new(9, 6))
-        .unit(2, ME, UnitKind::Soldier, Hex::new(5, 6))
+        .unit(2, ME, UnitKind::Spearman, Hex::new(5, 6))
         .terrain(Hex::new(11, 6), legatum_core::Terrain::Hills)
         .build();
     view.players[ME.0 as usize].cities = 1;
@@ -76,9 +76,9 @@ fn sentry_sees_four_turn_approach_and_triggers_early_defense() {
     let mut seen = ViewBuilder {
         view: hidden.clone(),
     }
-    .unit(50, ENEMY, UnitKind::Ranger, marching)
-    .unit(51, ENEMY, UnitKind::Ranger, Hex::new(14, 5))
-    .unit(52, ENEMY, UnitKind::Ranger, Hex::new(14, 7))
+    .unit(50, ENEMY, UnitKind::Archer, marching)
+    .unit(51, ENEMY, UnitKind::Archer, Hex::new(14, 5))
+    .unit(52, ENEMY, UnitKind::Archer, Hex::new(14, 7))
     .build();
     seen.units
         .iter_mut()
@@ -101,7 +101,7 @@ fn sentry_sees_four_turn_approach_and_triggers_early_defense() {
                 item: ProductionItem::Building {
                     building: legatum_core::BuildingKind::Walls
                 } | ProductionItem::Unit {
-                    unit: UnitKind::Ranger
+                    unit: UnitKind::Archer
                 }
             }
         )),
@@ -147,7 +147,7 @@ fn stale_army_sightings_have_more_information_value_than_fresh_sight() {
     stale.observed_threats.push(ThreatObservation {
         unit: UnitId(50),
         owner: ENEMY,
-        kind: UnitKind::Ranger,
+        kind: UnitKind::Archer,
         pos: Hex::new(14, 6),
         seen_turn: stale.turn - 7,
     });
@@ -184,7 +184,7 @@ fn observed_archers_call_for_cavalry_and_observed_cavalry_for_spears() {
         (52, Hex::new(14, 7)),
     ] {
         view = ViewBuilder { view }
-            .unit(id, ENEMY, UnitKind::Ranger, at)
+            .unit(id, ENEMY, UnitKind::Archer, at)
             .build();
     }
     let archer_orders = crate::fixture::brain(&view, 7, AiDifficulty::Hard).plan(&view);
@@ -219,7 +219,7 @@ fn observed_archers_call_for_cavalry_and_observed_cavalry_for_spears() {
         mounted_orders.contains(&Order::SetProduction {
             city: legatum_core::CityId(1),
             item: ProductionItem::Unit {
-                unit: UnitKind::Soldier
+                unit: UnitKind::Spearman
             },
         }),
         "cavalry should raise spear production value: {mounted_orders:?}"
@@ -231,9 +231,9 @@ fn held_shot_stepin_keeps_a_doomed_unit_out_of_its_fallen_city() {
     let mut view = ViewBuilder::new(32, 16)
         .city(1, ME, Hex::new(6, 6), 3)
         .unit(1, ME, UnitKind::Horseman, Hex::new(7, 6))
-        .unit(2, ENEMY, UnitKind::Ranger, Hex::new(8, 6))
-        .unit(3, ENEMY, UnitKind::Ranger, Hex::new(8, 7))
-        .unit(4, ENEMY, UnitKind::Ranger, Hex::new(8, 5))
+        .unit(2, ENEMY, UnitKind::Archer, Hex::new(8, 6))
+        .unit(3, ENEMY, UnitKind::Archer, Hex::new(8, 7))
+        .unit(4, ENEMY, UnitKind::Archer, Hex::new(8, 5))
         .unit(5, ENEMY, UnitKind::Horseman, Hex::new(9, 6))
         .unit(6, ENEMY, UnitKind::Horseman, Hex::new(9, 7))
         .build();

@@ -48,7 +48,7 @@ export function hallFixture(mode: HallMode) {
   A.buildings = ['Walls']; A.population = 6;
   const holderOf = (mode: HallMode) => (mode === 'lost' ? 1 : mode === 'captured' ? 0 : g);
   if (mode === 'own' || mode === 'ownWalled' || mode === 'lost' || mode === 'rival' || mode === 'captured') {
-    B.buildings = mode === 'ownWalled' ? ['Walls', 'CourierHall'] : ['CourierHall'];
+    B.buildings = mode === 'ownWalled' ? ['Walls', 'YamRelayStation'] : ['YamRelayStation'];
     B.population = 6;
     f.players[g].hallCity = B.id;
     f.players[g].goalHolder = holderOf(mode);
@@ -60,7 +60,7 @@ export function hallFixture(mode: HallMode) {
     }
   }
   // The Hall's roads, as the first turn after it completed would have laid them.
-  if (mode === 'building') { C.producing = { kind: 'Wonder', building: 'CourierHall', tile: fromOffset(7, 10) }; C.prod = 40; }
+  if (mode === 'building') { C.producing = { kind: 'Wonder', building: 'YamRelayStation', tile: fromOffset(7, 10) }; C.prod = 40; }
   f.players[0].gold = 600;
   // A scout beside the rival's Hall city, so it is in sight.
   const scout = spawnUnit(f, 0, 'Scout', fromOffset(mode === 'rival' || mode === 'captured' ? 12 : 4, mode === 'rival' || mode === 'captured' ? 6 : 6), false);

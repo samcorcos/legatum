@@ -8,13 +8,13 @@ use crate::scoring;
 
 fn factory() -> ProductionItem {
     ProductionItem::Building {
-        building: BuildingKind::MachineShop,
+        building: BuildingKind::Forge,
     }
 }
 
 fn heir_item() -> ProductionItem {
     ProductionItem::Unit {
-        unit: UnitKind::Heir,
+        unit: UnitKind::HeirToTheThrone,
     }
 }
 
@@ -36,7 +36,7 @@ fn give_factory(state: &mut GameState, city: CityId) {
         .get_mut(&city)
         .unwrap()
         .buildings
-        .insert(BuildingKind::MachineShop);
+        .insert(BuildingKind::Forge);
 }
 
 /// Five Germany cities, each with a Ruhr Foundry, as P0.
@@ -62,7 +62,7 @@ fn goal_vp(state: &GameState, p: PlayerId) -> Vec<PlayerId> {
 
 /// An Heir of `of`, held by `owner`.
 fn heir_for(state: &mut GameState, of: PlayerId, owner: PlayerId, pos: Hex) -> UnitId {
-    let u = spawn_unit(state, owner, UnitKind::Heir, pos);
+    let u = spawn_unit(state, owner, UnitKind::HeirToTheThrone, pos);
     state.units.get_mut(&u).unwrap().heir_of = Some(of);
     u
 }
@@ -80,13 +80,13 @@ fn the_ruhr_foundry_is_germanys_forge_replacement() {
         );
     }
     assert_eq!(
-        data::building_stats_for(Faction::Germany, BuildingKind::MachineShop)
+        data::building_stats_for(Faction::Germany, BuildingKind::Forge)
             .yields
             .production,
         6
     );
     assert_eq!(
-        data::building_stats_for(Faction::India, BuildingKind::MachineShop)
+        data::building_stats_for(Faction::India, BuildingKind::Forge)
             .yields
             .production,
         3
@@ -202,8 +202,11 @@ fn only_the_byzantium_trains_an_heir_and_never_buys_one() {
         economy::buy_block(&s, &s.cities[&a], heir_item()),
         Some(economy::BuyBlock::NotBuyable)
     );
-    assert!(data::unit_stats(UnitKind::Heir).cost >= 2 * data::unit_stats(UnitKind::Marksman).cost);
-    assert!(!data::unit_stats(UnitKind::Heir).military);
+    assert!(
+        data::unit_stats(UnitKind::HeirToTheThrone).cost
+            >= 2 * data::unit_stats(UnitKind::Crossbowman).cost
+    );
+    assert!(!data::unit_stats(UnitKind::HeirToTheThrone).military);
 }
 
 #[test]
@@ -221,7 +224,7 @@ fn one_heir_at_a_time_and_retrained_only_once_he_is_gone() {
     let heir = s
         .units
         .values()
-        .find(|u| u.kind == UnitKind::Heir)
+        .find(|u| u.kind == UnitKind::HeirToTheThrone)
         .expect("trained");
     assert_eq!((heir.owner, heir.heir_of), (P0, Some(P0)));
     let id = heir.id;
@@ -310,13 +313,13 @@ fn each_byzantines_heir_scores_for_its_own_empire() {
 
 fn hall() -> ProductionItem {
     ProductionItem::Building {
-        building: BuildingKind::CourierHall,
+        building: BuildingKind::YamRelayStation,
     }
 }
 
 fn hall_at(state: &GameState, city: CityId) -> ProductionItem {
     ProductionItem::Wonder {
-        building: BuildingKind::CourierHall,
+        building: BuildingKind::YamRelayStation,
         tile: state.cities[&city].pos.neighbors()[0],
     }
 }
@@ -348,13 +351,13 @@ fn only_mongols_sees_or_builds_the_hall_and_it_is_pricey() {
         );
     }
     assert!(
-        data::building_stats_for(Faction::Mongols, BuildingKind::CourierHall).cost
-            > data::building_stats(BuildingKind::MachineShop).cost
+        data::building_stats_for(Faction::Mongols, BuildingKind::YamRelayStation).cost
+            > data::building_stats(BuildingKind::Forge).cost
     );
     // No faction discount or surcharge touches the price.
     assert_eq!(
-        data::building_stats_for(Faction::Byzantium, BuildingKind::CourierHall).cost,
-        data::building_stats(BuildingKind::CourierHall).cost
+        data::building_stats_for(Faction::Byzantium, BuildingKind::YamRelayStation).cost,
+        data::building_stats(BuildingKind::YamRelayStation).cost
     );
 }
 
@@ -373,7 +376,7 @@ fn one_hall_per_mongols_empire_rebuilt_only_if_it_no_longer_exists() {
     assert_eq!(s.player(P0).hall_city, Some(a));
     assert!(data::has_building(
         &s.cities[&a].buildings,
-        BuildingKind::CourierHall
+        BuildingKind::YamRelayStation
     ));
     assert!(!economy::can_produce(&s, &s.cities[&b], hall_at(&s, b)));
     // A rival captures the Hall's city: it stays standing there, so retake it.
@@ -497,6 +500,6 @@ fn the_hall_opens_its_holders_land_to_every_unit_at_peace() {
     }
     // Captured: the road moves to the captor's land, and the old holder's closes.
     transfer_hall_city(&mut s, a, P1);
-    assert!(s.passage_allowed(P0, UnitKind::Soldier, Some(P1)));
-    assert!(!s.passage_allowed(P1, UnitKind::Soldier, Some(P0)));
+    assert!(s.passage_allowed(P0, UnitKind::Spearman, Some(P1)));
+    assert!(!s.passage_allowed(P1, UnitKind::Spearman, Some(P0)));
 }

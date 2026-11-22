@@ -6,7 +6,7 @@ import type { ProductionItem } from './types';
 const items: ProductionItem[] = [
   ...UNIT_KINDS.map((unit): ProductionItem => ({ kind: 'Unit', unit })),
   ...BUILDING_KINDS.map((building): ProductionItem => ({ kind: 'Building', building })),
-  ...(['RelayUplink', 'PlanetaryFoundry', 'WorldExchange', 'CourierHall'] as const).map((building): ProductionItem => ({ kind: 'Wonder', building, tile: { q: 0, r: 0 } })),
+  ...(['GreatLibrary', 'RoyalArsenal', 'GrandBazaar', 'YamRelayStation'] as const).map((building): ProductionItem => ({ kind: 'Wonder', building, tile: { q: 0, r: 0 } })),
   ...IMPROVEMENT_KINDS.map((improvement): ProductionItem => ({ kind: 'Improvement', improvement, tile: { q: 0, r: 0 } })),
   ...(['Gold', 'Science'] as const).map((project): ProductionItem => ({ kind: 'Project', project })),
 ];

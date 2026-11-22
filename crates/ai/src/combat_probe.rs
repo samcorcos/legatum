@@ -9,7 +9,7 @@ use legatum_core::{CityId, PlayerView};
 /// What Hard thinks of taking one visible enemy city from the current view.
 #[derive(Clone, Debug, Default)]
 pub struct AssaultProbe {
-    /// The city is currently in sight (otherwise the forecast assumes one fortified Soldier).
+    /// The city is currently in sight (otherwise the forecast assumes one fortified Spearman).
     pub city_visible: bool,
     /// Units the strike forecast counts (healthy, able to reach an assault tile in time).
     pub force: usize,

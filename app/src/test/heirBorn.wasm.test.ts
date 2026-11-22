@@ -45,7 +45,7 @@ describe.skipIf(!available)('the Heir is born in public', () => {
     s.terrain.fill('Grassland'); s.ruin.fill(0); s.owner.fill(-1); s.tileCity.fill(-1);
     for (const r of s.diplomacy?.relations ?? []) r.state = 'Peace';
     meetAll(s);
-    city(s, 0, 4, 4, { producing: { kind: 'Unit', unit: 'Heir' }, prod: 1000 });
+    city(s, 0, 4, 4, { producing: { kind: 'Unit', unit: 'HeirToTheThrone' }, prod: 1000 });
     city(s, 1, 19, 19);
     refreshVision(s);
     const core = makeCore(); core.load(coreFixture(s));
@@ -56,13 +56,13 @@ describe.skipIf(!available)('the Heir is born in public', () => {
     expect(born).toMatchObject({ type: 'HeirBorn', owner: 0, city_name: 'Constantinople' });
 
     // The rival never saw that tile, yet the Heir is in its view, current, and held by Byzantium.
-    const heir = a1.units.find((u) => u.kind === 'Heir')!;
+    const heir = a1.units.find((u) => u.kind === 'HeirToTheThrone')!;
     expect(heir).toBeDefined();
     expect(heir.heir_of).toBe(0);
     expect(a1.tiles[tileIndex(heir.pos, a1.width, a1.height)].visible).toBe(false);
     expect(minimapUnits(a1).some((u) => u.heir && u.hex.q === heir.pos.q && u.hex.r === heir.pos.r)).toBe(true);
     expect(heirTag(a1, heir)).toBe('Heir to the Throne');
-    expect(heirTag(a0, a0.units.find((u) => u.kind === 'Heir')!)).toBe('Your Heir');
+    expect(heirTag(a0, a0.units.find((u) => u.kind === 'HeirToTheThrone')!)).toBe('Your Heir');
     expect(heirHoverLine(a1, heir, 2)).toBe('Be at War, then capture him to score 2 VP');
 
     const rival = formatEvents(result.events, contextFromViews(b1, a1)).map((l) => l.text);

@@ -26,13 +26,13 @@ function barbarianGate(faction: Faction, { rival = false } = {}) {
   const free = (hs: ReturnType<typeof neighbors>) => hs.filter((h) => f.terrain[tileIndex(h, f.width, f.height)] === 'Plains'
     && !f.units.some((u) => hexEq(u.pos, h)) && !f.cities.some((c) => hexEq(c.pos, h)));
   // A ranged unit in the city (Auto-fire is offered), and a wounded Soldier outside beside a barbarian.
-  const archer = spawnUnit(f, 0, 'Ranger', own.pos, false);
+  const archer = spawnUnit(f, 0, 'Archer', own.pos, false);
   const barbPos = f.units.find((u) => u.id === setup.attackers[0])!.pos;
   const woundedAt = free(neighbors(barbPos)).find((h) => !hexEq(h, own.pos))!;
-  const wounded = spawnUnit(f, 0, 'Soldier', woundedAt, false);
+  const wounded = spawnUnit(f, 0, 'Spearman', woundedAt, false);
   wounded.hp = 30;
   let rivalId: number | undefined;
-  if (rival) rivalId = spawnUnit(f, 1, 'Soldier', free(neighbors(own.pos))[0], false).id;
+  if (rival) rivalId = spawnUnit(f, 1, 'Spearman', free(neighbors(own.pos))[0], false).id;
   refreshVision(f);
   return { ...setup, archer: archer.id, wounded: wounded.id, rival: rivalId };
 }

@@ -165,7 +165,7 @@ fn instrumented_metrics_match_replayed_tapes() {
                     })
                     .map(|(_, _, turn)| *turn)
             };
-            let first_soldier_turn = first_produced(UnitKind::Soldier);
+            let first_soldier_turn = first_produced(UnitKind::Spearman);
             let first_settler_turn = first_produced(UnitKind::Settler);
             let first_city_turn = Some(1);
             let second_city_turn = city_foundings

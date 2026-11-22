@@ -72,7 +72,7 @@ fn idle_soldier_collects_known_ruin_inside_own_borders() {
         .city(1, ME, off(5, 5), 3)
         .owner(ruin, ME)
         .ruin(ruin)
-        .unit(1, ME, UnitKind::Soldier, off(6, 5))
+        .unit(1, ME, UnitKind::Spearman, off(6, 5))
         .build();
     for _ in 0..3 {
         let orders = scripted(&view);
@@ -93,10 +93,10 @@ fn threatened_city_garrison_stays_put_for_nearby_ruin() {
     let ruin = off(7, 5);
     let view = ViewBuilder::new(14, 12)
         .city(1, ME, home, 3)
-        .unit(2, ENEMY, UnitKind::Soldier, off(4, 7))
+        .unit(2, ENEMY, UnitKind::Spearman, off(4, 7))
         .owner(ruin, ME)
         .ruin(ruin)
-        .unit(1, ME, UnitKind::Soldier, home)
+        .unit(1, ME, UnitKind::Spearman, home)
         .build();
     let orders = scripted(&view);
     assert_ne!(move_target(&orders, 1), Some(ruin));
@@ -110,7 +110,7 @@ fn quiet_city_garrison_can_collect_nearby_ruin() {
         .city(1, ME, home, 3)
         .owner(ruin, ME)
         .ruin(ruin)
-        .unit(1, ME, UnitKind::Soldier, home)
+        .unit(1, ME, UnitKind::Spearman, home)
         .build();
     let orders = scripted(&view);
     assert!(move_target(&orders, 1).is_some_and(|to| to.distance(ruin) < home.distance(ruin)));
@@ -124,7 +124,7 @@ fn military_does_not_duplicate_a_scouts_ruin_order() {
         .owner(ruin, ME)
         .ruin(ruin)
         .unit(1, ME, UnitKind::Scout, off(7, 5))
-        .unit(2, ME, UnitKind::Soldier, off(6, 5))
+        .unit(2, ME, UnitKind::Spearman, off(6, 5))
         .build();
     let orders = scripted(&view);
     assert_eq!(move_target(&orders, 1), Some(ruin));
@@ -150,7 +150,7 @@ fn midgame_view() -> PlayerView {
         .producing(
             1,
             ProductionItem::Unit {
-                unit: UnitKind::Soldier,
+                unit: UnitKind::Spearman,
             },
             30,
         )
@@ -159,7 +159,7 @@ fn midgame_view() -> PlayerView {
         .city(22, MATE, off(5, 28), 2);
     let mut id = 100;
     for (i, (c, r)) in cities.iter().enumerate() {
-        let kinds = [UnitKind::Soldier, UnitKind::Ranger, UnitKind::Soldier];
+        let kinds = [UnitKind::Spearman, UnitKind::Archer, UnitKind::Spearman];
         for (k, kind) in kinds.iter().enumerate() {
             let pos = if k == 0 {
                 off(*c, *r)
@@ -180,14 +180,14 @@ fn midgame_view() -> PlayerView {
     }
     for i in 0..10 {
         let kind = if i % 3 == 0 {
-            UnitKind::Ranger
+            UnitKind::Archer
         } else {
-            UnitKind::Soldier
+            UnitKind::Spearman
         };
         b = b.unit_hp(id, ENEMY, kind, off(22 + i % 5, 18 + i / 2), 60 + 4 * i);
         id += 1;
     }
-    b = b.unit(id, MATE, UnitKind::Soldier, off(5, 27));
+    b = b.unit(id, MATE, UnitKind::Spearman, off(5, 27));
     b.build()
 }
 
@@ -273,7 +273,7 @@ fn exposed_openings_reinforce_the_starting_soldier_for_every_faction() {
             let mut b = ViewBuilder::new(24, 16)
                 .faction(faction)
                 .city(1, ME, off(5, 8), 1)
-                .unit(1, ME, UnitKind::Soldier, off(5, 8));
+                .unit(1, ME, UnitKind::Spearman, off(5, 8));
             if !fog {
                 // Outside the immediate three-tile military threat radius.
                 b = b.city(2, ENEMY, off(10, 8), 1);
@@ -311,7 +311,7 @@ fn exposed_openings_reinforce_the_starting_soldier_for_every_faction() {
             assert_eq!(
                 production_for(&orders, 1),
                 Some(ProductionItem::Unit {
-                    unit: UnitKind::Soldier
+                    unit: UnitKind::Spearman
                 }),
                 "{faction:?}, fog={fog}"
             );
@@ -324,7 +324,7 @@ fn safe_opening_expands_then_reinforces_even_after_the_settler_is_gone() {
     let mut view = ViewBuilder::new(24, 16)
         .unexplored_from_col(9)
         .city(1, ME, off(5, 8), 2)
-        .unit(1, ME, UnitKind::Soldier, off(5, 8))
+        .unit(1, ME, UnitKind::Spearman, off(5, 8))
         .ruin(off(8, 8))
         .build();
     assert_eq!(
@@ -347,7 +347,7 @@ fn safe_opening_expands_then_reinforces_even_after_the_settler_is_gone() {
     assert_eq!(
         production_for(&scripted(&view), 1),
         Some(ProductionItem::Unit {
-            unit: UnitKind::Soldier
+            unit: UnitKind::Spearman
         })
     );
 }
@@ -358,11 +358,11 @@ fn hard_reinforces_a_known_rival() {
     let site = off(5, 2);
     let mut view = ViewBuilder::new(24, 16)
         .city(1, ME, capital, 2)
-        .unit(1, ME, UnitKind::Soldier, capital)
+        .unit(1, ME, UnitKind::Spearman, capital)
         .patch(site, 2, Terrain::Forest)
         .build();
     view.turn = 4;
-    // The empire's third Settler (170) costs twice a Soldier (80), the relation the test's
+    // The empire's third Settler (170) costs twice a Spearman (80), the relation the test's
     // Soldier-first opening was written for.
     settlers_trained(&mut view, 2);
     for (i, tile) in view.tiles.iter_mut().enumerate() {
@@ -377,7 +377,7 @@ fn hard_reinforces_a_known_rival() {
         let mut brain = ScriptedBrain::with_difficulty(Faction::Switzerland, 7, ME, difficulty);
         brain.decisions.modernization_value = modernization;
         // The reinforcement policy without the priced colony: with `colony_compound` on, a
-        // one-Soldier capital at peace trains its Settler first (`colony_compound_tests`).
+        // one-Spearman capital at peace trains its Settler first (`colony_compound_tests`).
         brain.decisions.colony_compound = 0;
         // The plain Hard reinforcement, not the Redoubt garrison (`swiss_playbook`,
         // `walls_garrison`).
@@ -390,7 +390,7 @@ fn hard_reinforces_a_known_rival() {
     assert_eq!(
         decide(&view, AiDifficulty::Normal, 100),
         Some(ProductionItem::Unit {
-            unit: UnitKind::Soldier
+            unit: UnitKind::Spearman
         })
     );
     view.cities.push(
@@ -407,9 +407,9 @@ fn hard_reinforces_a_known_rival() {
             decide(&view, AiDifficulty::Hard, modernization),
             Some(ProductionItem::Unit {
                 unit: if modernization == 0 {
-                    UnitKind::Ranger
+                    UnitKind::Archer
                 } else {
-                    UnitKind::Soldier
+                    UnitKind::Spearman
                 }
             })
         );
@@ -422,8 +422,8 @@ fn disconnected_rivals_and_teammates_do_not_trigger_opening_defense() {
         .city(1, ME, off(5, 8), 2)
         .city(2, MATE, off(5, 13), 1)
         .city(3, ENEMY, off(10, 8), 1)
-        .unit(1, ME, UnitKind::Soldier, off(5, 8))
-        .unit(2, MATE, UnitKind::Soldier, off(6, 8));
+        .unit(1, ME, UnitKind::Spearman, off(5, 8))
+        .unit(2, MATE, UnitKind::Spearman, off(6, 8));
     for row in 0..16 {
         b = b.terrain(off(7, row), Terrain::Mountains);
     }
@@ -441,11 +441,11 @@ fn opening_defender_in_production_counts_toward_the_reinforcement() {
         .city(1, ME, off(5, 8), 2)
         .city(2, ME, off(5, 13), 2)
         .city(3, ENEMY, off(10, 8), 1)
-        .unit(1, ME, UnitKind::Soldier, off(5, 8))
+        .unit(1, ME, UnitKind::Spearman, off(5, 8))
         .producing(
             1,
             ProductionItem::Unit {
-                unit: UnitKind::Soldier,
+                unit: UnitKind::Spearman,
             },
             80,
         )
@@ -471,10 +471,10 @@ fn opening_defense_prices_reinforcements_without_speculative_buying() {
     let mut view = ViewBuilder::new(24, 16)
         .city(1, ME, off(5, 8), 2)
         .city(2, ENEMY, off(10, 8), 1)
-        .unit(1, ME, UnitKind::Soldier, off(5, 8))
+        .unit(1, ME, UnitKind::Spearman, off(5, 8))
         .build();
     view.turn = 8;
-    // The third Settler costs twice a Soldier: the relation this test was written for.
+    // The third Settler costs twice a Spearman: the relation this test was written for.
     settlers_trained(&mut view, 2);
     let f = Faction::Switzerland;
     let orders = ScriptedBrain::with_difficulty(f, 7, ME, AiDifficulty::Easy).orders(&view);
@@ -482,7 +482,7 @@ fn opening_defense_prices_reinforcements_without_speculative_buying() {
     assert_eq!(
         production_for(&orders, 1),
         Some(ProductionItem::Unit {
-            unit: UnitKind::Soldier
+            unit: UnitKind::Spearman
         })
     );
     for modernization in [0, 100] {
@@ -501,9 +501,9 @@ fn opening_defense_prices_reinforcements_without_speculative_buying() {
                 production_for(&orders, 1),
                 Some(ProductionItem::Unit {
                     unit: if difficulty == AiDifficulty::Hard && modernization == 0 {
-                        UnitKind::Ranger
+                        UnitKind::Archer
                     } else {
-                        UnitKind::Soldier
+                        UnitKind::Spearman
                     }
                 })
             );
@@ -515,7 +515,7 @@ fn opening_defense_prices_reinforcements_without_speculative_buying() {
     v.economy.gold = 60;
     let d = &mut **v.cities[0].detail.as_mut().unwrap();
     d.producing = Some(ProductionItem::Unit {
-        unit: UnitKind::Soldier,
+        unit: UnitKind::Spearman,
     });
     d.turns_to_complete = Some(8);
     d.buy_cost = Some(40);
@@ -527,7 +527,7 @@ fn opening_defense_prices_reinforcements_without_speculative_buying() {
     let buy = Order::BuyItem {
         city: CityId(1),
         item: ProductionItem::Unit {
-            unit: UnitKind::Soldier,
+            unit: UnitKind::Spearman,
         },
     };
     let normal = ScriptedBrain::with_difficulty(f, 7, ME, AiDifficulty::Normal).orders(&v);
@@ -587,10 +587,10 @@ fn athens_build_a_workshop_then_the_lab_network() {
         building: BuildingKind::Workshop,
     };
     let relay = ProductionItem::Building {
-        building: BuildingKind::RelayUplink,
+        building: BuildingKind::GreatLibrary,
     };
     let lab = ProductionItem::Building {
-        building: BuildingKind::Laboratory,
+        building: BuildingKind::Library,
     };
     view.cities[0]
         .detail
@@ -616,8 +616,8 @@ fn athens_build_a_workshop_then_the_lab_network() {
 fn threatened_idle_city_builds_a_defender() {
     let view = ViewBuilder::new(16, 16)
         .city(1, ME, off(5, 5), 3)
-        .unit(50, ENEMY, UnitKind::Soldier, off(7, 5))
-        .unit(51, ENEMY, UnitKind::Soldier, off(7, 6))
+        .unit(50, ENEMY, UnitKind::Spearman, off(7, 5))
+        .unit(51, ENEMY, UnitKind::Spearman, off(7, 6))
         .build();
     let orders = scripted(&view);
     let item = orders.iter().find_map(|o| match o {
@@ -627,7 +627,7 @@ fn threatened_idle_city_builds_a_defender() {
     assert!(matches!(
         item,
         Some(ProductionItem::Unit {
-            unit: UnitKind::Soldier | UnitKind::Ranger
+            unit: UnitKind::Spearman | UnitKind::Archer
         })
     ));
 }
@@ -663,7 +663,7 @@ fn buys_with_plentiful_gold_but_never_the_megaproject() {
         .producing(
             1,
             ProductionItem::Building {
-                building: BuildingKind::RelayUplink,
+                building: BuildingKind::GreatLibrary,
             },
             500,
         )
@@ -697,7 +697,7 @@ fn scout_prefers_nearby_ruin_and_avoids_enemy_army() {
         .unexplored_from_col(20)
         .ruin(off(6, 6))
         .unit(1, ME, UnitKind::Scout, off(3, 6))
-        .unit(9, ENEMY, UnitKind::Soldier, off(7, 6))
+        .unit(9, ENEMY, UnitKind::Spearman, off(7, 6))
         .build();
     let to = move_target(&scripted(&guarded), 1).expect("scout moves");
     assert!(
@@ -795,7 +795,7 @@ fn settler_retreats_from_enemy_army() {
     let view = ViewBuilder::new(20, 16)
         .city(1, ME, off(4, 8), 3)
         .unit(1, ME, UnitKind::Settler, off(9, 8))
-        .unit(9, ENEMY, UnitKind::Soldier, off(10, 8))
+        .unit(9, ENEMY, UnitKind::Spearman, off(10, 8))
         .build();
     let to = move_target(&scripted(&view), 1).expect("settler flees");
     assert!(to.distance(off(9, 8)) <= 2, "reach safety this turn");
@@ -808,9 +808,9 @@ fn military_defends_a_threatened_city() {
     let city = off(6, 6);
     let view = ViewBuilder::new(20, 16)
         .city(1, ME, city, 2)
-        .unit(1, ME, UnitKind::Soldier, off(10, 6))
-        .unit(50, ENEMY, UnitKind::Soldier, off(4, 5))
-        .unit(51, ENEMY, UnitKind::Soldier, off(4, 7))
+        .unit(1, ME, UnitKind::Spearman, off(10, 6))
+        .unit(50, ENEMY, UnitKind::Spearman, off(4, 5))
+        .unit(51, ENEMY, UnitKind::Spearman, off(4, 7))
         .build();
     let orders = scripted(&view);
     let to = move_target(&orders, 1).expect("defender moves");
@@ -822,7 +822,7 @@ fn garrison_holds_in_its_city() {
     let city = off(6, 6);
     let view = ViewBuilder::new(20, 16)
         .city(1, ME, city, 2)
-        .unit(1, ME, UnitKind::Soldier, city)
+        .unit(1, ME, UnitKind::Spearman, city)
         .build();
     assert_eq!(
         order_for(&scripted(&view), 1),
@@ -830,14 +830,14 @@ fn garrison_holds_in_its_city() {
     );
 }
 
-/// Our full-health Soldier (20) next to an enemy Soldier at 90 HP (19 x 0.9 = 17): a ratio of
+/// Our full-health Spearman (20) next to an enemy Spearman at 90 HP (19 x 0.9 = 17): a ratio of
 /// about 117%, between the aggression-100 threshold (90%) and the aggression-0 one (130%).
 fn weak_neighbor_view() -> PlayerView {
     ViewBuilder::new(24, 16)
         .city(1, ME, off(3, 8), 3)
-        .unit(2, ME, UnitKind::Soldier, off(3, 8))
-        .unit(1, ME, UnitKind::Soldier, off(14, 8))
-        .unit_hp(50, ENEMY, UnitKind::Soldier, off(15, 8), 90)
+        .unit(2, ME, UnitKind::Spearman, off(3, 8))
+        .unit(1, ME, UnitKind::Spearman, off(14, 8))
+        .unit_hp(50, ENEMY, UnitKind::Spearman, off(15, 8), 90)
         .build()
 }
 
@@ -855,10 +855,10 @@ fn attacks_a_weak_neighbor_only_when_aggressive() {
 fn does_not_attack_a_strong_city() {
     let view = ViewBuilder::new(24, 16)
         .city(1, ME, off(3, 8), 3)
-        .unit(2, ME, UnitKind::Soldier, off(3, 8))
-        .unit(1, ME, UnitKind::Soldier, off(13, 8))
+        .unit(2, ME, UnitKind::Spearman, off(3, 8))
+        .unit(1, ME, UnitKind::Spearman, off(13, 8))
         .city(9, ENEMY, off(15, 8), 8)
-        .unit(50, ENEMY, UnitKind::Soldier, off(15, 8))
+        .unit(50, ENEMY, UnitKind::Spearman, off(15, 8))
         .build();
     let orders = run(&view, Knobs::new(50, 50, 50, 50, 100));
     assert_ne!(move_target(&orders, 1), Some(off(15, 8)));
@@ -868,8 +868,8 @@ fn does_not_attack_a_strong_city() {
 fn captures_an_unescorted_enemy_settler() {
     let view = ViewBuilder::new(24, 16)
         .city(1, ME, off(3, 8), 3)
-        .unit(2, ME, UnitKind::Soldier, off(3, 8))
-        .unit(1, ME, UnitKind::Soldier, off(12, 8))
+        .unit(2, ME, UnitKind::Spearman, off(3, 8))
+        .unit(1, ME, UnitKind::Spearman, off(12, 8))
         .unit(50, ENEMY, UnitKind::Settler, off(14, 8))
         .build();
     let orders = run(&view, Knobs::new(50, 50, 50, 50, 0));
@@ -880,8 +880,8 @@ fn captures_an_unescorted_enemy_settler() {
 fn ranger_shoots_enemy_in_range() {
     let view = ViewBuilder::new(20, 16)
         .city(1, ME, off(6, 6), 2)
-        .unit(1, ME, UnitKind::Ranger, off(6, 6))
-        .unit(50, ENEMY, UnitKind::Soldier, off(8, 6))
+        .unit(1, ME, UnitKind::Archer, off(6, 6))
+        .unit(50, ENEMY, UnitKind::Spearman, off(8, 6))
         .build();
     assert_eq!(
         order_for(&scripted(&view), 1),
@@ -897,12 +897,12 @@ fn never_orders_a_teammates_unit_or_city() {
     let view = ViewBuilder::new(20, 16)
         .city(1, ME, off(4, 4), 3)
         .city_with_detail(2, MATE, off(12, 10), 3)
-        .unit(1, ME, UnitKind::Soldier, off(4, 4))
+        .unit(1, ME, UnitKind::Spearman, off(4, 4))
         .unit(2, MATE, UnitKind::Settler, off(14, 12))
         .unit(3, MATE, UnitKind::Scout, off(10, 4))
-        .unit(4, MATE, UnitKind::Soldier, off(12, 10))
-        .unit(5, MATE, UnitKind::Ranger, off(13, 10))
-        .unit(50, ENEMY, UnitKind::Soldier, off(15, 10))
+        .unit(4, MATE, UnitKind::Spearman, off(12, 10))
+        .unit(5, MATE, UnitKind::Archer, off(13, 10))
+        .unit(50, ENEMY, UnitKind::Spearman, off(15, 10))
         .build();
     // assert_valid (inside scripted) rejects any order for a unit or city that isn't ours.
     let orders = scripted(&view);
@@ -1017,10 +1017,10 @@ fn midgame_speed() {
 fn open_city_view(soldiers: &[Hex]) -> PlayerView {
     let mut b = ViewBuilder::new(24, 16)
         .city(1, ME, off(3, 8), 3)
-        .unit(90, ME, UnitKind::Soldier, off(3, 8))
+        .unit(90, ME, UnitKind::Spearman, off(3, 8))
         .city(9, ENEMY, off(15, 8), 2);
     for (i, h) in soldiers.iter().enumerate() {
-        b = b.unit(1 + i as u32, ME, UnitKind::Soldier, *h);
+        b = b.unit(1 + i as u32, ME, UnitKind::Spearman, *h);
     }
     b.build()
 }
@@ -1051,12 +1051,12 @@ fn aggressive_army_gathers_on_distinct_tiles_near_a_winnable_city() {
     let base = |defenders: u32| {
         let mut b = ViewBuilder::new(30, 16)
             .city(1, ME, off(3, 8), 3)
-            .unit(90, ME, UnitKind::Soldier, off(3, 8))
-            .unit(1, ME, UnitKind::Soldier, off(4, 8))
-            .unit(2, ME, UnitKind::Soldier, off(4, 9))
+            .unit(90, ME, UnitKind::Spearman, off(3, 8))
+            .unit(1, ME, UnitKind::Spearman, off(4, 8))
+            .unit(2, ME, UnitKind::Spearman, off(4, 9))
             .city(9, ENEMY, target, 6);
         for i in 0..defenders {
-            b = b.unit(50 + i, ENEMY, UnitKind::Soldier, off(14 - i as i32, 8));
+            b = b.unit(50 + i, ENEMY, UnitKind::Spearman, off(14 - i as i32, 8));
         }
         b.build()
     };
@@ -1091,8 +1091,8 @@ fn two_units_never_step_into_the_same_tile() {
         builder = builder.terrain(h, Terrain::Plains);
     }
     let view = builder
-        .unit(1, ME, UnitKind::Soldier, a)
-        .unit(2, ME, UnitKind::Soldier, b)
+        .unit(1, ME, UnitKind::Spearman, a)
+        .unit(2, ME, UnitKind::Spearman, b)
         .build();
     let mut p =
         crate::scripted::Planner::new(&view, Knobs::new(50, 50, 50, 50, 50), Faction::India, 1);
@@ -1166,8 +1166,8 @@ fn two_units_with_different_first_steps_do_not_collide_on_the_second() {
 #[test]
 fn movement_repaths_when_a_friend_arrives_before_the_next_round() {
     let view = ViewBuilder::new(14, 14)
-        .unit(1, ME, UnitKind::Soldier, Hex::new(3, 5))
-        .unit(2, ME, UnitKind::Soldier, Hex::new(4, 5))
+        .unit(1, ME, UnitKind::Spearman, Hex::new(3, 5))
+        .unit(2, ME, UnitKind::Spearman, Hex::new(4, 5))
         .build();
     let mut p = planner(&view);
     let orders = vec![
@@ -1196,8 +1196,8 @@ fn yielding_rechecks_the_occupancy_of_the_yielding_units_start() {
         builder = builder.terrain(h, Terrain::Plains);
     }
     let view = builder
-        .unit(1, ME, UnitKind::Soldier, a)
-        .unit(2, ME, UnitKind::Soldier, b)
+        .unit(1, ME, UnitKind::Spearman, a)
+        .unit(2, ME, UnitKind::Spearman, b)
         .build();
     let mut p = planner(&view);
     p.orders = vec![
@@ -1231,9 +1231,9 @@ fn routine_arrival_yields_to_a_later_emergency_retreat_step() {
     let goal = off(6, 6);
     let retreat_from = goal.neighbor(3).neighbor(3);
     let view = ViewBuilder::new(14, 14)
-        .unit(90, ME, UnitKind::Trooper, retreat_from)
-        .unit(1, ME, UnitKind::Soldier, goal.neighbor(1))
-        .unit(100, ENEMY, UnitKind::Ranger, retreat_from.neighbor(3))
+        .unit(90, ME, UnitKind::Pikeman, retreat_from)
+        .unit(1, ME, UnitKind::Spearman, goal.neighbor(1))
+        .unit(100, ENEMY, UnitKind::Archer, retreat_from.neighbor(3))
         .build();
     let mut p = planner(&view);
     p.orders = vec![
@@ -1259,8 +1259,8 @@ fn routine_arrival_yields_to_a_later_emergency_retreat_step() {
 fn stuck_units_take_turns() {
     // Both had gotos and full moves: they bounced last turn. The higher id yields.
     let view = ViewBuilder::new(24, 12)
-        .unit(1, ME, UnitKind::Soldier, off(10, 5))
-        .unit(2, ME, UnitKind::Soldier, off(10, 7))
+        .unit(1, ME, UnitKind::Spearman, off(10, 5))
+        .unit(2, ME, UnitKind::Spearman, off(10, 7))
         .build();
     let mut view = view;
     for u in view.units.iter_mut() {
@@ -1291,7 +1291,7 @@ fn settler_discounts_foreign_neighbors_but_can_found_beside_them() {
 fn ranger_never_shoots_a_civilian() {
     let view = ViewBuilder::new(20, 16)
         .city(1, ME, off(6, 6), 2)
-        .unit(1, ME, UnitKind::Ranger, off(6, 6))
+        .unit(1, ME, UnitKind::Archer, off(6, 6))
         .unit(50, ENEMY, UnitKind::Settler, off(8, 6))
         .build();
     let orders = scripted(&view);
@@ -1307,9 +1307,9 @@ fn review_ranger_shoots_city_with_only_a_civilian_inside() {
     let target = off(8, 6);
     let view = ViewBuilder::new(20, 16)
         .city(1, ME, off(3, 6), 2)
-        .unit(90, ME, UnitKind::Soldier, off(3, 6))
+        .unit(90, ME, UnitKind::Spearman, off(3, 6))
         .city(9, ENEMY, target, 2)
-        .unit(1, ME, UnitKind::Ranger, off(6, 6))
+        .unit(1, ME, UnitKind::Archer, off(6, 6))
         .unit(50, ENEMY, UnitKind::Settler, target)
         .build();
     assert_eq!(
@@ -1332,9 +1332,9 @@ fn review_campaign_gathers_on_reachable_land_not_the_nearest_island() {
         .unwrap();
     let mut b = ViewBuilder::new(30, 16)
         .city(1, ME, off(3, 8), 3)
-        .unit(90, ME, UnitKind::Soldier, off(3, 8))
-        .unit(1, ME, UnitKind::Soldier, start)
-        .unit(2, ME, UnitKind::Soldier, off(4, 9))
+        .unit(90, ME, UnitKind::Spearman, off(3, 8))
+        .unit(1, ME, UnitKind::Spearman, start)
+        .unit(2, ME, UnitKind::Spearman, off(4, 9))
         .city(9, ENEMY, target, 2);
     for h in island.neighbors() {
         b = b.terrain(h, Terrain::Ocean);
@@ -1388,8 +1388,8 @@ fn confirmed_route_stops_before_a_newly_seen_enemy() {
     let enemy = Hex::new(5, 3);
     let goal = Hex::new(6, 3);
     let view = ViewBuilder::new(12, 10)
-        .unit(1, ME, UnitKind::Soldier, start)
-        .unit(2, ENEMY, UnitKind::Soldier, enemy)
+        .unit(1, ME, UnitKind::Spearman, start)
+        .unit(2, ENEMY, UnitKind::Spearman, enemy)
         .build();
     let mut p = planner(&view);
     assert!(p.unit_order(
@@ -1479,9 +1479,9 @@ fn late_campaign_prioritizes_reachable_vp_leader_and_keeps_garrison() {
     let leader = off(17, 8);
     let mut view = ViewBuilder::new(28, 16)
         .city(1, ME, home, 3)
-        .unit(90, ME, UnitKind::Soldier, home)
-        .unit(1, ME, UnitKind::Soldier, off(4, 8))
-        .unit(2, ME, UnitKind::Soldier, off(4, 9))
+        .unit(90, ME, UnitKind::Spearman, home)
+        .unit(1, ME, UnitKind::Spearman, off(4, 8))
+        .unit(2, ME, UnitKind::Spearman, off(4, 9))
         .city(9, ENEMY, weak, 2)
         .city(10, PlayerId(3), leader, 2)
         .build();
@@ -1555,12 +1555,12 @@ fn late_pressure_does_not_attack_unseen_or_overwhelming_city_or_abandon_defense(
 
     let mut under_attack = ViewBuilder::new(24, 16)
         .city(1, ME, off(3, 8), 3)
-        .unit(90, ME, UnitKind::Soldier, off(3, 8))
-        .unit(1, ME, UnitKind::Soldier, off(5, 8))
-        .unit(2, ME, UnitKind::Soldier, off(5, 9))
-        .unit(51, ENEMY, UnitKind::Trooper, off(1, 8))
-        .unit(52, ENEMY, UnitKind::Trooper, off(1, 9))
-        .unit(53, ENEMY, UnitKind::Trooper, off(2, 6))
+        .unit(90, ME, UnitKind::Spearman, off(3, 8))
+        .unit(1, ME, UnitKind::Spearman, off(5, 8))
+        .unit(2, ME, UnitKind::Spearman, off(5, 9))
+        .unit(51, ENEMY, UnitKind::Pikeman, off(1, 8))
+        .unit(52, ENEMY, UnitKind::Pikeman, off(1, 9))
+        .unit(53, ENEMY, UnitKind::Pikeman, off(2, 6))
         .city(9, ENEMY, target, 1)
         .build();
     under_attack.turn = 140;
@@ -1618,9 +1618,9 @@ fn research_responds_to_food_production_gold_and_army_bottlenecks() {
     let view = ViewBuilder::new(20, 16)
         .known_techs(&TechId::ALL[..5])
         .city(1, ME, off(5, 8), 3)
-        .unit(1, ME, UnitKind::Soldier, off(5, 8))
-        .unit(2, ME, UnitKind::Soldier, off(6, 8))
-        .unit(50, ENEMY, UnitKind::Trooper, off(7, 8))
+        .unit(1, ME, UnitKind::Spearman, off(5, 8))
+        .unit(2, ME, UnitKind::Spearman, off(6, 8))
+        .unit(50, ENEMY, UnitKind::Pikeman, off(7, 8))
         .build();
     // The Ancient era is done: an enemy at the gates puts the Classical first tier first: Iron
     // Working (it reveals the Iron every Classical unit needs; gene `reveal_tech_first`), then
@@ -1669,8 +1669,8 @@ fn expansion_ignores_unreachable_islands_and_unfinishable_settlers() {
 fn melee_risk_for_adjacent_ranger_is_not_its_safe_ranged_forecast() {
     let target = off(9, 8);
     let view = ViewBuilder::new(20, 16)
-        .unit_hp(1, ME, UnitKind::Ranger, off(8, 8), 25)
-        .unit(50, ENEMY, UnitKind::Trooper, target)
+        .unit_hp(1, ME, UnitKind::Archer, off(8, 8), 25)
+        .unit(50, ENEMY, UnitKind::Pikeman, target)
         .build();
     let p = planner(&view);
     let u = p.ctx.own_units[0];
@@ -1709,9 +1709,9 @@ fn a_ranger_uses_melee_to_occupy_an_empty_zero_hp_city() {
     let target = off(15, 8);
     let mut view = ViewBuilder::new(24, 16)
         .city(1, ME, off(3, 8), 3)
-        .unit(90, ME, UnitKind::Soldier, off(3, 8))
+        .unit(90, ME, UnitKind::Spearman, off(3, 8))
         .city(9, ENEMY, target, 2)
-        .unit(1, ME, UnitKind::Ranger, off(14, 8))
+        .unit(1, ME, UnitKind::Archer, off(14, 8))
         .build();
     view.cities[1].hp = 0;
     let orders = scripted(&view);
@@ -1724,13 +1724,13 @@ fn a_ranger_uses_melee_to_occupy_an_empty_zero_hp_city() {
 
 #[test]
 fn ranged_target_uses_exact_kill_odds_instead_of_uncapped_base_damage() {
-    // Both base-damage estimates suggest a kill. Two equally threatening Soldiers; only the
+    // Both base-damage estimates suggest a kill. Two equally threatening Spearmen; only the
     // one in the open is a guaranteed kill across all rolls, so exact odds must decide.
     let view = ViewBuilder::new(20, 16)
         .terrain(off(8, 9), Terrain::Hills)
-        .unit(1, ME, UnitKind::Ranger, off(8, 8))
-        .unit_hp(50, ENEMY, UnitKind::Soldier, off(9, 8), 22)
-        .unit_hp(51, ENEMY, UnitKind::Soldier, off(8, 9), 22)
+        .unit(1, ME, UnitKind::Archer, off(8, 8))
+        .unit_hp(50, ENEMY, UnitKind::Spearman, off(9, 8), 22)
+        .unit_hp(51, ENEMY, UnitKind::Spearman, off(8, 9), 22)
         .build();
     let a = forecast_attack_mode(&view, UnitId(1), off(9, 8), AttackMode::Ranged).unwrap();
     let b = forecast_attack_mode(&view, UnitId(1), off(8, 9), AttackMode::Ranged).unwrap();
@@ -1751,12 +1751,12 @@ fn ranged_target_uses_exact_kill_odds_instead_of_uncapped_base_damage() {
 
 #[test]
 fn ranged_target_weighs_kill_odds_by_the_threat_removed() {
-    // Not kill-first: an 85% kill on a Trooper, which would hit our Ranger far harder, removes
-    // more expected threat than a certain kill on a Soldier with the same HP.
+    // Not kill-first: an 85% kill on a Pikeman, which would hit our Archer far harder, removes
+    // more expected threat than a certain kill on a Spearman with the same HP.
     let view = ViewBuilder::new(20, 16)
-        .unit(1, ME, UnitKind::Ranger, off(8, 8))
-        .unit_hp(50, ENEMY, UnitKind::Soldier, off(9, 8), 20)
-        .unit_hp(51, ENEMY, UnitKind::Trooper, off(8, 9), 18)
+        .unit(1, ME, UnitKind::Archer, off(8, 8))
+        .unit_hp(50, ENEMY, UnitKind::Spearman, off(9, 8), 20)
+        .unit_hp(51, ENEMY, UnitKind::Pikeman, off(8, 9), 18)
         .build();
     let a = forecast_attack_mode(&view, UnitId(1), off(9, 8), AttackMode::Ranged).unwrap();
     let b = forecast_attack_mode(&view, UnitId(1), off(8, 9), AttackMode::Ranged).unwrap();
@@ -1802,14 +1802,14 @@ fn private_enemy_state_cannot_change_the_view_or_decision() {
 
 #[test]
 fn bicycle_ranged_units_fire_in_campaigns_and_keep_melee_follow_through() {
-    for kind in [UnitKind::Marksman, UnitKind::CompositeArcher] {
+    for kind in [UnitKind::Crossbowman, UnitKind::CompositeArcher] {
         let target = off(15, 8);
         let mut view = ViewBuilder::new(24, 16)
             .city(1, ME, off(3, 8), 4)
-            .unit(90, ME, UnitKind::Trooper, off(3, 8))
+            .unit(90, ME, UnitKind::Pikeman, off(3, 8))
             .city(9, ENEMY, target, 4)
             .unit(1, ME, kind, off(13, 8))
-            .unit(2, ME, UnitKind::Trooper, off(14, 8))
+            .unit(2, ME, UnitKind::Pikeman, off(14, 8))
             .build();
         let orders = scripted(&view);
         assert_eq!(
@@ -1841,14 +1841,14 @@ fn buys_a_quoted_defender_without_replacing_a_market() {
         building: BuildingKind::Market,
     };
     let soldier = ProductionItem::Unit {
-        unit: UnitKind::Soldier,
+        unit: UnitKind::Spearman,
     };
     let mut view = ViewBuilder::new(16, 16)
         .faction(Faction::India)
         .city(1, ME, off(5, 5), 3)
         .gold(1000)
         .producing(1, market, 1000)
-        .unit(50, ENEMY, UnitKind::Trooper, off(7, 5))
+        .unit(50, ENEMY, UnitKind::Pikeman, off(7, 5))
         .build();
     let d = view.cities[0].detail.as_mut().unwrap();
     d.options
@@ -1887,8 +1887,8 @@ fn buys_a_quoted_defender_without_replacing_a_market() {
 
 #[test]
 fn a_threatened_city_buys_a_ranged_garrison_that_the_city_shields() {
-    // Civ 6: the city absorbs the Trooper's attack, so a bought Ranger is safe while it
-    // shoots; it is preferred over a cheaper Soldier that holds equally well.
+    // Civ 6: the city absorbs the Pikeman's attack, so a bought Archer is safe while it
+    // shoots; it is preferred over a cheaper Spearman that holds equally well.
     let market = ProductionItem::Building {
         building: BuildingKind::Market,
     };
@@ -1897,10 +1897,10 @@ fn a_threatened_city_buys_a_ranged_garrison_that_the_city_shields() {
         .city(1, ME, off(5, 5), 3)
         .gold(1000)
         .producing(1, market, 1000)
-        .unit(50, ENEMY, UnitKind::Trooper, off(7, 5))
+        .unit(50, ENEMY, UnitKind::Pikeman, off(7, 5))
         .build();
     let d = view.cities[0].detail.as_mut().unwrap();
-    for (unit, cost) in [(UnitKind::Soldier, 80), (UnitKind::Ranger, 100)] {
+    for (unit, cost) in [(UnitKind::Spearman, 80), (UnitKind::Archer, 100)] {
         d.options
             .iter_mut()
             .find(|o| o.item == ProductionItem::Unit { unit })
@@ -1912,7 +1912,7 @@ fn a_threatened_city_buys_a_ranged_garrison_that_the_city_shields() {
         orders.contains(&Order::BuyItem {
             city: CityId(1),
             item: ProductionItem::Unit {
-                unit: UnitKind::Ranger
+                unit: UnitKind::Archer
             }
         }),
         "{orders:?}"
@@ -1922,14 +1922,14 @@ fn a_threatened_city_buys_a_ranged_garrison_that_the_city_shields() {
 mod colony_compound_tests {
     use super::*;
 
-    /// A one-Soldier capital at peace, a known rival town five hexes off and good land in
+    /// A one-Spearman capital at peace, a known rival town five hexes off and good land in
     /// reach: the old army gate wants a second troop first; the priced colony outbids it.
     #[test]
     fn a_priced_colony_outbids_a_second_troop_in_a_quiet_opening() {
         let mut view = ViewBuilder::new(24, 16)
             .city(1, ME, off(5, 8), 2)
             .city(2, ENEMY, off(10, 8), 1)
-            .unit(1, ME, UnitKind::Soldier, off(5, 8))
+            .unit(1, ME, UnitKind::Spearman, off(5, 8))
             .build();
         view.turn = 8;
         settlers_trained(&mut view, 1);

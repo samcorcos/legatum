@@ -58,7 +58,7 @@ export function mapArtFixture(seed = '531204', size?: { width: number; height: n
     const h = row.find((x) => free(x) && !parade.some((p) => distance(p, x) < 1));
     if (!h) break;
     parade.push(h);
-    spawnUnit(g, seat, 'Soldier', h, false);
+    spawnUnit(g, seat, 'Spearman', h, false);
   }
   const civ = spots(home.pos, 3, 8).filter((h) => free(h));
   for (let seat = 0; seat < 8; seat++) {
@@ -74,9 +74,9 @@ export function mapArtFixture(seed = '531204', size?: { width: number; height: n
   const campAt = spots(home.pos, 7, 10).find((h) => g.cities.every((c) => distance(c.pos, h) >= 5) && !g.resource?.[idxOf(g, h)]) ?? null;
   const camps: MCamp[] = [];
   if (campAt) {
-    const guard = spawnUnit(g, 255, 'Soldier', campAt, false);
+    const guard = spawnUnit(g, 255, 'Spearman', campAt, false);
     const near = within(campAt, 1).filter((h) => !hexEq(h, campAt) && free(h));
-    const raiders = near.slice(0, 2).map((h, k) => spawnUnit(g, 255, k ? 'Ranger' : 'Soldier', h, false).id);
+    const raiders = near.slice(0, 2).map((h, k) => spawnUnit(g, 255, k ? 'Archer' : 'Spearman', h, false).id);
     const watch = near.find(free);
     if (watch) spawnUnit(g, 0, 'Scout', watch, false);
     camps.push({ id: 0, pos: campAt, founded_turn: 6, guard: guard.id, scout: null, raiders, scout_report: null, raid: null, next_raid_turn: 99, next_spawn_turn: 99 });

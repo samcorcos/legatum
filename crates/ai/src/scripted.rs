@@ -647,7 +647,7 @@ mod order_trace_tests {
         let unit = Order::SetProduction {
             city,
             item: legatum_core::ProductionItem::Unit {
-                unit: legatum_core::UnitKind::Soldier,
+                unit: legatum_core::UnitKind::Spearman,
             },
         };
         let building = Order::SetProduction {

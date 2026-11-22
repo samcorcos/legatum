@@ -13,7 +13,7 @@ describe('planning reach', () => {
     const v = view(9, 9, 'Grassland');
     const pos = fromOffset(4, 4);
     // moves_left 0 is what the view reports after a unit spent both moves last turn.
-    const reach = reachTiles(v, { pos, kind: 'Soldier', max_moves: 2, moves_left: 0 } as never);
+    const reach = reachTiles(v, { pos, kind: 'Spearman', max_moves: 2, moves_left: 0 } as never);
     expect(reach.size).toBe(18); // every hex within 2 on open ground
     for (const i of reach) {
       const hx = fromOffset(i % 9, Math.floor(i / 9));
@@ -24,16 +24,16 @@ describe('planning reach', () => {
 
   it('allows one costly step at full moves, then stops', () => {
     const v = view(9, 9, 'Forest');
-    const reach = reachTiles(v, { pos: fromOffset(4, 4), kind: 'Soldier', max_moves: 2 });
+    const reach = reachTiles(v, { pos: fromOffset(4, 4), kind: 'Spearman', max_moves: 2 });
     expect(reach.size).toBe(6); // forest costs 2: one step in each direction
   });
 
   it('skips unexplored and impassable tiles', () => {
     const v = view(9, 9, 'Grassland');
     for (const t of v.tiles) t.explored = false;
-    expect(reachTiles(v, { pos: fromOffset(4, 4), kind: 'Soldier', max_moves: 2 }).size).toBe(0);
+    expect(reachTiles(v, { pos: fromOffset(4, 4), kind: 'Spearman', max_moves: 2 }).size).toBe(0);
     const m = view(9, 9, 'Mountains');
-    expect(reachTiles(m, { pos: fromOffset(4, 4), kind: 'Soldier', max_moves: 2 }).size).toBe(0);
+    expect(reachTiles(m, { pos: fromOffset(4, 4), kind: 'Spearman', max_moves: 2 }).size).toBe(0);
   });
 
   it('routes through an allied city but does not show the city as a stopping tile', () => {

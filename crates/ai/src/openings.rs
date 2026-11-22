@@ -177,10 +177,10 @@ impl OpeningPolicy {
         use UnitKind::*;
         let (items, counts, escort, burst_buy, research, target, start) = match opening {
             Opening::Rush => (
-                [unit(Soldier), unit(Ranger), building(Market), unit(Ranger)],
+                [unit(Spearman), unit(Archer), building(Market), unit(Archer)],
                 [2, 1, 1, 1],
                 EscortPolicy::None,
-                unit(Ranger),
+                unit(Archer),
                 [Currency, BronzeWorking, Feudalism, Engineering],
                 0,
                 2,
@@ -204,11 +204,11 @@ impl OpeningPolicy {
                     building(Workshop),
                     unit(Settler),
                     building(Market),
-                    unit(Ranger),
+                    unit(Archer),
                 ],
                 [1, 2, 1, 2],
                 EscortPolicy::EscortIfThreat,
-                unit(Ranger),
+                unit(Archer),
                 [BronzeWorking, Currency, Irrigation, Feudalism],
                 2,
                 30,
@@ -218,7 +218,7 @@ impl OpeningPolicy {
                     building(Market),
                     unit(Settler),
                     building(Workshop),
-                    building(Laboratory),
+                    building(Library),
                 ],
                 [1, 1, 1, 1],
                 EscortPolicy::EscortIfThreat,
@@ -1196,7 +1196,7 @@ impl Planner<'_> {
         legatum_core::path::find_path(map, from, target, |h| {
             let tile = v.tile(h)?;
             (tile.explored
-                && (v.passage_allowed(v.me, legatum_core::UnitKind::Soldier, tile.owner)
+                && (v.passage_allowed(v.me, legatum_core::UnitKind::Spearman, tile.owner)
                     || tile.owner == owner))
                 .then_some(tile.move_cost())
                 .flatten()
@@ -1660,7 +1660,7 @@ impl Planner<'_> {
                         (!t.explored
                             && self.view().passage_allowed(
                                 self.ctx.me,
-                                legatum_core::UnitKind::Soldier,
+                                legatum_core::UnitKind::Spearman,
                                 t.owner,
                             ))
                         .then(|| legatum_core::Terrain::Grassland.move_cost())
@@ -1757,9 +1757,9 @@ mod tests {
             .city(1, ME, Hex::new(5, 5), 3)
             .city(2, ME, Hex::new(5, 10), 3)
             .city(3, ENEMY, Hex::new(13, 5), 3)
-            .unit(1, ME, UnitKind::Soldier, Hex::new(5, 5))
-            .unit(2, ME, UnitKind::Soldier, Hex::new(10, 4))
-            .unit(3, ME, UnitKind::Soldier, Hex::new(11, 4))
+            .unit(1, ME, UnitKind::Spearman, Hex::new(5, 5))
+            .unit(2, ME, UnitKind::Spearman, Hex::new(10, 4))
+            .unit(3, ME, UnitKind::Spearman, Hex::new(11, 4))
             .build();
         v.turn = 80;
         let mut policy = OpeningPolicy::builtin(Opening::Rush);
@@ -1874,7 +1874,7 @@ mod tests {
         let p = OpeningPolicy::builtin(Opening::GreedyExpand);
         let mut v = ViewBuilder::new(24, 18)
             .city(1, ME, home, 3)
-            .unit(90, PlayerId::BARBARIAN, UnitKind::Ranger, Hex::new(7, 5))
+            .unit(90, PlayerId::BARBARIAN, UnitKind::Archer, Hex::new(7, 5))
             .build();
         let d = v.cities[0].detail.as_mut().unwrap();
         d.options
@@ -1940,7 +1940,7 @@ mod tests {
     fn unknown_or_fogged_capitals_never_count_as_empty_armies() {
         let mut v = ViewBuilder::new(24, 18)
             .city(1, ME, Hex::new(4, 5), 3)
-            .unit(1, ME, UnitKind::Soldier, Hex::new(4, 5))
+            .unit(1, ME, UnitKind::Spearman, Hex::new(4, 5))
             .build();
         let p = OpeningPolicy::builtin(Opening::Rush);
         assert_eq!(weak_neighbor(&v, &p), None);
@@ -1952,7 +1952,7 @@ mod tests {
         assert_eq!(weak_neighbor(&v, &p), None);
         v.cities[1].visible = true;
         v = ViewBuilder { view: v }
-            .unit(2, ENEMY, UnitKind::Trooper, Hex::new(12, 5))
+            .unit(2, ENEMY, UnitKind::Pikeman, Hex::new(12, 5))
             .build();
         assert_eq!(weak_neighbor(&v, &p), None);
     }
@@ -1993,7 +1993,7 @@ mod tests {
             .city(1, ME, Hex::new(5, 5), 3)
             .city(2, ENEMY, Hex::new(10, 5), 3)
             .city(3, PlayerId(3), Hex::new(16, 5), 3)
-            .unit(1, ME, UnitKind::Soldier, Hex::new(6, 5))
+            .unit(1, ME, UnitKind::Spearman, Hex::new(6, 5))
             .build()
     }
 
@@ -2056,10 +2056,10 @@ mod tests {
         let mut v = ViewBuilder::new(30, 20)
             .city(1, ME, Hex::new(5, 5), 3)
             .city(2, ENEMY, target, 2)
-            .unit(1, ME, UnitKind::Soldier, Hex::new(13, 5))
-            .unit(2, ME, UnitKind::Soldier, Hex::new(13, 6))
-            .unit(3, ME, UnitKind::Ranger, Hex::new(14, 4))
-            .unit(4, ME, UnitKind::Soldier, Hex::new(5, 5))
+            .unit(1, ME, UnitKind::Spearman, Hex::new(13, 5))
+            .unit(2, ME, UnitKind::Spearman, Hex::new(13, 6))
+            .unit(3, ME, UnitKind::Archer, Hex::new(14, 4))
+            .unit(4, ME, UnitKind::Spearman, Hex::new(5, 5))
             .build();
         peace(&mut v);
         let declare = v.diplomacy.actions[0].order.clone();
@@ -2098,8 +2098,8 @@ mod tests {
         let mut v = ViewBuilder::new(30, 20)
             .city(1, ME, Hex::new(5, 5), 3)
             .city(2, ENEMY, target, 2)
-            .unit(1, ME, UnitKind::Soldier, Hex::new(6, 5))
-            .unit(2, ME, UnitKind::Soldier, Hex::new(6, 6))
+            .unit(1, ME, UnitKind::Spearman, Hex::new(6, 5))
+            .unit(2, ME, UnitKind::Spearman, Hex::new(6, 6))
             .build();
         peace(&mut v);
         for pos in target.within(2) {
@@ -2130,7 +2130,7 @@ mod tests {
             assert!(to.distance(target) <= 3);
             assert!(v.passage_allowed(
                 v.me,
-                legatum_core::UnitKind::Soldier,
+                legatum_core::UnitKind::Spearman,
                 v.tile(to).unwrap().owner
             ));
         }
@@ -2142,11 +2142,11 @@ mod tests {
         let mut v = ViewBuilder::new(30, 20)
             .city(1, ME, Hex::new(5, 5), 3)
             .city(2, ENEMY, target, 2)
-            .unit(1, ME, UnitKind::Soldier, Hex::new(11, 5))
-            .unit(2, ME, UnitKind::Soldier, Hex::new(11, 6))
-            .unit(3, ME, UnitKind::Soldier, Hex::new(11, 7))
-            .unit(4, ME, UnitKind::Ranger, Hex::new(11, 8))
-            .unit(5, ME, UnitKind::Ranger, Hex::new(10, 9))
+            .unit(1, ME, UnitKind::Spearman, Hex::new(11, 5))
+            .unit(2, ME, UnitKind::Spearman, Hex::new(11, 6))
+            .unit(3, ME, UnitKind::Spearman, Hex::new(11, 7))
+            .unit(4, ME, UnitKind::Archer, Hex::new(11, 8))
+            .unit(5, ME, UnitKind::Archer, Hex::new(10, 9))
             .build();
         peace(&mut v);
         for pos in target.within(legatum_core::data::CITY_WORK_RADIUS) {
@@ -2169,7 +2169,7 @@ mod tests {
             assert_eq!(u.pos.distance(target), 4);
             assert!(v.passage_allowed(
                 ME,
-                legatum_core::UnitKind::Soldier,
+                legatum_core::UnitKind::Spearman,
                 v.tile(u.pos).unwrap().owner
             ));
             assert!(
@@ -2246,18 +2246,18 @@ mod tests {
         let v = ViewBuilder::new(30, 20)
             .city(1, ME, Hex::new(5, 5), 3)
             .city(2, ENEMY, Hex::new(15, 5), 3)
-            .unit(1, ME, UnitKind::Soldier, Hex::new(12, 5))
-            .unit(2, ME, UnitKind::Soldier, Hex::new(12, 6))
-            .unit(3, ME, UnitKind::Ranger, Hex::new(13, 4))
-            .unit(4, ME, UnitKind::Ranger, Hex::new(14, 4))
-            .unit(9, ME, UnitKind::Soldier, Hex::new(13, 5))
+            .unit(1, ME, UnitKind::Spearman, Hex::new(12, 5))
+            .unit(2, ME, UnitKind::Spearman, Hex::new(12, 6))
+            .unit(3, ME, UnitKind::Archer, Hex::new(13, 4))
+            .unit(4, ME, UnitKind::Archer, Hex::new(14, 4))
+            .unit(9, ME, UnitKind::Spearman, Hex::new(13, 5))
             .unit(5, ENEMY, UnitKind::Scout, Hex::new(6, 5))
             .build();
         let mut b = OpeningBrain::new(base(), OpeningPolicy::builtin(Opening::Rush));
         b.observe(&v);
         assert_eq!(b.phase_for(&v), Phase::Conquer);
         let v = ViewBuilder { view: v }
-            .unit(6, ENEMY, UnitKind::Soldier, Hex::new(7, 5))
+            .unit(6, ENEMY, UnitKind::Spearman, Hex::new(7, 5))
             .build();
         assert_eq!(
             b.phase_for(&v),
@@ -2265,8 +2265,8 @@ mod tests {
             "the capital can hold one raider"
         );
         let v = ViewBuilder { view: v }
-            .unit(7, ENEMY, UnitKind::Trooper, Hex::new(7, 4))
-            .unit(8, ENEMY, UnitKind::Trooper, Hex::new(6, 6))
+            .unit(7, ENEMY, UnitKind::Pikeman, Hex::new(7, 4))
+            .unit(8, ENEMY, UnitKind::Pikeman, Hex::new(6, 6))
             .build();
         assert_eq!(b.phase_for(&v), Phase::Defend);
     }
@@ -2343,7 +2343,7 @@ mod tests {
     fn rush_clock_starts_at_army_readiness_and_capture_releases_expansion() {
         let mut v = ViewBuilder::new(30, 20)
             .city(1, ME, Hex::new(5, 5), 3)
-            .unit(1, ME, UnitKind::Soldier, Hex::new(5, 5))
+            .unit(1, ME, UnitKind::Spearman, Hex::new(5, 5))
             .build();
         let mut policy = OpeningPolicy::builtin(Opening::Rush);
         policy.numbers.war_army = 4;
@@ -2354,9 +2354,9 @@ mod tests {
         assert_eq!(b.phase_for(&v), Phase::Opening, "building is not failure");
         v = ViewBuilder { view: v }
             .city(2, ENEMY, Hex::new(15, 5), 3)
-            .unit(3, ME, UnitKind::Soldier, Hex::new(12, 4))
-            .unit(4, ME, UnitKind::Soldier, Hex::new(13, 4))
-            .unit(5, ME, UnitKind::Ranger, Hex::new(14, 4))
+            .unit(3, ME, UnitKind::Spearman, Hex::new(12, 4))
+            .unit(4, ME, UnitKind::Spearman, Hex::new(13, 4))
+            .unit(5, ME, UnitKind::Archer, Hex::new(14, 4))
             .build();
         v.turn = 101;
         b.observe(&v);
@@ -2388,7 +2388,7 @@ mod tests {
     fn rush_recovers_from_real_losses_and_defends_against_visible_threats() {
         let mut v = ViewBuilder::new(30, 20)
             .city(1, ME, Hex::new(5, 5), 3)
-            .unit(1, ME, UnitKind::Soldier, Hex::new(5, 5))
+            .unit(1, ME, UnitKind::Spearman, Hex::new(5, 5))
             .build();
         let mut b = OpeningBrain::new(base(), OpeningPolicy::builtin(Opening::Rush));
         b.army_ready_turn = Some(1);
@@ -2397,7 +2397,7 @@ mod tests {
         assert_eq!(b.phase_for(&v), Phase::TurtleTech);
         b.phase = Phase::TurtleTech;
         v = ViewBuilder { view: v }
-            .unit(2, ENEMY, UnitKind::Soldier, Hex::new(7, 5))
+            .unit(2, ENEMY, UnitKind::Spearman, Hex::new(7, 5))
             .build();
         assert_eq!(b.phase_for(&v), Phase::Defend);
     }
@@ -2408,7 +2408,7 @@ mod tests {
             .known_techs(&TechId::ALL)
             .city(1, ME, Hex::new(5, 5), 3)
             .city(2, ENEMY, Hex::new(13, 5), 3)
-            .unit(1, ME, UnitKind::Soldier, Hex::new(11, 5))
+            .unit(1, ME, UnitKind::Spearman, Hex::new(11, 5))
             .gold(1000)
             .build();
         let mut policy = OpeningPolicy::builtin(Opening::Rush);

@@ -82,7 +82,7 @@ pub fn start_invariants(state: &GameState) -> Result<(), String> {
             let units: Vec<_> = state.units_of(p.id).collect();
             let mut kinds: Vec<_> = units.iter().map(|u| u.kind).collect();
             kinds.sort();
-            if kinds != [UnitKind::Scout, UnitKind::Soldier] {
+            if kinds != [UnitKind::Scout, UnitKind::Spearman] {
                 return Err(format!("starting units: {:?} has {kinds:?}", p.id));
             }
             let start = state
@@ -338,7 +338,7 @@ fn can_found(state: &GameState, owner: PlayerId, pos: Hex) -> bool {
 fn unit_order(state: &GameState, unit: &Unit, rng: &mut Rng) -> Order {
     let id = unit.id;
     let view = player_view(state, unit.owner);
-    if unit.kind == UnitKind::Heir {
+    if unit.kind == UnitKind::HeirToTheThrone {
         // A civilian with no order of its own: he never founds, attacks or marches.
         return Order::SkipUnit { unit: id };
     }
@@ -363,7 +363,7 @@ fn unit_order(state: &GameState, unit: &Unit, rng: &mut Rng) -> Order {
                 to: pick(rng, &sites),
             });
     }
-    if unit.kind == UnitKind::Ranger
+    if unit.kind == UnitKind::Archer
         && state.passage_allowed(
             unit.owner,
             unit.kind,
@@ -553,7 +553,7 @@ pub fn generate(state: &GameState, seed: u64, step: usize) -> (Orders, Orders) {
         list.push(Order::BuyItem {
             city: CityId(u32::MAX),
             item: ProductionItem::Unit {
-                unit: UnitKind::Soldier,
+                unit: UnitKind::Spearman,
             },
         });
         if let Some(foreign) = state.units.values().find(|u| u.owner != p) {
@@ -640,7 +640,7 @@ pub fn generate(state: &GameState, seed: u64, step: usize) -> (Orders, Orders) {
                 .min_by_key(|(cost, _)| *cost)
                 .map_or(
                     ProductionItem::Unit {
-                        unit: UnitKind::Soldier,
+                        unit: UnitKind::Spearman,
                     },
                     |(_, item)| item,
                 );
@@ -656,7 +656,7 @@ pub fn generate(state: &GameState, seed: u64, step: usize) -> (Orders, Orders) {
                 list.push(Order::SetProduction {
                     city: city.id,
                     item: ProductionItem::Building {
-                        building: BuildingKind::RelayUplink,
+                        building: BuildingKind::GreatLibrary,
                     },
                 });
             }
@@ -672,7 +672,7 @@ pub fn generate(state: &GameState, seed: u64, step: usize) -> (Orders, Orders) {
             Order::BuyItem {
                 city: CityId(1),
                 item: ProductionItem::Unit {
-                    unit: UnitKind::Soldier,
+                    unit: UnitKind::Spearman,
                 },
             },
         ],

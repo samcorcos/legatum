@@ -23,7 +23,7 @@ fn situation() -> GameState {
         rules::cities::found_city(&mut s, settler, &mut vec![]).unwrap();
     }
     for pos in [h(5, 6), h(6, 6), h(5, 7), h(6, 7), h(7, 7)] {
-        spawn_unit(&mut s, PlayerId(0), UnitKind::Trooper, pos);
+        spawn_unit(&mut s, PlayerId(0), UnitKind::Pikeman, pos);
     }
     spawn_unit(&mut s, PlayerId(0), UnitKind::Scout, h(9, 6));
     visibility::update_explored(&mut s);
@@ -40,7 +40,7 @@ fn beyond_strike_reach(s: &mut GameState) {
     let troopers: Vec<UnitId> = s
         .units
         .values()
-        .filter(|u| u.owner == PlayerId(0) && u.kind == UnitKind::Trooper)
+        .filter(|u| u.owner == PlayerId(0) && u.kind == UnitKind::Pikeman)
         .map(|u| u.id)
         .collect();
     for (id, pos) in troopers.into_iter().zip(spots) {
@@ -131,7 +131,7 @@ fn identical_fogged_views_ignore_unseen_world_and_produce_identical_declarations
 fn surprise_war_ranger_shoots_on_the_declaration_turn() {
     let mut s = situation();
     s.player_mut(PlayerId(0)).gold = 2_000;
-    let ranger = spawn_unit(&mut s, PlayerId(0), UnitKind::Ranger, h(9, 7));
+    let ranger = spawn_unit(&mut s, PlayerId(0), UnitKind::Archer, h(9, 7));
     visibility::update_explored(&mut s);
     let target = h(11, 6);
     let view = player_view(&s, PlayerId(0));
@@ -236,9 +236,9 @@ fn peace_acceptance_is_deterministic_from_public_strength_and_own_city_danger() 
     let own = s.cities_of(PlayerId(0)).next().unwrap().id;
     s.cities.get_mut(&own).unwrap().hp = 50;
     // A weak city is in danger when the force beside it outweighs what holds it: its low HP
-    // alone, against one Trooper and our three, is not.
+    // alone, against one Pikeman and our three, is not.
     for at in [h(3, 6), h(3, 7), h(4, 6), h(4, 7)] {
-        spawn_unit(&mut s, PlayerId(1), UnitKind::Trooper, at);
+        spawn_unit(&mut s, PlayerId(1), UnitKind::Pikeman, at);
     }
     s.turn += 1;
     let mut v = player_view(&s, PlayerId(0));
@@ -340,7 +340,7 @@ fn nearby_land_or_coalition_value_can_justify_an_economic_war() {
     assert!(orders.iter().all(|o| match o {
         Order::MoveUnit { to, .. } => v.passage_allowed(
             v.me,
-            legatum_core::UnitKind::Soldier,
+            legatum_core::UnitKind::Spearman,
             v.tile(*to).and_then(|t| t.owner)
         ),
         Order::RangedAttack { .. } => false,
@@ -389,7 +389,7 @@ fn wounded_or_home_bound_armies_do_not_start_paper_campaigns() {
     let keep = s
         .units
         .values()
-        .find(|u| u.owner == PlayerId(0) && u.kind == UnitKind::Trooper)
+        .find(|u| u.owner == PlayerId(0) && u.kind == UnitKind::Pikeman)
         .unwrap()
         .id;
     s.units
@@ -570,7 +570,7 @@ fn viable_campaign_can_declare_without_a_guaranteed_title_flip() {
         rules::cities::found_city(&mut s, u, &mut vec![]).unwrap();
     }
     for pos in [h(5, 8), h(6, 8), h(7, 8), h(5, 9)] {
-        spawn_unit(&mut s, PlayerId(0), UnitKind::Trooper, pos);
+        spawn_unit(&mut s, PlayerId(0), UnitKind::Pikeman, pos);
     }
     let city = s.cities_of(PlayerId(1)).next().unwrap().id;
     s.cities.get_mut(&city).unwrap().population = 6;

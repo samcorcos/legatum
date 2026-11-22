@@ -113,11 +113,11 @@ fn buys_an_overdue_lab_at_the_real_price_without_queuing_a_duplicate() {
         .unwrap()
         .buildings
         .extend([BuildingKind::Granary, BuildingKind::Workshop]);
-    spawn_unit(&mut s, ME, UnitKind::Soldier, at(6, 8));
-    spawn_unit(&mut s, ME, UnitKind::Ranger, at(6, 9));
+    spawn_unit(&mut s, ME, UnitKind::Spearman, at(6, 8));
+    spawn_unit(&mut s, ME, UnitKind::Archer, at(6, 9));
     update_explored(&mut s);
     let lab = ProductionItem::Building {
-        building: BuildingKind::Laboratory,
+        building: BuildingKind::Library,
     };
     let quote = player_view(&s, ME)
         .cities
@@ -134,7 +134,7 @@ fn buys_an_overdue_lab_at_the_real_price_without_queuing_a_duplicate() {
         .buy_cost
         .unwrap();
     s.player_mut(ME).gold = quote;
-    // About the real price of an overdue Laboratory, not the held Gold: buy_hold 3 (default
+    // About the real price of an overdue Library, not the held Gold: buy_hold 3 (default
     // since 2026-10-31) keeps the treasury for the army spike and has its own tests.
     let orders = decide_with(
         &mut s,
@@ -155,7 +155,7 @@ fn buys_an_overdue_lab_at_the_real_price_without_queuing_a_duplicate() {
     assert!(
         next.cities[&city]
             .buildings
-            .contains(&BuildingKind::Laboratory)
+            .contains(&BuildingKind::Library)
     );
     assert!(next.player(ME).gold < quote);
     s.player_mut(ME).gold = 0;
@@ -194,11 +194,11 @@ fn does_not_buy_production_that_will_finish_this_turn() {
 fn a_bankrupt_city_finishes_its_market_instead_of_training_an_unpayable_defender() {
     let (mut s, city) = scenario();
     s.player_mut(ME).techs.insert(TechId::Currency);
-    spawn_unit(&mut s, ME, UnitKind::Soldier, at(6, 8));
+    spawn_unit(&mut s, ME, UnitKind::Spearman, at(6, 8));
     for row in 0..6 {
-        spawn_unit(&mut s, ME, UnitKind::Soldier, at(1, row));
+        spawn_unit(&mut s, ME, UnitKind::Spearman, at(1, row));
     }
-    spawn_unit(&mut s, ENEMY, UnitKind::Ranger, at(8, 8));
+    spawn_unit(&mut s, ENEMY, UnitKind::Archer, at(8, 8));
     let market = ProductionItem::Building {
         building: BuildingKind::Market,
     };
@@ -230,7 +230,7 @@ fn siege_cannot_buy_walls_when_all_defender_spawn_tiles_are_occupied() {
     for pos in at(6, 8).within(1) {
         spawn_unit(&mut s, ME, UnitKind::Scout, pos);
     }
-    spawn_unit(&mut s, ENEMY, UnitKind::Ranger, at(8, 8));
+    spawn_unit(&mut s, ENEMY, UnitKind::Archer, at(8, 8));
     let orders = decide(&mut s);
     assert!(
         !orders.iter().any(|o| matches!(o,
@@ -256,7 +256,7 @@ fn a_frontier_garrison_gets_its_quoted_upgrade_before_a_routine_rush_purchase() 
         TechId::Feudalism,
     ]);
     let soldier = spawn_unit(&mut s, ME, UnitKind::Phalangite, at(6, 8));
-    spawn_unit(&mut s, ME, UnitKind::Ranger, at(5, 8));
+    spawn_unit(&mut s, ME, UnitKind::Archer, at(5, 8));
     spawn_unit(&mut s, ENEMY, UnitKind::Scout, at(9, 8));
     let item = ProductionItem::Building {
         building: BuildingKind::Workshop,
@@ -289,15 +289,15 @@ fn a_frontier_garrison_gets_its_quoted_upgrade_before_a_routine_rush_purchase() 
         orders.contains(&Order::UpgradeUnit { unit: soldier }),
         "{orders:?}"
     );
-    assert_eq!(resolve(&s, orders).units[&soldier].kind, UnitKind::Trooper);
+    assert_eq!(resolve(&s, orders).units[&soldier].kind, UnitKind::Pikeman);
 }
 
 #[test]
 fn a_new_bombardment_interrupts_a_settler_and_banks_its_progress() {
     let (mut s, city) = scenario();
     at_war(&mut s);
-    spawn_unit(&mut s, ME, UnitKind::Soldier, at(6, 8));
-    spawn_unit(&mut s, ENEMY, UnitKind::Ranger, at(8, 8));
+    spawn_unit(&mut s, ME, UnitKind::Spearman, at(6, 8));
+    spawn_unit(&mut s, ENEMY, UnitKind::Archer, at(8, 8));
     let settler = ProductionItem::Unit {
         unit: UnitKind::Settler,
     };
@@ -310,19 +310,19 @@ fn a_new_bombardment_interrupts_a_settler_and_banks_its_progress() {
         orders.contains(&Order::SetProduction {
             city,
             item: ProductionItem::Unit {
-                unit: UnitKind::Ranger
+                unit: UnitKind::Archer
             },
         }),
         "{orders:?}"
     );
     let next = resolve(&s, orders);
-    // Per-item banking: the Settler's progress waits for the next Settler; the Ranger is built
+    // Per-item banking: the Settler's progress waits for the next Settler; the Archer is built
     // from its own progress rather than popping out of the Settler's.
     assert_eq!(next.cities[&city].banked(settler), progress);
     assert_eq!(
         next.cities[&city].producing,
         Some(ProductionItem::Unit {
-            unit: UnitKind::Ranger
+            unit: UnitKind::Archer
         })
     );
     assert!(next.cities[&city].population >= 3);
@@ -333,9 +333,9 @@ fn visible_enemy_troops_near_a_thin_city_buy_a_second_defender_before_buildings(
     let (mut s, city) = scenario();
     at_war(&mut s);
     s.player_mut(ME).techs.insert(TechId::BronzeWorking);
-    spawn_unit(&mut s, ME, UnitKind::Soldier, at(6, 8));
-    // Not yet a forecast capture: a visible Soldier approaching, three tiles out.
-    spawn_unit(&mut s, ENEMY, UnitKind::Soldier, at(9, 8));
+    spawn_unit(&mut s, ME, UnitKind::Spearman, at(6, 8));
+    // Not yet a forecast capture: a visible Spearman approaching, three tiles out.
+    spawn_unit(&mut s, ENEMY, UnitKind::Spearman, at(9, 8));
     s.player_mut(ME).gold = 2000;
     let orders = decide(&mut s);
     assert!(

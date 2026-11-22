@@ -11,7 +11,7 @@ it('shows the queued-spend balance for both land and Siege upgrades', async () =
   const client = new FixtureClient();
   await client.newGame(await client.standardSetup('42', 'India', 'Byzantium', 'Ada', 'Bo'));
   const view = client.view(0);
-  const unit = view.units.find((u) => u.owner === view.me && u.kind === 'Soldier')!;
+  const unit = view.units.find((u) => u.owner === view.me && u.kind === 'Spearman')!;
   unit.siege_offer = { price: { total: 50, parts: [['Siege', 50]] }, blocker: null };
   const container = document.body.appendChild(document.createElement('div'));
   const root = createRoot(container);
@@ -35,7 +35,7 @@ it('includes supply reserved by an earlier upgrade in the requirement list', asy
   const client = new FixtureClient();
   await client.newGame(await client.standardSetup('42', 'India', 'Byzantium', 'Ada', 'Bo'));
   const view = client.view(0);
-  const unit = view.units.find((u) => u.owner === view.me && u.kind === 'Soldier')!;
+  const unit = view.units.find((u) => u.owner === view.me && u.kind === 'Spearman')!;
   unit.upgrade_need = 'Iron';
   unit.upgrade_breakdown = { total: 60, parts: [['Upgrade', 60]] };
   view.research.known.push('Mathematics');

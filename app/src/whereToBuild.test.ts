@@ -3,10 +3,10 @@ import { itemName } from './data';
 import type { CityView, Order, PlayerView, ProductionItem, ProductionOption, TechUnlock, UnavailableOption } from './types';
 import { COSTLY_LISTED_COST, fastestSite, plainReason, showsWhereToBuild, sortSites, whereSummary, whereToBuild, type BuildSite } from './whereToBuild';
 
-const GL: ProductionItem = { kind: 'Building', building: 'RelayUplink' };
+const GL: ProductionItem = { kind: 'Building', building: 'GreatLibrary' };
 const MARKET: ProductionItem = { kind: 'Building', building: 'Market' };
-const FACTORY: ProductionItem = { kind: 'Building', building: 'Autoworks' };
-const SOLDIER: ProductionItem = { kind: 'Unit', unit: 'Soldier' };
+const FACTORY: ProductionItem = { kind: 'Building', building: 'Factory' };
+const SOLDIER: ProductionItem = { kind: 'Unit', unit: 'Spearman' };
 
 const option = (item: ProductionItem, cost: number, stored: number, turns: number): ProductionOption =>
   ({ item, cost, production_stored: stored, production_banked: stored, buy_cost: null, yields: {} as never, turns }) as ProductionOption;

@@ -45,7 +45,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await page.keyboard.press('Escape');
     await page.clock.resume();
     await expect(card).toHaveCount(0);
-    const heir = await page.evaluate(() => { const s = (window as unknown as GameWindow).legatum.getState(), v = s.views![s.seat]; const h = v.units.find((u) => u.kind === 'Heir')!; return { pos: h.pos, visible: v.tiles[h.pos.r * v.width + h.pos.q]?.visible ?? false }; });
+    const heir = await page.evaluate(() => { const s = (window as unknown as GameWindow).legatum.getState(), v = s.views![s.seat]; const h = v.units.find((u) => u.kind === 'HeirToTheThrone')!; return { pos: h.pos, visible: v.tiles[h.pos.r * v.width + h.pos.q]?.visible ?? false }; });
     expect(heir.visible).toBe(false);
     await page.evaluate(() => { const w = window as unknown as MapWindow; w.legatumMap.camera.zoom = 1.4; w.legatumMap.redraw(); });
     await page.evaluate(() => (window as unknown as GameWindow).legatum.getState().set({ reportOpen: false }));

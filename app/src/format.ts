@@ -555,7 +555,7 @@ function heirGoalLine(e: GoalEvent, ctx: ReportContext): ReportLine {
   const subject = (p: PlayerId) => (p === ctx.me ? 'You' : who(ctx, p));
   const gain = (p: PlayerId) => (mine(p) ? ` (+${e.vp} VP)` : '');
   const loss = (p: PlayerId) => (mine(p) ? ` (−${e.vp} VP)` : '');
-  const base = { weight: 2, icon: 'unit-heir' } as const;
+  const base = { weight: 2, icon: 'unit-heirtothethrone' } as const;
   if (e.type === 'FactionGoalLost') {
     const text = isByzantium(e.player) ? `${subject(e.player)} lost the Heir: nobody scores until he is held again` : `${subject(e.player)} lost Byzantine Heir`;
     return line('victory', `${text}${loss(e.player)}`, { ...base, players: [e.player], tone: mine(e.player) ? 'bad' : 'neutral' });
@@ -587,8 +587,8 @@ function hallGoalLine(e: GoalEvent, ctx: ReportContext): ReportLine {
   const mine = (p: PlayerId) => p === ctx.me || ctx.team.includes(p);
   const subject = (p: PlayerId) => (p === ctx.me ? 'You' : who(ctx, p));
   const events = ctx.events ?? [];
-  const built = (p: PlayerId) => events.find((x): x is Extract<Event, { type: 'ProductionCompleted' }> => x.type === 'ProductionCompleted' && x.owner === p && (x.item.kind === 'Building' || x.item.kind === 'Wonder') && x.item.building === 'CourierHall');
-  const base = { weight: 2, icon: 'building-courierhall' } as const;
+  const built = (p: PlayerId) => events.find((x): x is Extract<Event, { type: 'ProductionCompleted' }> => x.type === 'ProductionCompleted' && x.owner === p && (x.item.kind === 'Building' || x.item.kind === 'Wonder') && x.item.building === 'YamRelayStation');
+  const base = { weight: 2, icon: 'building-yamrelaystation' } as const;
   if (e.type === 'FactionGoalLost') {
     const razed = events.find((x): x is Extract<Event, { type: 'CityRazed' }> => x.type === 'CityRazed' && x.from === e.player);
     const lost = mine(e.player) ? ` (−${e.vp} VP)` : '';
@@ -1087,12 +1087,12 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
       const vp = factionGoalVp('Byzantium');
       if (mine(e.owner)) {
         return line('victory', `${e.owner === ctx.me ? 'Your' : `${possessiveOf(who(ctx, e.owner))}`} Heir was born in ${e.city_name}: hold him to score ${vp} VP, and keep him safe`, {
-          at: e.at, players: [e.owner], weight: 2, tone: 'good', icon: 'unit-heir',
+          at: e.at, players: [e.owner], weight: 2, tone: 'good', icon: 'unit-heirtothethrone',
           details: ['Every empire was told where he was born. His position is public from now on: a rival that captures him scores the points.'],
         });
       }
       return line('victory', `${possessiveOf(who(ctx, e.owner))} Heir was born in ${e.city_name}: be at War, then capture him to score ${vp} VP`, {
-        at: e.at, players: [e.owner], weight: 2, tone: 'neutral', icon: 'unit-heir',
+        at: e.at, players: [e.owner], weight: 2, tone: 'neutral', icon: 'unit-heirtothethrone',
         details: ['Every empire is told where he was born. His position is public every turn, on the map and the minimap, and whoever holds him scores the points. To capture him you must be at War with his holder.'],
       });
     }
@@ -1622,7 +1622,7 @@ export function formatEvents(events: Event[], ctx: ReportContext): ReportLine[] 
         at: e.at, from: e.attacker_at ?? null, players: [e.attacker_owner, d.owner], weight: 2,
         tone: mine(e.attacker_owner) && !mine(d.owner) ? 'good' : mine(d.owner) && !mine(e.attacker_owner) ? 'bad' : 'neutral',
         details: group.map((b) => `${unitLabel(ctx, b.attacker as number, b.attacker_owner)} dealt ${b.damage_to_defender} and took ${b.damage_to_attacker}.`),
-        icon: d.kind === 'City' && hpAfter <= 0 ? 'emblem-captured' : d.kind === 'City' ? 'fortify' : 'unit-soldier',
+        icon: d.kind === 'City' && hpAfter <= 0 ? 'emblem-captured' : d.kind === 'City' ? 'fortify' : 'unit-spearman',
       }));
       continue;
     }

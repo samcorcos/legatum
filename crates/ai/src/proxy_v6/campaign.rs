@@ -77,7 +77,7 @@ impl Plan<'_> {
                             (tile.explored
                                 && (v.passage_allowed(
                                     v.me,
-                                    legatum_core::UnitKind::Soldier,
+                                    legatum_core::UnitKind::Spearman,
                                     tile.owner,
                                 ) || tile
                                     .owner
@@ -186,7 +186,7 @@ impl Plan<'_> {
                                     v.same_team(owner, e.owner)
                                         || v.passage_allowed(
                                             v.me,
-                                            legatum_core::UnitKind::Soldier,
+                                            legatum_core::UnitKind::Spearman,
                                             Some(owner),
                                         )
                                 })

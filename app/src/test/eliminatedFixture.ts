@@ -42,7 +42,7 @@ export function eliminatedState() {
   for (const p of s.players) { p.gold = 300; p.explored.fill(1); }
   const dead = s.players[ELIMINATED.player];
   dead.alive = false;
-for (const c of s.cities) spawnUnit(s, c.owner, 'Soldier', c.pos, false);
+for (const c of s.cities) spawnUnit(s, c.owner, 'Spearman', c.pos, false);
   s.diplomacy!.betrayals = [{ by: 2, against: ELIMINATED.team, turn: 30, until: 50 }];
   refreshVision(s);
   meetAll(s);

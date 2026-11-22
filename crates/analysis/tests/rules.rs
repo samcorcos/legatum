@@ -71,7 +71,7 @@ fn ranger_reproduction_detects_all_three_reported_failures_deterministically() {
     }
     assert!(count(&a, Behavior::UnansweredAttack) >= 2);
     assert!(a.turns.iter().any(|t| t.events.contains("units killed")));
-    // The garrison is flagged while a favorable sortie on the Ranger was available. Since
+    // The garrison is flagged while a favorable sortie on the Archer was available. Since
     // cities shield their garrisons (core `combat::city_tile_defender`, 2026-10-03), the
     // bombardment hits the city, the garrison stays healthy and its sortie stays favorable
     // through the last turn, so every bombarded turn is flagged.
@@ -93,9 +93,9 @@ fn ranger_reproduction_detects_all_three_reported_failures_deterministically() {
 #[test]
 fn responses_reset_attack_streak_even_when_the_movement_is_blocked() {
     let mut s = fixture();
-    let guard = spawn_unit(&mut s, PlayerId(0), UnitKind::Soldier, h(4, 4));
-    let ranger = spawn_unit(&mut s, PlayerId(1), UnitKind::Ranger, h(6, 4));
-    spawn_unit(&mut s, PlayerId(0), UnitKind::Soldier, h(3, 4));
+    let guard = spawn_unit(&mut s, PlayerId(0), UnitKind::Spearman, h(4, 4));
+    let ranger = spawn_unit(&mut s, PlayerId(1), UnitKind::Archer, h(6, 4));
+    spawn_unit(&mut s, PlayerId(0), UnitKind::Spearman, h(3, 4));
     let shot = Order::RangedAttack {
         unit: ranger,
         target: h(4, 4),
@@ -128,7 +128,7 @@ fn responses_reset_attack_streak_even_when_the_movement_is_blocked() {
 fn scout_requires_visible_hostile_and_a_known_safe_step_and_excludes_humans() {
     let mut s = fixture();
     let scout = spawn_unit(&mut s, PlayerId(0), UnitKind::Scout, h(8, 6));
-    spawn_unit(&mut s, PlayerId(1), UnitKind::Soldier, h(9, 6));
+    spawn_unit(&mut s, PlayerId(1), UnitKind::Spearman, h(9, 6));
     let r = report(&tape(
         s.clone(),
         vec![mine(vec![Order::MoveUnit {
@@ -166,11 +166,11 @@ fn scout_requires_visible_hostile_and_a_known_safe_step_and_excludes_humans() {
 #[test]
 fn healthy_idle_military_near_threatened_city_but_not_healing_or_garrison() {
     let mut s = fixture();
-    spawn_unit(&mut s, PlayerId(0), UnitKind::Soldier, h(3, 5));
-    spawn_unit(&mut s, PlayerId(0), UnitKind::Soldier, h(4, 4));
-    let wounded = spawn_unit(&mut s, PlayerId(0), UnitKind::Soldier, h(3, 3));
+    spawn_unit(&mut s, PlayerId(0), UnitKind::Spearman, h(3, 5));
+    spawn_unit(&mut s, PlayerId(0), UnitKind::Spearman, h(4, 4));
+    let wounded = spawn_unit(&mut s, PlayerId(0), UnitKind::Spearman, h(3, 3));
     s.units.get_mut(&wounded).unwrap().hp = 10;
-    spawn_unit(&mut s, PlayerId(1), UnitKind::Ranger, h(6, 4));
+    spawn_unit(&mut s, PlayerId(1), UnitKind::Archer, h(6, 4));
     let r = report(&tape(s, vec![OrderMap::new(); 2]));
     assert_eq!(count(&r, Behavior::IdleMilitaryThreatenedCity), 1);
 }
@@ -186,8 +186,8 @@ fn repeated_engine_bounces_not_just_stationary_units() {
     s.players.push(ally);
     s.setup.players.push(s.setup.players[0].clone());
     spawn_unit(&mut s, PlayerId(2), UnitKind::Settler, h(17, 1));
-    let a = spawn_unit(&mut s, PlayerId(0), UnitKind::Soldier, h(8, 4));
-    let b = spawn_unit(&mut s, PlayerId(2), UnitKind::Soldier, h(10, 4));
+    let a = spawn_unit(&mut s, PlayerId(0), UnitKind::Spearman, h(8, 4));
+    let b = spawn_unit(&mut s, PlayerId(2), UnitKind::Spearman, h(10, 4));
     let orders = OrderMap::from([
         (
             PlayerId(0),
@@ -217,7 +217,7 @@ fn repeated_engine_bounces_not_just_stationary_units() {
 #[test]
 fn movement_oscillation_requires_a_b_a_b() {
     let mut s = fixture();
-    let u = spawn_unit(&mut s, PlayerId(0), UnitKind::Soldier, h(8, 4));
+    let u = spawn_unit(&mut s, PlayerId(0), UnitKind::Spearman, h(8, 4));
     let turns = [h(9, 4), h(8, 4), h(9, 4)]
         .into_iter()
         .map(|to| mine(vec![Order::MoveUnit { unit: u, to }]))
@@ -229,8 +229,8 @@ fn movement_oscillation_requires_a_b_a_b() {
 #[test]
 fn gold_hoarding_requires_attacks_and_affordable_defense_and_no_spending() {
     let mut s = fixture();
-    spawn_unit(&mut s, PlayerId(0), UnitKind::Soldier, h(4, 4));
-    let ranger = spawn_unit(&mut s, PlayerId(1), UnitKind::Ranger, h(6, 4));
+    spawn_unit(&mut s, PlayerId(0), UnitKind::Spearman, h(4, 4));
+    let ranger = spawn_unit(&mut s, PlayerId(1), UnitKind::Archer, h(6, 4));
     let shot = OrderMap::from([(
         PlayerId(1),
         vec![Order::RangedAttack {
@@ -261,7 +261,7 @@ fn gold_hoarding_requires_attacks_and_affordable_defense_and_no_spending() {
         vec![Order::BuyItem {
             city,
             item: ProductionItem::Unit {
-                unit: UnitKind::Soldier,
+                unit: UnitKind::Spearman,
             },
         }],
     );
@@ -309,7 +309,7 @@ fn idle_research_and_production_do_not_flag_completion_turns() {
         .find(|c| c.owner == PlayerId(0))
         .unwrap()
         .buildings
-        .insert(BuildingKind::Laboratory);
+        .insert(BuildingKind::Library);
     let r = report(&tape(s.clone(), vec![OrderMap::new()]));
     assert_eq!(count(&r, Behavior::ResearchIdle), 1);
     assert_eq!(count(&r, Behavior::ProductionIdle), 1);
@@ -317,7 +317,7 @@ fn idle_research_and_production_do_not_flag_completion_turns() {
     let view = player_view(&s, PlayerId(0));
     let tech = view.research.available[0].tech;
     let item = ProductionItem::Unit {
-        unit: UnitKind::Soldier,
+        unit: UnitKind::Spearman,
     };
     let r = report(&tape(
         s,
@@ -337,7 +337,7 @@ fn idle_research_and_production_do_not_flag_completion_turns() {
         player
             .outcomes
             .iter()
-            .any(|o| o.contains("bought") && o.contains("Soldier")),
+            .any(|o| o.contains("bought") && o.contains("Spearman")),
         "incident-free spending still has attributed evidence"
     );
     assert!(r.narrative(64_000).contains("bought"));
@@ -423,12 +423,12 @@ fn rates_use_opportunities_and_attacker_factions_and_compact_output_discloses_om
 #[test]
 fn a_garrison_holding_under_bombardment_is_flagged_only_when_it_had_a_better_option() {
     // Garrison-hold rule: a city's garrison stays under bombardment by design. With the
-    // Ranger across an impassable water gap (no sortie reaches it) and no ranged reply, holding is not
+    // Archer across an impassable water gap (no sortie reaches it) and no ranged reply, holding is not
     // an incident; a ranged garrison that could shoot back but held is still flagged.
     let run = |garrison_kind: UnitKind| {
         let mut s = fixture();
         let guard = spawn_unit(&mut s, PlayerId(0), garrison_kind, h(4, 4));
-        let ranger = spawn_unit(&mut s, PlayerId(1), UnitKind::Ranger, h(6, 4));
+        let ranger = spawn_unit(&mut s, PlayerId(1), UnitKind::Archer, h(6, 4));
         for n in h(6, 4).neighbors() {
             s.map.get_mut(n).unwrap().terrain = Terrain::Mountains;
         }
@@ -448,10 +448,10 @@ fn a_garrison_holding_under_bombardment_is_flagged_only_when_it_had_a_better_opt
             .collect();
         report(&tape(s, turns))
     };
-    let held = run(UnitKind::Soldier);
+    let held = run(UnitKind::Spearman);
     assert_eq!(count(&held, Behavior::GarrisonUnderRangedFire), 0);
     assert_eq!(count(&held, Behavior::UnansweredAttack), 0);
-    let passive_shooter = run(UnitKind::Ranger);
+    let passive_shooter = run(UnitKind::Archer);
     assert!(count(&passive_shooter, Behavior::GarrisonUnderRangedFire) > 0);
     // The city absorbs the shots, so the garrison itself is never the unit attacked.
     assert_eq!(count(&passive_shooter, Behavior::UnansweredAttack), 0);

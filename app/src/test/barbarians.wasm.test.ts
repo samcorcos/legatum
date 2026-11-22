@@ -38,7 +38,7 @@ function addCity(s: MState, owner: number, pos: Hex) {
 }
 function addCamp(s: MState, pos: Hex, scoutAt?: Hex): MCamp {
   const b = s.barbarians!;
-  const guard = spawnUnit(s, BARBARIAN, 'Soldier', pos, false).id;
+  const guard = spawnUnit(s, BARBARIAN, 'Spearman', pos, false).id;
   const scout = spawnUnit(s, BARBARIAN, 'Scout', scoutAt ?? ring(pos, 1)[0], false).id;
   const camp: MCamp = { id: b.next_camp_id++, pos, founded_turn: 1, guard, scout, raiders: [], scout_report: null, raid: null, next_raid_turn: 0, next_spawn_turn: 100 };
   b.last_camp_turn = 1;
@@ -79,7 +79,7 @@ describe.skipIf(!available)('WASM barbarian behavior', () => {
     const s = fixture(true);
     addCity(s, 0, fromOffset(2, 2));
     addCamp(s, fromOffset(16, 2));
-    const soldier = spawnUnit(s, 0, 'Soldier', fromOffset(8, 5), false);
+    const soldier = spawnUnit(s, 0, 'Spearman', fromOffset(8, 5), false);
     const raider = spawnUnit(s, BARBARIAN, 'Scout', fromOffset(9, 5), false);
     raider.hp = 20;
     const { reports } = play(s, [{ 0: [{ type: 'MoveUnit', unit: soldier.id, to: fromOffset(9, 5) }] }]);
@@ -102,7 +102,7 @@ describe.skipIf(!available)('WASM barbarian behavior', () => {
     const camp = addCamp(s, fromOffset(12, 6));
     s.units = s.units.filter((u) => u.id !== camp.guard && u.id !== camp.scout);
     camp.guard = null; camp.scout = null;
-    const soldier = spawnUnit(s, 1, 'Soldier', fromOffset(10, 6), false);
+    const soldier = spawnUnit(s, 1, 'Spearman', fromOffset(10, 6), false);
     const { reports } = play(s, [{ 1: [{ type: 'MoveUnit', unit: soldier.id, to: fromOffset(12, 6) }] }, {}]);
     expect(reports[0]).toContainEqual({ type: 'BarbarianCampCleared', camp: camp.id, at: fromOffset(12, 6), by: 1, unit: soldier.id, gold: 50 });
   });
@@ -111,7 +111,7 @@ describe.skipIf(!available)('WASM barbarian behavior', () => {
     const s = fixture(true);
     addCity(s, 0, fromOffset(2, 2));
     const camp = addCamp(s, fromOffset(14, 6));
-    const raider = spawnUnit(s, BARBARIAN, 'Soldier', fromOffset(10, 6), false);
+    const raider = spawnUnit(s, BARBARIAN, 'Spearman', fromOffset(10, 6), false);
     camp.raiders.push(raider.id);
     spawnUnit(s, 0, 'Settler', fromOffset(9, 6), false);
     const { reports } = play(s, Array.from({ length: 5 }, () => ({})));

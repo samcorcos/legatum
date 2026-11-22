@@ -27,7 +27,7 @@ function wing(tiles: number | null = null, extra: (v: PlayerView, city: CityView
     { id: 50, owner: 0, kind: 'Fighter', city: city.id, hp: 100 },
     { id: 51, owner: 0, kind: 'Bomber', city: city.id, hp: 100 },
   ] satisfies AircraftView[];
-  if (tiles !== null) addUnit(v, 2, 'Soldier', fromOffset(8 + tiles, 8));
+  if (tiles !== null) addUnit(v, 2, 'Spearman', fromOffset(8 + tiles, 8));
   extra(v, city);
   return { v, city, fighter: v.aircraft[0], bomber: v.aircraft[1] };
 }
@@ -73,7 +73,7 @@ describe('what an aircraft is doing, in plain words', () => {
   });
 
   it('a teammate\'s unit is never a target, and the reason names what is missing', () => {
-    const { v, city, bomber } = wing(null, (view) => { addUnit(view, 1, 'Soldier', fromOffset(10, 8)); });
+    const { v, city, bomber } = wing(null, (view) => { addUnit(view, 1, 'Spearman', fromOffset(10, 8)); });
     expect(airState(v, city, bomber, [], undefined)).toMatchObject({ kind: 'idle', targets: 0 });
     expect(noTargetReason(v, city, 'Bomber')).toBe('No enemy unit or city is visible within 8 tiles of Bern.');
   });
@@ -89,7 +89,7 @@ describe('what an aircraft is doing, in plain words', () => {
   it('spared barbarians are in reach but ask for no answer, and the reason says so', () => {
     const { v, city, fighter, bomber } = wing(null, (view) => {
       view.players.find((p) => p.id === view.me)!.faction = 'Celts';
-      addUnit(view, 2, 'Soldier', fromOffset(10, 8));
+      addUnit(view, 2, 'Spearman', fromOffset(10, 8));
       view.units[view.units.length - 1].owner = 255;
     });
     expect(airState(v, city, fighter, [], undefined)).toMatchObject({ kind: 'guard', targets: 0 });
@@ -246,7 +246,7 @@ describe('the map', () => {
   });
 
   it('an open strike picker rings its candidates: the Fighter\'s are the ones within 5', () => {
-    const { v, city } = wing(2, (view) => { addUnit(view, 2, 'Soldier', fromOffset(15, 8)); });
+    const { v, city } = wing(2, (view) => { addUnit(view, 2, 'Spearman', fromOffset(15, 8)); });
     const f = airOverlayFor(v, city.id, { plane: 50, what: 'strike', hover: null })!;
     const b = airOverlayFor(v, city.id, { plane: 51, what: 'strike', hover: null })!;
     expect(f.pickKind).toBe('strike');
@@ -282,12 +282,12 @@ describe('the moment an aircraft is ready', () => {
 
   it('completing one is a card for you, with its art; ground units still get none', () => {
     const { v, city } = wing();
-    const done = (unit: 'Fighter' | 'Bomber' | 'Soldier'): Event => ({ type: 'ProductionCompleted', city: city.id, owner: 0, item: { kind: 'Unit', unit } });
+    const done = (unit: 'Fighter' | 'Bomber' | 'Spearman'): Event => ({ type: 'ProductionCompleted', city: city.id, owner: 0, item: { kind: 'Unit', unit } });
     const [card] = momentsForTurn([done('Fighter')], 0, v, v);
     expect(card).toMatchObject({ tier: 'notable', kicker: 'Aircraft ready · Bern', title: 'Fighter ready', at: city.pos, unit: { kind: 'Fighter' } });
     expect(card.effect).toContain('Order it to strike enemies within 5 tiles instead');
     expect(momentsForTurn([done('Bomber')], 0, v, v)[0].effect).toContain('each turn');
-    expect(momentsForTurn([done('Soldier')], 0, v, v)).toEqual([]);
+    expect(momentsForTurn([done('Spearman')], 0, v, v)).toEqual([]);
     // A rival's aircraft is not announced to you.
     expect(momentsForTurn([{ ...done('Fighter'), owner: 2 } as Event], 0, v, v)).toEqual([]);
   });

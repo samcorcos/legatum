@@ -678,15 +678,15 @@ mod tests {
     use legatum_core::{AiDifficulty, Faction, PlayerView};
 
     /// Sparta at Peace with a legal declaration on the enemy, whose city is 15 tiles off, and
-    /// three Soldiers near home.
+    /// three Spearmen near home.
     fn sparta_view() -> PlayerView {
         let mut v = ViewBuilder::new(40, 20)
             .faction(Faction::Sparta)
             .city(1, ME, off(3, 5), 3)
             .city(2, ENEMY, off(18, 5), 3)
-            .unit(1, ME, UnitKind::Soldier, off(5, 5))
-            .unit(2, ME, UnitKind::Soldier, off(5, 6))
-            .unit(3, ME, UnitKind::Soldier, off(5, 7))
+            .unit(1, ME, UnitKind::Spearman, off(5, 5))
+            .unit(2, ME, UnitKind::Spearman, off(5, 6))
+            .unit(3, ME, UnitKind::Spearman, off(5, 7))
             .build();
         v.diplomacy.legacy = false;
         let against = v.team_of(ENEMY);
@@ -822,7 +822,7 @@ mod tests {
     fn a_home_city_under_attack_takes_the_roster_units_near_it() {
         let mut v = sparta_view();
         let raider = ViewBuilder::new(40, 20)
-            .unit(9, ENEMY, UnitKind::Soldier, off(4, 5))
+            .unit(9, ENEMY, UnitKind::Spearman, off(4, 5))
             .build()
             .units
             .into_iter()

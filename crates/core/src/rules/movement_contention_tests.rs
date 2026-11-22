@@ -7,8 +7,8 @@ use crate::{AttackMode, Order, forecast_attack_mode, player_view};
 fn f8_two_rangers_with_clean_alternatives_both_arrive() {
     let mut s = game(&[0, 1]);
     let middle = hex(5, 5);
-    let a = unit(&mut s, 0, UnitKind::Ranger, middle.neighbor(0));
-    let b = unit(&mut s, 0, UnitKind::Ranger, middle.neighbor(5));
+    let a = unit(&mut s, 0, UnitKind::Archer, middle.neighbor(0));
+    let b = unit(&mut s, 0, UnitKind::Archer, middle.neighbor(5));
     let goals = [middle.neighbor(2), middle.neighbor(1)];
     for (u, to) in [(a, goals[0]), (b, goals[1])] {
         assert_eq!(
@@ -39,8 +39,8 @@ fn own_traffic_takes_turns_through_a_single_hex_choke() {
     for h in starts.into_iter().chain(goals).chain([middle]) {
         set_terrain(&mut s, h, Terrain::Grassland);
     }
-    let a = unit(&mut s, 0, UnitKind::Ranger, starts[0]);
-    let b = unit(&mut s, 0, UnitKind::Ranger, starts[1]);
+    let a = unit(&mut s, 0, UnitKind::Archer, starts[0]);
+    let b = unit(&mut s, 0, UnitKind::Archer, starts[1]);
     goto(&mut s, a, goals[0]);
     goto(&mut s, b, goals[1]);
     let (next, events) = resolve_units(&s, &no_orders());
@@ -70,8 +70,8 @@ fn allied_unit_is_transit_only_in_a_single_hex_choke() {
     for h in [start, middle, beyond] {
         set_terrain(&mut s, h, Terrain::Grassland);
     }
-    let ally = unit(&mut s, 1, UnitKind::Soldier, middle);
-    let mover = unit(&mut s, 0, UnitKind::Soldier, start);
+    let ally = unit(&mut s, 1, UnitKind::Spearman, middle);
+    let mover = unit(&mut s, 0, UnitKind::Spearman, start);
     goto(&mut s, mover, beyond);
     let (next, _) = resolve_units(&s, &no_orders());
     assert_eq!(next.units[&mover].pos, beyond);
@@ -86,8 +86,8 @@ fn allied_unit_is_transit_only_in_a_single_hex_choke() {
 fn same_owner_shared_final_destination_terminates_without_stacking() {
     let mut s = game(&[0, 1]);
     let target = hex(5, 5);
-    let a = unit(&mut s, 0, UnitKind::Ranger, target.neighbor(0));
-    let b = unit(&mut s, 0, UnitKind::Ranger, target.neighbor(3));
+    let a = unit(&mut s, 0, UnitKind::Archer, target.neighbor(0));
+    let b = unit(&mut s, 0, UnitKind::Archer, target.neighbor(3));
     goto(&mut s, a, target);
     goto(&mut s, b, target);
     let (next, events) = resolve_units(&s, &no_orders());
@@ -168,11 +168,11 @@ fn contested_city(holding: bool, defender_hp: i32) -> (GameState, CityId, UnitId
     let t = hex(5, 5);
     let c = city(&mut s, 1, t, 3);
     s.cities.get_mut(&c).unwrap().hp = 0;
-    let a = unit(&mut s, 0, UnitKind::Trooper, t.neighbor(0));
+    let a = unit(&mut s, 0, UnitKind::Pikeman, t.neighbor(0));
     let b = unit(
         &mut s,
         1,
-        UnitKind::Soldier,
+        UnitKind::Spearman,
         if holding { t } else { t.neighbor(3) },
     );
     s.units.get_mut(&b).unwrap().hp = defender_hp;
@@ -302,7 +302,7 @@ fn mutual_kill_does_not_capture_and_two_own_survivors_do_not_block_capture() {
 
     let (mut s, c, a, _) = contested_city(false, 10);
     let target = s.cities[&c].pos;
-    let ally = unit(&mut s, 0, UnitKind::Soldier, target.neighbor(1));
+    let ally = unit(&mut s, 0, UnitKind::Spearman, target.neighbor(1));
     goto(&mut s, ally, target);
     let (next, _) = resolve_units(&s, &no_orders());
     assert_eq!(next.cities[&c].owner, PlayerId(0));
@@ -318,7 +318,7 @@ fn mutual_kill_does_not_capture_and_two_own_survivors_do_not_block_capture() {
 fn confirmed_route_survives_save_load_and_follows_each_previewed_step() {
     let mut s = game(&[0, 1]);
     let start = hex(5, 5);
-    let a = unit(&mut s, 0, UnitKind::Ranger, start);
+    let a = unit(&mut s, 0, UnitKind::Archer, start);
     // Deliberate three-step detour to a tile only one step from the start.
     let path = vec![
         start.neighbor(2),
@@ -358,8 +358,8 @@ fn confirmed_route_survives_save_load_and_follows_each_previewed_step() {
 fn confirmed_routes_are_private_and_validation_cannot_probe_fog() {
     let mut s = game(&[0, 1]);
     let (start, target) = (hex(5, 5), hex(6, 5));
-    let a = unit(&mut s, 0, UnitKind::Ranger, start);
-    let b = unit(&mut s, 1, UnitKind::Soldier, target);
+    let a = unit(&mut s, 0, UnitKind::Archer, start);
+    let b = unit(&mut s, 1, UnitKind::Spearman, target);
     s.units.get_mut(&b).unwrap().path = vec![hex(7, 5)];
     goto(&mut s, b, hex(7, 5));
     visibility::update_explored(&mut s);
@@ -404,7 +404,7 @@ fn confirmed_routes_are_private_and_validation_cannot_probe_fog() {
 fn automated_scout_waits_for_own_traffic_without_skipping_its_next_step() {
     let mut s = game(&[0, 1]);
     let middle = hex(5, 5);
-    let a = unit(&mut s, 0, UnitKind::Ranger, middle.neighbor(0));
+    let a = unit(&mut s, 0, UnitKind::Archer, middle.neighbor(0));
     let b = unit(&mut s, 0, UnitKind::Scout, middle.neighbor(5));
     visibility::update_explored(&mut s);
     let goals = [middle.neighbor(2), middle.neighbor(3)];
@@ -597,7 +597,7 @@ fn changed_route(blocker: &str, kind: UnitKind) {
             unit(&mut s, 1, UnitKind::Settler, at);
         }
         _ => {
-            unit(&mut s, 1, UnitKind::Soldier, at);
+            unit(&mut s, 1, UnitKind::Spearman, at);
         }
     }
     let mut plain = s.clone();
@@ -628,19 +628,19 @@ fn changed_route(blocker: &str, kind: UnitKind) {
 
 #[test]
 fn review_route_never_attacks_new_enemy_unit() {
-    changed_route("enemy", UnitKind::Soldier);
+    changed_route("enemy", UnitKind::Spearman);
 }
 #[test]
 fn review_route_never_attacks_new_enemy_city() {
-    changed_route("city", UnitKind::Soldier);
+    changed_route("city", UnitKind::Spearman);
 }
 #[test]
 fn review_route_never_captures_intermediate_civilian() {
-    changed_route("civilian", UnitKind::Soldier);
+    changed_route("civilian", UnitKind::Spearman);
 }
 #[test]
 fn review_route_reroutes_around_parked_friend() {
-    changed_route("friend", UnitKind::Soldier);
+    changed_route("friend", UnitKind::Spearman);
 }
 #[test]
 fn review_settler_route_reroutes_around_enemy() {
@@ -651,7 +651,7 @@ fn review_settler_route_reroutes_around_enemy() {
 fn review_known_hostiles_are_rejected_inside_routes_but_allowed_as_goals() {
     for blocker in ["city", "unit", "civilian"] {
         let mut s = game(&[0, 1]);
-        let a = unit(&mut s, 0, UnitKind::Soldier, hex(3, 4));
+        let a = unit(&mut s, 0, UnitKind::Spearman, hex(3, 4));
         let at = hex(4, 4);
         if blocker == "city" {
             city(&mut s, 1, at, 3);
@@ -660,7 +660,7 @@ fn review_known_hostiles_are_rejected_inside_routes_but_allowed_as_goals() {
                 &mut s,
                 1,
                 if blocker == "unit" {
-                    UnitKind::Soldier
+                    UnitKind::Spearman
                 } else {
                     UnitKind::Settler
                 },
@@ -704,8 +704,8 @@ fn review_known_hostiles_are_rejected_inside_routes_but_allowed_as_goals() {
 #[test]
 fn review_ranged_units_cannot_capture_in_any_entry_case() {
     for kind in [
-        UnitKind::Ranger,
-        UnitKind::Marksman,
+        UnitKind::Archer,
+        UnitKind::Crossbowman,
         UnitKind::CompositeArcher,
     ] {
         for defender in ["none", "incoming", "garrison"] {
@@ -718,7 +718,7 @@ fn review_ranged_units_cannot_capture_in_any_entry_case() {
                 let b = unit(
                     &mut s,
                     1,
-                    UnitKind::Soldier,
+                    UnitKind::Spearman,
                     if defender == "incoming" {
                         at.neighbor(3)
                     } else {
@@ -750,7 +750,7 @@ fn team_capture(seed: u64, reverse_ids: bool, reverse_seats: bool, hp: [i32; 2])
         let a = unit(
             &mut s,
             if reverse_seats { 1 - k } else { k } as u8,
-            UnitKind::Soldier,
+            UnitKind::Spearman,
             starts[k],
         );
         s.units.get_mut(&a).unwrap().hp = hp[k];
@@ -801,10 +801,10 @@ fn review_teammate_capture_coin_uses_seed_turn_tile_not_ids_or_seats() {
 fn review_waiting_traffic_does_not_retry_because_another_owner_moved() {
     let mut s = game(&[0, 1]);
     let at = hex(5, 5);
-    unit(&mut s, 0, UnitKind::Soldier, at);
-    let a = unit(&mut s, 0, UnitKind::Soldier, at.neighbor(0));
-    let b = unit(&mut s, 0, UnitKind::Soldier, at.neighbor(3));
-    let other = unit(&mut s, 1, UnitKind::Soldier, hex(9, 8));
+    unit(&mut s, 0, UnitKind::Spearman, at);
+    let a = unit(&mut s, 0, UnitKind::Spearman, at.neighbor(0));
+    let b = unit(&mut s, 0, UnitKind::Spearman, at.neighbor(3));
+    let other = unit(&mut s, 1, UnitKind::Spearman, hex(9, 8));
     goto(&mut s, a, at);
     goto(&mut s, b, at);
     goto(&mut s, other, hex(10, 8));
@@ -829,8 +829,8 @@ fn review_waiting_traffic_does_not_retry_because_another_owner_moved() {
 #[test]
 fn review_terrain_fallback_cannot_turn_a_move_into_an_attack() {
     let mut s = game(&[0, 1]);
-    let a = unit(&mut s, 0, UnitKind::Soldier, hex(3, 4));
-    let b = unit(&mut s, 1, UnitKind::Soldier, hex(4, 4));
+    let a = unit(&mut s, 0, UnitKind::Spearman, hex(3, 4));
+    let b = unit(&mut s, 1, UnitKind::Spearman, hex(4, 4));
     for t in &mut s.map.tiles {
         t.terrain = Terrain::Mountains;
     }
@@ -859,9 +859,9 @@ fn review_teammates_use_hp_after_contested_ruin_combat() {
         let at = hex(5, 5);
         let c = city(&mut s, 2, at, 3);
         s.cities.get_mut(&c).unwrap().hp = 0;
-        let a = unit(&mut s, 0, UnitKind::Soldier, at.neighbor(0));
-        let b = unit(&mut s, 1, UnitKind::Soldier, at.neighbor(2));
-        let enemy = unit(&mut s, 2, UnitKind::Soldier, at.neighbor(4));
+        let a = unit(&mut s, 0, UnitKind::Spearman, at.neighbor(0));
+        let b = unit(&mut s, 1, UnitKind::Spearman, at.neighbor(2));
+        let enemy = unit(&mut s, 2, UnitKind::Spearman, at.neighbor(4));
         s.units.get_mut(&enemy).unwrap().hp = 1;
         for u in [a, b, enemy] {
             goto(&mut s, u, at);
@@ -894,7 +894,7 @@ fn review_defeated_city_forecast_has_no_retaliation() {
     let at = hex(5, 5);
     let c = city(&mut s, 1, at, 3);
     s.cities.get_mut(&c).unwrap().hp = 0;
-    let a = unit(&mut s, 0, UnitKind::Soldier, at.neighbor(0));
+    let a = unit(&mut s, 0, UnitKind::Spearman, at.neighbor(0));
     visibility::update_explored(&mut s);
     let f = forecast_attack_mode(&player_view(&s, PlayerId(0)), a, at, AttackMode::Melee).unwrap();
     assert_eq!(
@@ -937,7 +937,7 @@ fn stranded_beside_a_foreign_city(around: bool) -> (GameState, UnitId, Hex, Hex)
     city(&mut s, 1, c, 3);
     assert_eq!(s.map.get(start).unwrap().owner, Some(PlayerId(1)));
     assert_eq!(s.map.get(exit).unwrap().owner, None);
-    let ranger = unit(&mut s, 0, UnitKind::Ranger, start);
+    let ranger = unit(&mut s, 0, UnitKind::Archer, start);
     (s, ranger, c, exit)
 }
 
@@ -950,7 +950,7 @@ fn only_stranded(s: &GameState) -> bool {
 
 #[test]
 fn a_stranded_unit_never_walks_into_a_peaceful_foreign_city_on_its_way_out() {
-    // War suite `war-india-chur-ring` run 41, T155: a Swiss Ranger stranded in Japanese land by
+    // War suite `war-india-chur-ring` run 41, T155: a Swiss Archer stranded in Japanese land by
     // the Peace made that turn took the city as the stepping stone to the exit and ended the
     // turn inside Hiroshima. The egress route counted the city's tile as passable.
     let (mut s, ranger, c, exit) = stranded_beside_a_foreign_city(false);

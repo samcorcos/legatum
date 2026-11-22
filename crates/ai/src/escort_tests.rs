@@ -11,8 +11,8 @@ fn view() -> ViewBuilder {
     ViewBuilder::new(24, 16)
         .faction(Faction::Mongols)
         .city(1, ME, HOME, 2)
-        .unit(1, ME, UnitKind::Soldier, SITE)
-        .unit(2, ME, UnitKind::Soldier, HOME)
+        .unit(1, ME, UnitKind::Spearman, SITE)
+        .unit(2, ME, UnitKind::Spearman, HOME)
 }
 
 fn planner(view: &PlayerView) -> Planner<'_> {
@@ -53,7 +53,7 @@ fn holding_or_upgrading_an_arrived_escort_reserves_its_position() {
 #[test]
 fn tactical_retreat_preempts_an_active_escort_assignment() {
     let mut view = view()
-        .unit(50, ENEMY, UnitKind::Trooper, Hex::new(9, 8))
+        .unit(50, ENEMY, UnitKind::Pikeman, Hex::new(9, 8))
         .build();
     view.units[0].hp = 20;
     let mut p = planner(&view);

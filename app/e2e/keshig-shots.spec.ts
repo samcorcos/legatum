@@ -43,7 +43,7 @@ for (const size of [{ width: 1000, height: 600 }, { width: 1440, height: 900 }])
       await boot(page, size);
       await page.evaluate(async () => {
         const svg = async (url: string) => (await fetch(url)).text();
-        const names = ['unit-keshig', 'unit-horseman', 'unit-ranger', 'unit-cataphract'];
+        const names = ['unit-keshig', 'unit-horseman', 'unit-archer', 'unit-cataphract'];
         const roundels = ['keshig', 'horseman', 'archer', 'cataphract'];
         const icons = await Promise.all(names.map((n) => svg(`/src/assets/icons/${n}.svg`)));
         const rounds = await Promise.all(roundels.map((n) => svg(`/src/assets/units/${n}-roundel.svg`)));

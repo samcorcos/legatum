@@ -63,7 +63,7 @@ pub const ORDINARY_BUILDINGS: [BuildingKind; 5] = [
     BuildingKind::Granary,
     BuildingKind::Workshop,
     BuildingKind::Market,
-    BuildingKind::Laboratory,
+    BuildingKind::Library,
     BuildingKind::Walls,
 ];
 
@@ -545,9 +545,9 @@ impl ViewBuilder {
                     || !matches!(
                         i,
                         ProductionItem::Building {
-                            building: BuildingKind::BroodHall | BuildingKind::CourierHall
+                            building: BuildingKind::RiceStorehouse | BuildingKind::YamRelayStation
                         } | ProductionItem::Unit {
-                            unit: UnitKind::Heir
+                            unit: UnitKind::HeirToTheThrone
                         }
                     )
             })
@@ -856,7 +856,7 @@ pub fn assert_valid(view: &PlayerView, orders: &[Order]) {
                 assert_ne!(
                     *item,
                     ProductionItem::Building {
-                        building: BuildingKind::RelayUplink
+                        building: BuildingKind::GreatLibrary
                     }
                 );
                 assert!(cost <= view.economy.gold);

@@ -75,14 +75,14 @@ impl Era {
     }
     fn melee(self) -> UnitKind {
         match self {
-            Era::Ancient => UnitKind::Soldier,
+            Era::Ancient => UnitKind::Spearman,
             Era::Classical => UnitKind::Phalangite,
-            Era::Renaissance => UnitKind::AssaultTrooper,
+            Era::Renaissance => UnitKind::Musketman,
         }
     }
     fn ranged(self) -> UnitKind {
         match self {
-            Era::Ancient => UnitKind::Ranger,
+            Era::Ancient => UnitKind::Archer,
             Era::Classical => UnitKind::CompositeArcher,
             Era::Renaissance => UnitKind::Arquebusier,
         }

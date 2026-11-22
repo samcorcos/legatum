@@ -63,7 +63,7 @@ export function sakokuState(turns: number | null = null, enemyInLand = false): M
   city(s, 0, 9, 14, 'Cell', 6);
   city(s, 1, 26, 4, 'Greenwatch', 4, true);
   city(s, 2, 25, 17, 'Waystation', 4, true);
-  spawnUnit(s, 0, 'Soldier', hive.pos, false);
+  spawnUnit(s, 0, 'Spearman', hive.pos, false);
   spawnUnit(s, 0, 'Scout', fromOffset(12, 9), false);
   s.players[0].goalRule = 'Sakoku';
   s.players[0].sakokuTurns = turns;
@@ -71,7 +71,7 @@ export function sakokuState(turns: number | null = null, enemyInLand = false): M
   if (enemyInLand) {
     for (const r of s.diplomacy?.relations ?? []) if (r.a === 0 && r.b === 1) r.state = 'War';
     const at = hive.grownTiles[0] ?? fromOffset(9, 8);
-    spawnUnit(s, 1, 'Soldier', at, false);
+    spawnUnit(s, 1, 'Spearman', at, false);
   }
   s.turn = turns === null ? 60 : 90;
   refreshVision(s);
@@ -87,13 +87,13 @@ function sakokuRivalState(parked = true): MState {
   const home = city(s, 0, 6, 6, 'Greenhold', 6, true);
   const hive = city(s, 1, 17, 10, 'Hive', 10, true);
   city(s, 1, 22, 15, 'Spore', 6);
-  spawnUnit(s, 0, 'Soldier', home.pos, false);
+  spawnUnit(s, 0, 'Spearman', home.pos, false);
   spawnUnit(s, 0, 'Scout', fromOffset(9, 8), false);
   for (const r of s.diplomacy?.relations ?? []) if (r.a === 0 && r.b === 1) r.state = 'War';
   s.players[1].sakokuTurns = 40;
   s.players[1].goalRule = 'Sakoku';
   const inside = hive.grownTiles[0] ?? fromOffset(18, 10);
-  if (parked) spawnUnit(s, 0, 'Soldier', inside, false);
+  if (parked) spawnUnit(s, 0, 'Spearman', inside, false);
   s.players[1].factionGoalDone = true;
   s.players[1].factionGoalReachedBefore = true;
   s.turn = 100;
@@ -141,13 +141,13 @@ export function freeTechsState(): MState {
 export function retireState(retired = 0): MState {
   const s = base('710104', 'Sparta', [{ faction: 'Celts', name: 'AI 2' }]);
   const shrine = city(s, 0, 8, 7, 'Ironhold', 6, true);
-  shrine.buildings = ['WarShrine'];
+  shrine.buildings = ['Agoge'];
   const plain = city(s, 0, 17, 11, 'Stonewatch', 4);
   city(s, 1, 25, 5, 'Greenwatch', 4, true);
   const xp = (level: number) => thresholdsFor('Sparta')[level - 1];
-  const stand = (kind: 'Soldier' | 'Trooper', at: MCity, level: number, hp = 100) => { const u = spawnUnit(s, 0, kind, at.pos, false); u.xp = level ? xp(level) : 0; u.hp = hp; return u; };
-  stand('Soldier', shrine, 4); stand('Soldier', shrine, 6, 70); stand('Trooper', shrine, 4, 85);
-  stand('Soldier', plain, 5); stand('Soldier', plain, 1);
+  const stand = (kind: 'Spearman' | 'Pikeman', at: MCity, level: number, hp = 100) => { const u = spawnUnit(s, 0, kind, at.pos, false); u.xp = level ? xp(level) : 0; u.hp = hp; return u; };
+  stand('Spearman', shrine, 4); stand('Spearman', shrine, 6, 70); stand('Pikeman', shrine, 4, 85);
+  stand('Spearman', plain, 5); stand('Spearman', plain, 1);
   s.players[0].veteransRetired = retired;
   if (retired >= 3) s.players[0].factionGoalDone = true;
   s.turn = 130;
@@ -161,7 +161,7 @@ export function wildState(): MState {
   const cities = [city(s, 0, 8, 7, 'Greenhold', 8, true), city(s, 0, 17, 9, 'Thornwatch', 8), city(s, 0, 11, 16, 'Mossfen', 8)];
   for (const c of cities) for (const h of within(c.pos, 3)) { const i = idxOf(s, h); if (s.owner[i] < 0 || s.tileCity[i] === c.id) { s.owner[i] = 0; s.tileCity[i] = c.id; } }
   city(s, 1, 26, 4, 'Waystation', 4, true);
-  spawnUnit(s, 0, 'Soldier', fromOffset(8, 8), false);
+  spawnUnit(s, 0, 'Spearman', fromOffset(8, 8), false);
   // Every milestone is already claimed, so a turn's report holds only what the rite did.
 s.turn = 100;
   refreshVision(s);
@@ -183,7 +183,7 @@ function wildClearedState(): MState {
   camp.guard = null;
   // At Peace a rival must leave closed Celts land; at war it may stand and clear the camp.
   for (const relation of s.diplomacy?.relations ?? []) relation.state = 'War';
-  spawnUnit(s, 1, 'Soldier', camp.pos, false);
+  spawnUnit(s, 1, 'Spearman', camp.pos, false);
   refreshVision(s);
   return s;
 }

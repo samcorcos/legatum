@@ -10,7 +10,7 @@ fn economy() -> PlayerView {
         .city(3, ME, off(10, 11), 3)
         .city(4, ENEMY, off(11, 5), 2)
         .city(5, ENEMY, off(17, 5), 2)
-        .unit(1, ME, UnitKind::Soldier, off(7, 5))
+        .unit(1, ME, UnitKind::Spearman, off(7, 5))
         .build()
 }
 
@@ -42,7 +42,7 @@ fn buys_a_funded_burst_in_multiple_cities_and_preserves_economic_builds() {
         for o in &mut d.options {
             if o.item
                 == (ProductionItem::Unit {
-                    unit: UnitKind::Ranger,
+                    unit: UnitKind::Archer,
                 })
             {
                 o.buy_cost = Some(175);
@@ -61,7 +61,7 @@ fn buys_a_funded_burst_in_multiple_cities_and_preserves_economic_builds() {
     assert!(buys.iter().all(|(_, item)| matches!(
         item,
         ProductionItem::Unit {
-            unit: UnitKind::Ranger
+            unit: UnitKind::Archer
         }
     )));
     let spent: i32 = buys
@@ -96,8 +96,8 @@ fn volley_then_melee_captures_instead_of_attacking_independently() {
     let mut view = ViewBuilder::new(20, 16)
         .city(1, ME, off(3, 5), 3)
         .city(2, ENEMY, target, 2)
-        .unit(1, ME, UnitKind::Ranger, off(6, 5))
-        .unit(2, ME, UnitKind::Soldier, off(7, 5))
+        .unit(1, ME, UnitKind::Archer, off(6, 5))
+        .unit(2, ME, UnitKind::Spearman, off(7, 5))
         .build();
     view.cities
         .iter_mut()
@@ -122,7 +122,7 @@ fn takes_exposed_settler_without_a_suicidal_melee_attack() {
     let target = off(7, 5);
     let view = ViewBuilder::new(20, 16)
         .city(1, ME, off(3, 5), 3)
-        .unit(1, ME, UnitKind::Soldier, off(6, 5))
+        .unit(1, ME, UnitKind::Spearman, off(6, 5))
         .unit(2, ENEMY, UnitKind::Settler, target)
         .build();
     let orders = HumanPlaybookBrain::default().orders(&view);

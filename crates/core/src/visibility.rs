@@ -682,7 +682,7 @@ mod tests {
         let mut state = blank_game(&setup, Map::new(24, 16, Terrain::Grassland));
         let pos = Hex::new(12, 8);
         state.map.get_mut(pos).unwrap().owner = Some(P0);
-        let hunter = spawn_unit(&mut state, P1, UnitKind::Marksman, pos);
+        let hunter = spawn_unit(&mut state, P1, UnitKind::Crossbowman, pos);
         let view = crate::player_view(&state, P0);
         assert!(view.tile(pos).unwrap().visible);
         assert!(view.units.iter().any(|unit| unit.id == hunter));
@@ -695,7 +695,7 @@ mod tests {
         let mut state = blank_game(&setup, Map::new(40, 24, Terrain::Grassland));
         let owned = Hex::new(20, 12);
         state.map.get_mut(owned).unwrap().owner = Some(P0);
-        spawn_unit(&mut state, P1, UnitKind::Marksman, Hex::new(21, 12));
+        spawn_unit(&mut state, P1, UnitKind::Crossbowman, Hex::new(21, 12));
         let public = public_view(&state);
         let human = player_view_detail(&state, P0, &public, ViewDetail::Full);
         let ai = player_view_detail(&state, P0, &public, ViewDetail::Decisions);
@@ -717,8 +717,8 @@ mod tests {
         city(&mut state, P1, Hex::new(36, 20));
         state.map.get_mut(screen).unwrap().terrain = Terrain::Forest;
         state.map.get_mut(shooter).unwrap().terrain = Terrain::Hills;
-        spawn_unit(&mut state, P0, UnitKind::Soldier, victim);
-        let attacker = spawn_unit(&mut state, P1, UnitKind::Ranger, shooter);
+        spawn_unit(&mut state, P0, UnitKind::Spearman, victim);
+        let attacker = spawn_unit(&mut state, P1, UnitKind::Archer, shooter);
         let (next, events) = crate::resolve_turn(
             &state,
             &[(

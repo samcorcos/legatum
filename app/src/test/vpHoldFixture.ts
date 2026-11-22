@@ -47,7 +47,7 @@ export function holdFixture(spec: HoldSpec): MState {
     p.factionGoalDone = true;
     const col = 3 + 6 * (p.id % 3), row = 3 + 6 * Math.floor(p.id / 3), at = fromOffset(col, row);
     if (!spec.noSettler?.includes(p.id)) spawnUnit(s, p.id, 'Settler', fromOffset(col + 2, row), false);
-    if (spec.noSettler?.includes(p.id)) spawnUnit(s, p.id, 'Soldier', fromOffset(col, row + 2), false);
+    if (spec.noSettler?.includes(p.id)) spawnUnit(s, p.id, 'Spearman', fromOffset(col, row + 2), false);
     const population = spec.cities?.[p.id];
     if (population === undefined) continue;
     const city: MCity = {

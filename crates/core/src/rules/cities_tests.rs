@@ -64,7 +64,7 @@ pub(crate) fn found(state: &mut GameState, owner: PlayerId, pos: Hex) -> CityId 
 
 fn soldier() -> ProductionItem {
     ProductionItem::Unit {
-        unit: UnitKind::Soldier,
+        unit: UnitKind::Spearman,
     }
 }
 
@@ -348,19 +348,19 @@ fn sparta_war_shrine_promotes_trained_military() {
     assert!(economy::can_produce(
         &s,
         &s.cities[&c],
-        building(BuildingKind::WarShrine)
+        building(BuildingKind::Agoge)
     ));
     let mut events = Vec::new();
     assert!(complete_item(
         &mut s,
         c,
-        building(BuildingKind::WarShrine),
+        building(BuildingKind::Agoge),
         &mut events
     ));
     assert!(complete_item(&mut s, c, soldier(), &mut events));
     let trained = s
         .units_of(P0)
-        .find(|u| u.kind == UnitKind::Soldier)
+        .find(|u| u.kind == UnitKind::Spearman)
         .unwrap();
     assert_eq!(
         crate::rules::promotion::level_for(Faction::Sparta, trained.xp),
@@ -398,7 +398,7 @@ fn a_foreign_unit_does_not_block_a_worked_tile() {
     s.map.get_mut(tile).unwrap().resource = Some(crate::resources::Resource::Wheat);
     let before = economy::city_yields(&s, &s.cities[&city]);
     assert!(before.worked.contains(&tile));
-    spawn_unit(&mut s, P1, UnitKind::Soldier, tile);
+    spawn_unit(&mut s, P1, UnitKind::Spearman, tile);
     let after = economy::city_yields(&s, &s.cities[&city]);
     assert!(after.worked.contains(&tile));
     assert_eq!(before.total, after.total);
@@ -409,7 +409,7 @@ fn celts_raze_removes_conquered_territory() {
     let mut s = test_game(&[(Faction::Celts, 0), (Faction::Mongols, 1)]);
     let home = found(&mut s, P0, at(5, 5));
     let foreign = found(&mut s, P1, at(12, 5));
-    let intruder = spawn_unit(&mut s, P1, UnitKind::Soldier, at(6, 5));
+    let intruder = spawn_unit(&mut s, P1, UnitKind::Spearman, at(6, 5));
     s.units.get_mut(&intruder).unwrap().hp = 15;
     let (mut next, _) = crate::resolve_turn(&s, &BTreeMap::new());
     assert!(next.units[&intruder].hp >= 15);
@@ -500,14 +500,14 @@ fn raze_allows_original_capitals_and_goal_buildings() {
         .get_mut(&target)
         .unwrap()
         .buildings
-        .insert(BuildingKind::RelayUplink);
+        .insert(BuildingKind::GreatLibrary);
     assert!(raze_blocker(&s, P0, target).is_none());
     s.cities.get_mut(&target).unwrap().buildings.clear();
     s.cities
         .get_mut(&target)
         .unwrap()
         .buildings
-        .insert(BuildingKind::CourierHall);
+        .insert(BuildingKind::YamRelayStation);
     assert!(raze_blocker(&s, P0, target).is_none());
     // The captor holds the capital's point until it razes the city: razing gives it up.
     assert_eq!(crate::scoring::capitals_held(&s, P0).len(), 1);
@@ -532,8 +532,8 @@ fn razing_a_great_work_city_destroys_its_site() {
         .get_mut(&target)
         .unwrap()
         .buildings
-        .insert(BuildingKind::RelayUplink);
-    crate::landmarks::complete(&mut s, target, BuildingKind::RelayUplink, site);
+        .insert(BuildingKind::GreatLibrary);
+    crate::landmarks::complete(&mut s, target, BuildingKind::GreatLibrary, site);
     crate::rules::battle::capture_city(&mut s, target, P0, &mut Vec::new());
     s.cities.get_mut(&target).unwrap().resistance = 0;
     assert_eq!(s.map.get(site).unwrap().owner, Some(P0));
@@ -588,14 +588,14 @@ fn set_production_switch_banks_progress_and_checks_tech() {
         &mut ev,
     );
     assert_eq!(city(&s, c).producing, Some(scout));
-    // The Soldier's progress stays banked with it; the Scout starts from its own (none).
+    // The Spearman's progress stays banked with it; the Scout starts from its own (none).
     assert_eq!(city(&s, c).production_stored, 0);
     assert_eq!(city(&s, c).banked(soldier()), 12);
 
     // A Library needs Writing: refused (and an order for it leaves the Scout building).
     let market = Order::SetProduction {
         city: c,
-        item: building(BuildingKind::Laboratory),
+        item: building(BuildingKind::Library),
     };
     assert!(validate_city_order(&s, P0, &market).is_err());
     apply_city_orders(&mut s, P0, std::slice::from_ref(&market), &mut ev);
@@ -619,13 +619,11 @@ fn megaproject_start_is_announced_once() {
     let mut s = two_players();
     let c = found(&mut s, P0, at(5, 5));
     s.player_mut(P0).techs.insert(TechId::Philosophy);
-    city_mut(&mut s, c)
-        .buildings
-        .insert(BuildingKind::Laboratory);
+    city_mut(&mut s, c).buildings.insert(BuildingKind::Library);
     let order = Order::SetProduction {
         city: c,
         item: ProductionItem::Wonder {
-            building: BuildingKind::RelayUplink,
+            building: BuildingKind::GreatLibrary,
             tile: at(6, 5),
         },
     };
@@ -1079,12 +1077,12 @@ fn founding_a_city_at_war_moves_no_unit() {
     found(&mut s, P0, at(2, 2));
     found(&mut s, P1, at(16, 16));
     let settler = spawn_unit(&mut s, P0, UnitKind::Settler, at(8, 8));
-    let escort = spawn_unit(&mut s, P0, UnitKind::Soldier, at(8, 8));
+    let escort = spawn_unit(&mut s, P0, UnitKind::Spearman, at(8, 8));
     let foes: Vec<_> = at(8, 8)
         .neighbors()
         .iter()
         .take(2)
-        .map(|h| spawn_unit(&mut s, P1, UnitKind::Soldier, *h))
+        .map(|h| spawn_unit(&mut s, P1, UnitKind::Spearman, *h))
         .collect();
     let before: Vec<_> = [escort, foes[0], foes[1]]
         .iter()
@@ -1208,7 +1206,7 @@ fn found_city_rules() {
     assert!(found_city(&mut s, ok, &mut ev).is_ok());
 
     // Not a settler.
-    let soldier = spawn_unit(&mut s, P0, UnitKind::Soldier, at(5, 15));
+    let soldier = spawn_unit(&mut s, P0, UnitKind::Spearman, at(5, 15));
     assert!(found_city(&mut s, soldier, &mut ev).is_err());
 
     // Not land.
@@ -1384,7 +1382,7 @@ fn spawn_placement_respects_stacking_and_waits_when_blocked() {
 
     // Own soldier on the city tile: the new soldier goes to the first adjacent tile in hex order,
     // skipping water.
-    spawn_unit(&mut s, P0, UnitKind::Soldier, pos);
+    spawn_unit(&mut s, P0, UnitKind::Spearman, pos);
     s.map.get_mut(adj[0]).unwrap().terrain = Terrain::Ocean;
     city_mut(&mut s, c).producing = Some(soldier());
     city_mut(&mut s, c).production_stored = 80;
@@ -1395,7 +1393,7 @@ fn spawn_placement_respects_stacking_and_waits_when_blocked() {
     // Block everything else: enemy scout, own military units.
     spawn_unit(&mut s, P1, UnitKind::Scout, adj[2]);
     for h in &adj[3..] {
-        spawn_unit(&mut s, P0, UnitKind::Soldier, *h);
+        spawn_unit(&mut s, P0, UnitKind::Spearman, *h);
     }
     let before = s.units.len();
     city_mut(&mut s, c).producing = Some(soldier());
@@ -1511,8 +1509,8 @@ fn newly_completed_military_pays_upkeep_using_the_city_yield_snapshot() {
     for faction in [Faction::Athens, Faction::Switzerland] {
         let mut s = test_game(&[(faction, 0), (Faction::Byzantium, 1)]);
         let c = found(&mut s, P0, at(5, 5));
-        spawn_unit(&mut s, P0, UnitKind::Ranger, at(4, 5));
-        spawn_unit(&mut s, P0, UnitKind::Soldier, at(6, 5));
+        spawn_unit(&mut s, P0, UnitKind::Archer, at(4, 5));
+        spawn_unit(&mut s, P0, UnitKind::Spearman, at(6, 5));
         city_mut(&mut s, c).producing = Some(soldier());
         city_mut(&mut s, c).production_stored = 79;
         s.player_mut(P0).gold = 10;
@@ -1535,10 +1533,10 @@ fn newly_completed_military_pays_upkeep_using_the_city_yield_snapshot() {
 fn negative_treasury_disbands_costliest_unit_one_per_turn() {
     let mut s = two_players();
     for i in 0..3 {
-        spawn_unit(&mut s, P0, UnitKind::Soldier, at(2 + i, 2));
+        spawn_unit(&mut s, P0, UnitKind::Spearman, at(2 + i, 2));
     }
-    let t1 = spawn_unit(&mut s, P0, UnitKind::Trooper, at(2, 4));
-    let t2 = spawn_unit(&mut s, P0, UnitKind::Trooper, at(3, 4));
+    let t1 = spawn_unit(&mut s, P0, UnitKind::Pikeman, at(2, 4));
+    let t2 = spawn_unit(&mut s, P0, UnitKind::Pikeman, at(3, 4));
     spawn_unit(&mut s, P0, UnitKind::Settler, at(4, 4));
     // 5 military, 2 free: upkeep 3.
     assert_eq!(economy::upkeep(&s, P0), 3);
@@ -1593,7 +1591,7 @@ fn an_undamaged_unthreatened_city_heals_twenty_and_caps_at_full() {
     city_mut(&mut s, a).hp = CITY_HP - 50;
     city_mut(&mut s, b).hp = CITY_HP - 2;
     // Its own garrison next door changes nothing.
-    spawn_unit(&mut s, P0, UnitKind::Soldier, at(6, 5));
+    spawn_unit(&mut s, P0, UnitKind::Spearman, at(6, 5));
     city_turn(&mut s);
     assert_eq!(CITY_HEAL, 20);
     assert_eq!(city(&s, a).hp, CITY_HP - 50 + 20);
@@ -1618,7 +1616,7 @@ fn a_city_with_an_at_war_military_unit_adjacent_does_not_heal() {
     let mut s = two_players();
     let a = found(&mut s, P0, at(5, 5));
     city_mut(&mut s, a).hp = CITY_HP - 50;
-    spawn_unit(&mut s, P1, UnitKind::Soldier, at(3, 5));
+    spawn_unit(&mut s, P1, UnitKind::Spearman, at(3, 5));
     city_turn(&mut s);
     assert_eq!(city(&s, a).hp, CITY_HP - 50 + CITY_HEAL);
 }
@@ -2092,8 +2090,8 @@ fn a_completed_great_work_tile_survives_population_loss() {
     let site = city(&s, c).grown_tiles[0];
     city_mut(&mut s, c)
         .buildings
-        .insert(BuildingKind::RelayUplink);
-    crate::landmarks::complete(&mut s, c, BuildingKind::RelayUplink, site);
+        .insert(BuildingKind::GreatLibrary);
+    crate::landmarks::complete(&mut s, c, BuildingKind::GreatLibrary, site);
     process_borders(&mut s, &mut Vec::new());
     assert!(!city(&s, c).grown_tiles.contains(&site));
     assert_eq!(city(&s, c).grown_tiles.len(), 1);
@@ -2103,7 +2101,7 @@ fn a_completed_great_work_tile_survives_population_loss() {
     let tile = s.map.get(site).unwrap();
     assert_eq!((tile.owner, tile.city), (Some(P0), Some(c)));
     assert_eq!(tile.landmark.unwrap().city, c);
-    assert!(city(&s, c).buildings.contains(&BuildingKind::RelayUplink));
+    assert!(city(&s, c).buildings.contains(&BuildingKind::GreatLibrary));
 }
 
 #[test]
@@ -2348,7 +2346,7 @@ fn blocked_queue_head_is_retained_while_later_work_proceeds() {
     let id = found(&mut s, P0, at(5, 5));
     let blocked = soldier();
     for h in at(5, 5).within(1) {
-        spawn_unit(&mut s, P0, UnitKind::Soldier, h);
+        spawn_unit(&mut s, P0, UnitKind::Spearman, h);
     }
     let monument = building(BuildingKind::Granary);
     let c = city_mut(&mut s, id);
@@ -2359,7 +2357,7 @@ fn blocked_queue_head_is_retained_while_later_work_proceeds() {
     produce(&mut s, id, 3, &mut events);
     assert_eq!(city(&s, id).producing, Some(monument));
     assert_eq!(city(&s, id).production_queue, vec![blocked]);
-    // The waiting Soldier keeps its own progress; the Monument starts from its own.
+    // The waiting Spearman keeps its own progress; the Monument starts from its own.
     assert_eq!(city(&s, id).production_stored, 3);
     assert_eq!(city(&s, id).banked(blocked), 17);
     assert!(events.iter().any(|e| matches!(e, Event::OrderFailed { reason: message, .. } if message.contains("No free spawn tile") && message.contains("kept in queue"))));
@@ -2384,7 +2382,7 @@ fn blocked_queue_head_is_retained_while_later_work_proceeds() {
             .iter()
             .any(|e| matches!(e, Event::ProductionCompleted { item, .. } if *item == blocked))
     );
-    // Overflow and the Soldier's own bank both went into it.
+    // Overflow and the Spearman's own bank both went into it.
     let cost = economy::city_production_cost(&s, city(&s, id), blocked);
     assert_eq!(city(&s, id).production_stored, overflow + 17 + 3 - cost);
     assert!(city(&s, id).production_banked.is_empty());
@@ -2416,7 +2414,7 @@ fn blocked_only_queue_banks_production_and_reports_once_across_save_load() {
     let id = found(&mut s, P0, at(5, 5));
     let item = soldier();
     for h in at(5, 5).within(1) {
-        spawn_unit(&mut s, P0, UnitKind::Soldier, h);
+        spawn_unit(&mut s, P0, UnitKind::Spearman, h);
     }
     let cap = IDLE_PRODUCTION_CAP;
     let item_cost = economy::city_production_cost(&s, city(&s, id), item);
@@ -2487,7 +2485,7 @@ fn waiting_queue_banks_only_up_to_the_first_queued_item_cost() {
     let mut s = two_players();
     let id = found(&mut s, P0, at(5, 5));
     for h in at(5, 5).within(1) {
-        spawn_unit(&mut s, P0, UnitKind::Soldier, h);
+        spawn_unit(&mut s, P0, UnitKind::Spearman, h);
     }
     let cost = economy::city_production_cost(&s, city(&s, id), soldier());
     let c = city_mut(&mut s, id);
@@ -2646,7 +2644,7 @@ fn invalid_queue_item_reports_its_specific_building_requirement() {
     s.player_mut(P0).techs.extend(TechId::ALL);
     let c = city_mut(&mut s, id);
     c.population = 8;
-    c.production_queue = vec![building(BuildingKind::Autoworks), soldier()];
+    c.production_queue = vec![building(BuildingKind::Factory), soldier()];
     let mut events = Vec::new();
     produce(&mut s, id, 3, &mut events);
     assert_eq!(city(&s, id).producing, Some(soldier()));
@@ -2661,19 +2659,19 @@ fn great_work_reservation_names_city_and_distinguishes_queued_from_started() {
     let a = found(&mut s, P0, at(5, 5));
     let b = found(&mut s, P0, at(12, 12));
     let work = ProductionItem::Wonder {
-        building: BuildingKind::PlanetaryFoundry,
+        building: BuildingKind::RoyalArsenal,
         tile: at(6, 5),
     };
     city_mut(&mut s, a).name = "Northstar".into();
     city_mut(&mut s, a).production_queue = vec![work];
     assert_eq!(
-        economy::building_blocker(&s, city(&s, b), BuildingKind::WorldExchange, true).as_deref(),
+        economy::building_blocker(&s, city(&s, b), BuildingKind::GrandBazaar, true).as_deref(),
         Some("World wonder queued in Northstar; only one per empire")
     );
     city_mut(&mut s, a).production_queue.clear();
     city_mut(&mut s, a).producing = Some(work);
     assert_eq!(
-        economy::building_blocker(&s, city(&s, b), BuildingKind::WorldExchange, true).as_deref(),
+        economy::building_blocker(&s, city(&s, b), BuildingKind::GrandBazaar, true).as_deref(),
         Some("World wonder under construction in Northstar; only one per empire")
     );
 }
@@ -3257,7 +3255,7 @@ fn no_purchase_under_threat_stops_military_buys_near_an_enemy_and_is_off_by_defa
     let id = found(&mut s, P0, at(5, 5));
     s.player_mut(P0).gold = 10_000;
     let soldier = ProductionItem::Unit {
-        unit: UnitKind::Soldier,
+        unit: UnitKind::Spearman,
     };
     let settler_free = ProductionItem::Building {
         building: BuildingKind::Granary,
@@ -3269,7 +3267,7 @@ fn no_purchase_under_threat_stops_military_buys_near_an_enemy_and_is_off_by_defa
         .into_iter()
         .find(|h| h.distance(s.cities[&id].pos) == 2)
         .unwrap();
-    let enemy = spawn_unit(&mut s, P1, UnitKind::Soldier, near);
+    let enemy = spawn_unit(&mut s, P1, UnitKind::Spearman, near);
     // Off by default: nothing changes.
     assert_eq!(economy::buy_block(&s, city(&s, id), soldier), None);
     s.setup

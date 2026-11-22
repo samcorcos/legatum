@@ -7,7 +7,7 @@ const at = (q: number, r: number) => ({ q, r });
 const from = at(10, 10);
 const to = at(4, 10);
 
-async function scene(enemy?: { q: number; r: number }, kind: 'Soldier' | 'Horseman' = 'Soldier') {
+async function scene(enemy?: { q: number; r: number }, kind: 'Spearman' | 'Horseman' = 'Spearman') {
   const v = await arenaView('Switzerland');
   const me = addUnit(v, 0, 'Horseman', from);
   if (enemy) addUnit(v, 2, kind, enemy);
@@ -75,7 +75,7 @@ describe('routes avoid what known enemies can strike (p881 retreat)', () => {
   });
 
   it('ignores one-move enemies for a unit that has stepped away, and enemies that cannot strike in time', async () => {
-    const { v } = await scene(at(8, 10), 'Soldier');
+    const { v } = await scene(at(8, 10), 'Spearman');
     v.units[1].max_moves = 1;
     const reach = enemyReach(v);
     expect(reach.threatened(at(9, 10), 1)).toBe(false);

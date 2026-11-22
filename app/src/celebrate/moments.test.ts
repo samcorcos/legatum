@@ -97,8 +97,8 @@ describe('truthful ruin moments', () => {
     const after = structuredClone(view);
     after.players.find((p) => p.id === 0)!.faction = 'Athens';
     const city = after.cities.find((c) => c.owner === 0)!;
-    city.detail!.buildings = ['Laboratory'];
-    const item = { kind: 'Building' as const, building: 'Laboratory' as const };
+    city.detail!.buildings = ['Library'];
+    const item = { kind: 'Building' as const, building: 'Library' as const };
     const events: Event[] = [
       { type: 'ProductionCompleted', city: city.id, owner: 0, item },
       { type: 'CityCaptured', city: city.id, from: 2, to: 0 },
@@ -198,7 +198,7 @@ it('reuses every tier for city growth/founding, research and Great Works', () =>
   const events: Event[] = [
     { type: 'CityGrew', owner: 0, city: city.id, population: 3 },
     { type: 'CityFounded', owner: 0, city: 99, name: 'New Home', at: city.pos },
-    { type: 'ProductionCompleted', city: city.id, owner: 0, item: { kind: 'Building', building: 'PlanetaryFoundry' } },
+    { type: 'ProductionCompleted', city: city.id, owner: 0, item: { kind: 'Building', building: 'RoyalArsenal' } },
   ];
   expect(map(events).map((m) => m.tier)).toEqual(['legendary', 'notable', 'minor']);
   const before = structuredClone(view); before.players[0].cities = 0;
@@ -402,7 +402,7 @@ describe('reward emblems and gain lists', () => {
       [{ type: 'CityCaptured', city: c.id, from: 2, to: 0 }, 'captured'],
       [{ type: 'CityFounded', city: c.id, owner: 0, name: c.name, at: c.pos }, 'founded'],
       [{ type: 'EraObjectiveScored', player: 0, era: 2, slot: 0, objective: 'Learn 9 technologies' }, 'milestone'],
-      [{ type: 'ProductionCompleted', city: c.id, owner: 0, item: { kind: 'Building', building: 'PlanetaryFoundry' } }, 'greatwork'],
+      [{ type: 'ProductionCompleted', city: c.id, owner: 0, item: { kind: 'Building', building: 'RoyalArsenal' } }, 'greatwork'],
       [{ type: 'FactionGoalCompleted', player: 0, faction: 'India', vp: 3 }, undefined],
     ];
     // A Live goal regained, and one lost, are report lines: no celebration moment.
@@ -422,7 +422,7 @@ describe('reward emblems and gain lists', () => {
 
   describe('Sparta’s and the Celts’ goals', () => {
     it('the last retirement is the goal’s legendary card, earlier ones are major cards, and a rival’s retirement is no moment of yours', () => {
-      const retired = (n: number): Event => ({ type: 'VeteranRetired', player: 0, unit: 3, kind: 'Soldier', city: 1, retired: n, of: 3 });
+      const retired = (n: number): Event => ({ type: 'VeteranRetired', player: 0, unit: 3, kind: 'Spearman', city: 1, retired: n, of: 3 });
       expect(map([retired(1)]).map((m) => [m.tier, m.title, m.effect])).toEqual([['major', 'A veteran retires with honour', '1 of 3 retired']]);
       expect(map([retired(3), { type: 'FactionGoalCompleted', player: 0, faction: 'Sparta', vp: 2 }]).map((m) => [m.tier, m.title])).toEqual([['legendary', 'The veterans are honoured']]);
     });

@@ -113,8 +113,8 @@ fn a_declaration_at_plain_peace_is_a_surprise_war_that_attacks_this_turn() {
     // G20 (Civ 6 surprise war): with no Alliance, War starts at the start of this
     // turn's resolution, so the attack ordered with it resolves in the same turn.
     let mut s = game(&[0, 1]);
-    let a = spawn_unit(&mut s, PlayerId(0), UnitKind::Soldier, h(4, 4));
-    let b = spawn_unit(&mut s, PlayerId(1), UnitKind::Soldier, h(5, 4));
+    let a = spawn_unit(&mut s, PlayerId(0), UnitKind::Spearman, h(4, 4));
+    let b = spawn_unit(&mut s, PlayerId(1), UnitKind::Spearman, h(5, 4));
     assert!(!s.at_war(PlayerId(0), PlayerId(1)));
     let view = player_view(&s, PlayerId(0));
     assert!(forecast_attack(&view, a, h(5, 4)).is_none());
@@ -161,14 +161,14 @@ fn a_declaration_at_plain_peace_is_a_surprise_war_that_attacks_this_turn() {
 
 #[test]
 fn declaration_wakes_sleepers_for_an_existing_peaceful_army_only_once() {
-    for kind in [UnitKind::Settler, UnitKind::Soldier] {
+    for kind in [UnitKind::Settler, UnitKind::Spearman] {
         for declarer in [0, 1] {
             let mut s = game(&[0, 1]);
             // This test exercises diplomacy wakeups with ordinary movement range.
             s.player_mut(PlayerId(0)).faction = Faction::Switzerland;
             let sleeper = spawn_unit(&mut s, PlayerId(0), kind, h(6, 4));
-            let enemy = spawn_unit(&mut s, PlayerId(1), UnitKind::Soldier, h(8, 4));
-            let arrival = spawn_unit(&mut s, PlayerId(1), UnitKind::Soldier, h(6, 8));
+            let enemy = spawn_unit(&mut s, PlayerId(1), UnitKind::Spearman, h(8, 4));
+            let arrival = spawn_unit(&mut s, PlayerId(1), UnitKind::Spearman, h(6, 8));
             let sleep = vec![(
                 0,
                 vec![Order::SleepUnit {
@@ -442,7 +442,7 @@ fn accepting_peace_does_not_cancel_the_current_city_assault() {
     // with the assault.
     let home = city(&mut s, 1, h(13, 9));
     s.cities.get_mut(&home).unwrap().original_capital = true;
-    let a = spawn_unit(&mut s, PlayerId(0), UnitKind::Soldier, h(5, 4));
+    let a = spawn_unit(&mut s, PlayerId(0), UnitKind::Spearman, h(5, 4));
     let (mut s, _) = step(&s, &[(0, vec![offer(1)])]);
     s.cities.get_mut(&c).unwrap().hp = 1;
     let (s, events) = step(
@@ -477,7 +477,7 @@ fn three_way_neutral_claimant_is_undamaged_and_blocks_occupation() {
         ids.push(spawn_unit(
             &mut s,
             PlayerId(i),
-            UnitKind::Soldier,
+            UnitKind::Spearman,
             positions[i as usize],
         ));
     }
@@ -521,14 +521,14 @@ fn peaceful_claimants_never_fight_the_stronger_enters_and_neutral_occupants_bloc
     // and nobody fights or captures (Sam, 2026-11-22). Equal strength is drawn by seed.
     for civilian in [false, true] {
         let mut s = game(&[0, 1]);
-        let a = spawn_unit(&mut s, PlayerId(0), UnitKind::Soldier, h(4, 4));
+        let a = spawn_unit(&mut s, PlayerId(0), UnitKind::Spearman, h(4, 4));
         let b = spawn_unit(
             &mut s,
             PlayerId(1),
             if civilian {
                 UnitKind::Settler
             } else {
-                UnitKind::Soldier
+                UnitKind::Spearman
             },
             h(6, 4),
         );
@@ -588,7 +588,7 @@ fn closed_borders_require_progress_to_exit_and_forbid_healing_fortifying_or_atta
     // This fixture isolates closed-border egress from both faction rules.
     s.player_mut(PlayerId(0)).faction = Faction::Switzerland;
     s.player_mut(PlayerId(1)).faction = Faction::Switzerland;
-    let a = spawn_unit(&mut s, PlayerId(0), UnitKind::Ranger, h(6, 5));
+    let a = spawn_unit(&mut s, PlayerId(0), UnitKind::Archer, h(6, 5));
     for tile in h(6, 5).within(2) {
         s.map.get_mut(tile).unwrap().owner = Some(PlayerId(1));
     }
@@ -634,7 +634,7 @@ fn closed_borders_require_progress_to_exit_and_forbid_healing_fortifying_or_atta
     spawn_unit(
         &mut s,
         PlayerId(2),
-        UnitKind::Soldier,
+        UnitKind::Spearman,
         toward_exit.neighbors()[0],
     );
     let (s, _) = step(&s, &[(0, vec![war(2)])]);
@@ -653,8 +653,8 @@ fn explicit_attack_forecasts_reject_closed_territory_like_validation() {
     let (mut s, _) = step(&game(&[0, 1, 2, 0]), &[(0, vec![war(2)])]);
     let origin = h(6, 5);
     let target = h(7, 5);
-    let ranger = spawn_unit(&mut s, PlayerId(0), UnitKind::Ranger, origin);
-    spawn_unit(&mut s, PlayerId(2), UnitKind::Soldier, target);
+    let ranger = spawn_unit(&mut s, PlayerId(0), UnitKind::Archer, origin);
+    spawn_unit(&mut s, PlayerId(2), UnitKind::Spearman, target);
     let shot = Order::RangedAttack {
         unit: ranger,
         target,
@@ -696,7 +696,7 @@ fn neutral_units_do_not_block_city_healing() {
     let mut s = game(&[0, 1]);
     let c = city(&mut s, 0, h(5, 5));
     s.cities.get_mut(&c).unwrap().hp = 100;
-    spawn_unit(&mut s, PlayerId(1), UnitKind::Soldier, h(6, 5));
+    spawn_unit(&mut s, PlayerId(1), UnitKind::Spearman, h(6, 5));
     let (s, _) = step(&s, &[]);
     assert!(s.cities[&c].hp > 100);
 }
@@ -903,8 +903,8 @@ fn former_ally_stays_in_closed_land_then_can_attack_after_declaration() {
     for tile in h(6, 5).within(2) {
         s.map.get_mut(tile).unwrap().owner = Some(PlayerId(1));
     }
-    let ranger = spawn_unit(&mut s, PlayerId(0), UnitKind::Ranger, h(6, 5));
-    let target = spawn_unit(&mut s, PlayerId(1), UnitKind::Soldier, h(7, 5));
+    let ranger = spawn_unit(&mut s, PlayerId(0), UnitKind::Archer, h(6, 5));
+    let target = spawn_unit(&mut s, PlayerId(1), UnitKind::Spearman, h(7, 5));
     let (s, _) = step(&s, &[(0, vec![leave(1)])]);
     assert_eq!(alliance_relation(&s, 0, 1).state, RelationState::Peace);
     assert_eq!(s.units[&ranger].pos, h(6, 5));
@@ -1206,23 +1206,23 @@ fn allies_may_enter_each_others_territory_but_not_attack() {
     city(&mut s, 1, h(8, 5));
     assert!(!s.passage_allowed(
         PlayerId(0),
-        legatum_core::UnitKind::Soldier,
+        legatum_core::UnitKind::Spearman,
         Some(PlayerId(1))
     ));
     let s = alliance(&s, 0, 1);
     assert!(s.passage_allowed(
         PlayerId(0),
-        legatum_core::UnitKind::Soldier,
+        legatum_core::UnitKind::Spearman,
         Some(PlayerId(1))
     ));
     assert!(s.passage_allowed(
         PlayerId(1),
-        legatum_core::UnitKind::Soldier,
+        legatum_core::UnitKind::Spearman,
         Some(PlayerId(0))
     ));
     assert!(!s.passage_allowed(
         PlayerId(2),
-        legatum_core::UnitKind::Soldier,
+        legatum_core::UnitKind::Spearman,
         Some(PlayerId(1))
     ));
     assert!(!s.at_war(PlayerId(0), PlayerId(1)));
@@ -1895,7 +1895,7 @@ fn a_heal_order_is_refused_in_closed_foreign_land_where_nothing_heals() {
     let mut s = game(&[0, 1, 2]);
     s.player_mut(PlayerId(0)).faction = Faction::Switzerland;
     s.player_mut(PlayerId(1)).faction = Faction::Switzerland;
-    let a = spawn_unit(&mut s, PlayerId(0), UnitKind::Ranger, h(6, 5));
+    let a = spawn_unit(&mut s, PlayerId(0), UnitKind::Archer, h(6, 5));
     for tile in h(6, 5).within(2) {
         s.map.get_mut(tile).unwrap().owner = Some(PlayerId(1));
     }

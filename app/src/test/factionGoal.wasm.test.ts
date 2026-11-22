@@ -60,13 +60,13 @@ describe.skipIf(!available)('faction goal progress: core behavior', () => {
       expect(empty.value).toBeLessThan(empty.target); // (Switzerland start with Gold)
       expect(fixtureClient.view(0).faction_goal).toMatchSnapshot();
       // Part-way: cities with the buildings the goal asks about, spread out and walled where it matters.
-      const all: BuildingKind[] = ['Granary', 'Workshop', 'Market', 'Laboratory', 'Walls'];
+      const all: BuildingKind[] = ['Granary', 'Workshop', 'Market', 'Library', 'Walls'];
       const own = fixture(faction);
       city(own, 1, 36, 36, 2, [], true);
       city(own, 0, 4, 4, 8, all, true);
-      city(own, 0, 14, 4, 5, ['Granary', 'Market', 'Laboratory', 'Walls']);
+      city(own, 0, 14, 4, 5, ['Granary', 'Market', 'Library', 'Walls']);
       city(own, 0, 4, 14, 5, ['Granary', 'Market']);
-      if (faction === 'Sparta') spawnUnit(own, 0, 'Soldier', fromOffset(4, 4), false);
+      if (faction === 'Sparta') spawnUnit(own, 0, 'Spearman', fromOffset(4, 4), false);
       if (faction === 'Athens') own.players[0].techs = ['Philosophy'];
       own.players[0].gold = 123;
       ({ fixtureClient, core } = pair(own));
@@ -84,11 +84,11 @@ describe.skipIf(!available)('faction goal progress: core behavior', () => {
     city(s, 1, 36, 36, 2, [], true);
     s.players[0].goalRule = 'Swarm';
     s.players[0].factionGoalDone = true;
-    s.players[0].greatWorkCompleted = 'RelayUplink';
+    s.players[0].greatWorkCompleted = 'GreatLibrary';
     const workTile = idxOf(s, fromOffset(36, 36));
     s.owner[workTile] = 0;
     s.landmark = Array(s.terrain.length).fill(null);
-    s.landmark[workTile] = { building: 'RelayUplink', city: 1, of: 0 };
+    s.landmark[workTile] = { building: 'GreatLibrary', city: 1, of: 0 };
     const { fixtureClient, core } = pair(s);
     expect(core.view(0).faction_goal ?? null).toBeNull();
     expect(fixtureClient.view(0).faction_goal ?? null).toBeNull();

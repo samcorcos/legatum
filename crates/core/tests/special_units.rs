@@ -21,26 +21,26 @@ fn base(kind: UnitKind) -> data::UnitStats {
 #[test]
 fn eagle_warrior_is_a_stronger_dearer_spearman() {
     let (own, spear) = (
-        data::unit_stats_for(Faction::Aztecs, UnitKind::Soldier),
-        base(UnitKind::Soldier),
+        data::unit_stats_for(Faction::Aztecs, UnitKind::Spearman),
+        base(UnitKind::Spearman),
     );
     assert_eq!(own.strength, spear.strength + 4);
     assert_eq!(own.cost, spear.cost + 10);
     assert_eq!(own.moves, spear.moves);
     assert_eq!(
-        data::unit_name_for(Faction::Aztecs, UnitKind::Soldier),
+        data::unit_name_for(Faction::Aztecs, UnitKind::Spearman),
         "Eagle Warrior"
     );
     // Only for the Aztecs, and switched off by its rule.
     assert_eq!(
-        data::unit_stats_for(Faction::Athens, UnitKind::Soldier).strength,
+        data::unit_stats_for(Faction::Athens, UnitKind::Spearman).strength,
         spear.strength
     );
     let mut off = RuleExperiments::default();
     off.faction_rules_off
         .insert(FactionRule::AztecsEagleWarrior);
     assert_eq!(
-        off.unit_stats_for(Faction::Aztecs, UnitKind::Soldier)
+        off.unit_stats_for(Faction::Aztecs, UnitKind::Spearman)
             .strength,
         spear.strength
     );
@@ -137,7 +137,7 @@ fn war_elephant_is_stronger_slower_and_charges_cities_unpenalised() {
 
 #[test]
 fn reislaufer_adds_half_its_strength_against_mounted_on_top_of_the_melee_bonus() {
-    let kind = UnitKind::Trooper;
+    let kind = UnitKind::Pikeman;
     let strength = data::unit_stats_for(Faction::Switzerland, kind).strength;
     assert_eq!(
         strength,
@@ -172,7 +172,7 @@ fn reislaufer_adds_half_its_strength_against_mounted_on_top_of_the_melee_bonus()
         FactionRuleSet::EMPTY,
         Faction::Switzerland,
         kind,
-        UnitKind::Soldier,
+        UnitKind::Spearman,
         true,
         false,
     );
@@ -264,19 +264,19 @@ fn hired(s: &GameState, city: CityId, seller: PlayerId) -> GameState {
 #[test]
 fn a_seller_offers_only_its_own_special_unit_priced_as_its_version() {
     for (faction, kind) in [
-        (Faction::Aztecs, UnitKind::Soldier),
-        (Faction::Sparta, UnitKind::Soldier),
+        (Faction::Aztecs, UnitKind::Spearman),
+        (Faction::Sparta, UnitKind::Spearman),
         (Faction::Celts, UnitKind::Phalangite),
         (Faction::Athens, UnitKind::CompositeArcher),
         (Faction::India, UnitKind::Knight),
-        (Faction::Switzerland, UnitKind::Trooper),
+        (Faction::Switzerland, UnitKind::Pikeman),
         (Faction::Mongols, data::KESHIG_KIND),
     ] {
         let (s, _) = shop(faction);
         let offers = company::offers(&s, P);
         assert_eq!(offers.len(), 1, "{faction:?}");
         assert_eq!(offers[0].unit, kind);
-        assert!(offers[0].unavailable.is_none() || kind != UnitKind::Soldier);
+        assert!(offers[0].unavailable.is_none() || kind != UnitKind::Spearman);
         assert_eq!(
             offers[0].price,
             data::unit_stats_for(faction, kind).cost * company::HIRE_PERCENT / 100,
@@ -312,7 +312,7 @@ fn a_plain_unit_cannot_be_hired_from_a_seller() {
     let (s, city) = shop(Faction::Sparta);
     let order = Order::HireCompany {
         city,
-        unit: UnitKind::Ranger,
+        unit: UnitKind::Archer,
         seller: SELLER,
     };
     let errors = validate_orders(&s, P, &[order]);
@@ -331,15 +331,15 @@ fn hiring_gives_the_seller_its_own_version_with_its_name_and_stats() {
         .units_of(P)
         .find(|u| company::is_company(u))
         .expect("a Company");
-    assert_eq!(u.kind, UnitKind::Soldier);
+    assert_eq!(u.kind, UnitKind::Spearman);
     assert_eq!(u.origin, Some(Faction::Aztecs));
     assert_eq!(next.made_by(u), Faction::Aztecs);
     let stats = next.unit_stats_of(u);
     assert_eq!(
         stats.strength,
-        data::unit_stats_for(Faction::Aztecs, UnitKind::Soldier).strength
+        data::unit_stats_for(Faction::Aztecs, UnitKind::Spearman).strength
     );
-    assert!(stats.strength > data::unit_stats_for(Faction::Byzantium, UnitKind::Soldier).strength);
+    assert!(stats.strength > data::unit_stats_for(Faction::Byzantium, UnitKind::Spearman).strength);
     let attack = combat::unit_attack_strength_for_rules(
         FactionRuleSet::EMPTY,
         Faction::Byzantium,
@@ -367,7 +367,7 @@ fn a_hired_hoplite_keeps_its_phalanx_but_not_spartas_faction_wide_rules() {
         .into_iter()
         .find(|n| next.map.move_cost(*n).is_some())
         .unwrap();
-    let twin = spawn_unit(&mut next, P, UnitKind::Soldier, neighbour);
+    let twin = spawn_unit(&mut next, P, UnitKind::Spearman, neighbour);
     next.units.get_mut(&twin).unwrap().origin = Some(Faction::Sparta);
     assert!(rules::battle::has_phalanx_neighbour(
         &next,
@@ -392,7 +392,7 @@ fn a_hired_hoplite_keeps_its_phalanx_but_not_spartas_faction_wide_rules() {
     assert!(wounded.parts.iter().any(|(l, v)| l == "Wounded" && *v < 0));
     assert_eq!(
         next.unit_stats_of(&next.units[&id]).moves,
-        data::unit_stats_for(Faction::Sparta, UnitKind::Soldier).moves
+        data::unit_stats_for(Faction::Sparta, UnitKind::Spearman).moves
     );
 }
 

@@ -2580,7 +2580,7 @@ mod tests {
         let mut v = ViewBuilder::new(24, 16)
             .city(1, ME, off(4, 6), 4)
             .city(2, ENEMY, off(10, 6), 4)
-            .unit(10, ME, UnitKind::Ranger, off(8, 6))
+            .unit(10, ME, UnitKind::Archer, off(8, 6))
             .build();
         v.turn = 40;
         v.diplomacy.legacy = false;
@@ -2647,7 +2647,7 @@ mod tests {
         home.hp = home.max_hp / 2;
         v.units.push(
             ViewBuilder::new(24, 16)
-                .unit(50, ENEMY, UnitKind::Soldier, off(5, 6))
+                .unit(50, ENEMY, UnitKind::Spearman, off(5, 6))
                 .build()
                 .units
                 .pop()
@@ -2667,11 +2667,11 @@ mod tests {
         let mut v = ViewBuilder::new(24, 16)
             .city(1, ME, off(4, 6), 4)
             .city(2, ENEMY, off(10, 6), 3)
-            .unit(10, ME, UnitKind::Soldier, off(8, 6))
-            .unit(11, ME, UnitKind::Soldier, off(8, 7))
-            .unit(12, ME, UnitKind::Ranger, off(8, 5))
-            .unit(13, ME, UnitKind::Ranger, off(7, 6))
-            .unit(14, ME, UnitKind::Soldier, off(8, 8))
+            .unit(10, ME, UnitKind::Spearman, off(8, 6))
+            .unit(11, ME, UnitKind::Spearman, off(8, 7))
+            .unit(12, ME, UnitKind::Archer, off(8, 5))
+            .unit(13, ME, UnitKind::Archer, off(7, 6))
+            .unit(14, ME, UnitKind::Spearman, off(8, 8))
             .build();
         v.turn = 40;
         v.diplomacy.legacy = false;
@@ -2731,8 +2731,8 @@ mod tests {
         let mut v = ViewBuilder::new(24, 16)
             .city(1, ME, off(4, 6), 4)
             .city(2, ENEMY, off(10, 6), 4)
-            .unit(10, ME, UnitKind::Soldier, off(8, 6))
-            .unit(11, ME, UnitKind::Soldier, off(8, 7))
+            .unit(10, ME, UnitKind::Spearman, off(8, 6))
+            .unit(11, ME, UnitKind::Spearman, off(8, 7))
             .build();
         v.turn = 40;
         let rival = v.team_of(ENEMY);
@@ -2920,11 +2920,11 @@ mod tests {
         let mut v = ViewBuilder::new(24, 16)
             .city(1, ME, off(4, 6), 4)
             .city(2, ENEMY, off(13, 6), 4)
-            .unit(10, ME, UnitKind::Soldier, off(4, 6))
-            .unit(11, ME, UnitKind::Soldier, off(5, 6))
-            .unit(12, ME, UnitKind::Soldier, off(5, 7))
-            .unit(20, ENEMY, UnitKind::Soldier, off(8, 6))
-            .unit(21, ENEMY, UnitKind::Soldier, off(8, 7))
+            .unit(10, ME, UnitKind::Spearman, off(4, 6))
+            .unit(11, ME, UnitKind::Spearman, off(5, 6))
+            .unit(12, ME, UnitKind::Spearman, off(5, 7))
+            .unit(20, ENEMY, UnitKind::Spearman, off(8, 6))
+            .unit(21, ENEMY, UnitKind::Spearman, off(8, 7))
             .build();
         v.turn = 40;
         let rival = v.team_of(ENEMY);
@@ -3048,9 +3048,9 @@ mod tests {
         let v = ViewBuilder::new(24, 16)
             .faction(Faction::Germany)
             .city(1, ME, off(4, 6), 3)
-            .unit(1, ME, UnitKind::Soldier, off(6, 6))
-            .unit(2, ME, UnitKind::Soldier, off(6, 7))
-            .unit(3, ENEMY, UnitKind::Soldier, off(8, 6))
+            .unit(1, ME, UnitKind::Spearman, off(6, 6))
+            .unit(2, ME, UnitKind::Spearman, off(6, 7))
+            .unit(3, ENEMY, UnitKind::Spearman, off(8, 6))
             .build();
         let raid = |v: &PlayerView| {
             let mut planner =
@@ -3073,8 +3073,8 @@ mod tests {
             .faction(Faction::Sparta)
             .city(1, ME, off(4, 6), 3)
             .city(2, ENEMY, off(11, 6), 3)
-            .unit(1, ME, UnitKind::Soldier, off(4, 6))
-            .unit(2, ME, UnitKind::Soldier, off(5, 6))
+            .unit(1, ME, UnitKind::Spearman, off(4, 6))
+            .unit(2, ME, UnitKind::Spearman, off(5, 6))
             .build();
         v.diplomacy.legacy = false;
         v.diplomacy
@@ -3128,10 +3128,10 @@ mod tests {
             .city(1, ME, off(4, 6), 3)
             .city(2, ENEMY, off(11, 6), 3)
             .walled(2)
-            .unit(1, ME, UnitKind::Trooper, off(4, 6))
-            .unit(2, ME, UnitKind::Trooper, off(8, 6))
-            .unit(3, ME, UnitKind::Trooper, off(8, 5))
-            .unit(4, ME, UnitKind::Trooper, off(8, 4))
+            .unit(1, ME, UnitKind::Pikeman, off(4, 6))
+            .unit(2, ME, UnitKind::Pikeman, off(8, 6))
+            .unit(3, ME, UnitKind::Pikeman, off(8, 5))
+            .unit(4, ME, UnitKind::Pikeman, off(8, 4))
             .build();
         v.diplomacy.legacy = false;
         v.diplomacy
@@ -3159,8 +3159,8 @@ mod tests {
         open.cities[1].walls = false;
         assert!(target(&open, legatum_core::AiDifficulty::Hard).is_some());
         let with_support = ViewBuilder { view: v.clone() }
-            .unit(5, ME, UnitKind::Ranger, off(8, 7))
-            .unit(6, ME, UnitKind::Ranger, off(9, 7))
+            .unit(5, ME, UnitKind::Archer, off(8, 7))
+            .unit(6, ME, UnitKind::Archer, off(9, 7))
             .build();
         assert!(target(&with_support, legatum_core::AiDifficulty::Hard).is_some());
         v.standings = vec![
@@ -3190,7 +3190,7 @@ mod tests {
     fn hard_coalition_stays_against_distant_strength_but_can_save_an_overrun_home() {
         let mut v = ViewBuilder::new(28, 20)
             .city(1, ME, off(4, 6), 3)
-            .unit(1, ME, UnitKind::Soldier, off(4, 6))
+            .unit(1, ME, UnitKind::Spearman, off(4, 6))
             .build();
         v.diplomacy.legacy = false;
         v.diplomacy
@@ -3238,9 +3238,9 @@ mod tests {
             "a distant army is not an overrun home"
         );
         let threatened = ViewBuilder { view: v }
-            .unit(50, ENEMY, UnitKind::Trooper, off(7, 6))
-            .unit(51, ENEMY, UnitKind::Trooper, off(7, 5))
-            .unit(52, ENEMY, UnitKind::Trooper, off(7, 7))
+            .unit(50, ENEMY, UnitKind::Pikeman, off(7, 6))
+            .unit(51, ENEMY, UnitKind::Pikeman, off(7, 5))
+            .unit(52, ENEMY, UnitKind::Pikeman, off(7, 7))
             .build();
         assert!(peace(&threatened, legatum_core::AiDifficulty::Hard));
     }
@@ -3538,12 +3538,12 @@ mod tests {
                 .city(1, ME, off(4, 6), 3)
                 .city(2, ENEMY, off(24, 6), 3)
                 .city(3, PlayerId(3), off(4, 12), 3)
-                .unit(1, ME, UnitKind::Soldier, off(4, 7));
+                .unit(1, ME, UnitKind::Spearman, off(4, 7));
             if enemy_units {
-                b = b.unit(2, ENEMY, UnitKind::Soldier, off(6, 6)).unit(
+                b = b.unit(2, ENEMY, UnitKind::Spearman, off(6, 6)).unit(
                     3,
                     ENEMY,
-                    UnitKind::Soldier,
+                    UnitKind::Spearman,
                     off(6, 7),
                 );
             }
@@ -3701,7 +3701,7 @@ mod peace_strong_tests {
     fn an_army_well_ahead_of_the_proposer_answers_the_danger() {
         let mut v = ViewBuilder::new(20, 16)
             .city(1, ME, off(5, 8), 3)
-            .unit(2, ENEMY, UnitKind::Soldier, off(7, 8))
+            .unit(2, ENEMY, UnitKind::Spearman, off(7, 8))
             .build();
         v.cities[0].hp = 80;
         let against = v.team_of(ENEMY);

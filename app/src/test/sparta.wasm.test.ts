@@ -52,13 +52,13 @@ const oathEvents = (events: Event[]) => events.filter((e) =>
 describe.skipIf(!available)('Sparta WASM behavior', () => {
   it('starts every military type at level one and quotes the 50% home cost', () => {
     const s = fixture(); city(s, 0, 4, 4); city(s, 1, 14, 4);
-    for (const kind of ['Soldier', 'Scout', 'Ranger', 'Trooper'] as const) spawnUnit(s, 0, kind, fromOffset(3, 4), false);
+    for (const kind of ['Spearman', 'Scout', 'Archer', 'Pikeman'] as const) spawnUnit(s, 0, kind, fromOffset(3, 4), false);
     const { fixtureClient, core } = pair(s);
     (expect(fixtureClient.view(0).units.filter((u) => u.owner === 0).map((u) => [u.kind, u.level, u.xp, u.xp_next])).toMatchSnapshot(), void (core.view(0).units.filter((u) => u.owner === 0).map((u) => [u.kind, u.level, u.xp, u.xp_next])));
-    expect(productionCost(s, 0, { kind: 'Unit', unit: 'Soldier' })).toBe(80);
+    expect(productionCost(s, 0, { kind: 'Unit', unit: 'Spearman' })).toBe(80);
     expect(productionCost(s, 0, { kind: 'Unit', unit: 'Settler' })).toBe(105);
     const options = (client: FixtureClient | WasmClient) => client.view(0).cities.find((c) => c.owner === 0)!.detail!.options
-      .filter((o) => o.item.kind === 'Unit' && ['Soldier', 'Settler'].includes(o.item.unit))
+      .filter((o) => o.item.kind === 'Unit' && ['Spearman', 'Settler'].includes(o.item.unit))
       .map((o) => [o.item, o.cost, o.buy_quote?.production, o.buy_quote?.additional_settler_production]);
     (expect(options(fixtureClient)).toMatchSnapshot(), void (options(core)));
     s.players[0].settlersTrained = 1;
@@ -72,9 +72,9 @@ describe.skipIf(!available)('Sparta WASM behavior', () => {
     s.players[1].faction = s.setup.players[1].faction = 'India';
     for (const r of s.diplomacy!.relations) r.state = 'War';
     target.hp = 0; target.prod = 13;
-    const attacker = spawnUnit(s, 0, 'Soldier', fromOffset(7, 4), false);
-    const near = spawnUnit(s, 0, 'Ranger', fromOffset(6, 4), false); near.hp = 45;
-    const far = spawnUnit(s, 0, 'Ranger', fromOffset(2, 2), false); far.hp = 55;
+    const attacker = spawnUnit(s, 0, 'Spearman', fromOffset(7, 4), false);
+    const near = spawnUnit(s, 0, 'Archer', fromOffset(6, 4), false); near.hp = 45;
+    const far = spawnUnit(s, 0, 'Archer', fromOffset(2, 2), false); far.hp = 55;
     const { fixtureClient, core } = pair(s);
     const orders: Record<number, Order[]> = { 0: [{ type: 'MoveUnit', unit: attacker.id, to: target.pos }] };
     (expect(oathEvents(fixtureClient.endTurn(orders).events)).toMatchSnapshot(), void (oathEvents(core.endTurn(orders).events)));
@@ -85,7 +85,7 @@ describe.skipIf(!available)('Sparta WASM behavior', () => {
 
   it('heals after a military kill', () => {
     const s = fixture(); city(s, 0, 3, 4); city(s, 1, 14, 4);
-    const ranger = spawnUnit(s, 0, 'Ranger', fromOffset(6, 4), false);
+    const ranger = spawnUnit(s, 0, 'Archer', fromOffset(6, 4), false);
     const enemy = spawnUnit(s, 1, 'Scout', fromOffset(8, 4), false); enemy.hp = 1;
     ranger.hp = 40;
     for (const r of s.diplomacy!.relations) r.state = 'War';

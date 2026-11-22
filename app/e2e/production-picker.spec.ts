@@ -61,10 +61,10 @@ test('a population-1 city greys out its Settler, says why with the growth foreca
 });
 
 test('banked progress shows on its card and in the city, and switching says what stays banked', async ({ page }) => {
-  const panel = await openCity(page, (c) => Object.assign(c, { population: 3, producing: { kind: 'Unit', unit: 'Soldier' }, prod: 12, productionQueue: [],
+  const panel = await openCity(page, (c) => Object.assign(c, { population: 3, producing: { kind: 'Unit', unit: 'Spearman' }, prod: 12, productionQueue: [],
     productionBanked: [{ item: { kind: 'Unit', unit: 'Settler' }, progress: 38 }] }));
   await expect(panel.locator('.production-choice[data-item="u:Settler"] .prod-cost')).toHaveText(/^38\/\d+ banked$/);
-  await expect(panel.locator('.production-choice[data-item="u:Soldier"] .prod-cost')).toHaveText(/^12\/\d+ so far$/);
+  await expect(panel.locator('.production-choice[data-item="u:Spearman"] .prod-cost')).toHaveText(/^12\/\d+ so far$/);
   await expect(panel.getByTestId('city-banked')).toHaveText(/^Banked Settler 38\/\d+$/);
   await panel.getByRole('button', { name: 'Build Settler', exact: true }).click();
   expect(await productionOrders(page)).toEqual([expect.objectContaining({ type: 'SetProductionQueue', queue: [{ kind: 'Unit', unit: 'Settler' }] })]);
@@ -151,7 +151,7 @@ test('turn 1: the Improvements group comes after Buildings, and the Units cards 
 for (const faction of ['Switzerland', 'India'] as const) {
   test(`${faction}: the world wonders section states its Production-only rule and fits at 1000x600`, async ({ page }) => {
     const panel = await openCity(page,
-      (c) => Object.assign(c, { population: 8, producing: null, prod: 0, food: 0, productionQueue: [], productionBanked: [], buildings: ['Autoworks'] }),
+      (c) => Object.assign(c, { population: 8, producing: null, prod: 0, food: 0, productionQueue: [], productionBanked: [], buildings: ['Factory'] }),
       2,
       (f) => { f.players[0].faction = faction; f.players[0].gold = 100_000; f.players[0].techs = [...TECHS]; });
     const works = panel.locator('.cp-great-works');

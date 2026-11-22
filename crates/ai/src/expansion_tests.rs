@@ -8,13 +8,13 @@ const SETTLER: ProductionItem = ProductionItem::Unit {
     unit: UnitKind::Settler,
 };
 
-/// Seat ME's capital builds a Settler `percent` done; an enemy Soldier stands `gap` hexes away.
+/// Seat ME's capital builds a Settler `percent` done; an enemy Spearman stands `gap` hexes away.
 fn settler_city(percent: i32, gap: i32) -> PlayerView {
     let home = off(6, 8);
     let mut v = ViewBuilder::new(28, 16)
         .faction(Faction::Celts)
         .city(1, ME, home, 3)
-        .unit(9, ENEMY, UnitKind::Soldier, off(6 + gap, 8))
+        .unit(9, ENEMY, UnitKind::Spearman, off(6 + gap, 8))
         .producing(1, SETTLER, 0)
         .build();
     let city = v.cities.iter_mut().find(|c| c.owner == ME).unwrap();

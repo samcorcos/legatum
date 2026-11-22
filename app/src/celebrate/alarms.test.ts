@@ -127,8 +127,8 @@ describe('threatFrom', () => {
     v.cities = [];
     v.units = [mine,
       { ...base, id: 900, kind: 'Scout', pos: { q: mine.pos.q + 1, r: mine.pos.r } },
-      { ...base, id: 901, kind: 'Trooper', pos: { q: mine.pos.q + 3, r: mine.pos.r } },
-      { ...base, id: 902, kind: 'Trooper', pos: { q: mine.pos.q + 4, r: mine.pos.r } }];
+      { ...base, id: 901, kind: 'Pikeman', pos: { q: mine.pos.q + 3, r: mine.pos.r } },
+      { ...base, id: 902, kind: 'Pikeman', pos: { q: mine.pos.q + 4, r: mine.pos.r } }];
     const t = threatFrom(v, 1);
     expect(t.summary).toBe('2 Tagmatic Soldiers, 1 Scout');
     expect(t.nearest?.at).toEqual({ q: mine.pos.q + 3, r: mine.pos.r });

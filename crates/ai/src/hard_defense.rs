@@ -1163,7 +1163,7 @@ impl Planner<'_> {
 
     /// Gene `settler_escort`: the route passes within two hexes of a city of a rival that can
     /// declare a surprise war. A city is where its troops stand, seen or not; the visible-unit
-    /// risk alone let the 8.9.24 Mongol escort turn back when the Swiss Soldier stood in fog.
+    /// risk alone let the 8.9.24 Mongol escort turn back when the Swiss Spearman stood in fog.
     fn settler_route_near_rival_city(
         &self,
         from: legatum_core::Hex,
@@ -1191,7 +1191,7 @@ impl Planner<'_> {
     /// can walk to it: two or more troops (not Scouts) of one empire at war or at Peace with a
     /// legal declaration, or one of an empire at war or with a recent surprise war
     /// (`recent_surprise_war`). Barbarians never assault a city. A single troop of a quiet
-    /// neighbour is not enough: in the `india-take-the-settler` Lab position a Spartan Soldier
+    /// neighbour is not enough: in the `india-take-the-settler` Lab position a Spartan Spearman
     /// parked three hexes from Leipzig for twenty turns, and holding the garrison for it froze
     /// Germany's first Settler (Germany's cities at T36 2.90 to 1.87 over 200 runs).
     fn capital_in_rival_reach(&self, capital: legatum_core::Hex) -> bool {
@@ -1215,8 +1215,8 @@ impl Planner<'_> {
             .any(|(owner, n)| n >= 2 || v.at_war(v.me, owner) || self.recent_surprise_war(owner))
     }
 
-    /// Gene `capital_guard` (8.9.25 India, T12-T22: Germany's only Soldier walked its first
-    /// Settler out of Leipzig with a Spartan and then an Indian Soldier in reach of the empty
+    /// Gene `capital_guard` (8.9.25 India, T12-T22: Germany's only Spearman walked its first
+    /// Settler out of Leipzig with a Spartan and then an Indian Spearman in reach of the empty
     /// capital; India killed the escort, took the Settler and walked into Leipzig): while a
     /// rival army is in reach of the capital, its last troop stays home. A lone defender in it
     /// is held back from escorts. An empty capital calls its Settlers within
@@ -1329,7 +1329,7 @@ impl Planner<'_> {
 
     /// Gene `snipe_read`: rival troops other than Scouts that could stand on `tile` after
     /// their next move. One escort holds a Settler's tile against one attacker for a turn;
-    /// two or more break it (8.9.25 India T16-T17: two Soldiers killed Germany's escort and
+    /// two or more break it (8.9.25 India T16-T17: two Spearmen killed Germany's escort and
     /// took the Settler).
     fn troops_in_reach(&self, tile: legatum_core::Hex) -> usize {
         let v = self.view();
@@ -1354,7 +1354,7 @@ impl Planner<'_> {
 
     /// Gene `escort_buy` (8.9.25 India: Germany bought a Pasture and a Mine with its 140
     /// Gold of ruin and wonder rewards at T2-T4 and sent its first Settler out with its only
-    /// Soldier, which then had to choose between the Settler and the capital): while we have
+    /// Spearman, which then had to choose between the Settler and the capital): while we have
     /// at most one troop, a Settler is out or in production, and a rival army (a troop other
     /// than a Scout of an empire at war, a raiding barbarian or a rival at Peace that can
     /// declare) stands within `SECOND_TROOP_RADIUS` of it or of the city training it, a second
@@ -1626,7 +1626,7 @@ impl Planner<'_> {
                 .filter(|u| self.duel_can_escort(u, s, held_home));
             // Gene `snipe_read`: a Settler falling back into one of our cities keeps its
             // escort beside it even from a tile a rival could strike (8.9.25 India T15: the
-            // German Settler turned home beside an Indian Soldier and its escort stood still).
+            // German Settler turned home beside an Indian Spearman and its escort stood still).
             let heading_home = self
                 .ctx
                 .own_cities
@@ -1723,7 +1723,7 @@ impl Planner<'_> {
                     // The wait needs an end: a troop too far for the two-turn rendezvous
                     // above still walks to the Settler, and the escort steps with it next
                     // turn (8.9.37: a Settler one step from its site skipped 11 turns while
-                    // its Soldier stood three turns away). Any free troop that can reach it is
+                    // its Spearman stood three turns away). Any free troop that can reach it is
                     // called, nearest first, however far (8.9.40 Byzantium T92: the nearest
                     // troop stood seven hexes off, past `escort_search_distance`).
                     if let Some(u) = self
@@ -1824,7 +1824,7 @@ mod tests {
             .gold(10000)
             .city(1, ME, Hex::new(6, 6), 4)
             .unit(1, ME, UnitKind::Settler, Hex::new(7, 6))
-            .unit(2, ENEMY, UnitKind::Soldier, Hex::new(10, 6))
+            .unit(2, ENEMY, UnitKind::Spearman, Hex::new(10, 6))
             .build();
         for option in &mut v.cities[0].detail.as_mut().unwrap().options {
             if matches!(option.item, legatum_core::ProductionItem::Unit { .. }) {
@@ -1861,7 +1861,7 @@ mod tests {
     fn visible_approach_reserves_defense_before_the_army_reaches_firing_range() {
         let v = ViewBuilder::new(24, 16)
             .city(1, ME, Hex::new(6, 6), 3)
-            .unit(5, ENEMY, UnitKind::Soldier, Hex::new(10, 6))
+            .unit(5, ENEMY, UnitKind::Spearman, Hex::new(10, 6))
             .build();
         let mut p = planner(&v);
         assert_eq!(p.ctx.threat[0], 0);
@@ -1876,7 +1876,7 @@ mod tests {
         let mut v = ViewBuilder::new(24, 16)
             .city(1, ME, Hex::new(6, 6), 3)
             .owner(Hex::new(10, 6), ENEMY)
-            .unit(5, ENEMY, UnitKind::Soldier, Hex::new(10, 6))
+            .unit(5, ENEMY, UnitKind::Spearman, Hex::new(10, 6))
             .build();
         v.diplomacy.legacy = false;
         let at = v.index(Hex::new(9, 6)).unwrap();
@@ -1912,7 +1912,7 @@ mod tests {
         legacy.prepare_hard_defense();
         assert_eq!(legacy.ctx.threat[0], 0);
         v = ViewBuilder { view: v }
-            .unit(6, ENEMY, UnitKind::Ranger, Hex::new(10, 5))
+            .unit(6, ENEMY, UnitKind::Archer, Hex::new(10, 5))
             .build();
         let mut p = planner(&v);
         p.prepare_hard_defense();
@@ -1921,7 +1921,7 @@ mod tests {
             "an approaching group warrants readiness"
         );
         v = ViewBuilder { view: v }
-            .unit(7, ENEMY, UnitKind::Ranger, Hex::new(9, 7))
+            .unit(7, ENEMY, UnitKind::Archer, Hex::new(9, 7))
             .build();
         let mut p = planner(&v);
         p.prepare_hard_defense();
@@ -1971,7 +1971,7 @@ mod tests {
         );
         // An armed rival at Peace still counts.
         let armed = ViewBuilder { view: v.clone() }
-            .unit(6, ENEMY, UnitKind::Soldier, Hex::new(10, 5))
+            .unit(6, ENEMY, UnitKind::Spearman, Hex::new(10, 5))
             .build();
         assert!(danger(&armed, 0, 0));
     }
@@ -1982,8 +1982,8 @@ mod tests {
         let v = ViewBuilder::new(24, 16)
             .city(1, ME, near, 3)
             .city(2, ME, far, 3)
-            .unit(5, ENEMY, UnitKind::Soldier, Hex::new(7, 6))
-            .unit(6, ENEMY, UnitKind::Ranger, Hex::new(7, 7))
+            .unit(5, ENEMY, UnitKind::Spearman, Hex::new(7, 6))
+            .unit(6, ENEMY, UnitKind::Archer, Hex::new(7, 7))
             .build();
         let threat = |slack: i32, city: Hex| {
             let mut p = planner(&v);
@@ -2003,10 +2003,10 @@ mod tests {
         let reserve = Hex::new(11, 6);
         let mut b = ViewBuilder::new(24, 16)
             .city(1, ME, home, 3)
-            .unit(1, ME, UnitKind::Soldier, home)
-            .unit(2, ME, UnitKind::Soldier, reserve);
+            .unit(1, ME, UnitKind::Spearman, home)
+            .unit(2, ME, UnitKind::Spearman, reserve);
         for (i, h) in home.neighbors().into_iter().enumerate() {
-            b = b.unit(10 + i as u32, ENEMY, UnitKind::Soldier, h);
+            b = b.unit(10 + i as u32, ENEMY, UnitKind::Spearman, h);
         }
         let v = b.build();
         let order = |radius: i32| {
@@ -2040,9 +2040,9 @@ mod tests {
         let v = ViewBuilder::new(24, 16)
             .city(1, ME, home, 3)
             .city(2, ENEMY, theirs, 3)
-            .unit(1, ME, UnitKind::Soldier, home)
-            .unit(2, ME, UnitKind::Soldier, Hex::new(7, 6))
-            .unit(3, ME, UnitKind::Soldier, Hex::new(7, 7))
+            .unit(1, ME, UnitKind::Spearman, home)
+            .unit(2, ME, UnitKind::Spearman, Hex::new(7, 6))
+            .unit(3, ME, UnitKind::Spearman, Hex::new(7, 7))
             .build();
         let closes_in = |radius: i32| {
             let mut p = planner(&v);
@@ -2067,7 +2067,7 @@ mod tests {
         let home = Hex::new(6, 6);
         let v = ViewBuilder::new(24, 16)
             .city(1, ME, home, 3)
-            .unit(5, ENEMY, UnitKind::Soldier, Hex::new(8, 6))
+            .unit(5, ENEMY, UnitKind::Spearman, Hex::new(8, 6))
             .build();
         let mut p = planner(&v);
         assert!(p.defending(Hex::new(10, 6)));
@@ -2145,10 +2145,10 @@ mod tests {
         let home = Hex::new(6, 6);
         let v = ViewBuilder::new(24, 16)
             .city(1, ME, home, 3)
-            .unit(1, ME, UnitKind::Trooper, home)
-            .unit(2, ME, UnitKind::Trooper, Hex::new(5, 6))
-            .unit(5, ENEMY, UnitKind::Soldier, Hex::new(8, 6))
-            .unit(6, ENEMY, UnitKind::Ranger, Hex::new(9, 6))
+            .unit(1, ME, UnitKind::Pikeman, home)
+            .unit(2, ME, UnitKind::Pikeman, Hex::new(5, 6))
+            .unit(5, ENEMY, UnitKind::Spearman, Hex::new(8, 6))
+            .unit(6, ENEMY, UnitKind::Archer, Hex::new(9, 6))
             .build();
         let mut p = planner(&v);
         let army = p.ctx.own_units.clone();
@@ -2166,8 +2166,8 @@ mod tests {
             .faction(legatum_core::Faction::India)
             .city(1, ME, home, 3)
             .city(2, ME, Hex::new(9, 6), 3)
-            .unit(1, ME, UnitKind::Trooper, home)
-            .unit(5, ENEMY, UnitKind::Soldier, Hex::new(8, 6))
+            .unit(1, ME, UnitKind::Pikeman, home)
+            .unit(5, ENEMY, UnitKind::Spearman, Hex::new(8, 6))
             .build();
         let mut off = planner(&v);
         off.decisions.india_network_guard = 0;
@@ -2189,9 +2189,9 @@ mod tests {
         let home = Hex::new(6, 6);
         let v = ViewBuilder::new(24, 16)
             .city(1, ME, home, 3)
-            .unit(1, ME, UnitKind::Trooper, home)
-            .unit(5, ENEMY, UnitKind::Soldier, Hex::new(10, 6))
-            .unit(6, ENEMY, UnitKind::Ranger, Hex::new(9, 6))
+            .unit(1, ME, UnitKind::Pikeman, home)
+            .unit(5, ENEMY, UnitKind::Spearman, Hex::new(10, 6))
+            .unit(6, ENEMY, UnitKind::Archer, Hex::new(9, 6))
             .build();
         let mut p = planner(&v);
         let army = p.ctx.own_units.clone();
@@ -2206,7 +2206,7 @@ mod tests {
     fn hypothetical_declaration_still_respects_known_impassable_terrain() {
         let pos = Hex::new(10, 6);
         let mut v = ViewBuilder::new(24, 16)
-            .unit(5, ENEMY, UnitKind::Soldier, pos)
+            .unit(5, ENEMY, UnitKind::Spearman, pos)
             .build();
         for h in pos.neighbors() {
             let i = v.index(h).unwrap();
@@ -2222,7 +2222,7 @@ mod tests {
         let v = ViewBuilder::new(28, 20)
             .city(1, ME, home, 3)
             .unit(1, ME, UnitKind::Settler, at)
-            .unit(2, ME, UnitKind::Soldier, home)
+            .unit(2, ME, UnitKind::Spearman, home)
             .unit(50, ENEMY, UnitKind::Scout, Hex::new(11, 6))
             .build();
         for gene in [0, 1] {
@@ -2276,7 +2276,7 @@ mod tests {
                 .city(1, ME, home, 3)
                 .city(2, ENEMY, Hex::new(12, 6), 3)
                 .unit(1, ME, UnitKind::Settler, Hex::new(7, 6))
-                .unit(2, ME, UnitKind::Soldier, home)
+                .unit(2, ME, UnitKind::Spearman, home)
                 .build(),
         );
         for gene in [1, 2] {
@@ -2310,7 +2310,7 @@ mod tests {
                 .city(1, ME, home, 3)
                 .city(2, ENEMY, Hex::new(14, 6), 3)
                 .unit(1, ME, UnitKind::Settler, at)
-                .unit(2, ME, UnitKind::Soldier, home)
+                .unit(2, ME, UnitKind::Spearman, home)
                 .build(),
         );
         for gene in [1, 2] {
@@ -2341,7 +2341,7 @@ mod tests {
     }
 
     /// 8.9.37 (his Byzantium game T69-T79): a Settler one step from its site, a peaceful
-    /// Cataphract that could declare three hexes from the site, its Soldier three turns away in a city.
+    /// Cataphract that could declare three hexes from the site, its Spearman three turns away in a city.
     /// The Settler waits for an escort, so the escort must be on its way; before, it was too
     /// far for the two-turn rendezvous and the Settler skipped 11 turns.
     #[test]
@@ -2353,7 +2353,7 @@ mod tests {
                 .city(1, ME, Hex::new(12, 22), 3)
                 .city(3, ME, Hex::new(8, 25), 3)
                 .unit(1, ME, UnitKind::Settler, settler)
-                .unit(2, ME, UnitKind::Soldier, Hex::new(12, 22))
+                .unit(2, ME, UnitKind::Spearman, Hex::new(12, 22))
                 .unit(50, ENEMY, UnitKind::Cataphract, Hex::new(9, 24))
                 .build(),
         );
@@ -2405,8 +2405,8 @@ mod tests {
         let v = ViewBuilder::new(28, 20)
             .city(1, ME, Hex::new(4, 4), 3)
             .unit(1, ME, UnitKind::Settler, at)
-            .unit(2, ME, UnitKind::Soldier, at)
-            .unit(50, ENEMY, UnitKind::Soldier, Hex::new(12, 6))
+            .unit(2, ME, UnitKind::Spearman, at)
+            .unit(50, ENEMY, UnitKind::Spearman, Hex::new(12, 6))
             .build();
         let mut p = planner(&v);
         p.unit_order(
@@ -2432,9 +2432,9 @@ mod tests {
         let v = ViewBuilder::new(28, 20)
             .city(1, ME, home, 3)
             .unit(1, ME, UnitKind::Settler, home)
-            .unit(2, ME, UnitKind::Soldier, home)
-            .unit(3, ME, UnitKind::Soldier, Hex::new(5, 6))
-            .unit(50, ENEMY, UnitKind::Soldier, Hex::new(10, 6))
+            .unit(2, ME, UnitKind::Spearman, home)
+            .unit(3, ME, UnitKind::Spearman, Hex::new(5, 6))
+            .unit(50, ENEMY, UnitKind::Spearman, Hex::new(10, 6))
             .build();
         let mut p = planner(&v);
         let movement = Order::MoveUnit {
@@ -2515,7 +2515,7 @@ mod tests {
         let v = ViewBuilder::new(28, 20)
             .city(1, ME, Hex::new(4, 6), 3)
             .unit(1, ME, UnitKind::Settler, from)
-            .unit(50, ENEMY, UnitKind::Soldier, Hex::new(10, 6))
+            .unit(50, ENEMY, UnitKind::Spearman, Hex::new(10, 6))
             .build();
         let mut p = planner(&v);
         p.unit_order(
@@ -2598,7 +2598,7 @@ mod tests {
     #[test]
     fn capital_guard_keeps_settler_safe_near_a_peaceful_scout() {
         let home = Hex::new(8, 6);
-        for kind in [UnitKind::Soldier, UnitKind::Ranger] {
+        for kind in [UnitKind::Spearman, UnitKind::Archer] {
             let mut v = ViewBuilder::new(24, 16)
                 .faction(legatum_core::Faction::Mongols)
                 .city(1, ME, home, 3)
@@ -2682,7 +2682,7 @@ mod tests {
         let v = ViewBuilder::new(28, 20)
             .city(1, ME, Hex::new(4, 6), 3)
             .unit(1, ME, UnitKind::Settler, from)
-            .unit(50, ENEMY, UnitKind::Soldier, Hex::new(10, 6))
+            .unit(50, ENEMY, UnitKind::Spearman, Hex::new(10, 6))
             .build();
         for order in [
             Order::SkipUnit {
@@ -2835,7 +2835,7 @@ mod tests {
                 ViewBuilder::new(28, 20)
                     .city(1, ME, home, 3)
                     .unit(1, ME, UnitKind::Settler, at)
-                    .unit(2, ME, UnitKind::Soldier, home)
+                    .unit(2, ME, UnitKind::Spearman, home)
                     .build(),
             ),
             Hex::new(10, 5),
@@ -2868,7 +2868,7 @@ mod tests {
                     .city(1, ME, home, 3)
                     .city(3, ME, Hex::new(1, 6), 3)
                     .unit(1, ME, UnitKind::Settler, home)
-                    .unit(2, ME, UnitKind::Soldier, Hex::new(1, 6))
+                    .unit(2, ME, UnitKind::Spearman, Hex::new(1, 6))
                     .build(),
             ),
             Hex::new(8, 5),
@@ -2897,7 +2897,7 @@ mod tests {
         let v = ViewBuilder::new(28, 20)
             .city(1, ME, home, 3)
             .unit(1, ME, UnitKind::Settler, home)
-            .unit(2, ME, UnitKind::Soldier, Hex::new(7, 6))
+            .unit(2, ME, UnitKind::Spearman, Hex::new(7, 6))
             .build();
         let mut p = planner(&v);
         p.decisions.settler_safety = 0;
@@ -2927,7 +2927,7 @@ mod tests {
         let v = ViewBuilder::new(28, 20)
             .city(1, ME, home, 3)
             .unit(1, ME, UnitKind::Settler, home)
-            .unit(2, ME, UnitKind::Soldier, Hex::new(4, 6))
+            .unit(2, ME, UnitKind::Spearman, Hex::new(4, 6))
             .build();
         let mut p = planner(&v);
         p.decisions.settler_safety = 0;
@@ -2956,7 +2956,7 @@ mod tests {
         let v = ViewBuilder::new(28, 20)
             .city(1, ME, home, 3)
             .unit(1, ME, UnitKind::Settler, home)
-            .unit(2, ME, UnitKind::Soldier, Hex::new(5, 6))
+            .unit(2, ME, UnitKind::Spearman, Hex::new(5, 6))
             .build();
         let mut p = planner(&v);
         p.decisions.settler_safety = 0;
@@ -2995,7 +2995,7 @@ mod tests {
                 .city(1, ME, Hex::new(12, 28), 3)
                 .city(3, ME, Hex::new(8, 25), 3)
                 .unit(1, ME, UnitKind::Settler, settler)
-                .unit(2, ME, UnitKind::Soldier, Hex::new(12, 28))
+                .unit(2, ME, UnitKind::Spearman, Hex::new(12, 28))
                 .unit(50, ENEMY, UnitKind::Cataphract, Hex::new(9, 24))
                 .build(),
         );
@@ -3061,9 +3061,9 @@ mod tests {
         let mut v = ViewBuilder::new(28, 16)
             .faction(legatum_core::Faction::Rome)
             .city(1, ME, Hex::new(6, 8), 3)
-            .unit(1, ME, UnitKind::Soldier, site)
-            .unit(2, ME, UnitKind::Soldier, Hex::new(6, 8))
-            .unit(3, ENEMY, UnitKind::Soldier, Hex::new(24, 8))
+            .unit(1, ME, UnitKind::Spearman, site)
+            .unit(2, ME, UnitKind::Spearman, Hex::new(6, 8))
+            .unit(3, ENEMY, UnitKind::Spearman, Hex::new(24, 8))
             .gold(0)
             .build();
         v.units[0].level = 1;
