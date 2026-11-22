@@ -187,7 +187,7 @@ export function TechPanel() {
           </div>
         </section>}
         <section className="era-current" aria-label={`${eraName(r.era)} era technologies`}>
-          <h3 className="era-heading">{eraName(r.era)} era <span className="muted">· only these can be researched now; finish them all to enter the next era{view.eras?.some((x) => x.era === r.era + 2) ? ' and open its three VP objectives' : ''}</span></h3>
+          <h3 className="era-heading">{eraName(r.era)} era <span className="muted">· only these can be researched now; finish them all to enter the next era</span></h3>
           <div className="era-cards" data-count={cards.length}>
             {cards.map((option) => {
               const queueIndex = queue.indexOf(option.tech);

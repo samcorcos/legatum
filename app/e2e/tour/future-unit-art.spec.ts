@@ -7,6 +7,7 @@ import { coreFixture } from '../../src/test/coreFixture';
 import { researchFixture } from '../../src/test/researchFixture';
 import { improvementCity } from '../../src/test/improvementsFixture';
 import { siegeFixture } from '../../src/test/siegeFixture';
+import { withWorldAges } from '../../src/test/vpV2Fixture';
 import { momentsForTurn } from '../../src/celebrate/moments';
 import { contextFromViews, formatEvents } from '../../src/format';
 import { TECHS, TECH_ERA, unitStatsFor } from '../../src/data';
@@ -77,10 +78,16 @@ for (const size of SIZES) test.describe(`future unit art ${size.name}`, () => {
     const future = TECH_ERA.Robotics;
     f.players[0].techs = TECHS.filter((t) => TECH_ERA[t] < future && !FUTURE_TECHS.includes(t));
     await loadFixture(page, coreFixture(f), 2);
+    // A Future-era empire is long past the first Age, so stage open Ages (render only) instead of "No Age has begun"; its own era stays.
+    await page.evaluate((view) => {
+      const store = (window as unknown as GameWindow).legatum, s = store.getState();
+      store.setState({ views: s.views!.map((x, i) => (i === s.seat ? { ...view, players: x.players } : x)) });
+    }, await page.evaluate(() => { const s = (window as unknown as GameWindow).legatum.getState(); return structuredClone(s.views![s.seat]); }).then(withWorldAges));
     const nav = page.locator('.topbar .tb-nav-tech');
     const opener = (await nav.isVisible()) ? nav : page.locator('.topbar .research-chip');
     await opener.click();
     await expect(page.locator('dialog.tech-modal')).toBeVisible();
+    await expect(page.locator('dialog.tech-modal').getByTestId('research-objectives')).not.toHaveClass(/\bno-obj\b/);
     for (const [tech, name] of [['Robotics', 'robotics'], ['StealthTechnology', 'stealth']] as const) {
       const card = page.locator(`dialog.tech-modal .era-card[data-tech="${tech}"]`);
       await card.scrollIntoViewIfNeeded();
