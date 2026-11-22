@@ -16,6 +16,8 @@ import { usePerfOverlay } from '../ui/PerfOverlay';
 import { buildLabel } from '../buildLabel';
 import { HOSTED, SOURCE_URL } from '../platform/hosted';
 import { isOlderVersionMessage, olderAutosaveMessage, saveHasCurrentRules } from '../saveErrors';
+import { MIN_SEATS } from '../lobby';
+import { MAX_PLAYERS } from '../gameSetup';
 
 /** Autosaves (by save time) that failed to open as an older version's save, so Continue can't repeat the failure. */
 const olderAutosaves = new Set<string>();
@@ -117,7 +119,7 @@ function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
         <ResumeButton />
         <button className={`btn big ${newGamePrimary ? 'primary' : ''}`} onClick={() => openSetup('solo')}>
           Single Player
-          <span className="btn-sub">You against one to seven AI empires</span>
+          <span className="btn-sub">You against {MIN_SEATS - 1} to {MAX_PLAYERS - 1} AI empires</span>
         </button>
         <button className="btn big" onClick={onMultiplayer}>
           Multiplayer

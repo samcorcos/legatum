@@ -57,7 +57,7 @@ export interface Lobby {
 export const MAX_TURN_LIMIT = 4_294_967_294;
 export const validTurnLimit = (limit: number | null): boolean => limit === null || (Number.isInteger(limit) && limit >= 1 && limit <= MAX_TURN_LIMIT);
 
-const MIN_SEATS = 2;
+export const MIN_SEATS = 2;
 /** A level a seat can be recorded with. Players are offered Easy, Normal and Hard only. */
 export type AiLevel = AiDifficulty | 'Training';
 /** The levels every build offers. All three plan from the seat's own view of the map. */
