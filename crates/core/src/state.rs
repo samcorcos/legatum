@@ -1049,19 +1049,42 @@ impl GameState {
     }
 
     /// FNV-1a 64 over the canonical JSON serialization. Equal states hash equally everywhere.
+    /// The JSON is streamed into the hash, never held in memory: the bytes and so the hash are
+    /// exactly those of `serde_json::to_vec(self)`.
     pub fn hash(&self) -> u64 {
-        let bytes = serde_json::to_vec(self).expect("state serializes");
-        fnv1a(&bytes)
+        let mut hasher = Fnv1a(FNV_OFFSET);
+        serde_json::to_writer(&mut hasher, self).expect("state serializes");
+        hasher.0
+    }
+}
+
+const FNV_OFFSET: u64 = 0xcbf2_9ce4_8422_2325;
+const FNV_PRIME: u64 = 0x0000_0100_0000_01b3;
+
+fn fnv1a_update(mut h: u64, bytes: &[u8]) -> u64 {
+    for b in bytes {
+        h ^= *b as u64;
+        h = h.wrapping_mul(FNV_PRIME);
+    }
+    h
+}
+
+/// An `io::Write` that folds every byte written into an FNV-1a 64 state.
+struct Fnv1a(u64);
+
+impl std::io::Write for Fnv1a {
+    fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+        self.0 = fnv1a_update(self.0, bytes);
+        Ok(bytes.len())
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
     }
 }
 
 pub fn fnv1a(bytes: &[u8]) -> u64 {
-    let mut h: u64 = 0xcbf2_9ce4_8422_2325;
-    for b in bytes {
-        h ^= *b as u64;
-        h = h.wrapping_mul(0x0000_0100_0000_01b3);
-    }
-    h
+    fnv1a_update(FNV_OFFSET, bytes)
 }
 
 fn is_zero(value: &u32) -> bool {
@@ -1082,4 +1105,20 @@ fn is_zero_i32(v: &i32) -> bool {
 
 fn is_zero_u32(v: &u32) -> bool {
     *v == 0
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn streamed_hash_equals_hash_of_the_serialized_bytes() {
+        let state = crate::new_game(&GameSetup::all_ai(7));
+        let (next, _) = crate::resolve_turn(&state, &BTreeMap::new());
+        for s in [&state, &next] {
+            let bytes = serde_json::to_vec(s).unwrap();
+            assert_eq!(s.hash(), fnv1a(&bytes));
+        }
+        assert_eq!(fnv1a(b""), FNV_OFFSET);
+    }
 }
