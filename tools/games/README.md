@@ -17,8 +17,10 @@ Every 15 minutes (launchd, `io.legatum.game-analysis`), `analyse_games.py poll`:
    - still in progress but idle for 6 hours with new turns since its last report: a checkpoint report;
    - fewer than 10 turns: skipped; a game that fails 3 times on the same upload is left for a person. If the reviewer itself is down (a trivial canary call fails too, e.g. the Claude login expired), the failure does not count against the game: the run stops and you get one notification (`reviewer_down` in the ledger) until a review works again.
 4. For each game, in `reports/<game id>/`:
-   - `facts.md`: standings, wars, expansion, losses, key events, the AI incident detector and the coach
-     questions with the player's answers. The replay uses the engine the game was played on: `game_dump` and
+   - `facts.md`: standings, wars, expansion, losses, key events, the AI incident detector, any rewinds
+     (the player went back to an earlier turn; the upload holds only the kept line) and the coach
+     questions with the player's answers. `coach_answers` and `rewinds` exist only in the upload copy and are
+     stripped before the engine reads a record. The replay uses the engine the game was played on: `game_dump` and
      `legatum-analyze` are built at the game's `engine_commit` and cached in `engine/bin/<commit>`.
    - `review.md`: a short coach-style triage written by Haiku (Claude Code) from `review_prompt.md` with
      `facts.md` pasted in, headed as untrusted model output.
@@ -67,7 +69,13 @@ tools/games/install-mac.sh --remove  # stop it (ledger and reports stay)
 python3 tools/games/analyse_games.py poll --dry-run           # what is due
 python3 tools/games/analyse_games.py poll --only <game id> --force
 python3 tools/games/analyse_games.py facts record.json.gz --events events.jsonl
+python3 tools/games/analyse_games.py exclude <game id> --reason "misclicks, restarted"   # never analyse it
+python3 tools/games/analyse_games.py include <game id>                                 # undo
 ```
+
+An excluded game is never analysed (not even with `--force`) and moves to the "Excluded" table at the bottom
+of `reports/INDEX.md`, so AI work does not learn from it. Use it for games the player abandoned because of
+misclicks rather than decisions. It refuses to run while an analysis run holds the ledger.
 
 Settings: `LEGATUM_GAMES_URL` (the Worker), `LEGATUM_REPO` (where to fetch engine commits),
 `LEGATUM_REVIEWER` (default `claude`; `codex,claude` tries Codex first), `LEGATUM_GAMES_READ_TOKEN` (instead of the keychain).

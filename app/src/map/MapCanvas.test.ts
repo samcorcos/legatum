@@ -15,7 +15,7 @@ import { hexAt } from '../hex';
 import { setOverlay } from './overlays';
 import { Game } from '../wasm-pkg/legatum.js';
 
-vi.mock('./render', async (original) => ({ ...await original<typeof import('./render')>(), draw: vi.fn(() => ({ pending: false, labelRects: [] })) }));
+vi.mock('./render', async (original) => ({ ...await original<typeof import('./render')>(), draw: vi.fn(() => ({ pending: false, labelRects: [], ambient: [] })) }));
 
 let root: Root;
 let map: HTMLCanvasElement;
@@ -45,6 +45,9 @@ beforeEach(async () => {
   vi.stubGlobal('cancelAnimationFrame', (id: number) => frames.delete(id));
   preference = Object.assign(new EventTarget(), { matches: false }) as MediaQueryList;
   vi.spyOn(window, 'matchMedia').mockReturnValue(preference);
+  // A frame for the hover alone clips the map canvas before it draws (the draw itself is mocked): give that canvas a context to clip.
+  const clip = { save() {}, restore() {}, setTransform() {}, beginPath() {}, rect() {}, clip() {} } as unknown as CanvasRenderingContext2D;
+  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (this: HTMLCanvasElement) { return this.classList.contains('map-canvas') ? clip : null; });
   const client = new FixtureClient();
   const setup = await client.standardSetup('42', 'India', 'Byzantium', 'Ada', 'Bo');
   setup.rule_experiments = { ...setup.rule_experiments, start_settlers: 1 };

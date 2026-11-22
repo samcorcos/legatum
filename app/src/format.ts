@@ -252,11 +252,11 @@ function renamePlayers(view: PlayerView, text: string): string {
 /** Use the viewer's empire names only when a core reason's subject uniquely identifies a player. */
 function renameSubject(view: PlayerView, text: string): string {
   for (const p of [...view.players].sort((a, b) => b.name.length - a.name.length)) {
-    const subject = new RegExp(`^${escapeRegExp(p.name)} (was|were|could not) `);
+    const subject = new RegExp(`^${escapeRegExp(p.name)} (was|were|could not|brought|took) `);
     if (!subject.test(text)) continue;
     if (view.players.filter((other) => other.name === p.name).length !== 1) return text;
     return text.replace(subject, (_, verb: string) =>
-      p.id === view.me ? `you ${verb === 'could not' ? verb : 'were'} ` : `${empireNameOf([p], view.players)} ${verb} `);
+      p.id === view.me ? `you ${verb === 'was' ? 'were' : verb} ` : `${empireNameOf([p], view.players)} ${verb} `);
   }
   return text;
 }
@@ -893,7 +893,9 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
       if (e.reason.startsWith(OUTMATCHED_PREFIX)) {
         return line('orders', `${unitLabel(ctx, e.unit, e.owner)} couldn't enter ${e.toward ? location(ctx, e.toward) : 'the tile'}: ${rename(e.reason.slice(OUTMATCHED_PREFIX.length))}`, {
           at: e.at, players: [e.owner], weight: mine(e.owner) ? 2 : 0, tone: 'neutral',
-          details: ['Empires not at War never fight over a tile: the stronger side moves in. This unit stayed put and keeps its order; give it a new route.'],
+          details: [mine(e.owner)
+            ? 'Empires not at War never fight over a tile: the stronger side moves in. This unit stayed put and keeps its order; give it a new route.'
+            : 'Empires not at War never fight over a tile: the stronger side moves in. This unit stayed put.'],
         });
       }
       // The attack's target died to ranged fire before movement and nothing hostile is left there.
@@ -912,7 +914,9 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
       return line('movement', `${unitLabel(ctx, e.unit, e.owner)} was blocked ${e.at ? at(ctx, e.at) : 'beyond sight'}`, {
         at: e.at,
         players: [e.owner],
-        details: [rename(e.reason)],
+        // Core's reason is written for the unit's owner ("against your 30"); for anyone else's unit, name the owner.
+        details: [(e.owner === ctx.me ? rename(e.reason) : rename(e.reason).replace(/ against your /, ` against ${possessive(ctx, e.owner)} `))
+          .replace(/^you /, 'You ')],
         weight: mine(e.owner) ? 1 : 0,
       });
     case 'AttackPursuit': {
