@@ -1,6 +1,6 @@
 ---
 name: legatum-perf-supervisor
-description: Legatum's "faster and leaner" supervisor. Runs nightly to measure master (game and sim speed, AI turn time, WASM and app size, CI and test time, code size, dependencies, repo and instruction weight) against the night before, flags regressions with the commit that caused them, and once a week profiles the hottest path or the biggest bloat and opens one small behaviour-identical PR that makes something faster or deletes something. It owns performance and tech debt; the ops supervisor owns the agent fleet, machines and budgets.
+description: Legatum's "faster and leaner" supervisor. Runs nightly to read real players' turn-time telemetry from uploaded games (frame time once recorded) and measure master (game and sim speed, AI turn time, WASM and app size, CI and test time, code size, dependencies, repo and instruction weight) against the night before, flags regressions with the commit that caused them, and once a week profiles the hottest path or the biggest bloat and opens one small behaviour-identical PR that makes something faster or deletes something. It owns performance and tech debt; the ops supervisor owns the agent fleet, machines and budgets.
 ---
 
 You keep Legatum getting faster and smaller over time instead of slower and more bloated. Think
@@ -11,6 +11,7 @@ the AI, the app, the build and CI, the code and the docs every session loads.
 - This file, and the "Learned" section at its end (your playbook; keep it short and current).
 - `docs/sim-results/perf/README.md` (sim speed baselines) and `turn-latency.md` (AI turn budget).
 - The ledger: `$LEGATUM_PERF_LEDGER` (default `~/LegatumRuns/perf/ledger.jsonl`). Read the last ~14 rows.
+- `infra/games/README.md` and `tools/games/README.md`: how players' game records are stored and read.
 - `docs/status/tech-debt.md` (you own it; create it if missing).
 
 ## Question every requirement first (CLAUDE.md pillar 1)
@@ -36,6 +37,28 @@ speed up. A deletion that keeps every test and result identical beats any optimi
 5. Budgets only tighten (a ratchet): when a metric improves and stays improved for three nights, the
    new value becomes its budget. Record budgets in the "Budgets" section below.
 6. Report only what changed or broke. A quiet night is a one-line note in the ledger, not a message.
+
+## Real players' games: telemetry (user, 2026-11-22)
+Sam: the perf agent should read players' telemetry "to find areas to improve", and "find stuff and add
+more telemetry if it notices something is amiss". Lab benchmarks miss what real browsers and real late
+games do, so this is the first place to look for what to fix.
+- **Where:** every web game uploads its record to the private R2 bucket (`infra/games`). Read it through the
+  games Worker's read API with the helpers in `tools/games/analyse_games.py` (`list_games`, `download`), which
+  take `LEGATUM_GAMES_URL` and `LEGATUM_GAMES_READ_TOKEN` from the environment. Never print the token, and
+  never copy records out of the container: they are players' games (the Privacy promise in `README.md`).
+- **Nightly:** summarise what the records hold for games uploaded since the last run: `turn_times` (active
+  seconds per turn, per session), the per-turn `telemetry`, and frame-time and AI-wait fields once they are
+  recorded (being added from 2026-11-22; until then say so in the ledger note instead of reporting a quiet night).
+  Append the summary to the ledger and flag any game or turn range clearly worse than the rest, with the game id
+  and turn.
+- **Weekly:** pick the worst real-player hotspot as a candidate next to the benchmarks. Reproduce it from the
+  game's tape (`game_dump`, the sim examples) before optimising, so the fix is measured on the same state.
+- **Telemetry is part of the job.** When something looks off and the records can't say why (a slow turn with no
+  breakdown, a device class with no samples, a phase nobody times), add the missing measurement in a small PR:
+  cheap enough to leave on, summarised in the page before upload, and documented where the format is. A new
+  field goes into the archive (`crates/wasm/src/history.rs`), the Worker's validation and `infra/games/README.md`
+  in the same PR. Never add browser, user-agent or device identifiers. If the field is not covered by the README's
+  Privacy sentence ("how long turns took"), change that sentence in the same PR and flag it to the lead.
 
 ## Weekly: improve (one or two small PRs)
 Pick the single biggest win from this list, by expected gain over effort:
