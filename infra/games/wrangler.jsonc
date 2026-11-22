@@ -6,8 +6,20 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-10-01",
   "r2_buckets": [{ "binding": "GAMES", "bucket_name": "legatum-games" }],
-  // Pages that may upload, comma separated. "*.legatum-game.pages.dev" covers preview deploys.
-  "vars": { "ALLOWED_ORIGINS": "https://legatum-game.pages.dev,*.legatum-game.pages.dev,http://localhost:*,http://127.0.0.1:*" },
-  // Off on purpose: request logs would hold players' IP addresses.
+  // One Quota object counts the new games per client address and UTC day (it keeps only a salted hash of the address).
+  "durable_objects": { "bindings": [{ "name": "QUOTA", "class_name": "Quota" }] },
+  "migrations": [
+    // new_sqlite_classes: SQLite-backed Durable Objects, the only kind the Workers Free plan allows.
+    { "tag": "v1", "new_sqlite_classes": ["Quota"] }
+  ],
+  "vars": {
+    // Pages that may upload, comma separated. "*.legatum-game.pages.dev" covers preview deploys.
+    "ALLOWED_ORIGINS": "https://legatum-game.pages.dev,*.legatum-game.pages.dev,http://localhost:*,http://127.0.0.1:*",
+    // New games (not later checkpoints of a stored game) one client address may store per UTC day; more get 429.
+    // A string, as Worker vars are; a bad value means 50.
+    "MAX_NEW_GAMES_PER_DAY": "50"
+  },
+  // Off on purpose: request logs would hold players' IP addresses. The only thing kept about a sender is the
+  // Quota object's salted hash of the address, for the current UTC day.
   "observability": { "enabled": false }
 }

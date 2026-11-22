@@ -65,6 +65,8 @@ function openDatabase(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     try {
       if (typeof indexedDB === 'undefined') throw new Error('no database');
+      // Stays at version 1: every build the site keeps (platform/versions.ts) opens this database, and an older one
+      // opening it below a version a newer build set would fail.
       const request = indexedDB.open(AUTOSAVE_DB, 1);
       request.onupgradeneeded = () => {
         const db = request.result;

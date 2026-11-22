@@ -115,7 +115,7 @@ A `view` can exceed what one relayed message may carry. The host splits any gues
 
 sent in order with nothing from the same connection interleaved. The guest's relay socket wrapper
 (`app/src/relaySocket.ts`) concatenates the pieces and delivers the original text to `RemoteClient` as one
-message; anything else passes through untouched. Guest-to-host messages are never chunked (64 KiB cap exists
+message (a message over 16 MiB of characters or 1,024 pieces is dropped); anything else passes through untouched. Guest-to-host messages are never chunked (64 KiB cap exists
 already). The host's own in-tab connection never sees chunks.
 
 ## Host (`crates/wasm/src/host`, `app/src/net`)

@@ -4,3 +4,18 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+  # One pull request a week per ecosystem, so dependency updates are one review, not many.
+  - package-ecosystem: "npm"
+    directories: ["/app", "/infra/relay", "/infra/games"]
+    schedule:
+      interval: "weekly"
+    groups:
+      npm:
+        patterns: ["*"]
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      cargo:
+        patterns: ["*"]

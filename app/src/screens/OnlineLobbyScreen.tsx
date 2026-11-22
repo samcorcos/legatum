@@ -9,6 +9,8 @@ import {
   versionProblem,
   type RoomInfo,
 } from '../platform/relayLobby';
+import { buildForRoom, buildUrl, navigate } from '../platform/versions';
+import { useSiteBuilds } from '../ui/useSiteBuilds';
 
 type Load = { kind: 'loading' } | { kind: 'ready'; rooms: RoomInfo[] } | { kind: 'failed' };
 
@@ -21,6 +23,7 @@ export function OnlineLobbyScreen() {
   const [joining, setJoining] = useState<string | null>(null);
   const [joinError, setJoinError] = useState<{ room: string; text: string } | null>(null);
   const relay = online?.relay ?? null;
+  const builds = useSiteBuilds();
 
   useEffect(() => {
     if (!relay) return;
@@ -95,15 +98,19 @@ export function OnlineLobbyScreen() {
         {load.kind === 'ready' && load.rooms.length > 0 && (
           <ul className="online-rooms">
             {load.rooms.map((room) => {
-              const mismatch = versionProblem(room, online);
+              // A game on another version the site still serves is joined there: Join opens that version.
+              const other = versionProblem(room, online) ? buildForRoom(builds, room) : null;
+              const mismatch = other ? null : versionProblem(room, online);
               const full = room.open_seats <= 0;
-              const note = mismatch ?? (joinError?.room === room.room ? joinError.text : null);
+              const note = mismatch ?? (joinError?.room === room.room ? joinError.text : other ? 'This game is on another version. Joining opens that version.' : null);
               return (
                 <li key={room.room} className={`online-room ${mismatch ? 'blocked' : ''}`}>
                   <div className="online-room-main">
                     {note && (
-                      <div className="online-room-note" role="alert">
-                        <span className="online-room-mark" aria-hidden>!</span>
+                      <div className="online-room-note" role={other && !mismatch && joinError?.room !== room.room ? 'status' : 'alert'}>
+                        {other && !mismatch && joinError?.room !== room.room
+                          ? <span className="online-room-mark info" aria-hidden>→</span>
+                          : <span className="online-room-mark" aria-hidden>!</span>}
                         {note}
                       </div>
                     )}
@@ -116,7 +123,7 @@ export function OnlineLobbyScreen() {
                   <button
                     className="btn primary online-join"
                     disabled={!!mismatch || full || !!joining}
-                    onClick={() => join(room)}
+                    onClick={() => (other ? navigate(buildUrl(other.id, { join: room.room })) : join(room))}
                     aria-label={joining === room.room ? undefined : `Join ${room.name || 'this game'}`}
                   >
                     {joining === room.room ? 'Joining…' : 'Join'}

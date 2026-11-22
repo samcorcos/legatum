@@ -73,6 +73,26 @@ describe('relaySocket', () => {
     expect(got).toEqual(['ok!']);
   });
 
+  it('drops a message that grows past 16 MiB of characters, and keeps working after', () => {
+    const { got, feed } = setup();
+    const piece = 'x'.repeat(256 * 1024);
+    for (let i = 0; i < 64; i++) feed(chunk(1, i, 80, piece)); // exactly 16 MiB so far
+    feed(chunk(1, 64, 80, 'y')); // one character over
+    for (let i = 65; i < 80; i++) feed(chunk(1, i, 80, piece));
+    expect(got).toEqual([]);
+    feed(chunk(2, 0, 2, 'ok'));
+    feed(chunk(2, 1, 2, '!'));
+    expect(got).toEqual(['ok!']);
+  });
+
+  it('delivers a message just under the 16 MiB cap', () => {
+    const { got, feed } = setup();
+    const piece = 'x'.repeat(256 * 1024);
+    for (let i = 0; i < 64; i++) feed(chunk(1, i, 64, piece));
+    expect(got).toHaveLength(1);
+    expect(got[0]).toHaveLength(16 * 1024 * 1024);
+  });
+
   it('drops a partial message when a normal message interrupts it', () => {
     const { got, feed } = setup();
     feed(chunk(1, 0, 2, 'a'));

@@ -221,6 +221,12 @@ div.seat {
   background: var(--bad, #a33);
   border-radius: 50%;
 }
+/* A game on another kept version: joinable, so a neutral mark, never the red one. */
+.online-room-mark.info {
+  color: var(--ink, #2b2419);
+  background: transparent;
+  border: 1px solid currentColor;
+}
 .online-join {
   flex: 0 0 auto;
   min-width: 96px;

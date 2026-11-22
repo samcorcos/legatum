@@ -42,6 +42,12 @@ describe('check-dist-refs', () => {
     expect(r.status, r.stderr).toBe(0);
   });
 
+  it('treats a link to a folder, such as the 404 page\'s link home, as its index.html', () => {
+    const dir = site({ 'index.html': '<p>', '404.html': '<a href="/">Home</a><a href="./">Back</a>' });
+    const r = check(dir);
+    expect(r.status, r.stderr).toBe(0);
+  });
+
   it('fails on a picture the build points to but does not contain (the 2026-11-22 broken art)', () => {
     const dir = site({ 'index.html': '<script src="./assets/index-1.js"></script>', 'assets/index-1.js': 'new URL(`tank-1.png`,import.meta.url)', 'assets/tank-1.webp': 'x' });
     const r = check(dir);

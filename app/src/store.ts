@@ -1,5 +1,6 @@
 import { soundHooksForMoments } from './celebrate/feedback';
-import { DAMAGED_SAVE_MESSAGE, loadErrorMessage, olderRulesMessage, saveHasCurrentRules } from './saveErrors';
+import { DAMAGED_SAVE_MESSAGE, loadErrorMessage, olderRulesMessage, saveHasCurrentRules, saveRulesVersion } from './saveErrors';
+import { BUILD_ID, buildForSave, buildUrl, fetchVersions, handOffSave, navigate, pageLaunch } from './platform/versions';
 import { RULES } from './data';
 import { buildLabel } from './buildLabel';
 import { momentsForTurn, type Moment } from './celebrate/moments';
@@ -151,6 +152,8 @@ export interface SaveFile {
   game: string;
   rulesVersion?: number;
   playtest?: string;
+  /** The website build that wrote it (platform/versions.ts): an older save opens there. Absent in older saves. */
+  build?: string;
   /** Written by an online host's "Save to file": the game has human seats, and can be hosted again. */
   online?: true;
   /** Coach questions: the toggle and what was already asked (app-side; never part of the game state). */
@@ -416,6 +419,7 @@ export function saveFile(client: GameClient, views: PlayerView[]): SaveFile {
     game: client.save(),
     rulesVersion: RULES.saveVersion,
     playtest: buildLabel,
+    ...(BUILD_ID ? { build: BUILD_ID } : {}),
     ...(useGame.getState().why.enabled ? { why: useGame.getState().why } : {}),
   };
 }
@@ -436,6 +440,7 @@ export function onlineSaveFile(game: string, views: PlayerView[]): SaveFile {
     game,
     rulesVersion: RULES.saveVersion,
     playtest: buildLabel,
+    ...(BUILD_ID ? { build: BUILD_ID } : {}),
     online: true,
   };
 }
@@ -473,6 +478,26 @@ export async function readAutosave(): Promise<SaveFile | null> {
 let campaign = newCampaignId();
 let resumeCampaign: string | null = null;
 let noticedCampaign: string | null = null;
+
+/**
+ * Open a save made with other rules in a build the site still serves (platform/versions.ts). An autosave is found
+ * there by its campaign (the same browser database); a chosen file is handed over through browser storage.
+ * True once the other page is opening.
+ */
+async function openInOwnBuild(save: SaveFile, campaign: string | null): Promise<boolean> {
+  // A page another build sent this save to never sends it on again (no back and forth if the list is wrong).
+  const arrived = pageLaunch();
+  if (arrived?.kind === 'continue' || arrived?.kind === 'open') return false;
+  const target = buildForSave(await fetchVersions(), saveRulesVersion(save.game), save.build);
+  if (!target) return false;
+  if (campaign) {
+    navigate(buildUrl(target.id, { continue: campaign }));
+    return true;
+  }
+  if (!(await handOffSave(JSON.stringify(save)))) return false;
+  navigate(buildUrl(target.id, { open: 'save' }));
+  return true;
+}
 
 function writeAutosave(client: GameClient, views: PlayerView[]) {
   if (client.archive && (views[0].finished || (views[0].turn - 1) % 5 === 0)) {
@@ -1478,7 +1503,14 @@ export const useGame = create<State>((set, get) => {
       set({ busy: 'Loading…', error: null });
       try {
         checkSaveText(save.game);
-        if (!saveHasCurrentRules(save.game)) throw new Error(olderRulesMessage(save.playtest));
+        if (!saveHasCurrentRules(save.game)) {
+          // The site may still serve the build that made it: the game continues there, on its own rules.
+          if (await openInOwnBuild(save, resumeCampaign)) {
+            set({ busy: 'Opening the version this game started on…' });
+            return;
+          }
+          throw new Error(olderRulesMessage(save.playtest));
+        }
         if (save.client !== 'wasm') throw new Error('This save used the retired TypeScript engine and cannot be loaded by the Rust engine.');
         const client = await createClient(save.client);
         measureTurn('loadClient', () => client.load(save.game));
