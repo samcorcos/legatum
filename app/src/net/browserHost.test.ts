@@ -1,5 +1,5 @@
 import { beforeEach, expect, it, vi } from 'vitest';
-import { BrowserHost, MAX_BACKOFF_MS, MIN_BACKOFF_MS, PING_MS, type HostEngine, type TunnelSocket } from './browserHost';
+import { BrowserHost, MAX_BACKOFF_MS, MIN_BACKOFF_MS, PING_MS, RelayRefusal, refusalMessage, type HostEngine, type TunnelSocket } from './browserHost';
 import { KIND_BYE, KIND_CLOSE, KIND_DATA, KIND_OPEN, KIND_PING, KIND_STATUS, KIND_SUMMARY, decodeFrame, encodeFrame, frameText } from './tunnel';
 
 /** An engine that echoes: every received text goes back to its sender. */
@@ -237,4 +237,90 @@ it("the host's own socket and admin calls reach the engine in the tab", async ()
   sock.close();
   await closed;
   expect(engine.disconnected).toEqual([1]);
+});
+
+/** A relay that answers POST /rooms with a refusal. */
+const refusing = (status: number, error: string, retryAfter?: string) => ({
+  fetch: async () => ({
+    ok: false,
+    status,
+    headers: { get: (n: string) => (n.toLowerCase() === 'retry-after' ? retryAfter ?? null : null) },
+    json: async () => ({ error }),
+    text: async () => JSON.stringify({ error }),
+  }),
+});
+
+const refusalOf = async (over: Parameters<typeof options>[0]) => {
+  const host = new BrowserHost(options(over));
+  const e = await host.start().then(() => null, (x: unknown) => x);
+  expect(e).toBeInstanceOf(RelayRefusal);
+  expect(tunnels).toHaveLength(0);
+  return e as RelayRefusal;
+};
+
+it.each([
+  [429, 'You are opening games too quickly.', '300', 'too_fast', 'You have opened too many games lately. Try again in 5 minutes.'],
+  [429, 'You are opening games too quickly.', '1', 'too_fast', 'You have opened too many games lately. Try again in 1 minute.'],
+  [429, 'You are opening games too quickly.', '601', 'too_fast', 'You have opened too many games lately. Try again in 11 minutes.'],
+  [429, 'You already have 2 games open.', undefined, 'too_many', 'You already have games open. Close one before hosting another.'],
+  [503, 'This lobby is full. Try again in a few minutes.', undefined, 'full', 'The game list is full right now. Try again in a few minutes.'],
+  [503, 'Hosting new games is paused. Try again later.', undefined, 'closed', 'Hosting new games is paused. Try again later.'],
+  [400, 'invalid room announcement', undefined, 'other', 'Could not open your game. Try again.'],
+] as const)('maps a %i from the relay (%s, Retry-After %s) to %s', async (status, error, retryAfter, kind, message) => {
+  const e = await refusalOf(refusing(status, error, retryAfter));
+  expect(e.kind).toBe(kind);
+  expect(e.message).toBe(message);
+});
+
+it('treats a network failure as offline with the connection advice', async () => {
+  const e = await refusalOf({ fetch: async () => { throw new TypeError('Failed to fetch'); } });
+  expect(e.kind).toBe('offline');
+  expect(e.message).toBe(refusalMessage('offline'));
+  expect(e.message).toMatch(/internet connection/);
+});
+
+it('never shows the relay or its status code in a refusal message', () => {
+  for (const kind of ['too_fast', 'too_many', 'full', 'closed', 'offline', 'other'] as const) {
+    expect(refusalMessage(kind, 120)).not.toMatch(/relay|socket|429|503|rate limit/i);
+  }
+});
+
+it('sends the room name as the game list will show it', async () => {
+  let body = '';
+  const host = new BrowserHost(options({
+    announce: { name: '  Ada \u{1F600} of   Rome  ', build: 'b', rules_version: 1, protocol: 1 },
+    fetch: async (_url, init) => {
+      body = (init as { body?: string }).body ?? '';
+      return { ok: true, status: 200, json: async () => ({ room: 'r', host_key: 'k' }), text: async () => '' };
+    },
+  }));
+  await host.start();
+  expect(JSON.parse(body).name).toBe('Ada of Rome');
+  host.stop();
+});
+
+it('tells the host when the relay refuses to list a forgotten room again, and keeps trying', async () => {
+  const seen: RelayRefusal[] = [];
+  let announceCalls = 0;
+  const host = new BrowserHost(options({
+    room: { room: 'old', host_key: 'k0' },
+    onRefused: (r) => seen.push(r),
+    fetch: async (_url: string, init?: { method?: string }) => {
+      if (init?.method === 'POST') {
+        announceCalls++;
+        return { ok: false, status: 429, headers: { get: () => '120' }, json: async () => ({ error: 'x' }), text: async () => '' };
+      }
+      return { ok: false, status: 404, json: async () => ({}), text: async () => '' };
+    },
+  }));
+  await host.start();
+  tunnels[0].drop();
+  const t = timers.filter((x) => !x.every && !x.dead).at(-1)!;
+  t.dead = true;
+  t.f();
+  await vi.waitFor(() => expect(seen).toHaveLength(1));
+  expect(announceCalls).toBe(1);
+  expect(seen[0].message).toBe('You have opened too many games lately. Try again in 2 minutes.');
+  await vi.waitFor(() => expect(timers.some((t) => !t.every && !t.dead)).toBe(true));
+  host.stop();
 });
