@@ -8,6 +8,7 @@ import type { PlayerView } from '../types';
 import { momentsForTurn, type Moment } from './moments';
 import { EraUpTakeover } from './EraUpTakeover';
 import { eraArt } from './eraArt';
+import { settleResearch } from './researchSettled';
 
 let view: PlayerView;
 beforeAll(async () => {
@@ -72,5 +73,15 @@ describe('the era-up takeover', () => {
 
   it('every era has a painting', () => {
     for (let era = 0; era < 7; era++) expect(eraArt(era)).toMatchObject({ small: expect.stringContaining('1280'), large: expect.stringContaining('1920') });
+  });
+
+  it('research picked before the card shows (behind the research screen) turns Choose research into Continue', () => {
+    const idle = enter();
+    expect(idle.eraUp?.primary).toBe('research');
+    expect(settleResearch(idle, false)).toBe(idle);
+    render(settleResearch(idle, true)!);
+    expect(host.querySelector('[data-testid=era-takeover]')?.getAttribute('data-primary')).toBe('continue');
+    expect(host.querySelector('[data-primary-action]')?.textContent).toContain('Continue');
+    expect(host.querySelector('[data-testid=era-up-choose]')).toBeNull();
   });
 });

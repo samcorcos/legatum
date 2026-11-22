@@ -13,6 +13,9 @@ Newest first. One entry per non-obvious finding: what we learned, the evidence, 
 
 - **Cause:** `writeAnswer` only appended to a module-level array (`unwrittenAnswers`); the desktop app that used to write it to disk was removed, so answers died with the tab while the designer was answering in a real game.
 - **Fix:** answers now live in `WhyMemory.answers` (last 500, so the save file and localStorage autosave carry them; old saves load with none) and the hosted build's upload copy carries them as top-level `coach_answers` (`historyToRecord`). The engine's `Recording` has `deny_unknown_fields`, so the key exists only in the upload copy: `exportGameHistory` strips it and `client.archive()` never has it. The Worker accepts an array of at most 2000 objects. README Privacy and the title notice say so.
+## 2026-11-22: The new-era card reopened the research screen after research was picked (`claude/project-thread-fuxj51`)
+
+- **A held card's "Choose research" was frozen when the turn's story was planned.** `eraUpCardFor` and `unlockCardFor` read `research.queue`/`current` from the view after the turn; a research pick is a pending `SetResearchQueue` order, not in the view until the next turn resolves. The held card also waits behind any open dialog (`useDialogOpen` in `MomentLane.tsx`), so a player who opened the research screen quickly, picked, then met the era takeover still saw "Choose research", and Return reopened the screen. `celebrate/researchSettled.ts` now re-checks `effectiveResearchQueue` over the pending orders when the card shows and turns that primary into Continue (or keeps Show for an unlock).
 
 ## 2026-11-22: Engine robustness review: save references, aircraft upgrade Gold, save/hash allocations (`claude/review-engine-robustness`)
 
