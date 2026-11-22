@@ -14,6 +14,7 @@ import {
   REASON_TOO_MANY_MESSAGES,
   REASON_TOO_MUCH_DATA,
   SocketRate,
+  addressKey,
   defaultName,
   ipHash,
   limitsFrom,
@@ -105,6 +106,23 @@ describe("token bucket and address hashing", () => {
     expect(r.take(10, 1000)).toBeNull();
     expect(r.take(100, 3000)).toBe(REASON_TOO_MUCH_DATA); // 70 left at 1 s, refilled to 90 by 3 s
     expect(r.take(90, 3000)).toBeNull();
+  });
+
+  it("limits an IPv6 line as one address: its first 64 bits", async () => {
+    expect(addressKey("203.0.113.9")).toBe("203.0.113.9");
+    expect(addressKey("::ffff:203.0.113.9")).toBe("203.0.113.9");
+    expect(addressKey("2001:db8:12:34:aaaa:bbbb:cccc:dddd")).toBe("2001:db8:12:34::/64");
+    expect(addressKey("2001:0DB8:0012:0034::1")).toBe("2001:db8:12:34::/64");
+    expect(addressKey("2001:db8::1")).toBe("2001:db8:0:0::/64");
+    expect(addressKey("2001:db8:12:35::1")).not.toBe(addressKey("2001:db8:12:34::1"));
+    expect(addressKey("::1")).toBe("0:0:0:0::/64");
+    expect(await ipHash("s", "2001:db8:12:34::1")).toBe(await ipHash("s", "2001:db8:12:34:ffff:ffff:ffff:ffff"));
+
+    // The same line under three of its addresses still holds only MAX_ROOMS_PER_IP rooms.
+    const net = (Date.now() % 60000).toString(16);
+    const line = (n: number) => `2001:db8:77:${net}::${n}`;
+    for (let i = 1; i <= DEFAULT_LIMITS.MAX_ROOMS_PER_IP; i++) expect((await create(announce(`v6 ${i}`), line(i))).r.status).toBe(200);
+    expect((await create(announce("v6 more"), line(99))).r.status).toBe(429);
   });
 
   it("hashes an address with a salt and never keeps it in the clear", async () => {
