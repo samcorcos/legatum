@@ -86,7 +86,7 @@ describe('server base', () => {
 
 describe('relay lobby helpers', () => {
   const info = { relay: 'https://r', build: '8.9.74', rules_version: 12, protocol: 1 };
-  const room: RoomInfo = { room: 'x', name: 'Ada', build: '8.9.74', rules_version: 12, protocol: 1, players: 2, humans: 2, open_seats: 1, phase: 'staging', turn: 0, updated_ms: 0 };
+  const room: RoomInfo = { room: 'x', name: 'Ada', build: '8.9.74', rules_version: 12, protocol: 1, players: 2, humans: 2, open_seats: 1, phase: 'staging', turn: 0, updated_ms: 0, locked: false };
   it('builds the room base', () => expect(roomBase('https://r/', 'abc')).toBe('https://r/rooms/abc'));
   it('accepts the same version', () => expect(versionProblem(room, info)).toBeNull());
   it('names both builds when they differ', () =>

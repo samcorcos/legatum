@@ -14,6 +14,8 @@ export interface RoomInfo {
   phase: 'staging' | 'playing';
   turn: number;
   updated_ms: number;
+  /** The host set a join code: a guest types it once to take a seat. */
+  locked: boolean;
 }
 
 export const LOBBY_POLL_MS = 3000;
@@ -52,6 +54,7 @@ export async function fetchLobby(relay: string, fetchImpl: FetchLike = fetch, ti
         phase: o.phase === 'playing' ? 'playing' : 'staging',
         turn: num(o.turn),
         updated_ms: num(o.updated_ms),
+        locked: o.locked === true,
       }];
     });
   } finally {

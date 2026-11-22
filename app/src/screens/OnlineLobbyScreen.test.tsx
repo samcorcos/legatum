@@ -67,6 +67,23 @@ it('lists rooms with seats and phase, and one Join per row', async () => {
   expect(rows[1].querySelector('button')!.disabled).toBe(true); // no open seat
 });
 
+it('marks a locked game with the word Locked, and passes that on when joining', async () => {
+  lobby = async () => ({ ok: true, json: async () => ({ rooms: [room({ locked: true }), room({ room: 'klmnopqrst', name: 'Bo' })] }) });
+  await mount();
+  const rows = [...host.querySelectorAll('.online-room')];
+  expect(rows[0].textContent).toContain('Locked');
+  expect(rows[0].querySelector('.online-room-lock svg')!.getAttribute('aria-hidden')).toBe('true');
+  expect(rows[1].textContent).not.toContain('Locked');
+  const join = vi.spyOn(useGame.getState(), 'joinOnline').mockResolvedValue(null);
+  act(() => useGame.setState({ joinOnline: join }));
+  const fresh = [...host.querySelectorAll('.online-room')];
+  act(() => fresh[0].querySelector('button')!.click());
+  await flush();
+  expect(join).toHaveBeenCalledWith(RELAY, 'abcdefghij', true);
+  act(() => fresh[1].querySelector('button')!.click());
+  expect(join).toHaveBeenLastCalledWith(RELAY, 'klmnopqrst', false);
+});
+
 it('blocks a game from a different version with the exact words', async () => {
   lobby = async () => ({ ok: true, json: async () => ({ rooms: [room({ build: '8.9.73' })] }) });
   await mount();

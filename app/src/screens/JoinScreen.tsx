@@ -7,6 +7,7 @@ import { colorFactions, factionColor } from '../theme';
 import { FactionMark } from '../ui/bits';
 import { HexBackdrop } from './HexBackdrop';
 import { ReclaimSeatButton } from '../ui/ReclaimSeatButton';
+import { JoinCodeField } from '../ui/JoinCodeField';
 
 /** An online game: pick which human seat this browser plays. */
 export function JoinScreen() {
@@ -16,6 +17,7 @@ export function JoinScreen() {
   const refresh = useGame((s) => s.refreshStatus);
   const busy = useGame((s) => s.busy);
   const error = useGame((s) => s.error);
+  const codeText = useGame((s) => s.joinCodeText);
   useEffect(() => {
     refresh();
     const t = setInterval(() => refresh(), 2500);
@@ -40,6 +42,7 @@ export function JoinScreen() {
           Every player plays on their own computer. Pick an open seat to command that empire. Turn{' '}
           {net.status.turn} is being planned.
         </p>
+        {net.locked && <JoinCodeField />}
         {error && <div className="toast bad inline" role="alert">{error}</div>}
         <div className="join-seats">
           {seats.map((s, i) => {
@@ -51,7 +54,7 @@ export function JoinScreen() {
                 key={s.seat}
                 className={`join-seat ${s.connected ? 'taken' : ''} ${wasMine ? 'mine' : ''}`}
                 style={{ ['--pc' as string]: factionColor(colored[i]) }}
-                disabled={!!busy || reserved}
+                disabled={!!busy || reserved || (!!net.locked && !codeText && !wasMine)}
                 onClick={() => joinSeat(s.seat, s.name)}
               >
                 <div className="join-top">

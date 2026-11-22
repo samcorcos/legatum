@@ -3,6 +3,7 @@ import { useGame } from '../../store';
 import { factionColor } from '../../theme';
 import { FactionPicker } from '../../ui/FactionPicker';
 import { OpenSeatButton } from '../../ui/OpenSeatButton';
+import { RemoveSeatButton } from '../../ui/RemoveSeatButton';
 import { Icon } from '../../ui/bits';
 import { MAX_PLAYERS } from '../../gameSetup';
 import { offeredLevels, DIFFICULTY_INFO, DIFFICULTY_LABEL, DIFFICULTY_SHORT, activeCount, addSlot, levelFields, levelOf, slotColorFactions, removeSlot, setSlot, slotKinds, type AiLevel, type Lobby, type LobbyMode, type Slot, type SlotKind } from '../../lobby';
@@ -81,6 +82,7 @@ function Occupancy({ room, seat }: { room: RoomView; seat: number }) {
   const mySeat = useGame((s) => s.stagingSeat);
   const busy = useGame((s) => s.busy);
   const releaseSeat = useGame((s) => s.releaseStagingSeat);
+  const removePlayer = useGame((s) => s.removeStagingPlayer);
   const o = room.state.occupants[seat];
   if (!o) return <span className="occupant empty">Open · waiting for a player…</span>;
   const status = !o.connected ? 'disconnected' : o.is_host ? 'host' : o.ready ? 'Ready' : 'not ready';
@@ -93,6 +95,9 @@ function Occupancy({ room, seat }: { room: RoomView; seat: number }) {
       </span>
       {!room.guest && local && seat !== mySeat && !o.is_host && !o.connected && (
         <OpenSeatButton name={o.name} disabled={!!busy} onOpen={() => releaseSeat(seat)} />
+      )}
+      {!room.guest && local && seat !== mySeat && !o.is_host && o.connected && (
+        <RemoveSeatButton name={o.name} disabled={!!busy} onRemove={() => removePlayer(seat)} />
       )}
     </span>
   );

@@ -101,6 +101,9 @@ under the Worker's Variables) without a code change; a missing or unusable value
   (empty for now: add entries there), becomes `Game <first 4 characters of the room id>`. `POST /rooms`
   returns the name it kept as `name`. The build label holds letters, digits, spaces and `. · ( ) _ + -` only,
   and starts with a letter or digit; anything else is refused with 400.
+- `POST /rooms` may carry `locked: true` (a boolean, default false; any other type is refused with 400). It means the
+  host set a join code. The relay stores and lists only that flag in `GET /lobby` rows (`locked`); the code itself is
+  checked by the host's engine and never reaches the relay. Deploy the relay before an app build that sends `locked`.
 - Every answer carries `X-Content-Type-Options: nosniff`, since `/api/status` and the lobby hand back text a
   host wrote.
 
@@ -112,6 +115,8 @@ can stop a flood at the edge before it reaches the Worker. It needs a custom dom
 - The lobby is public: anyone can list rooms and open guest sockets. Room ids are unguessable, but they
   are not secrets once listed.
 - Only the holder of the host key can open the tunnel. The key is returned once by `POST /rooms`.
+- A host can lock its game with a join code and remove players; both are decided in the host's tab, so the relay
+  learns nothing more than the `locked` flag.
 - Seat tokens and every game message stay end to end between guest and host. The relay copies the bytes
   and cannot tell a seat token from any other text.
 - `POST /rooms` needs no account, and CORS stays open (`*`) because an origin check stops no one who

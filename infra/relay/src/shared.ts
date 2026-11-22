@@ -100,6 +100,8 @@ export interface RoomAnnounce {
   build: string;
   rules_version: number;
   protocol: number;
+  /** The host set a join code. The relay learns only this yes/no, never the code. */
+  locked: boolean;
 }
 
 export interface Summary {
@@ -168,10 +170,12 @@ export function parseAnnounce(v: unknown): RoomAnnounce | null {
   if (typeof name !== "string" || name.length > MAX_NAME_INPUT) return null;
   if (typeof build !== "string" || build.length < 1 || build.length > MAX_BUILD) return null;
   if (!isCount(rules_version) || !isCount(protocol)) return null;
+  const locked = o.locked === undefined ? false : o.locked;
+  if (typeof locked !== "boolean") return null;
   // Every player in the lobby reads the build label, so it holds only what a real label is made of
   // ("Version 0.1.0 (abc1234)", "Dev · after 9 (abc1234)", "playtest-9"): no markup, links or symbols.
   if (!BUILD_RE.test(build)) return null;
-  return { name: sanitizeName(name), build, rules_version, protocol };
+  return { name: sanitizeName(name), build, rules_version, protocol, locked };
 }
 
 const BUILD_RE = /^[\p{L}\p{N}][\p{L}\p{N} .·()_+-]*$/u;
