@@ -8,7 +8,7 @@ import { wallsFixture } from '../../src/test/wallsFixture';
 import { stageHeirHolder } from '../vpStage';
 import { forgeHeirFixture } from '../../src/test/forgeHeirFixture';
 import { broadcastCoreSave, freeTechsCoreSave, retireCoreSave, sakokuCoreSave, wildClearedCoreSave, wildCoreSave } from '../../src/test/goalActionsFixture';
-import { SIZES, aim, centred, dismissCelebrations, expectDockWhole, expectRaceWhole, loadFixture, openReport, selectThing, shot, showMoment, type GameWindow } from './helpers';
+import { SIZES, aim, centred, dismissCelebrations, expectDockWhole, expectRaceWhole, loadFixture, openReport, primaries, selectThing, shot, showMoment, type GameWindow } from './helpers';
 
 // Each test starts from its own save, so tests can run on separate workers.
 test.describe.configure({ mode: 'parallel' });
@@ -345,6 +345,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
       await expect(p.getByTestId('turn-number')).toHaveText('102');
       await showMoment(p, 'A warband camp is cleared');
       await p.mouse.move(5, size.height / 2);
+      expect(await primaries(p), 'one primary with a moment card up').toBe(1);
       await shot(p, size, '93m-wild-camp-cleared-moment');
       await dismissCelebrations(p);
       await expect(p.locator('[data-goal-action="CallTheWild"]')).toContainText('2 of 3 cities have a wild camp');
