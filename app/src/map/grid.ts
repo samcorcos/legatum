@@ -19,8 +19,9 @@ export const isFar = (hexPx: number) => hexPx < FAR_HEX_PX;
 export const sealRadius = (hexPx: number) => Math.max(7, Math.min(11, hexPx * 0.62));
 /** A unit pip's half-width when zoomed out. */
 export const PIP_HALF = 8;
-/** A city banner's bottom edge sits this far above the hex centre (× hexPx); the banner grows upward. */
-export const BANNER_BOTTOM = 0.62;
+/** A city banner block's bottom edge (the name plate, or its meters under it) sits this far above the hex centre (× hexPx);
+ * the block grows upward, so the painted town below it (roofs from about 0.2-0.4 hexPx above the centre) stays clear. */
+export const BANNER_BOTTOM = 0.5;
 /** Units in a city are drawn this far below the centre (× hexPx), clear of the banner. */
 export const CITY_UNIT_DROP = 0.3;
 /** How far (× token half-width) the first token of a two-unit stack is raised. */
