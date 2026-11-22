@@ -48,7 +48,7 @@ for (const size of SIZES) test.describe(`world wonder race ${size.name}`, () => 
       const v = st.views![st.seat];
       st.set({ report: { turn: v.turn, hash: 'wrl', events: [events], lines: [[]] }, reportOpen: false });
     }, { events: [event] });
-    await expect(page.locator('.moment-card', { hasText: 'A wonder race lost' })).toBeVisible();
+    await expect(page.locator('.moment-card', { hasText: 'Wonder race lost' })).toBeVisible();
     await page.mouse.move(5, size.height / 2);
     await shot(page, size, 'wonder-race-lost-moment-card');
   });
