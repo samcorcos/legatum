@@ -606,6 +606,70 @@ fn rome_pulls_a_wounded_veteran_out_of_reach_to_heal() {
     );
 }
 
+/// Gene `roman_finish_siege` (owner's game, Laurion T32-34): three Roman units promoted by
+/// their city attacks and, now wounded veterans beside a nearly fallen city, the veteran
+/// retreat walked all three home. While the capture forecast holds, the siege keeps them.
+#[test]
+fn rome_finishes_a_siege_its_first_promotions_were_earned_in() {
+    let target = Hex::new(14, 8);
+    let mut view = ViewBuilder::new(24, 16)
+        .faction(Faction::Rome)
+        .city(1, ME, Hex::new(4, 8), 3)
+        .city(9, ENEMY, target, 1)
+        .unit(4, ME, UnitKind::Soldier, Hex::new(4, 8))
+        .unit_hp(1, ME, UnitKind::Soldier, Hex::new(13, 8), 60)
+        .unit_hp(2, ME, UnitKind::Soldier, Hex::new(13, 9), 60)
+        .unit_hp(3, ME, UnitKind::Soldier, Hex::new(15, 7), 60)
+        // A relief column in reach: what makes the wounded veterans exposed.
+        .unit(50, ENEMY, UnitKind::Soldier, Hex::new(12, 8))
+        .build();
+    for u in view.units.iter_mut().filter(|u| u.id.0 <= 3) {
+        u.level = 1;
+        u.xp = Some(16);
+    }
+    let city = view.cities.iter_mut().find(|c| c.pos == target).unwrap();
+    city.hp = 10;
+    let siege = |view: &PlayerView, finish: i32| {
+        let mut p = rome_planner(view);
+        p.decisions.roman_finish_siege = finish;
+        p.campaigns.active = Some(crate::campaign::Campaign {
+            target: legatum_core::CityId(9),
+            start_turn: 1,
+            committed: vec![UnitId(1), UnitId(2), UnitId(3)],
+            deadline: None,
+            expected_value: 100,
+            target_was_unwalled: true,
+        });
+        p.plan_settlers();
+        // Orders given here pre-empt the siege: plan_military never sees these units.
+        let left = (1..=3)
+            .filter(|id| {
+                p.orders
+                    .iter()
+                    .any(|o| legatum_core::rules::units::order_unit(o) == Some(UnitId(*id)))
+            })
+            .count();
+        (p.roman_live_siege().is_some(), left)
+    };
+    assert_eq!(
+        siege(&view, 1),
+        (true, 0),
+        "the capture forecast holds; nobody leaves"
+    );
+    view.cities.iter_mut().find(|c| c.pos == target).unwrap().hp = 0;
+    assert_eq!(
+        siege(&view, 1),
+        (true, 0),
+        "shot down to 0 HP, it falls to the next melee step"
+    );
+    let (live, left) = siege(&view, 0);
+    assert!(!live);
+    assert!(
+        left > 0,
+        "the control arm pulls the veterans out of the siege"
+    );
+}
+
 #[test]
 fn rome_hunts_promotions_only_near_home() {
     let city = Hex::new(3, 8);
