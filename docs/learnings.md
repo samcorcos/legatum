@@ -1,10 +1,10 @@
 # Learnings (digest)
 
-This file is the short list of lessons that are still true and still change what an agent should do. Read it at session start and after compaction. The full record, every entry verbatim with its evidence, lives in the monthly archive under `docs/learnings/` (`2026-09.md`, `2026-10.md`, `2026-11.md`, ...).
+This file is the short list of lessons that are still true and still change what an agent should do. Read it at session start and after compaction. The full record, every entry verbatim with its evidence, lives in the archive under `docs/learnings/`: one file per entry in `docs/learnings/<YYYY-MM>/` since 2026-11-22, and the closed month files (`2026-09.md`, `2026-10.md`, `2026-11.md`) for everything earlier.
 
-**How to add a learning.** Append a dated entry (`## YYYY-MM-DD: title`, then bullets: cause, evidence, what changed) at the top of the current month's archive file, `docs/learnings/<YYYY-MM>.md`; start the file if the month is new. Promote it here, as one or two lines with the archive month in brackets, only if it is durable: a rule an agent must follow from now on. Correct or delete digest lines that stop being true; the archive keeps the history. Lessons about removed systems (the Tauri desktop app, the Mac app, the LAN server, iOS, Quick speed, crowns, decadence, the TS mock engine, the Codex lanes on the Mac) stay in the archive only.
+**How to add a learning.** Write a dated entry (`## YYYY-MM-DD: title`, then bullets: cause, evidence, what changed) as its own new file, `docs/learnings/<YYYY-MM>/<DD>-<slug>.md` (for example `docs/learnings/2026-11/22-one-file-per-learning.md`). Never append to a month file or to another entry's file: a shared file that every branch appends to conflicts in every open pull request. Promote it here, as one or two lines with the archive month in brackets, only if it is durable: a rule an agent must follow from now on. Correct or delete digest lines that stop being true; the archive keeps the history. Lessons about removed systems (the Tauri desktop app, the Mac app, the LAN server, iOS, Quick speed, crowns, decadence, the TS mock engine, the Codex lanes on the Mac) stay in the archive only.
 
-To find the full entry for a line, search its month file for the words in the line.
+To find the full entry for a line, search `docs/learnings/` for the words in the line (`grep -rn "words" docs/learnings/`).
 
 ## Engine and determinism
 

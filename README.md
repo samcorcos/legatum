@@ -18,7 +18,7 @@
 </p>
 
 <p align="center">
-  <a href="docs/media/legatum-teaser.mp4">
+  <a href="https://playlegatum.com/media/legatum-teaser.mp4">
     <img src="docs/media/teaser-poster.jpg" alt="Play the Legatum teaser: armies clash on a border, the map pulls back over eight empires, a new game's first turns, an empire growing, a new era, a battle forecast and the public score ledger." width="880">
   </a>
   <br>

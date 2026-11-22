@@ -156,7 +156,7 @@ Rules for your PRs:
 ## Record
 - Every run appends one ledger row (the script does it). Weekly, update `docs/status/tech-debt.md`
   (top 10, ranked) and `docs/sim-results/perf/README.md` when a baseline really moved.
-- Something non-obvious learned goes in the current month's `docs/learnings/<YYYY-MM>.md`; a check that proved useful or useless
+- Something non-obvious learned goes in its own file, `docs/learnings/<YYYY-MM>/<DD>-<slug>.md`; a check that proved useful or useless
   goes in "Learned" below.
 
 ## Report (brief)
