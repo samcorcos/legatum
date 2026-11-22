@@ -13,3 +13,7 @@ it('keeps a city automation setting from a saved pending turn', () => {
   expect(decodeOrders([{ type: 'SetCityAutomation', city: 4, focus: 'Science' }]))
     .toEqual([{ type: 'SetCityAutomation', city: 4, focus: 'Science' }]);
 });
+
+it('keeps a Gold gift, so an online gift reaches the host', () => {
+  expect(decodeOrders([{ type: 'GiveGold', to: 1, amount: 120 }])).toEqual([{ type: 'GiveGold', to: 1, amount: 120 }]);
+});

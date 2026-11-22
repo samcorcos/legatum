@@ -183,6 +183,60 @@ impl GameState {
     }
 }
 
+/// Settle "first into an era" between empires that entered it on the same turn. `learn` runs one
+/// empire at a time, so the lower id would always be first; after the turn's research this picks
+/// the first among every empire that entered an era this turn, when that era had no first
+/// before the turn, by a seeded draw (`purpose::ERA_FIRST`), and rewrites `era_firsts` and the
+/// `first` flags of this turn's `EraEntered` events to match.
+pub fn draw_same_turn_firsts(state: &mut GameState, events: &mut [crate::events::Event]) {
+    use crate::events::Event;
+    // 1-based eras first claimed this turn.
+    let claimed: Vec<u8> = events
+        .iter()
+        .filter_map(|e| match e {
+            Event::EraEntered {
+                era, first: true, ..
+            } => Some(*era),
+            _ => None,
+        })
+        .collect();
+    for era in claimed {
+        let mut entrants: Vec<PlayerId> = events
+            .iter()
+            .filter_map(|e| match e {
+                Event::EraEntered { player, era: e, .. } if *e == era => Some(*player),
+                _ => None,
+            })
+            .collect();
+        entrants.sort();
+        entrants.dedup();
+        if entrants.len() < 2 {
+            continue;
+        }
+        let first = crate::rng::seeded_order(
+            state.dice_seed(),
+            &[
+                u64::from(state.turn),
+                crate::rng::purpose::ERA_FIRST,
+                u64::from(era),
+            ],
+            &entrants,
+        )[0];
+        state.era_firsts.insert(era - 1, first);
+        for e in events.iter_mut() {
+            if let Event::EraEntered {
+                player,
+                era: e_era,
+                first: f,
+            } = e
+                && *e_era == era
+            {
+                *f = *player == first;
+            }
+        }
+    }
+}
+
 /// Whether the empire may research `tech` now: unknown and in its current era.
 pub fn researchable(p: &Player, tech: TechId) -> bool {
     !p.techs.contains(&tech) && era_of_tech(tech) == current_era(&p.techs)

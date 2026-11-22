@@ -45,7 +45,6 @@ export function coreFixture(s: MState): string {
         ...(p.goalHolder !== undefined && p.goalHolder !== null ? { goal_holder: p.goalHolder } : {}),
         ...(p.hallCity !== undefined && p.hallCity !== null ? { hall_city: p.hallCity } : {}),
         ...(p.diwanCity !== undefined && p.diwanCity !== null ? { diwan_city: p.diwanCity } : {}),
-        ...(p.capitalsTaken?.length ? { capitals_taken: Object.fromEntries(p.capitalsTaken) } : {}),
         ...(p.freeTechsPending ? { free_techs_pending: p.freeTechsPending } : {}),
         ...(p.veteransRetired ? { veterans_retired: p.veteransRetired } : {}),
         ...(p.sakokuTurns !== undefined && p.sakokuTurns !== null ? { sakoku_turns: p.sakokuTurns } : {}),

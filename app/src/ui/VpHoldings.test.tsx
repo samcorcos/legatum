@@ -82,7 +82,7 @@ it('pointing at a token opens its card after a short rest, and leaving closes it
   act(() => { tok.dispatchEvent(new PointerEvent('pointerover', { bubbles: true, pointerType: 'mouse' })); });
   expect(card()).toBeNull();
   act(() => { vi.advanceTimersByTime(HOVER_INTENT_MS + 5); });
-  expect(cardTitle()).toBe('Era II: Classical');
+  expect(cardTitle()).toBe('Age II: Classical');
   expect(card()!.querySelector('.vh-card.own-mine')).not.toBeNull();
   act(() => { tok.dispatchEvent(new PointerEvent('pointerout', { bubbles: true, pointerType: 'mouse' })); vi.advanceTimersByTime(200); });
   expect(card()).toBeNull();

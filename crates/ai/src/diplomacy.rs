@@ -144,9 +144,11 @@ pub struct TreatyCost {
     pub affordable: bool,
 }
 
-/// Turn an Alliance's upkeep into a score penalty for `v.me`.
-pub fn treaty_cost(v: &PlayerView, kind: TreatyKind) -> TreatyCost {
-    let upkeep = kind.upkeep_for_cities(v.cities.iter().filter(|c| c.owner == v.me).count());
+/// Turn an Alliance's upkeep into a score penalty for `v.me`. An Alliance with `partner` costs
+/// nothing while the waiver applies (either side at War with a team close to winning,
+/// `PlayerView::alliance_upkeep_waived_by`), so it is priced at what it really costs now.
+pub fn treaty_cost(v: &PlayerView, kind: TreatyKind, partner: TeamId) -> TreatyCost {
+    let upkeep = treaty_upkeep(v, kind, partner);
     let treasury = v.economy.gold;
     let net = v.economy.gold_per_turn.total - upkeep;
     if upkeep == 0 {
@@ -167,6 +169,15 @@ pub fn treaty_cost(v: &PlayerView, kind: TreatyKind) -> TreatyCost {
         penalty,
         affordable,
     }
+}
+
+/// The Gold per turn an Alliance with `partner` would cost `v.me` now: nothing while the waiver
+/// applies, otherwise the ordinary upkeep for its cities.
+pub fn treaty_upkeep(v: &PlayerView, kind: TreatyKind, partner: TeamId) -> i32 {
+    if kind == TreatyKind::Alliance && v.alliance_upkeep_waived_by(v.team, partner).is_some() {
+        return 0;
+    }
+    kind.upkeep_for_cities(v.cities.iter().filter(|c| c.owner == v.me).count())
 }
 
 /// Hexes from our nearest city (or unit, before we have a city) to their nearest known city or
@@ -1071,11 +1082,10 @@ impl Planner<'_> {
                 alliance_security(ours, theirs, distance),
                 alliance_opportunity(self.knobs.aggression, ours, theirs, distance)
             ));
-            let c = treaty_cost(v, p.kind);
+            let c = treaty_cost(v, p.kind, p.from);
             reasons.push(format!(
                 "{} Gold/turn upkeep: score -{}",
-                p.kind
-                    .upkeep_for_cities(v.cities.iter().filter(|c| c.owner == v.me).count()),
+                treaty_upkeep(v, p.kind, p.from),
                 c.penalty
             ));
             if let Some(lead) = self.shared_leader_war(p.from) {
@@ -1422,7 +1432,7 @@ impl Planner<'_> {
                 // off us (a strong reachable neighbour), and security when we are losing a war;
                 // against the wars it forecloses. Price: upkeep and every
                 // Alliance we already carry. A betrayer is refused while its record lasts.
-                let cost = treaty_cost(v, kind);
+                let cost = treaty_cost(v, kind, other);
                 // Against a shared leader, the leader's win can outweigh the upkeep deficit.
                 let shared_leader = self.shared_leader_war(other);
                 let affordable = cost.affordable

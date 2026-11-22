@@ -124,7 +124,7 @@ fn sparta_nonmilitary_costs_include_settler_escalation_and_great_works() {
                 building: BuildingKind::RelayUplink
             }
         ),
-        900
+        600
     );
     let c = s.cities.get_mut(&home).unwrap();
     c.population = 5;

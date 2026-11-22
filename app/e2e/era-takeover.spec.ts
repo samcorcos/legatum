@@ -9,7 +9,7 @@ import { coreFixture } from '../src/test/coreFixture';
 import { researchFixture } from '../src/test/researchFixture';
 import { TECHS } from '../src/data';
 import type { useGame } from '../src/store';
-import { withScoreCheck, withV2 } from '../src/test/vpV2Fixture';
+import { withScoreCheck } from '../src/test/vpV2Fixture';
 import type { Hex } from '../src/types';
 
 type GameWindow = Window & { legatum: typeof useGame; legatumMap: { toScreen(hex: Hex): { x: number; y: number }; redraw(): void } };
@@ -44,17 +44,6 @@ function eraUpState() {
   f.players[0].research_queue = ['Writing'];
   f.players[0].science = 5000;
   return coreFixture(f);
-}
-
-/** Stage the era-up on the live view: v2 objectives, and your own EraEntered in the report (render only). */
-async function stageEraUp(page: Page) {
-  const base = await page.evaluate(() => { const s = (window as unknown as GameWindow).legatum.getState(); return structuredClone(s.views![s.seat]); });
-  const view = withV2(base, { era: 2 });
-  await page.evaluate((v) => {
-    const store = (window as unknown as GameWindow).legatum, s = store.getState();
-    store.setState({ views: s.views!.map((x, i) => (i === s.seat ? v : x)) });
-    store.getState().set({ report: { turn: v.turn, hash: 'era-up', lines: [[], []], events: [[{ type: 'EraEntered', player: v.me, era: 2, first: false }], []] }, reportOpen: false });
-  }, view);
 }
 
 /** The opener's World Age turn: its own era-up, then the Age begins and the score check follows (render only). */
@@ -123,26 +112,6 @@ for (const size of SIZES) test.describe(`era takeover ${size.width}x${size.heigh
     for (const selector of ['.et-art', '.et-seal', '.et-rays', '.et-foot']) {
       await expect.poll(() => takeover(page).locator(selector).first().evaluate((el) => getComputedStyle(el).animationName)).toBe('none');
     }
-  });
-
-  test('with VP v2 on, the three era objectives are on the card', async ({ page }) => {
-    await load(page, eraUpState());
-    await stageEraUp(page);
-    const t = takeover(page);
-    await expect(t).toBeVisible();
-    await expect(t.getByTestId('era-up-objectives').locator('li')).toHaveCount(3);
-    await expect(t.getByTestId('era-up-objectives')).toContainText('Meet any one of the three');
-    // The objectives are the hero: titled for what they are worth, first, widest, with your progress on each.
-    await expect(t.getByTestId('era-up-objectives').locator('h3')).toContainText('Victory points open now');
-    await expect(t.getByTestId('era-up-objectives').locator('.eo-num')).toHaveText(['6/9', '2/4', '0/1']);
-    const widths = await t.locator('.et-col').evaluateAll((els) => els.map((el) => el.getBoundingClientRect().width));
-    expect(widths[0]).toBeGreaterThan(Math.max(...widths.slice(1)) * 1.1);
-    expect(await t.locator('.et-col').first().getAttribute('data-testid')).toBe('era-up-objectives');
-    await page.waitForTimeout(3200);
-    for (const col of await t.locator('.et-col').all()) expect(await col.evaluate((el) => el.scrollHeight <= el.clientHeight + 1 && el.scrollWidth <= el.clientWidth + 1)).toBe(true);
-    const foot = (await t.locator('.et-foot').boundingBox())!;
-    expect(foot.y + foot.height).toBeLessThanOrEqual(size.height + 0.5);
-    await shot(page, size, 'era-up-classical-objectives');
   });
 
   test('in a World Age game the era-up keeps to the era, and the score check follows when the Age begins', async ({ page }) => {

@@ -34,7 +34,7 @@ Reduced motion removes the arrival and ray animation like every other card.
 **Era-up takeover (the second exception).** Your own `EraEntered` holds a full-screen takeover
 (`.era-takeover`, `position: fixed; inset: 0`; `.moment-lane:has(.era-takeover)` takes z-index 80) that covers the HUD and
 declares no overlay slot. It follows the unlock card's contract: no timer, a click or map pan never closes it, Return takes
-its primary ("Choose research" when nothing is queued, else "Continue") and Esc is Later, each closing only itself, and it
+its primary ("Choose research" when nothing is queued, else "Continue"; research picked in pending orders while the card waited counts as queued, `celebrate/researchSettled.ts`, which does the same for the unlock card) and Esc is Later, each closing only itself, and it
 waits behind any open `<dialog>` and returns. It is local to the viewer's screen, so it never blocks a teammate's turn.
 `handleOverlayKey` (`gameplayKeys.ts`) treats it like an unlock card, so the open turn report does not eat its Esc or Return.
 The animation is under 3 s and every key or the button skips it at once; reduced motion shows the finished scene. The

@@ -1,6 +1,5 @@
 import { TECH_NAME, itemIcon, itemKey } from '../data';
 import { eraName, eraNumeral, researchCatalog } from '../ui/eraResearch';
-import { eraObjectivesFor, type ObjectiveLine } from '../eraObjectives';
 import type { Faction, PlayerView, ProductionItem, TechId } from '../types';
 
 /** One thing the era puts in your hands: a unit, building, improvement or project its technologies unlock (this empire's own version). */
@@ -21,15 +20,12 @@ const tierOf = (population: number): EraCities['tier'] => population >= 13 ? 'me
 
 /** What the viewer's own era-up card shows: the era, whether they were first, and what is now researchable. */
 export interface EraUpCard {
-  deck?: boolean;
   era: number;
   eraName: string;
   numeral: string;
   first: boolean;
   /** The era's technologies, as the strict gate now offers them (known ones are listed too, marked). */
   techs: { tech: TechId; name: string; cost: number; known: boolean }[];
-  /** The era's three public objectives with your progress (VP v2: any one scores 1 VP); empty in a legacy-rules game. */
-  objectives: ObjectiveLine[];
   /** Units, buildings and improvements the era's technologies open for this empire. */
   brings: EraBring[];
   cities: EraCities;
@@ -66,7 +62,7 @@ export function eraUpCardFor(view: PlayerView, era: number, first: boolean): Era
   const tier = tierOf(biggest || 4);
   const researchSet = (r.queue?.length ?? 0) > 0;
   return {
-    era, eraName: eraName(era), numeral: eraNumeral(era), first, techs, objectives: eraObjectivesFor(view, era + 1)?.lines ?? [], deck: !!view.rule_experiments?.objectives_deck, brings,
+    era, eraName: eraName(era), numeral: eraNumeral(era), first, techs, brings,
     cities: { tier, from: era > 0 ? { era: era - 1, name: eraName(era - 1) } : null, to: { era, name: eraName(era) } },
     researchSet, primary: researchSet ? 'continue' : 'research',
   };

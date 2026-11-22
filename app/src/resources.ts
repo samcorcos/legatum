@@ -2,7 +2,7 @@
 // crates/ai/tests/ui_rules.rs, plus the words the UI uses for them. The core is authoritative.
 import { IMPROVEMENT_INFO, RULES, TECH_NAME, forgesName, itemName } from './data';
 import { improvementGain, improvementKindFor, improvementUpgradeYields } from './improvements';
-import { empireOfPlayer } from './empires';
+import { empireOfPlayer, PEOPLE_NAME } from './empires';
 import { distance, hexAt } from './hex';
 import { terrainYields } from './settlement';
 import type { BuildingKind, Faction, Hex, PlayerView, Resource, ResourceClass, SupplyView, TechId, Terrain, TileView, UnitKind, Yields } from './types';
@@ -243,13 +243,14 @@ export function depositHolders(view: Pick<PlayerView, 'tiles' | 'players' | 'me'
   return { empires: [...holders].sort((a, b) => a - b).map((id) => empireOfPlayer(view, id)), held, unclaimed, nearestUnclaimed, nearest };
 }
 
-/** An empire named in a sentence: peoples take "the" (the Mongols, the Celts), countries do not (Switzerland, Sparta). */
-const withThe = (name: string): string => (name.split(' · ')[0].endsWith('s') ? `the ${name}` : name);
+const PEOPLES = new Set(Object.values(PEOPLE_NAME));
+/** An empire named in a sentence: peoples take "the" (the Mongols, the Celts), countries and cities do not (Switzerland, Athens). */
+export const withThe = (name: string): string => (PEOPLES.has(name.split(' · ')[0]) ? `the ${name}` : name);
 
 /** "Switzerland holds", "The Mongols hold", "Byzantium and the Celts hold": who holds something, in a sentence. */
 export function empireHolds(names: readonly string[]): string {
   const list = listEmpires(names);
-  const plural = names.length > 1 || names[0].split(' · ')[0].endsWith('s');
+  const plural = names.length > 1 || PEOPLES.has(names[0].split(' · ')[0]);
   return `${list.replace(/^./, (c) => c.toUpperCase())} ${plural ? 'hold' : 'holds'}`;
 }
 

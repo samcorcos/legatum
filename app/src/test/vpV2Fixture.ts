@@ -1,23 +1,27 @@
-// A victory view for UI tests and screenshots with staged eras and objectives. Render-only;
-// the numbers are the ones the core would send for such a game.
+// A victory view for UI tests and screenshots with staged World Ages. Render-only; the numbers are the ones the core
+// would send for such a game, except that each Age here carries three cards (a real game draws one) so the lists and
+// sheets are exercised with more than one line.
 import { decadencePercent, decadenceRules } from '../data';
 import type { EraView, Faction, ObjectiveProgress, PlayerPublic, PlayerView, RuleSwitches, VpSource } from '../types';
 
+// NOT A REAL GAME SHAPE: a real World Ages game draws ONE card per Age. Each Age here deliberately carries three cards
+// (slots 0, 1, 2) so the list, the sheet and the "which card scored" paths are tested with more than one line; the
+// tests count on it. Use `withWorldAges` (below) for a one-card-per-Age view.
 const V2_ERAS: EraView[] = [
   {
     era: 2, name: 'Classical', entered_by: [], scored_by: [],
     objectives: [
-      { slot: 0, family: 'Build', text: 'Learn 9 technologies', target: 9, objective: { kind: 'Techs', n: 9 } },
+      { slot: 0, family: 'Expand', text: 'Prosperity: grow your population by 9', target: 9, objective: { kind: 'Population', n: 9 } },
       { slot: 1, family: 'Expand', text: 'Gain 4 cities', target: 4, objective: { kind: 'Cities', n: 4 } },
-      { slot: 2, family: 'Fight', text: 'Capture 1 enemy city', target: 1, objective: { kind: 'Captures', n: 1 } },
+      { slot: 2, family: 'Fight', text: 'Breach: capture a walled city', target: 1, objective: { kind: 'Breach' } },
     ],
   },
   {
     era: 3, name: 'Medieval', entered_by: [], scored_by: [],
     objectives: [
-      { slot: 0, family: 'Build', text: 'Learn 14 technologies', target: 14, objective: { kind: 'Techs', n: 14 } },
+      { slot: 0, family: 'Expand', text: 'Frontier: gain 14 tiles of territory', target: 14, objective: { kind: 'Territory', n: 14 } },
       { slot: 1, family: 'Expand', text: 'Grow your population by 40', target: 40, objective: { kind: 'Population', n: 40 } },
-      { slot: 2, family: 'Fight', text: 'Capture 1 city from an empire ahead of you on VP', target: 1, objective: { kind: 'CapturesFromAhead', n: 1 } },
+      { slot: 2, family: 'Fight', text: 'Humble the mighty: capture a city from an empire ahead of you on VP', target: 1, objective: { kind: 'HumbleTheMighty' } },
     ],
   },
   {
@@ -25,7 +29,7 @@ const V2_ERAS: EraView[] = [
     objectives: [
       { slot: 0, family: 'Build', text: 'Add a Bank to 3 more cities', target: 3, objective: { kind: 'Buildings', building: 'Clearinghouse', cities: 3 } },
       { slot: 1, family: 'Expand', text: 'Gain 100 tiles of territory', target: 100, objective: { kind: 'Territory', n: 100 } },
-      { slot: 2, family: 'Fight', text: 'Destroy 16 enemy military units', target: 16, objective: { kind: 'Kills', n: 16 } },
+      { slot: 2, family: 'Fight', text: 'Veterans: earn 4 promotions in battle', target: 4, objective: { kind: 'Veterans', n: 4 } },
     ],
   },
   {
@@ -33,15 +37,15 @@ const V2_ERAS: EraView[] = [
     objectives: [
       { slot: 0, family: 'Build', text: 'Add a Forge to 4 more cities', target: 4, objective: { kind: 'Buildings', building: 'MachineShop', cities: 4 } },
       { slot: 1, family: 'Expand', text: 'Gain 8 cities', target: 8, objective: { kind: 'Cities', n: 8 } },
-      { slot: 2, family: 'Fight', text: 'Take 1 city from the VP leader', target: 1, objective: { kind: 'CapturesFromLeader', n: 1 } },
+      { slot: 2, family: 'Fight', text: 'Breach: capture a walled city', target: 1, objective: { kind: 'Breach' } },
     ],
   },
   {
     era: 6, name: 'Modern', entered_by: [], scored_by: [],
     objectives: [
-      { slot: 0, family: 'Build', text: 'Learn 24 technologies', target: 24, objective: { kind: 'Techs', n: 24 } },
+      { slot: 0, family: 'Expand', text: 'Frontier: gain 24 tiles of territory', target: 24, objective: { kind: 'Territory', n: 24 } },
       { slot: 1, family: 'Expand', text: 'Grow your population by 85', target: 85, objective: { kind: 'Population', n: 85 } },
-      { slot: 2, family: 'Fight', text: 'Destroy 28 enemy military units', target: 28, objective: { kind: 'Kills', n: 28 } },
+      { slot: 2, family: 'Fight', text: 'Veterans: earn 4 promotions in battle', target: 4, objective: { kind: 'Veterans', n: 4 } },
     ],
   },
   {
@@ -49,13 +53,13 @@ const V2_ERAS: EraView[] = [
     objectives: [
       { slot: 0, family: 'Build', text: 'Add a Research Lab to 4 more cities', target: 4, objective: { kind: 'Buildings', building: 'InferenceCore', cities: 4 } },
       { slot: 1, family: 'Expand', text: 'Gain 160 tiles of territory', target: 160, objective: { kind: 'Territory', n: 160 } },
-      { slot: 2, family: 'Fight', text: 'Take 2 cities from the VP leader', target: 2, objective: { kind: 'CapturesFromLeader', n: 2 } },
+      { slot: 2, family: 'Fight', text: 'Humble the mighty: capture a city from an empire ahead of you on VP', target: 1, objective: { kind: 'HumbleTheMighty' } },
     ],
   },
 ];
 
 export interface V2Options {
-  /** Your era (1-based). Eras up to it are entered. */
+  /** Your era (1-based). Eras up to it are entered. The first rival is in era 3, so Ages up to the later of the two have begun. */
   era?: number;
   /** Overreach: your lead over the average empire in percent (default 0: no decadence), and the first rival's. The rates derive from `data.ts` (and `rules`). */
   lead?: number;
@@ -83,7 +87,8 @@ export function withV2(base: PlayerView, o: V2Options = {}): PlayerView {
       decadence_percent: decadencePercent(lead, rules),
     };
   });
-  view.eras = V2_ERAS.map((ev) => ({
+  // An Age is in the view from the turn the first empire enters its era.
+  view.eras = V2_ERAS.filter((ev) => ev.era <= Math.max(era, 3)).map((ev) => ({
     ...structuredClone(ev),
     entered_by: [...(ev.era <= era ? [view.me] : []), ...(ev.era <= 3 ? [rival.id] : []), ...(ev.era === 2 && others[1] ? [others[1].id] : [])],
     scored_by: [
@@ -92,9 +97,9 @@ export function withV2(base: PlayerView, o: V2Options = {}): PlayerView {
     ],
   }));
   const prog: Record<string, [number, number]> = o.progress ?? { '2:0': [6, 9], '2:1': [2, 4], '2:2': [0, 1], '3:0': [6, 14], '3:1': [11, 40], '3:2': [0, 1] };
-  view.objective_progress = view.eras.filter((ev) => ev.era <= era + 1).flatMap((ev) => ev.objectives.map((ob): ObjectiveProgress => {
+  view.objective_progress = view.eras.flatMap((ev) => ev.objectives.map((ob): ObjectiveProgress => {
     const [current, target] = prog[`${ev.era}:${ob.slot}`] ?? [0, ob.target];
-    return { era: ev.era, slot: ob.slot, current, target, entered: ev.era <= era, era_scored: scored.includes(ev.era) };
+    return { era: ev.era, slot: ob.slot, current, target, entered: true, era_scored: scored.includes(ev.era) };
   }));
   view.players = view.players.map((p) => {
     const sources = p.vp_sources.filter(([s]) => s.kind !== 'EraObjective');
@@ -110,7 +115,6 @@ export function withV2(base: PlayerView, o: V2Options = {}): PlayerView {
  */
 export function withWorldAges(base: PlayerView): PlayerView {
   const view = withV2(base, { era: 3, scored: [] });
-  view.rule_experiments = { ...view.rule_experiments, objectives_deck: true };
   view.eras = view.eras.filter((e) => e.era <= 3).map((e) => ({
     ...e,
     objectives: [{ slot: 0, family: 'Fight' as const, text: 'Veterans: earn 4 promotions in battle (a promotion is a level a unit gains from combat experience after this Age began)', target: 4, objective: { kind: 'Veterans', n: 4 } }],

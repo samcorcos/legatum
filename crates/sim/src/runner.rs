@@ -2259,6 +2259,7 @@ mod tests {
                 city_research: true,
                 city_upkeep: true,
                 expansion_coalitions: true,
+                no_purchase_under_threat: true,
                 frontier_cities: true,
                 market_plunder: true,
                 wall_masonry: true,

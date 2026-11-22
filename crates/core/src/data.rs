@@ -839,16 +839,16 @@ pub fn building_stats(kind: BuildingKind) -> BuildingStats {
         ),
         // Walls tier 2: each tier adds to the one below (`combat::city_defense_with_fort`).
         Castle => (240, Yields::new(0, 0, 0, 0), 5, Some(TechId::Chivalry)),
-        // Walls tier 3.
-        StarFort => (
-            320,
-            Yields::new(0, 0, 0, 0),
-            5,
-            Some(TechId::MilitaryEngineering),
-        ),
+        // Walls tier 3. Machinery, the Medieval tech whose Siege reaches Castles, also brings the
+        // answer (rules 50; was Military Engineering, one era later, when Industrial units with
+        // built-in Siege followed one era after it and left the Star Fort little time to matter).
+        StarFort => (320, Yields::new(0, 0, 0, 0), 5, Some(TechId::Machinery)),
+        // World wonders: each is worth the same 2 held VP, so prices follow one era curve (rules 50,
+        // a first pass the owner may veto: Pyramids 240 -> 360 and Great Library 600 -> 400 were
+        // the two outliers more than 25% off it; the rest are within it).
         // Great Library
-        RelayUplink => (600, Yields::ZERO, 0, Some(TechId::Philosophy)),
-        Pyramids => (240, Yields::new(0, 1, 0, 0), 0, Some(TechId::Masonry)),
+        RelayUplink => (400, Yields::ZERO, 0, Some(TechId::Philosophy)),
+        Pyramids => (360, Yields::new(0, 1, 0, 0), 0, Some(TechId::Masonry)),
         HagiaSophia => (400, Yields::new(0, 0, 0, 2), 0, Some(TechId::Machinery)),
         EiffelTower => (720, Yields::new(0, 0, 3, 0), 0, Some(TechId::Steel)),
         IterReactor => (900, Yields::new(0, 0, 0, 4), 0, Some(TechId::FusionPower)),
