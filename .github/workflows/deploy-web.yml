@@ -80,6 +80,9 @@ jobs:
 
       - name: Build the hosted web version
         if: steps.gate.outputs.deploy == 'true'
+        # Keeps the live site's earlier files, so a game open in a tab keeps its art after the deploy.
+        env:
+          LEGATUM_CARRY_ASSETS_FROM: https://${{ env.PAGES_PROJECT }}.pages.dev
         run: scripts/build-web.sh
 
       - name: Install Chromium for the smoke test

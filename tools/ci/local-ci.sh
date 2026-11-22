@@ -63,6 +63,7 @@ if [ -z "${PLAYWRIGHT_BROWSERS_PATH:-}" ] && [ ! -d /opt/pw-browsers ]; then
 fi
 step "App tests" bash -c 'cd app && npm test'
 step "App build" bash -c 'cd app && npm run build'
+step "App build references" node tools/release/check-dist-refs.mjs app/dist
 
 {
   echo "### Local CI: $(git rev-parse --short HEAD) on $(uname -sm), $(getconf _NPROCESSORS_ONLN 2>/dev/null || echo '?') cores"
