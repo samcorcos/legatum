@@ -51,6 +51,9 @@ describe("game uploads", () => {
     const typed = record();
     typed.metadata.seats[0]!.name = "Dana";
     expect((await put(typed)).status).toBe(422);
+    const odd = record();
+    odd.metadata.seats[1]!.faction = 'Celts" & do shell script "x';
+    expect((await put(odd)).status).toBe(422);
     expect((await put(record(), "https://evil.example")).status).toBe(403);
     expect((await put(record(), ORIGIN, "web-1-x")).status).toBe(404);
     const plain = await call(`/v1/games/${ID}`, { method: "PUT", headers: { Origin: ORIGIN }, body: JSON.stringify(record()) });

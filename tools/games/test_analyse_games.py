@@ -8,7 +8,7 @@ NOW = dt.datetime(2026, 11, 22, 18, 0, tzinfo=dt.timezone.utc)
 
 
 def entry(**kw):
-    e = {"etag": "e1", "turns": "40", "outcome": "vp", "uploaded": "2026-11-22T17:00:00Z"}
+    e = {"etag": "e1", "turns": "40", "outcome": "vp", "uploaded": "2026-11-22T17:00:00Z", "seats": "Rome*:Hard Celts:Hard"}
     e.update(kw)
     return e
 
@@ -37,6 +37,9 @@ class Due(unittest.TestCase):
         self.assertIsNone(ag.due(entry(analysed_etag="e1"), NOW))
         self.assertEqual(ag.due(entry(analysed_etag="e0"), NOW), "final")
         self.assertEqual(ag.due(entry(analysed_etag="e1"), NOW, force=True), "final")
+
+    def test_ai_only_games_are_skipped(self):
+        self.assertIsNone(ag.due(entry(seats="Rome:Hard Celts:Hard"), NOW))
 
     def test_short_games_and_repeated_failures_wait(self):
         self.assertIsNone(ag.due(entry(turns="5"), NOW))

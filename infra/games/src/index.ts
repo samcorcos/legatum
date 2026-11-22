@@ -86,6 +86,8 @@ export function checkRecord(id: string, record: unknown): Metadata | string {
   for (const [i, s] of m.seats.entries()) {
     const name = DEFAULT_NAME_RE.exec(String(s?.name));
     if (!name || name[1] !== (s.human ? "Player" : "AI") || Number(name[2]) !== i + 1) return "seat names must be the defaults";
+    // Stored as listing metadata and shown on the analysis Mac: plain words only.
+    if (!/^[A-Za-z][A-Za-z ]{0,23}$/.test(String(s.faction)) || !/^[A-Za-z]{1,12}$/.test(String(s.difficulty))) return "bad faction or difficulty";
   }
   // The player's coach-question answers ride along as an optional list of objects.
   if (r.coach_answers !== undefined) {

@@ -27,6 +27,19 @@ Every 15 minutes (launchd, `io.legatum.game-analysis`), `analyse_games.py poll`:
 
 Engine builds are heavy, so analysis waits while the Mac is on battery (`--force` overrides).
 
+## Safety
+
+Anyone can upload a game, so everything in an upload is treated as hostile:
+
+- Only engine commits already on `master` are built: GitHub serves pull-request commits from the same
+  repository, and building whatever commit a game names would run a stranger's code.
+- The macOS notification gets the text as an argument, never inside AppleScript source. The Worker accepts
+  only plain-word faction and difficulty names.
+- At most 3 analyses per run and 12 per day (`LEGATUM_ANALYSE_PER_RUN`, `LEGATUM_ANALYSE_PER_DAY`), and only
+  games with a human seat, so junk uploads cannot spend the Mac's model budget.
+- The reviewer model runs read-only with no network (Codex `-s read-only`; Claude limited to Read, Grep and
+  Glob). Coach answers are text players typed: at worst they mislead a review, which a person reads.
+
 ## Install
 
 ```

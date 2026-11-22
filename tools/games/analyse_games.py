@@ -37,6 +37,10 @@ KEYCHAIN_SERVICE = "legatum-games-read"
 IDLE_HOURS = 6  # an in-progress game untouched this long gets a checkpoint report
 MIN_TURNS = 10  # shorter games are noted in the ledger and skipped
 MAX_ATTEMPTS = 3  # per upload (etag); a game that keeps failing is left for a human
+# Anyone can upload a game, so a flood of junk uploads must not spend the Mac's model budget or CPU:
+# at most this many analyses per run and per UTC day (overrides: LEGATUM_ANALYSE_PER_RUN / _PER_DAY).
+PER_RUN = int(os.environ.get("LEGATUM_ANALYSE_PER_RUN", "3"))
+PER_DAY = int(os.environ.get("LEGATUM_ANALYSE_PER_DAY", "12"))
 HERE = Path(__file__).resolve().parent
 
 
@@ -74,6 +78,8 @@ def due(entry: dict, now: dt.datetime, force: bool = False) -> str | None:
     turns = int(entry.get("turns") or 0)
     if turns < MIN_TURNS:
         return None
+    if "*" not in str(entry.get("seats", "")):
+        return None  # no human seat: nothing a player did to learn from
     if entry.get("outcome") != "in-progress":
         return "final"
     uploaded = parse_iso(entry.get("uploaded"))
@@ -139,7 +145,7 @@ def on_mains_power() -> bool:
 
 def engine_bins(home: Path, commit: str, log) -> dict | None:
     """game_dump and legatum-analyze built at `commit`, cached under engine/bin/<commit>."""
-    if not commit or commit == "unknown" or not all(c in "0123456789abcdef" for c in commit):
+    if len(commit) != 40 or not all(c in "0123456789abcdef" for c in commit):
         return None
     out = home / "engine" / "bin" / commit
     bins = {"game_dump": out / "game_dump", "analyze": out / "legatum-analyze"}
@@ -149,7 +155,13 @@ def engine_bins(home: Path, commit: str, log) -> dict | None:
     repo_url = os.environ.get("LEGATUM_REPO", DEFAULT_REPO)
     if not repo.exists():
         run(["git", "clone", "--no-checkout", repo_url, str(repo)], log)
-    run(["git", "-C", str(repo), "fetch", "--quiet", "origin", "master", commit], log, check=False)
+    # Only commits already on master: an uploaded game names its commit, and GitHub serves every pull
+    # request's commits from the same repository, so building "any fetchable commit" would build and run a
+    # stranger's code (security review, 2026-11-22). Fetch master only and require the commit on it.
+    run(["git", "-C", str(repo), "fetch", "--quiet", "origin", "+refs/heads/master:refs/remotes/origin/master"], log)
+    on_master = run(["git", "-C", str(repo), "merge-base", "--is-ancestor", commit, "origin/master"], log, check=False)
+    if on_master.returncode != 0:
+        raise RuntimeError(f"engine commit {commit[:12]} is not on master; not building it")
     wt = home / "engine" / "wt"
     if wt.exists():
         run(["git", "-C", str(repo), "worktree", "remove", "--force", str(wt)], log, check=False)
@@ -429,9 +441,12 @@ def write_index(home: Path, ledger: dict) -> None:
 
 
 def notify(text: str) -> None:
+    # The text holds uploaded metadata, which anyone can write: pass it as an argument, never inside the
+    # AppleScript source, where a quote in a faction name would run as code (security review, 2026-11-22).
     if shutil.which("osascript"):
-        subprocess.run(["osascript", "-e", f'display notification "{text}" with title "Legatum game analysis"'],
-                       capture_output=True)
+        subprocess.run(["osascript", "-e", "on run argv", "-e",
+                        'display notification (item 1 of argv) with title "Legatum game analysis"', "-e", "end run",
+                        text], capture_output=True)
 
 
 def poll(args) -> int:
@@ -467,6 +482,16 @@ def poll(args) -> int:
         todo = [(k, e, due(e, now, args.force)) for k, e in ledger["games"].items()
                 if (not args.only or args.only in k)]
         todo = [(k, e, kind) for k, e, kind in todo if kind]
+        if not todo:
+            return 0
+        today = dt.date.today().isoformat()
+        done_today = sum(1 for e in ledger["games"].values() if str(e.get("analysed_at", "")).startswith(today))
+        budget = min(PER_RUN, max(0, PER_DAY - done_today)) if not args.force else len(todo)
+        if len(todo) > budget:
+            log(f"{len(todo)} game(s) due, analysing {budget} now (per-run {PER_RUN}, per-day {PER_DAY})")
+            # Finished games first, then the longest: the most to learn from.
+            todo.sort(key=lambda x: (x[2] != "final", -int(x[1].get("turns") or 0)))
+            todo = todo[:budget]
         if not todo:
             return 0
         if args.dry_run:
