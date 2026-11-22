@@ -25,10 +25,9 @@ Helper programs around the engine. Everything here is optional for building and 
 | `tools/league/` | Tuned-opening export (`export_tuned.py`) for Hard v2. | `crates/ai` (`hard_v2.rs`, `tuned_openings.rs`) | historical |
 | `tools/ops/` | Agent worktrees, background jobs, landing, test timing and Playwright worker helpers. | `scripts/build-wasm.sh`, `.config/nextest.toml`, `tools/astra/`, `tools/cloud/`, `tools/release/check.sh` | active |
 | `tools/perf/` | Performance budgets and profiles for AI turns and app load. | `app/e2e/perf-app.spec.ts`, `scripts/perf-wasm-*.mjs`, perf agent and workflow skill | active |
-| `tools/release/` | Public export, release checks, link checker and license texts. | `ci.yml`, `release-mac.yml`, `THIRD_PARTY_NOTICES.md`, `app/` | active |
+| `tools/release/` | Public export, release checks, link checker and license texts. | `ci.yml`, `THIRD_PARTY_NOTICES.md`, `app/` | active |
 | `tools/scenarios/` | Extract, cut, compare and publish saved game states and scenarios. | App scenario tests and loaders, `app/e2e/scenarios.spec.ts` | active |
 | `tools/sim/` | Simulation, combat and pacing runs, nightly runs, and `repin.sh` (regenerates pinned determinism tapes and hashes after an intended rule change). | `README.md`, `AGENTS.md`, `CONTRIBUTING.md`, `plans/`, `crates/ai` | active |
-| `tools/training/` | Copies Training-mode answers from the desktop app into the repo. | The legatum-rules reference only | historical (desktop app is being removed) |
 | `tools/ui/` | Playwright bridge helpers and WebKit tooling for UI checks. | `docs/pw-bridge.md`, `app/e2e/`, workflow skill | active |
 
 ## Main scripts
@@ -39,4 +38,3 @@ Helper programs around the engine. Everything here is optional for building and 
 | `scripts/archive-stats` | Summarise or export the game-archive index. |
 | `scripts/wasm-tape-check.mjs`, `scripts/wasm-search-check.mjs` | Check that WASM and native builds produce identical per-turn state hashes. |
 | `scripts/perf-profile.sh` | Record a reproducible single-threaded performance profile. |
-| `scripts/build-mac-app.sh`, `scripts/build-ios-sim.sh` | Desktop and iOS builds; being removed with the web-only change. |

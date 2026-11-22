@@ -7,7 +7,7 @@ import { attacksInMelee, itemName, tileRingPercent } from '../data';
 import { yieldsText } from '../cityProgress';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { isEliminated, useGame } from '../store';
-import type { AlongsideAttack, BattleForecast, CityAssaultForecast, CityBuildFocus, Hex, PlayerView } from '../types';
+import type { AlongsideAttack, BattleForecast, CityAssaultForecast, CityBuildFocus, Hex, PlayerView, ProductionItem } from '../types';
 import { cityAutomationFocus, cityAutomationPreview } from '../automation';
 import { distance, hexEq, hexToPixel, pixelToHex, tileIndex, within } from '../hex';
 import { planTurns, previewRoute, roadBonusNote, routeTurnsText, routeRiskText, routeDangerText, isCalmRouteNote, type PathStep, type RouteRisk } from '../path';
@@ -61,7 +61,7 @@ import { alarmedCities } from '../siege';
 import { useCityAlarms } from '../ui/useCityAlarms';
 import { setBorderVariant, type BorderVariant } from './borderVariant';
 import { aircraftAsUnit, airOverlayFor, pickerCandidates } from '../airWing';
-import { productionQueue, setAirOrder, toggleBuyTile } from '../orders';
+import { pendingProduction, productionQueue, setAirOrder, toggleBuyTile } from '../orders';
 import { tilePurchasePreview } from '../ui/productionPurchases';
 
 /** Whether a field the draw loop reads changed between two renders (by identity; the effects flag by value). */
@@ -384,6 +384,16 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
       .map((c) => [c.id, unchosen.has(c.id) ? null : cityAutomationFocus(c.id, view!, orders)]));
   }, [view, orders]);
 
+  // A city told what to build this turn shows it on its banner at once, not the red Build prompt until the turn resolves.
+  const cityBuilds = useMemo(() => {
+    const m = new Map<number, ProductionItem>();
+    for (const c of view?.cities ?? []) {
+      const item = c.owner === view?.me ? pendingProduction(orders, c.id) : null;
+      if (item) m.set(c.id, item);
+    }
+    return m;
+  }, [view, orders]);
+
   const rangedTiles = useMemo(() => {
     if (mode !== 'ranged' || !ownSel || !view || !client) return null;
     const valid: Hex[] = [], blocked: Hex[] = [];
@@ -564,6 +574,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
     pendingLines,
     pendingMarks,
     cityFocuses,
+    cityBuilds,
     rangedTiles,
     territoryOverlay,
     tileBuys,
@@ -588,7 +599,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
     scenarioTargets,
     siege,
   });
-  const nextFrame = { anchoringPreview: !!activePreview, lens, lensTiles, overlays, yieldTiles: overlayTiles.yields, borderTiles: overlayTiles.borders, view, selUnit, selection, pathInfo, pathAttack, pendingLines, pendingMarks, cityFocuses, rangedTiles, goalPreview, territoryOverlay, tileBuys, improveOverlay, placeOverlay, airOverlay, hover, hoverSelect: intent === 'select', cues, arrow, anim, seat, reducedMotion, combatFx: { enabled: combatFx.enabled }, celebration, scenarioTargets, siege };
+  const nextFrame = { anchoringPreview: !!activePreview, lens, lensTiles, overlays, yieldTiles: overlayTiles.yields, borderTiles: overlayTiles.borders, view, selUnit, selection, pathInfo, pathAttack, pendingLines, pendingMarks, cityFocuses, cityBuilds, rangedTiles, goalPreview, territoryOverlay, tileBuys, improveOverlay, placeOverlay, airOverlay, hover, hoverSelect: intent === 'select', cues, arrow, anim, seat, reducedMotion, combatFx: { enabled: combatFx.enabled }, celebration, scenarioTargets, siege };
   // Redraw only when something the map draws changed: a render for a card or a panel leaves the canvas alone.
   if (frameChanged(frame.current, nextFrame)) dirty.current = true;
   frame.current = nextFrame;
@@ -1003,6 +1014,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
         pendingLines: f.pendingLines,
         pendingMarks: f.pendingMarks,
         cityFocuses: f.cityFocuses,
+        cityBuilds: f.cityBuilds,
         cues: f.cues ? cuesAt(f.cues.list, t - f.cues.start, still, cueDelay) : [],
         reportArrow: (drawnArrow.current = f.arrow ? arrowAt(f.arrow, t - f.arrow.start) : null),
         celebration: !still && f.celebration.active && t >= celebStarted ? { moment: f.celebration.active, elapsed: t - celebStarted, reduced: still, targets: celebrationTargets.current } : undefined,
