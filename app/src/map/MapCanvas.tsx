@@ -679,6 +679,8 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
       const world = hexToPixel(at, HEX_SIZE);
       const origin = { x: (world.x - camera.x) * camera.zoom + r.width / 2, y: (world.y - camera.y) * camera.zoom + r.height / 2 };
       const bounds = { left: 8, top: 8, right: r.width - 8, bottom: r.height - 8 };
+      // A unit already off screen is one the player panned or jumped away from: a panel opening is no reason to fly back.
+      if (origin.x < 0 || origin.y < 0 || origin.x > r.width || origin.y > r.height) return;
       const obstacles = hudObstacles(canvas, game);
       const visible = visibleTilePoint(origin, Math.max(100, HEX_SIZE * camera.zoom * 2.5), bounds, obstacles)
         ?? visibleTilePoint(origin, HEX_SIZE * camera.zoom + 12, bounds, obstacles);
