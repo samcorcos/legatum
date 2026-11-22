@@ -1,5 +1,5 @@
 import { CALENDAR_NOTE, calendarLabel } from '../data';
-import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { useId, useLayoutEffect, useRef, useState } from 'react';
 import { readAutosave, useGame, type SaveFile } from '../store';
 import { pickSaveFile } from '../ui/GameMenu';
 import { DecoRule, Fan, Wordmark } from '../brand/ornaments';
