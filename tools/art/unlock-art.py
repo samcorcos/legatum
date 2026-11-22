@@ -40,10 +40,49 @@ def enlarge(raw: Image.Image) -> Image.Image:
     return sub.resize((round(sub.width * k), round(sub.height * k)), Image.LANCZOS) if k > 1.2 else sub
 
 
+def drop_fragments(im: Image.Image) -> Image.Image:
+    """Clear opaque islands under 2% of the largest one: a shrub crown or a sling pouch the key cut loose from its
+    stem or rope reads as a floating speck at card size (art review, 2026-11-22)."""
+    from collections import deque
+    a = im.getchannel("A")
+    w, h = a.size
+    px = a.load()
+    seen = bytearray(w * h)
+    comps = []
+    for y in range(h):
+        for x in range(w):
+            if px[x, y] > 24 and not seen[y * w + x]:
+                q, comp = deque([(x, y)]), []
+                seen[y * w + x] = 1
+                while q:
+                    cx, cy = q.popleft()
+                    comp.append((cx, cy))
+                    for nx, ny in ((cx + 1, cy), (cx - 1, cy), (cx, cy + 1), (cx, cy - 1)):
+                        if 0 <= nx < w and 0 <= ny < h and not seen[ny * w + nx] and px[nx, ny] > 24:
+                            seen[ny * w + nx] = 1
+                            q.append((nx, ny))
+                comps.append(comp)
+    if len(comps) <= 1:
+        return im
+    big = max(len(c) for c in comps)
+    out = im.copy()
+    o = out.load()
+    for comp in comps:
+        if len(comp) < big * 0.02:
+            for x, y in comp:
+                for dx in (-1, 0, 1):
+                    for dy in (-1, 0, 1):
+                        if 0 <= x + dx < w and 0 <= y + dy < h:
+                            r, g, b, _ = o[x + dx, y + dy]
+                            o[x + dx, y + dy] = (r, g, b, 0)
+    return out
+
+
 def fit(raw: Image.Image) -> Image.Image:
     # unit-art.py's edge key (saturated-magenta test, 2 px pull-in): the stock key's 9 px erosion cuts thin columns
     # and ropes, leaving roof kiosks and slings floating.
     keyed = _ua.key_edge(enlarge(raw).convert("RGBA"))
+    keyed = drop_fragments(keyed)
     box = keyed.getchannel("A").point(lambda v: 255 if v > 24 else 0).getbbox()
     art = keyed.crop(box)
     scale = min(WIDTH / art.width, HEIGHT / art.height)
