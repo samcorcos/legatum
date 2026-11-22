@@ -2463,8 +2463,25 @@ fn city_detail(
         .collect();
     population_unlocks.sort_by_key(|u| u.population);
     let era = state.era_of(c.owner);
+    // The Nile: Egypt has no Production, so a Quarry (Production only) would give it nothing.
+    // The order stays legal; the view just doesn't offer it (no rules change).
+    let nile = state.player(c.owner).faction == Faction::Egypt
+        && state.setup.rule_experiments.egypt_nile();
     let options = all_items()
-        .chain(crate::improvements::candidates(state, c))
+        .chain(
+            crate::improvements::candidates(state, c)
+                .into_iter()
+                .filter(|item| {
+                    !(nile
+                        && matches!(
+                            item,
+                            ProductionItem::Improvement {
+                                improvement: ImprovementKind::Quarry,
+                                ..
+                            }
+                        ))
+                }),
+        )
         .chain(
             BuildingKind::ALL
                 .into_iter()
