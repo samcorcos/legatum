@@ -1200,6 +1200,10 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
       return line('victory', `${who(ctx, e.captor)} took the original capital ${e.name}: +1 VP while holding it`, {
         at: ctx.cityPos(e.capital), players: [e.captor], weight: 2, tone: toneFor(e.captor),
       });
+    case 'CapitalSacked':
+      return line('victory', `${who(ctx, e.captor)} sacked the original capital ${e.name}: +1 VP, kept for good`, {
+        players: [e.captor], weight: 2, tone: e.captor === ctx.me ? 'good' : 'neutral',
+      });
     case 'CapitalLost':
       return line('victory', `${who(ctx, e.player)} no longer ${e.player === ctx.me ? 'hold' : 'holds'} the original capital ${e.name}: −1 VP`, {
         at: ctx.cityPos(e.capital), players: [e.player], weight: 2, tone: e.player === ctx.me ? 'bad' : 'neutral',

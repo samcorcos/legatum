@@ -1385,7 +1385,12 @@ impl ScoreSources {
                 .sum(),
             capitals_taken: vp
                 .iter()
-                .filter(|(source, _)| matches!(source, VpSource::CapitalTaken { .. }))
+                .filter(|(source, _)| {
+                    matches!(
+                        source,
+                        VpSource::CapitalTaken { .. } | VpSource::CapitalSacked { .. }
+                    )
+                })
                 .map(|(_, vp)| u64::from(*vp))
                 .sum(),
             total: u64::from(scoring::vp_total(state, player)),

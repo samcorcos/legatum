@@ -655,6 +655,9 @@ pub enum VpSource {
     EraObjective { era: u8 },
     /// 1 VP while this empire holds a rival's original capital (`scoring::capitals_held`).
     CapitalTaken { capital: CityId },
+    /// 1 VP kept for good: a rival's original capital this Celtic empire sacked
+    /// (`Player::capitals_sacked`).
+    CapitalSacked { capital: CityId },
     /// The Great Work built by `of`, scored by the current holder of its tile.
     GreatWork { of: PlayerId },
     /// The faction goal of empire `of`. Usually scored by `of` itself; a held goal (a

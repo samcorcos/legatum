@@ -242,7 +242,12 @@ export function buildVpModel(view: PlayerView): VpModel {
     rule: `${p.name} holds the original capital ${name}: 1 VP while holding it`,
     terms: 'Held · follows the city', live: true, held: true,
     owners: [p.id], own: own([p.id]), facts: [{ id: p.id, value: 1, label: name }], unit: '',
-  })));
+  })).concat((p.capitals_sacked ?? []).map(([id, name]) => ({
+    id: `capital-sacked-${p.id}-${id}`, kind: 'capital' as const, name, icon: 'city', vp: 1,
+    rule: `${p.name} sacked the original capital ${name}: 1 VP, kept for good`,
+    terms: 'Kept · the city is gone', live: false, held: false,
+    owners: [p.id], own: own([p.id]), facts: [{ id: p.id, value: 1, label: name }], unit: '',
+  }))));
 
   // VP v2 eras: the public objectives drawn at game start. An era is a way to score for every empire that enters it.
   const myEra = mePublic?.era ?? 1;
@@ -339,7 +344,7 @@ export function buildVpModel(view: PlayerView): VpModel {
   const all = [...works, ...capitalSources, ...raceEras, ...ordered];
   const open = [...works, ...raceEras].filter((s) => s.own === 'open');
   return { me, turn: view.turn, rows, empires, works, eras, capitalSources,
-    capitals: view.players.map((p) => ({ owner: p.id, names: (p.capitals_taken ?? []).map(([, name]) => name) })),
+    capitals: view.players.map((p) => ({ owner: p.id, names: [...(p.capitals_taken ?? []).map(([, name]) => name), ...(p.capitals_sacked ?? []).map(([, name]) => `${name} (sacked)`)] })),
     deck: !!view.rule_experiments?.objectives_deck, gold: view.economy.gold, raceRules: { era: myEra, decadence: mePublic?.decadence_percent ?? 0, rules: decadenceRules(view.rule_experiments) },
     goals, all, open, byId,
     holds: rows.filter((r) => r.hold).sort((a, b) => a.hold!.left - b.hold!.left || Number(b.isMine) - Number(a.isMine)) };

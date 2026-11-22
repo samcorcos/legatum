@@ -170,7 +170,10 @@ pub fn vp(state: &GameState, p: PlayerId) -> Vec<(VpSource, u32)> {
         }
     }
     for (capital, _) in capitals_held(state, p) {
-        out.push((VpSource::CapitalTaken { capital }, 1));
+        out.push((VpSource::CapitalTaken { capital }, CAPITAL_VP));
+    }
+    for (capital, _) in &state.player(p).capitals_sacked {
+        out.push((VpSource::CapitalSacked { capital: *capital }, CAPITAL_VP));
     }
     for (of, holder) in goals::holders(state) {
         if holder == p {

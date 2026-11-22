@@ -159,6 +159,7 @@ impl ViewBuilder {
                 vp: 0,
                 vp_sources: Vec::new(),
                 capitals_taken: Vec::new(),
+                capitals_sacked: Vec::new(),
                 capital_stands: true,
                 cities: 0,
                 faction_goal_done: true,

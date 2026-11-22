@@ -410,6 +410,13 @@ pub enum Event {
         capital: CityId,
         name: String,
     },
+    /// Public: a Celtic empire burned a rival's original capital in a sack and keeps its 1 VP
+    /// for the rest of the game.
+    CapitalSacked {
+        captor: PlayerId,
+        capital: CityId,
+        name: String,
+    },
     SpartaConquest {
         city: CityId,
         player: PlayerId,

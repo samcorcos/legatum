@@ -122,7 +122,7 @@ function RowDetail({ model, s, kind }: { model: VpModel; s?: Source; kind: 'work
   }
   if (kind === 'capital') {
     return <div className="sl-detail">
-      <p className="sl-detail-rule">Hold a rival's first capital: 1 VP while you hold it. You lose the point if anyone takes the city or you raze it.</p>
+      <p className="sl-detail-rule">Hold a rival's first capital: 1 VP while you hold it. You lose the point if anyone takes the city or you raze it. The Celts keep the point of a capital they sack.</p>
       <ul className="sl-goals">
         {model.empires.map((e) => {
           const names = model.capitals.find((c) => c.owner === e.id)?.names ?? [];

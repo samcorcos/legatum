@@ -510,7 +510,7 @@ export interface CityView {
 }
 
 /** One way a player scored: the core's `types::VpSource`. A held goal (a capturable item) scores for whoever holds it, so the goal names its empire (`of`). */
-export type VpSource = { kind: 'GreatWork'; of: PlayerId } | { kind: 'FactionGoal'; of: PlayerId } | { kind: 'EraObjective'; era: number } | { kind: 'CapitalTaken'; capital: CityId };
+export type VpSource = { kind: 'GreatWork'; of: PlayerId } | { kind: 'FactionGoal'; of: PlayerId } | { kind: 'EraObjective'; era: number } | { kind: 'CapitalTaken'; capital: CityId } | { kind: 'CapitalSacked'; capital: CityId };
 
 /** Core `goals::GoalRule`: which rule a goal follows (the Aztecs use the Swarm rule for the New Fire). */
 export type GoalRule = 'None' | 'Hoard' | 'Swarm' | 'Sakoku' | 'Diwan' | 'Heir' | 'Factories' | 'Wild' | 'Retire' | 'Hall' | 'Broadcast';
@@ -529,6 +529,8 @@ export interface PlayerPublic {
   /** What the VP are made of, by id: era objectives, captured capitals, Great Works and faction goals. */
   vp_sources: [VpSource, number][];
   capitals_taken?: [CityId, string][];
+  /** Celts only: rival original capitals this empire sacked, each 1 VP kept for good (core `capitals_sacked`). */
+  capitals_sacked?: [CityId, string][];
   /** Its original capital still stands in its own team's hands (public; core `scoring::capital_stands`). Absent in older views: standing. */
   capital_stands?: boolean;
   cities: number;
@@ -1168,6 +1170,7 @@ export type Event =
   | { type: 'CityCaptured'; city: CityId; from: PlayerId; to: PlayerId; bounty?: number }
   | { type: 'AthensCityCaptured'; city: CityId; from: PlayerId; to: PlayerId }
   | { type: 'CapitalTaken'; captor: PlayerId; capital: CityId; name: string }
+  | { type: 'CapitalSacked'; captor: PlayerId; capital: CityId; name: string }
   | { type: 'CapitalLost'; player: PlayerId; capital: CityId; name: string }
   | { type: 'CityRazed'; city: CityId; from: PlayerId; by: PlayerId; at: Hex; original_capital?: boolean; sack_gold?: number; camp?: Hex; ordered?: boolean }
   | { type: 'BuildingDismantled'; city: CityId; owner: PlayerId; building: BuildingKind; reason: string }

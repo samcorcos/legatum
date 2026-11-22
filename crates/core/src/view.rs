@@ -844,6 +844,10 @@ pub struct PlayerPublic {
     /// (`scoring::capitals_held`). A capital retaken or razed leaves the list.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub capitals_taken: Vec<(CityId, String)>,
+    /// Public: the rival original capitals this Celtic empire burned in a sack, each worth 1 VP
+    /// for the rest of the game (`Player::capitals_sacked`).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub capitals_sacked: Vec<(CityId, String)>,
     /// Whether this empire's original capital still stands in its own team's hands.
     /// Public like the treasuries: it is the capitals victory's whole race
     /// (`scoring::capital_stands`). Absent in older views, read as standing.
@@ -1242,6 +1246,27 @@ impl PlayerView {
         self.teams_at_war(self.team_of(a), self.team_of(b))
     }
 
+    /// The team that would waive an Alliance's upkeep between `a` and `b` this turn, from public
+    /// information: a team either side is at War with that is alive and on a victory hold or
+    /// within `scoring::NEAR_VICTORY_VP` of its target. Mirrors `diplomacy::upkeep_waived_by`.
+    pub fn alliance_upkeep_waived_by(&self, a: TeamId, b: TeamId) -> Option<TeamId> {
+        self.standings
+            .iter()
+            .map(|s| (s.team, s))
+            .find_map(|(t, s)| {
+                (t != a
+                    && t != b
+                    && (self.teams_at_war(a, t) || self.teams_at_war(b, t))
+                    && self
+                        .players
+                        .iter()
+                        .any(|p| p.alive && s.members.contains(&p.id))
+                    && (s.victory_hold.is_some()
+                        || s.vp.saturating_add(crate::scoring::NEAR_VICTORY_VP) >= s.target))
+                    .then_some(t)
+            })
+    }
+
     pub fn teams_at_war(&self, a: TeamId, b: TeamId) -> bool {
         if a == TeamId::BARBARIAN || b == TeamId::BARBARIAN {
             return a != b;
@@ -1539,6 +1564,7 @@ pub fn public_view(state: &GameState) -> PublicView {
             vp: scoring::vp_total(state, p.id),
             vp_sources: scoring::vp(state, p.id),
             capitals_taken: scoring::capitals_held(state, p.id),
+            capitals_sacked: p.capitals_sacked.clone(),
             capital_stands: scoring::capital_stands(state, p.id),
             cities: state.cities_of(p.id).count() as u32,
             faction_goal_done: p.faction_goal_done,
@@ -1728,6 +1754,7 @@ pub(crate) fn order_check_view(state: &GameState, me: PlayerId) -> PlayerView {
                 vp: 0,
                 vp_sources: Vec::new(),
                 capitals_taken: Vec::new(),
+                capitals_sacked: Vec::new(),
                 capital_stands: true,
                 cities: 0,
                 faction_goal_done: p.faction_goal_done,

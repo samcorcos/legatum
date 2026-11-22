@@ -610,7 +610,9 @@ fn standings(state: &legatum_core::GameState) -> Value {
                     VpSource::EraObjective { .. } => objectives += vp,
                     VpSource::FactionGoal { .. } => goal += vp,
                     VpSource::GreatWork { .. } => other += vp,
-                    VpSource::CapitalTaken { .. } => capitals += vp,
+                    VpSource::CapitalTaken { .. } | VpSource::CapitalSacked { .. } => {
+                        capitals += vp
+                    }
                 }
             }
             json!({

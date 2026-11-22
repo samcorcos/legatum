@@ -250,6 +250,7 @@ fn vp_source_label(source: &VpSource) -> String {
         VpSource::FactionGoal { .. } => "Faction goal".to_string(),
         VpSource::GreatWork { .. } => "Great Work".to_string(),
         VpSource::CapitalTaken { .. } => "Capital held".to_string(),
+        VpSource::CapitalSacked { .. } => "Capital sacked".to_string(),
     }
 }
 

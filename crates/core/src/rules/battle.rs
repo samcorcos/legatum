@@ -1415,7 +1415,8 @@ pub fn capture_city(
         None
     };
     // An original capital's VP is held, not scored here: `scoring::vp` counts it while a rival of
-    // its founder owns it, and end-of-turn scoring reports the change of hands.
+    // its founder owns it, and end-of-turn scoring reports the change of hands. The one exception
+    // is the Celtic sack below, which keeps the point for good.
     let rules = state.setup.rule_experiments;
     // A city the captor founded comes home intact (designer, 2026-11-14): the sack is for
     // everyone else's cities, teammates' included.
@@ -1428,6 +1429,11 @@ pub fn capture_city(
             return;
         };
         let (from, at, original_capital) = (victim.owner, victim.pos, victim.original_capital);
+        // A rival's original capital burned in the sack keeps its point for good (Celtic
+        // exception to held capital VP; the city is gone, so nobody can take it back).
+        let sacked_capital = (original_capital
+            && state.team_of(victim.founder) != state.team_of(captor))
+        .then(|| victim.name.clone());
         let (prize, walled) = (
             crate::objectives::prize_city(victim),
             crate::objectives::walled_city(victim),
@@ -1474,6 +1480,17 @@ pub fn capture_city(
                 city,
                 from,
                 to: captor,
+            });
+        }
+        if let Some(name) = sacked_capital {
+            state
+                .player_mut(captor)
+                .capitals_sacked
+                .push((city, name.clone()));
+            events.push(Event::CapitalSacked {
+                captor,
+                capital: city,
+                name,
             });
         }
         return;
@@ -3138,7 +3155,7 @@ mod tests {
     }
 
     #[test]
-    fn celtic_sack_of_original_capital_burns_it_and_scores_nothing() {
+    fn celtic_sack_of_a_rival_original_capital_keeps_its_point_for_good() {
         let mut s = game(&[0, 1]);
         s.setup.rule_experiments.apply("objectives=deck").unwrap();
         let capital = city(&mut s, 1, hex(5, 5), 3);
@@ -3149,8 +3166,32 @@ mod tests {
         assert!(events.iter().any(
             |e| matches!(e, Event::CityRazed { city, original_capital: true, ordered: false, .. } if *city == capital)
         ));
-        // The capital is gone, so nobody holds its point.
-        assert!(!holds_capital_point(&s, PlayerId(0), capital));
+        assert!(events.iter().any(
+            |e| matches!(e, Event::CapitalSacked { captor: PlayerId(0), capital: c, .. } if *c == capital)
+        ));
+        // The city is gone, but the Celts keep its point: nobody can take it back.
+        let sacked = (crate::VpSource::CapitalSacked { capital }, 1);
+        assert!(crate::scoring::vp(&s, PlayerId(0)).contains(&sacked));
+        let (next, _) = crate::resolve_turn(&s, &BTreeMap::new());
+        assert!(crate::scoring::vp(&next, PlayerId(0)).contains(&sacked));
+        assert!(!holds_capital_point(&next, PlayerId(0), capital));
+    }
+
+    #[test]
+    fn celtic_sack_of_a_teammates_capital_scores_nothing() {
+        let mut s = game(&[0, 0, 1]);
+        let capital = city(&mut s, 1, hex(5, 5), 3);
+        s.cities.get_mut(&capital).unwrap().owner = PlayerId(2);
+        s.player_mut(PlayerId(0)).faction = Faction::Celts;
+        let mut events = Vec::new();
+        capture_city(&mut s, capital, PlayerId(0), &mut events);
+        assert!(!s.cities.contains_key(&capital), "the sack still burns it");
+        assert!(s.player(PlayerId(0)).capitals_sacked.is_empty());
+        assert!(
+            !events
+                .iter()
+                .any(|e| matches!(e, Event::CapitalSacked { .. }))
+        );
     }
 
     fn razed(events: &[Event]) -> Event {
