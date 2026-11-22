@@ -49,12 +49,14 @@ fn archived_mongols_settler_and_escort_decisions_match_for_three_real_episodes()
     let mut brains: BTreeMap<PlayerId, Box<dyn Brain>> = BTreeMap::new();
     for p in &state.players {
         if !p.is_human {
-            let base = ScriptedBrain::with_difficulty(
+            let mut base = ScriptedBrain::with_difficulty(
                 p.faction,
                 brain_seed(state.setup.seed, p.id),
                 p.id,
                 state.setup.players[p.id.0 as usize].difficulty,
             );
+            // The archive predates Hard weighing a site's whole ring-one terrain (2026-11-22).
+            base.decisions.site_terrain_weight = 0;
             let brain: Box<dyn Brain> = if state.setup.players[p.id.0 as usize].search {
                 Box::new(SearchBrain::new(
                     base,

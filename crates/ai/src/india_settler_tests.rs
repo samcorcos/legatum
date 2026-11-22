@@ -50,6 +50,8 @@ fn genes_off(brain: &mut ScriptedBrain) {
     brain.decisions.supported_defence = 0;
     // The fixtures were recorded before Walls counted as the garrison (shared since 2026-11-06).
     brain.decisions.walls_garrison = 0;
+    // Recorded before Hard weighed a site's whole ring-one terrain (2026-11-22).
+    brain.decisions.site_terrain_weight = 0;
 }
 
 fn unit_order(orders: &[Order], unit: UnitId) -> Option<&Order> {
