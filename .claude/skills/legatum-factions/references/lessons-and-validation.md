@@ -1,0 +1,45 @@
+# Factions: start sites, simplification, lessons, measurement and validation (history and detail)
+
+Start-site leans, the 2026-10-31 simplification pass, the invisible-exception lesson, lessons from measured results, per-faction identity metrics, the validation checklist and the superseded fantasy direction.
+
+Moved verbatim from SKILL.md on 2026-11-22 (original order kept). The current rules are in SKILL.md; where this file disagrees with SKILL.md, SKILL.md wins.
+
+**Start sites (2026-11-02):** only India has a start preference (the widest land). A faction lean toward each style's terrain was built and measured twice (unbanded: +23% Production for Sparta, Germany and the Aztecs; banded to 8% quality and 2 Production: Production within 1.4% of the mean) and neither moved a weak faction up; the banded lean left the best/worst ratio at or above master's on the current engine (3.32 against 3.25), so floor-only shipped. The banded lean is one commit back in git (`a412c2534`; `docs/sim-results/start-lean-2026-11-02.md`). Since 2026-11-07 (RULES_VERSION 24) every faction's founding territory (centre plus ring 1) is the same 8 Food and 8 Production, so no faction starts with a richer first ring; only India's seat still gets the widest land.
+
+**Simplification pass (user, 2026-10-31):** Mongols lose "slip past enemy units" (+1 move is enough). Sparta loses the kill-bounty Gold and the Gold and stored Production taken on capture. He first cut desertion at peace and the phalanx too ("I honestly didn't even notice that they were in the rules at all"), then kept both: "oh i didn't realize the phalanx was the unit. let's keep the unit and keep the drawback." Explain what a rule is attached to (the Hoplite) when proposing a cut. Germany's then-goal became a Factory (Ruhr Foundry) in every city of at least four; the yield-less Engine was deleted. The fixed-count 2026-11-01 ruling below supersedes that goal. Test for every faction rule: would a player notice it was gone?
+
+**A faction exception the player can't see reads as a bug (user, 2026-10-31, Playtest 8.9.20 T52):** he declared war to take an adjacent unescorted Mongol Settler, it walked away because moving Mongol civilians were exempt from the capture pin, and his reaction was "[what?] that's dumb. please fix." Lesson: a faction rule that quietly overrides a core rule the player relies on (adjacent + capture = capture) is not asymmetry, it's a trap. Exceptions must be visible at the moment of the decision (the forecast names them) or not exist. Fixed as a hotfix (8.9.21); slip-past is being removed entirely.
+
+## Lessons from what happened
+- **Sparta 7a diagnosis (2026-10-04):** in 200 matched Standard Hard games it won 3 (1.5%), began its first war at median T27 and spent mean 177 turns at war, yet captured 0.74 cities/game and had only 2.97 cities at T150. Desertion hit 29 seats (109 units), usually late; only two seats were eliminated. Two small AI campaign changes reached 5/200 and 7/200 wins and were removed. A wounded-unit recovery fallback fix was retained (5/200 wins, 0.81 captures/game). Opt-in rule trials on the unchanged-AI baseline were +25% rather than +50% non-military premium (10/200 wins), 2 field HP/turn (4/200), and exempting all Settlers from the premium (4/200). No default rule changed; see `docs/sim-results/2026-10-04-sparta-diagnosis.md`. The cause is mixed: civilian-growth cost burden and slow AI capture conversion. Human balance is unproven.
+- **A goal's requirements must be pursued by something (2026-10-06, playtest 8.3).** Mongols's AI skipped every Market for a missing Workshop that nothing queued and built no Market in 91 turns. The goal pass now walks each goal item's chain (foundation building, lower tier, technology) and research prices the goal's techs (`goals.rs::goal_need,goal_techs`). Audit: only Mongols and Athens (Relay Restoration, known by the end in 60% of seats) had a gap; the other six goals wait on population, war, Gold or cities, not an unlock. A foundation step that fires before the network is founded takes idle cities from Settlers and costs about 3 points in 1v1; gate it on the goal being nearly all that is left. Per-faction goal rate and median turn are in every sim report.
+- **Measure combined balance at the end.** A chain of redesigns each measured "vs master" looked fine, but combined Standard balance was 2.49x until re-measured.
+- **Goal completion isn't winning.** Byzantium completed its goal 98% of the time and didn't win more. Judge by win rate on held-out seeds.
+- **Bonuses on all yields snowball.** Japan's former network on every yield made it the leader (16.7%); the current rule adds only Food and Production.
+- **Validity propped up by a weak member** (Tall) hides missing counters; compute validity on the shipped set.
+- **Balance targets:** best/worst faction win ratio ≤ 1.5x under Standard rules, about 2,000 games plus held-out seeds (1,000+; 500 is too noisy). Measure on scripted Hard (`--difficulty hard`).
+
+- **The AI must play the kit, not a generic game with a faction label (user, 2026-11-05).** After his easy Celts win, every fix taught rivals to counter his plan and none taught the AI Celts to play it (AI Celts 5.9%; `goal_actions.rs::wild_now` calls the Wild on a fixed rule, garrisons as if barbarians were a threat). For each faction he wins with, turn his plan into that faction's committed AI strategy (Celts: light garrisons where only barbarians reach, camps as a border shield, hold the trigger until the 2 VP can be kept, attack the weakest unwalled neighbour). A bottom-of-table AI win rate is first a question of whether the AI plays the kit.
+
+## Measure identity per faction, never in aggregate (user, 2026-10-03)
+Aggregate numbers like "captures per game" mislead: some factions should capture nothing, others should live by conquest. Report per faction, against its identity:
+- Sparta and Mongols: captures per game, and the turn of their first war and first capture.
+- Switzerland: interest earned, Great Works bought, and bounty exposure.
+- Byzantium: Companies hired (per game, kind, seller, Gold paid), Companies alive at expiry, turned barbarian, Gold income against upkeep.
+- India: cluster density, network bonus, Revenue Office coverage and Gold remitted.
+
+India's current AI prices a provincial Revenue Office by the Gold it begins remitting, values the Imperial Diwan as a held goal, researches Currency for both, guards the Diwan's city, targets a rival Diwan for its transferable VP, and avoids queuing an upkeep-paying troop when its treasury has under ten turns of runway.
+- Germany: project output.
+
+**AI genes are judged per faction too (user, 2026-10-11):** "it's ok if some genes apply to some civs and not others. they don't all have the same play style." A gene that helps one faction and hurts another isn't "no effect". Keep it on where it helps, off where it hurts, and gate it by faction (plus situation, when the same faction responds differently on different maps). Never reject a gene on the all-faction average alone.
+
+Judge AI combat skill by efficiency, not volume: captures per war declared, units lost per capture, and failed assaults on walled cities.
+
+
+## Validation checklist for any faction change
+**Every rule must earn its place (user, 2026-11-05, on Germany's Ruhr Foundry: "i suspect for germany, disabling ruhr would have no impact because it's so late in the game... benefits should lead to a higher win rate when they're in the game. otherwise it's a waste of space").** Each faction strength and drawback has an ablation switch (`RuleExperiments.faction_rules_off`, `legatum-sim --rule-off`), and `tools/sim/ablate.sh <faction>` runs a paired census per rule. A strength switched off must lower the faction's win share (95% CI excluding 0); a drawback switched off must raise it. A rule with no effect (CI includes 0, |Δ| under 1 pp) is dead: redesign it (earlier, stronger, or cut), never keep it as decoration. Run the ablation for a new faction rule before it lands, and for every faction after a rules version bump. Caveat: AI-only censuses measure the rule as the AI plays it; a dead strength can mean the AI ignores it (check telemetry that the AI uses it) as well as a weak rule. Timing matters as much as size: Hard's Germany learned Industrialization at a median T141 against a median game end of T183, so its Factory-slot Ruhr Foundry paid in the last quarter while its −1 move cost the first three. (superseded 2026-11-06: the Foundry is at the Forge slot (Iron Working) and the −1 move is gone.)
+Rules reference updated; WASM behavior tests; AI plays it (telemetry proves the mechanic is used); rivals' AI reacts; UI explains it; 8-player Hard at both speeds (per-faction CIs and the ratio); duels if it touches openings; human-playbook v6 if it touches combat or difficulty.
+
+## Superseded fantasy direction
+
+The 2026-10-07 vault-goblin and non-human portrait decision was superseded by the user's 2026-10-10 historical-factions decision. Switzerland is human. The historical portrait branch will replace the old art; see the rename map TODO.

@@ -14,8 +14,8 @@ export const HINT_IDS = ['production', 'research', 'enemy', 'ready'] as const;
 export type HintId = typeof HINT_IDS[number];
 // One action sentence each (pillar 9): the rules behind it live in the guide chapter the hint links to.
 const HINTS: Record<HintId, { title: string; body: string; section: GuideSection }> = {
-  production: { title: 'Pick production', body: `Select your capital and choose something to build. It works every owned tile within ${WORK_RADIUS} tiles, and each time it grows it claims one more tile.`, section: 'cities' },
-  research: { title: 'Choose your first research', body: 'Open Technologies (T) and pick one. Bronze Working unlocks Workshops (Production); Irrigation gives every city +1 Food. Finish an era to enter the next.', section: 'cities' },
+  production: { title: 'Pick production', body: `Choose something for your capital to build. It works every owned tile within ${WORK_RADIUS} tiles, and each time it grows it claims one more tile.`, section: 'cities' },
+  research: { title: 'Choose your first research', body: 'Press T or click Research at the top, then pick one. Bronze Working unlocks Workshops (Production); Irrigation gives every city +1 Food. Finish an era to enter the next.', section: 'cities' },
   enemy: { title: 'A rival in sight', body: 'You are at War with them. Check the battle forecast before you attack: everyone moves at once and their orders are hidden.', section: 'combat' },
   ready: { title: 'Ready to resolve?', body: 'Everything has orders. End the turn (Return; Ready in multiplayer) and every empire’s orders resolve together.', section: 'turns' },
 };

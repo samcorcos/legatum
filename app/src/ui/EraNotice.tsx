@@ -21,7 +21,7 @@ function useEraNotices(): EraNoticeLine[] {
   return useMemo(() => {
     if (!report || !view) return [];
     const team = new Set(view.players.filter((p) => p.team === view.team).map((p) => p.id));
-    // The first empire into an era is announced by the Age banner, which is this notice for it.
+    // The first empire into an era opens the Age, and the Age's score check names it (its opener line), so this notice skips it.
     return (report.events[seat] ?? []).flatMap((e, i) => e.type === 'EraEntered' && !team.has(e.player) && !e.first
       ? [{ key: `${report.turn}:${i}`, era: e.era, first: e.first,
         text: `${empireOfPlayer(view, e.player)} entered the ${eraName(e.era - 1)} era${e.first ? ' first' : ''}` }] : []);

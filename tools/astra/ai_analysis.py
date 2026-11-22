@@ -173,7 +173,7 @@ Required regression: {finding['tests']}
 Confirm the cited behavior with the current engine and check pending/running AI tasks for
 conflicting work before edits; if the behavior is fixed already, report it and stop. The
 archived rules fingerprint may require the original engine revision to reproduce. Preserve
-unrelated work; never edit docs/learnings.md or CLAUDE.md. Never use rm or pkill -f.
+unrelated work; never edit docs/learnings.md, docs/learnings/ or CLAUDE.md. Never use rm or pkill -f.
 Run cargo fmt --all; cargo clippy --workspace --all-targets -- -D warnings; cargo test --workspace.
 Merge master into your own branch before finishing, resolve conflicts, and commit in small
 commits ending with Co-Authored-By: gpt-6-astra (Codex) <noreply@openai.com>.
