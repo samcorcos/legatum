@@ -149,8 +149,7 @@ export function GameMenu() {
               }}>Export game history</button>
             </>}
             <div className="menu-foot">
-              {kind === 'remote' ? 'Online player' : 'Core (WASM)'}
-
+              {kind === 'remote' && 'Online player'}
               {hash && <div className="mono">state {hash.slice(0, 10)}…</div>}
             </div>
           </details>
