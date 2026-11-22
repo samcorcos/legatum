@@ -14,6 +14,7 @@ REVIEWERS = {
     "docs": ("docs-review", "legatum-docs-reviewer"),
     "ui": ("ui-review", "legatum-ui-reviewer"),
     "plain": ("plain-review", "legatum-plain-language-reviewer"),
+    "art": ("art-review", "legatum-art-reviewer"),
 }
 
 
@@ -82,4 +83,10 @@ def marker_status(repo, name, tip, kinds, classes):
     if kinds["ui"]:
         ok, msg, _ = check_marker(repo, "ui", name, tip, classes["ui"])
         out.append(("ui", ok, msg))
+    if kinds["art"] or kinds.get("artimpact"):
+        # Art, and changes that may make art stale (user, 2026-11-22): the art reviewer judges both.
+        ok, msg, _ = check_marker(repo, "art", name, tip, classes["art"])
+        if not ok:
+            msg += " (art or art-related code changed: " + ", ".join((kinds["art"] + kinds.get("artimpact", []))[:4]) + ")"
+        out.append(("art", ok, msg))
     return out

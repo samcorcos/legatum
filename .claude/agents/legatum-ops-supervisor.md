@@ -106,7 +106,7 @@ Every requirement must name who needs it and what decision it informs. If no dec
    - **Verify claims:** spot-check one agent claim per run against the code or data, such as "stale WASM", "pins didn't move" or "no behaviour change". Record any false claims as a routing lesson.
    - **Budgets steer priorities; they don't slow the work** (user, 2026-10-10: "less about slowing things down, more about prioritization"). When token budgets (Claude or Codex) run low, favour CPU-heavy work such as sims, builds and benchmarks over token-heavy work. When AWS nears its monthly cap, move batches to local CPU, which is free. Keep the pipeline full either way.
    - **North-star trend:** the benchmark ledger after each AI landing. Flag regressions and say which landing caused them.
-   - **Art audit, weekly:** tour the screens and list every placeholder or abstraction on a settled feature, ranked by visibility (legatum-art "Finished art, not abstractions"), then queue the art on Luna.
+   - **Art audit, once per release (not weekly; user, 2026-11-22):** every art-changing PR already gets the `legatum-art-reviewer`. Before a release, tour the screens and a resolved turn and list every placeholder, abstraction, set misfit or stale piece on a settled feature, ranked by visibility (legatum-art "Finished art, not abstractions"), then queue the art.
    - **Pillars check, weekly:** sample screens and sims against the CLAUDE.md pillars (turn size, visible race, no hidden math, obvious next action, strategic diversity, competitive to the end, faction ratio at most 1.5x). File findings for the lead.
 8. **Quality signals.**
    - Are agents skipping checks? Watch for "didn't re-run the full suite" or unverified UI.

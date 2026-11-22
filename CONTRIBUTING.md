@@ -73,7 +73,7 @@ described in [app/README.md](app/README.md#browser-end-to-end-tests); CI does no
 ready for review.
 
 `CLAUDE.md` describes further gates before anything lands on `master`: `tools/gates/check.py`, an AI
-documentation review and, for UI changes, an AI UI review. The maintainer runs those himself on your
+documentation review and, for UI changes, an AI UI review and, for art changes, an AI art review. The maintainer runs those himself on your
 branch. You do not need to run them or produce their marker files, and a pull request is not held up for
 lacking them. They may lead to follow-up commits or requests.
 

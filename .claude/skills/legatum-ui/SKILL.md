@@ -8,6 +8,7 @@ description: This skill should be used when designing, building or reviewing any
 Pillars 5 (no hidden math) and 9 (the next action is always obvious) from CLAUDE.md govern everything here.
 
 ## Recurring feedback, as rules
+- **Question every requirement on every screen (user, 2026-11-22: "Yes, question every requirement").** Clear is not enough: each screen and map piece is reviewed for what can be removed or merged without losing a decision, and before each release the whole game is checked for one icon, one word, one colour and one component per concept. The UI reviewer reports both (simplicity findings, consistency table); art quality itself belongs to `legatum-art-reviewer`.
 - **Escape never throws away something he has to answer; whatever it hides, the turn report (L) brings back (user, 2026-11-21, Coach questions):** "sometimes I press escape and accidentally close out coaches notes. is there a way to find that?" and "it would be nice if they were in the game log ("L") so i can click on it if i accidentally dismiss it." The coach card grabbed focus when it appeared, so an Escape meant for the map skipped the question for good. Now Esc only hides the card behind a "Coach question" button in the same spot (draft kept); skipping takes the Skip button; the latest turn report lists the question with Answer (waiting) or Answer now (skipped). Apply to any card that wants a reply: Esc hides, an explicit button discards, and L can find it again.
   - A floating reopen button and the turn report never show together (at 1000x600 the button covered the report's header): while the report lists the item, the button hides (UI review, 2026-11-21).
   - A report button that reopens a card closes the report first, so the card never covers the report's own Close.
@@ -649,7 +650,7 @@ Verify UI changes with Playwright screenshots at the three sizes and attach them
 - **Each number once per tooltip:** don't print "4 moves" twice in one card.
 - **Tour fixtures that depend on turn resolution pin their outcome** (garrison HP, seeds) and assert the payoff line (e.g. "captured"), so AI or rule changes fail loudly instead of quietly losing the payoff shots.
 - **After a rebalance, grep the skills and the Guide for the old numbers.**
-- **Archive every release's tour on release day** (`~/LegatumRuns/tours/playtest-<version>-review/`). 8.9.18 wasn't archived, which cost an extra tour run.
+- **Archive every release's tour on release day** (`/mnt/project-files/ui-tours/<release>/` since 2026-11-22; `~/LegatumRuns/tours/playtest-<version>-review/` on the Mac before that). 8.9.18 wasn't archived, which cost an extra tour run.
 - **A unit-panel tooltip goes beside the panel**, so it doesn't cover the Lens switcher at the left edge.
 - **Mounted surfaces agree:** card, forecast, tooltip and Guide show the same three numbers (130% strength, +40% against ranged, −33% against a city) in the same words. Review all four together.
 
