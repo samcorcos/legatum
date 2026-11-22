@@ -8,7 +8,7 @@
   "seat": 1,
   "difficulty": "Hard",
   "minutes": 24,
-  "briefing": "Turn 147. You are the Mongols, the VP leader with 8 VP. They come from the Great Library in Bukhara and Hagia Sophia in Tara (2 VP each), the Celtic capital Lugdunum, two era objectives and Strongest Army. You are at Peace with India, which has 5 VP, 20 cities, only 5 military units, a 1,000-Gold treasury and Flight; you are close to Flight yourself. Ten VP held for ten turns wins. Score as many VP as you can in 30 turns, and keep India from passing you.",
+  "briefing": "Turn 147. You are the Mongols, the VP leader with 8 VP. They come from the Great Library in Bukhara and Hagia Sophia in Tara (2 VP each), the Celtic capital Lugdunum, two Age cards and Strongest Army. You are at Peace with India, which has 5 VP, 20 cities, only 5 military units, a 1,000-Gold treasury and Flight; you are close to Flight yourself. Ten VP held for ten turns wins. Score as many VP as you can in 30 turns, and keep India from passing you.",
   "tests": "You lead India 8 VP to 5, and India has Flight. Can you close it out?",
   "objective": {
     "summary": "Gain as many VP as you can by turn 177.",
