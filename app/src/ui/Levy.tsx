@@ -24,20 +24,21 @@ function CompanyRoster({ view, owner, className = 'levy-note' }: { view: PlayerV
   return <p className={className} data-testid="company-roster"><Amounts text={rosterLine(view, owner, count)} /></p>;
 }
 
-/** The top-bar figure: compact, and a warning once the cap is reached (no new armed unit can start, complete or be bought). */
+/** The top-bar figure: compact, and a warning once the cap is reached (no new armed unit can start, complete or be bought).
+ * The chip stays "6 / 2" in red with the alert mark at every size; "full" and "4 over the cap" live in its tooltip (1000x600 top bar). */
 export function LevyCounter() {
   const l = useOwnLevy();
   const view = useGame((s) => s.views?.[s.seat]);
   if (!l) return null;
   const full = levyFull(l);
   return <Tip className={`levy-counter${full ? ' full' : ''}`} content={<>
-    <div><b>{levyText(l)}</b></div>
+    <div><b>{levyText(l)}{full && ` · ${levyState(l)}`}</b></div>
     <div>{THIN_LEVIES}</div>
     {view && <CompanyRoster view={view} owner={view.me} className="levy-tip-company" />}
     {l.units > l.cap && <div>You are {l.units - l.cap} over the limit. No unit is disbanded, but you can't raise more until you are under it.</div>}
     {full && <div className="levy-tip-full">No new military unit can be started, bought or finished until you have one unit fewer or one city more.</div>}
   </>}>
-    <span aria-label={levyText(l)}>{full && <Icon name="ui-alert" size={12} className="ui-mark" />} <Icon name="unit-soldier" size={12} className="count-icon ui-mark" label={LEVY_CHIP_LABEL} /><span className="count-label">Military units </span><b>{l.units} / {l.cap}</b>{full && ` · ${levyState(l)}`}</span>
+    <span aria-label={full ? `${levyText(l)} · ${levyState(l)}` : levyText(l)}>{full && <Icon name="ui-alert" size={12} className="ui-mark" />} <Icon name="unit-soldier" size={12} className="count-icon ui-mark" label={LEVY_CHIP_LABEL} /><span className="count-label">Military units </span><b>{l.units} / {l.cap}</b></span>
   </Tip>;
 }
 

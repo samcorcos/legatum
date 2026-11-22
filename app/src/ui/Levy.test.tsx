@@ -56,7 +56,10 @@ it('shows the armed-unit count: top bar, city panel note, and a rival\'s row; a 
   for (let i = l.units; i < l.cap; i++) spawnUnit(st, 0, 'Soldier', fromOffset(1 + i, 2), false);
   show(view(), { diplomacyOpen: false });
   act(() => root.render(<><TopBar /><LevyNote /></>));
-  expect(container.querySelector('.levy-counter.full')!.textContent).toContain('full');
+  // The top-bar chip stays short ("3 / 3" in red with the alert mark); the state word is in its tooltip and label.
+  const full = container.querySelector('.levy-counter.full')!;
+  expect(full.textContent).not.toContain('full');
+  expect(full.querySelector('[aria-label]')!.getAttribute('aria-label')).toBe(`Military units ${l.cap} / ${l.cap} · full`);
   expect(container.querySelector('.levy-counter .ui-mark, .levy-counter svg, .levy-counter .mask-icon')).not.toBeNull();
   expect(container.querySelector('.levy-note.full')!.textContent).toContain('full: the military units below cannot be started or bought');
   // A rival sees it on Byzantium's diplomacy row.
