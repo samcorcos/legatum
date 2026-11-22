@@ -1,3 +1,4 @@
+import { ageName } from '../data';
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { feel, useCombatFx } from '../feel';
 import { CrestMedallion } from '../brand/ornaments';
@@ -105,7 +106,7 @@ export function ScoreCheck({ moment, dismiss }: { moment: Moment; dismiss(): voi
   const primary = useRef<HTMLButtonElement>(null);
   useEffect(() => { primary.current?.focus({ preventScroll: true }); }, [moment.id]);
   const finish = useTally(root, moment.id, reduced);
-  return <div ref={root} key={moment.id} className={`era-takeover score-check ${reduced ? 'reduced' : ''}`} role="dialog" aria-modal="true" aria-label={`Score check: the ${card.name} Age begins`}
+  return <div ref={root} key={moment.id} className={`era-takeover score-check ${reduced ? 'reduced' : ''}`} role="dialog" aria-modal="true" aria-label={`Score check: the ${ageName(card.name)} begins`}
     data-testid="score-check" data-era={card.era}>
     <div className="et-art" aria-hidden="true">
       {art && <img src={art.small} srcSet={`${art.small} 1280w, ${art.large} 1920w`} sizes="100vw" alt="" draggable={false} />}
@@ -114,7 +115,7 @@ export function ScoreCheck({ moment, dismiss }: { moment: Moment; dismiss(): voi
     <div className="sc-body" onPointerDown={finish}>
       <header className="sc-head">
         <div>
-          <div className="sc-kicker">{card.replay ? `The ${card.name} Age · the score now · Turn ${card.turn}` : `The ${card.name} Age begins · Turn ${card.turn}`}</div>
+          <div className="sc-kicker">{card.replay ? `The ${ageName(card.name)} · the score now · Turn ${card.turn}` : `The ${ageName(card.name)} begins · Turn ${card.turn}`}</div>
           <h2 className="sc-title">Score check</h2>
         </div>
         <p className="sc-rule">{card.opener}<br />First to hold <b>{card.target} VP</b> for <b>10 turns</b> wins.</p>

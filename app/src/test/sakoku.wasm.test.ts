@@ -147,7 +147,7 @@ describe.skipIf(!available)('Sakoku core behavior', () => {
   it('keeps the VP while an enemy unit stands in the land', () => {
     const s = world();
     s.players[0].sakokuTurns = 30; s.players[0].factionGoalDone = true; s.players[0].factionGoalReachedBefore = true;
-    // The rival is at war with India and has a Soldier on India's land.
+    // The rival is at war with India and has a Spearman on India's land.
     for (const r of s.diplomacy?.relations ?? []) r.state = 'War';
     // A tile beside India's first city, in its sight and its land.
     const inside = within(s.cities[0].pos, 1).find((h) => h.q !== s.cities[0].pos.q || h.r !== s.cities[0].pos.r)!;

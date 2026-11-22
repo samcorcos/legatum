@@ -67,15 +67,15 @@ describe.skipIf(!available)('production controls on the Rust engine', () => {
   it('buys a separate Spearman and preserves the chosen building and earned progress', async () => {
     const { client, city } = await renderCity(10, 1_000, 'India', 0, 'Market');
     act(() => button('Buy Spearman for 160 Gold').click());
-    const soldier = { kind: 'Unit', unit: 'Spearman' } as const;
+    const spearman = { kind: 'Unit', unit: 'Spearman' } as const;
     const orders = useGame.getState().orders[0];
-    expect(orders).toEqual([{ type: 'BuyItem', city: city.id, item: soldier }]);
+    expect(orders).toEqual([{ type: 'BuyItem', city: city.id, item: spearman }]);
     expect(container.textContent).toContain('160 Gold');
     expect(container.querySelector('.purchase-status')?.textContent).toContain('to spend');
     expect(client.validate(0, orders)).toEqual([]);
     const result = client.endTurn({ 0: orders });
-    expect(result.events).toContainEqual({ type: 'ItemBought', city: city.id, owner: 0, item: soldier, gold: 160 });
-    expect(result.events).toContainEqual({ type: 'ProductionCompleted', city: city.id, owner: 0, item: soldier });
+    expect(result.events).toContainEqual({ type: 'ItemBought', city: city.id, owner: 0, item: spearman, gold: 160 });
+    expect(result.events).toContainEqual({ type: 'ProductionCompleted', city: city.id, owner: 0, item: spearman });
     const detail = client.view(0).cities.find((c) => c.id === city.id)!.detail!;
     expect(detail.producing).toEqual({ kind: 'Building', building: 'Market' });
     expect(detail.production_stored).toBeGreaterThan(10);

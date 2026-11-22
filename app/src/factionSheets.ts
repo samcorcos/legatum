@@ -201,7 +201,7 @@ export const FACTION_SHEETS: Record<Faction, FactionSheet> = {
     lore: 'Spartan citizens trained for war through the agoge and fought in disciplined hoplite formations, supported by coerced helot labour.',
     ratings: { aggression: 5, economy: 1, complexity: 3 },
     pairs: [
-      { strength: `Your military units start at level 1, gain XP 50% faster and can reach level 6, Spartan Veteran. Each level adds ${RULES.promotion.strengthPercent}% to a unit’s strength.`, strengthIcon: 'unit-oathbearer' },
+      { strength: `Your military units start at level 1, gain XP 50% faster and can reach level 6, Spartan Veteran. Each level adds ${RULES.promotion.strengthPercent}% to a unit’s strength.`, strengthIcon: 'unit-spartanhoplite' },
       { strength: 'Destroying an enemy unit restores up to 100 HP, shared among your units that hit it. Capturing a city fully heals your military units within 2 tiles.', strengthIcon: 'mark-heal' },
       { price: 'Settlers and non-military buildings cost 50% more Production. Walls, Castles, Star Forts and the Agoge cost the normal price.', priceIcon: 'unit-settler' },
     ],
@@ -213,7 +213,7 @@ export const FACTION_SHEETS: Record<Faction, FactionSheet> = {
     ratings: { aggression: 1, economy: 4, complexity: 2 },
     pairs: [
       { strength: 'Every ruin also gives you 20 Science.', price: `Your Markets give +1 Gold a turn instead of +3, at the normal ${BUILDING_STATS.Market.cost} Production.`, strengthIcon: 'ruin', priceIcon: 'building-market' },
-      { strength: 'The Lyceum replaces the Library and gives +6 Science a turn.', strengthIcon: 'building-listeninghouse', onCard: true },
+      { strength: 'The Lyceum replaces the Library and gives +6 Science a turn.', strengthIcon: 'building-lyceum', onCard: true },
       { price: 'A rival that captures one of your cities gets one free technology (once per city for each rival).', priceIcon: 'ui-trend-down' },
       specialRow('Athens', 'unit-peltast'),
     ],

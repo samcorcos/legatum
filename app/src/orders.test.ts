@@ -73,15 +73,15 @@ describe('unit orders', () => {
 
 describe('city orders', () => {
   it('production replaces per city and choosing the current item cancels', () => {
-    const soldier = { kind: 'Unit', unit: 'Spearman' } as const;
+    const spearman = { kind: 'Unit', unit: 'Spearman' } as const;
     const granary = { kind: 'Building', building: 'Granary' } as const;
     let o: Order[] = [];
-    o = setProduction(o, 7, soldier, null);
+    o = setProduction(o, 7, spearman, null);
     o = setProduction(o, 7, granary, null);
-    o = setProduction(o, 8, soldier, null);
+    o = setProduction(o, 8, spearman, null);
     expect(o).toHaveLength(2);
     expect(pendingProduction(o, 7)).toEqual(granary);
-    expect(setProduction(o, 7, soldier, soldier).filter((x) => x.type === 'SetProduction' && x.city === 7)).toHaveLength(0);
+    expect(setProduction(o, 7, spearman, spearman).filter((x) => x.type === 'SetProduction' && x.city === 7)).toHaveLength(0);
   });
 
   it('buy toggles and is at most one per city', () => {
@@ -95,7 +95,7 @@ describe('city orders', () => {
 
   it('a tile purchase shares the city purchase slot with an item and a hire, and toggles off', () => {
     const tile = { q: 3, r: 2 };
-    const soldier = { kind: 'Unit', unit: 'Spearman' } as const;
+    const spearman = { kind: 'Unit', unit: 'Spearman' } as const;
     let o = toggleBuyTile([], 3, tile);
     expect(o).toEqual([{ type: 'BuyTile', city: 3, tile }]);
     expect(hasBuy(o, 3)).toBe(true);
@@ -103,29 +103,29 @@ describe('city orders', () => {
     // Another tile replaces it; an item replaces the tile; the tile replaces an item and a hire.
     o = toggleBuyTile(o, 3, { q: 4, r: 2 });
     expect(o).toEqual([{ type: 'BuyTile', city: 3, tile: { q: 4, r: 2 } }]);
-    o = toggleBuy(o, 3, soldier);
-    expect(o).toEqual([{ type: 'BuyItem', city: 3, item: soldier }]);
+    o = toggleBuy(o, 3, spearman);
+    expect(o).toEqual([{ type: 'BuyItem', city: 3, item: spearman }]);
     o = toggleBuyTile(o, 3, tile);
     expect(o).toEqual([{ type: 'BuyTile', city: 3, tile }]);
     const hire = { type: 'HireCompany', city: 3, unit: 'Spearman', seller: 1 } as const;
     expect(toggleBuyTile(toggleHire([], hire), 3, tile)).toEqual([{ type: 'BuyTile', city: 3, tile }]);
     // Other cities are untouched, and clicking the queued tile cancels it.
-    o = toggleBuyTile([{ type: 'BuyItem', city: 4, item: soldier }, ...o], 3, tile);
-    expect(o).toEqual([{ type: 'BuyItem', city: 4, item: soldier }]);
+    o = toggleBuyTile([{ type: 'BuyItem', city: 4, item: spearman }, ...o], 3, tile);
+    expect(o).toEqual([{ type: 'BuyItem', city: 4, item: spearman }]);
   });
 
   it('changes production without changing the purchased item or its spending order', () => {
     const granary = { kind: 'Building', building: 'Granary' } as const;
-    const soldier = { kind: 'Unit', unit: 'Spearman' } as const;
+    const spearman = { kind: 'Unit', unit: 'Spearman' } as const;
     const scout = { kind: 'Unit', unit: 'Scout' } as const;
     const original: Order[] = [{ type: 'BuyItem', city: 7, item: { kind: 'Unit', unit: 'Spearman' } }, { type: 'BuyItem', city: 8, item: { kind: 'Unit', unit: 'Spearman' } }];
-    const changed = setProduction(original, 7, soldier, granary);
-    expect(changed).toEqual([...original, { type: 'SetProduction', city: 7, item: soldier }]);
+    const changed = setProduction(original, 7, spearman, granary);
+    expect(changed).toEqual([...original, { type: 'SetProduction', city: 7, item: spearman }]);
     const replaced = setProduction(changed, 7, scout, granary);
     expect(replaced).toEqual([...original, { type: 'SetProduction', city: 7, item: scout }]);
     expect(setProduction(replaced, 7, granary, granary)).toEqual(original);
     expect(toggleBuy(changed, 7, { kind: 'Unit', unit: 'Spearman' })).toEqual([
-      { type: 'BuyItem', city: 8, item: { kind: 'Unit', unit: 'Spearman' } }, { type: 'SetProduction', city: 7, item: soldier },
+      { type: 'BuyItem', city: 8, item: { kind: 'Unit', unit: 'Spearman' } }, { type: 'SetProduction', city: 7, item: spearman },
     ]);
   });
 

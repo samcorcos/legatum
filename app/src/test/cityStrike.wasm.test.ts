@@ -154,10 +154,10 @@ describe.skipIf(!available)('city strike core behavior', () => {
     addCity(s, 1, target);
     const a = unit(s, 0, 'Spearman', { q: 9, r: 8 });
     const b = unit(s, 0, 'Spearman', { q: 10, r: 7 });
-    const rangers = [unit(s, 0, 'Archer', { q: 9, r: 7 }), unit(s, 0, 'Archer', { q: 10, r: 6 })];
+    const archers = [unit(s, 0, 'Archer', { q: 9, r: 7 }), unit(s, 0, 'Archer', { q: 10, r: 6 })];
     const support = unit(s, 1, 'Pikeman', { q: 8, r: 8 }, 1);
     const orders: Order[] = [a, b].map((u) => ({ type: 'MoveUnit', unit: u.id, to: target }));
-    orders.push(...rangers.map((u): Order => ({ type: 'RangedAttack', unit: u.id, target })));
+    orders.push(...archers.map((u): Order => ({ type: 'RangedAttack', unit: u.id, target })));
     const events = play(s, { 0: orders, 1: [{ type: 'MoveUnit', unit: support.id, to: a.pos }] });
     expect(events).toEqual(expect.arrayContaining([expect.objectContaining({ type: 'UnitDestroyed', unit: support.id })]));
     for (const u of [a, b]) {
@@ -212,9 +212,9 @@ describe.skipIf(!available)('city strike core behavior', () => {
     const s = fixture(), target = { q: 10, r: 8 };
     const c = addCity(s, 1, target, 10, false);
     const garrison = unit(s, 1, 'Spearman', target, 1);
-    const rangers = [unit(s, 0, 'Archer', { q: 8, r: 8 }), unit(s, 0, 'Archer', { q: 10, r: 6 })];
+    const archers = [unit(s, 0, 'Archer', { q: 8, r: 8 }), unit(s, 0, 'Archer', { q: 10, r: 6 })];
     const a = unit(s, 0, 'Spearman', { q: 9, r: 8 });
-    const orders: Order[] = rangers.map((u): Order => ({ type: 'RangedAttack', unit: u.id, target }));
+    const orders: Order[] = archers.map((u): Order => ({ type: 'RangedAttack', unit: u.id, target }));
     orders.push({ type: 'MoveUnit', unit: a.id, to: target });
     const events = play(s, { 0: orders });
     const shots = events.filter((e): e is Battle => e.type === 'Battle' && e.ranged);
@@ -306,8 +306,8 @@ describe.skipIf(!available)('city strike core behavior', () => {
   it('a unit shot by a Ranger and the city together dies once; the kill XP goes to the Ranger', () => {
     const s = fixture(); addCity(s, 0, middle, 20).population = 1; // a worn, small Bastion: neither shot alone kills
     const target = unit(s, 1, 'Spearman', away(middle, 0, 1), 45);
-    const ranger = unit(s, 0, 'Archer', away(target.pos, 0, 2));
-    const events = play(s, { 0: [{ type: 'RangedAttack', unit: ranger.id, target: target.pos }] });
+    const archer = unit(s, 0, 'Archer', away(target.pos, 0, 2));
+    const events = play(s, { 0: [{ type: 'RangedAttack', unit: archer.id, target: target.pos }] });
     const hits = events.filter((e): e is Battle => e.type === 'Battle' && shotAt(e) === target.id);
     expect(hits.map((e) => typeof e.attacker)).toEqual(['number', 'object']);
     // Neither shot alone kills it; both report the HP after the whole ranged phase.
@@ -322,11 +322,11 @@ describe.skipIf(!available)('city strike core behavior', () => {
     const doomed = unit(s, 1, 'Archer', away(middle, 3, 1), 5);
     const events = play(s, { 1: [{ type: 'RangedAttack', unit: doomed.id, target: middle }] });
     const shots = cityShots(events);
-    // City a shoots the weaker Ranger, city b (out of the Ranger's reach) the Soldier.
+    // City a shoots the weaker Archer, city b (out of the Archer's reach) the Spearman.
     (expect(shots.map((e) => [(e.attacker as { city: number }).city, shotAt(e)])).toMatchSnapshot(), void ([[a.id, doomed.id], [b.id, target.id]]));
     expect(events.some((e) => e.type === 'Battle' && e.attacker === doomed.id && e.defender.kind === 'City')).toBe(true);
     expect(events.some((e) => e.type === 'UnitDestroyed' && e.unit === doomed.id)).toBe(true);
-    // Now only the Soldier is in range of both cities: both fire at it and the damage sums.
+    // Now only the Spearman is in range of both cities: both fire at it and the damage sums.
     const t = fixture(); addCity(t, 0, middle); addCity(t, 0, away(middle, 0, 3));
     const lone = unit(t, 1, 'Spearman', away(middle, 0, 1));
     const both = cityShots(play(t));

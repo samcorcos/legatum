@@ -1,4 +1,5 @@
 import { useGame } from '../store';
+import { empireOfPlayer } from '../empires';
 import type { PlayerView } from '../types';
 import { itemName } from '../data';
 import { effectiveProduction } from '../orders';
@@ -25,7 +26,7 @@ export function CityList({ view }: { view: PlayerView }) {
           return (
             <button key={city.id} aria-pressed={selection?.kind === 'city' && selection.id === city.id}
               onClick={() => { select({ kind: 'city', id: city.id }, true); feel.select(); }}>
-              <PlayerBadge id={city.owner} name={owner?.name} />
+              <PlayerBadge id={city.owner} name={empireOfPlayer(view, city.owner)} />
               <span>{city.name}</span>
               {city.detail && (() => {
                 // Pending choices count, and a blocked queue is waiting rather than empty.

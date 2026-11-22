@@ -85,14 +85,14 @@ describe.skipIf(!available)('Sparta WASM behavior', () => {
 
   it('heals after a military kill', () => {
     const s = fixture(); city(s, 0, 3, 4); city(s, 1, 14, 4);
-    const ranger = spawnUnit(s, 0, 'Archer', fromOffset(6, 4), false);
+    const archer = spawnUnit(s, 0, 'Archer', fromOffset(6, 4), false);
     const enemy = spawnUnit(s, 1, 'Scout', fromOffset(8, 4), false); enemy.hp = 1;
-    ranger.hp = 40;
+    archer.hp = 40;
     for (const r of s.diplomacy!.relations) r.state = 'War';
     const pair1 = pair(s);
-    const orders: Record<number, Order[]> = { 0: [{ type: 'RangedAttack', unit: ranger.id, target: enemy.pos }] };
+    const orders: Record<number, Order[]> = { 0: [{ type: 'RangedAttack', unit: archer.id, target: enemy.pos }] };
     (expect(oathEvents(pair1.fixtureClient.endTurn(orders).events)).toMatchSnapshot(), void (oathEvents(pair1.core.endTurn(orders).events)));
-    expect(pair1.fixtureClient.view(0).units.find((u) => u.id === ranger.id)?.hp).toBe(100);
-    (expect(pair1.fixtureClient.view(0).units.find((u) => u.id === ranger.id)?.hp).toMatchSnapshot(), void (pair1.core.view(0).units.find((u) => u.id === ranger.id)?.hp));
+    expect(pair1.fixtureClient.view(0).units.find((u) => u.id === archer.id)?.hp).toBe(100);
+    (expect(pair1.fixtureClient.view(0).units.find((u) => u.id === archer.id)?.hp).toMatchSnapshot(), void (pair1.core.view(0).units.find((u) => u.id === archer.id)?.hp));
   });
 });

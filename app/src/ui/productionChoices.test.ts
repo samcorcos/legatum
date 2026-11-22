@@ -21,7 +21,7 @@ it('a unit its successor does not fold says what it still does better', () => {
   expect(lines[1].keeps).toBeUndefined();
   expect(unitLines([option('CompositeArcher')], 'Athens')[0].keeps).toBeUndefined();
 });
-it('does not fold a Soldier until a successor is actually available', () => {
+it('does not fold a Spearman until a successor is actually available', () => {
   expect(unitLines([option('Spearman'), option('Archer')], 'India')).toHaveLength(2);
 });
 
@@ -37,18 +37,18 @@ it('nests missing building prerequisites into a full upgrade chain', () => {
   const granary: ProductionItem = { kind: 'Building', building: 'Granary' };
   const hydro: UnavailableOption = { item: { kind: 'Building', building: 'Mill' }, cost: 180, reason: 'Requires Granary', prerequisite_building: 'Granary', production_banked: 0 };
   const machine: UnavailableOption = { item: { kind: 'Building', building: 'Forge' }, cost: 260, reason: 'Requires Workshop', prerequisite_building: 'Workshop', production_banked: 0 };
-  const autoworks: UnavailableOption = { item: { kind: 'Building', building: 'Factory' }, cost: 420, reason: 'Requires Machine Shop', prerequisite_building: 'Forge', production_banked: 0 };
+  const factory: UnavailableOption = { item: { kind: 'Building', building: 'Factory' }, cost: 420, reason: 'Requires Machine Shop', prerequisite_building: 'Forge', production_banked: 0 };
   const rows = nestBuildingUpgrades([
     { row: { item: granary } as ProductionOption },
     { unavailable: hydro },
     { row: { item: { kind: 'Building', building: 'Workshop' } } as ProductionOption },
-    { unavailable: machine }, { unavailable: autoworks },
+    { unavailable: machine }, { unavailable: factory },
   ]);
   expect(rows.map((n) => n.entry.row?.item ?? n.entry.unavailable?.item)).toEqual([
     granary, { kind: 'Building', building: 'Workshop' },
   ]);
   expect(rows[0].upgrades[0].entry.unavailable?.item).toEqual(hydro.item);
-  expect(rows[1].upgrades[0].upgrades[0].entry.unavailable?.item).toEqual(autoworks.item);
+  expect(rows[1].upgrades[0].upgrades[0].entry.unavailable?.item).toEqual(factory.item);
 });
 it('leaves upgrade rows open when the prerequisite is already built or the blocker is technology', () => {
   const university: ProductionOption = { item: { kind: 'Building', building: 'University' } } as ProductionOption;

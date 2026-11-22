@@ -1714,22 +1714,22 @@ mod tests {
         assert_eq!(armor["upgrade_from"], "Pikeman");
         assert_eq!(armor["upgrade_cost"], 116);
         assert_eq!(armor["unit_strength"], 44);
-        let college = unlocks
+        let university = unlocks
             .iter()
             .find(|u| u["item"]["building"] == "University")
             .unwrap();
-        assert_eq!(college["predecessor"], "Library");
-        assert_eq!(college["min_population"], 5);
-        assert_eq!(college["cost"], 240);
+        assert_eq!(university["predecessor"], "Library");
+        assert_eq!(university["min_population"], 5);
+        assert_eq!(university["cost"], 240);
         // The Military Engineer retired with the Siege upgrade: it is no unit unlock.
         assert!(
             unlocks
                 .iter()
                 .all(|u| u["item"]["unit"] != "MilitaryEngineer")
         );
-        let ranger_upgrade: Vec<Order> =
+        let archer_upgrade: Vec<Order> =
             serde_json::from_str(r#"[{"type":"UpgradeUnit","unit":1}]"#).unwrap();
-        assert!(matches!(ranger_upgrade[0], Order::UpgradeUnit { .. }));
+        assert!(matches!(archer_upgrade[0], Order::UpgradeUnit { .. }));
 
         // Saves from before charters were removed carry a "doctrine" field; it is ignored.
         let mut save: Value = serde_json::from_str(&g.save_json()).unwrap();
@@ -1800,7 +1800,7 @@ mod tests {
     }
 
     #[test]
-    fn wounded_ranger_forecasts_match_melee_and_ranged_resolution() {
+    fn wounded_archer_forecasts_match_melee_and_ranged_resolution() {
         use legatum_core::{
             BattleForecast, Event, TeamId, Terrain, UnitKind, combat, game::spawn_unit,
         };

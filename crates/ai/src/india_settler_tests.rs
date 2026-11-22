@@ -62,7 +62,7 @@ fn unit_order(orders: &[Order], unit: UnitId) -> Option<&Order> {
 
 const LEIPZIG: Hex = Hex { q: 14, r: 23 };
 const GERMAN_SETTLER: UnitId = UnitId(21);
-const GERMAN_SOLDIER: UnitId = UnitId(18);
+const GERMAN_SPEARMAN: UnitId = UnitId(18);
 
 /// Gene off, the fixture reproduces the recorded trip: T12 east with the garrison, T13 and
 /// T14 south-west to (11,27) with the Spearman beside the Settler.
@@ -112,9 +112,9 @@ fn germany_t12_to_t14_escorts_its_settler() {
         let (view, mut brain) = germany(f);
         let orders = brain.orders(&view);
         let path = path_of(unit_order(&orders, GERMAN_SETTLER));
-        let soldier = destination(unit_order(&orders, GERMAN_SOLDIER));
+        let spearman = destination(unit_order(&orders, GERMAN_SPEARMAN));
         assert!(
-            soldier.is_some_and(|to| path.contains(&to)),
+            spearman.is_some_and(|to| path.contains(&to)),
             "T{}: {orders:?}",
             view.turn
         );
@@ -134,9 +134,9 @@ fn germany_t15_escort_walks_home_with_the_settler() {
         "{orders:?}"
     );
     assert_eq!(
-        unit_order(&orders, GERMAN_SOLDIER),
+        unit_order(&orders, GERMAN_SPEARMAN),
         Some(&Order::MoveUnit {
-            unit: GERMAN_SOLDIER,
+            unit: GERMAN_SPEARMAN,
             to: Hex { q: 12, r: 25 }
         }),
         "{orders:?}"
@@ -145,9 +145,9 @@ fn germany_t15_escort_walks_home_with_the_settler() {
     genes_off(&mut brain);
     let orders = brain.orders(&view);
     assert_eq!(
-        unit_order(&orders, GERMAN_SOLDIER),
+        unit_order(&orders, GERMAN_SPEARMAN),
         Some(&Order::SkipUnit {
-            unit: GERMAN_SOLDIER
+            unit: GERMAN_SPEARMAN
         }),
         "{orders:?}"
     );
@@ -167,10 +167,10 @@ fn germany_t14_goes_home_when_an_army_reaches_the_empty_capital() {
     second.id = UnitId(900);
     second.pos = Hex { q: 12, r: 24 };
     view.units.push(second);
-    let soldier = view
+    let spearman = view
         .units
         .iter()
-        .find(|u| u.id == GERMAN_SOLDIER)
+        .find(|u| u.id == GERMAN_SPEARMAN)
         .unwrap()
         .pos;
     let orders = brain.orders(&view);
@@ -179,9 +179,9 @@ fn germany_t14_goes_home_when_an_army_reaches_the_empty_capital() {
         Some(LEIPZIG),
         "{orders:?}"
     );
-    let to = destination(unit_order(&orders, GERMAN_SOLDIER)).expect("the Soldier moves");
+    let to = destination(unit_order(&orders, GERMAN_SPEARMAN)).expect("the Spearman moves");
     assert!(
-        to.distance(LEIPZIG) < soldier.distance(LEIPZIG),
+        to.distance(LEIPZIG) < spearman.distance(LEIPZIG),
         "{orders:?}"
     );
     let (_, mut off) = germany(fixture!("T14-p5"));
@@ -195,7 +195,7 @@ fn germany_t14_goes_home_when_an_army_reaches_the_empty_capital() {
 }
 
 const CELTIC_SETTLER: UnitId = UnitId(27);
-const CELTIC_SOLDIER: UnitId = UnitId(15);
+const CELTIC_SPEARMAN: UnitId = UnitId(15);
 
 /// T17: India declared on Germany at T16. The Celts have not met India and see none of its
 /// units; their Settler walked on alone to (18,9) and India's Scout took it at T18. With
@@ -219,9 +219,9 @@ fn celts_t17_settler_waits_for_its_escort() {
         "{orders:?}"
     );
     assert_eq!(
-        unit_order(&orders, CELTIC_SOLDIER),
+        unit_order(&orders, CELTIC_SPEARMAN),
         Some(&Order::MoveUnit {
-            unit: CELTIC_SOLDIER,
+            unit: CELTIC_SPEARMAN,
             to: settler
         }),
         "{orders:?}"

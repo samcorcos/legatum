@@ -8,8 +8,8 @@
   "seat": 5,
   "difficulty": "Hard",
   "minutes": 10,
-  "briefing": "Mongols have one city, Last Bridge, and one Soldier to hold it. Its walls were never built. Your strike force, three Soldiers and a Ranger trained for this campaign, waits a day's march to the south. Spartan Soldiers hit harder than any in this era, and nothing on the walls of Last Bridge can shoot back. The Mongols are at Peace with you, so the war is yours to declare, and it starts the moment you do. Take the city before turn 34. Every turn you save counts.",
-  "tests": "Executing an early rush: declare and strike in the same turn, focus fire with the Ranger, capture with a healthy Soldier, and keep the home city safe. The AI's Hard conquest planner faces the same choice with the same force.",
+  "briefing": "Mongols have one city, Last Bridge, and one Spearman to hold it. Its walls were never built. Your strike force, three Hoplites and an Archer trained for this campaign, waits a day's march to the south. Spartan Hoplites hit harder than any in this era, and nothing on the walls of Last Bridge can shoot back. The Mongols are at Peace with you, so the war is yours to declare, and it starts the moment you do. Take the city before turn 34. Every turn you save counts.",
+  "tests": "Executing an early rush: declare and strike in the same turn, focus fire with the Archer, capture with a healthy Hoplite, and keep the home city safe. The AI's Hard conquest planner faces the same choice with the same force.",
   "objective": {
     "summary": "Capture Last Bridge by turn 34. Faster is better; don't lose your own cities.",
     "turns": 12,
@@ -44,7 +44,7 @@
     ]
   },
   "predictions": {
-    "good_play": "Declare war on turn 22 and march all four units in the same turn (a surprise war takes effect before movement). From turn 23 the Ranger shoots Last Bridge's Soldier from two hexes every turn while two Soldiers attack; the 28-strength Spartan Soldiers beat the 20-strength garrison, and an unwalled 200-HP city falls in a few hits. Capture with the healthiest Soldier around turn 25-27, which also eliminates the Mongols. Leave Soldier #18 in Promise against barbarians. Expected score about 500.",
+    "good_play": "Declare war on turn 22 and march all four units in the same turn (a surprise war takes effect before movement). From turn 23 the Archer shoots Last Bridge's Spearman from two hexes every turn while two Hoplites attack; the 28-strength Spartan Hoplites beat the 20-strength garrison, and an unwalled 200-HP city falls in a few hits. Capture with the healthiest Hoplite around turn 25-27, which also eliminates the Mongols. Leave Hoplite #18 in Promise against barbarians. Expected score about 500.",
     "ai_play": "Spartan Hard has no standing reason to start a war on turn 22: its conquest planner stages before an optional war and often prefers expansion this early. I expect it to declare in about half the runs, usually several turns late, and to capture in about a third; elsewhere it chips at the city or never attacks, scoring only damage and surviving units.",
     "ai_score": {
       "median": 100,
@@ -53,7 +53,7 @@
       "win_percent": 35
     }
   },
-  "source": "All-AI Hard game, Standard speed, seed 9201. Played to turn 22; then 0 Spartan combat units (one garrison per city stays home) were moved 3-4 hexes from Last Bridge, and [Ranger, Soldier, Soldier, Soldier] were spawned to make a four-unit strike force. Still at Peace. Built by `legatum-sim scenario-build rush-offense`. Removed 1 unit(s) that stood in foreign territory at Peace once Byzantium peace passage was removed (2026-10-10): [(UnitId(5), Scout, PlayerId(1))].",
+  "source": "All-AI Hard game, Standard speed, seed 9201. Played to turn 22; then 0 Spartan combat units (one garrison per city stays home) were moved 3-4 hexes from Last Bridge, and [Archer, Spartan Hoplite, Spartan Hoplite, Spartan Hoplite] were spawned to make a four-unit strike force. Still at Peace. Built by `legatum-sim scenario-build rush-offense`. Removed 1 unit(s) that stood in foreign territory at Peace once Byzantium peace passage was removed (2026-10-10): [(UnitId(5), Scout, PlayerId(1))].",
   "baseline": {
     "runs": 50,
     "difficulty": "Hard",

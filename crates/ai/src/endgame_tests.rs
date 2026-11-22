@@ -4,7 +4,7 @@ use crate::{Brain, Knobs, ScriptedBrain};
 use legatum_core::view::TeamStanding;
 use legatum_core::*;
 
-const TROOPER: ProductionItem = ProductionItem::Unit {
+const PIKEMAN: ProductionItem = ProductionItem::Unit {
     unit: UnitKind::Pikeman,
 };
 const RELAY: ProductionItem = ProductionItem::Building {
@@ -57,7 +57,7 @@ fn endgame() -> PlayerView {
     set_work_completed(&mut v, true);
     let d = v.cities[0].detail.as_mut().unwrap();
     d.options
-        .retain(|o| o.item == TROOPER || o.item == RELAY || o.item == LAB);
+        .retain(|o| o.item == PIKEMAN || o.item == RELAY || o.item == LAB);
     for opt in &mut d.options {
         opt.turns = 20;
         if opt.item != RELAY {
@@ -128,7 +128,7 @@ fn hard_limits_routine_upkeep_but_reinforces_visible_threats() {
             );
         }
         view.turn = 70;
-        let soldier = ProductionItem::Unit {
+        let spearman = ProductionItem::Unit {
             unit: UnitKind::Spearman,
         };
         for city in &mut view.cities {
@@ -136,14 +136,14 @@ fn hard_limits_routine_upkeep_but_reinforces_visible_threats() {
                 .as_mut()
                 .unwrap()
                 .options
-                .retain(|o| o.item == soldier);
+                .retain(|o| o.item == spearman);
         }
         let orders = brain(&view, 7, AiDifficulty::Hard).orders(&view);
         assert_valid(&view, &orders);
         assert_eq!(
             orders
                 .iter()
-                .any(|o| matches!(o, Order::SetProduction { item, .. } if *item == soldier)),
+                .any(|o| matches!(o, Order::SetProduction { item, .. } if *item == spearman)),
             threatened
         );
     }
@@ -206,7 +206,7 @@ fn winning_cash_goal_survives_harassment_but_does_not_sacrifice_a_falling_city()
     v.players[0].faction_goal_done = false;
     v.economy.gold = 390;
     let d = v.cities[0].detail.as_mut().unwrap();
-    d.producing = Some(TROOPER);
+    d.producing = Some(PIKEMAN);
     d.buy_cost = Some(160);
     // A hostile unit cannot defeat the fortified city's healthy standing army.
     v.units.extend(
@@ -228,14 +228,14 @@ fn winning_cash_goal_survives_harassment_but_does_not_sacrifice_a_falling_city()
             .orders(&v)
             .contains(&Order::BuyItem {
                 city: CityId(1),
-                item: TROOPER
+                item: PIKEMAN
             })
     );
     v.economy.gold = 560;
     let orders = ScriptedBrain::new(Faction::Switzerland, 7, ME).orders(&v);
     assert!(orders.contains(&Order::BuyItem {
         city: CityId(1),
-        item: TROOPER
+        item: PIKEMAN
     }));
 }
 
@@ -278,7 +278,7 @@ fn endgame_cash_goal_is_not_spent_again_on_each_bombardment_turn() {
     let orders = ScriptedBrain::new(Faction::Switzerland, 7, ME).orders(&v);
     assert!(orders.contains(&Order::BuyItem {
         city: CityId(1),
-        item: TROOPER
+        item: PIKEMAN
     }));
 }
 

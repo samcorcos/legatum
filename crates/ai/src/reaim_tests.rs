@@ -364,7 +364,7 @@ fn a_city_we_wore_down_is_endangered_only_by_an_enemy_that_outweighs_its_garriso
         let p = fights_enemy(&held, level);
         assert!(
             !p.endangered_by(held.team_of(ENEMY)),
-            "level {level}: a 0-HP city held by two Soldiers is not endangered by one"
+            "level {level}: a 0-HP city held by two Spearmen is not endangered by one"
         );
         assert!(!p.collapsing(), "level {level}: nor is it collapsing");
         let empty = build(0);

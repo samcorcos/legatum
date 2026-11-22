@@ -61,17 +61,17 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await loadFixture(page, coreFixture(setup.fixture), 2);
     const forecast = page.locator('.forecast');
     const garrison = page.getByTestId('forecast-assault-garrison');
-    for (const [unit, name] of [[setup.nearOpen, '21c-forecast-garrisoned-melee'], [setup.ranger, '21d-forecast-garrisoned-ranged']] as const) {
+    for (const [unit, name] of [[setup.nearOpen, '21c-forecast-garrisoned-melee'], [setup.archer, '21d-forecast-garrisoned-ranged']] as const) {
       await selectThing(page, 'unit', unit);
       await centred(page, unit);
       // The Archer aims a ranged strike (the Ranged Attack action, R).
-      if (unit === setup.ranger) await page.evaluate(() => (window as unknown as GameWindow).legatum.getState().setMode('ranged'));
+      if (unit === setup.archer) await page.evaluate(() => (window as unknown as GameWindow).legatum.getState().setMode('ranged'));
       await aim(page, await posOf(page, 'city', setup.open), forecast);
       // One card shows the city, the garrison under it and whether the city is captured this turn (user, 2026-10-19, T187 Lugano).
       await expect(garrison).toContainText('Archer garrison');
       await expect(page.getByTestId('forecast-assault-city')).toContainText('→');
-      await expect(page.getByTestId('forecast-assault-capture')).toContainText(unit === setup.ranger ? 'A shot cannot capture a city.' : 'not captured this turn');
-      if (unit === setup.ranger) await expect(forecast).toContainText('Ranged strike');
+      await expect(page.getByTestId('forecast-assault-capture')).toContainText(unit === setup.archer ? 'A shot cannot capture a city.' : 'not captured this turn');
+      if (unit === setup.archer) await expect(forecast).toContainText('Ranged strike');
       await expectWhole(forecast);
       await shot(page, size, name);
       await page.mouse.move(5, size.height / 2);
@@ -211,10 +211,10 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
   test('promotion: unit rank and the promoted combat forecast', async ({ page }) => {
     const setup = promotionFixture();
     await loadFixture(page, coreFixture(setup.fixture), 2);
-    await selectThing(page, 'unit', setup.trooper);
+    await selectThing(page, 'unit', setup.pikeman);
     await expect(page.locator('.unit-panel .up-rank')).toBeVisible();
     await shot(page, size, '23-promotion');
-    await centred(page, setup.trooper);
+    await centred(page, setup.pikeman);
     await aim(page, await posOf(page, 'unit', setup.enemy), page.locator('.forecast'));
     await shot(page, size, '24-promotion-forecast');
   });

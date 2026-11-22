@@ -13,10 +13,10 @@ fn scenario() -> (GameState, CityId, UnitId) {
     found_city(&mut s, home, &mut Vec::new()).unwrap();
     let enemy = spawn_unit(&mut s, PlayerId(1), UnitKind::Settler, Hex::new(12, 5));
     let city = found_city(&mut s, enemy, &mut Vec::new()).unwrap();
-    let ranger = spawn_unit(&mut s, PlayerId(0), UnitKind::Archer, Hex::new(10, 5));
+    let archer = spawn_unit(&mut s, PlayerId(0), UnitKind::Archer, Hex::new(10, 5));
     s.player_mut(PlayerId(0)).gold = 1000;
     s.cities.get_mut(&city).unwrap().hp = 70;
-    (s, city, ranger)
+    (s, city, archer)
 }
 
 #[test]
@@ -124,7 +124,7 @@ fn same_turn_declaration_counts_a_surprise_war_settler_loss() {
 
 #[test]
 fn war_battles_are_counted_once_per_declared_war_not_per_shot_or_barbarian_fight() {
-    let (s, _, ranger) = scenario();
+    let (s, _, archer) = scenario();
     let me = PlayerId(0);
     let mut relation = legatum_core::diplomacy::Relation {
         a: TeamId(0),
@@ -153,7 +153,7 @@ fn war_battles_are_counted_once_per_declared_war_not_per_shot_or_barbarian_fight
     let orders = BTreeMap::from([(
         me,
         vec![Order::RangedAttack {
-            unit: ranger,
+            unit: archer,
             target: Hex::new(12, 5),
         }],
     )]);
@@ -187,7 +187,7 @@ fn war_battles_are_counted_once_per_declared_war_not_per_shot_or_barbarian_fight
 
 #[test]
 fn marches_require_real_quota_progress_and_sieges_exclude_captures_and_casualties() {
-    let (mut s, city, ranger) = scenario();
+    let (mut s, city, archer) = scenario();
     let me = PlayerId(0);
     let mut observer = Observer::default();
     let mut c = Counters::default();
@@ -195,18 +195,18 @@ fn marches_require_real_quota_progress_and_sieges_exclude_captures_and_casualtie
         city,
         target: Hex::new(12, 5),
         minimum: 1,
-        units: vec![(ranger, Hex::new(10, 5))],
+        units: vec![(archer, Hex::new(10, 5))],
     };
     observer.after(&mut c, &s, me, 1, &[], Some(&march));
     assert_eq!(c.coalition_marches, 0, "orders alone never count");
-    s.units.get_mut(&ranger).unwrap().pos = Hex::new(11, 5);
+    s.units.get_mut(&archer).unwrap().pos = Hex::new(11, 5);
     observer.after(&mut c, &s, me, 2, &[], Some(&march));
     assert_eq!(c.coalition_marches, 1);
     observer.before(&mut c, &s, me);
-    s.units.get_mut(&ranger).unwrap().pos = Hex::new(5, 5);
+    s.units.get_mut(&archer).unwrap().pos = Hex::new(5, 5);
     observer.after(&mut c, &s, me, 3, &[], None);
     assert_eq!(c.sieges_abandoned, 1);
-    s.units.get_mut(&ranger).unwrap().pos = Hex::new(10, 5);
+    s.units.get_mut(&archer).unwrap().pos = Hex::new(10, 5);
     observer.before(&mut c, &s, me);
     let mut captured = s.clone();
     captured.cities.get_mut(&city).unwrap().owner = me;
@@ -224,7 +224,7 @@ fn marches_require_real_quota_progress_and_sieges_exclude_captures_and_casualtie
         None,
     );
     assert_eq!(c.sieges_abandoned, 1);
-    s.units.remove(&ranger);
+    s.units.remove(&archer);
     observer.after(&mut c, &s, me, 5, &[], None);
     assert_eq!(c.sieges_abandoned, 1);
 }

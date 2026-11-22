@@ -24,7 +24,7 @@ async function shot(page: Page, size: string, name: string) {
   await page.screenshot({ path: `${outRoot}/${size}/${name}.png`, animations: 'disabled' });
 }
 
-/** `busy`: the city is building a Soldier (the common case: its picker is far below the fold); `gold` sets the treasury. */
+/** `busy`: the city is building a Spearman (the common case: its picker is far below the fold); `gold` sets the treasury. */
 async function load(page: Page, { busy = false, gold }: { busy?: boolean; gold?: number } = {}) {
   const s = diplomacyState(12, { met: true });
   s.cities[0].buildings = ['Granary'];

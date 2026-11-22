@@ -568,7 +568,7 @@ fn market_first_economy_weights_only_gold_that_repays_within_horizon() {
 }
 
 #[test]
-fn a_clearinghouse_repays_its_cost_with_the_full_stacked_gold_tier() {
+fn a_bank_repays_its_cost_with_the_full_stacked_gold_tier() {
     let mut v = ViewBuilder { view: view() }
         .known_techs(&[TechId::Currency, TechId::Banking])
         .city(2, ME, h(5, 13), 5)

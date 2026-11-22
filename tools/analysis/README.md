@@ -56,7 +56,7 @@ Each JSONL record contains seed, experimental settings, final hash, final player
 Definitions:
 
 - A battle is one `Event::Battle`, including scout combat, ranged fire, and meeting engagements. Several can occur in one turn. A city battle damages the city itself; a garrison battle hits a unit on a city tile.
-- An army is Soldier + Ranger + Trooper, excluding Scouts and Settlers. Army snapshots include zero armies and eliminated seats. Per-turn army histograms include only living empires; position shares weight each living combat unit equally for each resolved turn.
+- An army is every military unit (`data::unit_stats(kind).military`) except Scouts; civilians such as Settlers are excluded. Army snapshots include zero armies and eliminated seats. Per-turn army histograms include only living empires; position shares weight each living combat unit equally for each resolved turn.
 - `*_army_order_*` counts submitted orders, not successful actions. A persistent movement order can resolve into multiple movement events. Counts of failed orders and bounces are retained, but the telemetry does not attribute each failure to a planner stage.
 - Threat counts reproduce the current planner's visible enemy military weight within three hexes of any own city. They diagnose the marching guard, not a counterfactual count of otherwise successful marches.
 - Capture spans run from the first battle on that city tile (including garrisons) to capture, inclusive. They include interruptions and, for recaptures, earlier owners' battles. They are not continuous siege duration estimates.

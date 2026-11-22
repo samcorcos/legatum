@@ -296,7 +296,7 @@ fn remote_commerce_requires_an_active_market_and_owned_capital_at_eight_hexes() 
 fn sparta_regiments_rest_heal_normally_at_home_in_field_or_fortified() {
     let mut s = state(Faction::Sparta);
     let home = city(&mut s, 4, 4);
-    let soldier = game::spawn_unit(&mut s, P, UnitKind::Spearman, Hex::from_offset(4, 4));
+    let spearman = game::spawn_unit(&mut s, P, UnitKind::Spearman, Hex::from_offset(4, 4));
     for (fortify, pos) in [
         (0, Hex::from_offset(4, 4)),
         (0, Hex::from_offset(14, 4)),
@@ -304,12 +304,12 @@ fn sparta_regiments_rest_heal_normally_at_home_in_field_or_fortified() {
     ] {
         // Spartan military uses the normal home or field rate while fortified too.
         s.cities.get_mut(&home).unwrap().buildings.clear();
-        let unit = s.units.get_mut(&soldier).unwrap();
+        let unit = s.units.get_mut(&spearman).unwrap();
         unit.pos = pos;
         unit.hp = 40;
         unit.acted = false;
         unit.fortify = fortify;
-        let forecast = rules::units::resting_heal(&s, &s.units[&soldier]);
+        let forecast = rules::units::resting_heal(&s, &s.units[&spearman]);
         assert_eq!(
             forecast.total,
             if pos == Hex::from_offset(4, 4) {
@@ -328,7 +328,7 @@ fn sparta_regiments_rest_heal_normally_at_home_in_field_or_fortified() {
         );
         rules::units::heal_and_fortify(&mut s);
         assert_eq!(
-            s.units[&soldier].hp,
+            s.units[&spearman].hp,
             40 + if pos == Hex::from_offset(4, 4) {
                 20
             } else {
@@ -593,7 +593,7 @@ fn scouts_cost_no_upkeep_and_use_no_free_slot() {
 }
 
 #[test]
-fn switzerland_with_ranger_soldier_and_two_scouts_are_not_bankrupt() {
+fn switzerland_with_archer_spearman_and_two_scouts_are_not_bankrupt() {
     // The 2026-10-06 playtest: turn 6, 0 Gold, an Archer, a Spearman and two Scouts.
     let mut s = state(Faction::Switzerland);
     city(&mut s, 4, 4);

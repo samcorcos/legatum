@@ -195,7 +195,7 @@ fn default_credits_committed_volley_but_a_defeated_city_still_fires_in_that_phas
 }
 
 #[test]
-fn rangers_wear_down_a_garrisoned_city_and_shoot_its_garrison_once_it_falls() {
+fn archers_wear_down_a_garrisoned_city_and_shoot_its_garrison_once_it_falls() {
     // Unwalled, so the city cannot fire back. Two Archers in range of a garrisoned city.
     let mut view = ViewBuilder::new(26, 18)
         .city(1, ME, Hex::new(3, 8), 2)

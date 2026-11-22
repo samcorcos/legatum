@@ -16,7 +16,7 @@ import type { Faction, UnitKind } from './types';
 const HOME = fromOffset(8, 8);
 const NEXT = fromOffset(9, 8);
 
-/** A bare map with `faction` as you, your city at HOME and a barbarian Soldier beside it. */
+/** A bare map with `faction` as you, your city at HOME and a barbarian Spearman beside it. */
 async function scene(faction: Faction, kind: UnitKind = 'Spearman') {
   const v = await arenaView(faction);
   const city = addCity(v, 0, 'Bern', HOME);
@@ -58,7 +58,7 @@ describe('alarms and danger marks', () => {
     const { v } = await scene(faction);
     const me = addUnit(v, 0, 'Spearman', fromOffset(7, 8));
     expect(reinforcementNote(v, me, HOME) !== null).toBe(noted);
-    // A rival Soldier at War beside the city always earns it.
+    // A rival Spearman at War beside the city always earns it.
     addUnit(v, 2, 'Spearman', fromOffset(8, 9));
     expect(reinforcementNote(v, me, HOME)).not.toBeNull();
   });

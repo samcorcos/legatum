@@ -255,14 +255,14 @@ fn an_unimproved_tile_keeps_old_hashes() {
 fn an_improvement_banks_its_progress_like_any_build() {
     let (mut s, id) = game();
     let tile = at(6, 5);
-    let soldier = ProductionItem::Unit {
+    let spearman = ProductionItem::Unit {
         unit: UnitKind::Spearman,
     };
     let c = s.cities.get_mut(&id).unwrap();
     c.production_stored = 0;
     c.switch_production(Some(farm(tile)));
     c.production_stored = 12;
-    c.switch_production(Some(soldier));
+    c.switch_production(Some(spearman));
     assert_eq!(c.banked(farm(tile)), 12);
     assert_eq!(c.production_stored, 0);
     c.switch_production(Some(farm(tile)));

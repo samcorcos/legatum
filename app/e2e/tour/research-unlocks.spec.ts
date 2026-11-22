@@ -85,7 +85,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
   });
 
   test('Science hover: the capital, cities and buildings, for Byzantium and a faction with a renamed Library', async ({ page, browser }) => {
-    // A College and Writing so the buildings line has something to add (legatum-ui: "Yield
+    // A University and Writing so the buildings line has something to add (legatum-ui: "Yield
     // hovers show where the number comes from").
     const byzantium = researchFixture('Byzantium');
     const byzantiumCapital = byzantium.cities.find((c) => c.owner === 0 && c.isCapital)!;
@@ -106,7 +106,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
       const p = await context.newPage();
       const normal = researchFixture('Athens');
       const normalCapital = normal.cities.find((c) => c.owner === 0 && c.isCapital)!;
-      normalCapital.buildings = ['Library']; // Athens' Listening House, by its own rename.
+      normalCapital.buildings = ['Library']; // Athens' Lyceum, by its own rename.
       await loadFixture(p, coreFixture(normal), 2);
       await p.locator('.science-stat').hover();
       const normalHover = p.locator('.science-hover');

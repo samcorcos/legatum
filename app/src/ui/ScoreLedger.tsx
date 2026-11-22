@@ -4,6 +4,7 @@
 // every way to score is a row, and your cell says held, open or not reached, with your progress
 // where only you can see it. What can I take: the world wonder rows show who builds and holds each. A row expands in place for its rule and the public facts behind it; nothing here
 // recommends a route (user, 2026-10-06).
+import { ageName } from '../data';
 import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useGame } from '../store';
 import { Icon } from './bits';
@@ -81,10 +82,10 @@ function EraCell({ s, e }: { s: Source; e: VpEmpire }) {
   const who = e.isMe ? 'You' : e.name;
   // One check for the token and the row's status word: has this empire scored the Age (`info.scored`)?
   // The card it used names the token; a save whose card is no longer drawn gets the Age's own mark.
-  if (!info.scored.includes(e.id)) return <div className="sl-cell"><Socket title={`${who} ${e.isMe ? 'have' : 'has'} not scored the ${info.eraName} Age yet`} /></div>;
+  if (!info.scored.includes(e.id)) return <div className="sl-cell"><Socket title={`${who} ${e.isMe ? 'have' : 'has'} not scored the ${ageName(info.eraName)} yet`} /></div>;
   const scoredWith = info.objectives.find((o) => o.scorers.includes(e.id));
-  if (!scoredWith) return <div className="sl-cell"><Token e={e} icon={s.icon} title={`${who} scored the ${info.eraName} Age`} /></div>;
-  return <div className="sl-cell"><Token e={e} icon={FAMILY_ICON[scoredWith.family as ObjectiveFamily]} title={`${who} scored the ${info.eraName} Age with: ${scoredWith.text}`} /></div>;
+  if (!scoredWith) return <div className="sl-cell"><Token e={e} icon={s.icon} title={`${who} scored the ${ageName(info.eraName)}`} /></div>;
+  return <div className="sl-cell"><Token e={e} icon={FAMILY_ICON[scoredWith.family as ObjectiveFamily]} title={`${who} scored the ${ageName(info.eraName)} with: ${scoredWith.text}`} /></div>;
 }
 
 /** An Age's status for the viewer, in one line. */

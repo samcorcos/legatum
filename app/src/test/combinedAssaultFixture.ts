@@ -1,4 +1,4 @@
-// Split counterattack and city-tile overflow (user decisions 2026-10-04): two of your Soldiers
+// Split counterattack and city-tile overflow (user decisions 2026-10-04): two of your Spearmen
 // beside a nearly broken, garrisoned enemy city. One is already ordered in, so the other's
 // forecast shows the shared counterattack and the overflow into the garrison; ending the turn
 // produces the combined-assault report. Injected visual fixture only; not imported by the app.

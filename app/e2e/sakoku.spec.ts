@@ -80,7 +80,7 @@ for (const size of SIZES) {
       await expectRaceWhole(page);
       await page.evaluate(() => {
         const g = (window as unknown as GameWindow).legatum.getState(), v = g.views![g.seat];
-        // Our Soldier standing inside India's land: the eastmost unit we have.
+        // Our Spearman standing inside India's land: the eastmost unit we have.
         const inside = v.units.filter((u) => u.owner === v.me).sort((a, b) => b.pos.q - a.pos.q)[0];
         g.select(null);
         g.jumpTo(inside.pos);

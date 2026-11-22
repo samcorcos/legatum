@@ -465,19 +465,19 @@ fn the_view_shows_the_broadcast_and_the_prompt() {
 
 // ---------- Sparta: Honour the Fallen ----------
 
-/// An Sparta empire with a War Shrine city and a second city without one, plus a rival.
+/// An Sparta empire with an Agoge city and a second city without one, plus a rival.
 fn sparta_game() -> (GameState, CityId, CityId) {
     let mut s = game(&[0, 1]);
     s.player_mut(A).faction = Faction::Sparta;
-    let shrine = city(&mut s, 0, hex(2, 2), 3);
+    let agoge = city(&mut s, 0, hex(2, 2), 3);
     s.cities
-        .get_mut(&shrine)
+        .get_mut(&agoge)
         .unwrap()
         .buildings
         .insert(BuildingKind::Agoge);
     let plain = city(&mut s, 0, hex(8, 2), 3);
     city(&mut s, 1, hex(10, 8), 3);
-    (s, shrine, plain)
+    (s, agoge, plain)
 }
 
 /// A soldier of the given promotion level (Sparta ladder) standing at `at`.
@@ -497,15 +497,15 @@ fn retire(unit: UnitId) -> Order {
 }
 
 #[test]
-fn retiring_needs_a_veteran_of_the_retire_level_standing_in_a_war_shrine_city() {
-    let (mut s, shrine, plain) = sparta_game();
-    let (shrine_pos, plain_pos) = (s.cities[&shrine].pos, s.cities[&plain].pos);
-    let ok = veteran(&mut s, shrine_pos, RETIRE_LEVEL);
-    let top = veteran(&mut s, shrine_pos, RETIRE_LEVEL + 2);
-    let green = veteran(&mut s, shrine_pos, RETIRE_LEVEL - 1);
+fn retiring_needs_a_veteran_of_the_retire_level_standing_in_an_agoge_city() {
+    let (mut s, agoge, plain) = sparta_game();
+    let (agoge_pos, plain_pos) = (s.cities[&agoge].pos, s.cities[&plain].pos);
+    let ok = veteran(&mut s, agoge_pos, RETIRE_LEVEL);
+    let top = veteran(&mut s, agoge_pos, RETIRE_LEVEL + 2);
+    let green = veteran(&mut s, agoge_pos, RETIRE_LEVEL - 1);
     let wrong_city = veteran(&mut s, plain_pos, RETIRE_LEVEL);
     let in_field = veteran(&mut s, hex(5, 5), RETIRE_LEVEL + 1);
-    let scout = unit(&mut s, 0, UnitKind::Scout, shrine_pos);
+    let scout = unit(&mut s, 0, UnitKind::Scout, agoge_pos);
     assert!(retire_blocker(&s, A, ok).is_none());
     assert!(retire_blocker(&s, A, top).is_none());
     assert!(
@@ -542,8 +542,8 @@ fn retiring_needs_a_veteran_of_the_retire_level_standing_in_a_war_shrine_city() 
 
 #[test]
 fn three_retirements_complete_the_goal_for_good() {
-    let (mut s, shrine, _) = sparta_game();
-    let at = s.cities[&shrine].pos;
+    let (mut s, agoge, _) = sparta_game();
+    let at = s.cities[&agoge].pos;
     let vets: Vec<_> = (0..4).map(|i| veteran(&mut s, at, 4 + (i % 2))).collect();
     let healthy = veteran(&mut s, at, 0);
     s.units.get_mut(&vets[0]).unwrap().hp = 40;
@@ -569,7 +569,7 @@ fn three_retirements_complete_the_goal_for_good() {
         .collect();
     assert_eq!(
         retired,
-        vec![(vets[0], shrine, 1, 3), (vets[1], shrine, 2, 3)]
+        vec![(vets[0], agoge, 1, 3), (vets[1], agoge, 2, 3)]
     );
     let g = goals::view(&s2, A).expect("progress");
     assert_eq!((g.value, g.target, g.done), (2, 3, false));
@@ -598,8 +598,8 @@ fn three_retirements_complete_the_goal_for_good() {
 
 #[test]
 fn retirements_past_what_completes_the_goal_are_refused() {
-    let (mut s, shrine, _) = sparta_game();
-    let at = s.cities[&shrine].pos;
+    let (mut s, agoge, _) = sparta_game();
+    let at = s.cities[&agoge].pos;
     let vets: Vec<_> = (0..4).map(|_| veteran(&mut s, at, 4)).collect();
     let orders_list: Vec<_> = vets.iter().map(|u| retire(*u)).collect();
     let errs = validate_orders(&s, A, &orders_list);
@@ -616,8 +616,8 @@ fn retirements_past_what_completes_the_goal_are_refused() {
 
 #[test]
 fn a_retiring_veteran_with_other_orders_leaves_cleanly() {
-    let (mut s, shrine, _) = sparta_game();
-    let at = s.cities[&shrine].pos;
+    let (mut s, agoge, _) = sparta_game();
+    let at = s.cities[&agoge].pos;
     let a = veteran(&mut s, at, 4);
     let b = veteran(&mut s, at, 4);
     let os = vec![
@@ -635,15 +635,15 @@ fn a_retiring_veteran_with_other_orders_leaves_cleanly() {
 }
 
 #[test]
-fn the_view_lists_shrines_and_veterans_with_why_not() {
-    let (mut s, shrine, plain) = sparta_game();
-    let (shrine_pos, plain_pos) = (s.cities[&shrine].pos, s.cities[&plain].pos);
-    let ready = veteran(&mut s, shrine_pos, RETIRE_LEVEL);
+fn the_view_lists_agoges_and_veterans_with_why_not() {
+    let (mut s, agoge, plain) = sparta_game();
+    let (agoge_pos, plain_pos) = (s.cities[&agoge].pos, s.cities[&plain].pos);
+    let ready = veteran(&mut s, agoge_pos, RETIRE_LEVEL);
     let away = veteran(&mut s, plain_pos, RETIRE_LEVEL + 1);
-    let _green = veteran(&mut s, shrine_pos, RETIRE_LEVEL - 1);
+    let _green = veteran(&mut s, agoge_pos, RETIRE_LEVEL - 1);
     let r = view(&s, A).retire.expect("retire view");
     assert_eq!((r.retired, r.target, r.level), (0, 3, RETIRE_LEVEL));
-    assert_eq!(r.shrines, vec![shrine]);
+    assert_eq!(r.shrines, vec![agoge]);
     assert_eq!(
         r.veterans
             .iter()

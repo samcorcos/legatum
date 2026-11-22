@@ -1,22 +1,22 @@
-//! Roads: the Courier Hall's open road.
+//! Roads: the Yam Relay Station's open road.
 //!
-//! When the first Courier Hall completes, every city on the map (all empires, enemy land
-//! included) is joined to the Hall's city by roads, and a city founded later is joined the next
-//! turn while a Hall stands (`extend`). Roads are land, not a city's property: a captured or
-//! razed Hall, or a razed city, takes none of them away, and nothing ever removes one.
+//! When the first Yam Relay Station completes, every city on the map (all empires, enemy land
+//! included) is joined to the Station's city by roads, and a city founded later is joined the next
+//! turn while a Station stands (`extend`). Roads are land, not a city's property: a captured or
+//! razed Station, or a razed city, takes none of them away, and nothing ever removes one.
 //!
 //! Movement: entering a road tile costs 1 move whatever the terrain (`Map::move_cost`), and a
 //! unit that starts its turn on a road has +1 move (`rules::units::reset_turn`). Roads grant no
 //! passage: Peace borders still apply (`GameState::passage_allowed`).
 //!
 //! The layout is deterministic integer arithmetic. Cities join one at a time, nearest to the
-//! Hall first. Each runs a Dijkstra search over land and ends at the road tile (a terminal)
-//! where its new road plus the trip along the existing network to the Hall is cheapest, so
-//! branches share trunks and every road leads towards the Hall (a shortest-path tree grown
+//! Station first. Each runs a Dijkstra search over land and ends at the road tile (a terminal)
+//! where its new road plus the trip along the existing network to the Station is cheapest, so
+//! branches share trunks and every road leads towards the Station (a shortest-path tree grown
 //! outward). Costs, in 64ths of a move: a new road tile costs 64 x its terrain cost (water and
 //! mountains are impassable, so roads use passes), a step along existing road costs 48 (joining
 //! a trunk beats building a parallel one), and a tile off the straight line from the city to
-//! the Hall costs a little more (about 1 per 0.4 tile of distance), so a road runs as a
+//! the Station costs a little more (about 1 per 0.4 tile of distance), so a road runs as a
 //! straight line rather than a zig-zag or an L.
 
 use crate::hex::Hex;
@@ -24,7 +24,7 @@ use crate::state::Map;
 use std::cmp::Reverse;
 use std::collections::BinaryHeap;
 
-/// `Tile::road` bit marking a road tile that has no link yet (the Hall's own tile at first).
+/// `Tile::road` bit marking a road tile that has no link yet (the Station's own tile at first).
 pub const NODE: u8 = 1 << 6;
 
 const NEW_ROAD: i32 = 64;
@@ -223,9 +223,9 @@ pub fn extend_roadworks(state: &mut crate::state::GameState) {
     }
 }
 
-/// Every turn, while a Courier Hall stands: the first one's completion lays the roads (rooted at
+/// Every turn, while a Yam Relay Station stands: the first one's completion lays the roads (rooted at
 /// its city, announced with `Event::RoadsLaid`), and any city without a road (founded since, or
-/// the city of a later Hall) is joined to the network. With no Hall standing nothing is laid, and
+/// the city of a later Station) is joined to the network. With no Station standing nothing is laid, and
 /// nothing is ever removed.
 pub fn extend(state: &mut crate::state::GameState, events: &mut Vec<crate::events::Event>) {
     let Some((owner, city, pos)) = state

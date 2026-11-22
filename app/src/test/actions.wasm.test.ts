@@ -202,25 +202,25 @@ describe.skipIf(!available)('one-time actions core behavior', () => {
     expect(core.view(1).actions).toMatchSnapshot();
   });
 
-  /** An Sparta with a War Shrine city, a plain city, and soldiers of the given promotion levels standing in the shrine city (a level-5 one in the plain city). */
+  /** An Sparta with an Agoge city, a plain city, and soldiers of the given promotion levels standing in the shrine city (a level-5 one in the plain city). */
   function sparta(levels: number[]) {
     const s = fixture(['Sparta', 'Mongols']);
-    const shrine = city(s, 0, 4, 4, 3), plain = city(s, 0, 12, 4, 3);
-    shrine.buildings.push('Agoge');
+    const agoge = city(s, 0, 4, 4, 3), plain = city(s, 0, 12, 4, 3);
+    agoge.buildings.push('Agoge');
     city(s, 1, 20, 20, 3);
     const xp = (level: number) => (level ? thresholdsFor('Sparta')[level - 1] : 0);
-    const ids = levels.map((level) => { const u = spawnUnit(s, 0, 'Spearman', shrine.pos, false); u.xp = xp(level); return u.id; });
+    const ids = levels.map((level) => { const u = spawnUnit(s, 0, 'Spearman', agoge.pos, false); u.xp = xp(level); return u.id; });
     const away = spawnUnit(s, 0, 'Spearman', plain.pos, false); away.xp = xp(5);
-    const scout = spawnUnit(s, 0, 'Scout', shrine.pos, false);
-    return { s, shrine, plain, ids, away: away.id, scout: scout.id };
+    const scout = spawnUnit(s, 0, 'Scout', agoge.pos, false);
+    return { s, agoge, plain, ids, away: away.id, scout: scout.id };
   }
   const retire = (unit: number) => action({ action: 'RetireVeteran', unit });
 
   it('previews Sparta retirement identically: shrines, veterans and why not', () => {
-    const { s, shrine, ids, away } = sparta([RETIRE_LEVEL, RETIRE_LEVEL + 2, RETIRE_LEVEL - 1]);
+    const { s, agoge, ids, away } = sparta([RETIRE_LEVEL, RETIRE_LEVEL + 2, RETIRE_LEVEL - 1]);
     const core = pair(s);
     const view = core.view(0).actions!.retire!;
-    expect(view).toMatchObject({ retired: 0, target: 3, level: RETIRE_LEVEL, shrines: [shrine.id] });
+    expect(view).toMatchObject({ retired: 0, target: 3, level: RETIRE_LEVEL, shrines: [agoge.id] });
     expect(view.veterans.map((v) => [v.unit, v.blocker === null])).toEqual([[ids[0], true], [ids[1], true], [away, false]]);
     expect(core.view(0).actions).toMatchSnapshot();
     expect(core.view(0).faction_goal).toMatchSnapshot();

@@ -23,14 +23,14 @@ async function start(page: Page, war = false, ranged = false) {
   await page.goto('/?client=wasm');
   await page.getByRole('button', { name: /^Continue/ }).click();
   await expect(page.getByTestId('turn-number')).toHaveText('1');
-  const soldier = await page.evaluate((at) => {
+  const spearman = await page.evaluate((at) => {
     const s = (window as unknown as GameWindow).legatum.getState(), view = s.views![s.seat];
     const u = view.units.find((u) => u.owner === view.me && u.pos.q === at.q && u.pos.r === at.r)!;
     s.set({ techOpen: false });
     s.select({ kind: 'unit', id: u.id }); s.jumpTo(u.pos);
     return u.id;
-  }, (war ? PURSUIT : WAR_PROMPT).soldier);
-  return soldier;
+  }, (war ? PURSUIT : WAR_PROMPT).spearman);
+  return spearman;
 }
 
 test('G20 ranged attack can target a city after the Soldier declares surprise War in the same turn', async ({ page }) => {
@@ -40,7 +40,7 @@ test('G20 ranged attack can target a city after the Soldier declares surprise Wa
   await page.getByRole('dialog', { name: 'Declare War on Switzerland?' })
     .getByRole('button', { name: 'Declare War and attack' }).click();
   const city = { q: 19, r: 8 }; // fromOffset(23, 8)
-  const ranger = await page.evaluate(() => {
+  const archer = await page.evaluate(() => {
     const s = (window as unknown as GameWindow).legatum.getState(), v = s.views![s.seat];
     const u = v.units.find((u) => u.owner === v.me && u.kind === 'Archer')!;
     s.select({ kind: 'unit', id: u.id }); s.jumpTo(u.pos);
@@ -49,7 +49,7 @@ test('G20 ranged attack can target a city after the Soldier declares surprise Wa
   await page.getByRole('button', { name: /^Ranged Attack/ }).click();
   const target = await mapPoint(page, city);
   await page.mouse.click(target.x, target.y, { button: 'right' });
-  await expect.poll(async () => (await orders(page)).some((o) => o.type === 'RangedAttack' && o.unit === ranger)).toBe(true);
+  await expect.poll(async () => (await orders(page)).some((o) => o.type === 'RangedAttack' && o.unit === archer)).toBe(true);
   await revealSidebar(page, 'turn-more');
   await expect(page.getByRole('button', { name: /^Pending orders/ })).not.toContainText('issue');
   await expect(page.locator('.seatbar .cta')).not.toContainText('unit needs orders');
@@ -59,7 +59,7 @@ test('G20 ranged attack can target a city after the Soldier declares surprise Wa
     const s = (window as unknown as GameWindow).legatum.getState();
     return s.report?.events[s.seat] ?? [];
   });
-  expect(result.some((e) => e.type === 'Battle' && e.attacker === ranger && e.defender.kind === 'City')).toBe(true);
+  expect(result.some((e) => e.type === 'Battle' && e.attacker === archer && e.defender.kind === 'City')).toBe(true);
 });
 
 async function mapPoint(page: Page, hex: Hex) {
@@ -83,10 +83,10 @@ const orders = (page: Page) => page.evaluate(() => {
   return s.orders[s.seat];
 });
 
-async function afterConfirm(page: Page, soldier: number) {
+async function afterConfirm(page: Page, spearman: number) {
   expect(await orders(page)).toEqual([
     { type: 'DeclareWar', against: 1, breach: false },
-    { type: 'MoveUnit', unit: soldier, to: WAR_PROMPT.scout },
+    { type: 'MoveUnit', unit: spearman, to: WAR_PROMPT.scout },
   ]);
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await endPlanning(page);
@@ -107,14 +107,14 @@ async function afterConfirm(page: Page, soldier: number) {
     const s = (window as unknown as GameWindow).legatum.getState(), view = s.views![s.seat];
     const u = view.units.find((u) => u.id === id)!;
     return { goto: u.goto, attack: u.attack_target ?? null };
-  }, soldier);
+  }, spearman);
   // One attack, this turn only: nothing is left standing for next turn.
   expect(aim).toEqual({ goto: null, attack: null });
   if (shots) await page.screenshot({ path: `${shots}/report-${page.viewportSize()!.width}.png` });
 }
 
 test('G2 desktop: hover says At Peace; right-click asks to declare War; confirm queues War and the attack', async ({ page }) => {
-  const soldier = await start(page);
+  const spearman = await start(page);
   const at = await mapPoint(page, WAR_PROMPT.scout);
   await page.mouse.move(at.x, at.y);
   const hint = page.locator('.peace-hint');
@@ -152,11 +152,11 @@ test('G2 desktop: hover says At Peace; right-click asks to declare War; confirm 
   await dialog.getByRole('button', { name: 'Declare War and attack', exact: true }).click();
   // G17: the decision is confirmed over the map, with Undo.
   await expect(page.locator('.decision-notice')).toContainText('War declared on Switzerland');
-  await afterConfirm(page, soldier);
+  await afterConfirm(page, spearman);
 });
 
 test('G2 at War: an attack on a unit follows it, and the report says what happened', async ({ page }) => {
-  const soldier = await start(page, true);
+  const spearman = await start(page, true);
   const at = await mapPoint(page, PURSUIT.scout);
   await page.mouse.move(at.x, at.y);
   await expect(page.locator('.forecast-pursuit')).toContainText('One attack this turn, then your Spearman stays where it fought and needs orders.');
@@ -166,7 +166,7 @@ test('G2 at War: an attack on a unit follows it, and the report says what happen
   await expect(page.getByRole('dialog')).toHaveCount(0);
   const queued = await orders(page);
   expect(queued).toHaveLength(1);
-  expect(queued[0]).toMatchObject({ unit: soldier, to: PURSUIT.scout });
+  expect(queued[0]).toMatchObject({ unit: spearman, to: PURSUIT.scout });
   await endPlanning(page);
   await expect(page.getByTestId('turn-number')).toHaveText('2');
   const report = page.getByRole('complementary', { name: 'Turn report' });
@@ -181,7 +181,7 @@ test('G2 at War: an attack on a unit follows it, and the report says what happen
     const s = (window as unknown as GameWindow).legatum.getState(), view = s.views![s.seat];
     const u = view.units.find((u) => u.id === id);
     return { goto: u?.goto ?? null, attack: u?.attack_target ?? null };
-  }, soldier);
+  }, spearman);
   // G18: the attack was one attack, this turn only.
   expect(aim).toEqual({ goto: null, attack: null });
   if (shots) await page.screenshot({ path: `${shots}/report-war.png` });

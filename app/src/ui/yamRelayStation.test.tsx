@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-// Faction goals increment 5 in the UI: the Courier Hall's token in the race panel, its goal-card
+// Faction goals increment 5 in the UI: the Yam Relay Station's token in the race panel, its goal-card
 // note, the open-road note under a unit, the build card's words, and Peace's border line.
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
@@ -33,19 +33,19 @@ beforeEach(async () => {
 });
 afterEach(() => { act(() => root.unmount()); host.remove(); document.querySelectorAll('.vhc-pop').forEach((n) => n.remove()); vi.useRealTimers(); vi.unstubAllGlobals(); });
 
-/** The Mongols's Hall stands in my city, so I hold it. */
+/** The Mongols's Station stands in my city, so I hold it. */
 const iHold = () => {
   view.courier_halls = [{ of: glass().id, holder: view.me, city: hallCity().id }];
   view.players.find((p) => p.id === view.me)!.vp_sources.push([{ kind: 'FactionGoal', of: glass().id }, 2]);
 };
 
-describe('the Hall in the race panel', () => {
+describe('the Station in the race panel', () => {
   const render = () => {
     useGame.setState({ client, views: [view], humans: [0], orders: [[]], errors: [[]], seat: 0 });
     act(() => root.render(<div className="game"><div className="seatbar" /><VpTrack /></div>));
   };
 
-  it('puts the goal token in the holder’s row wearing the Hall’s own icon, and says where the Hall stands', () => {
+  it('puts the goal token in the holder’s row wearing the Station’s own icon, and says where the Station stands', () => {
     iHold();
     render();
     const tok = host.querySelector<HTMLElement>(`.panel.vp [data-source="goal-${glass().id}"][data-owner="${view.me}"]`)!;
@@ -58,7 +58,7 @@ describe('the Hall in the race panel', () => {
     expect(card.textContent).toContain('whoever holds its tile scores');
   });
 
-  it('a click on the token shows the Hall’s city on the map', () => {
+  it('a click on the token shows the Station’s city on the map', () => {
     iHold();
     const jumpTo = vi.fn();
     render();
@@ -67,7 +67,7 @@ describe('the Hall in the race panel', () => {
     expect(jumpTo).toHaveBeenCalledWith(hallCity().pos);
   });
 
-  it('says last seen for a remembered city, and that nobody holds an unbuilt or sacked Hall', () => {
+  it('says last seen for a remembered city, and that nobody holds an unbuilt or sacked Station', () => {
     iHold();
     hallCity().visible = false;
     expect(buildVpModel(view).goals.find((g) => g.only === glass().id)!.holdNote).toBe(`You hold the Yam Relay Station in ${hallCity().name} · last seen`);
@@ -79,7 +79,7 @@ describe('the Hall in the race panel', () => {
     expect(g.own).toBe('open');
   });
 
-  it('follows the Hall to a captor and keeps its card in the holder’s row when the Mongols has fallen', () => {
+  it('follows the Station to a captor and keeps its card in the holder’s row when the Mongols has fallen', () => {
     view.courier_halls = [{ of: glass().id, holder: rival().id, city: hallCity().id }];
     rival().vp_sources.push([{ kind: 'FactionGoal', of: glass().id }, 2]);
     glass().alive = false;
@@ -92,7 +92,7 @@ describe('the Hall in the race panel', () => {
 });
 
 describe('the open road under a unit', () => {
-  it('notes it while standing on a Hall holder’s land at Peace, and not on your own or an ordinary rival’s', () => {
+  it('notes it while standing on a Station holder’s land at Peace, and not on your own or an ordinary rival’s', () => {
     const unit = view.units.find((u) => u.owner === view.me && u.military)!;
     const at = tileIndex(unit.pos, view.width, view.height);
     view.tiles[at].owner = rival().id;
@@ -108,15 +108,15 @@ describe('the open road under a unit', () => {
   });
 });
 
-describe('the Hall’s words', () => {
-  it('the build card says what it scores, what it opens and the one-per-empire rule; a standing Hall reads Built', () => {
+describe('the Station’s words', () => {
+  it('the build card says what it scores, what it opens and the one-per-empire rule; a standing Station reads Built', () => {
     expect(hallCardText()).toBe('+2 VP while you hold it · every empire crosses all your land at Peace · one per empire, rebuilt only if destroyed');
     expect(hallStands('The Yam Relay Station already stands in Far Mile')).toBe(true);
     expect(hallStands('The Yam Relay Station stands in Far Mile; retake the city instead')).toBe(false);
     expect(hallStands('The Yam Relay Station is already being built in Far Mile')).toBe(false);
   });
 
-  it('Peace says whose borders the Hall opens', () => {
+  it('Peace says whose borders the Station opens', () => {
     const relation = view.diplomacy.relations.find((r) => r.a === view.team || r.b === view.team)!;
     const other = view.players.find((p) => p.team === (relation.a === view.team ? relation.b : relation.a))!;
     expect(peaceBorders(relation, view)).toBe('closed borders');

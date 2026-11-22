@@ -48,7 +48,7 @@ fn a_capture_no_visible_attack_can_retake_leaves_its_holder_to_the_attack_passes
 }
 
 #[test]
-fn a_capture_an_adjacent_soldier_would_retake_empty_keeps_its_holder_first() {
+fn a_capture_an_adjacent_spearman_would_retake_empty_keeps_its_holder_first() {
     let view = captured(&[(20, UnitKind::Spearman, Hex::new(9, 8))]);
     assert_eq!(holds(&view, 1), (true, true));
 }
@@ -88,7 +88,7 @@ fn a_strike_unit_beside_a_wounded_enemy_kills_it_instead_of_staging() {
 }
 
 /// Gene `shot_sweep`: an Archer an earlier pass sent home stands two hexes from an enemy Spearman.
-fn ranger_sent_home(enemy_hp: i32, guards: &[Hex]) -> (PlayerView, Order) {
+fn archer_sent_home(enemy_hp: i32, guards: &[Hex]) -> (PlayerView, Order) {
     let mut b = ViewBuilder::new(24, 18)
         .city(1, ME, Hex::new(2, 8), 4)
         .unit(1, ME, UnitKind::Archer, Hex::new(8, 8))
@@ -114,7 +114,7 @@ fn swept(view: &PlayerView, home: &Order, gene: i32) -> Vec<Order> {
 
 #[test]
 fn a_shooter_sent_home_kills_the_wounded_enemy_in_range_instead() {
-    let (view, home) = ranger_sent_home(10, &[]);
+    let (view, home) = archer_sent_home(10, &[]);
     assert_eq!(swept(&view, &home, 0), vec![home.clone()]);
     assert_eq!(
         swept(&view, &home, 1),
@@ -127,7 +127,7 @@ fn a_shooter_sent_home_kills_the_wounded_enemy_in_range_instead() {
 
 #[test]
 fn a_shot_that_would_not_kill_leaves_the_move() {
-    let (view, home) = ranger_sent_home(100, &[]);
+    let (view, home) = archer_sent_home(100, &[]);
     assert_eq!(swept(&view, &home, 1), vec![home]);
 }
 
@@ -135,6 +135,6 @@ fn a_shot_that_would_not_kill_leaves_the_move() {
 fn a_shooter_the_rest_of_the_enemy_would_kill_if_it_stayed_keeps_its_move() {
     // Three healthy Pikemen beside it would finish an Archer that stays to shoot.
     let guards = [Hex::new(9, 7), Hex::new(7, 8), Hex::new(8, 9)];
-    let (view, home) = ranger_sent_home(10, &guards);
+    let (view, home) = archer_sent_home(10, &guards);
     assert_eq!(swept(&view, &home, 1), vec![home]);
 }

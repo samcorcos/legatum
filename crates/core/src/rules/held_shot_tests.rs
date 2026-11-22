@@ -231,13 +231,13 @@ fn bibracte_t75_the_charge_goes_on_to_the_settler_when_a_shot_kills_its_escort()
     let horse = unit(&mut s, 1, UnitKind::Horseman, tile);
     let settler = unit(&mut s, 1, UnitKind::Settler, tile);
     s.units.get_mut(&horse).unwrap().hp = 1;
-    let ranger = unit(&mut s, 0, UnitKind::Archer, tile.neighbor(2));
+    let archer = unit(&mut s, 0, UnitKind::Archer, tile.neighbor(2));
     let rider = unit(&mut s, 0, UnitKind::Horseman, tile.neighbor(3));
     let away = tile.neighbor(0).neighbor(0);
     let (next, events) = resolve_units(
         &s,
         &two(
-            vec![shoot(ranger, tile), move_to(rider, tile)],
+            vec![shoot(archer, tile), move_to(rider, tile)],
             vec![move_to(settler, away)],
         ),
     );
@@ -265,11 +265,11 @@ fn a_charge_whose_target_died_with_nothing_left_says_so() {
     let tile = hex(5, 4);
     let horse = unit(&mut s, 1, UnitKind::Horseman, tile);
     s.units.get_mut(&horse).unwrap().hp = 1;
-    let ranger = unit(&mut s, 0, UnitKind::Archer, tile.neighbor(2));
+    let archer = unit(&mut s, 0, UnitKind::Archer, tile.neighbor(2));
     let rider = unit(&mut s, 0, UnitKind::Horseman, tile.neighbor(3));
     let (_, events) = resolve_units(
         &s,
-        &two(vec![shoot(ranger, tile), move_to(rider, tile)], vec![]),
+        &two(vec![shoot(archer, tile), move_to(rider, tile)], vec![]),
     );
     assert!(events.iter().any(|e| matches!(e,
         Event::MoveBlocked { unit, reason, .. }

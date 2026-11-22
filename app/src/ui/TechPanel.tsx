@@ -1,4 +1,5 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState, type Ref } from 'react';
+import { empireOfPlayer } from '../empires';
 import { useGame } from '../store';
 import { feel } from '../feel';
 import type { Faction, PlayerView, TechId } from '../types';
@@ -24,7 +25,7 @@ import { pendingSpend } from './productionPurchases';
 function EraBadge({ view }: { view: PlayerView }) {
   const r = view.research;
   const who = eraFirst(r, r.era);
-  const first = who === null ? null : who === view.me ? 'You were first into this era' : `${view.players.find((p) => p.id === who)?.name ?? 'A rival'} was first into this era`;
+  const first = who === null ? null : who === view.me ? 'You were first into this era' : `${empireOfPlayer(view, who)} was first into this era`;
   const rows = eraRows(r);
   return <div className="era-badge" data-testid="era-badge" aria-label={`${r.era_name} era, ${r.era_known} of ${r.era_total} technologies known`}>
     <span className="era-badge-numeral" aria-hidden="true">{eraNumeral(r.era)}</span>

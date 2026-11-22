@@ -105,19 +105,19 @@ describe('research upgrade previews', () => {
   it('matches the gold charged', async () => {
     const c = await newClient();
     const s = c.debugState();
-    const soldier = s.units.find((u) => u.owner === 0 && u.kind === 'Spearman')!;
-    s.owner[tileIndex(soldier.pos, s.width, s.height)] = 0;
+    const spearman = s.units.find((u) => u.owner === 0 && u.kind === 'Spearman')!;
+    s.owner[tileIndex(spearman.pos, s.width, s.height)] = 0;
     // The Phalangite uses 1 Iron: an Iron deposit under the Spearman, inside the border, with the technology that reveals it.
-    (s.resource ??= s.terrain.map(() => null))[tileIndex(soldier.pos, s.width, s.height)] = 'Iron';
+    (s.resource ??= s.terrain.map(() => null))[tileIndex(spearman.pos, s.width, s.height)] = 'Iron';
     s.players[0].techs.push('Mathematics', 'IronWorking');
     s.players[0].gold = 1000;
     const advertised = c.view(0).research.unlocks.find((unlock) =>
       unlock.item.kind === 'Unit' && unlock.item.unit === 'Phalangite')!.upgrade_cost;
     expect(advertised).not.toBeNull();
     expect(ownUnit(c, 0, 'Spearman').upgrade_cost).toBe(advertised);
-    const result = c.endTurn({ 0: [{ type: 'UpgradeUnit', unit: soldier.id }] });
-    expect(result.events).toContainEqual({ type: 'UnitUpgraded', unit: soldier.id, owner: 0, to: 'Phalangite', gold: advertised });
-    expect(ownUnit(c, 0, 'Phalangite').id).toBe(soldier.id);
+    const result = c.endTurn({ 0: [{ type: 'UpgradeUnit', unit: spearman.id }] });
+    expect(result.events).toContainEqual({ type: 'UnitUpgraded', unit: spearman.id, owner: 0, to: 'Phalangite', gold: advertised });
+    expect(ownUnit(c, 0, 'Phalangite').id).toBe(spearman.id);
   });
 });
 
@@ -149,14 +149,14 @@ describe('founding a city', () => {
     expect(seen.detail).toBeNull();
 
     // Production, buying and a new unit.
-    const soldier = { kind: 'Unit' as const, unit: 'Spearman' as const };
-    const orders: Order[] = [{ type: 'SetProduction', city: city.id, item: soldier }];
+    const spearman = { kind: 'Unit' as const, unit: 'Spearman' as const };
+    const orders: Order[] = [{ type: 'SetProduction', city: city.id, item: spearman }];
     expect(c.validate(0, orders)).toEqual([]);
     c.endTurn({ 0: orders });
     const d2 = c.view(0).cities.find((x) => x.id === city.id)!.detail!;
-    expect(d2.producing).toEqual(soldier);
-    const soldierCost = d2.options.find((option) => option.item.kind === 'Unit' && option.item.unit === 'Spearman')?.cost;
-    expect(d2.buy_cost).toBe(Math.trunc(((soldierCost ?? 0) * 175) / 100));
+    expect(d2.producing).toEqual(spearman);
+    const spearmanCost = d2.options.find((option) => option.item.kind === 'Unit' && option.item.unit === 'Spearman')?.cost;
+    expect(d2.buy_cost).toBe(Math.trunc(((spearmanCost ?? 0) * 175) / 100));
   });
 });
 
@@ -164,7 +164,7 @@ describe('validate', () => {
   it('rejects bad orders with the right indices', async () => {
     const c = await newClient();
     const scout = ownUnit(c, 0, 'Scout');
-    const soldier = ownUnit(c, 0, 'Spearman');
+    const spearman = ownUnit(c, 0, 'Spearman');
     const dest = within(scout.pos, 2).find((h) => {
       const t = c.view(0).tiles[tileIndex(h, 48, 32)];
       return t.explored && moveCost(t.terrain) !== null && !hexEq(h, scout.pos);
@@ -185,9 +185,9 @@ describe('validate', () => {
 
     const mate = ownUnit(c, 1, 'Scout');
     expect(c.validate(0, [{ type: 'SleepUnit', unit: mate.id }])[0].message).toMatch(/yours/);
-    expect(c.validate(0, [{ type: 'MoveUnit', unit: soldier.id, to: { q: 500, r: 500 } }])[0].message).toMatch(/off the map/);
-    expect(c.validate(0, [{ type: 'RangedAttack', unit: soldier.id, target: dest }])[0].message).toMatch(/no ranged/);
-    expect(c.validate(0, [{ type: 'UpgradeUnit', unit: soldier.id }])).toHaveLength(1);
+    expect(c.validate(0, [{ type: 'MoveUnit', unit: spearman.id, to: { q: 500, r: 500 } }])[0].message).toMatch(/off the map/);
+    expect(c.validate(0, [{ type: 'RangedAttack', unit: spearman.id, target: dest }])[0].message).toMatch(/no ranged/);
+    expect(c.validate(0, [{ type: 'UpgradeUnit', unit: spearman.id }])).toHaveLength(1);
     expect(c.validate(0, [{ type: 'SetResearch', tech: 'Mathematics' }])[0].message).toBe('Mathematics is in the Classical era: finish the Ancient era first');
     expect(c.validate(0, [{ type: 'SetResearch', tech: 'BronzeWorking' }])).toEqual([]);
     expect(c.validate(0, [{ type: 'BuyItem', city: 999, item: { kind: 'Unit', unit: 'Spearman' } }])).toHaveLength(1);
@@ -250,15 +250,15 @@ describe('forecast', () => {
   it('returns odds and breakdowns for an adjacent enemy, null otherwise', async () => {
     const c = await newClient();
     const s = c.debugState();
-    const soldier = s.units.find((u) => u.owner === 0 && u.kind === 'Spearman')!;
+    const spearman = s.units.find((u) => u.owner === 0 && u.kind === 'Spearman')!;
     const enemy = s.units.find((u) => u.owner === 2 && u.kind === 'Spearman')!;
-    const spot = neighbors(soldier.pos).find(
+    const spot = neighbors(spearman.pos).find(
       (h) => moveCost(s.terrain[tileIndex(h, 48, 32)]) !== null && !s.units.some((u) => hexEq(u.pos, h)),
     )!;
-    expect(c.forecast(0, soldier.id, spot, 'Melee')).toBeNull();
+    expect(c.forecast(0, spearman.id, spot, 'Melee')).toBeNull();
     enemy.pos = { ...spot };
     for (const r of s.diplomacy!.relations) r.state = 'War';
-    const f = c.forecast(0, soldier.id, spot, 'Melee')!;
+    const f = c.forecast(0, spearman.id, spot, 'Melee')!;
     expect(f).not.toBeNull();
     expect(f.win_chance).toBeGreaterThanOrEqual(0);
     expect(f.win_chance).toBeLessThanOrEqual(100);
@@ -270,11 +270,11 @@ describe('forecast', () => {
     expect(f.defender_hp).toBe(100);
     expect(f.expected_damage_to_defender).toBeGreaterThan(0);
     // The enemy cannot forecast with our unit.
-    expect(c.forecast(2, soldier.id, spot, 'Melee')).toBeNull();
+    expect(c.forecast(2, spearman.id, spot, 'Melee')).toBeNull();
 
     // Attacking resolves as a Battle with the numbers behind it.
-    const r = c.endTurn({ 0: [{ type: 'MoveUnit', unit: soldier.id, to: spot }] });
-    const battle = r.events.find((e) => e.type === 'Battle' && e.attacker === soldier.id);
+    const r = c.endTurn({ 0: [{ type: 'MoveUnit', unit: spearman.id, to: spot }] });
+    const battle = r.events.find((e) => e.type === 'Battle' && e.attacker === spearman.id);
     expect(battle).toBeTruthy();
     if (battle && battle.type === 'Battle') {
       expect(battle.attacker_roll).toBeGreaterThanOrEqual(80);

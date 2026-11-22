@@ -178,7 +178,7 @@ fn hard_snipes_an_exposed_settler_with_a_surprise_war_and_then_seeks_peace() {
     let mut state = early_game(711);
     let (site, beside) = open_ground(&state);
     let settler = spawn_unit(&mut state, RIVAL, UnitKind::Settler, site);
-    let soldier = spawn_unit(&mut state, ME, UnitKind::Spearman, beside);
+    let spearman = spawn_unit(&mut state, ME, UnitKind::Spearman, beside);
     let rival = state.player(RIVAL).team;
     let view = player_view(&state, ME);
     assert!(!view.at_war(ME, RIVAL));
@@ -192,7 +192,7 @@ fn hard_snipes_an_exposed_settler_with_a_surprise_war_and_then_seeks_peace() {
         "{orders:?}"
     );
     assert!(orders.contains(&Order::MoveUnit {
-        unit: soldier,
+        unit: spearman,
         to: site
     }));
     let snipe = brain.plan_events().iter().rev().find_map(|e| match e {

@@ -7,8 +7,8 @@ use std::collections::BTreeMap;
 const ME: PlayerId = PlayerId(4);
 const HUMAN: PlayerId = PlayerId(0);
 const GARRISON: UnitId = UnitId(44);
-const HUMAN_RANGER: UnitId = UnitId(37);
-const HUMAN_SOLDIER: UnitId = UnitId(45);
+const HUMAN_ARCHER: UnitId = UnitId(37);
+const HUMAN_SPEARMAN: UnitId = UnitId(45);
 const RESONATOR: Hex = Hex::new(20, 15);
 
 #[derive(serde::Deserialize)]
@@ -18,7 +18,7 @@ struct ArchivedTurn {
 }
 
 /// Replay the pinned T32 state and its orders under current rules. The mountain at (21, 14)
-/// blocks the Ranger-to-city line, so neither city nor garrison takes these shots.
+/// blocks the Archer-to-city line, so neither city nor garrison takes these shots.
 fn archived_states() -> Vec<GameState> {
     replay_archived_states(true)
 }
@@ -90,17 +90,17 @@ fn archived_positions_have_no_legal_garrison_shot_under_terrain_sight() {
         let garrison = &state.units[&GARRISON];
         assert_eq!(garrison.pos, RESONATOR);
         assert_eq!(garrison.kind, UnitKind::Archer);
-        assert_eq!(garrison.hp, 100, "the archived Ranger's shots now lack LOS");
+        assert_eq!(garrison.hp, 100, "the archived Archer's shots now lack LOS");
         let city = state.cities.values().find(|c| c.pos == RESONATOR).unwrap();
         assert_eq!(
             city.hp,
             117 + legatum_core::data::CITY_HEAL * (state.turn - 32) as i32,
             "blocked shots leave the city free to regenerate"
         );
-        let ranger = &state.units[&HUMAN_RANGER];
-        assert_eq!(ranger.pos.distance(RESONATOR), 2);
+        let archer = &state.units[&HUMAN_ARCHER];
+        assert_eq!(archer.pos.distance(RESONATOR), 2);
         assert_eq!(
-            legatum_core::los::blocker(RESONATOR, ranger.pos, |h| {
+            legatum_core::los::blocker(RESONATOR, archer.pos, |h| {
                 state.map.get(h).map(|t| t.terrain)
             }),
             Some(Hex::new(21, 14)),
@@ -109,7 +109,7 @@ fn archived_positions_have_no_legal_garrison_shot_under_terrain_sight() {
         );
         let view = player_view(&state, ME);
         assert!(
-            forecast_attack_mode(&view, GARRISON, ranger.pos, AttackMode::Ranged).is_none(),
+            forecast_attack_mode(&view, GARRISON, archer.pos, AttackMode::Ranged).is_none(),
             "T{}",
             state.turn
         );
@@ -131,8 +131,8 @@ fn ranged_garrison_fires_when_the_archived_corridor_is_opened() {
     for mut state in archived_states() {
         // Restore a legal two-hex shot without altering either side's position or orders.
         state.map.get_mut(Hex::new(21, 14)).unwrap().terrain = Terrain::Plains;
-        let ranger = &state.units[&HUMAN_RANGER];
-        assert!(legatum_core::los::visible(RESONATOR, ranger.pos, |h| {
+        let archer = &state.units[&HUMAN_ARCHER];
+        assert!(legatum_core::los::visible(RESONATOR, archer.pos, |h| {
             state.map.get(h).map(|t| t.terrain)
         }));
         for difficulty in [AiDifficulty::Normal, AiDifficulty::Hard] {
@@ -161,7 +161,7 @@ fn opening_the_archived_corridor_exposes_the_city_but_not_its_garrison() {
     let mut state = archived_states().remove(0);
     state.map.get_mut(Hex::new(21, 14)).unwrap().terrain = Terrain::Plains;
     let orders = vec![Order::RangedAttack {
-        unit: HUMAN_RANGER,
+        unit: HUMAN_ARCHER,
         target: RESONATOR,
     }];
     assert!(validate_orders(&state, HUMAN, &orders).is_empty());
@@ -178,7 +178,7 @@ fn opening_the_archived_corridor_exposes_the_city_but_not_its_garrison() {
 }
 
 #[test]
-fn a_soldier_that_can_take_the_city_next_turn_is_the_more_valuable_target() {
+fn a_spearman_that_can_take_the_city_next_turn_is_the_more_valuable_target() {
     // Counterfactual on T34: open the mountain corridor, then the Spearman stands where it attacked from on T35, next to a
     // nearly broken city, and the garrison has the 27 HP it had in the archive (before cities
     // shielded garrisons). The Archer's volley breaks the 10-HP city in the ranged phase, which
@@ -190,7 +190,7 @@ fn a_soldier_that_can_take_the_city_next_turn_is_the_more_valuable_target() {
     state.map.get_mut(Hex::new(21, 14)).unwrap().terrain = Terrain::Plains;
     let adjacent = Hex::new(20, 14);
     assert!(!state.units.values().any(|u| u.pos == adjacent));
-    state.units.get_mut(&HUMAN_SOLDIER).unwrap().pos = adjacent;
+    state.units.get_mut(&HUMAN_SPEARMAN).unwrap().pos = adjacent;
     state.units.get_mut(&GARRISON).unwrap().hp = 27;
     let city = state
         .cities
@@ -199,7 +199,7 @@ fn a_soldier_that_can_take_the_city_next_turn_is_the_more_valuable_target() {
         .unwrap();
     city.hp = 10;
     let view = player_view(&state, ME);
-    for target in [state.units[&HUMAN_RANGER].pos, adjacent] {
+    for target in [state.units[&HUMAN_ARCHER].pos, adjacent] {
         assert!(forecast_attack_mode(&view, GARRISON, target, AttackMode::Ranged).is_some());
     }
     for difficulty in [AiDifficulty::Normal, AiDifficulty::Hard] {
@@ -216,14 +216,14 @@ fn a_soldier_that_can_take_the_city_next_turn_is_the_more_valuable_target() {
 }
 
 #[test]
-fn a_soldier_against_a_city_that_cannot_break_is_no_capture_threat() {
+fn a_spearman_against_a_city_that_cannot_break_is_no_capture_threat() {
     // The same Spearman beside the full-HP garrison of a city that this turn's fire cannot
     // break: its attack only hits the city, so it carries no capture stake and the garrison
     // shoots the Archer, whose volley would otherwise wear the city down.
     let mut state = archived_states().pop().unwrap();
     state.map.get_mut(Hex::new(21, 14)).unwrap().terrain = Terrain::Plains;
     let adjacent = Hex::new(20, 14);
-    state.units.get_mut(&HUMAN_SOLDIER).unwrap().pos = adjacent;
+    state.units.get_mut(&HUMAN_SPEARMAN).unwrap().pos = adjacent;
     let city = state
         .cities
         .values_mut()
@@ -241,7 +241,7 @@ fn a_soldier_against_a_city_that_cannot_break_is_no_capture_threat() {
             garrison_order(&orders),
             Some(&Order::RangedAttack {
                 unit: GARRISON,
-                target: state.units[&HUMAN_RANGER].pos
+                target: state.units[&HUMAN_ARCHER].pos
             }),
             "{difficulty:?}"
         );

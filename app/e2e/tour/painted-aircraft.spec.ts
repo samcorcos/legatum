@@ -16,12 +16,12 @@ type MapWindow = GameWindow & { legatumMap: { camera: { x: number; y: number; zo
 const KINDS = ['Fighter', 'Bomber', 'StealthFighter', 'StealthBomber', 'CombatDrone'] as const;
 const ZOOMS = [{ name: 'normal', zoom: 1.0 }, { name: 'close', zoom: 1.8 }] as const;
 
-/** Waypost Seven with one aircraft in the hangar and enemy Soldiers three tiles out (the siege fixture's approach). */
+/** Waypost Seven with one aircraft in the hangar and enemy Spearmen three tiles out (the siege fixture's approach). */
 async function start(page: Page, kind: string) {
   const setup = siegeFixture({ approach: true });
   let game: string;
   if (kind === 'CombatDrone') {
-    // A Drone Swarm two tiles from the nearest Soldier, ordered to shoot it.
+    // A Drone Swarm two tiles from the nearest Spearman, ordered to shoot it.
     const f = setup.fixture;
     const foe = f.units.find((u) => u.owner !== 0)!;
     const free = ring(foe.pos, 2).find((h) => f.terrain[tileIndex(h, f.width, f.height)] === 'Plains' && !f.units.some((u) => hexEq(u.pos, h)));

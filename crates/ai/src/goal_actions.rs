@@ -37,7 +37,7 @@ pub(crate) fn hold_turns(_view: &PlayerView) -> u32 {
 /// is none to plan against: such a game ends when somebody wins, however long that takes, so a
 /// goal whose build needs 50 turns is not "too late" at turn 800. The earlier fiction (the end a
 /// tenth of the expected length ahead, calibration 2026-10-07) let a 9-VP Mongols that was 50
-/// turns from its Courier Hall never start it in 900 turns (`docs/learnings.md` 2026-10-23).
+/// turns from its Yam Relay Station never start it in 900 turns (`docs/learnings.md` 2026-10-23).
 pub(crate) fn last_turn(view: &PlayerView, open_end: bool) -> u32 {
     view.turn_limit.unwrap_or_else(|| {
         if open_end {
@@ -169,7 +169,7 @@ fn broadcast_now(view: &PlayerView, open_end: bool) -> bool {
 }
 
 /// The Sparta's retirement window: the 2 VP take the team to the target with time to hold it,
-/// or the game is late. Veterans gather at a War Shrine city in this window (`gather_veterans`).
+/// or the game is late. Veterans gather at an Agoge city in this window (`gather_veterans`).
 pub(crate) fn retire_window(view: &PlayerView, open_end: bool) -> bool {
     view.actions.retire.is_some()
         && rite_pays(
@@ -180,7 +180,7 @@ pub(crate) fn retire_window(view: &PlayerView, open_end: bool) -> bool {
         )
 }
 
-/// The veterans to retire this turn: the ones in a War Shrine city, up to those still owed, once
+/// The veterans to retire this turn: the ones in an Agoge city, up to those still owed, once
 /// enough veterans exist to finish (a part-retired
 /// veteran guard scores nothing), the weakest first (lowest level, then HP). Never when it leaves
 /// a threatened city with no garrison, except in the last turns.

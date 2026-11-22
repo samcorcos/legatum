@@ -39,7 +39,7 @@ describe('walls-only city strike', () => {
     const events = client.endTurn({}).events;
     const shots = events.filter((e) => e.type === 'Battle' && typeof e.attacker !== 'number');
     const hit = shots.map((e) => e.type === 'Battle' && e.defender.kind === 'Unit' && e.defender.unit);
-    // The walled city and the Customs Bastion (at the Scout) fire; the unwalled city does not.
+    // The walled city and the Alpine Redoubt (at the Scout) fire; the unwalled city does not.
     expect(hit).toContain(nearWalled);
     expect(hit).not.toContain(nearOpen);
     expect(shots).toHaveLength(2);

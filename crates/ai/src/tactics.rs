@@ -1413,7 +1413,7 @@ mod bombardment_tests {
         // a garrisoned city with HP only takes the hit, so a capture needs the garrison exposed
         // (the city broken first) and killed.
         let city = Hex::new(8, 8);
-        let build = |city_hp: i32, garrison_hp: Option<i32>, enemy_ranger: bool| {
+        let build = |city_hp: i32, garrison_hp: Option<i32>, enemy_archer: bool| {
             let mut b = ViewBuilder::new(24, 16).city(1, ME, city, 2).unit(
                 50,
                 ENEMY,
@@ -1423,7 +1423,7 @@ mod bombardment_tests {
             if let Some(hp) = garrison_hp {
                 b = b.unit_hp(1, ME, UnitKind::Archer, city, hp);
             }
-            if enemy_ranger {
+            if enemy_archer {
                 b = b.unit(51, ENEMY, UnitKind::Archer, Hex::new(10, 8));
             }
             let mut v = b.build();
@@ -1487,7 +1487,7 @@ mod bombardment_tests {
         // With our Spearman beside the city that damage is progress toward a capture and beats
         // a shot at a field unit; with no captor near, the field unit is worth more.
         let city = Hex::new(8, 8);
-        let ranger = Hex::new(6, 8);
+        let archer = Hex::new(6, 8);
         let field = Hex::new(6, 10);
         let shot = |captor: bool| {
             let mut b = ViewBuilder::new(24, 16)
@@ -1495,7 +1495,7 @@ mod bombardment_tests {
                 .city(2, ENEMY, city, 2)
                 .unit(50, ENEMY, UnitKind::Spearman, city)
                 .unit(51, ENEMY, UnitKind::Spearman, field)
-                .unit(1, ME, UnitKind::Archer, ranger);
+                .unit(1, ME, UnitKind::Archer, archer);
             if captor {
                 b = b.unit(2, ME, UnitKind::Spearman, Hex::new(7, 8));
             }

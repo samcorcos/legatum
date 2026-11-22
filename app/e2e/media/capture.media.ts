@@ -235,7 +235,7 @@ test('war', async ({ page }) => {
   await glide(page, at, false, 30);
   await expect(page.getByTestId('forecast-assault')).toBeVisible({ timeout: 15_000 });
   await page.waitForTimeout(3200);
-  // Order the first Soldier in, bring the second, and end the turn.
+  // Order the first Spearman in, bring the second, and end the turn.
   await page.evaluate(({ unit, to }) => { (window as unknown as W).legatum.getState().editOrders((o: any[]) => [...o, { type: 'MoveUnit', unit, to }]); }, { unit: c.first, to: c.pos });
   await page.waitForTimeout(1200);
   await page.evaluate((id) => { (window as unknown as W).legatum.getState().select({ kind: 'unit', id }, true); }, c.second);

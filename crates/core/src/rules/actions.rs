@@ -39,7 +39,7 @@ pub fn swarm_blocker(state: &GameState, p: PlayerId) -> Option<String> {
 
 /// Why `p` can't close (`close`) or reopen the country now, or None. Closing needs Peace with
 /// the world's Alliances behind it (a closed country can't be allied) and no captured Courier
-/// Hall (the open road contradicts the vow).
+/// Station (the open road contradicts the vow).
 pub fn sakoku_blocker(state: &GameState, p: PlayerId, close: bool) -> Option<String> {
     if goals::rule(state, p) != GoalRule::Sakoku {
         return Some("Only an empire with Sakoku can close the country".into());
@@ -96,7 +96,7 @@ pub fn veteran_level(state: &GameState, unit: &crate::state::Unit) -> u8 {
 }
 
 /// Why `p` can't retire `unit` now, or None. A veteran is a military unit of promotion level
-/// `goals::SPARTA_RETIRE_LEVEL` or higher, standing in an own city with a War Shrine.
+/// `goals::SPARTA_RETIRE_LEVEL` or higher, standing in an own city with an Agoge.
 pub fn retire_blocker(state: &GameState, p: PlayerId, unit: UnitId) -> Option<String> {
     let player = state.player(p);
     if goals::switched_off(state, p) {
@@ -545,7 +545,7 @@ pub struct RetireView {
     pub target: u8,
     /// The promotion level a veteran needs (`goals::SPARTA_RETIRE_LEVEL`).
     pub level: u8,
-    /// Own cities with a War Shrine: where veterans retire.
+    /// Own cities with an Agoge: where veterans retire.
     pub shrines: Vec<CityId>,
     /// Every unit of the required level, in id order.
     pub veterans: Vec<RetireVeteranView>,

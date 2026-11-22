@@ -66,7 +66,7 @@ fn every_difficulty_picks_opening_capital_production_without_founding() {
 }
 
 #[test]
-fn idle_soldier_collects_known_ruin_inside_own_borders() {
+fn idle_spearman_collects_known_ruin_inside_own_borders() {
     let ruin = off(8, 5);
     let mut view = ViewBuilder::new(12, 12)
         .city(1, ME, off(5, 5), 3)
@@ -76,7 +76,7 @@ fn idle_soldier_collects_known_ruin_inside_own_borders() {
         .build();
     for _ in 0..3 {
         let orders = scripted(&view);
-        let next = move_target(&orders, 1).expect("idle Soldier should travel toward ruin");
+        let next = move_target(&orders, 1).expect("idle Spearman should travel toward ruin");
         assert!(next.distance(ruin) < view.units[0].pos.distance(ruin));
         view.units[0].pos = next;
         if next == ruin {
@@ -84,7 +84,7 @@ fn idle_soldier_collects_known_ruin_inside_own_borders() {
         }
         view.turn += 1;
     }
-    panic!("Soldier did not reach the ruin within three planned turns");
+    panic!("Spearman did not reach the ruin within three planned turns");
 }
 
 #[test]
@@ -267,7 +267,7 @@ fn production_for(orders: &[Order], city: u32) -> Option<ProductionItem> {
 }
 
 #[test]
-fn exposed_openings_reinforce_the_starting_soldier_for_every_faction() {
+fn exposed_openings_reinforce_the_starting_spearman_for_every_faction() {
     for faction in Faction::ALL {
         for fog in [false, true] {
             let mut b = ViewBuilder::new(24, 16)
@@ -363,7 +363,7 @@ fn hard_reinforces_a_known_rival() {
         .build();
     view.turn = 4;
     // The empire's third Settler (170) costs twice a Spearman (80), the relation the test's
-    // Soldier-first opening was written for.
+    // Spearman-first opening was written for.
     settlers_trained(&mut view, 2);
     for (i, tile) in view.tiles.iter_mut().enumerate() {
         let h = off(i as i32 % view.width, i as i32 / view.width);
@@ -877,7 +877,7 @@ fn captures_an_unescorted_enemy_settler() {
 }
 
 #[test]
-fn ranger_shoots_enemy_in_range() {
+fn archer_shoots_enemy_in_range() {
     let view = ViewBuilder::new(20, 16)
         .city(1, ME, off(6, 6), 2)
         .unit(1, ME, UnitKind::Archer, off(6, 6))
@@ -1014,19 +1014,19 @@ fn midgame_speed() {
 }
 
 /// An ungarrisoned pop-2 city (strength 14, 200 HP: weight 28).
-fn open_city_view(soldiers: &[Hex]) -> PlayerView {
+fn open_city_view(spearmen: &[Hex]) -> PlayerView {
     let mut b = ViewBuilder::new(24, 16)
         .city(1, ME, off(3, 8), 3)
         .unit(90, ME, UnitKind::Spearman, off(3, 8))
         .city(9, ENEMY, off(15, 8), 2);
-    for (i, h) in soldiers.iter().enumerate() {
+    for (i, h) in spearmen.iter().enumerate() {
         b = b.unit(1 + i as u32, ME, UnitKind::Spearman, *h);
     }
     b.build()
 }
 
 #[test]
-fn lone_soldier_waits_but_a_pair_finishes_a_suppressed_city() {
+fn lone_spearman_waits_but_a_pair_finishes_a_suppressed_city() {
     let city = off(15, 8);
     let alone = open_city_view(&[off(14, 8)]);
     let orders = run(&alone, Knobs::new(50, 50, 50, 50, 0));
@@ -1288,7 +1288,7 @@ fn settler_discounts_foreign_neighbors_but_can_found_beside_them() {
 }
 
 #[test]
-fn ranger_never_shoots_a_civilian() {
+fn archer_never_shoots_a_civilian() {
     let view = ViewBuilder::new(20, 16)
         .city(1, ME, off(6, 6), 2)
         .unit(1, ME, UnitKind::Archer, off(6, 6))
@@ -1303,7 +1303,7 @@ fn ranger_never_shoots_a_civilian() {
 }
 
 #[test]
-fn review_ranger_shoots_city_with_only_a_civilian_inside() {
+fn review_archer_shoots_city_with_only_a_civilian_inside() {
     let target = off(8, 6);
     let view = ViewBuilder::new(20, 16)
         .city(1, ME, off(3, 6), 2)
@@ -1666,7 +1666,7 @@ fn expansion_ignores_unreachable_islands_and_unfinishable_settlers() {
 }
 
 #[test]
-fn melee_risk_for_adjacent_ranger_is_not_its_safe_ranged_forecast() {
+fn melee_risk_for_adjacent_archer_is_not_its_safe_ranged_forecast() {
     let target = off(9, 8);
     let view = ViewBuilder::new(20, 16)
         .unit_hp(1, ME, UnitKind::Archer, off(8, 8), 25)
@@ -1681,7 +1681,7 @@ fn melee_risk_for_adjacent_ranger_is_not_its_safe_ranged_forecast() {
     assert!(p.too_risky(u, target));
     // A free shot does not make standing next to a lethal melee attacker safe.
     let orders = scripted(&view);
-    let escape = move_target(&orders, 1).expect("wounded Ranger can escape");
+    let escape = move_target(&orders, 1).expect("wounded Archer can escape");
     assert!(escape.distance(target) > 2);
 }
 
@@ -1705,7 +1705,7 @@ fn one_unit_occupies_a_zero_hp_city_instead_of_bouncing_with_its_army() {
 }
 
 #[test]
-fn a_ranger_uses_melee_to_occupy_an_empty_zero_hp_city() {
+fn an_archer_uses_melee_to_occupy_an_empty_zero_hp_city() {
     let target = off(15, 8);
     let mut view = ViewBuilder::new(24, 16)
         .city(1, ME, off(3, 8), 3)
@@ -1840,7 +1840,7 @@ fn buys_a_quoted_defender_without_replacing_a_market() {
     let market = ProductionItem::Building {
         building: BuildingKind::Market,
     };
-    let soldier = ProductionItem::Unit {
+    let spearman = ProductionItem::Unit {
         unit: UnitKind::Spearman,
     };
     let mut view = ViewBuilder::new(16, 16)
@@ -1853,13 +1853,13 @@ fn buys_a_quoted_defender_without_replacing_a_market() {
     let d = view.cities[0].detail.as_mut().unwrap();
     d.options
         .iter_mut()
-        .find(|o| o.item == soldier)
+        .find(|o| o.item == spearman)
         .unwrap()
         .buy_cost = Some(80);
     let orders = ScriptedBrain::new(Faction::India, 7, ME).orders(&view);
     assert!(orders.contains(&Order::BuyItem {
         city: CityId(1),
-        item: soldier
+        item: spearman
     }));
     assert!(!orders.iter().any(|o| matches!(
         o,
@@ -1874,7 +1874,7 @@ fn buys_a_quoted_defender_without_replacing_a_market() {
         .unwrap()
         .options
         .iter_mut()
-        .find(|o| o.item == soldier)
+        .find(|o| o.item == spearman)
         .unwrap()
         .buy_block = Some(legatum_core::economy::BuyBlock::NoSpawnTile);
     assert!(

@@ -171,7 +171,7 @@ export class TerrainCache {
   private plans: { near: Plan; far: Plan } | null = null;
   private sig: Int32Array;
   private cityAt = new Map<number, CityView>();
-  /** Walled cities by tile (only they fire): the Switzerland' Customs Bastion has its own trace. */
+  /** Walled cities by tile (only they fire): the Switzerland' Alpine Redoubt has its own trace. */
   private wallAt = new Map<number, Wall>();
   /** Each empire's current era, 0-based (public): a city is painted in its owner's era. */
   private ownerEra = new Map<number, number>();

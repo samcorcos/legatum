@@ -77,13 +77,13 @@ describe('the Heir’s unit panel text', () => {
 
 describe('the capture line on a tile', () => {
   it('offers "Capture the Heir (+2 VP)" under a selected military unit, and only for a rival-held Heir to the Throne', () => {
-    const soldier = view.units.find((u) => u.owner === view.me && u.military)!;
+    const spearman = view.units.find((u) => u.owner === view.me && u.military)!;
     rival().faction = 'Byzantium'; // This case exercises the Byzantine holder's label, independent of the AI roster.
     const h = heir(rival().id);
-    h.pos = { q: soldier.pos.q + 1, r: soldier.pos.r };
+    h.pos = { q: spearman.pos.q + 1, r: spearman.pos.r };
     atWarWith(rival().team);
     view.units.push(h);
-    useGame.setState({ selection: { kind: 'unit', id: soldier.id } });
+    useGame.setState({ selection: { kind: 'unit', id: spearman.id } });
     const idx = view.tiles.length;
     expect(idx).toBeGreaterThan(0);
     act(() => root.render(<TileCard view={view} hex={h.pos} />));

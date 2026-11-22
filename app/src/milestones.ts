@@ -7,7 +7,7 @@ import type { Faction, Hex, PlayerView, Yields } from './types';
 
 const YIELD_ORDER: [keyof Yields, string][] = [['food', 'Food'], ['production', 'Production'], ['gold', 'Gold'], ['science', 'Science']];
 
-/** "Settler" or "Settler and College": items the city's new population unlocked (core `population_unlocks`). */
+/** "Settler" or "Settler and University": items the city's new population unlocked (core `population_unlocks`). */
 export function growthUnlocks(view: PlayerView, city: number, population: number): string | null {
   const c = view.cities.find((x) => x.id === city);
   const faction = view.players.find((p) => p.id === c?.owner)?.faction;

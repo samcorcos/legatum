@@ -10,10 +10,10 @@ use crate::{resolve_turn, validate_orders};
 
 const P0: PlayerId = PlayerId(0);
 const P1: PlayerId = PlayerId(1);
-const TROOPER: ProductionItem = ProductionItem::Unit {
+const PIKEMAN: ProductionItem = ProductionItem::Unit {
     unit: UnitKind::Pikeman,
 };
-const SOLDIER: ProductionItem = ProductionItem::Unit {
+const SPEARMAN: ProductionItem = ProductionItem::Unit {
     unit: UnitKind::Spearman,
 };
 const WALLS: ProductionItem = ProductionItem::Building {
@@ -128,7 +128,7 @@ fn a_pikeman_starts_only_with_spare_iron_and_says_why_not() {
     let (mut s, id, _) = swiss_iron_game();
     spawn_unit(&mut s, P0, UnitKind::Pikeman, at(5, 4));
     spawn_unit(&mut s, P0, UnitKind::Pikeman, at(4, 5));
-    let reason = start_blocker(&s, &s.cities[&id], TROOPER).unwrap();
+    let reason = start_blocker(&s, &s.cities[&id], PIKEMAN).unwrap();
     assert_eq!(
         reason,
         "No Iron to spare: all 2 of your Iron are in use. Bring another Iron deposit inside your borders, or build a Mine on one for +1 Iron."
@@ -140,7 +140,7 @@ fn a_pikeman_starts_only_with_spare_iron_and_says_why_not() {
         .unwrap()
         .options
         .iter()
-        .find(|o| o.item == TROOPER)
+        .find(|o| o.item == PIKEMAN)
         .expect("still listed, with its blocker");
     assert_eq!(option.resource_blocker.as_deref(), Some(reason.as_str()));
     assert_eq!(option.supply_need, Some(Resource::Iron));
@@ -152,7 +152,7 @@ fn a_pikeman_starts_only_with_spare_iron_and_says_why_not() {
         P0,
         &[Order::SetProduction {
             city: id,
-            item: TROOPER,
+            item: PIKEMAN,
         }],
     );
     assert_eq!(errors.len(), 1, "{errors:?}");
@@ -160,18 +160,18 @@ fn a_pikeman_starts_only_with_spare_iron_and_says_why_not() {
 
     // A Mine makes room for one more.
     s.map.get_mut(at(6, 5)).unwrap().improved = true;
-    assert_eq!(start_blocker(&s, &s.cities[&id], TROOPER), None);
+    assert_eq!(start_blocker(&s, &s.cities[&id], PIKEMAN), None);
 
     // No deposit at all: say how to get one.
     s.map.get_mut(at(6, 5)).unwrap().resource = None;
     assert_eq!(
-        start_blocker(&s, &s.cities[&id], TROOPER).unwrap(),
+        start_blocker(&s, &s.cities[&id], PIKEMAN).unwrap(),
         "Needs 1 Iron: you have none yet. Bring an Iron deposit inside your borders, or build a Mine on one for +1 Iron."
     );
     // Not yet revealed.
     s.player_mut(P0).techs.remove(&TechId::IronWorking);
     assert_eq!(
-        start_blocker(&s, &s.cities[&id], TROOPER).unwrap(),
+        start_blocker(&s, &s.cities[&id], PIKEMAN).unwrap(),
         "Needs Iron: Iron Working reveals Iron on the map"
     );
 }
@@ -183,7 +183,7 @@ fn a_build_in_progress_holds_its_supply_and_gives_it_back_when_replaced() {
     let c = crate::rules::test_support::city(&mut s, 0, at(12, 6), 3);
     let start = |city| Order::SetProduction {
         city,
-        item: TROOPER,
+        item: PIKEMAN,
     };
     let errors = validate_orders(&s, P0, &[start(a), start(b), start(c)]);
     assert_eq!(errors.iter().map(|e| e.index).collect::<Vec<_>>(), vec![2]);
@@ -198,7 +198,7 @@ fn a_build_in_progress_holds_its_supply_and_gives_it_back_when_replaced() {
     assert_eq!(chip.held.len(), 2);
     assert_eq!(chip.spare, 0);
     // The city's own build doesn't block itself, and replacing it frees its supply.
-    assert_eq!(start_blocker(&next, &next.cities[&a], TROOPER), None);
+    assert_eq!(start_blocker(&next, &next.cities[&a], PIKEMAN), None);
     let swap = vec![
         Order::SetProduction {
             city: a,
@@ -416,16 +416,16 @@ fn a_queued_pikeman_waits_for_supply_and_starts_when_it_is_spare() {
         P0,
         vec![Order::SetProductionQueue {
             city: id,
-            queue: vec![SOLDIER, TROOPER],
+            queue: vec![SPEARMAN, PIKEMAN],
         }],
     );
     assert!(validate_orders(&s, P0, &os[&P0]).is_empty());
     let (mut next, _) = resolve_turn(&s, &os);
-    assert_eq!(next.cities[&id].producing, Some(SOLDIER));
+    assert_eq!(next.cities[&id].producing, Some(SPEARMAN));
     next.cities.get_mut(&id).unwrap().production_stored = 100;
     let (after, events) = resolve_turn(&next, &BTreeMap::new());
     assert_eq!(after.cities[&id].producing, None);
-    assert_eq!(after.cities[&id].production_queue, vec![TROOPER]);
+    assert_eq!(after.cities[&id].production_queue, vec![PIKEMAN]);
     assert!(events.iter().any(|e| matches!(
         e,
         Event::OrderFailed { reason, .. } if reason.contains("No Iron to spare") && reason.contains("kept in queue")
@@ -434,7 +434,7 @@ fn a_queued_pikeman_waits_for_supply_and_starts_when_it_is_spare() {
     let mut mined = after.clone();
     mined.map.get_mut(iron).unwrap().improved = true;
     let (started, _) = resolve_turn(&mined, &BTreeMap::new());
-    assert_eq!(started.cities[&id].producing, Some(TROOPER));
+    assert_eq!(started.cities[&id].producing, Some(PIKEMAN));
 }
 
 #[test]
@@ -442,14 +442,14 @@ fn buying_a_pikeman_needs_spare_iron() {
     let (mut s, id, _) = swiss_iron_game();
     spawn_unit(&mut s, P0, UnitKind::Pikeman, at(5, 4));
     spawn_unit(&mut s, P0, UnitKind::Pikeman, at(4, 5));
-    let reason = crate::economy::buy_blocker(&s, &s.cities[&id], TROOPER).unwrap();
+    let reason = crate::economy::buy_blocker(&s, &s.cities[&id], PIKEMAN).unwrap();
     assert!(reason.starts_with("No Iron to spare"), "{reason}");
     s.map.get_mut(at(6, 5)).unwrap().improved = true;
     let buy = orders(
         P0,
         vec![Order::BuyItem {
             city: id,
-            item: TROOPER,
+            item: PIKEMAN,
         }],
     );
     assert!(validate_orders(&s, P0, &buy[&P0]).is_empty());
@@ -483,7 +483,7 @@ fn upgrades_into_classical_units_take_iron_supply_in_list_order() {
         Order::UpgradeUnit { unit: b },
         Order::SetProduction {
             city: id,
-            item: TROOPER,
+            item: PIKEMAN,
         },
     ];
     let errors = validate_orders(&s, P0, &mixed);

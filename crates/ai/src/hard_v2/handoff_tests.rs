@@ -230,7 +230,7 @@ fn temporary_defense_never_completes_an_opening() {
 }
 
 #[test]
-fn rush_keeps_starting_soldier_and_ready_army_until_its_first_capture() {
+fn rush_keeps_starting_spearman_and_ready_army_until_its_first_capture() {
     let state = legatum_core::new_game(&legatum_core::GameSetup::all_ai(5));
     let mut v = legatum_core::player_view(&state, ME);
     let mut b = OpeningBrain::new(base(&v), policy(Opening::Rush)).with_handoff();

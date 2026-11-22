@@ -25,7 +25,7 @@ describe('constructed wonder landmarks', () => {
     const hexPx = HEX_SIZE * zoom;
     const centre = { x: 200, y: 200 };
     const ordinary = landmarkBox(centre, hexPx);
-    // The Courier Hall is the narrowest painting: 224 of its 256 source pixels.
+    // The Yam Relay Station is the narrowest painting: 224 of its 256 source pixels.
     expect(ordinary.s * (224 / 256)).toBeGreaterThanOrEqual(CITY_WORLD * zoom);
     const banner = { x: ordinary.x + 20, y: ordinary.y, w: 70, h: 25 };
     const placed = landmarkBox(centre, hexPx, [banner]);

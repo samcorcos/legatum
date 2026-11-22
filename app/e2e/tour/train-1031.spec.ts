@@ -118,10 +118,10 @@ for (const size of SIZES) test.describe(`train-1031 ${size.name}`, () => {
     test.setTimeout(180_000);
     const m = citiesFixture('Mongols');
     m.players[0].techs.push('Mathematics');
-    const soldier = spawnUnit(m, 0, 'Spearman', fromOffset(5, 5), false);
+    const spearman = spawnUnit(m, 0, 'Spearman', fromOffset(5, 5), false);
     refreshVision(m);
     await loadFixture(page, coreFixture(m), 2);
-    await selectThing(page, 'unit', soldier.id);
+    await selectThing(page, 'unit', spearman.id);
     await park(page);
     await shot(page, size, '16-mongol-siege-reason');
 

@@ -65,7 +65,7 @@ fn barbarian_units(s: &GameState) -> Vec<&crate::state::Unit> {
 }
 
 #[test]
-fn barbarian_ranger_skips_a_visible_target_behind_a_mountain() {
+fn barbarian_archer_skips_a_visible_target_behind_a_mountain() {
     let mut s = peaceful();
     let ranger = spawn(&mut s, UnitKind::Archer, hex(4, 4));
     unit(&mut s, 0, UnitKind::Spearman, hex(6, 4));
@@ -324,14 +324,14 @@ fn entering_an_undefended_camp_clears_it_for_standard_gold() {
     let scout = camp(&s, camp_id).unwrap().scout.unwrap();
     s.units.remove(&guard);
     s.units.remove(&scout);
-    let soldier = unit(&mut s, 1, UnitKind::Spearman, hex(4, 5));
+    let spearman = unit(&mut s, 1, UnitKind::Spearman, hex(4, 5));
     let gold = s.players[1].gold;
     let (next, events) = run(
         &s,
         &orders(
             1,
             vec![Order::MoveUnit {
-                unit: soldier,
+                unit: spearman,
                 to: hex(6, 5),
             }],
         ),
@@ -343,7 +343,7 @@ fn entering_an_undefended_camp_clears_it_for_standard_gold() {
         camp: camp_id,
         at: hex(6, 5),
         by: PlayerId(1),
-        unit: Some(soldier),
+        unit: Some(spearman),
         gold: reward,
     }));
     let paid: i32 = events
@@ -367,13 +367,13 @@ fn entering_an_undefended_camp_clears_it_for_standard_gold() {
 fn a_guarded_camp_must_be_fought_for() {
     let mut s = peaceful();
     let camp_id = add_camp(&mut s, hex(6, 5));
-    let soldier = unit(&mut s, 1, UnitKind::Spearman, hex(5, 5));
+    let spearman = unit(&mut s, 1, UnitKind::Spearman, hex(5, 5));
     let (next, events) = run(
         &s,
         &orders(
             1,
             vec![Order::MoveUnit {
-                unit: soldier,
+                unit: spearman,
                 to: hex(6, 5),
             }],
         ),
@@ -383,7 +383,7 @@ fn a_guarded_camp_must_be_fought_for() {
         camp(&next, camp_id).is_some(),
         "the guard survived one attack"
     );
-    assert_ne!(next.units[&soldier].pos, hex(6, 5));
+    assert_ne!(next.units[&spearman].pos, hex(6, 5));
 }
 
 #[test]
@@ -694,8 +694,8 @@ fn fighting_barbarians_earns_xp_only_up_to_the_first_promotion() {
     for (xp_before, expect_gain) in [(0, true), (first, false)] {
         let mut s = peaceful();
         add_camp(&mut s, hex(10, 2));
-        let soldier = unit(&mut s, 0, UnitKind::Spearman, hex(4, 5));
-        s.units.get_mut(&soldier).unwrap().xp = xp_before;
+        let spearman = unit(&mut s, 0, UnitKind::Spearman, hex(4, 5));
+        s.units.get_mut(&spearman).unwrap().xp = xp_before;
         let raider = spawn(&mut s, UnitKind::Spearman, hex(5, 5));
         s.units.get_mut(&raider).unwrap().hp = 30;
         let (next, events) = run(
@@ -703,7 +703,7 @@ fn fighting_barbarians_earns_xp_only_up_to_the_first_promotion() {
             &orders(
                 0,
                 vec![Order::MoveUnit {
-                    unit: soldier,
+                    unit: spearman,
                     to: hex(5, 5),
                 }],
             ),
@@ -711,9 +711,9 @@ fn fighting_barbarians_earns_xp_only_up_to_the_first_promotion() {
         assert!(
             events
                 .iter()
-                .any(|e| matches!(e, Event::Battle { attacker, .. } if *attacker == soldier))
+                .any(|e| matches!(e, Event::Battle { attacker, .. } if *attacker == spearman))
         );
-        let after = next.units[&soldier].xp;
+        let after = next.units[&spearman].xp;
         if expect_gain {
             assert!(
                 after > 0 && after <= first,
@@ -771,7 +771,7 @@ fn barbarian_units_never_step_onto_or_shoot_celtic_units() {
     add_camp(&mut s, hex(9, 8));
     let raider = spawn(&mut s, UnitKind::Spearman, hex(5, 5));
     let ranger = spawn(&mut s, UnitKind::Archer, hex(5, 3));
-    let soldier = unit(&mut s, 0, UnitKind::Spearman, hex(6, 5));
+    let spearman = unit(&mut s, 0, UnitKind::Spearman, hex(6, 5));
     let archer = unit(&mut s, 0, UnitKind::Archer, hex(5, 2));
     let mut sight = BitSet::new(s.map.tiles.len());
     for h in [hex(6, 5), hex(5, 2)] {
@@ -794,18 +794,18 @@ fn barbarian_units_never_step_onto_or_shoot_celtic_units() {
     let mut events = Vec::new();
     crate::rules::movement::resolve_movement(&mut t, &mut events);
     assert_eq!(t.units[&raider].pos, hex(5, 5));
-    assert!(t.units.contains_key(&soldier) && t.units.contains_key(&archer));
+    assert!(t.units.contains_key(&spearman) && t.units.contains_key(&archer));
     assert!(!events.iter().any(|e| matches!(e, Event::Battle { .. })));
     // A Celtic unit stepping onto the tile a barbarian also steps onto is no meeting either:
     // the barbarian stays put.
     let mut t = s.clone();
     barbarians_goto(&mut t, raider, hex(6, 4));
-    t.units.get_mut(&soldier).unwrap().goto = Some(hex(6, 4));
+    t.units.get_mut(&spearman).unwrap().goto = Some(hex(6, 4));
     let mut events = Vec::new();
     crate::rules::movement::resolve_movement(&mut t, &mut events);
     assert!(!events.iter().any(|e| matches!(e, Event::Battle { .. })));
     assert_eq!(t.units[&raider].pos, hex(5, 5));
-    assert_eq!(t.units[&soldier].pos, hex(6, 4));
+    assert_eq!(t.units[&spearman].pos, hex(6, 4));
 }
 
 #[test]
@@ -838,11 +838,11 @@ fn the_celts_still_fight_camps_and_collect_the_gold() {
     let mut s = celtic();
     let camp_id = add_camp(&mut s, hex(6, 5));
     let guard = camp(&s, camp_id).unwrap().guard.unwrap();
-    let soldier = unit(&mut s, 0, UnitKind::Spearman, hex(5, 5));
+    let spearman = unit(&mut s, 0, UnitKind::Spearman, hex(5, 5));
     let go = orders(
         0,
         vec![Order::MoveUnit {
-            unit: soldier,
+            unit: spearman,
             to: hex(6, 5),
         }],
     );
@@ -860,7 +860,7 @@ fn the_celts_still_fight_camps_and_collect_the_gold() {
         camp: camp_id,
         at: hex(6, 5),
         by: PlayerId(0),
-        unit: Some(soldier),
+        unit: Some(spearman),
         gold: CAMP_CLEAR_GOLD,
     }));
 }

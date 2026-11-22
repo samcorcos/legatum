@@ -44,7 +44,7 @@ import { drawResourceIcons, medallionTop, resourceDetail, STACK_LIFT } from './r
 import type { ScenarioTarget } from '../scenarios/scenarios';
 import { drawRoads } from './roadArt';
 import { drawClosedLand } from './sakokuLand';
-import { drawHallBadge, drawHallLand, hallBadgeAt, hallSites } from './courierHall';
+import { drawStationBadge, drawStationLand, stationBadgeAt, stationSites } from './yamRelayStation';
 import { drawWonderArt, drawWonderBadges } from './wonderArt';
 import { deathPos, hpAt, type CombatPlan, type FxGhost } from './combatFx';
 import { aircraftPassProgress, drawCombatFx, drawSiegeAmbient, siegeAmbientBox } from './combatFxDraw';
@@ -680,10 +680,10 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   // ---- screen space ----
   screenT();
 
-  // Roads, then the Courier Hall's rhumb lines and compass-rose plaque: above terrain, below banners and units.
+  // Roads, then the Yam Relay Station's rhumb lines and compass-rose plaque: above terrain, below banners and units.
   if (reveal?.roads) drawRevealed(ctx, dpr, w, h, reveal.roads, view, (v) => drawRoads(ctx, v, S2, hexPx, w, h));
   else drawRoads(ctx, view, S2, hexPx, w, h);
-  drawHallLand(ctx, view, S2, hexPx, w, h);
+  drawStationLand(ctx, view, S2, hexPx, w, h);
   // A closed country (Sakoku): its palisade border.
   drawClosedLand(ctx, view, S2, hexPx, w, h);
 
@@ -841,7 +841,7 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
     if (siege.has(c.id)) drawSiegeBar(ctx, far.x, far.y - far.seal.ay + far.seal.h + 2, Math.max(30, far.seal.w), c.hp, c.max_hp, FONTS[look].sans, false);
   }
 
-  drawHallBadge(ctx, view, S2, hexPx, w, h);
+  drawStationBadge(ctx, view, S2, hexPx, w, h);
 
   // Units. Sharing a tile, they fan out side by side (military right, civilian left) so both
   // tokens read; three or more also carry a count badge.
@@ -1399,10 +1399,10 @@ function cityBanners(view: PlayerView, cam: Camera, w: number, h: number, dpr: n
     const { y, cover } = bannerBlock(c, spec, meters, p, hexPx, fs, look, dpr, siege);
     return [{ c, spec, x: p.x, y, fs, alpha, meters, cover, far: null as FarCity | null }];
   });
-  // The Courier Hall's badge sits beside its city's seal: names keep clear of it.
-  const badges = far ? hallSites(view).map(({ city }) => {
+  // The Yam Relay Station's badge sits beside its city's seal: names keep clear of it.
+  const badges = far ? stationSites(view).map(({ city }) => {
     const q = worldToScreen(cam, w, h, hexToPixel(city.pos, HEX_SIZE).x, hexToPixel(city.pos, HEX_SIZE).y);
-    const b = hallBadgeAt(q, hexPx);
+    const b = stationBadgeAt(q, hexPx);
     return { x: b.x - b.r, y: b.y - b.r, w: b.r * 2, h: b.r * 2 };
   }) : [];
   if (far) placeFarNames(items, view.me, selectedCity, dpr, look, badges);

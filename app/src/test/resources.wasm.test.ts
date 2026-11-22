@@ -26,8 +26,8 @@ type Game = {
 let makeCore: () => WasmClient;
 let Game: Game;
 
-const TROOPER: ProductionItem = { kind: 'Unit', unit: 'Pikeman' };
-const SOLDIER: ProductionItem = { kind: 'Unit', unit: 'Spearman' };
+const PIKEMAN: ProductionItem = { kind: 'Unit', unit: 'Pikeman' };
+const SPEARMAN: ProductionItem = { kind: 'Unit', unit: 'Spearman' };
 const WALLS: ProductionItem = { kind: 'Building', building: 'Walls' };
 type Turn = Record<number, Order[]>;
 
@@ -136,10 +136,10 @@ describe.skipIf(!available)('WASM resource behavior', () => {
     let { fixtureClient, core } = start(s);
     expect(option(fixtureClient.view(0), a.id).supply_need).toBe('Iron');
     expect(option(fixtureClient.view(0), a.id).resource_blocker).toBe('No Iron to spare: all 2 of your Iron are in use. Bring another Iron deposit inside your borders, or build a Mine on one for +1 Iron.');
-    const errors = fixtureClient.validate(0, [{ type: 'SetProduction', city: a.id, item: TROOPER }, { type: 'SetProductionQueue', city: b.id, queue: [TROOPER, SOLDIER] }]);
+    const errors = fixtureClient.validate(0, [{ type: 'SetProduction', city: a.id, item: PIKEMAN }, { type: 'SetProductionQueue', city: b.id, queue: [PIKEMAN, SPEARMAN] }]);
     expect(errors.map((e) => e.index)).toEqual([0, 1]);
     expect(errors[0].message).toMatch(/^A cannot start Pikeman: No Iron to spare/);
-    turn(fixtureClient, core, { 0: [{ type: 'SetProductionQueue', city: b.id, queue: [SOLDIER, TROOPER] }] });
+    turn(fixtureClient, core, { 0: [{ type: 'SetProductionQueue', city: b.id, queue: [SPEARMAN, PIKEMAN] }] });
 
     put(s, fromOffset(5, 4), null);
     ({ fixtureClient, core } = start(s));
@@ -147,7 +147,7 @@ describe.skipIf(!available)('WASM resource behavior', () => {
     s.players[0].techs = s.players[0].techs.filter((t) => t !== 'IronWorking');
     ({ fixtureClient, core } = start(s));
     expect(option(fixtureClient.view(0), a.id).resource_blocker).toBe('Needs Iron: Iron Working reveals Iron on the map');
-    turn(fixtureClient, core, { 0: [{ type: 'SetProduction', city: a.id, item: TROOPER }] });
+    turn(fixtureClient, core, { 0: [{ type: 'SetProduction', city: a.id, item: PIKEMAN }] });
   });
 
   it('a build in progress holds its supply and gives it back when replaced', () => {
@@ -156,13 +156,13 @@ describe.skipIf(!available)('WASM resource behavior', () => {
     let { fixtureClient, core } = start(s);
     // One Iron is spare: A starts a Pikeman and holds it.
     expect(option(fixtureClient.view(0), a.id).resource_blocker).toBeUndefined();
-    turn(fixtureClient, core, { 0: [{ type: 'SetProduction', city: a.id, item: TROOPER }] });
+    turn(fixtureClient, core, { 0: [{ type: 'SetProduction', city: a.id, item: PIKEMAN }] });
     const v = fixtureClient.view(0);
     expect(supplyOf(v, 'Iron')).toMatchObject({ held: ['Pikeman in A'], spare: 0 });
     expect(option(v, b.id).resource_blocker).toBe('No Iron to spare: all 2 of your Iron are in use. 1 is held for the Pikeman being built in A. Bring another Iron deposit inside your borders, or build a Mine on one for +1 Iron.');
     // The city's own build doesn't count against it; replacing it frees the supply.
     expect(option(v, a.id).resource_blocker).toBeUndefined();
-    turn(fixtureClient, core, { 0: [{ type: 'SetProduction', city: a.id, item: WALLS }, { type: 'SetProduction', city: b.id, item: TROOPER }] });
+    turn(fixtureClient, core, { 0: [{ type: 'SetProduction', city: a.id, item: WALLS }, { type: 'SetProduction', city: b.id, item: PIKEMAN }] });
     expect(supplyOf(fixtureClient.view(0), 'Iron')).toMatchObject({ held: ['Pikeman in B'], spare: 0 });
 
     // Finishing turns the hold into a user.
@@ -170,7 +170,7 @@ describe.skipIf(!available)('WASM resource behavior', () => {
     done.cities[1].prod = 1000;
     const d = start(done);
     const events = turn(d.fixtureClient, d.core, {});
-    expect(events).toContainEqual({ type: 'ProductionCompleted', city: b.id, owner: 0, item: TROOPER });
+    expect(events).toContainEqual({ type: 'ProductionCompleted', city: b.id, owner: 0, item: PIKEMAN });
     expect(supplyOf(d.fixtureClient.view(0), 'Iron')).toMatchObject({ used: { total: 2, parts: [['Pikeman ×2', 2]] }, spare: 0 });
     expect(supplyOf(d.fixtureClient.view(0), 'Iron').held).toBeUndefined();
   });
@@ -180,7 +180,7 @@ describe.skipIf(!available)('WASM resource behavior', () => {
     const u1 = spawnUnit(s, 0, 'Pikeman', fromOffset(3, 3), false);
     spawnUnit(s, 0, 'Pikeman', fromOffset(3, 4), false);
     let { fixtureClient, core } = start(s);
-    turn(fixtureClient, core, { 0: [{ type: 'SetProductionQueue', city: a.id, queue: [SOLDIER, TROOPER] }] });
+    turn(fixtureClient, core, { 0: [{ type: 'SetProductionQueue', city: a.id, queue: [SPEARMAN, PIKEMAN] }] });
     const waiting = structuredClone(fixtureClient.debugState());
     waiting.cities[0].prod = 140;
     ({ fixtureClient, core } = start(waiting));
@@ -195,7 +195,7 @@ describe.skipIf(!available)('WASM resource behavior', () => {
     freed.cities[0].prod = 1000;
     ({ fixtureClient, core } = start(freed));
     const resumed = turn(fixtureClient, core, {});
-    expect(resumed).toContainEqual(expect.objectContaining({ type: 'ProductionCompleted', item: TROOPER }));
+    expect(resumed).toContainEqual(expect.objectContaining({ type: 'ProductionCompleted', item: PIKEMAN }));
   });
 
   it('buying a Pikeman needs spare Iron and takes over its own hold', () => {
@@ -203,7 +203,7 @@ describe.skipIf(!available)('WASM resource behavior', () => {
     spawnUnit(s, 0, 'Pikeman', fromOffset(3, 3), false);
     spawnUnit(s, 0, 'Pikeman', fromOffset(3, 4), false);
     let { fixtureClient, core } = start(s);
-    const buy: Order[] = [{ type: 'BuyItem', city: a.id, item: TROOPER }];
+    const buy: Order[] = [{ type: 'BuyItem', city: a.id, item: PIKEMAN }];
     expect(fixtureClient.validate(0, buy)[0].message).toMatch(/^No Iron to spare/);
     turn(fixtureClient, core, { 0: buy });
 
@@ -211,7 +211,7 @@ describe.skipIf(!available)('WASM resource behavior', () => {
     put(s, fromOffset(12, 4), 'Iron');
     s.units.pop();
     ({ fixtureClient, core } = start(s));
-    turn(fixtureClient, core, { 0: [{ type: 'SetProduction', city: b.id, item: TROOPER }] });
+    turn(fixtureClient, core, { 0: [{ type: 'SetProduction', city: b.id, item: PIKEMAN }] });
     expect(supplyOf(fixtureClient.view(0), 'Iron').spare).toBe(2);
     const second = structuredClone(fixtureClient.debugState());
     spawnUnit(second, 0, 'Pikeman', fromOffset(3, 5), false);
@@ -219,7 +219,7 @@ describe.skipIf(!available)('WASM resource behavior', () => {
     ({ fixtureClient, core } = start(second));
     expect(supplyOf(fixtureClient.view(0), 'Iron')).toMatchObject({ spare: 0, held: ['Pikeman in B'] });
     expect(fixtureClient.validate(0, buy)[0].message).toMatch(/^No Iron to spare/);
-    const buyHeld: Order[] = [{ type: 'BuyItem', city: b.id, item: TROOPER }];
+    const buyHeld: Order[] = [{ type: 'BuyItem', city: b.id, item: PIKEMAN }];
     expect(fixtureClient.validate(0, buyHeld)).toEqual([]);
     (expect(fixtureClient.validate(0, buy)).toMatchSnapshot(), void (core.validate(0, buy)));
     turn(fixtureClient, core, { 0: buyHeld });

@@ -8,8 +8,8 @@ use legatum_core::events::Defender;
 use legatum_core::{Event, GameState, Hex, Order, PlayerId, UnitId, resolve_turn};
 use legatum_wasm::tape::TapeTurn;
 
-const RANGER: UnitId = UnitId(62);
-const SOLDIER: UnitId = UnitId(82);
+const ARCHER: UnitId = UnitId(62);
+const SPEARMAN: UnitId = UnitId(82);
 
 fn fixture() -> (GameState, Vec<TapeTurn>) {
     let v: serde_json::Value =
@@ -21,15 +21,15 @@ fn fixture() -> (GameState, Vec<TapeTurn>) {
 }
 
 #[test]
-fn the_retreating_ranger_is_hit_once_then_gets_away() {
+fn the_retreating_archer_is_hit_once_then_gets_away() {
     let (state, turns) = fixture();
     assert_eq!(state.turn, 106);
     let start = Hex { q: 24, r: 18 };
-    assert_eq!(state.units[&RANGER].pos, start);
-    assert_eq!(state.units[&RANGER].hp, 58);
-    assert_eq!(state.units[&SOLDIER].pos.distance(start), 1, "adjacent");
+    assert_eq!(state.units[&ARCHER].pos, start);
+    assert_eq!(state.units[&ARCHER].hp, 58);
+    assert_eq!(state.units[&SPEARMAN].pos.distance(start), 1, "adjacent");
     assert!(turns[0].orders[&PlayerId(0)].iter().any(|o| matches!(o,
-        Order::MoveUnitPath { unit, to, .. } if *unit == RANGER && *to == Hex { q: 25, r: 16 })));
+        Order::MoveUnitPath { unit, to, .. } if *unit == ARCHER && *to == Hex { q: 25, r: 16 })));
     let (next, events) = resolve_turn(&state, &turns[0].orders);
     let hits: Vec<_> = events
         .iter()
@@ -41,7 +41,7 @@ fn the_retreating_ranger_is_hit_once_then_gets_away() {
                 defender_leaving,
                 defender_hp_after,
                 ..
-            } if *attacker == SOLDIER && *unit == RANGER => {
+            } if *attacker == SPEARMAN && *unit == ARCHER => {
                 Some((*at, *defender_leaving, *defender_hp_after))
             }
             _ => None,
@@ -54,14 +54,14 @@ fn the_retreating_ranger_is_hit_once_then_gets_away() {
     assert!(hp > 0, "it survived the hit");
     assert!(
         !events.iter().any(|e| matches!(e,
-            Event::MoveBlocked { unit, reason, .. } if *unit == RANGER && reason.contains("pinned"))),
+            Event::MoveBlocked { unit, reason, .. } if *unit == ARCHER && reason.contains("pinned"))),
         "no longer pinned"
     );
-    let r = &next.units[&RANGER];
+    let r = &next.units[&ARCHER];
     assert_ne!(r.pos, start, "it pulled back");
     assert!(r.pos.distance(Hex { q: 25, r: 16 }) < start.distance(Hex { q: 25, r: 16 }));
     assert_eq!(
-        next.units[&SOLDIER].pos, state.units[&SOLDIER].pos,
-        "the Soldier stays"
+        next.units[&SPEARMAN].pos, state.units[&SPEARMAN].pos,
+        "the Spearman stays"
     );
 }

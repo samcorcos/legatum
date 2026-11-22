@@ -72,13 +72,13 @@ fn the_shop_lists_what_a_met_peaceful_seller_can_field_and_only_for_byzantium() 
             .all(|o| company::sold_by(s.player(o.seller).faction, o.unit)),
         "no Scouts, Settlers, the Heir, aircraft or hunters"
     );
-    let soldier = offers
+    let spearman = offers
         .iter()
         .find(|o| o.unit == UnitKind::Spearman)
         .unwrap()
         .price;
     assert_eq!(
-        soldier,
+        spearman,
         data::unit_stats_for(Faction::Byzantium, UnitKind::Spearman).cost,
         "100% of the Production cost, half the ordinary purchase"
     );

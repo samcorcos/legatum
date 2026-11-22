@@ -9,7 +9,7 @@ import './siege.css';
 /** The most cards shown in full; any others are one line each, still one click from their city. */
 const FULL_CARDS = 3;
 
-/** What the attackers are doing, in one line, with the damage they do: "3 Soldiers beside it · about 84 HP a turn". */
+/** What the attackers are doing, in one line, with the damage they do: "3 Spearmen beside it · about 84 HP a turn". */
 function whoLine(a: CityAlarm): string {
   if (a.kind === 'approach') return `${a.force} from ${a.from} within 3 tiles`;
   if (a.attackers.length) {

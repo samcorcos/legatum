@@ -171,11 +171,11 @@ describe('G18 combat warnings', () => {
   });
 
   it('warns on the forecast card when the attacker could be destroyed, including chances that round to 0%', () => {
-    expect(attackerRisk(forecast({}), 'Soldier')).toBeNull();
-    expect(attackerRisk(forecast({ loss_chance: 35, attacker_hp: 36 }), 'Soldier')).toBe('Risky: your Soldier may be destroyed (35% chance).');
+    expect(attackerRisk(forecast({}), 'Spearman')).toBeNull();
+    expect(attackerRisk(forecast({ loss_chance: 35, attacker_hp: 36 }), 'Spearman')).toBe('Risky: your Spearman may be destroyed (35% chance).');
     // Worst roll (120%) of 20 vs 20 deals 36: a 36 HP attacker can die even when the chance rounds down to 0%.
-    expect(attackerRisk(forecast({ attacker_hp: 36 }), 'Soldier')).toBe('Risky: your Soldier may be destroyed (under 1% chance).');
-    expect(attackerRisk(forecast({ ranged: true, loss_chance: 0, attacker_hp: 1 }), 'Ranger')).toBeNull();
+    expect(attackerRisk(forecast({ attacker_hp: 36 }), 'Spearman')).toBe('Risky: your Spearman may be destroyed (under 1% chance).');
+    expect(attackerRisk(forecast({ ranged: true, loss_chance: 0, attacker_hp: 1 }), 'Archer')).toBeNull();
   });
 
   it('flags own units under half HP standing next to enemy military, weakest first', () => {
@@ -194,25 +194,25 @@ describe('G18 combat warnings', () => {
 describe('city strike forecast', () => {
   const f = { ranged: false, attacker_hp: 60, city_strike: { city: 1, damage: 21,
     city_strength: { total: 16, parts: [['City', 10], ['Population', 6]] },
-    attacker_defense: { total: 16, parts: [['Soldier', 20], ['Wounded', -4]] } } } as unknown as BattleForecast;
+    attacker_defense: { total: 16, parts: [['Spearman', 20], ['Wounded', -4]] } } } as unknown as BattleForecast;
   it('says the city fires back, how hard, and at whom, with both breakdowns', () => {
-    const w = cityStrikeWarning(f, 'Redoubt', 'Soldier')!;
-    expect(w.text).toBe('Redoubt will fire back: about −21 HP to your Soldier. It fires at the weakest unit in range.');
-    expect(w.details).toContain('City 16 (City 10, Population +6) vs your defence 16 (Soldier 20, Wounded −4)');
+    const w = cityStrikeWarning(f, 'Redoubt', 'Spearman')!;
+    expect(w.text).toBe('Redoubt will fire back: about −21 HP to your Spearman. It fires at the weakest unit in range.');
+    expect(w.details).toContain('City 16 (City 10, Population +6) vs your defence 16 (Spearman 20, Wounded −4)');
     expect(w.deadly).toBe(false);
   });
   it('warns when the shot could destroy the attacker, and is silent without a shot', () => {
-    expect(cityStrikeWarning({ ...f, attacker_hp: 20 }, 'Redoubt', 'Soldier')).toMatchObject({ deadly: true, text: expect.stringContaining('about −20 HP to your Soldier, and it could destroy it') });
-    expect(cityStrikeWarning({ ...f, city_strike: undefined }, 'Redoubt', 'Soldier')).toBeNull();
+    expect(cityStrikeWarning({ ...f, attacker_hp: 20 }, 'Redoubt', 'Spearman')).toMatchObject({ deadly: true, text: expect.stringContaining('about −20 HP to your Spearman, and it could destroy it') });
+    expect(cityStrikeWarning({ ...f, city_strike: undefined }, 'Redoubt', 'Spearman')).toBeNull();
   });
 });
 
 describe('walled city fire folded into the forecast (playtest-6 H1)', () => {
-  // The walls fixture's numbers: a Soldier (20) attacks a population-3 walled city (26, 200 HP).
+  // The walls fixture's numbers: a Spearman (20) attacks a population-3 walled city (26, 200 HP).
   const strike = { city: 1, damage: damage(26, 20, 100), city_strength: { total: 26, parts: [] }, attacker_defense: { total: 20, parts: [] } };
   const odds = exactOdds(20, 26, 100, 200, false);
   const f = {
-    ranged: false, attacker_strength: { total: 20, parts: [['Soldier', 20]] }, defender_strength: { total: 26, parts: [] },
+    ranged: false, attacker_strength: { total: 20, parts: [['Spearman', 20]] }, defender_strength: { total: 26, parts: [] },
     win_chance: odds.win, loss_chance: odds.loss, expected_damage_to_attacker: odds.expToAtk, expected_damage_to_defender: odds.expToDef,
     attacker_hp: 100, defender_hp: 200, city_strike: strike,
   } as unknown as BattleForecast;
@@ -224,7 +224,7 @@ describe('walled city fire folded into the forecast (playtest-6 H1)', () => {
     let shots = 0;
     for (let r = 80; r <= 120; r++) shots += damage(26, 20, r);
     expect(out.fire).toBe(Math.trunc(shots / 41));
-    // Wounded by the shot, the Soldier attacks weaker: it takes more and deals less than without it.
+    // Wounded by the shot, the Spearman attacks weaker: it takes more and deals less than without it.
     expect(out.attack).toBeGreaterThan(f.expected_damage_to_attacker);
     expect(out.dealt).toBeLessThan(f.expected_damage_to_defender);
     expect(out.hpAfter).toBe(100 - out.fire - out.attack);
@@ -357,16 +357,16 @@ it('the headline follows the whole fight at a city, never the walls alone (T187 
 it('words the whole fight at a city from core numbers: city, garrison, capture, you', () => {
   const a = { attacks: 2, city_hp: 40, city_hp_after: 0, capture_chance: 0, can_capture: true,
     garrison: { unit: 7, owner: 1, kind: 'Spearman' as const, hp: 100, hp_after: 61, destroyed_chance: 0 } };
-  const s = assaultSummary(a, 'Lugano', 'Soldier');
+  const s = assaultSummary(a, 'Lugano', 'Spearman');
   expect(s.title).toBe('The whole fight at Lugano: 2 attacks this turn');
   expect(s.rows.map((r) => [r.key, r.hp, r.after])).toEqual([['city', 40, 0], ['garrison', 100, 61]]);
-  expect(s.capture).toBe('Lugano is not captured this turn: its Soldier survives with about 61 HP.');
+  expect(s.capture).toBe('Lugano is not captured this turn: its Spearman survives with about 61 HP.');
   expect(s.captureTone).toBe('bad');
-  const falls = assaultSummary({ ...a, capture_chance: 100, garrison: { ...a.garrison, hp_after: 0, destroyed_chance: 100 } }, 'Lugano', 'Soldier');
+  const falls = assaultSummary({ ...a, capture_chance: 100, garrison: { ...a.garrison, hp_after: 0, destroyed_chance: 100 } }, 'Lugano', 'Spearman');
   expect(falls.capture).toBe('Lugano is captured this turn.');
   expect(falls.rows[1].note).toBe('destroyed');
-  const maybe = assaultSummary({ ...a, capture_chance: 55 }, 'Lugano', 'Soldier');
-  expect(maybe.capture).toBe('Lugano is captured this turn in 55% of outcomes; otherwise its Soldier survives with about 61 HP.');
+  const maybe = assaultSummary({ ...a, capture_chance: 55 }, 'Lugano', 'Spearman');
+  expect(maybe.capture).toBe('Lugano is captured this turn in 55% of outcomes; otherwise its Spearman survives with about 61 HP.');
   const shot = assaultSummary({ ...a, can_capture: false, attacks: 1, garrison: null, city_hp_after: 12 }, 'Lugano', null);
   expect(shot.capture).toBe('A shot cannot capture a city. After this turn Lugano keeps about 12 HP.');
   expect(shot.rows.map((r) => r.key)).toEqual(['city']);
@@ -502,9 +502,9 @@ describe('the carried hit at a city', () => {
   it('splits the hit between the city and the garrison from core numbers', () => {
     const a = { attacks: 1, city_hp: 12, city_hp_after: 0, capture_chance: 0, can_capture: true,
       garrison: { unit: 7, owner: 1, kind: 'Spearman' as const, hp: 100, hp_after: 69, destroyed_chance: 0, carried: 31 } };
-    const rows = assaultSummary(a, 'Lugano', 'Soldier').rows;
+    const rows = assaultSummary(a, 'Lugano', 'Spearman').rows;
     expect(rows[0]).toMatchObject({ label: 'Lugano', hp: 12, after: 0, note: 'carries −31 to the garrison' });
     expect(rows[1].note).toBeUndefined();
-    expect(assaultSummary({ ...a, garrison: { ...a.garrison, carried: 0 } }, 'Lugano', 'Soldier').rows[0].note).toBeUndefined();
+    expect(assaultSummary({ ...a, garrison: { ...a.garrison, carried: 0 } }, 'Lugano', 'Spearman').rows[0].note).toBeUndefined();
   });
 });

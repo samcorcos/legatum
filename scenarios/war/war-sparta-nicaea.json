@@ -83,7 +83,7 @@
     "turns": 4,
     "units_lost": 0,
     "cities_lost": 0,
-    "summary": "Sparta's capital had trained only Hoplites since turn 2. On turn 18 four of them stood one to three hexes from Byzantium's only city, Nicaea, eight hexes from home; he declared war, stole a Byzantine Settler on turn 20 and stormed Nicaea (no Walls: they had turned into a Ranger on turn 20) on turn 22 without losing a unit. Byzantium was eliminated.",
+    "summary": "Sparta's capital had trained only Hoplites since turn 2. On turn 18 four of them stood one to three hexes from Byzantium's only city, Nicaea, eight hexes from home; he declared war, stole a Byzantine Settler on turn 20 and stormed Nicaea (no Walls: they had turned into an Archer on turn 20) on turn 22 without losing a unit. Byzantium was eliminated.",
     "game": "Playtest 8.9.2 (Sparta, Standard, 8 empires), engine 28be168b"
   },
   "lab": {

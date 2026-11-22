@@ -2151,10 +2151,10 @@ mod tests {
         let mut s = game(&[0, 1]);
         s.player_mut(PlayerId(0)).faction = Faction::Sparta;
         let shooter = unit(&mut s, 0, UnitKind::Archer, hex(2, 3));
-        let soldier = unit(&mut s, 0, UnitKind::Spearman, hex(3, 3));
+        let spearman = unit(&mut s, 0, UnitKind::Spearman, hex(3, 3));
         let victim = unit(&mut s, 1, UnitKind::Spearman, hex(4, 3));
         s.units.get_mut(&shooter).unwrap().hp = 40;
-        s.units.get_mut(&soldier).unwrap().hp = 40;
+        s.units.get_mut(&spearman).unwrap().hp = 40;
         s.units.get_mut(&victim).unwrap().hp = 30;
         let mut events = Vec::new();
         let mut shot = plan_fight(&s, 0, shooter, Target::Unit(victim), FightKind::Ranged);
@@ -2166,10 +2166,10 @@ mod tests {
                 .iter()
                 .any(|e| matches!(e, Event::SpartaKillHeal { .. }))
         );
-        let blow = forced_hit(&s, soldier, victim, 10, 0);
+        let blow = forced_hit(&s, spearman, victim, 10, 0);
         apply_fights(&mut s, &[blow], &mut events);
         assert!(!s.units.contains_key(&victim));
-        assert_eq!((s.units[&shooter].hp, s.units[&soldier].hp), (90, 90));
+        assert_eq!((s.units[&shooter].hp, s.units[&spearman].hp), (90, 90));
     }
 
     #[test]
@@ -2297,7 +2297,7 @@ mod tests {
         assert_eq!(s.units[&civilian].hp, 1);
         assert!(
             s.cities[&c].hp < old_hp,
-            "the killed Ranger still shoots from the same snapshot"
+            "the killed Archer still shoots from the same snapshot"
         );
         let shot: Vec<_> = events.iter().filter(|e| matches!(e, Event::Battle { attacker: crate::events::Attacker::City { city }, .. } if *city == c)).collect();
         assert_eq!(shot.len(), 1);
@@ -2337,21 +2337,21 @@ mod tests {
     fn city_strike_ignores_peace_civilians_and_out_of_range() {
         let mut s = game(&[0, 1]);
         walled_city(&mut s, 0, hex(3, 3), 2);
-        let soldier = unit(&mut s, 1, UnitKind::Spearman, hex(5, 3));
+        let spearman = unit(&mut s, 1, UnitKind::Spearman, hex(5, 3));
         unit(&mut s, 1, UnitKind::Settler, hex(3, 4));
         let mut events = Vec::new();
         resolve_ranged(&mut s, &[], &mut events);
         assert_eq!(
             events.len(),
             1,
-            "on by default: the city fires at the Soldier"
+            "on by default: the city fires at the Spearman"
         );
         events.clear();
-        s.units.get_mut(&soldier).unwrap().hp = 100;
-        s.units.get_mut(&soldier).unwrap().pos = hex(6, 3);
+        s.units.get_mut(&spearman).unwrap().hp = 100;
+        s.units.get_mut(&spearman).unwrap().pos = hex(6, 3);
         resolve_ranged(&mut s, &[], &mut events);
         assert!(events.is_empty());
-        s.units.get_mut(&soldier).unwrap().pos = hex(5, 3);
+        s.units.get_mut(&spearman).unwrap().pos = hex(5, 3);
         for r in &mut s.diplomacy.as_mut().unwrap().relations {
             r.state = crate::diplomacy::RelationState::Peace;
         }
@@ -2364,7 +2364,7 @@ mod tests {
         for blocker in [Terrain::Forest, Terrain::Hills] {
             let mut s = game(&[0, 1]);
             let city = walled_city(&mut s, 0, hex(3, 3), 2);
-            let soldier = unit(&mut s, 1, UnitKind::Spearman, hex(5, 3));
+            let spearman = unit(&mut s, 1, UnitKind::Spearman, hex(5, 3));
             s.map.get_mut(hex(4, 3)).unwrap().terrain = blocker;
             // Remove the normal city-border sight ring so only native sight governs this case.
             for h in hex(3, 3).neighbors() {
@@ -2383,17 +2383,17 @@ mod tests {
                 visibility::visible_tiles(&s, s.team_of(PlayerId(0)))
                     .get(s.map.index(hex(5, 3)).unwrap())
             );
-            let hp = s.units[&soldier].hp;
+            let hp = s.units[&spearman].hp;
             let mut events = Vec::new();
             resolve_ranged(&mut s, &[], &mut events);
             assert!(
-                s.units[&soldier].hp < hp,
+                s.units[&spearman].hp < hp,
                 "{blocker:?} must not block city fire"
             );
             assert!(events.iter().any(|e| matches!(e, Event::Battle {
                 attacker: Attacker::City { city: firing },
                 defender: Defender::Unit { unit: target, .. }, ..
-            } if *firing == city && *target == soldier)));
+            } if *firing == city && *target == spearman)));
         }
     }
 
@@ -2401,29 +2401,29 @@ mod tests {
     fn a_city_at_zero_hp_does_not_fire_but_one_hp_does() {
         let mut s = game(&[0, 1]);
         let c = walled_city(&mut s, 0, hex(3, 3), 2);
-        let soldier = unit(&mut s, 1, UnitKind::Spearman, hex(4, 3));
+        let spearman = unit(&mut s, 1, UnitKind::Spearman, hex(4, 3));
         s.cities.get_mut(&c).unwrap().hp = 0;
         let mut events = Vec::new();
         resolve_ranged(&mut s, &[], &mut events);
         assert!(events.is_empty());
-        assert_eq!(s.units[&soldier].hp, 100);
+        assert_eq!(s.units[&spearman].hp, 100);
         s.cities.get_mut(&c).unwrap().hp = 1;
         resolve_ranged(&mut s, &[], &mut events);
         assert_eq!(events.len(), 1);
-        assert!(s.units[&soldier].hp < 100);
+        assert!(s.units[&spearman].hp < 100);
     }
 
     #[test]
-    fn only_walled_cities_fire_with_citadel_and_customs_bastion_counting() {
+    fn only_walled_cities_fire_with_citadel_and_alpine_redoubt_counting() {
         // Civ 6: an unwalled city relies on its garrison and HP; Walls (any tier) let it fire.
         let mut s = game(&[0, 1]);
         s.players[0].faction = Faction::India;
         let c = city(&mut s, 0, hex(3, 3), 2);
-        let soldier = unit(&mut s, 1, UnitKind::Spearman, hex(4, 3));
+        let spearman = unit(&mut s, 1, UnitKind::Spearman, hex(4, 3));
         let mut events = Vec::new();
         resolve_ranged(&mut s, &[], &mut events);
         assert!(events.is_empty(), "an unwalled city cannot fire");
-        assert_eq!(s.units[&soldier].hp, 100);
+        assert_eq!(s.units[&spearman].hp, 100);
         for (faction, walls) in [
             (Faction::India, BuildingKind::Walls),
             (Faction::India, BuildingKind::Castle),
@@ -2435,7 +2435,7 @@ mod tests {
             let mut events = Vec::new();
             resolve_ranged(&mut t, &[], &mut events);
             assert_eq!(events.len(), 1, "{faction:?} {walls:?} fires");
-            assert!(t.units[&soldier].hp < 100);
+            assert!(t.units[&spearman].hp < 100);
         }
     }
 
@@ -2590,7 +2590,7 @@ mod tests {
         assert_eq!(
             next.cities[&c].hp,
             data::CITY_HP - fight.damage_to_defender,
-            "the city's defense (not the Soldier's) decides the damage"
+            "the city's defense (not the Spearman's) decides the damage"
         );
         assert!(events.iter().any(|e| matches!(e,
             Event::Battle { defender: Defender::City { city, .. }, .. } if *city == c)));
@@ -2771,11 +2771,11 @@ mod tests {
         assert_eq!(s.units[&archer].hp, 100);
     }
 
-    /// The user's game (2026-10-04): three Oathbearers attacked one nearly dead Spearman in the
+    /// The user's game (2026-10-04): three Spartan Hoplites attacked one nearly dead Spearman in the
     /// same movement round, and each took the Spearman's full counterattack. Now they share one,
     /// and the Spearman is destroyed once.
     #[test]
-    fn three_oathbearers_share_a_dying_soldiers_one_counterattack() {
+    fn three_spartan_hoplites_share_a_dying_spearmans_one_counterattack() {
         let mut s = game(&[0, 1]);
         s.player_mut(PlayerId(0)).faction = Faction::Sparta;
         let d = unit(&mut s, 1, UnitKind::Spearman, hex(5, 5));

@@ -8,7 +8,7 @@ use legatum_core::{CityId, TechId};
 const GRANARY: ProductionItem = ProductionItem::Building {
     building: BuildingKind::Granary,
 };
-const SOLDIER: ProductionItem = ProductionItem::Unit {
+const SPEARMAN: ProductionItem = ProductionItem::Unit {
     unit: UnitKind::Spearman,
 };
 
@@ -28,7 +28,7 @@ fn tally() -> Tally {
 /// Athens: city 1 has an enemy Spearman two tiles away and no garrison, so the frontline check
 /// wants a defender there; city 2, far from it, can buy a Granary for 80. City 1's Spearman is
 /// quoted at `soldier` (None: no unit can be bought there).
-fn view(gold: i32, soldier: Option<i32>) -> legatum_core::PlayerView {
+fn view(gold: i32, spearman: Option<i32>) -> legatum_core::PlayerView {
     let mut view = ViewBuilder::new(32, 20)
         .faction(Faction::Athens)
         .known_techs(&TechId::ALL)
@@ -39,10 +39,11 @@ fn view(gold: i32, soldier: Option<i32>) -> legatum_core::PlayerView {
         .build();
     view.economy.gold_per_turn.total = 50;
     let d = view.cities[0].detail.as_mut().unwrap();
-    d.options.retain(|o| o.item == SOLDIER && soldier.is_some());
+    d.options
+        .retain(|o| o.item == SPEARMAN && spearman.is_some());
     for o in &mut d.options {
-        o.buy_cost = soldier;
-        o.buy_block = soldier
+        o.buy_cost = spearman;
+        o.buy_block = spearman
             .is_some_and(|cost| cost > gold)
             .then_some(legatum_core::economy::BuyBlock::NotEnoughGold);
     }
@@ -90,7 +91,7 @@ fn a_threatened_city_that_cannot_buy_a_defender_does_not_stop_other_purchases() 
     let mut p = planner(&v);
     p.orders.push(Order::BuyItem {
         city: CityId(1),
-        item: SOLDIER,
+        item: SPEARMAN,
     });
     p.plan_buy(&mut tally());
     assert!(granary_bought(&p), "{:?}", p.orders);
@@ -115,7 +116,7 @@ fn an_unaffordable_defender_keeps_its_price_and_an_affordable_one_is_bought_firs
         p.orders,
         vec![Order::BuyItem {
             city: CityId(1),
-            item: SOLDIER,
+            item: SPEARMAN,
         }]
     );
 }

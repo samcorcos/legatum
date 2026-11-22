@@ -364,7 +364,7 @@ pub enum BuildingKind {
     GrandBazaar,
     #[serde(alias = "InferenceCore")]
     ResearchLab,
-    /// Mongols's Courier Hall: a pricey landmark, one per Mongols empire. While it stands,
+    /// Mongols's Yam Relay Station: a pricey landmark, one per Mongols empire. While it stands,
     /// its holder (whoever owns its city) scores the Mongols goal and every empire crosses
     /// the holder's land at Peace (`goals`, `GameState::passage_allowed`). Only Mongols can
     /// build it.

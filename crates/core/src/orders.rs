@@ -224,7 +224,7 @@ pub enum Action {
     /// count of unknown technologies, each with its prerequisites known or listed before it.
     ChooseFreeTechs { techs: Vec<TechId> },
     /// Sparta, Honour the Fallen: retire a veteran (promotion level
-    /// `goals::SPARTA_RETIRE_LEVEL` or higher) standing in an own city with a War Shrine. The
+    /// `goals::SPARTA_RETIRE_LEVEL` or higher) standing in an own city with an Agoge. The
     /// unit leaves for good and counts toward `goals::SPARTA_RETIRE_COUNT`; the last one
     /// completes the goal for good.
     RetireVeteran { unit: UnitId },

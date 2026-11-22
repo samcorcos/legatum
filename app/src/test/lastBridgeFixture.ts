@@ -1,7 +1,7 @@
-// Playtest-6.2 "The Last Bridge": three of your Soldiers in a row south of an enemy city. The
+// Playtest-6.2 "The Last Bridge": three of your Spearmen in a row south of an enemy city. The
 // two beside it are ordered to attack; the rightmost must reach the free tile beside the city,
 // not route through its neighbour. A second group waits in a one-tile pass behind a parked
-// Soldier, to show the route warning. Injected visual fixture only; not imported by the app.
+// Spearman, to show the route warning. Injected visual fixture only; not imported by the app.
 import type { Hex } from '../types';
 import { fromOffset, neighbors } from '../hex';
 import { FixtureClient } from './fixtureEngine';
@@ -36,7 +36,7 @@ export function lastBridgeFixture() {
   const e = neighbors(c).find((h) => h.r === c.r && h.q === c.q + 1)!;
   const right: Hex = { q: se.q + 1, r: se.r };
   const units = [sw, se, right].map((h) => spawnUnit(f, 0, 'Spearman', h, false));
-  // The pass: a parked Soldier at its mouth and another behind it.
+  // The pass: a parked Spearman at its mouth and another behind it.
   const parked = spawnUnit(f, 0, 'Spearman', fromOffset(15, 10), false);
   const behind = spawnUnit(f, 0, 'Spearman', fromOffset(14, 10), false);
   refreshVision(f);

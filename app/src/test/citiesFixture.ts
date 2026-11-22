@@ -3,7 +3,7 @@
 //   Zurich  a Library and 200 Production already banked toward the Great Library
 //   Basel   the most Production but no Library, so the Great Library is blocked here
 //   Geneva  small, no Library, and idle (nothing chosen)
-//   Lugano  a young city on Forest building a Soldier
+//   Lugano  a young city on Forest building a Spearman
 // Philosophy and Electricity are known, so the Great Library and Research Lab are on offer.
 // Injected visual fixture only; not imported by the app.
 import { fromOffset, neighbors } from '../hex';

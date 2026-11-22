@@ -1729,8 +1729,8 @@ impl Planner<'_> {
         let at_war = self.at_war();
         // Gene `roman_soldier_route`: a Roman veteran is a soldier, not a civilian to be
         // captured on the road, so the Settler's danger detours do not apply to it.
-        let soldier = self.roman_soldier_founder(s);
-        let field = if soldier {
+        let spearman = self.roman_soldier_founder(s);
+        let field = if spearman {
             ctx.distance_field(s.pos, true)
         } else if at_war {
             let mut blocked = ctx.settler_danger.clone();
@@ -1841,7 +1841,7 @@ impl Planner<'_> {
                 Some("remembered border risk")
             } else if ctx.in_danger(h) {
                 Some("in danger")
-            } else if ctx.settler_danger[i] && !soldier {
+            } else if ctx.settler_danger[i] && !spearman {
                 Some("settler danger")
             } else if site.threats > 0 {
                 Some("site threats")
@@ -1932,7 +1932,7 @@ impl Planner<'_> {
                     && site
                         .nearest_city
                         .is_none_or(|home| home <= self.decisions.settler_max_site_distance));
-            let risk = if self.settler_safety() && !first_city && !soldier {
+            let risk = if self.settler_safety() && !first_city && !spearman {
                 self.settler_trip_risk(s.pos, h)
             } else {
                 0
@@ -2004,7 +2004,7 @@ impl Planner<'_> {
                 // A captured Settler denies us a city and gives the captor one. Exposure is a
                 // bounded loss-risk heuristic, so price both sides of that swing.
                 value -= Self::settler_loss_cost(value, risk);
-            } else if self.hard_defense() && !first_city && !soldier {
+            } else if self.hard_defense() && !first_city && !spearman {
                 // Retain the established two-seat policy used by the paired duel.
                 let legacy_risk = self.settler_trip_risk(s.pos, h);
                 if legacy_risk >= self.decisions.settler_risk_avoid {
@@ -3337,7 +3337,7 @@ mod found_here_tests {
     }
 
     /// A Settler on a legal site with enemy Spearmen (2 moves) at `distance` from it.
-    fn settler_with_soldiers(distance: i32, soldiers: usize) -> PlayerView {
+    fn settler_with_spearmen(distance: i32, spearmen: usize) -> PlayerView {
         let settler = off(9, 8);
         let mut b = ViewBuilder::new(20, 16).city(1, ME, off(3, 8), 3).unit(
             1,
@@ -3348,7 +3348,7 @@ mod found_here_tests {
         for (i, h) in settler
             .ring(distance)
             .into_iter()
-            .take(soldiers)
+            .take(spearmen)
             .enumerate()
         {
             b = b.unit(2 + i as u32, ENEMY, UnitKind::Spearman, h);
@@ -3359,7 +3359,7 @@ mod found_here_tests {
     #[test]
     fn a_settler_founds_beside_an_army_that_cannot_reach_it_this_turn() {
         // Within the threat radius (3), beyond a Spearman's two moves.
-        let view = settler_with_soldiers(3, 1);
+        let view = settler_with_spearmen(3, 1);
         let mut off_planner = planner(&view, 0);
         off_planner.plan_settlers();
         assert!(
@@ -3368,7 +3368,7 @@ mod found_here_tests {
         );
         let mut on = planner(&view, 1);
         on.plan_settlers();
-        assert!(founds(&on.orders), "one Soldier can't take a fresh city");
+        assert!(founds(&on.orders), "one Spearman can't take a fresh city");
         // The order is remembered, so a failed found is not repeated next turn.
         assert_eq!(
             on.campaigns.found_tried,
@@ -3379,7 +3379,7 @@ mod found_here_tests {
     #[test]
     fn a_settler_an_enemy_can_reach_this_turn_does_not_found_there() {
         // Founding resolves after movement: the Spearman would capture it first.
-        let view = settler_with_soldiers(1, 1);
+        let view = settler_with_spearmen(1, 1);
         let mut p = planner(&view, 1);
         let ((), notes) = trace_settler(UnitId(1), None, || p.plan_settlers());
         assert!(!founds(&p.orders));
@@ -3391,7 +3391,7 @@ mod found_here_tests {
 
     #[test]
     fn an_army_that_would_take_the_fresh_city_keeps_the_settler_off_the_tile() {
-        let view = settler_with_soldiers(3, 6);
+        let view = settler_with_spearmen(3, 6);
         let mut p = planner(&view, 1);
         let ((), notes) = trace_settler(UnitId(1), None, || p.plan_settlers());
         assert!(!founds(&p.orders));
@@ -3411,7 +3411,7 @@ mod found_here_tests {
 
     #[test]
     fn a_found_that_failed_here_last_turn_is_not_repeated() {
-        let view = settler_with_soldiers(3, 1);
+        let view = settler_with_spearmen(3, 1);
         let mut p = planner(&view, 1);
         p.campaigns
             .found_tried
@@ -3432,7 +3432,7 @@ mod settler_shelter_tests {
     use legatum_core::Faction;
 
     #[test]
-    fn a_settler_in_a_city_one_soldier_cannot_break_stays_inside() {
+    fn a_settler_in_a_city_one_spearman_cannot_break_stays_inside() {
         // A Spearman two hexes away reaches the city this turn but cannot take a full city.
         let city = off(6, 8);
         let view = ViewBuilder::new(20, 16)
@@ -3455,7 +3455,7 @@ mod settler_shelter_tests {
         let (off_notes, _) = notes(0);
         assert!(
             off_notes.iter().any(|n| n.starts_with("exposed at")),
-            "gene off: the Soldier's reach makes the Settler retreat: {off_notes:?}"
+            "gene off: the Spearman's reach makes the Settler retreat: {off_notes:?}"
         );
         let (on_notes, _) = notes(1);
         assert!(

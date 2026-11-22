@@ -350,6 +350,8 @@ export const HOPLITE_PHALANX_STRENGTH: number = RULES.hoplitePhalanxStrength;
 export const ERA_NAMES = RULES.eraNames as readonly string[];
 export const ERA_COUNT = ERA_NAMES.length;
 export const eraName = (era: number): string => ERA_NAMES[Math.min(Math.max(0, era), ERA_COUNT - 1)];
+/** An Age's name from its era's name: "Medieval Age"; "Machine Age" stays as it is, because that era's name already ends in Age. */
+export const ageName = (era: string): string => (/\bAge$/.test(era) ? era : `${era} Age`);
 /** The technologies of one era, in research order. */
 export const eraTechs = (era: number): TechId[] => TECHS.filter((t) => TECH_ERA[t] === era);
 
@@ -662,7 +664,7 @@ export const FACTION_GOAL: Record<Faction, FactionGoal> = {
     detail: () => `Promote ${goalTarget('Sparta')} veterans to level ${RULES.spartaRetireLevel} or higher, build an Agoge, and retire them there. Each one leaves your army for good`,
   },
   Athens: {
-    name: 'Share the Learning', live: goalLive('Athens'), icon: 'building-listeninghouse', action: 'Share the Learning',
+    name: 'Share the Learning', live: goalLive('Athens'), icon: 'building-lyceum', action: 'Share the Learning',
     rule: () => `Share your learning once: every rival gains ${RULES.signalFreeTechs} free technologies of its choice`,
     detail: () => `Share your learning once: every living empire outside your team gains ${RULES.signalFreeTechs} free technologies of its choice, at once`,
   },
@@ -954,13 +956,13 @@ export function itemKey(item: ProductionItem): string {
 const FACTION_UNIT_ICON: Partial<Record<Faction, Partial<Record<UnitKind, string>>>> = {
   Byzantium: { Pikeman: 'unit-tagmatic' },
   Rome: { Phalangite: 'unit-legionary' },
-  Mongols: { Cataphract: 'unit-keshig' }, Sparta: { Spearman: 'unit-oathbearer' },
+  Mongols: { Cataphract: 'unit-keshig' }, Sparta: { Spearman: 'unit-spartanhoplite' },
   Aztecs: { Spearman: 'unit-eaglewarrior' }, Egypt: { Spearman: 'unit-medjay' }, Celts: { Phalangite: 'unit-gaesatae' }, Athens: { CompositeArcher: 'unit-peltast' },
   India: { Knight: 'unit-warelephant' }, Switzerland: { Pikeman: 'unit-reislaufer' }, Germany: { Tank: 'unit-panzer' },
 };
 const FACTION_BUILDING_ICON: Partial<Record<Faction, Partial<Record<BuildingKind, string>>>> = {
-  Switzerland: { Walls: 'building-customsbastion' }, Germany: { Forge: 'building-foundry' },
-  Athens: { Library: 'building-listeninghouse' },
+  Switzerland: { Walls: 'building-alpineredoubt' }, Germany: { Forge: 'building-foundry' },
+  Athens: { Library: 'building-lyceum' },
   India: { Market: 'building-market-india' },
   Egypt: { Granary: 'building-royalgranary' },
   Rome: { Walls: 'building-castrum' },
@@ -971,7 +973,7 @@ export function unitIconName(kind: UnitKind, faction?: Faction): string {
   return (faction && FACTION_UNIT_ICON[faction]?.[kind]) || `unit-${kind.toLowerCase()}`;
 }
 
-/** A building's icon name: its faction replacement's own icon (Customs Bastion, Brood Hall) when `faction` has one. */
+/** A building's icon name: its faction replacement's own icon (Alpine Redoubt, Ruhr Foundry, Lyceum) when `faction` has one. */
 export function buildingIconName(kind: BuildingKind, faction?: Faction): string {
   return (faction && FACTION_BUILDING_ICON[faction]?.[kind]) || `building-${kind.toLowerCase()}`;
 }

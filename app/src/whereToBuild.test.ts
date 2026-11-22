@@ -6,7 +6,7 @@ import { COSTLY_LISTED_COST, fastestSite, plainReason, showsWhereToBuild, sortSi
 const GL: ProductionItem = { kind: 'Building', building: 'GreatLibrary' };
 const MARKET: ProductionItem = { kind: 'Building', building: 'Market' };
 const FACTORY: ProductionItem = { kind: 'Building', building: 'Factory' };
-const SOLDIER: ProductionItem = { kind: 'Unit', unit: 'Spearman' };
+const SPEARMAN: ProductionItem = { kind: 'Unit', unit: 'Spearman' };
 
 const option = (item: ProductionItem, cost: number, stored: number, turns: number): ProductionOption =>
   ({ item, cost, production_stored: stored, production_banked: stored, buy_cost: null, yields: {} as never, turns }) as ProductionOption;
@@ -106,13 +106,13 @@ describe('where to build', () => {
   it('is worth showing for Great Works and costly buildings with two or more cities, and for nothing else', () => {
     const cheap = unlock(MARKET, 'Currency', 120, { 1: {}, 2: {} });
     const big = unlock(FACTORY, 'Industrialization', COSTLY_LISTED_COST, { 1: {}, 2: {} });
-    const two = [city({ id: 1, name: 'A', options: [option(GL, 600, 0, 9), option(MARKET, 120, 0, 3), option(FACTORY, COSTLY_LISTED_COST, 0, 9), option(SOLDIER, 60, 0, 2)] }),
-      city({ id: 2, name: 'B', options: [option(GL, 600, 0, 9), option(MARKET, 120, 0, 3), option(FACTORY, COSTLY_LISTED_COST, 0, 9), option(SOLDIER, 60, 0, 2)] })];
+    const two = [city({ id: 1, name: 'A', options: [option(GL, 600, 0, 9), option(MARKET, 120, 0, 3), option(FACTORY, COSTLY_LISTED_COST, 0, 9), option(SPEARMAN, 60, 0, 2)] }),
+      city({ id: 2, name: 'B', options: [option(GL, 600, 0, 9), option(MARKET, 120, 0, 3), option(FACTORY, COSTLY_LISTED_COST, 0, 9), option(SPEARMAN, 60, 0, 2)] })];
     const v = view(two, [gl, cheap, big]);
     expect(showsWhereToBuild(whereToBuild(v, GL, []))).toBe(true);
     expect(showsWhereToBuild(whereToBuild(v, FACTORY, []))).toBe(true);
     expect(showsWhereToBuild(whereToBuild(v, MARKET, []))).toBe(false);
-    expect(showsWhereToBuild(whereToBuild(v, SOLDIER, []))).toBe(false);
+    expect(showsWhereToBuild(whereToBuild(v, SPEARMAN, []))).toBe(false);
     expect(showsWhereToBuild(whereToBuild(view([two[0]], [gl]), GL, []))).toBe(false);
   });
 

@@ -1297,7 +1297,7 @@ mod tests {
     }
 
     #[test]
-    fn adjacent_ranger_melee_forecast_matches_its_movement_attack() {
+    fn adjacent_archer_melee_forecast_matches_its_movement_attack() {
         use crate::{AttackMode, forecast_attack_mode};
         let mut s = test_state(24, 16);
         let a = spawn_unit(&mut s, P0, UnitKind::Archer, at(5, 5));
@@ -1361,11 +1361,11 @@ mod tests {
         use crate::{AttackMode, forecast_attack_mode};
         let mut s = test_state(24, 16);
         let ranger = spawn_unit(&mut s, P0, UnitKind::Archer, at(5, 5));
-        let soldier = spawn_unit(&mut s, P0, UnitKind::Spearman, at(6, 5));
+        let spearman = spawn_unit(&mut s, P0, UnitKind::Spearman, at(6, 5));
         spawn_unit(&mut s, P2, UnitKind::Spearman, at(7, 5));
         spawn_unit(&mut s, P2, UnitKind::Spearman, at(8, 5));
         let v = view0(&mut s);
-        assert!(forecast_attack_mode(&v, soldier, at(7, 5), AttackMode::Ranged).is_none());
+        assert!(forecast_attack_mode(&v, spearman, at(7, 5), AttackMode::Ranged).is_none());
         assert!(forecast_attack_mode(&v, ranger, at(8, 5), AttackMode::Ranged).is_none());
         assert!(!forecast_attack(&v, ranger, at(8, 5)).unwrap().ranged);
     }
@@ -1602,7 +1602,7 @@ mod tests {
         let target = at(7, 5);
         let around = target.neighbors();
         let archer = spawn_unit(&mut s, P0, UnitKind::Archer, around[0]);
-        let soldier = spawn_unit(&mut s, P0, UnitKind::Spearman, around[1]);
+        let spearman = spawn_unit(&mut s, P0, UnitKind::Spearman, around[1]);
         let c = add_city(&mut s, P2, target, 3);
         s.cities.get_mut(&c).unwrap().hp = 0;
         let g = spawn_unit(&mut s, P2, UnitKind::Spearman, target);
@@ -1620,7 +1620,7 @@ mod tests {
             target,
             AttackMode::Ranged,
             &[AlongsideAttack {
-                unit: soldier,
+                unit: spearman,
                 mode: AttackMode::Melee,
             }],
         )

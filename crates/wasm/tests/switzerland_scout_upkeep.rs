@@ -32,7 +32,7 @@ fn the_users_switzerland_are_not_bankrupt_with_two_scouts() {
     assert_eq!(
         economy::upkeep_breakdown(&state, ME).total,
         0,
-        "Ranger and Soldier are the first two; Scouts are exempt"
+        "Archer and Spearman are the first two; Scouts are exempt"
     );
     let (next, events) = resolve_turn(&state, &BTreeMap::new());
     assert!(

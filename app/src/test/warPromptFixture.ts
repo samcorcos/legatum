@@ -3,10 +3,10 @@ import { coreFixture } from './coreFixture';
 import { createState, makeStandardSetup, spawnUnit } from './fixtureEngine';
 import { idxOf, refreshVision } from './fixtureEngine';
 
-/** Playtest G2: the human's Soldier stands next to an AI Scout of a team still at Peace. */
-export const WAR_PROMPT = { soldier: fromOffset(9, 8), scout: neighbors(fromOffset(9, 8))[3] };
+/** Playtest G2: the human's Spearman stands next to an AI Scout of a team still at Peace. */
+export const WAR_PROMPT = { spearman: fromOffset(9, 8), scout: neighbors(fromOffset(9, 8))[3] };
 /** At War instead, with the Scout two tiles away, so it can move before the attack lands. */
-export const PURSUIT = { soldier: fromOffset(9, 8), scout: neighbors(neighbors(fromOffset(9, 8))[0])[0] };
+export const PURSUIT = { spearman: fromOffset(9, 8), scout: neighbors(neighbors(fromOffset(9, 8))[0])[0] };
 
 export function warPromptCoreSave(war = false, ranged = false) {
   const setup = makeStandardSetup('700041', 'Celts', 'Switzerland', 'Ada', 'Swiss envoy');
@@ -25,7 +25,7 @@ export function warPromptCoreSave(war = false, ranged = false) {
   for (const p of s.players) p.gold = 1000;
   const at = war ? PURSUIT : WAR_PROMPT;
   if (war) for (const r of s.diplomacy!.relations) r.state = 'War';
-  spawnUnit(s, 0, 'Spearman', at.soldier, false);
+  spawnUnit(s, 0, 'Spearman', at.spearman, false);
   if (ranged) spawnUnit(s, 0, 'Archer', fromOffset(21, 8), false);
   spawnUnit(s, 1, 'Scout', at.scout, false);
   if (!ranged) spawnUnit(s, 1, 'Spearman', s.cities[1].pos, false);

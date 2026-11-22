@@ -8,7 +8,7 @@
   "seat": 6,
   "difficulty": "Hard",
   "minutes": 12,
-  "briefing": "News from Requiem Deep had barely reached Hymnal when the couriers came. Two Mongol Soldiers and two Rangers, the fastest feet on the continent, stand on the road from Waystation, two and three hexes from Hymnal's gate, and last night their envoy declared war. Hymnal has one Soldier and no walls; your other Soldier stands just outside Requiem Deep. Mongol troops move a hex further than yours but find no shelter in hills or forest. Hold both cities for fifteen turns and keep an army standing when the dust settles.",
+  "briefing": "News from Requiem Deep had barely reached Hymnal when the couriers came. Two Mongol Spearmen and two Archers, the fastest feet on the continent, stand on the road from Waystation, two and three hexes from Hymnal's gate, and last night their envoy declared war. Hymnal has one Spearman and no walls; your other Spearman stands just outside Requiem Deep. Mongol troops move a hex further than yours but find no shelter in hills or forest. Hold both cities for fifteen turns and keep an army standing when the dust settles.",
   "tests": "Rush defence at the moment the game's counters says walls and turtling should beat a rush: does the defender fortify, shoot from inside the city, punish attackers caught in the open, and keep expanding?",
   "objective": {
     "summary": "Hold Requiem Deep and Hymnal and keep at least 2 combat units through turn 36.",
@@ -41,8 +41,8 @@
     ]
   },
   "predictions": {
-    "good_play": "The Rangers are the threat: they shoot Hymnal's Soldier every turn without retaliation, and they are weak in melee (8 strength) and get no terrain defence. Keep Hymnal's Soldier fortified until a Ranger stands adjacent in the open, then strike it and step back; never trade blows with a full-health Mongol Soldier outside the walls. Bring Soldier #21 back into Requiem Deep, finish the Ranger there (34 Production stored) and walk it to Hymnal to shoot back from inside the city. Switch Hymnal to a Ranger too. Walls can't arrive inside 15 turns, so don't detour into Fortification. Offer peace once two Mongol units are down.",
-    "ai_play": "Revised after the r1 baseline (four Soldiers three hexes out never attacked, 50/50 held) and a 12-run trial of this force: Japanese Hard fortifies its Soldiers and never sallies against the Rangers, so Hymnal's garrison is shot down and Hymnal falls in every run; Requiem Deep holds. Expect 80-100 points and no run that meets the objective.",
+    "good_play": "The Archers are the threat: they shoot Hymnal's Spearman every turn without retaliation, and they are weak in melee (8 strength) and get no terrain defence. Keep Hymnal's Spearman fortified until an Archer stands adjacent in the open, then strike it and step back; never trade blows with a full-health Mongol Spearman outside the walls. Bring Spearman #21 back into Requiem Deep, finish the Archer there (34 Production stored) and walk it to Hymnal to shoot back from inside the city. Switch Hymnal to an Archer too. Walls can't arrive inside 15 turns, so don't detour into Fortification. Offer peace once two Mongol units are down.",
+    "ai_play": "Revised after the r1 baseline (four Spearmen three hexes out never attacked, 50/50 held) and a 12-run trial of this force: Japanese Hard fortifies its Spearmen and never sallies against the Archers, so Hymnal's garrison is shot down and Hymnal falls in every run; Requiem Deep holds. Expect 80-100 points and no run that meets the objective.",
     "ai_score": {
       "median": 85,
       "low": 80,
@@ -50,7 +50,7 @@
       "win_percent": 0
     }
   },
-  "source": "All-AI Hard game, Standard speed, seed 9107; Mongols (player 2) played the Rush opening. Played to turn 20, then a force of two Soldiers and two Rangers was staged 2-3 hexes from Hymnal (2 existing Mongol units moved, 2 spawned), the threatened city was given a Soldier garrison (it had none), and Mongols declared war as an ordinary order on turn 20 (its staged units held). Built by `legatum-sim scenario-build rush-defense`. Removed 1 unit(s) that stood in foreign territory at Peace once Byzantium peace passage was removed (2026-10-10): [(UnitId(23), Scout, PlayerId(7))].",
+  "source": "All-AI Hard game, Standard speed, seed 9107; Mongols (player 2) played the Rush opening. Played to turn 20, then a force of two Spearmen and two Archers was staged 2-3 hexes from Hymnal (2 existing Mongol units moved, 2 spawned), the threatened city was given a Spearman garrison (it had none), and Mongols declared war as an ordinary order on turn 20 (its staged units held). Built by `legatum-sim scenario-build rush-defense`. Removed 1 unit(s) that stood in foreign territory at Peace once Byzantium peace passage was removed (2026-10-10): [(UnitId(23), Scout, PlayerId(7))].",
   "baseline": {
     "runs": 50,
     "difficulty": "Hard",

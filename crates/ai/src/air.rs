@@ -537,13 +537,13 @@ mod tests {
     fn a_fighter_strikes_a_near_target_unless_enemy_bombers_are_likely() {
         // The rival's Spearman stands `soldier_x - 5` hexes from the Fighter's city (a Fighter
         // strikes 3), its city `city_x - 5` (Bombers strike 5, a Fighter intercepts 4).
-        let build = |soldier_x: i32, city_x: i32, rival_era: u8| {
+        let build = |spearman_x: i32, city_x: i32, rival_era: u8| {
             ViewBuilder::new(24, 16)
                 .faction(Faction::India)
                 .city(1, ME, off(5, 8), 3)
                 .city(2, RIVAL, off(city_x, 8), 3)
                 .unit(1, ME, UnitKind::Scout, off(7, 8))
-                .unit(2, RIVAL, UnitKind::Spearman, off(soldier_x, 8))
+                .unit(2, RIVAL, UnitKind::Spearman, off(spearman_x, 8))
                 .aircraft(30, UnitKind::Fighter, 1)
                 .era_of(2, rival_era)
                 .build()

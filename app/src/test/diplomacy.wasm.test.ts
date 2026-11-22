@@ -58,19 +58,19 @@ describe.skipIf(!available)('WASM diplomacy behavior', () => {
   });
   it('validates and resolves a ranged city attack with a same-turn surprise war', () => {
     const target = fromOffset(16, 6);
-    let ranger = 0;
+    let archer = 0;
     const p = fixture(true, (s) => {
-      ranger = spawnUnit(s, 0, 'Archer', fromOffset(14, 6), false).id;
+      archer = spawnUnit(s, 0, 'Archer', fromOffset(14, 6), false).id;
       refreshVision(s);
     });
-    const shot: Order = { type: 'RangedAttack', unit: ranger, target };
+    const shot: Order = { type: 'RangedAttack', unit: archer, target };
     const orders = [war(1), shot];
     for (const client of [p.fixtureClient, p.core]) {
       expect(client.validate(0, [shot])).toHaveLength(1);
       expect(client.validate(0, orders)).toEqual([]);
     }
     const reports = [p.fixtureClient, p.core].map((client) => client.endTurn({ 0: orders }));
-    for (const report of reports) expect(report.events.some((e) => e.type === 'Battle' && e.attacker === ranger && e.defender.kind === 'City')).toBe(true);
+    for (const report of reports) expect(report.events.some((e) => e.type === 'Battle' && e.attacker === archer && e.defender.kind === 'City')).toBe(true);
   });
   it('rejects an Alliance between empires that have not met, then allows it once they have', () => {
     const p = fixture(false, (s) => { s.diplomacy!.contacts = []; }, false);
@@ -190,10 +190,10 @@ describe.skipIf(!available)('WASM diplomacy behavior', () => {
   it.each(['fixtureClient', 'core'] as const)('%s explicit attack forecasts reject closed territory with the validation reason', (engine) => {
     const origin = fromOffset(6, 5), target = fromOffset(7, 5);
     for (const owner of [1, null, 0, 2, 3]) {
-      let ranger = 0;
+      let archer = 0;
       const p = fixture(false, (s) => {
         s.units = s.units.filter((u) => u.kind === 'Settler');
-        ranger = spawnUnit(s, 0, 'Archer', origin, false).id;
+        archer = spawnUnit(s, 0, 'Archer', origin, false).id;
         spawnUnit(s, 2, 'Spearman', target, false);
         s.owner[idxOf(s, origin)] = owner ?? -1;
         s.owner[idxOf(s, target)] = -1;
@@ -202,11 +202,11 @@ describe.skipIf(!available)('WASM diplomacy behavior', () => {
       });
       const client = p[engine], closed = owner === 1;
       for (const mode of ['Melee', 'Ranged'] as const) {
-        const forecast = client.forecast(0, ranger, target, mode);
+        const forecast = client.forecast(0, archer, target, mode);
         if (closed) expect(forecast).toBeNull();
         else expect(forecast?.expected_damage_to_defender).toBeGreaterThan(0);
       }
-      expect(client.validate(0, [{ type: 'RangedAttack', unit: ranger, target }])).toEqual(closed
+      expect(client.validate(0, [{ type: 'RangedAttack', unit: archer, target }])).toEqual(closed
         ? [{ index: 0, message: 'Cannot attack from closed foreign territory' }] : []);
     }
   });

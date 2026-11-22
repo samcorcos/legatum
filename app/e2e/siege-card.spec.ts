@@ -76,7 +76,7 @@ for (const size of [{ width: 1000, height: 600 }, { width: 1440, height: 900 }])
       await page.evaluate(() => {
         const g = (window as unknown as { legatum: { getState(): { client: { debugState(): { resource: (string | null)[]; owner: number[]; players: { techs: string[] }[] }; view(p: number): unknown }; set(s: unknown): void } } }).legatum.getState();
         const f = g.client.debugState();
-        // Four units with Siege (archer, spearman, Arquebusier, Assault Trooper) already use 4 Iron: three deposits (2 supply each) leave some to spare.
+        // Four units with Siege (archer, spearman, Arquebusier, Musketman) already use 4 Iron: three deposits (2 supply each) leave some to spare.
         let placed = 0;
         for (let k = 0; k < f.owner.length && placed < 3; k++) if (f.owner[k] === 0 && !f.resource[k]) { f.resource[k] = 'Iron'; placed++; }
         g.set({ views: [g.client.view(0)] });

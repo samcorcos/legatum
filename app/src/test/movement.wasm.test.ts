@@ -70,18 +70,18 @@ describe.skipIf(!available)('movement WASM behavior', () => {
     for (const p of s.players) p.explored.fill(1);
     for (let row = 0; row < 12; row++) for (let col = 5; col <= 8; col++) s.owner[idxOf(s, fromOffset(col, row))] = 1;
     const goal = (row: number) => fromOffset(6, row);
-    const soldier = spawnUnit(s, 0, 'Spearman', fromOffset(3, 2), false);
+    const spearman = spawnUnit(s, 0, 'Spearman', fromOffset(3, 2), false);
     const scout = spawnUnit(s, 0, 'Scout', fromOffset(3, 4), false);
     const settler = spawnUnit(s, 0, 'Settler', fromOffset(3, 6), false);
     const orders: Order[] = [
-      { type: 'MoveUnit', unit: soldier.id, to: goal(2) },
+      { type: 'MoveUnit', unit: spearman.id, to: goal(2) },
       { type: 'MoveUnit', unit: scout.id, to: goal(4) },
       { type: 'MoveUnit', unit: settler.id, to: goal(6) },
     ];
     const { fixtureClient, core } = play(s, [{ 0: orders.slice(1) }]);
     for (const c of [fixtureClient, core]) {
       const at = (id: number) => c.view(0).units.find((u) => u.id === id)!.pos;
-      expect(c.view(0).tiles[idxOf(s, at(soldier.id))].owner).not.toBe(1);
+      expect(c.view(0).tiles[idxOf(s, at(spearman.id))].owner).not.toBe(1);
       expect(c.view(0).tiles[idxOf(s, at(scout.id))].owner).not.toBe(1);
       expect(c.view(0).tiles[idxOf(s, at(settler.id))].owner).not.toBe(1);
     }

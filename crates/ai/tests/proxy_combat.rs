@@ -52,14 +52,14 @@ fn decide(state: &mut GameState) -> Vec<Order> {
 fn a_wounded_shooter_removes_the_garrison_and_infantry_captures_in_the_same_turn() {
     let (mut state, city) = scenario();
     state.cities.get_mut(&city).unwrap().hp = 15;
-    let ranger = spawn_unit(&mut state, ME, UnitKind::Archer, at(12, 8));
-    state.units.get_mut(&ranger).unwrap().hp = 45;
+    let archer = spawn_unit(&mut state, ME, UnitKind::Archer, at(12, 8));
+    state.units.get_mut(&archer).unwrap().hp = 45;
     let infantry = spawn_unit(&mut state, ME, UnitKind::Spearman, at(13, 8));
     let defender = spawn_unit(&mut state, ENEMY, UnitKind::Spearman, at(14, 8));
     state.units.get_mut(&defender).unwrap().hp = 8;
     let ours = decide(&mut state);
     assert!(ours.contains(&Order::RangedAttack {
-        unit: ranger,
+        unit: archer,
         target: at(14, 8)
     }));
     assert!(ours.iter().any(|o| matches!(o, Order::MoveUnitPath { unit, to, .. } if *unit == infantry && *to == at(14, 8))));
@@ -77,7 +77,7 @@ fn a_wounded_shooter_removes_the_garrison_and_infantry_captures_in_the_same_turn
         ]),
     );
     assert_eq!(next.cities[&city].owner, ME, "{events:?}");
-    assert_eq!(next.units[&ranger].hp, 45);
+    assert_eq!(next.units[&archer].hp, 45);
     assert!(!next.units.contains_key(&defender));
 }
 
@@ -276,7 +276,7 @@ fn a_great_work_uses_the_fast_city_even_when_it_is_busy() {
     let city = state.cities.get_mut(&fast).unwrap();
     city.buildings.insert(BuildingKind::Workshop);
     // Busy with a valid Settler (it needs population 2). The 40 stays banked with the
-    // Settler, so its Machine Shop (not transferable progress) makes this city faster.
+    // Settler, so its Forge (not transferable progress) makes this city faster.
     city.buildings.insert(BuildingKind::Forge);
     city.population = 4;
     city.production_stored = 40;

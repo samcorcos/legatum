@@ -174,7 +174,7 @@ pub const SCIENCE_HISTORY_TURNS: usize = 10;
 /// The Heir's Production cost (provisional, to calibrate): expensive on purpose, and the Byzantium
 /// can keep only one (`goals`).
 pub const HEIR_COST: i32 = 800;
-/// The Courier Hall's Production cost (provisional, to calibrate): pricey, one per Mongols
+/// The Yam Relay Station's Production cost (provisional, to calibrate): pricey, one per Mongols
 /// empire, and it opens the holder's whole land to every empire.
 pub const YAM_RELAY_STATION_COST: i32 = 600;
 /// Roadworks: Production cost, and the range in hexes of the cities its city is linked to.
@@ -1353,7 +1353,7 @@ pub fn is_panzer_rules(off: FactionRuleSet, faction: Faction, kind: UnitKind) ->
 }
 
 /// Buildings a faction can never construct, with the reason shown in choices and validation.
-/// The Sparta alone can build the War Shrine.
+/// The Sparta alone can build the Agoge.
 pub fn faction_excluded_building(faction: Faction, building: BuildingKind) -> Option<&'static str> {
     match (faction, building) {
         (f, BuildingKind::Agoge) if f != Faction::Sparta => Some("Only Sparta can build an Agoge"),
@@ -1700,7 +1700,7 @@ pub fn building_stats_for_rules(
         }
         _ => {}
     }
-    // The Hall's price is its own goal cost.
+    // The Station's price is its own goal cost.
     s
 }
 

@@ -2,7 +2,7 @@
 //! goals are a cost the faction chooses to pay, so each is a value question rather than a quota:
 //! when giving up three veterans or living among camps is worth 2 VP, and how rivals profit from
 //! it. The one-time decisions themselves (retire, call) are in `goal_actions.rs`; this is what
-//! the rest of the planner does around them: the War Shrine, gathering the veterans, keeping the
+//! the rest of the planner does around them: the Agoge, gathering the veterans, keeping the
 //! Celts' camps, not settling after the call, and rivals clearing a Celt's camps or punishing a
 //! retired army. Everything reads the fogged view alone.
 
@@ -15,8 +15,8 @@ use legatum_core::{BuildingKind, CityId, Faction, Hex, Order, VpSource, data, go
 /// a rival weighing its capture (public: Sparta's goal is done once its veterans retired).
 const RETIRED_FULL_GARRISON: i32 = 3;
 const RETIRED_VALUE_PER_MISSING_UNIT: i32 = 45;
-/// Production preference for a military unit in a War Shrine city while Honour the Fallen is open.
-const SHRINE_TRAINING_BONUS: i32 = 60;
+/// Production preference for a military unit in an Agoge city while Honour the Fallen is open.
+const AGOGE_TRAINING_BONUS: i32 = 60;
 /// A rival goes this much farther for a camp whose clearing takes 2 VP from a Celts empire.
 pub(crate) const DENIAL_CAMP_RANGE: i32 = 4;
 /// The longest walk to a Celts's camp, and the health a unit must have to go.
@@ -26,29 +26,29 @@ const WILD_ARRIVAL_MIN_HP: i32 = 40;
 impl Planner<'_> {
     // ---------- Sparta: Honour the Fallen ----------
 
-    fn city_has_shrine(c: &CityView) -> bool {
+    fn city_has_agoge(c: &CityView) -> bool {
         c.detail
             .as_ref()
             .is_some_and(|d| data::has_building(&d.buildings, BuildingKind::Agoge))
     }
 
-    /// Own cities with a War Shrine standing.
-    pub(crate) fn shrine_cities(&self) -> Vec<&CityView> {
+    /// Own cities with an Agoge standing.
+    pub(crate) fn agoge_cities(&self) -> Vec<&CityView> {
         self.ctx
             .own_cities
             .iter()
             .copied()
-            .filter(|c| Self::city_has_shrine(c))
+            .filter(|c| Self::city_has_agoge(c))
             .collect()
     }
 
-    /// Where Sparta's one War Shrine should go while they have none: the city with the
+    /// Where Sparta's one Agoge should go while they have none: the city with the
     /// most Production out of resistance (veterans stay near the capital's army). None once one
     /// stands or is being built, or when the goal is done.
-    pub(crate) fn shrine_site(&self) -> Option<CityId> {
+    pub(crate) fn agoge_site(&self) -> Option<CityId> {
         if self.faction != Faction::Sparta
             || self.view().actions.retire.is_none()
-            || self.shrine_planned()
+            || self.agoge_planned()
         {
             return None;
         }
@@ -65,29 +65,29 @@ impl Planner<'_> {
             .map(|c| c.id)
     }
 
-    /// A War Shrine stands or is being built anywhere in the empire.
-    fn shrine_planned(&self) -> bool {
-        let shrine = legatum_core::ProductionItem::Building {
+    /// An Agoge stands or is being built anywhere in the empire.
+    fn agoge_planned(&self) -> bool {
+        let agoge = legatum_core::ProductionItem::Building {
             building: BuildingKind::Agoge,
         };
         self.ctx.own_cities.iter().any(|c| {
-            Self::city_has_shrine(c)
+            Self::city_has_agoge(c)
                 || c.detail
                     .as_ref()
-                    .is_some_and(|d| d.producing == Some(shrine))
+                    .is_some_and(|d| d.producing == Some(agoge))
                 || self.orders.iter().any(|o| {
                     matches!(o, Order::SetProduction { city, item } | Order::BuyItem { city, item }
-                        if *city == c.id && *item == shrine)
+                        if *city == c.id && *item == agoge)
                 })
         })
     }
 
-    /// Production value of the War Shrine in `c`: the goal needs one, and every Sparta unit
+    /// Production value of the Agoge in `c`: the goal needs one, and every Sparta unit
     /// trained there starts a level higher, so veterans come sooner. Only in the chosen city, and
     /// only once the empire has the economy to spare it (a third of the game is gone, or a veteran
     /// already waits).
-    pub(crate) fn shrine_value(&self, c: &CityView) -> i32 {
-        if self.shrine_site() != Some(c.id) {
+    pub(crate) fn agoge_value(&self, c: &CityView) -> i32 {
+        if self.agoge_site() != Some(c.id) {
             return 0;
         }
         let early = self.view().turn * 100 < legatum_core::data::EXPECTED_GAME_TURNS * 25;
@@ -102,21 +102,21 @@ impl Planner<'_> {
         goals::spec(Faction::Sparta).vp as i32 * 150
     }
 
-    /// Sparta military trained in a War Shrine city start a level higher, closer to the level
+    /// Sparta military trained in an Agoge city start a level higher, closer to the level
     /// the goal needs: a small preference for training there while the goal is open.
-    pub(crate) fn shrine_training_bonus(&self, c: &CityView, unit: legatum_core::UnitKind) -> i32 {
+    pub(crate) fn agoge_training_bonus(&self, c: &CityView, unit: legatum_core::UnitKind) -> i32 {
         if self.faction == Faction::Sparta
             && self.view().actions.retire.is_some()
-            && Self::city_has_shrine(c)
+            && Self::city_has_agoge(c)
             && legatum_core::data::unit_stats(unit).military
         {
-            SHRINE_TRAINING_BONUS
+            AGOGE_TRAINING_BONUS
         } else {
             0
         }
     }
 
-    /// In the retirement window, bring every veteran to the nearest War Shrine city and hold him
+    /// In the retirement window, bring every veteran to the nearest Agoge city and hold him
     /// there, so the retirement can happen in one turn. Only with enough veterans to complete the
     /// goal (a lone veteran gathers nothing), and never leaving a city that needs him.
     pub(crate) fn gather_veterans(&mut self) {
@@ -137,7 +137,7 @@ impl Planner<'_> {
         {
             return;
         }
-        let shrines: Vec<Hex> = self.shrine_cities().iter().map(|c| c.pos).collect();
+        let shrines: Vec<Hex> = self.agoge_cities().iter().map(|c| c.pos).collect();
         for u in veterans {
             if self.has_acted(u.id) {
                 continue;

@@ -8,7 +8,7 @@
   "seat": 6,
   "difficulty": "Hard",
   "minutes": 15,
-  "briefing": "A new campaign, turn 1. Your Settler stands in the far east with a Scout and a Soldier for company. Athens values learning and civic growth. Build several cities to expand that lead. Civ 6 players measure a good opening by three cities at turn 50. Found as many as you can by then: every city counts, and so does every citizen.",
+  "briefing": "A new campaign, turn 1. Your Settler stands in the far east with a Scout and a Spearman for company. Athens values learning and civic growth. Build several cities to expand that lead. Civ 6 players measure a good opening by three cities at turn 50. Found as many as you can by then: every city counts, and so does every citizen.",
   "tests": "The Civ 6 three-cities benchmark: settle timing, growth before Settlers (each costs a citizen), scouting for sites and barbarian safety. The baseline is the plain Hard AI's own opening from the same start.",
   "objective": {
     "summary": "Found as many cities as you can by turn 50. Three is the benchmark.",
@@ -30,8 +30,8 @@
     ]
   },
   "predictions": {
-    "good_play": "Found the capital on turn 1 in place unless the Scout shows a clearly better tile next door. Scout in a loop to mark three sites 4-6 hexes out and spot barbarian camps. Research Soil Reclamation first and build a Monument or Scout only while the capital grows to 2; then Settler, Settler, Soldier, Settler, keeping the Soldier on escort when barbarians are near. Aim for the first Settler around turn 12-14 and four cities by turn 50.",
-    "ai_play": "The Athenian Hard AI follows the measured pacing: first Settler around turn 18, second city around turn 26, a third city in the 40s and sometimes none. It spends early production on a Scout or Soldier and doesn't buy Settlers.",
+    "good_play": "Found the capital on turn 1 in place unless the Scout shows a clearly better tile next door. Scout in a loop to mark three sites 4-6 hexes out and spot barbarian camps. Research Soil Reclamation first and build a Monument or Scout only while the capital grows to 2; then Settler, Settler, Spearman, Settler, keeping the Spearman on escort when barbarians are near. Aim for the first Settler around turn 12-14 and four cities by turn 50.",
+    "ai_play": "The Athenian Hard AI follows the measured pacing: first Settler around turn 18, second city around turn 26, a third city in the 40s and sometimes none. It spends early production on a Scout or Spearman and doesn't buy Settlers.",
     "ai_score": {
       "median": 360,
       "low": 260,

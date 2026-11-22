@@ -280,7 +280,7 @@ fn recipes() -> Vec<Recipe> {
                 "Sparta's capital had trained only Hoplites since turn 2. On turn 18 four of them \
                  stood one to three hexes from Byzantium's only city, Nicaea, eight hexes from \
                  home; he declared war, stole a Byzantine Settler on turn 20 and stormed Nicaea \
-                 (no Walls: they had turned into a Ranger on turn 20) on turn 22 without losing \
+                 (no Walls: they had turned into an Archer on turn 20) on turn 22 without losing \
                  a unit. Byzantium was eliminated.",
                 "Playtest 8.9.2 (Sparta, Standard, 8 empires), engine 28be168b",
             ),
@@ -471,7 +471,7 @@ fn recipes() -> Vec<Recipe> {
                 1,
                 0,
                 "Sparta (the Spartan AI, Hard) declared on Athens on turn 101, when the designer \
-                 had seven cities and two military units (an Arquebusier and an Assault Trooper) \
+                 had seven cities and two military units (an Arquebusier and a Musketman) \
                  and Athens Colony 7 had just been founded: pop 1, no Walls, five tiles from \
                  Sellasia. Sparta's own view showed none of his military; its campaign aimed at \
                  Phaleron and on turn 104 moved to the Mongol city of Shangdu. Twenty-nine turns \

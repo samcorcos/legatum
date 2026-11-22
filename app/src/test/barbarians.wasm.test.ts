@@ -79,11 +79,11 @@ describe.skipIf(!available)('WASM barbarian behavior', () => {
     const s = fixture(true);
     addCity(s, 0, fromOffset(2, 2));
     addCamp(s, fromOffset(16, 2));
-    const soldier = spawnUnit(s, 0, 'Spearman', fromOffset(8, 5), false);
+    const spearman = spawnUnit(s, 0, 'Spearman', fromOffset(8, 5), false);
     const raider = spawnUnit(s, BARBARIAN, 'Scout', fromOffset(9, 5), false);
     raider.hp = 20;
-    const { reports } = play(s, [{ 0: [{ type: 'MoveUnit', unit: soldier.id, to: fromOffset(9, 5) }] }]);
-    expect(reports[0].some((e) => e.type === 'Battle' && e.attacker === soldier.id)).toBe(true);
+    const { reports } = play(s, [{ 0: [{ type: 'MoveUnit', unit: spearman.id, to: fromOffset(9, 5) }] }]);
+    expect(reports[0].some((e) => e.type === 'Battle' && e.attacker === spearman.id)).toBe(true);
   });
 
   it('a scout that sees a city and gets home launches a raid that musters three raiders', () => {
@@ -102,9 +102,9 @@ describe.skipIf(!available)('WASM barbarian behavior', () => {
     const camp = addCamp(s, fromOffset(12, 6));
     s.units = s.units.filter((u) => u.id !== camp.guard && u.id !== camp.scout);
     camp.guard = null; camp.scout = null;
-    const soldier = spawnUnit(s, 1, 'Spearman', fromOffset(10, 6), false);
-    const { reports } = play(s, [{ 1: [{ type: 'MoveUnit', unit: soldier.id, to: fromOffset(12, 6) }] }, {}]);
-    expect(reports[0]).toContainEqual({ type: 'BarbarianCampCleared', camp: camp.id, at: fromOffset(12, 6), by: 1, unit: soldier.id, gold: 50 });
+    const spearman = spawnUnit(s, 1, 'Spearman', fromOffset(10, 6), false);
+    const { reports } = play(s, [{ 1: [{ type: 'MoveUnit', unit: spearman.id, to: fromOffset(12, 6) }] }, {}]);
+    expect(reports[0]).toContainEqual({ type: 'BarbarianCampCleared', camp: camp.id, at: fromOffset(12, 6), by: 1, unit: spearman.id, gold: 50 });
   });
 
   it('raiders capture a lone Settler and walk it to their camp', () => {

@@ -45,7 +45,7 @@ fn orders_of(v: &PlayerView) -> Vec<Action> {
 
 // ---------- Sparta ----------
 
-/// An Sparta with a War Shrine in city 1, a plain city 2, an enemy city, a garrison soldier in
+/// An Sparta with an Agoge in city 1, a plain city 2, an enemy city, a garrison soldier in
 /// each home city, and one soldier per entry of `levels` in city 1 (ids 10, 11, ...).
 fn sparta(turn: u32, vp: u32, target: u32, retired: u8, levels: &[u8]) -> PlayerView {
     let mut b = ViewBuilder::new(30, 20)
@@ -190,7 +190,7 @@ fn the_sparta_ai_orders_are_valid_with_retirement() {
 }
 
 #[test]
-fn veterans_gather_at_a_war_shrine_city_in_the_window() {
+fn veterans_gather_at_an_agoge_city_in_the_window() {
     // Three veterans stand in city 2 (no shrine); the window is open.
     let mut v = sparta(70, 15, 17, 0, &[4, 4, 4]);
     for u in v.units.iter_mut().filter(|u| u.level >= 4) {
@@ -198,13 +198,13 @@ fn veterans_gather_at_a_war_shrine_city_in_the_window() {
     }
     let mut p = planner(&v);
     p.gather_veterans();
-    let shrine = off(3, 3);
+    let agoge = off(3, 3);
     for id in [10, 11, 12] {
         assert!(
             p.orders.iter().any(|o| matches!(o,
                 Order::MoveUnit { unit, to } | Order::MoveUnitPath { unit, to, .. }
-                    if *unit == UnitId(id) && to.distance(shrine) <= 1)),
-            "veteran {id} heads for the War Shrine city: {:?}",
+                    if *unit == UnitId(id) && to.distance(agoge) <= 1)),
+            "veteran {id} heads for the Agoge city: {:?}",
             p.orders
         );
     }
@@ -236,8 +236,8 @@ fn veterans_gather_at_a_war_shrine_city_in_the_window() {
 }
 
 #[test]
-fn the_war_shrine_goes_in_one_city_once_a_third_of_the_game_is_gone_or_a_veteran_exists() {
-    let shrine = ProductionItem::Building {
+fn the_agoge_goes_in_one_city_once_a_third_of_the_game_is_gone_or_a_veteran_exists() {
+    let agoge = ProductionItem::Building {
         building: BuildingKind::Agoge,
     };
     // No shrine anywhere yet: strip the fixture's.
@@ -249,27 +249,27 @@ fn the_war_shrine_goes_in_one_city_once_a_third_of_the_game_is_gone_or_a_veteran
     };
     // Early and no veteran: not yet.
     let v = bare(10, &[]);
-    assert!(planner(&v).shrine_cities().is_empty());
-    assert_eq!(planner(&v).shrine_value(&v.cities[1]), 0);
+    assert!(planner(&v).agoge_cities().is_empty());
+    assert_eq!(planner(&v).agoge_value(&v.cities[1]), 0);
     // A veteran exists: the highest-Production city is the site, and only it.
     let v = bare(10, &[4]);
     let p = planner(&v);
-    assert_eq!(p.shrine_site(), Some(legatum_core::CityId(2)));
-    assert!(p.shrine_value(&v.cities[1]) >= 300);
-    assert_eq!(p.shrine_value(&v.cities[0]), 0);
+    assert_eq!(p.agoge_site(), Some(legatum_core::CityId(2)));
+    assert!(p.agoge_value(&v.cities[1]) >= 300);
+    assert_eq!(p.agoge_value(&v.cities[0]), 0);
     // Later in the game it is wanted regardless.
     let v = bare(60, &[]);
-    assert!(planner(&v).shrine_value(&v.cities[1]) >= 300);
+    assert!(planner(&v).agoge_value(&v.cities[1]) >= 300);
     // Being built, or standing, anywhere ends the demand.
     let mut building = bare(60, &[]);
-    building.cities[0].detail.as_mut().unwrap().producing = Some(shrine);
-    assert_eq!(planner(&building).shrine_site(), None);
+    building.cities[0].detail.as_mut().unwrap().producing = Some(agoge);
+    assert_eq!(planner(&building).agoge_site(), None);
     let standing_one = sparta(60, 5, 17, 0, &[]);
-    assert_eq!(planner(&standing_one).shrine_site(), None);
+    assert_eq!(planner(&standing_one).agoge_site(), None);
     // A done goal needs none.
     let mut done = bare(60, &[]);
     done.actions.retire = None;
-    assert_eq!(planner(&done).shrine_site(), None);
+    assert_eq!(planner(&done).agoge_site(), None);
 }
 
 #[test]
@@ -417,23 +417,23 @@ fn the_wild_waits_until_every_city_has_room_for_its_camp() {
 }
 
 #[test]
-fn sparta_units_train_in_the_war_shrine_city_while_the_goal_is_open() {
+fn sparta_units_train_in_the_agoge_city_while_the_goal_is_open() {
     let v = sparta(60, 5, 17, 0, &[]);
     let p = planner(&v);
     assert_eq!(
-        p.shrine_training_bonus(&v.cities[0], UnitKind::Spearman),
-        SHRINE_TRAINING_BONUS
+        p.agoge_training_bonus(&v.cities[0], UnitKind::Spearman),
+        AGOGE_TRAINING_BONUS
     );
     assert_eq!(
-        p.shrine_training_bonus(&v.cities[1], UnitKind::Spearman),
+        p.agoge_training_bonus(&v.cities[1], UnitKind::Spearman),
         0,
         "no shrine there"
     );
-    assert_eq!(p.shrine_training_bonus(&v.cities[0], UnitKind::Settler), 0);
+    assert_eq!(p.agoge_training_bonus(&v.cities[0], UnitKind::Settler), 0);
     let mut done = v.clone();
     done.actions.retire = None;
     assert_eq!(
-        planner(&done).shrine_training_bonus(&done.cities[0], UnitKind::Spearman),
+        planner(&done).agoge_training_bonus(&done.cities[0], UnitKind::Spearman),
         0
     );
 }

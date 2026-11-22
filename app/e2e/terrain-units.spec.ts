@@ -1,8 +1,8 @@
 // Units on the organic terrain (2026-10-11): the painted miniature must stand out from forest, range, hills, desert and
 // grass, at normal and far zoom, at 1000x600 and 1440x900. Two jobs:
 //  - review shots (UNIT_SHOTS=<dir>, UNIT_PREFIX=before|after, optional UNIT_QUERY=terrain=s2&organic=1): a clip around
-//    one Soldier on each terrain, plus a forest cluster of four seats, a Scout and a Settler, at both zooms;
-//  - a contrast check: a Soldier alone in a deep wood must differ in luminance from the art around it (its base, and the
+//    one Spearman on each terrain, plus a forest cluster of four seats, a Scout and a Settler, at both zooms;
+//  - a contrast check: a Spearman alone in a deep wood must differ in luminance from the art around it (its base, and the
 //    pool of vellum either side of the figure, against the bare terrain just outside its halo), by at least the thresholds
 //    calibrated on the shots.
 import { test as base, expect, type Page } from '@playwright/test';
@@ -78,7 +78,7 @@ function scene() {
   const cluster: [number, UnitKind][] = [[0, 'Spearman'], [1, 'Spearman'], [2, 'Spearman'], [3, 'Spearman'], [0, 'Scout'], [0, 'Settler']];
   const clusterAt: Hex[] = [];
   cluster.forEach(([seat, kind], k) => {
-    // The Settler shares the first Soldier's tile, so a two-unit stack is shot as well.
+    // The Settler shares the first Spearman's tile, so a two-unit stack is shot as well.
     const h = k === 0 || kind === 'Settler' ? deep : ring[k - 1];
     if (!h) return;
     clusterAt.push(h);
@@ -86,7 +86,7 @@ function scene() {
   });
   // A Settler beside a wood, for the Settle lens.
   const settler = spawnUnit(g, 0, 'Settler', interior('Plains', 4), false);
-  // A lone Soldier in the deepest remaining wood, for the contrast check.
+  // A lone Spearman in the deepest remaining wood, for the contrast check.
   const lone = interior('Forest');
   spawnUnit(g, 0, 'Spearman', lone, false);
   const ownerScout = interior('Desert');

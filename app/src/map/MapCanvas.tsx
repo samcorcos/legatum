@@ -178,7 +178,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
   const busy = useGame((s) => s.busy);
   const view: PlayerView | null = views ? views[seat] : null;
   // A goal action, while it is weighed or ordered: the Great Migration's shrinking cities and released tiles,
-  // the warbands's cities and camps. A veteran's retirement marks the valid War Shrine cities (below).
+  // the warbands's cities and camps. A veteran's retirement marks the valid Agoge cities (below).
   const swarmOpen = useGame((s) => s.goalDialog === 'Swarm' || !!(s.orders[s.seat] ?? []).find((o) => o.type === 'Action' && o.action.action === 'Swarm'));
   const wildOpen = useGame((s) => s.goalDialog === 'CallTheWild' || !!(s.orders[s.seat] ?? []).find((o) => o.type === 'Action' && o.action.action === 'CallTheWild'));
   const retireWeighing = useGame((s) => s.goalDialog === 'RetireVeteran');

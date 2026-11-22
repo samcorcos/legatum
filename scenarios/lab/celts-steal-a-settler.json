@@ -8,7 +8,7 @@
   "seat": 0,
   "difficulty": "Hard",
   "minutes": 7,
-  "briefing": "Turn 16. You are the Celts with one city, a Scout at 18,17 and a Soldier at 21,21. A German Settler is crossing near the Scout. Take it and found your second city within nine turns.",
+  "briefing": "Turn 16. You are the Celts with one city, a Scout at 18,17 and a Spearman at 21,21. A German Settler is crossing near the Scout. Take it and found your second city within nine turns.",
   "tests": "Can you take Germany’s escorted Settler and found a second Celtic city?",
   "objective": {
     "summary": "Own 2 cities by turn 25.",
@@ -60,7 +60,7 @@
   },
   "lab": {
     "question": "Can you take Germany’s escorted Settler and found a second Celtic city?",
-    "blurb": "Turn 16. A German Settler and its Soldier are crossing near your Scout. Catch the Settler and it founds your second city.",
+    "blurb": "Turn 16. A German Settler and its Spearman are crossing near your Scout. Catch the Settler and it founds your second city.",
     "era": 0,
     "order": 19
   },

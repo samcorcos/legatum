@@ -75,9 +75,9 @@ describe.skipIf(!available)('city healing core behavior', () => {
 
   it('a city damaged this turn does not heal; the next quiet turn it does', () => {
     const s = fixture(); addCity(s, 0, home, 100);
-    const ranger = spawnUnit(s, 1, 'Archer', fromOffset(10, 5), false);
+    const archer = spawnUnit(s, 1, 'Archer', fromOffset(10, 5), false);
     const g = start(s);
-    const events = g.turn({ 1: [{ type: 'RangedAttack', unit: ranger.id, target: home }] });
+    const events = g.turn({ 1: [{ type: 'RangedAttack', unit: archer.id, target: home }] });
     const dealt = events.flatMap((e) => e.type === 'Battle' && e.defender.kind === 'City' ? [e.damage_to_defender] : [])[0];
     expect(dealt).toBeGreaterThan(0);
     expect(g.city().hp).toBe(100 - dealt);

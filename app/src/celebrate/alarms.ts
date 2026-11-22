@@ -221,7 +221,7 @@ export function alarmHeadline(view: PlayerView, alarms: readonly Alarm[]): strin
 export interface Threat {
   /** Their units in sight, nearest to yours first. */
   units: { name: string; at: Hex; tiles: number; scout: boolean }[];
-  /** "5 Troopers, 1 Scout". */
+  /** "5 Pikemen, 1 Scout". */
   summary: string;
   /** Where "Show on map" for their forces centres, and how it reads. */
   nearest: { at: Hex; text: string } | null;

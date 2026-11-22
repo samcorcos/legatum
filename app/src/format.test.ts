@@ -188,10 +188,10 @@ describe('split counterattack reports', () => {
   const assault = (attackers: number[], taken: number[], hpAfter: number, defender: Extract<Event, { type: 'Battle' }>['defender']) =>
     attackers.map((attacker, i): Event => ({ ...battle, attacker, at, defender,
       damage_to_attacker: taken[i], damage_to_defender: 15, defender_hp_after: hpAfter, attacker_hp_after: 100 - taken[i] }));
-  const soldier = { kind: 'Unit', unit: 9, owner: 2, unit_kind: 'Spearman' } as const;
+  const spearman = { kind: 'Unit', unit: 9, owner: 2, unit_kind: 'Spearman' } as const;
 
   it('names the defender once, by place, and only that line says destroyed', () => {
-    const events = [...assault([7, 8, 10], [7, 7, 7], 0, soldier),
+    const events = [...assault([7, 8, 10], [7, 7, 7], 0, spearman),
       { type: 'UnitDestroyed', unit: 9, owner: 2, unit_kind: 'Spearman', at } as Event];
     const lines = formatEvents(events, context);
     expect(lines.map((l) => l.text)).toEqual([
@@ -202,7 +202,7 @@ describe('split counterattack reports', () => {
   });
 
   it('shows the remainder going to one attacker and a defender that held', () => {
-    const lines = formatEvents(assault([7, 11], [11, 10], 12, soldier), context);
+    const lines = formatEvents(assault([7, 11], [11, 10], 12, spearman), context);
     expect(lines.map((l) => l.text)).toEqual([
       "Hollow Crown's Spearman held at Tessitura against a combined assault by your Spartan Hoplite and Pikeman; its counterattack was split, −11, −10 (12 HP left)",
     ]);
@@ -724,8 +724,8 @@ it('explains a Settler whose destination can no longer hold a city, from what th
   const dest = { q: capital.pos.q + 5, r: capital.pos.r };
   const di = tileIndex(dest, before.width, before.height);
   before.tiles[di] = { ...before.tiles[di], terrain: 'Plains', explored: true, owner: null };
-  const soldier = before.units.find((u) => u.owner === before.me && u.kind === 'Spearman')!;
-  const settler = { ...soldier, kind: 'Settler' as const, military: false, pos: { q: capital.pos.q + 1, r: capital.pos.r }, goto: dest };
+  const spearman = before.units.find((u) => u.owner === before.me && u.kind === 'Spearman')!;
+  const settler = { ...spearman, kind: 'Settler' as const, military: false, pos: { q: capital.pos.q + 1, r: capital.pos.r }, goto: dest };
   before.units = before.units.map((u) => (u.id === settler.id ? settler : u));
   // A rival founds Brasslock two tiles past the destination.
   const after: PlayerView = structuredClone(before);
@@ -825,7 +825,7 @@ describe('the Mongols’ Yam Relay Station in the report', () => {
   const built = (owner: number): Event => ({ type: 'ProductionCompleted', city: 1, owner, item: { kind: 'Building', building: 'YamRelayStation' } });
   const goal = (events: Event[], context = c) => formatEvents(events, context).filter((l) => l.category === 'victory').map((l) => [l.text, l.tone]);
 
-  it('words the moment the Hall is built, from the viewer’s side', () => {
+  it('words the moment the Station is built, from the viewer’s side', () => {
     expect(goal([built(0), got(0)])).toEqual([['You built the Yam Relay Station in Tithe Station: every empire may cross your land at Peace now (+2 VP)', 'good']]);
     expect(goal([built(1), got(1)])).toEqual([['Ben built the Yam Relay Station in Tithe Station: their land is open to every empire at Peace', 'good']]);
     expect(goal([got(2)])).toEqual([['Hollow Crown built the Yam Relay Station: their land is open to every empire at Peace', 'neutral']]);

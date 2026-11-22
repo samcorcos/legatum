@@ -125,19 +125,21 @@ fn g2_target_that_sidesteps_within_reach_is_attacked_where_it_ends() {
     let (a, m, b) = line(hex(3, 5), 0);
     let c = m.neighbor(1);
     assert_eq!((b.distance(c), m.distance(c)), (1, 1));
-    let soldier = unit(&mut s, 0, UnitKind::Spearman, a);
+    let spearman = unit(&mut s, 0, UnitKind::Spearman, a);
     let scout = unit(&mut s, 1, UnitKind::Scout, b);
-    let (next, events) =
-        resolve_units(&s, &two(vec![move_to(soldier, b)], vec![move_to(scout, c)]));
+    let (next, events) = resolve_units(
+        &s,
+        &two(vec![move_to(spearman, b)], vec![move_to(scout, c)]),
+    );
     assert_eq!(battles_on(&events, scout), vec![c], "{events:?}");
     assert_eq!(
-        pursuit(&events, soldier),
+        pursuit(&events, spearman),
         Some((PursuitOutcome::Attacked, Some(c)))
     );
-    assert_eq!(next.units[&soldier].pos, m, "attacking ends movement");
+    assert_eq!(next.units[&spearman].pos, m, "attacking ends movement");
     if next.units.contains_key(&scout) {
         // One attack per order (G18): it stays where it fought and needs orders.
-        let u = &next.units[&soldier];
+        let u = &next.units[&spearman];
         assert_eq!((u.goto, u.attack_target), (None, None));
         assert!(u.path.is_empty());
     }
@@ -150,7 +152,7 @@ fn g2_pursuit_is_the_same_from_either_seat() {
         let mut s = game(&[0, 1]);
         let (a, m, b) = line(hex(3, 5), 0);
         let c = m.neighbor(1);
-        let (target, soldier) = if atk == 1 {
+        let (target, spearman) = if atk == 1 {
             let t = unit(&mut s, def, UnitKind::Scout, b);
             (t, unit(&mut s, atk, UnitKind::Spearman, a))
         } else {
@@ -158,7 +160,7 @@ fn g2_pursuit_is_the_same_from_either_seat() {
             (unit(&mut s, def, UnitKind::Scout, b), so)
         };
         let mut orders = BTreeMap::new();
-        orders.insert(PlayerId(atk), vec![move_to(soldier, b)]);
+        orders.insert(PlayerId(atk), vec![move_to(spearman, b)]);
         orders.insert(PlayerId(def), vec![move_to(target, c)]);
         let (_, events) = resolve_units(&s, &orders);
         assert_eq!(battles_on(&events, target), vec![c], "attacker seat {atk}");
@@ -170,19 +172,19 @@ fn g18_target_that_outruns_the_attacker_is_followed_then_the_order_ends() {
     let mut s = game(&[0, 1]);
     let (a, _, b) = line(hex(2, 5), 0);
     let far = b.neighbor(0).neighbor(0);
-    let soldier = unit(&mut s, 0, UnitKind::Spearman, a);
+    let spearman = unit(&mut s, 0, UnitKind::Spearman, a);
     let scout = unit(&mut s, 1, UnitKind::Scout, b);
     let (s1, e1) = resolve_units(
         &s,
-        &two(vec![move_to(soldier, b)], vec![move_to(scout, far)]),
+        &two(vec![move_to(spearman, b)], vec![move_to(scout, far)]),
     );
     assert!(battles_on(&e1, scout).is_empty());
     assert_eq!(s1.units[&scout].pos, far);
     assert_eq!(
-        pursuit(&e1, soldier),
+        pursuit(&e1, spearman),
         Some((PursuitOutcome::Followed, Some(far)))
     );
-    let u = &s1.units[&soldier];
+    let u = &s1.units[&spearman];
     assert_eq!(u.pos, b, "followed into the vacated tile");
     assert_eq!(
         (u.goto, u.attack_target),
@@ -192,7 +194,7 @@ fn g18_target_that_outruns_the_attacker_is_followed_then_the_order_ends() {
     // Next turn, with no new order, it does not attack.
     let (s2, e2) = resolve_units(&s1, &no_orders());
     assert!(battles_on(&e2, scout).is_empty());
-    assert_eq!(s2.units[&soldier].pos, b);
+    assert_eq!(s2.units[&spearman].pos, b);
 }
 
 #[test]
@@ -200,18 +202,18 @@ fn g2_target_that_leaves_sight_ends_the_order_and_says_so() {
     let mut s = game(&[0, 1]);
     let (a, _, b) = line(hex(1, 5), 0);
     let gone = b.neighbor(0).neighbor(0).neighbor(0);
-    let soldier = unit(&mut s, 0, UnitKind::Spearman, a);
+    let spearman = unit(&mut s, 0, UnitKind::Spearman, a);
     let scout = unit(&mut s, 1, UnitKind::Scout, b);
     let (s1, e1) = resolve_units(
         &s,
-        &two(vec![move_to(soldier, b)], vec![move_to(scout, gone)]),
+        &two(vec![move_to(spearman, b)], vec![move_to(scout, gone)]),
     );
     assert_eq!(s1.units[&scout].pos, gone);
     assert_eq!(
-        pursuit(&e1, soldier),
+        pursuit(&e1, spearman),
         Some((PursuitOutcome::LostSight, None))
     );
-    let u = &s1.units[&soldier];
+    let u = &s1.units[&spearman];
     assert_eq!((u.goto, u.attack_target), (None, None), "no dangling route");
     assert!(battles_on(&e1, scout).is_empty());
 }
@@ -221,12 +223,12 @@ fn g2_pursuit_never_attacks_an_escort_it_was_not_ordered_to_attack() {
     let mut s = game(&[0, 1]);
     let (a, m, b) = line(hex(3, 5), 0);
     let c = m.neighbor(1);
-    let soldier = unit(&mut s, 0, UnitKind::Spearman, a);
+    let spearman = unit(&mut s, 0, UnitKind::Spearman, a);
     let settler = unit(&mut s, 1, UnitKind::Settler, b);
     let escort = unit(&mut s, 1, UnitKind::Spearman, c);
     let (next, events) = resolve_units(
         &s,
-        &two(vec![move_to(soldier, b)], vec![move_to(settler, c)]),
+        &two(vec![move_to(spearman, b)], vec![move_to(settler, c)]),
     );
     assert!(
         !events.iter().any(|e| matches!(e, Event::Battle { .. })),
@@ -235,7 +237,7 @@ fn g2_pursuit_never_attacks_an_escort_it_was_not_ordered_to_attack() {
     assert_eq!(next.units[&escort].hp, 100);
     assert_eq!(next.units[&settler].owner, PlayerId(1));
     assert_eq!(
-        pursuit(&events, soldier),
+        pursuit(&events, spearman),
         Some((PursuitOutcome::Followed, Some(c)))
     );
 }
@@ -245,17 +247,17 @@ fn g2_plain_move_never_pursues() {
     // An empty destination is a move, not an attack order: no target to follow.
     let mut s = game(&[0, 1]);
     let (a, m, b) = line(hex(3, 5), 0);
-    let soldier = unit(&mut s, 0, UnitKind::Spearman, a);
+    let spearman = unit(&mut s, 0, UnitKind::Spearman, a);
     let scout = unit(&mut s, 1, UnitKind::Scout, m.neighbor(1).neighbor(1));
     let (next, events) = resolve_units(
         &s,
         &two(
-            vec![move_to(soldier, b)],
+            vec![move_to(spearman, b)],
             vec![move_to(scout, m.neighbor(1))],
         ),
     );
-    assert_eq!(next.units[&soldier].attack_target, None);
-    assert!(pursuit(&events, soldier).is_none());
+    assert_eq!(next.units[&spearman].attack_target, None);
+    assert!(pursuit(&events, spearman).is_none());
 }
 
 #[test]
@@ -264,14 +266,14 @@ fn g2_ranged_fire_resolves_before_the_target_can_move() {
     // out of range before the shot.
     let mut s = game(&[0, 1]);
     let (a, _, b) = line(hex(3, 5), 0);
-    let ranger = unit(&mut s, 0, UnitKind::Archer, a);
+    let archer = unit(&mut s, 0, UnitKind::Archer, a);
     let scout = unit(&mut s, 1, UnitKind::Scout, b);
     let away = b.neighbor(0).neighbor(0);
     let (next, events) = resolve_units(
         &s,
         &two(
             vec![Order::RangedAttack {
-                unit: ranger,
+                unit: archer,
                 target: b,
             }],
             vec![move_to(scout, away)],
@@ -291,22 +293,22 @@ fn g2_move_onto_a_peaceful_unit_names_it_in_the_report() {
     at_peace(&mut s);
     let here = hex(3, 5);
     let there = here.neighbor(0);
-    let soldier = unit(&mut s, 0, UnitKind::Spearman, here);
+    let spearman = unit(&mut s, 0, UnitKind::Spearman, here);
     let scout = unit(&mut s, 1, UnitKind::Scout, there);
     let (next, events) = resolve_units(
         &s,
         &two(
-            vec![move_to(soldier, there)],
+            vec![move_to(spearman, there)],
             vec![move_to(scout, there.neighbor(1))],
         ),
     );
     assert_eq!(
-        next.units[&soldier].attack_target, None,
+        next.units[&spearman].attack_target, None,
         "no War: no attack"
     );
     let want = format!("{PEACE_BLOCK_PREFIX}P1's Scout");
     assert!(
-        events.iter().any(|e| matches!(e, Event::MoveBlocked { unit, reason, .. } if *unit == soldier && *reason == want)),
+        events.iter().any(|e| matches!(e, Event::MoveBlocked { unit, reason, .. } if *unit == spearman && *reason == want)),
         "{events:?}"
     );
     assert!(!events.iter().any(|e| matches!(e, Event::Battle { .. })));
@@ -325,10 +327,10 @@ fn peace_game() -> GameState {
 fn g20_ranged_attack_on_city_validates_and_fires_with_same_turn_surprise_war() {
     let mut s = peace_game();
     let target = hex(10, 8);
-    let ranger = unit(&mut s, 0, UnitKind::Archer, hex(8, 8));
+    let archer = unit(&mut s, 0, UnitKind::Archer, hex(8, 8));
     crate::visibility::update_explored(&mut s);
     let shot = Order::RangedAttack {
-        unit: ranger,
+        unit: archer,
         target,
     };
     let war = Order::DeclareWar {
@@ -344,7 +346,7 @@ fn g20_ranged_attack_on_city_validates_and_fires_with_same_turn_surprise_war() {
         errors[0].message
     );
     let empty = Order::RangedAttack {
-        unit: ranger,
+        unit: archer,
         target: hex(9, 9),
     };
     let errors = crate::validate_orders(&s, PlayerId(0), std::slice::from_ref(&empty));
@@ -358,7 +360,7 @@ fn g20_ranged_attack_on_city_validates_and_fires_with_same_turn_surprise_war() {
     assert!(
         events.iter().any(|e| matches!(e, Event::Battle {
         attacker, defender: crate::events::Defender::City { .. }, ..
-    } if *attacker == ranger)),
+    } if *attacker == archer)),
         "{events:?}"
     );
 }
@@ -376,7 +378,7 @@ fn g20_declaring_war_at_plain_peace_attacks_this_turn() {
     let mut s = peace_game();
     let here = hex(4, 5);
     let there = here.neighbor(0);
-    let soldier = unit(&mut s, 0, UnitKind::Spearman, here);
+    let spearman = unit(&mut s, 0, UnitKind::Spearman, here);
     let scout = unit(&mut s, 1, UnitKind::Scout, there);
     let step = there.neighbor(1);
     let orders = two(
@@ -385,14 +387,14 @@ fn g20_declaring_war_at_plain_peace_attacks_this_turn() {
                 against: TeamId(1),
                 breach: false,
             },
-            move_to(soldier, there),
+            move_to(spearman, there),
         ],
         vec![move_to(scout, step)],
     );
     let (s1, e1) = resolve_turn(&s, &orders);
     assert!(
         !e1.iter().any(|e| matches!(e, Event::OrderFailed { .. })
-            || matches!(e, Event::MoveBlocked { unit, .. } if *unit == soldier)),
+            || matches!(e, Event::MoveBlocked { unit, .. } if *unit == spearman)),
         "{e1:?}"
     );
     assert_eq!(war_declared(&e1), Some(s.turn), "War starts this turn");
@@ -407,12 +409,12 @@ fn g20_declaring_war_at_plain_peace_attacks_this_turn() {
     assert!(declared_at < battle_at, "declared before the battle");
     assert!(!battles_on(&e1, scout).is_empty(), "{e1:?}");
     assert_ne!(
-        pursuit(&e1, soldier).map(|p| p.0),
+        pursuit(&e1, spearman).map(|p| p.0),
         Some(PursuitOutcome::AwaitingWar)
     );
     assert!(s1.at_war(PlayerId(0), PlayerId(1)));
     if s1.units.contains_key(&scout) {
-        let u = &s1.units[&soldier];
+        let u = &s1.units[&spearman];
         assert_eq!((u.goto, u.attack_target), (None, None), "one attack (G18)");
     }
 }
@@ -435,7 +437,7 @@ fn g20_war_on_an_ally_still_holds_the_attack_for_the_first_turn_of_war() {
     sign_alliance(&mut s);
     let here = hex(4, 5);
     let there = here.neighbor(0);
-    let soldier = unit(&mut s, 0, UnitKind::Spearman, here);
+    let spearman = unit(&mut s, 0, UnitKind::Spearman, here);
     let scout = unit(&mut s, 1, UnitKind::Scout, there);
     let step = there.neighbor(1);
     let orders = two(
@@ -444,7 +446,7 @@ fn g20_war_on_an_ally_still_holds_the_attack_for_the_first_turn_of_war() {
                 against: TeamId(1),
                 breach: true,
             },
-            move_to(soldier, there),
+            move_to(spearman, there),
         ],
         vec![move_to(scout, step)],
     );
@@ -455,12 +457,12 @@ fn g20_war_on_an_ally_still_holds_the_attack_for_the_first_turn_of_war() {
         "war on an ally takes effect next turn"
     );
     assert!(battles_on(&e1, scout).is_empty());
-    assert_eq!(s1.units[&soldier].pos, here, "holds until War begins");
+    assert_eq!(s1.units[&spearman].pos, here, "holds until War begins");
     assert_eq!(
-        pursuit(&e1, soldier),
+        pursuit(&e1, spearman),
         Some((PursuitOutcome::AwaitingWar, Some(step)))
     );
-    let u = &s1.units[&soldier];
+    let u = &s1.units[&spearman];
     assert_eq!((u.goto, u.attack_target), (Some(step), Some(scout)));
     // War has begun: the held attack fires once at the Scout's new tile.
     let (s2, e2) = resolve_turn(&s1, &no_orders());
@@ -474,11 +476,11 @@ fn g2_attack_on_a_peaceful_unit_without_declaring_war_does_not_wait() {
     let mut s = peace_game();
     let here = hex(4, 5);
     let there = here.neighbor(0);
-    let soldier = unit(&mut s, 0, UnitKind::Spearman, here);
+    let spearman = unit(&mut s, 0, UnitKind::Spearman, here);
     let _scout = unit(&mut s, 1, UnitKind::Scout, there);
-    let (s1, e1) = resolve_turn(&s, &orders(0, vec![move_to(soldier, there)]));
-    assert_eq!(s1.units[&soldier].attack_target, None);
-    assert!(pursuit(&e1, soldier).is_none());
+    let (s1, e1) = resolve_turn(&s, &orders(0, vec![move_to(spearman, there)]));
+    assert_eq!(s1.units[&spearman].attack_target, None);
+    assert!(pursuit(&e1, spearman).is_none());
     assert!(e1.iter().any(
         |e| matches!(e, Event::MoveBlocked { reason, .. } if reason.starts_with(PEACE_BLOCK_PREFIX))
     ));
@@ -489,7 +491,7 @@ fn g2_an_attack_declared_this_turn_may_target_a_unit_inside_closed_borders() {
     let mut s = peace_game();
     let their_land = hex(9, 8);
     let here = their_land.neighbor(3).neighbor(3);
-    let soldier = unit(&mut s, 0, UnitKind::Spearman, here);
+    let spearman = unit(&mut s, 0, UnitKind::Spearman, here);
     let _guard = unit(&mut s, 1, UnitKind::Spearman, their_land);
     for h in their_land.within(1) {
         if let Some(t) = s.map.get_mut(h) {
@@ -497,7 +499,7 @@ fn g2_an_attack_declared_this_turn_may_target_a_unit_inside_closed_borders() {
         }
     }
     crate::visibility::update_explored(&mut s);
-    let attack = move_to(soldier, their_land);
+    let attack = move_to(spearman, their_land);
     assert_eq!(
         crate::validate_orders(&s, PlayerId(0), std::slice::from_ref(&attack)).len(),
         1,
@@ -518,7 +520,7 @@ fn g20_declaring_war_with_a_move_onto_their_city_marches_now_and_attacks_once() 
     let mut s = peace_game();
     let their_city = hex(10, 8);
     let here = their_city.neighbor(3).neighbor(3);
-    let soldier = unit(&mut s, 0, UnitKind::Spearman, here);
+    let spearman = unit(&mut s, 0, UnitKind::Spearman, here);
     crate::visibility::update_explored(&mut s);
     let orders = orders(
         0,
@@ -527,7 +529,7 @@ fn g20_declaring_war_with_a_move_onto_their_city_marches_now_and_attacks_once() 
                 against: TeamId(1),
                 breach: false,
             },
-            move_to(soldier, their_city),
+            move_to(spearman, their_city),
         ],
     );
     assert_eq!(
@@ -541,7 +543,7 @@ fn g20_declaring_war_with_a_move_onto_their_city_marches_now_and_attacks_once() 
         "{e1:?}"
     );
     assert_ne!(
-        s1.units[&soldier].pos, here,
+        s1.units[&spearman].pos, here,
         "War opened the borders this turn"
     );
     let (s2, e2) = resolve_turn(&s1, &no_orders());
@@ -554,7 +556,7 @@ fn g20_declaring_war_with_a_move_onto_their_city_marches_now_and_attacks_once() 
                 attacker,
                 defender: crate::events::Defender::City { .. },
                 ..
-            } if *attacker == soldier)
+            } if *attacker == spearman)
             })
             .count()
     };
@@ -566,7 +568,7 @@ fn g20_declaring_war_with_a_move_onto_their_city_marches_now_and_attacks_once() 
     );
     // The city fires back each turn (city strike), so the Spearman may not survive.
     assert!(
-        s3.units.get(&soldier).is_none_or(|u| u.goto.is_none()),
+        s3.units.get(&spearman).is_none_or(|u| u.goto.is_none()),
         "the attack ended the order"
     );
 }
@@ -588,20 +590,20 @@ fn g18_an_attack_whose_defender_survives_ends_the_order_and_never_repeats() {
     let here = hex(4, 5);
     let there = here.neighbor(0);
     set_terrain(&mut s, there, crate::types::Terrain::Hills);
-    let soldier = unit(&mut s, 0, UnitKind::Spearman, here);
+    let spearman = unit(&mut s, 0, UnitKind::Spearman, here);
     let guard = unit(&mut s, 1, UnitKind::Spearman, there);
     s.units.get_mut(&guard).unwrap().fortify = 6;
-    let (s1, e1) = resolve_units(&s, &orders(0, vec![move_to(soldier, there)]));
-    assert_eq!(fought(&e1, soldier), 1);
+    let (s1, e1) = resolve_units(&s, &orders(0, vec![move_to(spearman, there)]));
+    assert_eq!(fought(&e1, spearman), 1);
     assert!(s1.units.contains_key(&guard), "the guard survived");
-    let u = &s1.units[&soldier];
+    let u = &s1.units[&spearman];
     assert_eq!(u.pos, here, "stays where it fought");
     assert_eq!((u.goto, u.attack_target), (None, None), "needs orders");
     assert!(u.path.is_empty() && !u.path_stop_on_block);
     // No new orders: no second attack, on this turn or the next.
     let (s2, e2) = resolve_units(&s1, &no_orders());
     let (_, e3) = resolve_units(&s2, &no_orders());
-    assert_eq!(fought(&e2, soldier) + fought(&e3, soldier), 0);
+    assert_eq!(fought(&e2, spearman) + fought(&e3, spearman), 0);
 }
 
 #[test]
@@ -623,14 +625,14 @@ fn g18_an_attack_on_a_city_that_stands_ends_the_order() {
     let mut s = game(&[0, 1]);
     let c = city(&mut s, 1, hex(6, 5), 3);
     let at = s.cities[&c].pos;
-    let soldier = unit(&mut s, 0, UnitKind::Spearman, at.neighbor(3));
+    let spearman = unit(&mut s, 0, UnitKind::Spearman, at.neighbor(3));
     crate::visibility::update_explored(&mut s);
-    let (s1, e1) = resolve_units(&s, &orders(0, vec![move_to(soldier, at)]));
-    assert_eq!(fought(&e1, soldier), 1);
+    let (s1, e1) = resolve_units(&s, &orders(0, vec![move_to(spearman, at)]));
+    assert_eq!(fought(&e1, spearman), 1);
     assert!(s1.cities[&c].hp > 0);
-    assert_eq!(s1.units[&soldier].goto, None);
+    assert_eq!(s1.units[&spearman].goto, None);
     let (_, e2) = resolve_units(&s1, &no_orders());
-    assert_eq!(fought(&e2, soldier), 0);
+    assert_eq!(fought(&e2, spearman), 0);
 }
 
 #[test]
@@ -639,18 +641,18 @@ fn g18_a_target_out_of_reach_this_turn_is_approached_then_the_order_ends() {
     let mut s = game(&[0, 1]);
     let start = hex(2, 5);
     let target = start.neighbor(0).neighbor(0).neighbor(0).neighbor(0);
-    let soldier = unit(&mut s, 0, UnitKind::Spearman, start);
+    let spearman = unit(&mut s, 0, UnitKind::Spearman, start);
     let guard = unit(&mut s, 1, UnitKind::Spearman, target);
     // A spotter off the route keeps the target in sight, so the order is an attack.
     unit(&mut s, 0, UnitKind::Scout, target.neighbor(2).neighbor(2));
     crate::visibility::update_explored(&mut s);
-    let (s1, e1) = resolve_units(&s, &orders(0, vec![move_to(soldier, target)]));
-    assert_eq!(fought(&e1, soldier), 0);
+    let (s1, e1) = resolve_units(&s, &orders(0, vec![move_to(spearman, target)]));
+    assert_eq!(fought(&e1, spearman), 0);
     assert_eq!(
-        pursuit(&e1, soldier),
+        pursuit(&e1, spearman),
         Some((PursuitOutcome::OutOfReach, Some(target)))
     );
-    let u = &s1.units[&soldier];
+    let u = &s1.units[&spearman];
     assert!(
         u.pos.distance(target) < start.distance(target),
         "approached"

@@ -29,9 +29,10 @@ jump between frames (the lower-half patch overlap is above 0.96 for every stage)
 levelled footings, rubble-and-mudbrick ramps up stepped cores, then a nearly full stepped
 core with the white casing laid from the bottom and no capstone. Hagia Sophia: footings
 with timber hoists, piers and walls at half height, then the great piers and arches done
-with the dome as an open timber centring. Eiffel Tower: four masonry piers with iron stubs,
-four separate trestled legs not yet joined, then the first platform and shaft with no
-lantern. ITER: the excavated pit with the isolation pedestals, half-height tokamak walls
+with the dome as an open timber centring. Eiffel Tower (all three stages repainted 2026-11-22 from the new master, stage 3 keyed with
+`wonder-art.py --lattice`): four masonry piers with iron stubs,
+four separate trestled legs not yet joined, then the legs joined by the first platform and
+the shaft rising to a short unfinished top. ITER: the excavated pit with the isolation pedestals, half-height tokamak walls
 with the bare steel assembly hall, then full-height concrete with the hall half clad.
 
 The Yam Relay Station (`building-yamrelaystation`) also occupies a chosen tile under
