@@ -31,6 +31,7 @@ a notice and deploys nothing, so forks stay green.
 | `CLOUDFLARE_ACCOUNT_ID` | secret | The Cloudflare account that owns the Pages project. |
 | `CLOUDFLARE_PAGES_PROJECT` | variable, optional | The Pages project name. Default `legatum-game` (`legatum` belongs to someone else). Project names are unique across Cloudflare: if `legatum-game` is taken, creation fails with a clear message; set this to a free name. The address becomes `https://<name>.pages.dev`. |
 | `LEGATUM_SITE_URL` | variable, optional | The public address used in the link-preview tags, for a custom domain. Default: `homepage` in `app/package.json`. |
+| `LEGATUM_GAMES_URL` | variable, optional | The game-upload Worker (`infra/games`, deployed separately). Set, every game played on the site is uploaded there and the page may connect to it; unset, nothing is uploaded. A custom domain must also be added to `ALLOWED_ORIGINS` in `infra/games/wrangler.jsonc`, or the Worker refuses its uploads (they stay queued in the browser). |
 
 ### What the hosted build is
 
@@ -41,6 +42,9 @@ relay, `none` for a build without online play) and writes it into the page's `co
 seat, online co-op, scenarios, autosave (browser storage) and Save to file / Load Game (download and upload) work.
 `app/hosted/_headers` sets the security headers and long caching for the hashed files; `app/hosted/404.html`
 answers unknown addresses. The title screen shows `Version <app version> · web <commit>`.
+
+With `LEGATUM_GAMES_URL` set, the build uploads every game's record (names removed) to that Worker, the
+title screen says so in one line, and `_headers` adds the Worker to `connect-src`. See `infra/games/README.md`.
 
 To build and check it locally:
 

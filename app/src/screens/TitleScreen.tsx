@@ -13,6 +13,7 @@ import { DEFAULT_PLAYER_NAME, MAX_PLAYER_NAME, rememberPlayerName, savedPlayerNa
 import { TitleArt } from './TitleArt';
 import { usePerfOverlay } from '../ui/PerfOverlay';
 import { buildLabel } from '../buildLabel';
+import { PRIVACY_URL, uploadsGames } from '../platform/gameUpload';
 import { isOlderVersionMessage, olderAutosaveMessage, saveHasCurrentRules } from '../saveErrors';
 import { MIN_SEATS } from '../lobby';
 import { MAX_PLAYERS } from '../gameSetup';
@@ -141,6 +142,12 @@ function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
           </button>
         )}
       </div>
+      {uploadsGames() && (
+        <p className="title-hosted-note title-upload-note">
+          Games you play here are uploaded, without player names, to help improve the AI.{' '}
+          <a href={PRIVACY_URL} target="_blank" rel="noreferrer">Privacy</a>
+        </p>
+      )}
     </>
   );
 }
