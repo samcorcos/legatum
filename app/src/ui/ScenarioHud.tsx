@@ -126,10 +126,9 @@ function SavedLine({ sc }: { sc: ActiveScenario }) {
   const saved = sc.saved;
   if (!saved) return <p className="scn-saved" data-testid="scenario-saved">Saving your run…</p>;
   if ('error' in saved) return <p className="scn-saved" data-testid="scenario-saved">Your run could not be saved: {saved.error}</p>;
-  const name = (saved.path ?? '').split(/[\\/]/).pop() ?? '';
   return (
-    <p className="scn-saved" data-testid="scenario-saved" title={saved.path}>
-      {saved.where === 'download' ? 'Your run was downloaded' : 'Your run is saved'}{name ? <>: <span className="scn-file">{name}</span></> : '.'}
+    <p className="scn-saved" data-testid="scenario-saved">
+      Your run was downloaded: <span className="scn-file">{saved.path}</span>
     </p>
   );
 }

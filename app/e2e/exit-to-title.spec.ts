@@ -1,15 +1,15 @@
 // Reproduction and regression test for playtest 6.3: "Exit to title" in the in-game menu did
 // nothing. Root cause: GameMenu's onBlur handler trusted FocusEvent.relatedTarget to tell whether
-// focus left the menu. WebKit (the Mac app's WKWebView) fires blur with relatedTarget null when a
+// focus left the menu. WebKit (Safari, and the Mac app's WKWebView at the time) fires blur with relatedTarget null when a
 // mousedown moves focus from the already-focused first menu item ("Save to file...") to another
 // button in the same menu (e.g. "Exit to title"), before the new element takes focus. The handler
 // then treated that as focus leaving the menu and closed it between mousedown and mouseup, so the
 // browser never saw a matching mouseup on the same element and no click fired. This only shows up
 // on WebKit (Chromium gives a real relatedTarget), which is why it matched what the user saw in
-// the Mac app but not in a quick Chromium check.
+// WebKit but not in a quick Chromium check.
 //
 // Playtest 8.4 repeat: the first fix (check document.activeElement after requestAnimationFrame)
-// still failed in the Mac app, because Safari/WKWebView never focuses a <button> on click: mousedown
+// still failed in WebKit, because Safari/WKWebView never focuses a <button> on click: mousedown
 // moves focus to <body>, so activeElement is outside the menu too. The Safari-click tests below
 // reproduce that on any engine (including Chromium and the Linux WebKit container, which do focus
 // buttons on click) by cancelling mousedown's default focus change and blurring the focused element.

@@ -9,7 +9,7 @@ The date range is the range of dates the repository's own records give (prompt h
 | Asset class | Path | How made | Prompts stored? | Dates on record |
 | --- | --- | --- | --- | --- |
 | Title key art | `app/src/assets/art/title-keyart-c-road-at-dawn.*` | Generated; master resampled to 2560 × 1440, JPEG derived | Yes, beside the master | 2026-11-01 to 2026-11-16 |
-| People portraits (eleven couples) | `app/src/assets/art/people-*` | Generated; 512 px and 360 px derivatives. Six were repainted by image edit on 2026-11-22 (faces) | Yes, beside each master | 2026-11-01 to 2026-11-22 |
+| People portraits (eleven couples) | `app/src/assets/art/people-*` | Generated; 512 px and 360 px derivatives. Six were repainted by image edit on 2026-11-22 (faces); the Spartan man's upper lip shaved by a second masked edit the same day | Yes, beside each master | 2026-11-01 to 2026-11-22 |
 | Unit miniatures | `app/src/assets/units/` | Generated on a flat magenta field, keyed to alpha, resized (`-source`, `-256`, `-64`, `-48`, card and panel crops). A reference miniature from the same set was attached to each request for style. Roundels (`*-roundel.svg`) are code | Yes for most: beside the file or in `units/prompts/`. None for the top-down aircraft plan sprites in `units/air/` | 2026-11-01 to 2026-11-22 |
 | Siege props | `app/src/assets/siege-props/` | Generated, keyed, resized | Yes, beside each source | Not recorded |
 | City miniatures | `app/src/assets/cities/` | Generated as sets, cut out and resized | Set prompts: some beside the files, the rest in `docs/design/city-art/prompts/` | 2026-10-10 to 2026-11-16 |
@@ -26,7 +26,7 @@ The date range is the range of dates the repository's own records give (prompt h
 | Heraldry: crests | `app/src/assets/heraldry/raster/crest-*-512.png` | Code: rendered from the seals by `heraldry/src/render-crests.mjs` (SVG lighting in Chromium). The earlier generated crests were replaced on 2026-11-21 | Not applicable | 2026-11-21 |
 | Icons | `app/src/assets/icons/*.svg` | Code: hand-written SVG on a 24 px grid | Not applicable | 2026-10 to 2026-11-21 |
 | Reward emblems | `app/src/assets/rewards/*.svg` | Code: `rewards/src/build-rewards.mjs` | Not applicable | Not recorded |
-| App icon and favicons | `app/src-tauri/icons/`, `app/public/favicon*`, `app/public/apple-touch-icon.png` | Composed by `tools/design/app-icon/build.mjs` from a code-drawn seal (`seal.svg`) over a parchment texture (`parchment.jpg`), which that script records as generated with Codex image generation | No prompt for the parchment texture | Not recorded |
+| App icon and favicons | `app/public/favicon*`, `app/public/apple-touch-icon.png` | Composed by `tools/design/app-icon/build.mjs` from a code-drawn seal (`seal.svg`) over a parchment texture (`parchment.jpg`), which that script records as generated with Codex image generation | No prompt for the parchment texture | Not recorded |
 | Music and sound effects | `app/public/audio/` | Third-party recordings released under CC0 1.0 (Kenney, Breviceps, vitalezzz), trimmed and encoded by `tools/audio/build_audio.py` | Not applicable. Sources, authors and licences: `app/public/audio/CREDITS.md`, `manifest.json`, `licenses/` | See `CREDITS.md` |
 
 ## Gaps

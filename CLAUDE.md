@@ -1,6 +1,6 @@
 # Legatum
 
-A historical 4X on a hex map (real peoples such as Switzerland, the Mongols and Sparta; grounded in real history, no sci-fi or fantasy, user 2026-10-10), built to feel familiar to Civ 6 players. The design target is two humans on a permanent team plus 6 AI empires; solo against AI empires, hot seat, LAN and online games also exist. Simultaneous turns, 3–6 hour games.
+A historical 4X on a hex map (real peoples such as Switzerland, the Mongols and Sparta; grounded in real history, no sci-fi or fantasy, user 2026-10-10), built to feel familiar to Civ 6 players. The design target is two humans on a permanent team plus 6 AI empires; solo against AI empires, hot seat and online games also exist. Simultaneous turns, 3–6 hour games.
 
 ## Sources of truth
 
@@ -32,7 +32,7 @@ Each kind of knowledge lives in exactly one place. Don't duplicate design conten
 ## Architecture
 
 - Rust simulation core: game state + all orders + seed → next state. Deterministic, integer math only, no rendering code.
-- Desktop app: Tauri with a TypeScript web UI and a 2D hex renderer.
+- The game is a web app (user, 2026-11-22: the desktop app was dropped): a TypeScript UI and a 2D hex renderer, with the engine compiled to WASM and running in the browser, served as static files from Cloudflare Pages.
 - Headless simulation runner: Rust CLI, parallel across cores.
 - Python bindings (PyO3) only if we reach learned AI.
 

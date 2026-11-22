@@ -54,8 +54,8 @@ export function GameScreen() {
   const training = useGame((s) => s.training);
   const resolvingToEnd = useGame((s) => s.resolvingToEnd);
   const stopResolving = useGame((s) => s.stopResolving);
-  const conn = useGame((s) => (s.client?.kind === 'remote' ? s.lan?.conn : null));
-  const credentialRejected = useGame((s) => s.client?.kind === 'remote' && s.lan?.credentialRejected);
+  const conn = useGame((s) => (s.client?.kind === 'remote' ? s.net?.conn : null));
+  const credentialRejected = useGame((s) => s.client?.kind === 'remote' && s.net?.credentialRejected);
 
   useEffect(() => {
     window.addEventListener('keydown', handleGameKey);
@@ -129,15 +129,15 @@ export function GameScreen() {
         <div className="conn-banner">
           Your saved seat credential is no longer valid.
           <ReclaimSeatButton />
-          <button className="btn quiet" onClick={() => useGame.getState().leaveLan()}>Leave</button>
+          <button className="btn quiet" onClick={() => useGame.getState().leaveOnline()}>Leave</button>
         </div>
       ) : conn === 'taken' ? (
         <div className="conn-banner">
           This seat is now being played in another window.
-          <button className="btn" onClick={() => useGame.getState().rejoinLan()}>
+          <button className="btn" onClick={() => useGame.getState().rejoinOnline()}>
             Rejoin here
           </button>
-          <button className="btn quiet" onClick={() => useGame.getState().leaveLan()}>
+          <button className="btn quiet" onClick={() => useGame.getState().leaveOnline()}>
             Leave
           </button>
         </div>

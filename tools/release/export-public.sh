@@ -53,7 +53,7 @@ pat="$(python3 -I "$here/scrub.py" pattern)"
 INCLUDE=(.)
 EXCLUDE=(
   .reviews .progress docs/sim-results .claude/settings.local.json .claude/worktrees
-  app/e2e-qa app/test-results app/dist app/node_modules app/src-tauri/target app/src-tauri/gen
+  app/e2e-qa app/test-results app/dist app/node_modules
   scripts/summarize-tech-bicycle.py scripts/summarize-tech-bicycle-2.py scripts/summarize-tech-bicycle-2-tuning.py
   scripts/summarize-tech-full.py scripts/test_summarize_tech_bicycle.py scripts/sparta-balance-report.py
   scripts/ruin-reward-report.py scripts/summarize-capital-science.py scripts/summarize-difficulty.py

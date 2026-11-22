@@ -7,8 +7,6 @@ __pycache__/
 app/dist/
 app/src/wasm-pkg/
 crates/wasm/pkg/
-app/src-tauri/target/
-app/src-tauri/gen/
 app/test-results/
 app/test-results-webkit/
 app/playwright-report/

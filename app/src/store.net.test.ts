@@ -7,7 +7,7 @@ const view = (turn: number): PlayerView => ({
   turn, me: 1, team: 0, units: [], cities: [], players: [], finished: false,
 }) as unknown as PlayerView;
 
-describe('LAN order reconciliation in the store', () => {
+describe('online order reconciliation in the store', () => {
   let sockets: FakeSocket[];
 
   beforeEach(() => {
@@ -27,7 +27,7 @@ describe('LAN order reconciliation in the store', () => {
     });
     useGame.setState(useGame.getInitialState(), true);
     const status = { mode: 'server' as const, has_game: true, turn: 5, seats: [], is_local: false };
-    useGame.setState({ lan: { status, mySeat: null, seats: [], conn: 'closed' } });
+    useGame.setState({ net: { status, mySeat: null, seats: [], conn: 'closed' } });
     useGame.getState().joinSeat(1, 'Ben');
     sockets[0].open();
     sockets[0].push({ type: 'welcome', seat: 1, game_id: 'g1', orders: [] });
@@ -36,7 +36,7 @@ describe('LAN order reconciliation in the store', () => {
   });
 
   afterEach(() => {
-    useGame.getState().leaveLan();
+    useGame.getState().leaveOnline();
     useGame.setState(useGame.getInitialState(), true);
     vi.useRealTimers();
     vi.unstubAllGlobals();

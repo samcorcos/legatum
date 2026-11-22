@@ -23,7 +23,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   useGame.getState().exitStaging();
-  useGame.getState().leaveLan();
+  useGame.getState().leaveOnline();
   setOnlineApi();
   vi.unstubAllGlobals();
 });

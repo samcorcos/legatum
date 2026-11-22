@@ -47,7 +47,7 @@ function hostNamed(lobby: Lobby, mode: LobbyMode): Lobby {
 
 export function LobbyScreen() {
   const mode = useGame((s) => s.setupMode);
-  const status = useGame((s) => s.lan?.status);
+  const status = useGame((s) => s.net?.status);
   const startGame = useGame((s) => s.startGame);
   const hostNewGame = useGame((s) => s.hostNewGame);
   const goto = useGame((s) => s.goto);
