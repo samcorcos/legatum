@@ -2,7 +2,7 @@
 
 Branch `astra/behaviour-primitives` is based on the completed `astra/opening-levers` commit `5808ca5d41460cb4182cfdbe6499765dcfe38d92`. It adds nine opt-in primitives, 23 bounded appended genes (48 total, schema 2), `--ai-primitives`, and per-seat diagnostics. Rules, canonical save structures, and committed fixtures are unchanged.
 
-The [policy and counter definitions](../opening-league.md#composable-behaviour-primitives-schema-2) describe the thresholds and priority interactions. [Machine-readable analysis](2026-09-30-behaviour-primitives-analysis.json) includes the command, denominators, aggregate counters, Scout checkpoints, and check results. The complete per-game report (`2026-09-30-behaviour-primitives-smoke.json.gz`, on the `evolution/league-phase2` branch, kept out of master for size) retains the dense Scout series and all individual counters.
+The [policy and counter definitions](../archive/opening-league.md#composable-behaviour-primitives-schema-2) describe the thresholds and priority interactions. [Machine-readable analysis](2026-09-30-behaviour-primitives-analysis.json) includes the command, denominators, aggregate counters, Scout checkpoints, and check results. The complete per-game report (`2026-09-30-behaviour-primitives-smoke.json.gz`, on the `evolution/league-phase2` branch, kept out of master for size) retains the dense Scout series and all individual counters.
 
 ## 100-game Quick smoke
 
