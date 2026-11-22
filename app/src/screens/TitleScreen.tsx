@@ -207,6 +207,7 @@ function MultiplayerMenu({ onBack }: { onBack: () => void }) {
               {listedAs === null ? <span>Your name in the game list</span> : <span className="host-name-note">{listedAs}</span>}
               <input
                 className="lobby-input"
+                aria-label="Your name in the game list"
                 value={name}
                 maxLength={MAX_PLAYER_NAME}
                 disabled={busy}

@@ -62,7 +62,8 @@ export function JoinScreen() {
                   </div>
                 </div>
                 <div className="join-rule">
-                  Strength: {FACTION_SHEETS[s.faction].pairs[0].strength} Price: {FACTION_SHEETS[s.faction].pairs[0].price} Goal: {info.goal}
+                  Strength: {FACTION_SHEETS[s.faction].pairs[0].strength}
+                  {FACTION_SHEETS[s.faction].pairs[0].price ? ` Price: ${FACTION_SHEETS[s.faction].pairs[0].price}` : ''} Goal: {info.goal}
                 </div>
                 <div className="join-status">
                   <span className={`conn-dot ${s.connected ? 'on' : ''}`} />
