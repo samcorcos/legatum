@@ -55,7 +55,7 @@ const upperFirst = (text: string) => text.charAt(0).toUpperCase() + text.slice(1
 /** What each automatic-build focus does, for the select's tooltip. */
 const FOCUS_TIP: Record<CityBuildFocus, string> = {
   Military: 'Trains the newest military units your strategic resources allow, never outdated ones. Spends no Gold.',
-  Economy: 'Builds buildings and improvements, never units. Runs a project once nothing is left. Spends no Gold.',
+  Economy: 'Builds buildings and improvements, never units. Spends no Gold.',
   Gold: 'Runs the Gold project and builds nothing else.',
   Science: 'Runs the Science project and builds nothing else.',
   Food: 'Runs the Food project and builds nothing else.',
@@ -777,7 +777,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
   </select>;
   const autoReason = buildFocus && productionWarning !== AUTOMATION_NO_CHOICE ? <p className="cp-automation-reason">{autoPick
     ? autoPickReason(autoPick, buildFocus, city, view)
-    : buildFocus === 'Military' || buildFocus === 'Economy' ? `Your queue goes first. When it empties, the city picks a ${buildFocus} build.` : `Your queue goes first. When it empties, the city runs its ${focusLabel(buildFocus, owner?.faction)}.`}</p> : null;
+    : buildFocus === 'Military' || buildFocus === 'Economy' ? `Your queue goes first. When it empties, the city picks a ${buildFocus} build.` : buildFocus === 'Food' && owner?.faction === 'Egypt' ? 'Your queue goes first. When it empties, the city runs Grow.' : `Your queue goes first. When it empties, the city runs its ${focusLabel(buildFocus, owner?.faction)}.`}</p> : null;
   const automationRow = city.owner === view.me ? <section className="cp-automation" aria-label="City building automation">
     <label htmlFor={`city-automation-${city.id}`}>Automate <kbd className="kbd" title="I: on or off with your last focus. Shift+I: next focus.">I</kbd></label>
     {autoSelect}

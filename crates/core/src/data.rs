@@ -1888,7 +1888,7 @@ pub fn faction_unavailable_reason(item: ProductionItem, faction: Faction) -> Opt
         } => "Only Egyptian cities can choose Grow".into(),
         ProductionItem::Project {
             project: crate::IndustryProject::Food,
-        } => "Egyptian cities grow with Grow instead".into(),
+        } => "Egyptian cities use Grow instead".into(),
         ProductionItem::Building { building }
             if faction == Faction::Egypt && is_workshop_line_building(building) =>
         {

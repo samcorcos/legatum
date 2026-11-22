@@ -24,7 +24,7 @@ it('names what each focus picked and why', () => {
 
 it('explains a Military fallback without inventing a defence exception', () => {
   const s = scene([building('Granary'), unit('Horseman')]);
-  expect(reason(building('Granary'), 'Military', s)).toBe('Granary: no unit can be trained or paid for now, so it builds this.');
+  expect(reason(building('Granary'), 'Military', s)).toBe('Granary: no unit is available now, so the city builds this.');
 });
 
 it('never falls back to a stock phrase', () => {

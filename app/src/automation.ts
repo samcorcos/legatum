@@ -125,5 +125,5 @@ export function autoPickReason(pick: ProductionItem, focus: CityBuildFocus, city
     return focus === 'Military' || focus === 'Economy' ? `${name}: nothing useful is left to build.` : `${name}: runs until you change the focus.`;
   }
   if (focus === 'Military' && isArmyUnit(pick)) return `${name}: the best unit your resources allow.`;
-  return focus === 'Military' ? `${name}: no unit can be trained or paid for now, so it builds this.` : `${name}: the most useful build for ${city.name}.`;
+  return focus === 'Military' ? `${name}: no unit is available now, so the city builds this.` : `${name}: the most useful build for ${city.name}.`;
 }
