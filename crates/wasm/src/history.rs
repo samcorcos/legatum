@@ -524,6 +524,17 @@ impl Recording {
     }
 }
 
+/// Where `Recording::anonymized_resuming` stopped: the renamed game's state and hashes after the last
+/// recorded turn, so the next call replays only the turns played since.
+#[derive(Clone, Debug)]
+pub struct AnonymizedResume {
+    initial_hash: u64,
+    /// The recording's own (typed-name) hash after its last turn then: the check that this is the same game.
+    last_original_hash: String,
+    hashes: Vec<String>,
+    state: GameState,
+}
+
 /// The name the lobby gives a seat by default: "Player N" for a human, "AI N" for an AI empire (N = seat + 1).
 pub fn default_seat_name(seat: usize, human: bool) -> String {
     format!("{} {}", if human { "Player" } else { "AI" }, seat + 1)
@@ -534,6 +545,17 @@ impl Recording {
     /// leave the device. Names are part of the state hash, so a renamed copy replays its orders to recompute
     /// every hash. A recording that already uses the default names comes back unchanged, with no replay.
     pub fn anonymized(&self) -> Result<Recording, String> {
+        self.anonymized_resuming(&mut None)
+    }
+
+    /// `anonymized`, picking up where the last call for the same game stopped. A game uploads its renamed
+    /// copy every few turns; without `resume` each upload replays every turn from the start, on the page's
+    /// main thread (about a second by turn 220). `resume` is trusted only while this recording still holds
+    /// the turn it stopped at, with the same hash; anything else replays from the start.
+    pub fn anonymized_resuming(
+        &self,
+        resume: &mut Option<AnonymizedResume>,
+    ) -> Result<Recording, String> {
         let mut out = self.clone();
         let mut typed: Vec<String> = Vec::new();
         let mut rename = |name: &mut String, seat: usize, human: bool| {
@@ -568,10 +590,41 @@ impl Recording {
             out.initial_state = Some(json::state_to_json(&state));
         }
         out.tape.initial_hash = state.hash();
-        for t in &mut out.tape.turns {
+        // The original hash after turn n names the whole game up to there (typed names included), so a
+        // resume point that matches it holds exactly the renamed state this replay would reach.
+        let kept = resume.take().filter(|r| {
+            r.initial_hash == self.tape.initial_hash
+                && r.hashes.len() <= self.tape.turns.len()
+                && r.hashes
+                    .len()
+                    .checked_sub(1)
+                    .is_none_or(|last| self.tape.turns[last].hash == r.last_original_hash)
+        });
+        let mut done = 0;
+        if let Some(r) = kept {
+            done = r.hashes.len();
+            for (t, hash) in out.tape.turns.iter_mut().zip(r.hashes) {
+                t.hash = hash;
+            }
+            if done > 0 {
+                state = r.state;
+            }
+        }
+        for t in &mut out.tape.turns[done..] {
             state = legatum_core::resolve_turn(&state, &t.orders).0;
             t.hash = state.hash().to_string();
         }
+        *resume = Some(AnonymizedResume {
+            initial_hash: self.tape.initial_hash,
+            last_original_hash: self
+                .tape
+                .turns
+                .last()
+                .map(|t| t.hash.clone())
+                .unwrap_or_default(),
+            hashes: out.tape.turns.iter().map(|t| t.hash.clone()).collect(),
+            state,
+        });
         // A partial recording's start state can quote a name elsewhere (a notice, a log line): never upload that.
         let text = serde_json::to_string(&out).map_err(|e| e.to_string())?;
         if typed
@@ -768,5 +821,58 @@ mod tests {
         assert_eq!(expected, session.state);
         // Default names need no replay and change nothing.
         assert_eq!(public.anonymized().unwrap(), public);
+    }
+
+    #[test]
+    fn anonymized_resuming_matches_a_full_replay_and_survives_a_changed_game() {
+        let mut setup = GameSetup::standard(42, [Faction::India, Faction::Byzantium]);
+        setup.players.truncate(3);
+        setup.players[0].name = "Dana Smith".into();
+        setup.players[1].is_human = false;
+        setup.players[2].is_human = true;
+        let mut session = Session::new(&setup, |_| BrainKind::Scripted);
+        let mut resume = None;
+        // An upload every two turns, as the page does every five: each equals the from-scratch copy.
+        for round in 0..4 {
+            for _ in 0..2 {
+                session.step(&OrderMap::new());
+            }
+            let history = session.history.as_ref().unwrap();
+            let resumed = history.anonymized_resuming(&mut resume).unwrap();
+            assert_eq!(resumed, history.anonymized().unwrap(), "round {round}");
+            assert_eq!(resume.as_ref().unwrap().hashes.len(), (round + 1) * 2);
+        }
+        // Calling again with nothing new replays nothing and changes nothing.
+        let history = session.history.as_ref().unwrap();
+        let again = history.anonymized_resuming(&mut resume).unwrap();
+        assert_eq!(again, history.anonymized().unwrap());
+        // A resume point from another game (a different seed) is dropped, not trusted.
+        let mut other = Session::new(
+            &GameSetup {
+                players: setup.players.clone(),
+                ..GameSetup::standard(43, [Faction::India, Faction::Byzantium])
+            },
+            |_| BrainKind::Scripted,
+        );
+        for _ in 0..3 {
+            other.step(&OrderMap::new());
+        }
+        let other_history = other.history.as_ref().unwrap();
+        let public = other_history.anonymized_resuming(&mut resume).unwrap();
+        assert_eq!(public, other_history.anonymized().unwrap());
+        // So is one from a later turn than the recording holds (an earlier save loaded again).
+        let mut ahead = resume.clone();
+        ahead.as_mut().unwrap().hashes.push("1".into());
+        assert_eq!(
+            other_history.anonymized_resuming(&mut ahead).unwrap(),
+            public
+        );
+        // And one whose last turn was played differently.
+        let mut diverged = resume.clone();
+        diverged.as_mut().unwrap().last_original_hash = "1".into();
+        assert_eq!(
+            other_history.anonymized_resuming(&mut diverged).unwrap(),
+            public
+        );
     }
 }

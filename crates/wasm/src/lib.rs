@@ -432,6 +432,7 @@ impl Game {
 
             state_change: 0,
             view_cache: RefCell::new(None),
+            anonymized: RefCell::new(None),
         })
     }
 
@@ -443,6 +444,7 @@ impl Game {
 
             state_change: 0,
             view_cache: RefCell::new(None),
+            anonymized: RefCell::new(None),
         })
     }
 
@@ -456,6 +458,7 @@ impl Game {
 
             state_change: 0,
             view_cache: RefCell::new(None),
+            anonymized: RefCell::new(None),
         })
     }
 
@@ -786,6 +789,8 @@ pub struct Game {
     scenario: Option<scenario::ActiveScenario>,
     state_change: u64,
     view_cache: RefCell<Option<CachedView>>,
+    /// Where the last `public_archive` stopped, so the next upload replays only the turns since.
+    anonymized: RefCell<Option<history::AnonymizedResume>>,
 }
 
 #[wasm_bindgen]
@@ -1037,7 +1042,7 @@ impl Game {
     pub fn public_archive(&self) -> Result<String, JsError> {
         js(guard(|| {
             let history = self.session.history.as_ref().ok_or("No recorded history")?;
-            to_json(&history.anonymized()?)
+            to_json(&history.anonymized_resuming(&mut self.anonymized.borrow_mut())?)
         }))
     }
 
@@ -1699,6 +1704,7 @@ mod tests {
 
             state_change: 0,
             view_cache: RefCell::new(None),
+            anonymized: RefCell::new(None),
         };
         let result: Value =
             serde_json::from_str(&game.end_turn_json(&to_json(&orders).unwrap()).unwrap()).unwrap();

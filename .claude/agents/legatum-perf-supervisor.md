@@ -60,6 +60,30 @@ games do, so this is the first place to look for what to fix.
   in the same PR. Never add browser, user-agent or device identifiers. If the field is not covered by the README's
   Privacy sentence ("how long turns took"), change that sentence in the same PR and flag it to the lead.
 
+## Costs that grow with the game (user, 2026-11-22)
+The late-game lag Sam hit was three things that each cost more with every unit on the map (a full map
+redraw per pointer move, a React render per hover pixel, the whole view sent to the engine once per
+enemy), fine at turn 20 and 738 ms of pointer lag at turn 141. Sam: "are there other things like that we
+should be looking out for proactively?" Yes: this class is the first thing to hunt, every run.
+- **The question for any code path:** what does it cost per unit, per city, per turn played, per tile on
+  screen, per device pixel? Anything that runs per pointer move, per frame, per End Turn or per autosave
+  must not also loop over the whole game.
+- **Measure growth, not one turn.** `crates/wasm/examples/growth_profile.rs` plays an all-AI game and prints,
+  every N turns, what the page pays around End Turn: lobby turn, view build and size, engine save and size,
+  load, archive, the upload copy, memory. Run it nightly when crates changed and compare the last rows
+  (turn 200+) with the ledger; a cost that grows faster than the game does is a finding even when today's
+  number is small. In the browser, `?perf=1` marks each End Turn step (`measureTurn` in `app/src/store.ts`).
+- **Where to look next** (known suspects, cross off with a measurement): map draw at device pixel ratio 2
+  (fill cost scales with pixels: Sam's turn-141 game still showed pointer lag there after the first fix);
+  the engine save going through a JSON value tree; the save text being escaped again inside the autosave
+  envelope; the 1.2 MB view parsed per seat per turn; report, notice and history lists that only grow;
+  anything in `app/src` that maps over `view.units`, `view.cities` or `view.tiles` inside a render or a
+  pointer handler; AI planning per unit pair.
+- **Real games are the judge:** once uploads carry frame times (being added from 2026-11-22; check
+  `frame_summary()` in `tools/games/analyse_games.py` exists before relying on it), plot frame p95, slow
+  frames, input lag and map-draw time against the units and cities of that turn. Until then use `turn_times`
+  and `telemetry`, which are recorded. A slope is a finding.
+
 ## Weekly: improve (one or two small PRs)
 Pick the single biggest win from this list, by expected gain over effort:
 - **Hot paths:** profile the AI turn and sim loop (`tools/perf/native-perf.sh`, `sim_bench`) and
@@ -104,6 +128,11 @@ Set from the first ledger rows; tighten only. Until then: AI whole-lobby turn p9
 CI about 15 minutes on 4 cores (after PR #14).
 
 ## Learned
+- 2026-11-22: the first growth profile found the upload's renamed copy replaying the whole game every five
+  turns (about 1 s native by turn 220, on the main thread, for any player who typed a name) and two engine
+  saves per turn (47 ms each natively at 1.7 MB). Neither showed in any benchmark, because every benchmark
+  measured a turn, not what happens around it. Fixed by resuming the replay and reusing the save.
+- 2026-11-22 (user): this agent always runs on Fable.
 - 2026-11-21: performance used to be sections of the ops supervisor and lapsed after late October
   (last sim baseline 10-31, AI turn budget 10-27, app size 10-23) because the run grew into fleet
   babysitting. Keep this agent narrow: measure, flag, one improvement a week.
