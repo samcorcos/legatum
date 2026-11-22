@@ -23,7 +23,7 @@ const STAR = 'M0 -5.4L1.6 -1.6L5.4 0L1.6 1.6L0 5.4L-1.6 1.6L-5.4 0L-1.6 -1.6Z';
 
 /** What a box shows: the capital's star, the wonder's or goal's icon, or the Age's numeral. */
 function BoxFace({ box }: { box: Box }) {
-  if (box.star) return <svg width={14} height={14} viewBox="-6 -6 12 12" aria-hidden="true"><path d={STAR} fill="currentColor" stroke="currentColor" strokeWidth={0.6} strokeLinejoin="round" /></svg>;
+  if (box.star) return <svg width={14} height={14} viewBox="-6 -6 12 12" aria-hidden="true"><path className="sc-star" d={STAR} fill="currentColor" stroke="currentColor" strokeWidth={0.6} strokeLinejoin="round" /></svg>;
   if (box.icon) return <Icon name={box.icon} size={16} />;
   return <>{box.mark}</>;
 }
@@ -137,8 +137,8 @@ export function ScoreCheck({ moment, dismiss }: { moment: Moment; dismiss(): voi
         <div className="sc-row sc-cols" aria-hidden="true"><span>Your sheet</span><span>Scored and open</span><span>How to score more</span><span>VP left</span></div>
         {card.lines.map((l) => <div key={l.key} className={`sc-row${l.fresh ? ' fresh' : ''}`} data-line={l.key}>
           <span className="sc-name"><b>{l.name}</b><small>{l.terms}</small></span>
-          <span className="sc-boxes">{l.boxes.map((b, i) => <span key={i} className={`sc-box ${b.state}`} title={b.title} aria-label={b.title} data-span={b.span ?? 1}
-            style={b.span && b.span > 1 ? { width: BOX * b.span + GAP * (b.span - 1) } : undefined}><BoxFace box={b} /></span>)}</span>
+          <span className="sc-boxes">{l.boxes.map((b, i) => <span key={i} className={`sc-cell ${b.state}`}><span className={`sc-box ${b.state}`} title={b.title} aria-label={b.title} data-span={b.span ?? 1}
+            style={b.span && b.span > 1 ? { width: BOX * b.span + GAP * (b.span - 1) } : undefined}><BoxFace box={b} /></span></span>)}</span>
           <span className="sc-how"><b>{l.how}</b>{l.detail && <small title={l.detail}>{l.detail}</small>}</span>
           <span className="sc-open">{l.open > 0 ? `+${l.open}` : '–'}</span>
         </div>)}

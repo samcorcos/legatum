@@ -15,7 +15,7 @@ const root = fileURLToPath(new URL('../../', import.meta.url));
  *   LEGATUM_RELAY_URL=http://127.0.0.1:8787 scripts/build-web.sh
  */
 // LEGATUM_E2E_RELAY points the online tests at a deployed relay instead (a live check before a release):
-//   LEGATUM_E2E_RELAY=https://legatum-relay.sam-1e7.workers.dev, with app/dist built for that relay.
+//   LEGATUM_E2E_RELAY=https://relay.playlegatum.com, with app/dist built for that relay.
 export const E2E_RELAY = process.env.LEGATUM_E2E_RELAY ?? 'http://127.0.0.1:8787';
 const BUILD_HINT = `Build first: LEGATUM_RELAY_URL=${E2E_RELAY} scripts/build-web.sh (needs the WASM engine; add --skip-wasm to reuse it).`;
 

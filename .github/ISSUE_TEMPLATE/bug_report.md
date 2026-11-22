@@ -16,7 +16,7 @@ most useful thing you can attach.
 **Where**
 
 - Build: commit or version shown on the title screen
-- How you ran it: legatum-game.pages.dev / a local build (which browser)
+- How you ran it: playlegatum.com / a local build (which browser)
 - OS and browser:
 
 **Anything else**

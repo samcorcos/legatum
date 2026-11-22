@@ -43,6 +43,9 @@ describe('the score check model', () => {
     const card = scoreCheckFor(view, 3, view.me);
     const ages = card.lines.find((l) => l.key === 'ages')!;
     expect(ages.boxes.slice(0, 3).map((b) => b.state)).toEqual(['kept', 'new', 'later']);
+    // A box still to come names its Age, as the heading does; the row terms are just the VP.
+    expect(ages.boxes[2].title).toBe('Renaissance: not begun yet');
+    expect(ages.terms).toBe('1 VP each');
     expect(ages.how).toBe('New card: Breach, capture a city that has Walls');
     expect(ages.fresh).toBe(true);
     expect(ages.open).toBe(1);

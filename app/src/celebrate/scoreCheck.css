@@ -27,10 +27,11 @@
 .sc-hold { margin: 6px 0 0; padding: 4px 8px; font: 700 12.5px/1.35 var(--sans); color: var(--panel); background: var(--bad); }
 
 .sc-sheet { display: flex; flex-direction: column; min-height: 0; outline-color: rgb(230 195 110 / .7); box-shadow: 0 0 0 4px rgb(143 111 28 / .3), 0 8px 26px rgb(0 0 0 / .45); }
-.sc-row { display: grid; grid-template-columns: 128px 232px minmax(0, 1fr) 44px; gap: 12px; align-items: center; padding: 7px 16px; border-bottom: 1px solid var(--rule); }
+.sc-row { display: grid; grid-template-columns: 128px 232px minmax(0, 1fr) 56px; gap: 12px; align-items: center; padding: 7px 16px; border-bottom: 1px solid var(--rule); }
 .sc-row.fresh { background: var(--panel-2); box-shadow: inset 3px 0 0 var(--gilt, #8f6f1c); }
 .sc-cols { padding-block: 7px 5px; border-bottom: 2px solid var(--ink); font: 700 11px/1.2 var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); }
 .sc-cols span:last-child, .sc-open { text-align: right; }
+.sc-cols span:last-child { white-space: nowrap; }
 .sc-name, .sc-how { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .sc-name b { font: 600 14px/1.25 var(--sans); }
 .sc-name small, .sc-how small { font: 400 12px/1.35 var(--sans); color: var(--ink-2); }
@@ -53,6 +54,12 @@
 /* A held icon sits on a solid ink pad, so the hatching never runs through it (UI review, 2026-11-22). */
 .sc-box.held:has(.mask-icon), .sc-box.held:has(svg) { background: radial-gradient(circle, var(--ink) 0 8.5px, transparent 9.5px), repeating-linear-gradient(135deg, var(--ink) 0 3px, #5b4a36 3px 5px); }
 .sc-box .mask-icon, .sc-box svg { flex: none; }
+/* The star is smaller than an icon, so its pad is too: the hatching still shows it is held, not kept (UI review, 2026-11-22). */
+.sc-box.held:has(.sc-star) { background: radial-gradient(circle, var(--ink) 0 6.5px, transparent 7.5px), repeating-linear-gradient(135deg, var(--ink) 0 3px, #5b4a36 3px 5px); }
+/* Each box sits in a cell with a faint outline, so a row has no gap while the tally stamps its boxes in. At rest the box covers it. */
+.sc-cell { position: relative; display: inline-flex; }
+.sc-cell:is(.kept, .held, .new)::before { content: ''; position: absolute; inset: 0; box-sizing: border-box; border: 1px dashed var(--rule-2); opacity: .7; }
+.sc-cell > .sc-box { position: relative; }
 .sc-box.later { background: transparent; color: var(--rule); border: 1px dashed var(--rule); }
 
 .sc-foot { margin-top: auto; padding-inline: 0; }

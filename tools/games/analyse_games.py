@@ -32,7 +32,7 @@ import urllib.request
 from collections import Counter, defaultdict
 from pathlib import Path
 
-DEFAULT_URL = "https://legatum-games.sam-1e7.workers.dev"
+DEFAULT_URL = "https://games.playlegatum.com"
 DEFAULT_REPO = "https://github.com/samcorcos/legatum.git"
 KEYCHAIN_SERVICE = "legatum-games-read"
 IDLE_HOURS = 6  # an in-progress game untouched this long gets a checkpoint report
