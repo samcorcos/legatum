@@ -222,7 +222,7 @@ describe.skipIf(!available)('WASM purchase behavior', () => {
   ] as const)('%s cannot buy the Walls-line building %s and matches native', (faction, building) => {
     const { s, a } = fixture();
     s.players[0].faction = s.setup.players[0].faction = faction;
-    s.players[0].techs = ['Masonry', 'Feudalism', 'Chivalry', 'MilitaryEngineering'];
+    s.players[0].techs = ['Masonry', 'Feudalism', 'Chivalry', 'Machinery'];
     a.producing = null;
     a.buildings = building === 'Castle' ? ['Walls'] : building === 'StarFort' ? ['Walls', 'Castle'] : [];
     const item = { kind: 'Building' as const, building };

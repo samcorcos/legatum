@@ -221,7 +221,7 @@ exports[`eras: core behavior > Railways, Code of Laws, Printing Press and the Ca
       "building": "RelayUplink",
       "kind": "Building",
     },
-    600,
+    400,
     {
       "food": 0,
       "gold": 0,
@@ -236,7 +236,7 @@ exports[`eras: core behavior > Railways, Code of Laws, Printing Press and the Ca
       "building": "Pyramids",
       "kind": "Building",
     },
-    240,
+    360,
     {
       "food": 0,
       "gold": 0,
@@ -381,7 +381,7 @@ exports[`eras: core behavior > Railways, Code of Laws, Printing Press and the Ca
     5,
   ],
   [
-    "MilitaryEngineering",
+    "Machinery",
     {
       "building": "StarFort",
       "kind": "Building",
