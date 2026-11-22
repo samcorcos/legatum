@@ -8,7 +8,7 @@ import { blockedQueueHead, wonderLostLine } from '../wonderRace';
 import { distance } from '../hex';
 import { unlockCardFor, type UnlockCard } from './unlockCard';
 import { eraUpCardFor, type EraUpCard } from './eraUp';
-import { scoreCheckFor, type ScoreCheckCard } from './scoreCheck';
+import { scoreCheckFor, type ScoreCheckCard } from './scoreCheckCards';
 import { eraName } from '../ui/eraResearch';
 import { cardName } from '../ageCards';
 import { WONDER_INFO, wonderArt, wonderBonusSentence } from '../wonders';
