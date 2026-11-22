@@ -6,9 +6,30 @@ import { TECHS } from '../../src/data';
 import { coreFixture } from '../../src/test/coreFixture';
 import { improvementCity } from '../../src/test/improvementsFixture';
 import { swarmState } from '../../src/test/goalActionsFixture';
+import { hallFixture } from '../../src/test/hallFixture';
 import { ring, tileIndex } from '../../src/hex';
 import { openLateRace } from '../lateRaceSave';
 import { SIZES, aim, frameHall, loadFixture, openHall, selectThing, shot, stageHallReport, type GameWindow } from './helpers';
+
+/**
+ * The capture moments' map: the hall fixture with its third city (C, not the Hall's city, whose capture the
+ * Hall's own moment tells) already in the captor's hands and the Pyramids on a tile beside it, built by `builder`.
+ * The card then names that city, and the Pyramids label on the map sits beside it.
+ */
+function wonderCapture(mode: 'captured' | 'lost') {
+  const f = hallFixture(mode);
+  const s = f.fixture;
+  const builder = mode === 'captured' ? f.glassSeat : 0, captor = mode === 'captured' ? 0 : f.otherSeat;
+  const c = s.cities.find((x) => x.id === f.c)!;
+  c.owner = captor;
+  c.buildings = [...c.buildings, 'Pyramids'];
+  for (let i = 0; i < s.owner.length; i++) if (s.tileCity[i] === f.c) s.owner[i] = captor;
+  const site = ring(c.pos, 1).map((h) => tileIndex(h, s.width, s.height)).find((i) => i >= 0 && s.tileCity[i] === f.c && s.terrain[i] !== 'Ocean')!;
+  s.terrain[site] = 'Plains';
+  s.landmark = Array(s.terrain.length).fill(null);
+  s.landmark[site] = { building: 'Pyramids', city: f.c, of: builder };
+  return { ...f, builder, captor, game: coreFixture(s), cityPos: c.pos, cityName: c.name };
+}
 
 
 for (const size of SIZES) test.describe(`ui review 1103 ${size.name}`, () => {
@@ -62,25 +83,29 @@ for (const size of SIZES) test.describe(`ui review 1103 ${size.name}`, () => {
 
   test('wonder capture: the captor and the loser', async ({ page, browser }) => {
     test.setTimeout(180_000);
-    const f = await openHall(page, 'captured');
-    await frameHall(page, f.hallPos, 1.25);
+    const f = wonderCapture('captured');
+    await loadFixture(page, f.game, 12);
+    await frameHall(page, f.cityPos, 1.25);
     await stageHallReport(page, [
-      { type: 'CityCaptured', city: f.b, from: f.glassSeat, to: 0 },
-      { type: 'GreatWorkLost', player: f.glassSeat, of: f.glassSeat, building: 'Pyramids', vp: 2 },
-      { type: 'GreatWorkCompleted', player: 0, of: f.glassSeat, building: 'Pyramids', vp: 2, again: true },
+      { type: 'CityCaptured', city: f.c, from: f.builder, to: f.captor },
+      { type: 'GreatWorkLost', player: f.builder, of: f.builder, building: 'Pyramids', vp: 2 },
+      { type: 'GreatWorkCompleted', player: f.captor, of: f.builder, building: 'Pyramids', vp: 2, again: true },
     ]);
+    await expect(page.locator('.moment-card')).toContainText(`Taken with ${f.cityName}`);
     await page.waitForTimeout(600);
     await shot(page, size, 'm2-wonder-city-captured-by-you');
     const context = await browser.newContext({ viewport: { width: size.width, height: size.height } });
     try {
       const p = await context.newPage();
-      const l = await openHall(p, 'lost');
-      await frameHall(p, l.hallPos, 1.25);
+      const l = wonderCapture('lost');
+      await loadFixture(p, l.game, 12);
+      await frameHall(p, l.cityPos, 1.25);
       await stageHallReport(p, [
-        { type: 'CityCaptured', city: l.b, from: 0, to: l.otherSeat },
-        { type: 'GreatWorkLost', player: 0, of: 0, building: 'Pyramids', vp: 2 },
-        { type: 'GreatWorkCompleted', player: l.otherSeat, of: 0, building: 'Pyramids', vp: 2, again: true },
+        { type: 'CityCaptured', city: l.c, from: l.builder, to: l.captor },
+        { type: 'GreatWorkLost', player: l.builder, of: l.builder, building: 'Pyramids', vp: 2 },
+        { type: 'GreatWorkCompleted', player: l.captor, of: l.builder, building: 'Pyramids', vp: 2, again: true },
       ]);
+      await expect(p.locator('.moment-card')).toContainText(`Lost with ${l.cityName}`);
       await p.waitForTimeout(600);
       await shot(p, size, 'm3-wonder-city-taken-from-you');
     } finally { await context.close(); }
