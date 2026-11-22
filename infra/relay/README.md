@@ -34,19 +34,73 @@ npx wrangler deploy
 The URL is `https://legatum-relay.<your-subdomain>.workers.dev`. Nothing secret or account-specific is
 committed. If the token sees several accounts, also set `CLOUDFLARE_ACCOUNT_ID`.
 
+The limits' vars deploy with the Worker from `wrangler.jsonc`. To stop new rooms in an emergency without a
+deploy, set `LOBBY_OPEN` to `0` in the dashboard (Workers > legatum-relay > Settings > Variables); the next
+`wrangler deploy` puts back the value in `wrangler.jsonc`.
+
 CI (`.github/workflows/relay.yml`) runs the typecheck and tests on every change under `infra/relay`. On `master` it then runs `wrangler deploy` itself when the repository secrets `CLOUDFLARE_API_TOKEN` (Workers Scripts: Edit) and `CLOUDFLARE_ACCOUNT_ID` exist, and skips the deploy with a notice when they do not. The manual deploy above still works.
 
 ## Behaviour notes
 
 - Room ids are 16 random characters, host keys 40, both from `crypto.getRandomValues`. The relay stores
   only a SHA-256 of the host key and compares digests in constant time.
-- A guest closed with 1013 means "no host" or "room full". 1012 means "tunnel dropped or replaced, reconnect".
+- A guest closed with 1013 means "no host", "room full" or "too many connections from one address" (the
+  reason says which). 1012 means "tunnel dropped or replaced, reconnect".
 - The relay closes the host tunnel with 1009 if the host sends a message over 1 MiB, and with 1003 if it
   sends text (tunnel frames are binary). A guest is closed with 1009 over 64 KiB and 1003 for binary.
+- Either side is closed with 4029 when it breaks its rate cap (below); the reason is `too many messages`
+  or `too much data`. A closed tunnel behaves like any dropped tunnel: guests get 1012, the host reconnects.
 - Invalid `summary` frames and non-object `status` frames are ignored; the last good value stays.
-- Rooms: at most 64 (a room counts from `POST /rooms` until it is deleted). An unclaimed room, or one whose
-  host left, is deleted after 120 s. `bye` deletes it at once.
-- The host's WebSocket pings (every 20 s) are answered by the runtime without waking the room.
+- An unclaimed room, or one whose host left, is deleted after 120 s. `bye` deletes it at once.
+- Kind 6 is the host's keepalive `ping` frame (the browser host sends one every 20 s, because a browser
+  cannot send WebSocket pings). The relay never forwards it and does not answer it.
+- WebSocket protocol pings (the desktop host's, every 20 s) are answered by the runtime without waking the
+  room, so the room cannot see them.
+
+## Limits and kill switch
+
+Every number below is enforced in the Worker and its Durable Objects, so nothing needs configuring in the
+Cloudflare dashboard. The ones marked "var" can be changed in `wrangler.jsonc` `vars` (or in the dashboard
+under the Worker's Variables) without a code change; a missing or unusable value falls back to the default.
+
+| Limit | Default | Var | Where | When broken |
+| --- | --- | --- | --- | --- |
+| New rooms allowed at all | on | `LOBBY_OPEN` (`"0"` = off) | Worker | 503 "Hosting new games is paused. Try again later." Running rooms carry on. |
+| Rooms on the relay | 64 | `MAX_ROOMS` | Lobby | 503 "This lobby is full. Try again in a few minutes." |
+| Live rooms per client address | 2 | `MAX_ROOMS_PER_IP` | Lobby | 429 "You already have 2 games open. Close one before hosting another." |
+| Room creations per client address | 6 per 10 minutes | `ROOM_CREATES_PER_10_MIN` | Lobby | 429 "You are opening games too quickly. Try again in a few minutes." with `Retry-After` |
+| Guest sockets per client address in one room | 4 | `MAX_GUESTS_PER_IP` | Room | closed 1013 `too many connections from one address` |
+| Guest sockets per room | 8 | | Room | closed 1013 `room is full` |
+| Guest messages | burst 300, then 5 per second | | Room | closed 4029 `too many messages` |
+| Guest bytes | burst 4 MiB, then 128 KiB per second | | Room | closed 4029 `too much data` |
+| Host tunnel frames | burst 4,000, then 20 per second | | Room | closed 4029 `too many messages` |
+| Host tunnel bytes | burst 64 MiB, then 4 MiB per second | | Room | closed 4029 `too much data` |
+| Message size | 64 KiB guest to host, 1 MiB host to guest | | Room | closed 1009 |
+| Announce body | 2 KiB | | Worker | 413 |
+| Host heartbeat | 60 s | | Lobby | a host that has sent a `ping` frame and then nothing for 60 s is left out of `GET /lobby` until it is heard again |
+
+- The `error` strings of `POST /rooms` are short plain sentences meant to be shown to the player as they are.
+- Client address means `CF-Connecting-IP`. The Lobby hashes it at once (SHA-256 with a random salt that
+  never leaves the Lobby) and keeps only the hash: on the room's row, gone when the room is deleted, and in a
+  create-rate bucket, gone once the bucket has refilled (at most 10 minutes). Rooms hash guest addresses the
+  same way with their own salt, in the guest socket's attachment, gone with the socket. Raw addresses are
+  never stored or logged.
+- A refused create does not spend a create token; only rooms actually made count toward the rate.
+- Rate caps are token buckets per socket, sized from the protocol: a turn is about one `view` per guest
+  chunked at 256 KiB (a big late-game view is a few MiB, so 8 guests are 100-200 frames and about 32 MiB at
+  once), and guests send small texts (orders, chat, a ping every 20 s). The bursts cover many turns back to
+  back; the low refill rates bound what a flooding socket costs, since incoming messages are what is billed.
+- The heartbeat applies only to hosts that send `ping` frames (the browser host), because the room cannot
+  see the desktop host's protocol pings. A pinging host costs one Lobby call about every 40 s.
+- Room names are cleaned, not trusted: letters of any script, digits, spaces and `' ’ . , ! ? & ( ) # : _ -`
+  are kept, everything else (emoji, symbols, invisible and direction-changing characters) is dropped,
+  whitespace collapses, combining marks are limited to 3 per letter and the name is cut to 40 visible
+  characters. An empty result, or a name containing a term from `BLOCKED_NAME_TERMS` in `src/shared.ts`
+  (empty for now: add entries there), becomes `Game <first 4 characters of the room id>`. `POST /rooms`
+  returns the name it kept as `name`. The build label may not contain control or direction characters.
+
+On top of this, a Cloudflare rate-limiting rule (Security > WAF > Rate limiting rules) on `POST /rooms`
+can stop a flood at the edge before it reaches the Worker. It needs a custom domain or zone; it is optional.
 
 ## Security model
 
@@ -55,9 +109,11 @@ CI (`.github/workflows/relay.yml`) runs the typecheck and tests on every change 
 - Only the holder of the host key can open the tunnel. The key is returned once by `POST /rooms`.
 - Seat tokens and every game message stay end to end between guest and host. The relay copies the bytes
   and cannot tell a seat token from any other text.
-- Hard limits (rooms, guests, message sizes, 2 KiB announce body) bound what a stranger can cost.
-- Anyone can create up to 64 rooms and fill the lobby. That is an accepted risk for a small game; add
-  rate limiting or a shared secret on `POST /rooms` if it ever matters.
+- `POST /rooms` needs no account, and CORS stays open (`*`) because an origin check stops no one who
+  scripts requests. What bounds a stranger is the limits table above: one address can hold 2 rooms and
+  make 6 every 10 minutes, so filling the 64-room lobby takes 32 addresses, and `LOBBY_OPEN=0` stops new rooms
+  at once if it happens. Someone with many addresses can still fill it; then add a Cloudflare rate-limiting
+  rule or a shared secret on `POST /rooms`.
 
 ## Cost on the free plan
 

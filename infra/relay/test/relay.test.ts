@@ -1,93 +1,5 @@
-import { env, exports } from "cloudflare:workers";
-import { runDurableObjectAlarm } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
-
-const BASE = "https://relay.test";
-const enc = new TextEncoder();
-const dec = new TextDecoder();
-
-const call = (path: string, init?: RequestInit) => (exports as unknown as { default: { fetch(u: string, i?: RequestInit): Promise<Response> } }).default.fetch(BASE + path, init);
-const announce = (name = "Alice", extra: object = {}) => ({ name, build: "8.9.74", rules_version: 3, protocol: 1, ...extra });
-
-async function create(body: unknown = announce()) {
-  const r = await call("/rooms", { method: "POST", body: JSON.stringify(body) });
-  return { r, j: (await r.json()) as { room: string; host_key: string } };
-}
-
-/** A WebSocket with a message queue and a recorded close. */
-class Sock {
-  q: (string | ArrayBuffer)[] = [];
-  closed: { code: number; reason: string } | null = null;
-  private waiters: (() => void)[] = [];
-  constructor(public ws: WebSocket) {
-    ws.accept();
-    ws.binaryType = "arraybuffer";
-    ws.addEventListener("message", (e) => {
-      this.q.push(e.data as string | ArrayBuffer);
-      this.wake();
-    });
-    ws.addEventListener("close", (e) => {
-      this.closed = { code: e.code, reason: e.reason };
-      this.wake();
-    });
-  }
-  private wake() {
-    this.waiters.splice(0).forEach((w) => w());
-  }
-  async until(pred: () => boolean, what: string) {
-    for (let i = 0; i < 100 && !pred(); i++) {
-      await new Promise<void>((res) => {
-        this.waiters.push(res);
-        setTimeout(res, 50);
-      });
-    }
-    if (!pred()) throw new Error("timed out waiting for " + what);
-  }
-  async next(): Promise<string | ArrayBuffer> {
-    await this.until(() => this.q.length > 0, "a message");
-    return this.q.shift()!;
-  }
-  async nextFrame() {
-    const m = (await this.next()) as ArrayBuffer;
-    const v = new DataView(m);
-    return { conn: v.getUint32(0), kind: v.getUint8(4), payload: dec.decode(new Uint8Array(m, 5)) };
-  }
-  async waitClosed() {
-    await this.until(() => this.closed !== null, "close");
-    return this.closed!;
-  }
-  send(x: string | ArrayBuffer) {
-    this.ws.send(x);
-  }
-}
-
-async function connect(path: string): Promise<Sock> {
-  const r = await call(path, { headers: { Upgrade: "websocket" } });
-  expect(r.status).toBe(101);
-  return new Sock(r.webSocket!);
-}
-
-function frame(conn: number, kind: number, payload: string | Uint8Array = ""): ArrayBuffer {
-  const p = typeof payload === "string" ? enc.encode(payload) : payload;
-  const out = new Uint8Array(5 + p.length);
-  new DataView(out.buffer).setUint32(0, conn);
-  out[4] = kind;
-  out.set(p, 5);
-  return out.buffer;
-}
-
-async function lobbyRooms() {
-  return ((await (await call("/lobby")).json()) as { rooms: Record<string, unknown>[] }).rooms;
-}
-
-async function hostedRoom(name = "Alice") {
-  const { j } = await create(announce(name));
-  const host = await connect(`/rooms/${j.room}/host?key=${j.host_key}`);
-  return { ...j, host };
-}
-
-const ns = (env as unknown as { ROOM: DurableObjectNamespace }).ROOM;
-const alarm = (room: string) => runDurableObjectAlarm(ns.get(ns.idFromName(room)));
+import { Sock, alarm, announce, call, connect, create, frame, hostedRoom, lobbyRooms } from "./helpers";
 
 describe("announce and lobby", () => {
   it("creates a room with a long random id and key, listed only once the host is connected", async () => {
@@ -119,19 +31,23 @@ describe("announce and lobby", () => {
       null,
       [],
       "x",
-      announce(""),
-      announce("x".repeat(81)),
+      announce(123),
+      announce("x".repeat(201)),
       announce("ok", { build: "" }),
+      announce("ok", { build: "8.9‮74" }),
       announce("ok", { build: "b".repeat(41) }),
       announce("ok", { rules_version: "3" }),
       announce("ok", { protocol: -1 }),
       announce("ok", { protocol: 1.5 }),
       { name: "ok", build: "b", protocol: 1 },
-      announce("bad\nname"),
     ];
     for (const b of bad) expect((await create(b)).r.status).toBe(400);
     expect((await call("/rooms", { method: "POST", body: "{not json" })).status).toBe(400);
-    expect((await create(announce("x".repeat(80)))).r.status).toBe(200);
+    // Names are cleaned rather than refused (hosts cut them at 80 characters).
+    const long = await create(announce("x".repeat(80)));
+    expect(long.r.status).toBe(200);
+    expect(long.j.name).toBe("x".repeat(40));
+    expect((await create(announce("bad\nname"))).j.name).toBe("bad name");
   });
 
   it("answers CORS preflight and sets CORS and no-store headers", async () => {
