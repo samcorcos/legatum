@@ -74,7 +74,8 @@ Don't copy those rules here; extend them there and keep this skill to direction 
 1. Mocks first for any new visual feature: 2-3 variants as screenshots in context at 1000x600 and 1440x900.
 2. Build to the house style, reusing tokens, pen weights and the icon grid.
 3. Review from headless Playwright screenshots against this skill, plus `tools/gates/art.py`; Codex-built art is never final until a Claude agent has looked at it. Every branch that changes art, or the names, kinds or wiring art depends on, gets the `legatum-art-reviewer` agent before it merges (user, 2026-11-22): it judges changed art beside its set (`tools/art/art-review.py sheet`) and lists art the branch should have changed (`art-review.py impact`).
-4. Record any new rule here (one line) and its detail in the matching reference file in the same change.
+4. When a rule change shows an unpainted item to more players (e.g. the Gold and Science projects, Germany-only until 2026-11-22), the art review flags painting it as a follow-up.
+5. Record any new rule here (one line) and its detail in the matching reference file in the same change.
 
 Run the consistency audit (`references/process-and-audit.md`) once per release (since 2026-11-22 every art PR gets the art reviewer).
 
