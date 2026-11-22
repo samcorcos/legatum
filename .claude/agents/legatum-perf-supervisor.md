@@ -47,8 +47,10 @@ games do, so this is the first place to look for what to fix.
   take `LEGATUM_GAMES_URL` and `LEGATUM_GAMES_READ_TOKEN` from the environment. Never print the token, and
   never copy records out of the container: they are players' games (the Privacy promise in `README.md`).
 - **Nightly:** summarise what the records hold for games uploaded since the last run: `turn_times` (active
-  seconds per turn, per session), the per-turn `telemetry`, and frame-time and AI-wait fields once they are
-  recorded (being added from 2026-11-22; until then say so in the ledger note instead of reporting a quiet night).
+  seconds per turn, per session), the per-turn `telemetry`, and `frame_times` (one `TurnFrameTime` row per turn
+  from 2026-11-22: frame p50/p95/max gaps, input lag, long tasks, map draw cost, units and cities in view, zoom,
+  canvas megapixels; `tools/games/analyse_games.py facts` prints them as the Smoothness line). Games played before
+  that build have none: say so in the ledger note instead of reporting a quiet night. AI-wait is not recorded yet.
   Append the summary to the ledger and flag any game or turn range clearly worse than the rest, with the game id
   and turn.
 - **Weekly:** pick the worst real-player hotspot as a candidate next to the benchmarks. Reproduce it from the

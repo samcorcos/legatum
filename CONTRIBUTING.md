@@ -113,7 +113,9 @@ lacking them. They may lead to follow-up commits or requests.
    with `tools/sim/repin.sh`, review the diff, and say in the pull request why games changed.
 4. **Saves carry a rules version.** Any change to the rules or to the serialized state bumps
    `legatum_core::RULES_VERSION` (`crates/core/src/lib.rs`). A save from another version is refused with
-   a clear message; there are no migrations. Current-version fixtures in
+   a clear message; there are no migrations. The one exception is optional client telemetry in the archive
+   (`frame_times`, `turn_times`): a default-empty field that no state hash reads and that old saves lack can be
+   added without a bump, so open games keep loading. Current-version fixtures in
    `crates/wasm/tests/fixtures/saves/` guard the round trip.
 5. **No hidden maths, no AI bonuses.** A number shown to a player should open into a breakdown. An AI
    seat at Easy, Normal or Hard plans from its own `PlayerView` and plays under the same rules as a

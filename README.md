@@ -121,9 +121,9 @@ These clips are recorded from the running game.
 
 Every game played in the browser version is uploaded to us, so we can measure how well the AI plays and find bugs.
 
-- **What is sent:** the game's record: the setup, every turn's orders, the score each turn and how long turns took. Player names are replaced with "Player 1", "AI 2" and so on before anything leaves your browser, and the server refuses a record with any other name.
+- **What is sent:** the game's record: the setup, every turn's orders, the score each turn, how long turns took, and how smoothly the game ran each turn (frame times, input delay and how many units were on screen, with the size of the map canvas). Player names are replaced with "Player 1", "AI 2" and so on before anything leaves your browser, and the server refuses a record with any other name.
 - **Coach questions:** if coach questions are on, your typed answers are uploaded with the game.
-- **What is not sent:** no account, no email, no cookies and no tracking. Legatum keeps no IP addresses or request logs.
+- **What is not sent:** no account, no email, no cookies and no tracking. The timing numbers carry no browser, device, window or screen description. Legatum keeps no IP addresses or request logs.
 - **Who can read it:** the records are stored privately and only the maintainer can read them. They may be used to train and test the game's AI.
 - **Turning it off:** uploads cannot be turned off in the browser version. Builds from source upload nothing.
 
