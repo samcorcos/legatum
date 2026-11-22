@@ -16,3 +16,7 @@
 # Vite names everything under /assets/ by content hash, so a changed file gets a new address.
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
+
+# The list of builds the site serves (tools/release/keep-builds.mjs): every tab must see the newest one.
+/versions.json
+  Cache-Control: no-cache

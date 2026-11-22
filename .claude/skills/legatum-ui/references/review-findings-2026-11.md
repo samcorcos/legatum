@@ -200,3 +200,8 @@ Moved verbatim from SKILL.md on 2026-11-22 (original order kept). The current ru
 - Number inputs are measured with the largest legal value (four digits for Gold): about 7ch wide, with 8px gaps to the label and button. A cleared field stays empty and never snaps to 0. Out of range is the red alert line (`order-error`, `role="alert"`).
 - A teammate's row uses the same PortraitRoundel and faction name as the Empires rows ("Aztecs", never the seat name "AI 3"), and the same name in its forecast and aria-label. In a sentence a people takes "the" ("You gave the Aztecs 120 Gold"; `resources.ts::withThe`).
 - A ledger row's status word and its token come from one check (`EraInfo.scored`), so "scored" never sits beside an empty socket. A note that belongs to one card (the capture cards' capital exception) shows only under that card.
+
+## Kept builds (PR #45, 2026-11-22)
+- **An older save opens in the kept build that made it** (`platform/versions.ts`); the refusal notice appears only when no kept build has its rules.
+- **"New version" news rides on Single Player's sub-line, never a separate title note:** the note pushed the menu off the screen at 1000x600. It shows between games only.
+- **A joinable game on another version gets a neutral mark, never the red "!":** red is for rows that cannot be joined.

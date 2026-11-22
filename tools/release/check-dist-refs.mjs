@@ -33,17 +33,23 @@ const missing = [];
 for (const file of walk(root)) {
   const ext = extname(file);
   if (!['.js', '.mjs', '.css', '.html'].includes(ext)) continue;
-  const text = readFileSync(file, 'utf8');
+  let text = readFileSync(file, 'utf8');
+  // A page with <base href> (the kept builds' pages, v/<id>/index.html from keep-builds.mjs) resolves from there.
+  let dir = relative(root, dirname(file));
+  const base = ext === '.html' ? /<base\s+href\s*=\s*(["'])([^"']*)\1[^>]*>/i.exec(text) : null;
+  if (base) {
+    text = text.replace(base[0], '');
+    dir = resolveRef(base[2] || './', dir ? dir + '/' : '').replace(/\/+$/, '');
+  }
   for (const raw of refsIn(text, ext)) {
     if (!isLocal(raw)) continue;
     if (!raw.split(/[?#]/)[0]) continue;
     // Relative to the file that names it; "assets/..." and "/..." are from the site root.
-    const dir = relative(root, dirname(file));
     const target = join(root, resolveRef(raw, dir ? dir + '/' : ''));
     checked++;
-    // A folder (the site root "/") is served by its index.html.
-    const served = existsSync(target) && statSync(target).isDirectory() ? join(target, 'index.html') : target;
-    if (!existsSync(served)) missing.push(`${relative(root, file)} -> ${raw}`);
+    // A folder is a page when it has an index.html (404.html's link home, a kept build's v/<id>/).
+    const page = existsSync(target) && statSync(target).isDirectory() ? join(target, 'index.html') : target;
+    if (!existsSync(page) || statSync(page).isDirectory()) missing.push(`${relative(root, file)} -> ${raw}`);
   }
 }
 

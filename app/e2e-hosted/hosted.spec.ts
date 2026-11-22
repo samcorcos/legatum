@@ -4,7 +4,7 @@
 // request for the game server's /api or /ws fails the test. A build with LEGATUM_GAMES_URL also sends each
 // game to that upload Worker (src/platform/gameUpload.ts): the test answers those itself, so a test game never
 // lands in the real bucket, and checks that the game was sent.
-import { readFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
 import { dismissInterstitials, endPlanning } from '../e2e/turnActions';
 import type { useGame } from '../src/store';
@@ -117,6 +117,66 @@ test('an engine that cannot download shows Reload, never a blank page', async ({
   await page.unroute(ENGINE);
   await page.keyboard.press('Enter');
   await expect(page.getByRole('heading', { name: 'Legatum', exact: true })).toBeVisible({ timeout: 60_000 });
+});
+
+test('a kept build plays from its own address, and sends new games to the newest version', async ({ page, baseURL }) => {
+  const problems = watch(page, new URL(baseURL!).origin);
+  // tools/release/keep-builds.mjs lists this build first and publishes it at v/<id>/ too.
+  const list = JSON.parse(readFileSync(new URL('../dist/versions.json', import.meta.url), 'utf8')) as { builds: { id: string }[] };
+  const mine = list.builds[0];
+  await page.goto(`/v/${mine.id}/`);
+  await expect(page.getByRole('heading', { name: 'Legatum', exact: true })).toBeVisible({ timeout: 60_000 });
+  const solo = page.getByRole('button', { name: /^Single Player/ });
+  await expect(solo).not.toContainText('New games start on the newest version');
+  // A newer deploy lands while this tab sits on the title: it says so, and a new game opens on the newest version.
+  await page.route('**/versions.json', (route) => route.fulfill({ json: { builds: [{ ...mine, id: 'newer00', label: 'Newer' }, { ...mine, retiredAt: new Date().toISOString() }] } }));
+  await page.reload();
+  await expect(solo).toContainText('New games start on the newest version');
+  await solo.click();
+  await expect(page.getByRole('button', { name: /^Start game/ })).toBeVisible({ timeout: 60_000 });
+  expect(new URL(page.url()).pathname).toBe('/');
+  expect(problems).toEqual([]);
+});
+
+test('an autosave from older rules continues in the build that made it', async ({ page, baseURL }) => {
+  const problems = watch(page, new URL(baseURL!).origin);
+  const dist = new URL('../dist/', import.meta.url);
+  const list = JSON.parse(readFileSync(new URL('versions.json', dist), 'utf8')) as { builds: { id: string; rules: number }[] };
+  const mine = list.builds[0];
+  // A kept older build: its page stands in at v/old0049/, and the site lists it with the older rules.
+  // It is removed again at the end: the deploy publishes this folder after the test.
+  const stand = new URL('v/old0049/', dist);
+  mkdirSync(stand, { recursive: true });
+  writeFileSync(new URL('index.html', stand), readFileSync(new URL(`v/${mine.id}/index.html`, dist)));
+  try {
+    await page.route('**/versions.json', (route) => route.fulfill({ json: { builds: [mine, { ...mine, id: 'old0049', rules: mine.rules - 1, label: 'Older' }] } }));
+    await page.goto('/');
+    await expect(page.getByRole('heading', { name: 'Legatum', exact: true })).toBeVisible({ timeout: 60_000 });
+    const save = { format: 'legatum-save', version: 1, client: 'wasm', savedAt: new Date().toISOString(), turn: 40, names: ['Rome'], game: `{"save_version":${mine.rules - 1}}`, build: 'old0049' };
+    await page.evaluate((text) => new Promise<void>((resolve, reject) => {
+      const open = indexedDB.open('legatum-autosave-v1', 1);
+      open.onupgradeneeded = () => { open.result.createObjectStore('saves', { keyPath: 'id' }); open.result.createObjectStore('orders', { keyPath: 'key' }); };
+      open.onerror = () => reject(open.error);
+      open.onsuccess = () => {
+        const tx = open.result.transaction('saves', 'readwrite');
+        tx.objectStore('saves').put({ id: 'rome:40', campaign: 'rome', turn: 40, savedAt: new Date().toISOString(), label: 'Rome', text });
+        tx.oncomplete = () => { open.result.close(); resolve(); };
+        tx.onerror = () => reject(tx.error);
+      };
+    }), JSON.stringify(save));
+    await page.reload();
+    const resume = page.getByRole('button', { name: /^Continue/ });
+    await expect(resume).toContainText('opens in the version it started on');
+    await expect(page.locator('.title-notice')).toHaveCount(0);
+    await resume.click();
+    await page.waitForURL(/\/v\/old0049\//);
+    // The stand-in is this build, so it cannot open the older rules: it says so and sends the game nowhere else.
+    await expect(page.locator('.title-notice')).toContainText('older rules', { timeout: 60_000 });
+    expect(new URL(page.url()).pathname).toBe('/v/old0049/');
+    expect(problems).toEqual([]);
+  } finally {
+    rmSync(stand, { recursive: true, force: true });
+  }
 });
 
 test('a visitor plays: title, a people, turns, a second city, save and load, with no server', async ({ page, baseURL, request }) => {
@@ -309,6 +369,8 @@ test('a visitor plays: title, a people, turns, a second city, save and load, wit
   const chooser = page.waitForEvent('filechooser');
   await page.getByRole('button', { name: /^Load Game/ }).click();
   await (await chooser).setFiles(file);
+  // The autosave is a game in progress, so the file asks before replacing it (ReplaceGameDialog).
+  await page.getByRole('button', { name: /^Load the file/i }).click();
   await expect(page.getByTestId('turn-number')).toHaveText(String(turn), { timeout: 60_000 });
   expect((await empire(page)).cities).toBe(2);
 

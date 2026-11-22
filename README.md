@@ -214,7 +214,7 @@ Legatum is built largely with AI coding agents, and all of its art is AI-generat
 
 ## Status
 
-Pre-release and moving fast. Rules, content and balance change often, and a save from an older rules version is refused with a clear message instead of being migrated. The web build is the only way to play. It is played through a short game in Chromium before every deploy; other browsers and the Rust crates on other systems should work but are not routinely tested.
+Pre-release and moving fast. Rules, content and balance change often, and a save from an older rules version is never migrated: the hosted site opens it in the earlier build that made it (kept for 30 days), and a build refuses it with a clear message when none is kept. The web build is the only way to play. It is played through a short game in Chromium before every deploy; other browsers and the Rust crates on other systems should work but are not routinely tested.
 
 ## Roadmap
 

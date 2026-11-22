@@ -65,6 +65,39 @@ sets the preview's own address), `scripts/build-web.sh` runs `tools/release/carr
 `asset-history.json`, which the build writes for the next deploy). A production deploy run by hand must set it too:
 `LEGATUM_CARRY_ASSETS_FROM=https://legatum-game.pages.dev scripts/build-web.sh`.
 
+### Every game finishes on the version it started on
+
+A deploy can also change the rules (`RULES_VERSION`), and a build refuses a save made with other rules. So every
+build stays playable for 30 days after a newer one replaces it. `scripts/build-web.sh` runs
+`tools/release/keep-builds.mjs`, which:
+
+- gives the build an id (the commit, plus a hash of any uncommitted changes; `LEGATUM_BUILD_ID` overrides it) and
+  publishes it twice: at the site root (the newest version) and at `v/<id>/`, a copy of its page with
+  `<base href="../../">`, so its scripts, art, terrain and sounds load from the root. Same site, so the same autosaves.
+- copies the pages of the earlier builds the live site lists (from `LEGATUM_CARRY_ASSETS_FROM`) and writes
+  `versions.json`: every build the site serves, newest first, with its rules version, online protocol and title-screen
+  label. A build drops out 30 days after it was replaced, the same window `carry-assets.mjs` keeps its files.
+- copies back root files (terrain, wonders, audio) that an earlier build used and this one dropped.
+
+The game reads `versions.json` (`app/src/platform/versions.ts`). Saves record the build that wrote them.
+
+- **Continue or Load Game with a save from other rules** opens it in the build that made it, or the newest build with
+  its rules: an autosave by its address (`v/<id>/?continue=<game>`, the same browser database), a chosen file
+  handed over through browser storage (`?open=save`). Only when no kept build has its rules does the game refuse it.
+- **Join Game** on a game whose host runs another kept build opens that build and joins (`?join=<room>`).
+- **Between games**, a tab whose build is not the newest says so on Single Player's sub-line ("New games start on the
+  newest version"), and Single Player and Multiplayer open the newest version (`/?menu=solo` or `multi`). A
+  game in progress is never interrupted.
+
+Builds from before `versions.json` existed can be added once by their Pages deployment address (from
+`wrangler pages deployment list --project-name legatum-game`), with the rules version they ran:
+`LEGATUM_KEEP_LEGACY="https://<deployment>.legatum-game.pages.dev=<id>:<rules>"`. Their files are crawled into the
+build too. Such a build ignores the `?continue` address, so the player presses Continue there.
+
+Limits: the site's `_headers` (the Content-Security-Policy) is the newest build's, so an older build whose relay or
+upload Worker address changed cannot reach the old one. A save made with rules the site no longer serves is refused
+as before.
+
 Every web build, and CI's app build, also runs `tools/release/check-dist-refs.mjs`: it fails if the JS, CSS or HTML
 points to a file the build does not contain (a link to a folder, such as `/`, counts when the folder has an `index.html`).
 
