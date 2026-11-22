@@ -1,4 +1,5 @@
 import { Amounts } from '../ui/Amounts';
+import { COLONIA_RING_KEY, COLONIA_SITE_RULE } from '../goalCities';
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import type { Hex, PlayerPublic, Resource, SupplyView } from '../types';
 import { RESOURCE_INFO, eraResource, lackedResources, resourceUsersThisEra, revealHint, STRATEGIC_RESOURCES, supplyTotalsText } from '../resources';
@@ -36,8 +37,12 @@ function useShortWindow() {
 
 /** `collapsed`: a unit or city is selected, so the dock yields height to its panel and
  * shows only the "Lens: X" toggle (as on phones) until the selection is cleared. */
-export function LensSwitcher({ lens, onChange, sites, onInspect, settlerId, players, me, visibleBarbarians = false, supply = [], era, empty = false, overlayEmpty = {}, collapsed = false }: {
+export function LensSwitcher({ lens, onChange, sites, onInspect, settlerId, players, me, visibleBarbarians = false, supply = [], era, empty = false, overlayEmpty = {}, collapsed = false, coloniaFounder = false, founderName = 'Settler' }: {
   lens: MapLens; onChange(lens: MapLens): void; sites: SettlementScore[]; onInspect(hex: Hex): void; settlerId: number | null; players: PlayerPublic[]; me?: number; visibleBarbarians?: boolean; supply?: SupplyView[]; era?: number; empty?: boolean; overlayEmpty?: Partial<Record<Overlay, boolean>>; collapsed?: boolean;
+  /** Rome: the selected unit founds the Colonia Victrix on a site that counts; the legend names the gilt ring, or says what a site needs when none is in view. */
+  coloniaFounder?: boolean;
+  /** The selected founder's name ("Spearman", "Settler"), so the legend names the unit actually selected. */
+  founderName?: string;
 }) {
   const overlays = useOverlays();
   const overlaysOn = OVERLAYS.filter((o) => overlays[o]);
@@ -93,9 +98,13 @@ export function LensSwitcher({ lens, onChange, sites, onInspect, settlerId, play
     return () => { resize.disconnect(); game.style.removeProperty('--settle-legend-height'); };
   }, [persistentLegend]);
   const best = sites.filter((s) => s.rank !== null).sort((a, b) => a.rank! - b.rank!);
+  const coloniaBest = coloniaFounder && best.length > 0 && best.every((s) => s.colonia);
   const settleLegend = <div className="settle-legend">
     <p>Better places to found a city are darker green. {touch ? 'Tap' : 'Hover'} a tile for why. No tint: not a site.</p>
     <div className="settle-scale" aria-label="Site quality, from poor to exceptional">{SETTLE_BANDS.map((band) => <span key={band} data-settle-band={band} title={`${band}: site quality ${bandRange(band)}. The same scale on every map.`}><i className={`settle-swatch band-${band.toLowerCase()}`} aria-hidden="true" /><em>{band}</em></span>)}</div>
+    {coloniaFounder && (sites.some((s) => s.colonia)
+      ? <p className="settle-colonia-key" data-testid="settle-colonia-key"><i className="settle-ring-gilt" aria-hidden="true" />{COLONIA_RING_KEY}</p>
+      : <p className="settle-colonia-key none" data-testid="settle-colonia-none"><i className="settle-ring-empty" aria-hidden="true" />No site you know founds your Colonia Victrix. {COLONIA_SITE_RULE}</p>)}
   </div>;
   return <section ref={panel} className="map-lenses" data-overlay-slot="map-tools" data-compact={compact} data-chip={chip || undefined} data-open={compact && open} aria-label="Map options" onKeyDown={(e) => {
     if (compact && open && e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); }
@@ -143,7 +152,7 @@ export function LensSwitcher({ lens, onChange, sites, onInspect, settlerId, play
       {empty && EMPTY[lens] && <p className="lens-empty"><b>{lens === 'threat' && players.find((p) => p.id === me)?.faction === 'Celts' && visibleBarbarians ? "Nothing in sight can attack you next turn. Barbarians don't attack you." : EMPTY[lens]}</b></p>}
       {lens === 'settle' && <>
         {!persistentLegend && settleLegend}
-        {best.length ? <><p className="settle-top-key" data-testid="settle-top-key">{settlerId === null ? 'Top three from your capital, marked on the map:' : 'Top three for this Settler, marked on the map:'}</p><div className="settle-recommendations" aria-label="Recommended settlement sites">{best.map((s) => <button className="btn" key={s.rank} data-settle-rank={s.rank} onClick={() => { if (compact) close(); onInspect(s.pos); }} aria-label={s.rank === 1 ? 'Inspect best spot' : `Inspect recommended site ${s.rank}`}>{s.rank === 1 ? 'Best spot' : `#${s.rank}`}</button>)}</div></>
+        {best.length ? <><p className="settle-top-key" data-testid="settle-top-key">{settlerId === null ? 'Top three from your capital, marked on the map:' : coloniaBest ? 'Top three Colonia sites for this veteran, marked on the map:' : `Top three for this ${founderName}, marked on the map:`}</p><div className={`settle-recommendations${coloniaBest ? ' colonia' : ''}`} aria-label="Recommended settlement sites">{best.map((s) => <button className="btn" key={s.rank} data-settle-rank={s.rank} onClick={() => { if (compact) close(); onInspect(s.pos); }} aria-label={s.rank === 1 ? (coloniaBest ? 'Inspect best Colonia site' : 'Inspect best spot') : `Inspect recommended site ${s.rank}`}>{s.rank === 1 ? (coloniaBest ? 'Best Colonia site' : 'Best spot') : `#${s.rank}`}</button>)}</div></>
           : <p>No safe reachable recommendations. Explore more land or clear nearby threats.</p>}
         {settlerId === null && <p>Travel is counted from your capital. Select or train a Settler to compare from its position.</p>}
       </>}

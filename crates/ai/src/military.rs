@@ -173,6 +173,9 @@ impl Planner<'_> {
         self.contest_vp_sources(&army);
         self.pass("hold_captures");
         self.hold_captures(&army);
+        // Gene `storm_fallen`: a fallen enemy city is entered before withdrawals and strikes.
+        self.pass("storm_fallen");
+        self.storm_fallen(&army);
         self.pass("withdraw_failed_campaign");
         self.withdraw_failed_campaign(&army);
         // Gene `door_defense`: strikes on the attackers at our cities, garrisons for empty
@@ -527,6 +530,199 @@ impl Planner<'_> {
                 }
             }
         }
+    }
+
+    /// Gene `storm_fallen` (Hard): a fallen (0 HP) enemy city at war whose every land
+    /// neighbour is held gets a capturer. With a free tile beside it the ordinary strike and
+    /// assault passes stage there; with none they hold forever when our own shooters hold the
+    /// approach. Then a free charger beside the city storms it when its forecast is not too
+    /// risky; otherwise the nearest charger within the open-city radius works in through our
+    /// own non-capturing units, swapping places each turn with the one on its next step
+    /// (`storm_lane`; the engine moves a closed friendly cycle together). Units near an own
+    /// city with an enemy in reach stay for home defence unless already beside the target.
+    /// Rules-50 seed 21999: Karakorum has two land neighbours, one held by Egypt's own CombatDrone
+    /// with two more Drones behind it, and stayed at 0 HP for 888 turns.
+    pub(crate) fn storm_fallen(&mut self, army: &[&UnitView]) {
+        if self.decisions.storm_fallen == 0 || !self.hard_defense() || self.takes_no_cities() {
+            return;
+        }
+        let v = self.view();
+        let radius = self.decisions.open_city_radius.max(4);
+        let min_hp = self.march_min_hp();
+        let mut fallen: Vec<&CityView> = self
+            .ctx
+            .enemy_cities
+            .iter()
+            .copied()
+            .filter(|c| {
+                c.visible && c.hp == 0 && !c.owner.is_barbarian() && v.at_war(v.me, c.owner)
+            })
+            .collect();
+        fallen.sort_by_key(|c| c.id);
+        if fallen.is_empty() {
+            return;
+        }
+        // Home defence comes first: a unit near an own city with an enemy at war in reach of it
+        // stays for the later defence passes, unless it is already beside the fallen city.
+        let threatened: Vec<Hex> =
+            self.ctx
+                .own_cities
+                .iter()
+                .filter(|own| {
+                    self.ctx.enemy_units.iter().any(|e| {
+                        e.military && e.pos.distance(own.pos) <= 3 && v.at_war(v.me, e.owner)
+                    })
+                })
+                .map(|own| own.pos)
+                .collect();
+        for c in fallen {
+            let mut chargers: Vec<&UnitView> = self
+                .free(army)
+                .into_iter()
+                .filter(|u| {
+                    crate::composition::charges(u.kind)
+                        && u.hp >= min_hp
+                        && u.pos.distance(c.pos) <= radius
+                        && !self.ctx.own_cities.iter().any(|own| own.pos == u.pos)
+                        && (u.pos.distance(c.pos) == 1
+                            || !threatened.iter().any(|h| h.distance(u.pos) <= 4))
+                        && self.ctx.reachable(u.pos, c.pos)
+                        && !self.too_risky(u, c.pos)
+                })
+                .collect();
+            chargers.sort_by_key(|u| (u.pos.distance(c.pos), std::cmp::Reverse(u.hp), u.id));
+            // Only a city whose every land neighbour is held: with a free tile beside it the
+            // ordinary strike and assault passes can stage there and keep their own timing.
+            let blocked = c.pos.ring(1).into_iter().all(|h| {
+                v.index(h).is_none_or(|i| {
+                    self.ctx.land_region[i].is_none()
+                        || self.ctx.move_cost(h).is_none()
+                        || self.ctx.occupied[i]
+                })
+            });
+            if !blocked {
+                continue;
+            }
+            if let Some(u) = chargers
+                .iter()
+                .filter(|u| u.pos.distance(c.pos) == 1)
+                .max_by_key(|u| (u.hp, std::cmp::Reverse(u.id)))
+            {
+                self.unit_order(
+                    u.id,
+                    Order::MoveUnit {
+                        unit: u.id,
+                        to: c.pos,
+                    },
+                );
+                continue;
+            }
+            // Every land tile beside the city is held: when ours, by units that cannot capture
+            // (shooters firing from there), the nearest charger works its way in through them.
+            // Each turn it swaps places with the non-capturing unit on its next step toward
+            // that tile (the engine moves a closed friendly cycle together), or steps onto it if
+            // free; beside the city it storms (above).
+            if let Some((u, step)) = self.storm_lane(c, &chargers) {
+                match self
+                    .ctx
+                    .own_units
+                    .iter()
+                    .copied()
+                    .find(|o| o.pos == step && o.military)
+                {
+                    Some(o) => {
+                        self.unit_order(
+                            o.id,
+                            Order::MoveUnit {
+                                unit: o.id,
+                                to: u.pos,
+                            },
+                        );
+                        self.unit_order(
+                            u.id,
+                            Order::MoveUnit {
+                                unit: u.id,
+                                to: step,
+                            },
+                        );
+                    }
+                    None => self.go_to(u, step),
+                }
+                self.mil_dest.insert(step);
+                self.mil_dest.insert(u.pos);
+            }
+        }
+    }
+
+    /// Gene `storm_fallen`: the charger nearest (in steps through our own units) to a land tile
+    /// beside fallen `city` that one of our non-capturing units holds, and its next step there.
+    /// The step is free, or held by our own free non-capturing military unit to swap with.
+    fn storm_lane<'u>(
+        &self,
+        city: &CityView,
+        chargers: &[&'u UnitView],
+    ) -> Option<(&'u UnitView, Hex)> {
+        let v = self.view();
+        let own_at = |h: Hex| {
+            self.ctx
+                .own_units
+                .iter()
+                .copied()
+                .find(|o| o.pos == h && o.military)
+        };
+        let yields = |h: Hex| {
+            own_at(h).is_some_and(|o| !crate::composition::charges(o.kind) && !self.has_acted(o.id))
+        };
+        let passable = |h: Hex| {
+            v.index(h).is_some_and(|i| {
+                self.ctx.move_cost(h).is_some()
+                    && !self.ctx.hostile_at[i]
+                    && !self.ctx.neutral_at[i]
+                    && self.ctx.land_region[i].is_some()
+            })
+        };
+        let starts: Vec<Hex> = city
+            .pos
+            .ring(1)
+            .into_iter()
+            .filter(|h| passable(*h) && yields(*h))
+            .collect();
+        if starts.is_empty() {
+            return None;
+        }
+        // Breadth-first from the held ring tiles outward; the first charger reached is nearest.
+        let mut dist: std::collections::BTreeMap<Hex, i32> =
+            starts.iter().map(|h| (*h, 0)).collect();
+        let mut frontier = starts;
+        for d in 1..=self.decisions.open_city_radius.max(4) {
+            let mut next = Vec::new();
+            for h in &frontier {
+                for n in h.ring(1) {
+                    if n == city.pos || dist.contains_key(&n) || !passable(n) {
+                        continue;
+                    }
+                    dist.insert(n, d);
+                    next.push(n);
+                }
+            }
+            next.sort();
+            if let Some(u) = chargers
+                .iter()
+                .filter(|u| next.contains(&u.pos))
+                .min_by_key(|u| (std::cmp::Reverse(u.hp), u.id))
+            {
+                let step = u
+                    .pos
+                    .ring(1)
+                    .into_iter()
+                    .filter(|n| dist.get(n) == Some(&(d - 1)))
+                    .filter(|n| yields(*n) || (own_at(*n).is_none() && self.free_tile_for(u, *n)))
+                    .min_by_key(|n| (own_at(*n).is_some(), *n))?;
+                return Some((*u, step));
+            }
+            frontier = next;
+        }
+        None
     }
 
     /// An enemy city with nobody guarding it is an opening any war should take, whatever
@@ -2278,10 +2474,12 @@ impl Planner<'_> {
                 (threat > 0).then_some((threat, stake, *c))
             })
             .collect();
-        // A Station city (its land is open to every empire) is answered first, and widest.
+        // A Station city (its land is open to every empire) is answered first, and widest; so is
+        // a Colonia or royal tomb city (its holder scores 2 VP).
+        let first = |c: &CityView| self.holds_hall_city(c) || self.holds_goal_city(c);
         order.sort_by(|a, b| {
-            self.holds_hall_city(b.2)
-                .cmp(&self.holds_hall_city(a.2))
+            first(b.2)
+                .cmp(&first(a.2))
                 .then(b.0.cmp(&a.0))
                 .then(b.1.cmp(&a.1))
                 .then(a.2.id.cmp(&b.2.id))
@@ -2544,6 +2742,7 @@ impl Planner<'_> {
                 std::cmp::Reverse(
                     self.hall_guard_city(c)
                         || self.diwan_guard_city(c)
+                        || self.goal_city_guard(c)
                         || self.wonder_guard_city(c)
                         || self.own_original_capital(c),
                 ),
@@ -4080,7 +4279,9 @@ impl Planner<'_> {
                     + if contain {
                         self.heir_in_city_value(city)
                             + if self.decisions.vp_denial > 0 {
-                                (self.hall_in_city_value(city) + self.forge_denial_value(city))
+                                (self.hall_in_city_value(city)
+                                    + self.goal_city_in_city_value(city)
+                                    + self.forge_denial_value(city))
                                     * self.decisions.vp_denial
                                     / 100
                             } else {

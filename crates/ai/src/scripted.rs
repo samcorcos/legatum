@@ -1152,6 +1152,11 @@ pub(crate) struct Planner<'a> {
     pub escort_sites: Vec<Hex>,
     /// Gene `roman_found_first`: the Roman veteran sent to found a city this turn.
     pub(crate) roman_founder: Option<UnitId>,
+    /// Gene `rome_colonia`: the Roman veteran sent to found the Colonia Victrix this turn.
+    pub(crate) colonia_founder: Option<UnitId>,
+    /// Gene `rome_colonia`: cities the would-be founder stood aside from this turn
+    /// (`colonia_lock_guard`): it does not follow another unit in.
+    pub(crate) colonia_aside: Vec<Hex>,
     /// Gold not yet committed this turn.
     pub gold_left: i32,
     /// A funded objective may save toward its next purchase after emergency defense.
@@ -1341,6 +1346,8 @@ impl<'a> Planner<'a> {
             settle_targets: Vec::new(),
             escort_sites: Vec::new(),
             roman_founder: None,
+            colonia_founder: None,
+            colonia_aside: Vec::new(),
             gold_left: view.economy.gold,
             faction_goal_savings: 0,
             siege_savings: 0,
@@ -1395,6 +1402,13 @@ impl<'a> Planner<'a> {
 
     /// Issue a unit-action order, unless the unit already has one. Returns whether it was issued.
     pub fn unit_order(&mut self, unit: UnitId, order: Order) -> bool {
+        if self.has_acted(unit) {
+            return false;
+        }
+        // Rome's Colonia founder never walks into an occupation lock (`goal_colonia.rs`).
+        if let Some(placed) = self.colonia_lock_guard(unit, &order) {
+            return placed;
+        }
         if !self.acted.insert(unit) {
             return false;
         }

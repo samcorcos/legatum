@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useLayoutEffect, use
 import { pendingAlarms, useGame, type TurnReport } from '../store';
 import type { Event as GameEvent } from '../types';
 import { CrestMedallion } from '../brand/ornaments';
+import { RingMedallion } from '../ui/ringMedallion';
 import { playerColor } from '../theme';
 import { useReducedMotion } from '../ui/useReducedMotion';
 import { motionStill } from '../ui/motion';
@@ -12,6 +13,7 @@ import { Amounts } from '../ui/Amounts';
 import { PortraitFrame } from '../ui/premium';
 import { VpSeal } from '../ui/vpParts';
 import { unitMiniatureUrl } from '../unitArt';
+import { buildingArtSlug, slugUrl } from '../unlockArt';
 import { resourceArtUrl } from '../icons';
 import { RewardEmblem } from './RewardEmblem';
 import { DURATION, momentsForTurn, planMoments, type Counter, type Emblem, type Moment } from './moments';
@@ -210,7 +212,7 @@ export function MomentLane() {
   const { active, deferred, reduced, collapsed, dismiss, more } = useCelebration();
   const lane = useRef<HTMLDivElement>(null);
   const card = active && active.tier !== 'minor' ? active : null;
-  const picture = card ? card.art ?? (card.resource ? resourceArtUrl(card.resource, 256) : null) ?? (card.unit ? unitMiniatureUrl(card.unit.kind, card.unit.faction) : null) : null;
+  const picture = card ? card.art ?? (card.resource ? resourceArtUrl(card.resource, 256) : null) ?? (card.unit ? unitMiniatureUrl(card.unit.kind, card.unit.faction) : null) ?? (card.building ? slugUrl(buildingArtSlug(card.building, card.faction), 256) ?? slugUrl(buildingArtSlug(card.building), 256) : null) : null;
   const vignette = card && !card.unlock && !card.eraUp && !card.scoreCheck ? vignetteFor(card) : null;
   // Global layout owns the reservations; publish the actual card + overflow-chip height so
   // reports and phone selection panels can share the screen without guessing text/font sizes.
@@ -230,14 +232,16 @@ export function MomentLane() {
       {card?.scoreCheck && !deferred && <ScoreCheck moment={card} dismiss={dismiss} />}
       {card && !card.unlock && !card.eraUp && !card.scoreCheck && <article key={card.id} className={`moment-card ${card.tier} ${card.partner ? 'partner' : ''} ${card.loss ? 'loss' : ''}`} data-tier={card.tier} aria-label={card.title} onClick={(e) => { if (!(e.target as Element).closest('button')) dismiss(); }}>
         <button className="moment-dismiss" aria-label="Dismiss celebration" onClick={dismiss}><Icon name="ui-cross" size={14} /></button>
-        <div className="moment-kicker">{card.kicker ?? (card.partner ? 'From your ally' : card.tier === 'legendary' ? 'Written in the chronicle' : card.tier === 'major' ? 'A moment of consequence' : 'An inheritance recovered')}</div>
+        {(card.kicker ?? (card.partner ? 'From your ally' : null)) && <div className="moment-kicker">{card.kicker ?? 'From your ally'}</div>}
         <div className="moment-body">
         <div className="moment-heading">
           {vignette && <img className="moment-vignette" src={vignette} alt="" />}
           {card.frame ? <span className="moment-frame"><PortraitFrame faction={card.frame} fallen crestSize={30} style={{ ['--pw' as string]: '84px', ['--ph' as string]: '104px' }} />{card.seal ? <VpSeal vp={card.seal} /> : null}</span>
             : picture ? <img className="moment-wonder-art" src={picture} alt="" /> :
             <span className="moment-crest"><span className="moment-rays" aria-hidden="true" />
-              {card.emblem ? <RewardEmblem kind={card.emblem} color={playerColor(card.owner)} size={card.tier === 'legendary' ? 88 : 68} />
+              {card.goalMark ? <RingMedallion icon={card.goalMark} tone={card.loss ? 'hollow' : 'gilt'} size={card.tier === 'legendary' ? 72 : 56}
+                  badge={<CrestMedallion faction={card.faction} color={playerColor(card.owner)} size={card.tier === 'legendary' ? 30 : 24} />} />
+                : card.emblem ? <RewardEmblem kind={card.emblem} color={playerColor(card.owner)} size={card.tier === 'legendary' ? 88 : 68} />
                 : <CrestMedallion faction={card.faction} color={playerColor(card.owner)} size={card.tier === 'legendary' ? 64 : 40} />}</span>}
           <h2>{card.title}</h2>
           {card.place && <p className="moment-place">{card.place}</p>}

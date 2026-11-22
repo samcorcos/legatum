@@ -93,6 +93,7 @@ impl Planner<'_> {
         let forge = self.forge_denial_value(city)
             + self.heir_in_city_value(city)
             + self.hall_in_city_value(city)
+            + self.goal_city_in_city_value(city)
             + self.work_in_city_value(city);
         if forge > 0 {
             return forge;
@@ -223,6 +224,10 @@ impl Planner<'_> {
                 own += goal_vp(Faction::India);
             }
         }
+        // Rome's Colonia Victrix and Egypt's royal tomb move with their city (`goal_cities.rs`).
+        let (taken, removed) = self.goal_city_swing(city);
+        own += taken;
+        denied += removed;
         if v.units.iter().any(|u| {
             u.kind == UnitKind::HeirToTheThrone && u.pos == city.pos && u.owner == city.owner
         }) {
@@ -289,7 +294,7 @@ impl Planner<'_> {
             .count()
             .min(2) as i32
             * 40;
-        (work + count) * self.decisions.vp_denial / 100
+        (work + count + self.tomb_site_denial(city)) * self.decisions.vp_denial / 100
     }
 
     /// Whether our captures are priced as sacks (gene `sack_price`): the Celts burn every city
@@ -372,6 +377,7 @@ impl Planner<'_> {
         let goals = self.forge_denial_value(city) / 50
             + self.heir_in_city_value(city) / 100
             + self.hall_in_city_value(city) / 50
+            + self.goal_city_in_city_value(city) / 50
             + self.work_in_city_value(city) / 50;
         // The hoard value is the Swiss goal's alone once every other goal's share is zero.
         let hoard = if goals == 0 {
@@ -384,7 +390,8 @@ impl Planner<'_> {
 
     pub(crate) fn swarm_weakness_value(&self, city: &legatum_core::view::CityView) -> i32 {
         let v = self.view();
-        let retired = self.retired_army_weakness_value(city);
+        // A working Egypt's cities build nothing until its tomb stands (`goal_cities.rs`).
+        let retired = self.retired_army_weakness_value(city) + self.tomb_weakness_value(city);
         if v.team_of(city.owner) == v.team
             || !v.players.iter().any(|p| {
                 p.id == city.owner

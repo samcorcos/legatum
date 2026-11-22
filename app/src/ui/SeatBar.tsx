@@ -187,7 +187,7 @@ export function SeatBar({ phoneDetails = false, onOpenDetails, race }: { phoneDe
     ? (net?.seats ?? []).filter((x) => x.seat !== net?.mySeat && !x.ready && view.players.find((p) => p.id === x.player)?.alive !== false).map((x) => x.name)
     : humans.filter((_, i) => i !== seat && !ready[i] && !isEliminated(views[i])).map(nameOf);
   const automated = automatedUnits(view, orders[seat]).filter((u) => !orders[seat].some((o) => orderUnit(o) === u.id));
-  const decisions = pendingDecisions(view, orders[seat], errors[seat], { humans, orders, errors, siegeSeen, airHeld, seat, report, goalDecisionSeen });
+  const decisions = pendingDecisions(view, orders[seat], errors[seat], { humans, orders, errors, siegeSeen, airHeld, seat, report, goalDecisionSeen, selection });
   const needing = decisions.filter((d) => d.kind === 'unit' || d.kind === 'air');
   // Name all outstanding work, including the selection. Keep the CTA's navigation
   // within that priority; Return still cycles through the whole decision list.
@@ -201,7 +201,7 @@ export function SeatBar({ phoneDetails = false, onOpenDetails, race }: { phoneDe
   const wounded = eliminated ? [] : woundedNearEnemies(view);
   const myErrors = errors[seat].filter((e) => e.index >= 0);
 
-  let cta: { label: string; sub: string; onClick: () => void; kind: string; disabled?: boolean };
+  let cta: { label: string; sub: string; onClick: () => void; kind: string; disabled?: boolean; act?: string };
   if (scenario && scenario.status.outcome !== 'Playing') {
     cta = { label: 'Scenario over', sub: 'See the result', onClick: () => useGame.getState().set({ scenario: { ...scenario, resultOpen: true } }), kind: 'todo' };
   } else if (view.finished && view.history) {
@@ -246,7 +246,7 @@ export function SeatBar({ phoneDetails = false, onOpenDetails, race }: { phoneDe
     const kind = view.economy.bankruptcy?.disband?.kind;
     cta = { label: 'Treasury runs dry', sub: `Lose ${kind ? itemName({ kind: 'Unit', unit: kind }, view.players.find((p) => p.id === view.me)?.faction) : 'a unit'} next turn`, onClick: goToPending, kind: 'todo' };
   } else if (next?.kind === 'goal') {
-    cta = { label: next.title, sub: next.line, onClick: goToPending, kind: 'todo' };
+    cta = { label: next.title, sub: next.line, act: next.act, onClick: goToPending, kind: 'todo' };
   } else if (next?.kind === 'unit' || next?.kind === 'air') {
     cta = { label: next.kind === 'unit' && next.issue ? 'Fix order' : needing.length === 1 ? '1 unit needs orders' : `${needing.length} units need orders`,
       // The label already says to fix it; the sub says what is wrong, in one sentence.
@@ -390,8 +390,9 @@ export function SeatBar({ phoneDetails = false, onOpenDetails, race }: { phoneDe
       <button className={`cta ${cta.kind}${next?.kind === 'diplomacy' && view.diplomacy?.calls?.some((c) => c.id === next.id) ? ' cta-call' : ''}${stepped ? ' stepped' : ''}${cta.label === 'Choose production' ? ` cta-production${automationNeedsChoice ? ' cta-long' : ''}` : cta.sub.length > 32 || next?.kind === 'siege' ? ' cta-long' : ''}`} onClick={cta.onClick} disabled={!!busy || (view.finished && cta.kind !== 'todo') || disconnected || cta.disabled}>
         <span className="cta-label">{cta.label}</span>
         <span className="cta-sub">
-          <span><Amounts text={cta.sub} /></span> {!touch && !returnOwned && ((cta.kind === 'todo' && !ready[seat]) || cta.kind === 'ready') && <Kbd>Return</Kbd>}
+          <span><Amounts text={cta.sub} /></span> {!cta.act && !touch && !returnOwned && ((cta.kind === 'todo' && !ready[seat]) || cta.kind === 'ready') && <Kbd>Return</Kbd>}
         </span>
+        {cta.act && <span className="cta-act">{cta.act} {!touch && !returnOwned && !ready[seat] && <Kbd>Return</Kbd>}</span>}
       </button>
       {observerCanAdvance && (
         <button className="btn" onClick={resolvingToEnd ? stopResolving : resolveToEnd} disabled={!resolvingToEnd && (!!busy || disconnected)}>

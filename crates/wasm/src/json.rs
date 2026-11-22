@@ -116,21 +116,21 @@ pub fn state_from_value(mut v: Value, check_version: bool) -> Result<GameState, 
     Ok(state)
 }
 
-/// The oldest rules version `upgrade_from_49` reads (it reads 49 to 52 and the current one).
+/// The oldest rules version `upgrade_from_49` reads (it reads 49 to 53 and the current one).
 pub const UPGRADABLE_RULES_VERSION: u32 = 49;
 
 /// Simulation only (the app keeps refusing a save from any other rules version): read a rules-49,
-/// rules-50, rules-51 or rules-52 saved state as a current (rules-53) one, for analysis that starts from
+/// rules-50, rules-51, rules-52 or rules-53 saved state as a current (rules-54) one, for analysis that starts from
 /// recorded positions which cannot be regenerated (hill-climb do-no-harm states). `json` is a save
-/// (`save_version` 49 to 53) or a bare state line with no `save_version` (`audit_states` output; a
-/// line carrying `capitals_taken` is read as rules 49, any other as rules 50 to 52). See
+/// (`save_version` 49 to 54) or a bare state line with no `save_version` (`audit_states` output; a
+/// line carrying `capitals_taken` is read as rules 49, any other as rules 50 to 53). See
 /// `upgrade_value_from_49` and `upgrade_value_from_50` for what changes.
 pub fn upgrade_from_49(json: &str) -> Result<GameState, String> {
     check_json_size(json)?;
     let v: Value = serde_json::from_str(json).map_err(|e| format!("invalid JSON: {e}"))?;
     match v.get("save_version").and_then(Value::as_u64) {
         None if carries_rules_49_fields(&v) => upgrade_value_from_49(v),
-        None | Some(50) | Some(51) | Some(52) | Some(53) => upgrade_value_from_50(v),
+        None | Some(50) | Some(51) | Some(52) | Some(53) | Some(54) => upgrade_value_from_50(v),
         Some(49) => upgrade_value_from_49(v),
         Some(n) if n == u64::from(legatum_core::RULES_VERSION) => parse_state(json),
         Some(n) => Err(format!(
@@ -148,17 +148,19 @@ pub fn carries_rules_49_fields(v: &Value) -> bool {
         .is_some_and(|ps| ps.iter().any(|p| p.get("capitals_taken").is_some()))
 }
 
-/// The rules-50 to rules-53 upgrade to rules 54 of a parsed state: the identity. Rules 51
+/// The rules-50 to rules-54 upgrade of a parsed state to rules 55: the identity (the rules-54
+/// `Player` fields for the Colonia Victrix and the royal tomb take their defaults: no Colonia, no
+/// work, no tomb). Rules 51
 /// changes how peaceful units contest a tile, rules 52 renames identifiers (the old names still
 /// parse through serde aliases) and rules 53 changes who counts for Humble the mighty
-/// (`objectives::humbles`, judged each turn from the turn-start VP); rules 54 adds city
+/// (`objectives::humbles`, judged each turn from the turn-start VP); rules 55 adds city
 /// automation focuses and the Food project (the old `Balanced` focus parses as `Economy`). None
 /// changes a field, and a capture counted under the older rules stays counted.
 pub fn upgrade_value_from_50(v: Value) -> Result<GameState, String> {
     state_from_value(v, false)
 }
 
-/// The rules-49 to rules-50 upgrade of a parsed state (then rules 51 to 54, which change no field):
+/// The rules-49 to rules-50 upgrade of a parsed state (then rules 51 to 55; 54 only adds defaulted fields):
 /// - `Player::capitals_taken` (49: every original capital the empire ever captured, kept for good)
 ///   is gone. Rules 50 derives a held capital's point from who holds it now, so a capital the
 ///   taker still holds keeps scoring and one it lost stops. A Celtic entry whose city no longer
@@ -306,17 +308,17 @@ mod tests {
     }
 
     #[test]
-    fn rules_51_saves_round_trip_and_a_version_50_save_is_refused() {
+    fn rules_55_saves_round_trip_and_a_version_54_save_is_refused() {
         // Rules 47: held shots at fallen cities; 48: Egypt's Nile and its Grow project. The save
         // shape only gains the project value, so a city growing on the Nile round-trips at 48,
         // and a 47 save is refused rather than migrated. Rules 49: Egypt starts knowing the Bronze
         // Working it skips; the save shape is unchanged, and a 48 save is refused. Rules 50: a
         // rival capital's VP is held, so `Player::capitals_taken` is gone, and a 49 save is refused.
         // Rules 51: peaceful contests, a resolution change only. Rules 52: identifiers renamed.
-        // Rules 53: who counts for Humble the mighty; the save shape is unchanged, and the app
-        // refuses a 52 save (only the simulation upgrade reads it). Rules 54: city automation
-        // focuses and the Food project; the save shape only gains values, and the app refuses a 53 save.
-        assert_eq!(legatum_core::RULES_VERSION, 54);
+        // Rules 53: who counts for Humble the mighty; the save shape is unchanged. Rules 54: Rome's
+        // Colonia Victrix and Egypt's royal tomb add `Player` fields. Rules 55: city automation
+        // focuses and the Food project; the save shape only gains values, and the app refuses a 54 save.
+        assert_eq!(legatum_core::RULES_VERSION, 55);
         let mut setup = GameSetup::all_ai(3);
         setup.players[0].faction = legatum_core::Faction::Egypt;
         let mut state = legatum_core::new_game(&setup);
@@ -339,7 +341,7 @@ mod tests {
         );
         assert_eq!(state.cities[&city].producing, Some(grow), "{events:?}");
         let save = state_to_json(&state);
-        assert!(save.contains("\"save_version\":54"));
+        assert!(save.contains("\"save_version\":55"));
         assert!(!save.contains("capitals_taken"));
         assert!(
             state
@@ -350,11 +352,14 @@ mod tests {
         assert!(save.contains("\"Grow\""));
         assert_eq!(parse_state(&save).unwrap(), state);
         let mut old: Value = serde_json::from_str(&save).unwrap();
-        old["save_version"] = Value::from(53);
+        old["save_version"] = Value::from(54);
         assert!(
             parse_state(&old.to_string())
                 .unwrap_err()
-                .contains("incompatible rules version: saved Some(53), current 54")
+                .contains(&format!(
+                    "incompatible rules version: saved Some(54), current {}",
+                    legatum_core::RULES_VERSION
+                ))
         );
         assert_eq!(upgrade_from_49(&old.to_string()).unwrap(), state);
     }

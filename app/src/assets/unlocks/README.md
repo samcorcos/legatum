@@ -13,6 +13,7 @@ Each slug has `<slug>-256.png`, `<slug>-128.png` and `<slug>-64.png`, all transp
 | `improvement-<kind>` and `improvement-<upgrade>` | Farm, Pasture, Quarry, Mine, and Irrigated Farm, Ranch, Deep Quarry, Deep Mine. An upgrade is the same subject grown richer. |
 | `improvement-saltpetre-works`, `improvement-oil-well`, `improvement-quartz-mine` | Later-era resource works, downscaled from their painted map masters in `docs/design/improvements-painted/sources/`. |
 | `effect-<tech>` | A technology's effect, painted as a scene that stands for the rule (the Siege lines of Mathematics, Machinery and Metallurgy are a catapult, a trebuchet and a bombard each on its own ground patch, painted 2026-11-22; they used to reuse the floating siege-prop paintings) (Irrigation: an irrigated field; Railways: a locomotive). Code of Laws has two: `effect-codeoflaws-buy` and `effect-codeoflaws-claim`. Unit upgrade lines show the two unit miniatures instead. |
+| `project-<name>` | A city project by its core `IndustryProject`, lower case, painted 2026-11-22 when Gold and Science opened to every city: `project-gold` a mint and treasury yard, `project-science` an open-air scholars' terrace with an armillary sphere, `project-grow` (Egypt's Grow) a Nile field with a shaduf, `project-food` (the Food project, served once `IndustryProject::Food` lands) a provisions yard with a threshing floor, sacks and baskets of produce. Prompts beside the files. An unpainted project falls back to its yield's icon (`ItemArt.tsx`). |
 
 ## How the game uses them
 

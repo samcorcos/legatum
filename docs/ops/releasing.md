@@ -41,7 +41,7 @@ runs in the host player's tab and goes through the relay (`infra/relay`, `plans/
 without online play) and writes it into the page's `connect-src`. Single player, hot seat, online co-op, scenarios,
 autosave (browser storage) and Save to file / Load Game (download and upload) work.
 `app/hosted/_headers` sets the security headers and long caching for the hashed files; `app/hosted/404.html`
-answers unknown addresses. The title screen shows `Version <app version> · web <commit>`.
+answers unknown addresses. The title screen shows `Version <app version> · web <commit>`, and a production build adds ` · Last updated <date time>` on the same line: the build's UTC time (`__BUILD_TIME__` in `app/vite.config.ts`, `LEGATUM_BUILD_TIME` overrides it), shown in the player's own time zone (`app/src/buildTime.ts`). Each kept build (`tools/release/keep-builds.mjs`) carries its own time. Dev builds leave it off.
 
 With `LEGATUM_GAMES_URL` set, the build uploads every game's record (names removed) to that Worker, the
 title screen says so in one line, and `_headers` adds the Worker to `connect-src`. See `infra/games/README.md`.

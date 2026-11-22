@@ -118,6 +118,14 @@ export interface MPlayer {
   hallCity?: CityId | null;
   /** Core `Player::diwan_city`: India's Imperial Diwan city, including after capture. */
   diwanCity?: CityId | null;
+  /** Core `Player::colonia_city`: Rome's Colonia Victrix, including after capture. */
+  coloniaCity?: CityId | null;
+  /** Core `Player::tomb_work`: Egypt is working on the Royal Tomb. */
+  tombWork?: boolean;
+  /** Core `Player::tomb_turns`: turns of work on the Royal Tomb so far. */
+  tombTurns?: number;
+  /** Core `Player::tomb_city`: the Royal Tomb's city, including after capture. */
+  tombCity?: CityId | null;
   /** Free technologies a rival's broadcast left this empire to choose (core `free_techs_pending`). */
   freeTechsPending?: number;
   /** Whose broadcast granted them. */

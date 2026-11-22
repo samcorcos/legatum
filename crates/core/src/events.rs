@@ -630,6 +630,26 @@ pub enum Event {
         player: PlayerId,
         turns: u32,
     },
+    /// Egypt started (or resumed) work on its royal tomb: none of its cities builds or grows
+    /// while it lasts. Public.
+    TombStarted {
+        player: PlayerId,
+        /// Turn ends already counted toward the tomb.
+        turns: u32,
+    },
+    /// Egypt paused work on its royal tomb with `turns` turn ends counted; the count is kept.
+    /// Public.
+    TombPaused {
+        player: PlayerId,
+        turns: u32,
+    },
+    /// The work finished: the royal tomb stands in `city`, worth 2 VP to whoever holds it. Public.
+    TombRaised {
+        player: PlayerId,
+        city: CityId,
+        name: String,
+        at: Hex,
+    },
     /// The Aztecs kindled the New Fire (`Action::Swarm`): each city's sacrifice. Public.
     SwarmUnleashed {
         player: PlayerId,

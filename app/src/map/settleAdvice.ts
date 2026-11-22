@@ -92,9 +92,10 @@ export function bandTitle(site: Pick<SettlementSite, 'band' | 'quality'>): strin
 }
 
 /** The relative half: the top-three marker and how far this Settler is from the site. */
-export function settleSummary(site: Pick<SettlementSite, 'rank' | 'travel_turns' | 'threats'>): string {
+export function settleSummary(site: Pick<SettlementSite, 'rank' | 'travel_turns' | 'threats'> & { colonia?: boolean }): string {
   const turns = site.travel_turns;
-  const mark = site.rank === 1 ? 'Best spot' : site.rank ? `#${site.rank} spot` : null;
+  const kind = site.colonia ? 'Colonia site' : 'spot';
+  const mark = site.rank === 1 ? `Best ${kind}` : site.rank ? `#${site.rank} ${kind}` : null;
   const parts: string[] = [];
   if (mark) parts.push(mark);
   if (turns === null) parts.push('no known route');

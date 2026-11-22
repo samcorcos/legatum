@@ -117,7 +117,7 @@ for (const size of SIZES) testWithFailingRequests.describe(`online screens ${siz
     await expectMenuAboveFooter(worst, '25a worst case (Resume + notice + name note)');
     await shot(worst, size, '25a-menu-worst-case');
     await worst.getByLabel('Your name in the game list').fill('\u{1F600}\u{1F600}');
-    await expect(worst.locator('.host-name .host-name-note')).toHaveText('The game list will show “Game” and four characters.');
+    await expect(worst.locator('.host-name .host-name-note')).toHaveText('Listed as “Game” and four characters.');
     await expectMenuAboveFooter(worst, '25b worst case, nothing showable');
     await shot(worst, size, '25b-menu-name-note-empty');
 

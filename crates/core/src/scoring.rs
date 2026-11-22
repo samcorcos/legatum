@@ -316,6 +316,16 @@ pub fn update_with_capture_snapshot(
         if let Some(n) = state.player_mut(id).sakoku_turns {
             state.player_mut(id).sakoku_turns = Some(n + 1);
         }
+        // One more turn of work on the royal tomb; at its target the tomb stands.
+        if let Some(city) = crate::goals::tomb_turn_end(state, id) {
+            let c = &state.cities[&city];
+            events.push(Event::TombRaised {
+                player: id,
+                city,
+                name: c.name.clone(),
+                at: c.pos,
+            });
+        }
         check_faction_goal(state, id, events);
     }
     for id in (0..state.players.len()).map(|i| PlayerId(i as u8)) {

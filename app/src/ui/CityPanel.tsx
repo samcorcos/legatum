@@ -30,6 +30,7 @@ import { closeTips } from './Tip';
 import { CapitalNote, CapitalStarGlyph, KickerDot } from './CapitalStar';
 import { capitalLine, capitalMark, replacementKickerLine } from '../capitalMark';
 import { hallCardText, hallStands } from './goalText';
+import { GOAL_CITY_ICON, TOMB_CITY_NOTE, goalCitiesAt, goalCityLine, tombWorking } from '../goalCities';
 import { isPermanentlyUnavailable, nestBuildingUpgrades, progressText, unavailableText, unitLines, withUnavailable, type BuildingLineNode } from './productionChoices';
 import { feel } from '../feel';
 import { answerDecision } from '../notice';
@@ -243,10 +244,17 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
   );
   const head = headWith();
 
+  // Egypt's Royal Tomb work: none of its cities builds or grows (core `economy`), and every panel says so.
+  const tombStopped = city.owner === view.me && tombWorking(view);
   // Healing, fire and bounty scroll with the list instead of riding in the sticky head: the head stays a name and three numbers, so the build cards keep the room.
   const status = (
     <>
       {capMark && !(capMark.own && city.owner === view.me) && <div className="cp-capital"><CapitalNote view={view} mark={capMark} testId="city-capital" /></div>}
+      {/* Rome's Colonia and Egypt's tomb: public goal cities, named with whose goal it is and who scores now. */}
+      {goalCitiesAt(view, city.id).map((g) => <div key={g.kind} className="cp-capital cp-goal-city" data-testid={`city-goal-${g.kind}`}>
+        <Icon name={GOAL_CITY_ICON[g.kind]} size={16} /><span>{goalCityLine(view, g)}</span>
+      </div>)}
+      {tombStopped && <div className="cp-capital cp-goal-city cp-tomb-work" data-testid="city-tomb-work"><Icon name="goal-royal-tomb" size={16} /><span>{TOMB_CITY_NOTE}</span></div>}
       {(fire || heal || bounty !== null || city.greece_captive_at_risk) && <div className="cp-status">
         {heal && <Tip as="div" className="cp-healing-wrap" content={CITY_HEAL_RULE}>
           <ProgressBar className="cp-healing" testId="city-heal" name="City HP healing"
@@ -385,7 +393,8 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
   const growthLabelText = growth?.state === 'starving' ? 'Starving' : `Grows to ${city.population + 1}${claim ? ` · ${claim.text}` : ''}${unlockNames ? ` · unlocks ${unlockNames}` : ''}`;
   const counts = territoryCounts(d);
   const ownedWonders = cityWonders(view, city);
-  const growthTurns = egyptBuilding && d.resistance === 0 ? 'Food builds instead'
+  const growthTurns = tombStopped && d.resistance === 0 ? 'Paused'
+    : egyptBuilding && d.resistance === 0 ? 'Food builds instead'
     : growth?.state === 'resisting' ? 'Paused'
     : growth?.state === 'starving' ? `−1 population in ${growth.turns}`
     : growth?.state === 'growing' ? `${growth.turns} turn${growth.turns === 1 ? '' : 's'}`
@@ -403,6 +412,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
       <div className="bd-note"><Amounts text={
         growth?.state === 'starving' ? `Stored Food runs out and ${city.name} loses 1 population in ${growth.turns} turn${growth.turns === 1 ? '' : 's'}. Build a Farm or a Granary to add Food.`
           : growth?.state === 'resisting' ? `No growth during resistance (${d.resistance} turns).`
+          : tombStopped ? TOMB_CITY_NOTE
           : egyptBuilding ? `While ${city.name} is building, its surplus Food goes into the build and the city doesn't grow. Choose Grow to grow it instead.`
           : `Grows at ${d.growth_threshold} Food. The first growth costs ${FIRST_GROWTH} Food. After that, each growth costs ${GROWTH_BASE} Food plus ${GROWTH_PER_POP} for every population above 1. Leftover Food carries over, and a city grows at most 1 population a turn. Each growth claims one more tile.`
       } /></div>
@@ -645,7 +655,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
         <span className="prod-turns">{o.turns > 0 ? `${o.turns} turn${o.turns === 1 ? '' : 's'}` : 'No output'}</span>
         {o.item.kind === 'Unit' && <span className={`prod-upkeep ${o.upkeep ? o.upkeep.free ? 'free' : 'paid' : 'none'}`}><Amounts text={upkeepText(o.upkeep)} />{o.upkeep && o.upkeep.gold_per_turn_after < 0 && <span className="prod-upkeep-after" title="Your total Gold/turn once this unit exists"> → <Amounts text={`${signed(o.upkeep.gold_per_turn_after)} Gold/turn`} /></span>}</span>}
         {imp && <span className="prod-upkeep none">No upkeep</span>}
-        <span className="prod-go" title={chosen ? 'Chosen: it starts when the turn ends' : undefined}>{placingHere ? 'Cancel' : resourceBlocked ? headOnly ? 'Blocked' : 'Queue →' : chosen ? active ? 'Chosen' : 'Queued' : 'Build →'}</span>
+        <span className="prod-go" title={chosen ? 'Chosen: it starts when the turn ends' : undefined}>{placingHere ? 'Cancel' : resourceBlocked ? headOnly ? 'Blocked' : 'Queue →' : chosen ? active ? 'Chosen' : 'Queued' : tombStopped ? 'Queue' : 'Build →'}</span>
       </button>
     </>;
     return <div className={`production-choice ${picked ? ' picked' : ''}${resourceBlocked ? ' supply-blocked' : ''}${site ? ' wonder-site' : ''}`} key={key} data-item={key} data-picked={picked || undefined}
@@ -900,7 +910,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
       <div className="cp-block">
         {/* The active item shares this row, keeping at least five choices visible at 1280x800. */}
         <ProgressBar className="cp-production" testId="city-production" name={egyptBuilding ? 'Built from Food' : 'Production'} color={YIELD_COLORS.production}
-          label={<span className="cp-now-line"><span className="lbl">Now producing</span>{producing ? <>
+          label={<span className="cp-now-line"><span className="lbl">{tombStopped ? 'Waiting for the tomb' : 'Now producing'}</span>{producing ? <>
             <span className="cp-now-item"><ItemArt item={producing} faction={owner?.faction} size={16} /><span className="cp-now-name">{meterName(producing)}</span></span>
           </> : raceLost ? <>
             <span className="cp-now-item"><ItemArt item={{ kind: 'Building', building: raceLost.building }} faction={owner?.faction} size={16} /><span className="cp-now-name">{BUILDING_NAME[raceLost.building]}</span></span>
@@ -925,7 +935,8 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
             return <Tip content={tip} placement="top" className="cp-now-stop-tip"><button className="queue-remove cp-now-stop" data-testid="production-stop" aria-label={`Stop building ${name}`}
               disabled={view.finished} onClick={() => changeQueue(after)}><Icon name="ui-cross" size={12} /></button></Tip>;
           })()}</span>}
-          turns={<span className="cp-now-turns">
+          turns={<span className={`cp-now-turns${tombStopped ? ' wrap' : ''}`}>
+            {tombStopped ? (producing ? <>{d.production_stored}/{d.production_cost ?? option?.cost ?? '—'} stored · waits for the tomb</> : 'Nothing queued') : <>
             {producing && pendingQueue && <><span className="pending-dot" aria-hidden="true" /><span className="pending-label" title="Pending until Ready">pending</span>{' '}</>}
             {buildChanged
               ? !producing ? '—' : producing.kind === 'Project' ? projectRate(producing, yields) : option
@@ -936,11 +947,12 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
                 ? <>{d.production_stored}/{d.production_cost} stored · {egyptBuilding ? `+${egyptProgress} from Food` : <Amount sign="+" n={yields.total.production} unit="Production" />}/turn · {d.production_stall ? 'Stalled' : `${d.turns_to_complete ?? '—'} turn${d.turns_to_complete === 1 ? '' : 's'}`}</>
                 : raceLost ? (d.production_stored > 0 ? `Stopped · ${d.production_stored} Production held for the next build` : 'Stopped · choose a new build')
                 : waitingCap !== null ? `${d.production_stored}/${waitingCap} held` : `${d.production_stored}/${d.idle_production_cap} stored`}
+            </>}
           </span>}
           value={storedProduction} max={waitingCap !== null ? Math.max(1, waitingCap) : pendingQueue ? producing ? option?.cost ?? d.production_cost ?? 1 : d.idle_production_cap : d.production_cost ?? d.idle_production_cap} />
 
         {switchNote && <div className="production-switch" data-testid="production-switch" role="status"><Amounts text={`${switchNote}.`} /></div>}
-        {egyptBuilding && <div className="production-switch" data-testid="egypt-construction" role="status">{`${city.name}'s ${nileSurplus} surplus Food goes into the ${producing ? itemName(producing, owner?.faction) : 'build'} this turn, so ${city.name} doesn't grow.`}{growOption && <>{' '}<button className="btn quiet" data-testid="egypt-grow-instead" disabled={view.finished} onClick={() => buildNow(growOption.item)}>Grow instead →</button></>}</div>}
+        {egyptBuilding && !tombStopped && <div className="production-switch" data-testid="egypt-construction" role="status">{`${city.name}'s ${nileSurplus} surplus Food goes into the ${producing ? itemName(producing, owner?.faction) : 'build'} this turn, so ${city.name} doesn't grow.`}{growOption && <>{' '}<button className="btn quiet" data-testid="egypt-grow-instead" disabled={view.finished} onClick={() => buildNow(growOption.item)}>Grow instead →</button></>}</div>}
         {parkedText && <div className="production-choose" data-testid="production-choose"><b>Choose a new build.</b> <Amounts text={parkedText} /></div>}
         {productionWarning && <Tip as="div" className="production-warning" content={FORECAST_ASSUMPTIONS}><Amounts text={productionWarning} /></Tip>}
         {shownBanks.length > 0 && <Tip as="div" className="cp-banked" content="Progress stays with the item you switched away from, in this city. It resumes when you build that item again and never moves to another item. Buying an item is a separate full-price purchase and leaves its banked progress alone.">
@@ -987,8 +999,9 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
       {occupiedLine ? <><p className="hint warn" data-testid="city-occupied">{occupiedLine}. Food, Gold and Science continue.</p></> : <>
       <div className="cp-block production-choose-block">
         {/* How Build and Queue differ is one hover away, so the choices start right under the title. */}
-        <Tip as="div" className="cp-choose-title" content={owner?.faction === 'Egypt' ? EGYPT_BUILD_RULE : BUILD_RULE}>{buildFocus && idleChoice && productionWarning !== AUTOMATION_NO_CHOICE ? `Chooses at Ready · ${focusLabel(buildFocus, owner?.faction)}` : `Choose what ${city.name} builds`}</Tip>
+        <Tip as="div" className="cp-choose-title" content={owner?.faction === 'Egypt' ? EGYPT_BUILD_RULE : BUILD_RULE}>{buildFocus && idleChoice && productionWarning !== AUTOMATION_NO_CHOICE ? `Chooses at Ready · ${focusLabel(buildFocus, owner?.faction)}` : tombStopped ? 'Queue for after the tomb' : `Choose what ${city.name} builds`}</Tip>
       </div>
+      {tombStopped && <p className="hint" data-testid="city-tomb-picker">You can still buy with Gold.</p>}
       <div className="cp-buyline">
         <div className="purchase-status" id={`purchase-status-${city.id}`} role="status">
           <Tip content="Gold available for purchases this turn."><span><Amount n={purchases.gold} unit="Gold" /> ({signed(view.economy.gold_per_turn.total)}/turn) to spend</span></Tip>

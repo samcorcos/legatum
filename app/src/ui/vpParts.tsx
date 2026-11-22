@@ -12,7 +12,7 @@ import { eraName } from './eraResearch';
 import { cardMeter, scoredCard } from '../ageCards';
 import { useGame } from '../store';
 import { ownWords, type EraObjective, type Progress, type Source, type VpEmpire, type VpModel } from '../vpModel';
-import type { ObjectiveFamily } from '../types';
+import type { Faction, ObjectiveFamily } from '../types';
 import './vpParts.css';
 
 const css = (v: Record<string, string | number>) => v as CSSProperties;
@@ -132,15 +132,26 @@ const liveWords = (faction: NonNullable<Source['faction']>) => {
 /** A held goal's public facts: whose item it is, who holds it now, and whether it can be placed on the map. */
 function HeldLines({ model, s, goalOwner }: { model: VpModel; s: Source; goalOwner?: VpEmpire }) {
   const holder = s.owners.length === 1 ? model.empires.find((e) => e.id === s.owners[0]) : undefined;
-  const hall = s.faction === 'Mongols';
+  const words = heldWords(s.faction);
+  // Rome's and Egypt's cards are short: the rule already names whose goal it is and that a capture takes it.
+  const cityGoal = s.faction === 'Rome' || s.faction === 'Egypt';
   return <div className="vh-held" data-held-by={holder?.id}>
-    {goalOwner && <div className="vh-held-row"><Marker e={goalOwner} size={16} title={goalOwner.name} /><span>{`${goalOwner.isMe ? 'Your' : `${goalOwner.name}’s`} ${hall ? 'Yam Relay Station' : 'Heir'}`}</span></div>}
+    {goalOwner && !cityGoal && <div className="vh-held-row"><Marker e={goalOwner} size={16} title={goalOwner.name} /><span>{`${goalOwner.isMe ? 'Your' : `${goalOwner.name}’s`} ${words.item}`}</span></div>}
     <div className={`vh-held-row now${holder ? '' : ' nobody'}`}>
       {holder ? <Marker e={holder} size={16} /> : <Socket size={16} />}
       <b>{s.holdNote}</b>
     </div>
-    {s.heldAt && <p className="vh-private" data-testid="heir-locate-hint">{hall ? 'Click its token in the race panel to show it on the map.' : 'Click his token in the race panel to show him on the map.'}</p>}
+    {s.heldAt && !cityGoal && <p className="vh-private" data-testid="heir-locate-hint">{words.locate}</p>}
   </div>;
+}
+
+/** What a held goal's item is called, how to find it and what a capture does, per faction (the Heir is a unit; the others stand in a city). */
+function heldWords(faction?: Faction): { item: string; locate: string } {
+  const its = 'Click its token in the race panel to show it on the map.';
+  if (faction === 'Mongols') return { item: 'Yam Relay Station', locate: its };
+  if (faction === 'India') return { item: 'Imperial Diwan', locate: its };
+  if (faction === 'Rome' || faction === 'Egypt') return { item: faction === 'Rome' ? 'Colonia Victrix' : 'Royal Tomb', locate: its };
+  return { item: 'Heir', locate: 'Click his token in the race panel to show him on the map.' };
 }
 
 /** The objective card: its band says whose it is, the markers or standings show who has it. */
@@ -165,7 +176,7 @@ export function SourceCard({ model, s, compact, terms = true, as: As = 'article'
       <SourceMedal model={model} s={s} size={compact ? 26 : 30} />
       <h3>{s.name}</h3>
     </div>
-    <p className="vh-rule">{s.rule}</p>
+    <p className="vh-rule">{s.rule}{(s.faction === 'Rome' || s.faction === 'Egypt') && s.kind === 'goal' && !/[.!?]$/.test(s.rule) ? '.' : ''}</p>
     {terms && <p className="vh-terms">{s.terms}</p>}
     {s.kind === 'era' && <EraObjectives model={model} s={s} />}
     {s.kind === 'era' && s.era && <p className="vh-private">{s.era.myScored ? 'You have scored this Age.' : 'Every empire sees this card the turn the first empire enters the era, and it never expires.'}</p>}

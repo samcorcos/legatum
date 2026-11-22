@@ -95,6 +95,18 @@ it('a city frozen by the occupation lock shows Held on its banner, not the red B
   expect(bannerMeters({ ...idle, occupation_lock: null }).find((m) => m.kind === 'production')).toMatchObject({ text: 'Build', bad: true });
 });
 
+it('while the Royal Tomb is built, every banner shows the tomb count in place of production and growth pauses', () => {
+  const { capital, second } = fixtureView();
+  const tomb = { working: true, turns: 6, target: 15, left: 9 };
+  for (const c of [capital, second]) {
+    const [growth, production] = bannerMeters(c, 'Egypt', null, null, tomb);
+    expect(growth).toMatchObject({ kind: 'growth', text: '–', paused: true, bad: false });
+    expect(production).toMatchObject({ kind: 'production', text: '6/15', paused: true, icon: 'goal-royal-tomb', inkIcon: true });
+  }
+  // Paused work leaves the city's own meters.
+  expect(bannerMeters(capital, undefined, null, null, { ...tomb, working: false })[1]).toMatchObject({ icon: 'building-granary' });
+});
+
 /** A minimal own city with detail, for production-meter states the fixture doesn't cover. */
 function cityWithDetail(detail: Partial<CityDetail>): { view: PlayerView; city: CityView } {
   const d: CityDetail = {

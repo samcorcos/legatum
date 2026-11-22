@@ -20,6 +20,7 @@ docs/sim-results/*.json
 # `*-source.png` rasters and the people/key-art masters stay untracked.
 app/src/assets/units/*-source.png
 app/src/assets/art/people-[a-z]*[a-z].png
+app/src/assets/art/random-choice.png
 app/src/assets/art/title-keyart-c-road-at-dawn.png
 
 # Local agent and tooling state: worktrees, per-machine settings, queues, review output, hook state.

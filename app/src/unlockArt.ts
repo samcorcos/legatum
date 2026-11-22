@@ -54,13 +54,14 @@ function unitUrl(unit: UnitKind, faction: Faction | undefined, size: UnlockArtSi
   return size === 64 ? unitThumbUrl(unit, faction) : unitMiniatureUrl(unit, faction);
 }
 
-/** A production item's painting, or null (projects, and anything not yet painted). */
+/** A production item's painting, or null if not yet painted. A project's is `project-<name>` (Gold, Science, Egypt's Grow). */
 export function itemArtUrl(item: ProductionItem, faction: Faction | undefined, size: UnlockArtSize, upgraded = false): string | null {
   switch (item.kind) {
     case 'Unit': return unitUrl(item.unit, faction, size);
     case 'Building':
     case 'Wonder': return slugUrl(buildingArtSlug(item.building, faction), size) ?? slugUrl(buildingArtSlug(item.building), size);
     case 'Improvement': return slugUrl(improvementArtSlug(item.improvement, upgraded), size);
+    case 'Project': return slugUrl(`project-${item.project.toLowerCase()}`, size);
     default: return null;
   }
 }

@@ -44,13 +44,16 @@ Start from the `impact` list, then read the diff yourself, because the script on
 
 For each, say what the art should now show, and whether the branch must fix it before merging (anything a player would see in this build) or it can go to a follow-up (say which).
 
+## Job 3: front-door media
+When the branch touches `README.md`, `docs/media/`, `app/public/og.jpg` or the media scripts in `docs/media/src/` (`tools/gates/check.py` requires you for these), open every image and a frame from every clip the README shows, at the size GitHub shows them (880 px wide, light and dark), and judge them as a stranger seeing the project for the first time. Apply legatum-art "Front-door media looks like the game": block on eyebrow or kicker labels, filler feature strips, boxes-and-arrows or flowchart diagrams, gradient or pastel cards, empty or uneven cards, slogan headlines, decorative badges, and anything that looks like a generic AI-made slide rather than Legatum. Ask of each picture: would a real studio put this on its store page? If a screenshot from the game or a sentence would say it better, the fix is to replace or remove the picture. Also read the media scripts' HTML and SVG templates, because they make the next version of each picture.
+
 ## Report (your final message)
 - **Verdict:** pass / pass with follow-ups / block.
 - **Changed art findings, most severe first:** file, sheet or crop path, what is wrong, the legatum-art rule it breaks, and the fix (a prompt change, a re-key, a regrade, a repaint).
 - **Art that should have changed:** each item with the change that implies it and what the art should show.
 - **Proposed skill updates:** rules you inferred, for the lead to fold into `legatum-art`.
 
-Blockers: art that does not belong to its set at display size, a wrong subject, forbidden content, missing alpha, a missing or placeholder piece for something the build shows, stale art for a renamed or re-themed kind.
+Blockers: front-door media that breaks legatum-art "Front-door media looks like the game", art that does not belong to its set at display size, a wrong subject, forbidden content, missing alpha, a missing or placeholder piece for something the build shows, stale art for a renamed or re-themed kind.
 
 ## Gate verdict
 Each required reviewer posts its verdict as a PR comment that names the reviewer and the head commit SHA; the merger checks those comments are present for the PR's head before merging (`tools/gates/check.py <branch> --base origin/master --pr-comments <file>` checks them). End your report with that verdict line: `legatum-art-reviewer: pass at <tip SHA you reviewed>` (or `pass with follow-ups at <sha>`, one line per follow-up, or `BLOCK at <sha>` with the blockers). Post it as a PR comment, or the lead posts it verbatim. Any later commit to the PR needs a fresh review.

@@ -29,8 +29,7 @@ const UNIT_ART: Record<UnitKind, string> = {
   Horseman: 'horseman', Knight: 'knight', Cavalry: 'cavalry', Tank: 'tank', AutonomousArmour: 'autonomous-armour',
   Fighter: 'fighter', Bomber: 'bomber', StealthFighter: 'stealth-fighter', StealthBomber: 'stealth-bomber',
   TrenchInfantry: 'trench-infantry', Howitzer: 'howitzer', EarlyTank: 'landship', Biplane: 'biplane',
-  // The Modern era's placeholder art (increment 2 paints its own): copies of the World War unit of each line, except the
-  // Main Battle Tank, which is the present-day tank painting that the Tank's WWII repaint replaced.
+  // The Modern era's own paintings (the Main Battle Tank is the present-day tank that the Tank's WWII repaint replaced).
   MechanisedInfantry: 'mechanised-infantry', MainBattleTank: 'main-battle-tank', RocketArtillery: 'rocket-artillery', JetFighter: 'jet-fighter', JetBomber: 'jet-bomber',
 };
 

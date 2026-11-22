@@ -322,3 +322,22 @@ it('the Resources key adds a "You lack it" mark when a revealed strategic resour
     act(() => root.unmount()); host.remove();
   }
 });
+
+it('the Settle legend names the selected unit, and a Colonia founder is shown its Colonia sites', () => {
+  const host = document.body.appendChild(document.createElement('div'));
+  const root = createRoot(host);
+  const site = (rank: number, colonia: boolean): SettlementScore => ({ pos: { q: rank, r: 0 }, score: 50, quality: 50, band: 'Good', border_risk: false, rank, travel_turns: 2, ...(colonia ? { colonia } : {}) });
+  const render = (sites: SettlementScore[], coloniaFounder: boolean, founderName?: string) => act(() => root.render(createElement(LensSwitcher, {
+    lens: 'settle', onChange: () => {}, sites, onInspect: () => {}, settlerId: 7, players: [], coloniaFounder, founderName,
+  })));
+  try {
+    render([site(1, true), site(2, true)], true, 'Spearman');
+    expect(host.querySelector('[data-testid="settle-top-key"]')?.textContent).toBe('Top three Colonia sites for this veteran, marked on the map:');
+    expect(host.querySelector('.settle-recommendations.colonia [data-settle-rank="1"]')?.textContent).toBe('Best Colonia site');
+    render([site(1, false), site(2, false)], true, 'Spearman');
+    expect(host.querySelector('[data-testid="settle-top-key"]')?.textContent).toBe('Top three for this Spearman, marked on the map:');
+    expect(host.querySelector('[data-testid="settle-colonia-none"]')?.textContent).toMatch(/^No site you know founds your Colonia Victrix\. A site counts if/);
+    render([site(1, false)], false);
+    expect(host.querySelector('[data-testid="settle-top-key"]')?.textContent).toBe('Top three for this Settler, marked on the map:');
+  } finally { act(() => root.unmount()); host.remove(); }
+});

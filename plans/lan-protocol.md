@@ -48,13 +48,14 @@ Client → server:
 | `ready` | `game_id: string`, `turn: number`, `ready: bool` | Mark this seat ready / not ready for the specified planning turn. |
 | `forecast` | `req_id`, `unit`, `target: Hex`, `mode: "Melee" \| "Ranged"` | Battle forecast from this seat's view for the intended order: `MoveUnit` uses Melee, `RangedAttack` uses Ranged. |
 | `ping` | — | keepalive |
+| `map_ping` | `hex: Hex` | Team map ping (2026-11-22). Relayed as `map_ping` to the other connected seats on the sender's team only; never stored in the game, a save or a tape (no `RULES_VERSION` change). Send it only when `welcome` said `map_pings: true`: a host from before pings answers an unknown type with an `error`. A tile off the map, or a connection with no seat, gets an `error`; a seat's 25th ping in one planning turn (limit 24) and any ping once the game is finished are dropped without a reply. Pings use their own queue of the latest 8 per connection, outside the reliable queue, so a slow reader loses old pings and is not evicted. |
 
 Server → client:
 
 | type | fields | when |
 | --- | --- | --- |
 | `seat_token` | `seat`, `game_id`, `token` | private acknowledgment of `game_take`; the client stores it before sending `join` |
-| `welcome` | `seat`, `game_id`, `orders: Order[]` | after every successful `join`; includes this seat's authoritative pending orders, even when empty |
+| `welcome` | `seat`, `game_id`, `orders: Order[]`, `map_pings?: true` (omitted when false) | after every successful `join`; includes this seat's authoritative pending orders, even when empty; `map_pings` says the host relays `map_ping` |
 | `view` | `view: PlayerView` | after join and after every turn |
 | `seats` | `seats: SeatStatus[]` | latest seat state after joins, leaves, orders/ready changes, or resolution (coalesced broadcast) |
 | `validation` | `errors: OrderError[]` | after `orders` |
@@ -62,6 +63,7 @@ Server → client:
 | `forecast` | `req_id`, `forecast: BattleForecast \| null` | reply |
 | `error` | `message: string`, optional `code: string` | bad request, seat taken, no game, etc. |
 | `pong` | — | reply to ping |
+| `map_ping` | `from: PlayerId`, `hex: Hex`, `turn` | a teammate pinged a tile in planning turn `turn`; the client shows it only while its own view is on that turn, and drops it when the turn changes. An older client ignores the type. |
 
 A guest's client stops retrying by itself after an `error` with `code` `join_code_needed`, `wrong_join_code`, `too_many_codes` or `removed` (the player acts first; `removed` also forgets the seat's credential).
 

@@ -94,6 +94,10 @@ pub struct StagingConfig {
     /// Barbarian camps; on unless the host turns them off.
     #[serde(default = "barbarians_on")]
     pub barbarians: bool,
+    /// The AI-only teams start in Alliances of two (`GameSetup::ai_alliances`). Off unless the
+    /// host turns it on; omitted when off, so rooms from older clients are unchanged.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub ai_alliances: bool,
     #[serde(default, skip_serializing_if = "StagingRules::is_default")]
     pub rule_experiments: StagingRules,
     pub seats: Vec<StagingSeat>,
@@ -132,6 +136,8 @@ pub struct StagingSettings {
     pub height: i32,
     pub turn_limit: Option<u32>,
     pub barbarians: bool,
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub ai_alliances: bool,
     #[serde(skip_serializing_if = "StagingRules::is_default")]
     pub rule_experiments: StagingRules,
     pub seats: Vec<StagingSeat>,
@@ -231,6 +237,7 @@ impl Room {
                 height: self.config.height,
                 turn_limit: self.config.turn_limit,
                 barbarians: self.config.barbarians,
+                ai_alliances: self.config.ai_alliances,
                 rule_experiments: self.config.rule_experiments,
                 seats: self.config.seats.clone(),
             },
@@ -550,6 +557,7 @@ impl Room {
             players,
             legacy_all_war: false,
             barbarians: self.config.barbarians,
+            ai_alliances: self.config.ai_alliances,
             rule_experiments: legatum_core::experiments::RuleExperiments::default(),
         }
     }
@@ -594,6 +602,7 @@ mod faction_tests {
                 height: 32,
                 turn_limit: None,
                 barbarians: true,
+                ai_alliances: false,
                 rule_experiments: StagingRules::default(),
                 seats,
             },

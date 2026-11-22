@@ -188,12 +188,7 @@ describe('the victory race model', () => {
 
   it('says what the faction sheets say: the goal line is composed from the same data', () => {
     for (const [faction, info] of Object.entries(FACTION_INFO)) {
-      if (faction === 'Rome') {
-        expect(info.goal).toBe('No faction goal yet.');
-        continue;
-      }
       const g = FACTION_GOAL[faction as keyof typeof FACTION_GOAL];
-      if (faction === 'Egypt' || faction === 'Rome') { expect(info.goal).toBe('No faction goal yet.'); continue; }
       expect(info.goal.startsWith(`${g.name}: `)).toBe(true);
     }
     expect(FACTION_INFO.Switzerland.goal).toContain('Keep 5,000 Gold');

@@ -961,7 +961,15 @@ fn athenian_ruins_keep_the_normal_reward_and_add_science() {
 
 fn fulfill_goal(s: &mut GameState) {
     match s.player(P).faction {
-        Faction::Egypt => (),
+        // The Royal Tomb and the Colonia Victrix are held by the owner of their city.
+        Faction::Egypt => {
+            let c = city(s, at(4, 4));
+            s.player_mut(P).tomb_city = Some(c);
+        }
+        Faction::Rome => {
+            let c = city(s, at(4, 4));
+            s.player_mut(P).colonia_city = Some(c);
+        }
         Faction::Switzerland => {
             let goal = goals::SWISS_HOARD_GOLD;
             s.player_mut(P).gold = goal;
@@ -1033,10 +1041,6 @@ fn fulfill_goal(s: &mut GameState) {
 #[test]
 fn every_goal_requires_own_state_out_of_resistance_and_awards_its_vp_once() {
     for f in Faction::ALL {
-        if matches!(f, Faction::Egypt | Faction::Rome) {
-            assert_eq!(goals::spec(f).vp, 0);
-            continue;
-        }
         let mut s = state(f);
         assert!(!goals::reached(&s, P));
         fulfill_goal(&mut s);
@@ -1044,7 +1048,12 @@ fn every_goal_requires_own_state_out_of_resistance_and_awards_its_vp_once() {
         let action_goal = matches!(f, Faction::Athens | Faction::Sparta | Faction::Aztecs);
         if !matches!(
             f,
-            Faction::Switzerland | Faction::Byzantium | Faction::Mongols | Faction::India
+            Faction::Switzerland
+                | Faction::Byzantium
+                | Faction::Mongols
+                | Faction::India
+                | Faction::Egypt
+                | Faction::Rome
         ) && !action_goal
         {
             // A city in resistance still counts for Germany's Foundry total and
@@ -1101,6 +1110,14 @@ fn every_goal_requires_own_state_out_of_resistance_and_awards_its_vp_once() {
                 .insert(BuildingKind::ImperialDiwan);
             s.player_mut(P).diwan_city = Some(c);
         }
+        if f == Faction::Egypt {
+            let c = city(&mut s, at(4, 4));
+            s.player_mut(P).tomb_city = Some(c);
+        }
+        if f == Faction::Rome {
+            let c = city(&mut s, at(4, 4));
+            s.player_mut(P).colonia_city = Some(c);
+        }
         assert_eq!(
             scoring::vp(&s, P)
                 .iter()
@@ -1115,9 +1132,6 @@ fn every_goal_requires_own_state_out_of_resistance_and_awards_its_vp_once() {
 #[test]
 fn goal_thresholds_do_not_accept_nearly_complete_empires_or_allied_territory() {
     for f in Faction::ALL {
-        if f == Faction::Egypt {
-            continue;
-        }
         let mut s = state(f);
         fulfill_goal(&mut s);
         match f {
@@ -1126,8 +1140,9 @@ fn goal_thresholds_do_not_accept_nearly_complete_empires_or_allied_territory() {
                 s.player_mut(P).gold = goal - 1;
             }
             // Action goals have no threshold: their requirements are validated in `rules::actions`.
-            Faction::Athens | Faction::Sparta | Faction::Aztecs | Faction::Rome => continue,
-            Faction::India => {
+            Faction::Athens | Faction::Sparta | Faction::Aztecs => continue,
+            // A rival holds the goal's city: its founder no longer scores.
+            Faction::India | Faction::Egypt | Faction::Rome => {
                 s.cities.values_mut().next().unwrap().owner = PlayerId(1);
             }
             Faction::Byzantium => {
@@ -1147,7 +1162,6 @@ fn goal_thresholds_do_not_accept_nearly_complete_empires_or_allied_territory() {
                 // A rival holds the Station's city: Mongols itself no longer scores.
                 s.cities.values_mut().next().unwrap().owner = PlayerId(1);
             }
-            Faction::Egypt => unreachable!("Egypt has no faction goal"),
         }
         assert!(!goals::reached(&s, P), "{f:?}");
     }

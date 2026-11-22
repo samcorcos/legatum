@@ -34,6 +34,8 @@ export interface Lobby {
   turnLimit: number | null;
   /** Barbarian camps (core `GameSetup::barbarians`). On for new games; missing reads as on. */
   barbarians?: boolean;
+  /** The AI-only teams start in Alliances of two (core `GameSetup::ai_alliances`). Co-op turns it on; missing reads as off. */
+  aiAlliances?: boolean;
   seed: string;
   /** Default for new AI seats; setting it applies to every AI seat. */
   difficulty: AiDifficulty;
@@ -188,6 +190,8 @@ function ai(i: number, team: number, level: AiLevel): Slot {
  */
 export function applyPreset(l: Lobby, preset: PresetId): Lobby {
   if (preset === 'custom') return { ...l, preset };
+  // Co-op: two humans on one team would face six uncoordinated AIs, so the AIs start allied in pairs.
+  const aiAlliances = preset === 'coop';
   const humans = l.mode === 'solo' ? 1 : 2;
   const keep = l.slots.filter((s) => humanKind(s.kind));
   const slots: Slot[] = [];
@@ -206,7 +210,7 @@ export function applyPreset(l: Lobby, preset: PresetId): Lobby {
       });
     } else slots.push(ai(i, team, levelOf(l)));
   }
-  return { ...l, preset, slots, mapSize: typeof l.mapSize === 'string' ? recommendedSize(slots.length) : l.mapSize };
+  return { ...l, preset, aiAlliances, slots, mapSize: typeof l.mapSize === 'string' ? recommendedSize(slots.length) : l.mapSize };
 }
 
 export function newLobby(mode: LobbyMode, seed: string): Lobby {
@@ -386,6 +390,16 @@ export function teams(l: Lobby): TeamSummary[] {
   return out;
 }
 
+/** Teams made only of AI seats: the ones `aiAlliances` puts into pairs. */
+export function aiOnlyTeams(l: Lobby): number {
+  return teams(l).filter((t) => t.slots.every((i) => l.slots[i].kind === 'ai')).length;
+}
+
+/** True when the setup turns AI alliances on: the same condition `buildSetup` uses. */
+export function aiAlliancesOn(l: Lobby): boolean {
+  return !!l.aiAlliances && aiOnlyTeams(l) >= 2;
+}
+
 /** Problems that block starting the game, locally or on the online host. */
 export function problems(l: Lobby): string[] {
   const p: string[] = [];
@@ -426,5 +440,5 @@ export function buildSetup(l: Lobby): GameSetup {
     return p;
   });
   const size = mapDimensions(l.mapSize);
-  return { seed: l.seed, width: size.width, height: size.height, players, turn_limit: l.turnLimit, barbarians: l.barbarians !== false };
+  return { seed: l.seed, width: size.width, height: size.height, players, turn_limit: l.turnLimit, barbarians: l.barbarians !== false, ...(aiAlliancesOn(l) ? { ai_alliances: true } : {}) };
 }

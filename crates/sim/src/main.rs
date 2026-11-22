@@ -5,6 +5,7 @@ mod barbarian_telemetry;
 mod border_telemetry;
 mod card_loop;
 mod clock;
+mod goal_city_telemetry;
 mod hold_telemetry;
 mod lobby;
 mod openings;

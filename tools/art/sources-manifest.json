@@ -57,6 +57,11 @@
    "sha256": "73ce4bd79f69d4e9af1d2cc5dc523e1cd434edf8ec2bfa2f8b391945cfceee34"
   },
   {
+   "path": "app/src/assets/art/random-choice.png",
+   "bytes": 3023494,
+   "sha256": "b270c47a47c3b9ea4b8e00e7ea6213212d5986d833dfef19ad3abc6b728f79d4"
+  },
+  {
    "path": "app/src/assets/art/title-keyart-c-road-at-dawn.png",
    "bytes": 5503492,
    "sha256": "8e7b107a645e9ea6d7181df35ea16081f7a505d0d14bddcd6438dc7891e345e9"

@@ -98,7 +98,7 @@ impl Planner<'_> {
     }
 
     /// A unit holds the city tile itself and the garrison is complete.
-    fn hall_garrisoned(&self, c: &CityView) -> bool {
+    pub(crate) fn hall_garrisoned(&self, c: &CityView) -> bool {
         self.hall_garrison(c) >= HALL_GARRISON
             && self
                 .ctx
@@ -337,10 +337,10 @@ impl Planner<'_> {
         self.hall_guard_city(c) && !self.hall_garrisoned(c)
     }
 
-    /// Percent of a visible attack the defenders of `c` must cover: a Station city is defended with
-    /// a wider margin than any other.
+    /// Percent of a visible attack the defenders of `c` must cover: a Station city (and a Colonia
+    /// or royal tomb city, `goal_cities.rs`) is defended with a wider margin than any other.
     pub(crate) fn hall_defense_percent(&self, c: &CityView) -> i32 {
-        if self.holds_hall_city(c) {
+        if self.holds_hall_city(c) || self.holds_goal_city(c) {
             HALL_DEFENSE_MARGIN_PERCENT
         } else {
             100

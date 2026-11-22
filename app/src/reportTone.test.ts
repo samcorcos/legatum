@@ -223,12 +223,28 @@ const CASES: Record<Event['type'], [string, Event, Tone][]> = {
     ['yours', ev({ type: 'FactionGoalCompleted', player: 0, faction: 'India', vp: 2 }), 'good'],
     ['regained', ev({ type: 'FactionGoalCompleted', player: 0, faction: 'Switzerland', vp: 2, again: true }), 'good'],
     ['theirs', ev({ type: 'FactionGoalCompleted', player: 2, faction: 'Switzerland', vp: 2 }), 'neutral'],
+    ['your Colonia', ev({ type: 'FactionGoalCompleted', player: 0, faction: 'Rome', vp: 2 }), 'good'],
+    ['a rival Royal Tomb', ev({ type: 'FactionGoalCompleted', player: 2, faction: 'Egypt', vp: 2 }), 'neutral'],
   ],
   FactionGoalLost: [
     ['you spent below the hoard', ev({ type: 'FactionGoalLost', player: 0, faction: 'Switzerland', vp: 2 }), 'bad'],
     ['a rival did', ev({ type: 'FactionGoalLost', player: 2, faction: 'Switzerland', vp: 2 }), 'good'],
     ['a camp of yours fell', ev({ type: 'FactionGoalLost', player: 0, faction: 'Celts', vp: 2 }), 'bad'],
     ['the Celts lost it', ev({ type: 'FactionGoalLost', player: 2, faction: 'Celts', vp: 2 }), 'good'],
+    ['you lost a Colonia you held', ev({ type: 'FactionGoalLost', player: 0, faction: 'Rome', vp: 2 }), 'bad'],
+    ['a rival lost the Royal Tomb', ev({ type: 'FactionGoalLost', player: 2, faction: 'Egypt', vp: 2 }), 'neutral'],
+  ],
+  TombStarted: [
+    ['yours', ev({ type: 'TombStarted', player: 0, turns: 0 }), 'neutral'],
+    ['theirs', ev({ type: 'TombStarted', player: 2, turns: 4 }), 'neutral'],
+  ],
+  TombPaused: [
+    ['yours', ev({ type: 'TombPaused', player: 0, turns: 6 }), 'neutral'],
+    ['theirs', ev({ type: 'TombPaused', player: 2, turns: 6 }), 'neutral'],
+  ],
+  TombRaised: [
+    ['yours', ev({ type: 'TombRaised', player: 0, city: 1, name: 'Thebes', at: { q: 3, r: 3 } }), 'good'],
+    ['theirs', ev({ type: 'TombRaised', player: 2, city: 5, name: 'Memphis', at: { q: 3, r: 3 } }), 'neutral'],
   ],
   VeteranRetired: [['yours', ev({ type: 'VeteranRetired', player: 0, unit: 7, kind: 'Spearman', city: 1, retired: 2, of: 3 }), 'good']],
   WildCalled: [

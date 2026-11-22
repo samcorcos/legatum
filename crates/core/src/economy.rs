@@ -456,6 +456,19 @@ fn yields_for_item<const FULL: bool>(
             ScienceConversion::Gold => {}
         }
     }
+    if owner.tomb_work {
+        // The royal tomb (Egypt, `goals::GoalRule::Tomb`): the city's Production and its Food
+        // beyond what its people eat are taken, so it neither builds nor grows. A Food
+        // deficit is left, so it still starves.
+        let surplus = (y.y.total.food - FOOD_PER_POP * city.population).max(0);
+        let production = y.y.total.production.max(0);
+        if surplus > 0 || production > 0 {
+            y.add(
+                "The Royal Tomb: this city works on it",
+                Yields::new(-surplus, -production, 0, 0),
+            );
+        }
+    }
     y.y
 }
 

@@ -1,5 +1,5 @@
 //! The one-time goal actions as real decisions (`Order::Action`): Japan's Sakoku vow
-//! (`goal_sakoku.rs`), the
+//! (`goal_sakoku.rs`), Egypt's royal tomb (`goal_tomb.rs`), the
 //! Athens' broadcast and a broadcast's free-technology picks, Sparta's retirement of
 //! veterans and the Celts' Call the Wild. Every brain gets them through `Brain::orders`, so they
 //! are decided from the fogged view alone.
@@ -449,6 +449,10 @@ fn goal_actions_inner(
         out.push(Order::Action {
             action: Action::CallTheWild,
         });
+    }
+    // Egypt's royal tomb: start, pause or resume the work (`goal_tomb.rs`).
+    if let Some(action) = crate::goal_tomb::tomb_action(view, open_end, decisions) {
+        out.push(Order::Action { action });
     }
     out
 }

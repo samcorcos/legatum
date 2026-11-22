@@ -383,7 +383,9 @@ impl Planner<'_> {
                 {
                     goals::spec(Faction::Byzantium).vp as i32 * HEIR_SWING_VALUE_PER_VP
                 }
-                VpSource::FactionGoal { of } => self.hall_goal_denial(*of),
+                VpSource::FactionGoal { of } => {
+                    self.hall_goal_denial(*of) + self.goal_city_goal_denial(*of)
+                }
                 _ => 0,
             })
             .sum()

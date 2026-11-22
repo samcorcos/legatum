@@ -63,6 +63,11 @@ pub struct GameSetup {
     /// serializes exactly as before, so old tapes and hashes are unchanged.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub barbarians: bool,
+    /// The teams with no human seat start in Alliances of two (`GameSetup::ai_alliance_pairs`).
+    /// The app's Co-op preset turns it on. Omitted when false, so every existing setup, save,
+    /// tape and hash is unchanged.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub ai_alliances: bool,
 }
 
 impl GameSetup {
@@ -70,6 +75,36 @@ impl GameSetup {
     /// Egypt and Rome are available through explicit seats, including the app's faction picker.
     fn seeded_faction_pool() -> Vec<Faction> {
         Faction::ALL[..9].to_vec()
+    }
+
+    /// The Alliances the AI-only teams start in when `ai_alliances` is on: the teams with no
+    /// human seat, put in a seeded order (`rng::seeded_order`, so the same seed gives the same
+    /// pairs and the order the seats are listed in doesn't matter), then taken two at a time.
+    /// An odd team out stays unallied. Each pair has the lower team id first. Empty when off.
+    pub fn ai_alliance_pairs(&self) -> Vec<(TeamId, TeamId)> {
+        if !self.ai_alliances || self.legacy_all_war {
+            return Vec::new();
+        }
+        let humans: std::collections::BTreeSet<TeamId> = self
+            .players
+            .iter()
+            .filter(|p| p.is_human)
+            .map(|p| p.team)
+            .collect();
+        let ai_teams: std::collections::BTreeSet<TeamId> = self
+            .players
+            .iter()
+            .map(|p| p.team)
+            .filter(|t| !humans.contains(t))
+            .collect();
+        let ai_teams: Vec<TeamId> = ai_teams.into_iter().collect();
+        let order =
+            crate::rng::seeded_order(self.seed, &[crate::rng::purpose::AI_ALLIANCES], &ai_teams);
+        let (pairs, _odd_team_out) = order.as_chunks::<2>();
+        pairs
+            .iter()
+            .map(|[a, b]| crate::diplomacy::pair(*a, *b))
+            .collect()
     }
 
     /// The standard game: two humans on team 0, six AIs on their own teams.
@@ -116,6 +151,7 @@ impl GameSetup {
             players,
             turn_limit: None,
             legacy_all_war: false,
+            ai_alliances: false,
             barbarians: true,
             rule_experiments: Default::default(),
         }
@@ -141,6 +177,7 @@ impl GameSetup {
             players,
             turn_limit: None,
             legacy_all_war: false,
+            ai_alliances: false,
             barbarians: true,
             rule_experiments: Default::default(),
         }
@@ -776,6 +813,22 @@ pub struct Player {
     /// India's Imperial Diwan stays with its city when captured.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub diwan_city: Option<CityId>,
+    /// Rome's Colonia Victrix: the city a level-3 veteran founded beside a rival's border. It
+    /// stays the Colonia when captured (`goals::colonia_city`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub colonia_city: Option<CityId>,
+    /// Egypt's royal tomb (`Action::Tomb`, `goals::GoalRule::Tomb`): while the work is on, none
+    /// of the empire's cities builds or grows, and each turn end adds one to `tomb_turns`. Public.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub tomb_work: bool,
+    /// Turn ends of work toward the royal tomb; kept when the work is paused, zeroed when the
+    /// tomb stands.
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    pub tomb_turns: u32,
+    /// Egypt's royal tomb: the city it stands in. It stays the tomb's city when captured
+    /// (`goals::tomb_city`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tomb_city: Option<CityId>,
     /// Free technologies a rival's Share the Signal broadcast left this empire to choose
     /// (`Action::ChooseFreeTechs`). The prompt persists across turns; nothing auto-picks.
     #[serde(default, skip_serializing_if = "is_zero_u8")]
@@ -940,6 +993,10 @@ static BARBARIAN_PLAYER: std::sync::LazyLock<Player> = std::sync::LazyLock::new(
     goal_holder: None,
     hall_city: None,
     diwan_city: None,
+    colonia_city: None,
+    tomb_work: false,
+    tomb_turns: 0,
+    tomb_city: None,
     faction_goal_reached_before: false,
     free_techs_pending: 0,
     free_techs_from: None,
@@ -1105,7 +1162,7 @@ fn is_zero_i32(v: &i32) -> bool {
     *v == 0
 }
 
-fn is_zero_u32(v: &u32) -> bool {
+pub(crate) fn is_zero_u32(v: &u32) -> bool {
     *v == 0
 }
 

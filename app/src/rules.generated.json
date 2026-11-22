@@ -1399,6 +1399,8 @@
   "cityHeal": 20,
   "cityHp": 200,
   "classBonusPercent": 40,
+  "coloniaBorderReach": 2,
+  "coloniaLevel": 3,
   "company": {
     "hirePercent": 100,
     "turns": 30,
@@ -5205,11 +5207,11 @@
       "vp": 2
     },
     "Egypt": {
-      "kind": "Permanent",
-      "label": "no faction goal yet",
-      "rule": "None",
-      "target": 0,
-      "vp": 0
+      "kind": "Held",
+      "label": "Royal Tomb held",
+      "rule": "Tomb",
+      "target": 1,
+      "vp": 2
     },
     "Germany": {
       "kind": "Live",
@@ -5233,11 +5235,11 @@
       "vp": 2
     },
     "Rome": {
-      "kind": "Permanent",
-      "label": "no faction goal yet",
-      "rule": "None",
-      "target": 0,
-      "vp": 0
+      "kind": "Held",
+      "label": "Colonia Victrix held",
+      "rule": "Colonia",
+      "target": 1,
+      "vp": 2
     },
     "Sparta": {
       "kind": "Permanent",
@@ -10162,7 +10164,7 @@
   "rocketArtilleryRange": 3,
   "rollMax": 120,
   "rollMin": 80,
-  "saveVersion": 54,
+  "saveVersion": 55,
   "settlerCostStep": 50,
   "siege": {
     "baseGold": 160,
@@ -20450,6 +20452,7 @@
     "tileRingStepPercent": 25,
     "workRadius": 3
   },
+  "tombTurns": 15,
   "treaty": {
     "Alliance": {
       "betrayalTurns": 20,

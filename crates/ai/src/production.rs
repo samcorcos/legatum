@@ -4586,6 +4586,7 @@ impl Planner<'_> {
                         && (t.army < minimum
                             || self.heir_unguarded(c)
                             || self.hall_unguarded(c)
+                            || self.goal_city_unguarded(c)
                             || ((self.wonder_guard_city(c) || self.own_original_capital(c))
                                 && !self
                                     .ctx
@@ -4834,6 +4835,7 @@ impl Planner<'_> {
                             if self.own_heirs().any(|h| h.pos == c.pos)
                                 || self.hall_guard_city(c)
                                 || self.diwan_guard_city(c)
+                                || self.goal_city_guard(c)
                                 || self.wonder_guard_city(c)
                                 || self.own_original_capital(c)
                             {

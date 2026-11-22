@@ -171,6 +171,9 @@ pub fn visible_events(
                 | Event::SwarmUnleashed { .. }
                 | Event::SakokuClosed { .. }
                 | Event::SakokuReopened { .. }
+                | Event::TombStarted { .. }
+                | Event::TombPaused { .. }
+                | Event::TombRaised { .. }
                 | Event::SignalBroadcast { .. }
                 | Event::RoadsLaid { .. }
                 | Event::WildCalled { .. }

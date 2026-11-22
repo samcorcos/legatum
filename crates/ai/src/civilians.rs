@@ -128,7 +128,7 @@ impl Planner<'_> {
 
     /// A wartime settler may not cross land owned by the team it is fighting, even though
     /// ordinary military movement can enter that land during a war.
-    fn enemy_war_tile(&self, h: Hex) -> bool {
+    pub(crate) fn enemy_war_tile(&self, h: Hex) -> bool {
         self.view().tile(h).is_some_and(|tile| {
             tile.owner
                 .is_some_and(|owner| self.view().at_war(self.ctx.me, owner))
@@ -138,7 +138,7 @@ impl Planner<'_> {
     /// Keep settlement sites outside the visible enemy army's threat radius. The shared
     /// settler danger map covers attack reach; THREAT_RADIUS adds the established city-threat
     /// buffer so a site cannot be selected just beyond that immediate reach.
-    fn enemy_army_near(&self, h: Hex) -> bool {
+    pub(crate) fn enemy_army_near(&self, h: Hex) -> bool {
         self.ctx
             .threat_units
             .iter()
@@ -665,6 +665,8 @@ impl Planner<'_> {
         for s in settlers {
             self.plan_settler(s);
         }
+        // Gene `rome_colonia`: a level-3 veteran founds the Colonia Victrix first.
+        self.plan_colonia();
         if self.faction == Faction::Rome
             && self.hard_defense()
             && self.decisions.roman_founders > 0
@@ -745,6 +747,9 @@ impl Planner<'_> {
                         && legatum_core::data::unit_class(u.kind) == Some(UnitClass::Melee)
                         && !self.has_acted(u.id)
                         && self.roman_unit_can_leave(u)
+                        // Gene `rome_colonia`: the Colonia's founder, and the veteran closest
+                        // to becoming it, found no ordinary city.
+                        && !self.colonia_reserved(u)
                         && siege.as_ref().is_none_or(|(city, ids)| {
                             !ids.contains(&u.id) || {
                                 let rest: Vec<UnitId> =
@@ -828,7 +833,11 @@ impl Planner<'_> {
     /// Whether `force` still forecasts the capture of `city` (the campaign's own tests). A
     /// visible city shot down to 0 HP falls to the first melee unit that walks in; the siege
     /// forecasts stop pricing it there, which is exactly when the veterans must stay.
-    fn roman_capture_holds(&self, city: &legatum_core::view::CityView, force: &[UnitId]) -> bool {
+    pub(crate) fn roman_capture_holds(
+        &self,
+        city: &legatum_core::view::CityView,
+        force: &[UnitId],
+    ) -> bool {
         (city.visible
             && city.hp <= 0
             && force.iter().any(|id| {

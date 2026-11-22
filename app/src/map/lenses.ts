@@ -37,7 +37,7 @@ export const LENS_FADED_ALPHA = 0.3;
 export type LensYield = { kind: 'food' | 'production' | 'gold' | 'science'; value: number };
 /** How a tile is painted: a wash (default), or an owner wash with a hairline (the Borders overlay). */
 type LensFill = 'owner';
-export interface LensTile { index: number; tint: string; label?: string; yields?: LensYield[]; rank?: number; /** Settle: the site's absolute band (Poor to Exceptional), drawn as a paler to deeper green. */ band?: SiteBand; faded: boolean; fill?: LensFill; /** The numeral is drawn only at normal zoom; the far tier keeps the tint alone. */ nearOnly?: boolean }
+export interface LensTile { index: number; tint: string; label?: string; yields?: LensYield[]; rank?: number; /** Settle: the site's absolute band (Poor to Exceptional), drawn as a paler to deeper green. */ band?: SiteBand; /** Settle, Rome: founding here makes the Colonia Victrix (core `goals::known_colonia_site`): a gilt ring. */ colonia?: boolean; faded: boolean; fill?: LensFill; /** The numeral is drawn only at normal zoom; the far tier keeps the tint alone. */ nearOnly?: boolean }
 export const yieldEntries = (y: Yields): LensYield[] => (['food', 'production', 'gold', 'science'] as const).filter((kind) => y[kind] !== 0).map((kind) => ({ kind, value: y[kind] }));
 
 /** Compute only when the view, lens or settlement analysis changes, never on pan/zoom. */
@@ -58,7 +58,7 @@ export function buildLensTiles(view: PlayerView, lens: MapLens, sites: Settlemen
       const site = scores.get(index);
       // Every legal site the core lists is tinted, by its absolute band; the top three also wear a marker.
       // The renderer resolves the band's look token; no score or empty label plate on the map.
-      if (site) tiles.push({ ...base, tint: '', band: site.band, rank: site.rank ?? undefined });
+      if (site) tiles.push({ ...base, tint: '', band: site.band, rank: site.rank ?? undefined, ...(site.colonia ? { colonia: true } : {}) });
     } else if (lens === 'movement') {
       const cost = tileMoveCost(t.terrain, t.road);
       tiles.push({ ...base, tint: cost === null ? ATLAS.lens.tint.blocked : cost === 1 ? ATLAS.lens.tint.easy : ATLAS.lens.tint.rough, label: cost === null ? '×' : String(cost) });

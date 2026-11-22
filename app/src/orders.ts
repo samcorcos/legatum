@@ -334,6 +334,9 @@ export function describeOrder(o: Order, view: PlayerView): string {
         case 'Sakoku': return o.action.close
           ? 'Close the country (Sakoku): no war, no Alliances, no tech diffusion · +2 VP after 30 turns closed'
           : 'Reopen the country: the Sakoku count and its VP are lost';
+        case 'Tomb': return o.action.build
+          ? `Build the Royal Tomb: no city builds or grows while the work is on · ${view.actions?.tomb?.turns ?? 0} of ${view.actions?.tomb?.target ?? RULES.tombTurns} turns done`
+          : `Pause the Royal Tomb: cities build and grow again · ${view.actions?.tomb?.turns ?? 0} of ${view.actions?.tomb?.target ?? RULES.tombTurns} turns kept`;
         case 'Broadcast': return `Share the Learning: every rival gains ${view.actions?.broadcast?.techs_each ?? 3} free technologies of its choice · +2 VP, permanent`;
         case 'RetireVeteran': return `${unit(o.action.unit)}: retire with honour · ${(view.actions?.retire?.retired ?? 0) + 1} of ${view.actions?.retire?.target ?? 3} toward Honour the Veterans`;
         case 'CallTheWild': return `Raise the Warbands: a warband camp in the territory of ${view.actions?.wild?.sites.length ?? 'every'} ${view.actions?.wild?.sites.length === 1 ? 'city' : 'cities'}`;

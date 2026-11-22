@@ -60,7 +60,7 @@ export function EraUpTakeover({ moment, dismiss }: { moment: Moment; dismiss(): 
     </div>
     <header className="et-head">
       <div className="et-seal" aria-hidden="true"><span className="et-rays" /><span className="et-numeral">{card.numeral}</span></div>
-      <div className="et-kicker">{card.first ? 'You are the first empire into this era' : 'A new era begins'}</div>
+      {card.first && <div className="et-kicker">You are the first empire into this era</div>}
       <h2 className="et-title">The {card.eraName} Era</h2>
       <div className="et-rule" aria-hidden="true"><svg width="12" height="12" viewBox="-5.5 -5.5 11 11"><path d="M0 -5L.95 -.95L5 0L.95 .95L0 5L-.95 .95L-5 0L-.95 -.95Z" fill="currentColor" /></svg></div>
     </header>

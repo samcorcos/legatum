@@ -1,5 +1,5 @@
 // The goal rites that are one-time actions: the Swarm (the Aztecs' New Fire), Japan's Sakoku vow, the Athens' broadcast, the
-// Celts's Call the warbands and Sparta's retirement of a veteran. The race panel carries the
+// Celts's Call the warbands, Egypt's Royal Tomb (built and paused) and Sparta's retirement of a veteran. The race panel carries the
 // action row (where the goals live; Sparta also offers retirement on the veteran itself),
 // a confirm dialog says what the action does and costs before it is
 // ordered (and the map marks it), and the order stays pending, undoable, until the turn ends.
@@ -11,6 +11,7 @@ import { empireOfPlayer } from '../empires';
 import { answerDecision } from '../notice';
 import { clearAction, pendingAction, pendingRetire, retireEntry, retireProgress, sakokuDiffusion, setAction, swarmRows, swarmTotals, wildRows } from '../goalActions';
 import { clearUnitOrder } from '../orders';
+import { tombBlockerPhrase, tombSiteName } from '../goalCities';
 import { useGame } from '../store';
 import { playerColor } from '../theme';
 import type { PlayerView } from '../types';
@@ -25,20 +26,20 @@ import { useCoarsePointer } from './useCoarsePointer';
 import './EndTurnConfirmation.css';
 import './goalActions.css';
 
-type Kind = 'Swarm' | 'Sakoku' | 'Broadcast' | 'CallTheWild';
+type Kind = 'Swarm' | 'Sakoku' | 'Broadcast' | 'CallTheWild' | 'Tomb';
 
 /** Which of the viewer's goal actions exists (the faction's) and whether it can be ordered. */
 function goalActionState(view: PlayerView, orders: readonly import('../types').Order[]) {
-  const swarm = view.actions?.swarm, sakoku = view.actions?.sakoku, broadcast = view.actions?.broadcast, wild = view.actions?.wild;
-  const kind: Kind | null = swarm ? 'Swarm' : sakoku ? 'Sakoku' : broadcast ? 'Broadcast' : wild ? 'CallTheWild' : null;
+  const swarm = view.actions?.swarm, sakoku = view.actions?.sakoku, broadcast = view.actions?.broadcast, wild = view.actions?.wild, tomb = view.actions?.tomb;
+  const kind: Kind | null = swarm ? 'Swarm' : sakoku ? 'Sakoku' : broadcast ? 'Broadcast' : wild ? 'CallTheWild' : tomb ? 'Tomb' : null;
   if (!kind) return null;
-  const blocker = (kind === 'Swarm' ? swarm?.blocker : kind === 'Sakoku' ? sakoku?.blocker : kind === 'Broadcast' ? broadcast?.blocker : wild?.blocker) ?? null;
+  const blocker = (kind === 'Swarm' ? swarm?.blocker : kind === 'Sakoku' ? sakoku?.blocker : kind === 'Broadcast' ? broadcast?.blocker : kind === 'Tomb' ? tomb?.blocker : wild?.blocker) ?? null;
   return { kind, blocker, ordered: !!pendingAction(orders, kind) };
 }
 
-/** The dialog an action opens: Sakoku is one action that closes an open country and reopens a closed one. */
-const dialogFor = (view: PlayerView, kind: Kind): 'Swarm' | 'Sakoku' | 'SakokuReopen' | 'Broadcast' | 'CallTheWild' =>
-  kind === 'Sakoku' ? (view.actions?.sakoku?.closed ? 'SakokuReopen' : 'Sakoku') : kind;
+/** The dialog an action opens: Sakoku is one action that closes an open country and reopens a closed one; the Royal Tomb is built and paused the same way. */
+const dialogFor = (view: PlayerView, kind: Kind): 'Swarm' | 'Sakoku' | 'SakokuReopen' | 'Broadcast' | 'CallTheWild' | 'Tomb' | 'TombPause' =>
+  kind === 'Sakoku' ? (view.actions?.sakoku?.closed ? 'SakokuReopen' : 'Sakoku') : kind === 'Tomb' ? (view.actions?.tomb?.working ? 'TombPause' : 'Tomb') : kind;
 
 /** The race panel's own-goal action: what it is, what it scores, and the one button to take it. */
 export function GoalActionRow() {
@@ -52,19 +53,26 @@ export function GoalActionRow() {
   const st = goalActionState(view, orders);
   if (!st) return view.actions?.retire ? <RetireProgressRow view={view} orders={orders} /> : null;
   const goal = st.kind === 'Swarm' ? SWARM_GOAL : FACTION_GOAL[me.faction];
-  const spare = view.actions?.swarm, wild = view.actions?.wild, sakoku = view.actions?.sakoku;
-  const why = st.blocker && !st.ordered ? st.blocker : null;
-  const label = st.kind === 'Sakoku' ? (sakoku?.closed ? 'Reopen the country' : 'Close the country') : goal.action;
+  const spare = view.actions?.swarm, wild = view.actions?.wild, sakoku = view.actions?.sakoku, tomb = view.actions?.tomb;
+  // A standing tomb has nothing to build: one line and Show on map, like Rome's held Colonia Victrix.
+  const standing = st.kind === 'Tomb' && tomb?.tomb != null ? (view.royal_tombs ?? []).find((g) => g.of === view.me) : undefined;
+  if (standing) return <TombStandingRow view={view} tomb={standing} />;
+  const why = st.blocker && !st.ordered ? (st.kind === 'Tomb' ? tombBlockerPhrase(st.blocker) : st.blocker) : null;
+  const label = st.kind === 'Sakoku' ? (sakoku?.closed ? 'Reopen the country' : 'Close the country')
+    : st.kind === 'Tomb' && tomb?.working ? 'Pause the Royal Tomb' : st.kind === 'Tomb' && (tomb?.turns ?? 0) > 0 ? 'Resume the Royal Tomb' : goal.action;
+  // Pausing the tomb or reopening the country scores nothing: those buttons carry no VP.
+  const undoing = (st.kind === 'Sakoku' && !!sakoku?.closed) || (st.kind === 'Tomb' && !!tomb?.working);
   const goalName = st.kind === 'Sakoku' ? 'Sakoku' : goal.name;
   const rule = st.kind === 'Sakoku' ? `Close the country for ${sakoku?.target ?? 30} turn ends to hold +${factionGoalVp(me.faction)} VP` : factionGoalRule(me.faction);
   const terms = st.kind === 'Sakoku' ? 'Reopening loses the held VP' : factionGoalTerms(me.faction);
-  const progress = st.kind === 'Sakoku' ? view.faction_goal?.label : wild ? `${wild.with_camp} of ${wild.cities} ${wild.cities === 1 ? 'city has' : 'cities have'} a wild camp in ${wild.cities === 1 ? 'its' : 'their'} territory.` : null;
+  const progress = st.kind === 'Sakoku' || st.kind === 'Tomb' ? view.faction_goal?.label : wild ? `${wild.with_camp} of ${wild.cities} ${wild.cities === 1 ? 'city has' : 'cities have'} a wild camp in ${wild.cities === 1 ? 'its' : 'their'} territory.` : null;
   const whyText = why ? (st.kind === 'Swarm' && spare ? `${spare.spare} of ${RULES.swarmPopulation} population to spare: every city keeps 1.` : why) : null;
   // The button's hover carries everything the short window's one-line row leaves out: the rule, the reason it is blocked and the progress.
-  const buttonTip = <><p>{rule}.</p>{whyText && <p>{whyText}</p>}{progress && <p>{progress}</p>}<p className="muted">{terms} · one action, confirmed first, resolved when the turn ends.</p></>;
+  const how = st.kind === 'Tomb' ? 'build or pause; you confirm first, and it happens when the turn ends' : 'one action; you confirm first, and it happens when the turn ends';
+  const buttonTip = <><p>{rule}.</p>{whyText && <p>{whyText}</p>}{progress && <p>{progress}</p>}<p className="muted">{terms} · {how}.</p></>;
   return <section className={`goal-action${st.ordered ? ' ordered' : ''}${why ? ' blocked' : ''}`} aria-label={`${goalName}: your faction goal`} data-goal-action={st.kind}>
-    <Tip as="div" className="goal-action-head" content={<><p>{rule}.</p><p className="muted">{terms} · one action, confirmed first, resolved when the turn ends.</p></>}>
-      <RingMedallion icon={goal.icon} tone={st.ordered ? 'gilt' : 'hollow'} size={28} />
+    <Tip as="div" className="goal-action-head" content={<><p>{rule}.</p><p className="muted">{terms} · {how}.</p></>}>
+      <RingMedallion icon={goal.icon} tone={st.ordered || (st.kind === 'Tomb' && tomb?.tomb != null) ? 'gilt' : 'hollow'} size={28} />
       <h3>{goalName}</h3>
       <VpSeal vp={factionGoalVp(me.faction)} />
     </Tip>
@@ -72,13 +80,32 @@ export function GoalActionRow() {
       {st.ordered
         ? <button className="btn goal-action-btn" onClick={() => editOrders((o) => clearAction(o, st.kind))}>Cancel the order</button>
         : <button className="btn goal-action-btn" disabled={!!st.blocker} onClick={() => { closeTips(); set({ goalDialog: dialogFor(view, st.kind), goalDecisionSeen: { ...useGame.getState().goalDecisionSeen, [view.me]: true } }); }}>
-          {label}{!touch && <> <Kbd>G</Kbd></>}
+          {/* One inline run, so a narrow button wraps "Build the Royal Tomb · +2 VP" as text, keeping "· +2 VP" whole. */}
+          <span>{label}{!undoing && <span className="goal-action-vp"> · +{factionGoalVp(me.faction)} VP</span>}</span>{!touch && <> <Kbd>G</Kbd></>}
         </button>}
     </Tip>
     {sakoku && <SakokuMeter view={view} />}
+    {tomb && <TombMeter view={view} />}
     {wild && <p className="goal-action-note goal-action-progress" data-testid="wild-progress">{progress}</p>}
-    {st.ordered && <p className="goal-action-note" role="status">Ordered: it resolves when the turn ends.</p>}
+    {st.ordered && <p className="goal-action-note" role="status">Ordered: it happens when the turn ends.</p>}
     {whyText && <p className="goal-action-why">{whyText}</p>}
+  </section>;
+}
+
+/** Egypt's row once the tomb stands: where, and who holds it (a rival that took the city is named). */
+function TombStandingRow({ view, tomb }: { view: PlayerView; tomb: import('../types').GoalCityView }) {
+  const goal = FACTION_GOAL.Egypt, vp = factionGoalVp('Egypt');
+  const held = tomb.holder === view.me;
+  const line = held ? `It stands in ${tomb.name}` : `${empireOfPlayer(view, tomb.holder)} holds it in ${tomb.name}. Retake the city.`;
+  return <section className={`goal-action${held ? ' ordered' : ''}`} aria-label={`${goal.name}: your faction goal`} data-goal-action="Tomb" data-tomb-state={held ? 'held' : 'lost'}>
+    <Tip as="div" className="goal-action-head" content={<><p>{factionGoalRule('Egypt')}.</p><p className="muted">{factionGoalTerms('Egypt')}.</p></>}>
+      <RingMedallion icon={goal.icon} tone={held ? 'gilt' : 'hollow'} size={28} />
+      <h3>{goal.name}</h3>
+      <VpSeal vp={vp} />
+    </Tip>
+    <p className="goal-action-note goal-action-progress colonia-status" data-testid="tomb-standing">{line}</p>
+    <p className="goal-action-note colonia-compact" data-testid="tomb-standing-compact">{goal.name} · +{vp} VP: {held ? `it stands in ${tomb.name}` : line}</p>
+    <button className="link" onClick={() => useGame.getState().jumpTo(tomb.at)}>Show on map</button>
   </section>;
 }
 
@@ -92,6 +119,21 @@ function SakokuMeter({ view }: { view: PlayerView }) {
   </div>;
 }
 
+/** Egypt's tomb count in the race panel's row: turns of work done against the turns needed (kept across a pause). */
+function TombMeter({ view }: { view: PlayerView }) {
+  const g = view.faction_goal, t = view.actions!.tomb!;
+  if (!g) return null;
+  const standing = t.tomb !== null, paused = !standing && !t.working && t.turns > 0;
+  return <>
+    <div className="goal-action-sakoku" data-testid="tomb-progress">
+      <span className="goal-action-note goal-action-progress">{paused ? `Paused: ${g.label}` : g.label}</span>
+      {!standing && t.turns > 0 && <span className="faction-goal-meter" role="progressbar" aria-label={`The Royal Tomb: ${t.turns} of ${t.target} turns`} aria-valuemin={0} aria-valuemax={t.target} aria-valuenow={Math.min(t.turns, t.target)}><i style={{ width: `${Math.min(100, 100 * t.turns / Math.max(1, t.target))}%` }} /></span>}
+    </div>
+    {/* The short window hides the line above; a paused count still shows, since the top bar drops it while paused. */}
+    {paused && <p className="goal-action-note goal-compact" data-testid="tomb-compact">Paused at {t.turns} of {t.target} turns</p>}
+  </>;
+}
+
 /** Sparta's goal progress and a direct confirm for the first veteran ready to retire. */
 function RetireProgressRow({ view, orders }: { view: PlayerView; orders: readonly import('../types').Order[] }) {
   const touch = useCoarsePointer();
@@ -100,7 +142,7 @@ function RetireProgressRow({ view, orders }: { view: PlayerView; orders: readonl
   const readyVeteran = r.veterans.find((v) => !v.blocker && !pendingRetire(orders, v.unit));
   const ready = r.veterans.filter((v) => !v.blocker).length;
   const progressText = `${r.retired} of ${r.target} veterans retired · ${r.shrines.length ? `${r.shrines.length} Agoge ${r.shrines.length === 1 ? 'city' : 'cities'}` : 'no Agoge yet'} · ${r.veterans.length ? `${r.veterans.length} ${r.veterans.length === 1 ? 'veteran' : 'veterans'} at level ${r.level}+${ready ? `, ${ready} in place` : ''}` : `no veteran at level ${r.level} yet`}`;
-  const whyText = r.veterans.some((v) => !v.blocker) ? 'Ready veterans already have retirement orders; they resolve when the turn ends.' : r.veterans[0]?.blocker ?? (r.shrines.length ? `Promote a veteran to level ${r.level} and move it to an Agoge city.` : 'Build an Agoge and promote a veteran.');
+  const whyText = r.veterans.some((v) => !v.blocker) ? 'Ready veterans already have retirement orders; they retire when the turn ends.' : r.veterans[0]?.blocker ?? (r.shrines.length ? `Promote a veteran to level ${r.level} and move it to an Agoge city.` : 'Build an Agoge and promote a veteran.');
   return <section className="goal-action" aria-label={`${goal.name}: your faction goal`} data-goal-action="Retire">
     <Tip as="div" className="goal-action-head" content={<><p>{factionGoalRule(me.faction)}.</p><p className="muted">{factionGoalTerms(me.faction)} · retire a veteran here or from its unit panel, in a city with an Agoge.</p></>}>
       <RingMedallion icon={goal.icon} tone={r.retired ? 'gilt' : 'hollow'} size={28} />
@@ -155,7 +197,8 @@ export function GoalActionDialog() {
   const me = view?.players.find((p) => p.id === view.me);
   const entry = view && kind === 'RetireVeteran' && unitId !== null ? retireEntry(view, unitId) : undefined;
   const available = !!view && !view.finished && (kind === 'Swarm' ? !!view.actions?.swarm : kind === 'Sakoku' ? !!view.actions?.sakoku && !view.actions.sakoku.closed : kind === 'SakokuReopen' ? !!view.actions?.sakoku?.closed : kind === 'Broadcast' ? !!view.actions?.broadcast
-    : kind === 'CallTheWild' ? !!view.actions?.wild : kind === 'RetireVeteran' ? !!entry : false);
+    : kind === 'CallTheWild' ? !!view.actions?.wild : kind === 'RetireVeteran' ? !!entry
+      : kind === 'Tomb' ? !!view.actions?.tomb && !view.actions.tomb.working : kind === 'TombPause' ? !!view.actions?.tomb?.working : false);
   const up = !!kind && available;
   useLayoutEffect(() => {
     const el = dialog.current;
@@ -170,12 +213,15 @@ export function GoalActionDialog() {
   const close = () => set({ goalDialog: null, goalDialogUnit: null });
   const goal = kind === 'Swarm' ? SWARM_GOAL : FACTION_GOAL[me.faction];
   const vp = factionGoalVp(me.faction);
-  const swarm = view.actions?.swarm, broadcast = view.actions?.broadcast, wild = view.actions?.wild, sakoku = view.actions?.sakoku;
+  const swarm = view.actions?.swarm, broadcast = view.actions?.broadcast, wild = view.actions?.wild, sakoku = view.actions?.sakoku, tomb = view.actions?.tomb;
+  const tombLeft = tomb ? Math.max(0, tomb.target - tomb.turns) : 0;
+  const tombSite = tombSiteName(view);
+  const tombCities = kind === 'Tomb' ? view.cities.filter((c) => c.owner === view.me).sort((a, b) => a.id - b.id) : [];
   const closing = kind === 'Sakoku';
   const sakokuTurns = sakoku?.target ?? 0;
   const diffusion = kind === 'Sakoku' ? sakokuDiffusion(view) : { techs: 0, science: 0 };
   const retiree = kind === 'RetireVeteran' && unitId !== null ? view.units.find((u) => u.id === unitId) : undefined;
-  const blocker = (kind === 'Swarm' ? swarm?.blocker : kind === 'Sakoku' ? sakoku?.blocker : kind === 'SakokuReopen' ? null : kind === 'Broadcast' ? broadcast?.blocker : kind === 'CallTheWild' ? wild?.blocker : entry?.blocker) ?? null;
+  const blocker = (kind === 'Swarm' ? swarm?.blocker : kind === 'Sakoku' ? sakoku?.blocker : kind === 'SakokuReopen' ? null : kind === 'Broadcast' ? broadcast?.blocker : kind === 'CallTheWild' ? wild?.blocker : kind === 'Tomb' || kind === 'TombPause' ? tomb?.blocker : entry?.blocker) ?? null;
   const progress = retireProgress(view);
   const retireCity = retiree ? view.cities.find((c) => c.pos.q === retiree.pos.q && c.pos.r === retiree.pos.r) : undefined;
   const retireName = retiree ? itemName({ kind: 'Unit', unit: retiree.kind }, me.faction) : 'veteran';
@@ -183,16 +229,21 @@ export function GoalActionDialog() {
     set({ goalDialog: null, goalDialogUnit: null });
     if (kind === 'RetireVeteran') {
       if (unitId === null) return;
-      answerDecision(`${retireName} is ordered to retire: it resolves when the turn ends`,
+      answerDecision(`${retireName} is ordered to retire: it happens when the turn ends`,
         (orders) => setAction(clearUnitOrder(orders, unitId), { action: 'RetireVeteran', unit: unitId }), undefined, 'commit');
       return;
     }
+    if (kind === 'Tomb' || kind === 'TombPause') {
+      answerDecision(kind === 'Tomb' ? 'Work on the Royal Tomb is ordered: it starts when the turn ends' : 'The pause is ordered: your cities build and grow again when the turn ends',
+        (orders) => setAction(orders, { action: 'Tomb', build: kind === 'Tomb' }), undefined, 'commit');
+      return;
+    }
     if (kind === 'Sakoku' || kind === 'SakokuReopen') {
-      answerDecision(kind === 'Sakoku' ? 'Sakoku is ordered: the country closes when the turn ends' : 'The country is ordered to reopen: it resolves when the turn ends',
+      answerDecision(kind === 'Sakoku' ? 'Sakoku is ordered: the country closes when the turn ends' : 'The country is ordered to reopen: it happens when the turn ends',
         (orders) => setAction(orders, { action: 'Sakoku', close: kind === 'Sakoku' }), undefined, 'commit');
       return;
     }
-    answerDecision(kind === 'Swarm' ? 'The New Fire is ordered: it resolves when the turn ends'
+    answerDecision(kind === 'Swarm' ? 'The New Fire is ordered: it happens when the turn ends'
       : kind === 'Broadcast' ? 'Share the Learning is ordered: it goes out when the turn ends' : 'Raise the Warbands is ordered: camps rise when the turn ends',
       (orders) => setAction(orders, { action: kind }), undefined, 'commit');
   };
@@ -202,8 +253,9 @@ export function GoalActionDialog() {
   const wildSites = kind === 'CallTheWild' ? wildRows(view) : [];
   const noRoom = kind === 'CallTheWild' ? view.cities.filter((c) => c.owner === view.me && !wildSites.some((r) => r.city.id === c.id)) : [];
   const receivers = (broadcast?.receivers ?? []).map((id) => ({ id, p: view.players.find((p) => p.id === id)! })).filter((r) => r.p);
-  const heading = kind === 'Swarm' ? 'Kindle the New Fire?' : kind === 'Sakoku' ? 'Close the country?' : kind === 'SakokuReopen' ? 'Reopen the country?' : kind === 'Broadcast' ? 'Share the Learning?' : kind === 'CallTheWild' ? 'Raise the Warbands?' : 'Retire this veteran?';
-  const buttonLabel = kind === 'RetireVeteran' ? goal.unitAction ?? 'Retire this veteran' : kind === 'Sakoku' ? 'Close the country' : kind === 'SakokuReopen' ? 'Reopen the country' : goal.action;
+  const resume = kind === 'Tomb' && (tomb?.turns ?? 0) > 0;
+  const heading = kind === 'Tomb' ? (resume ? 'Resume the Royal Tomb?' : 'Build the Royal Tomb?') : kind === 'TombPause' ? 'Pause the Royal Tomb?' : kind === 'Swarm' ? 'Kindle the New Fire?' : kind === 'Sakoku' ? 'Close the country?' : kind === 'SakokuReopen' ? 'Reopen the country?' : kind === 'Broadcast' ? 'Share the Learning?' : kind === 'CallTheWild' ? 'Raise the Warbands?' : 'Retire this veteran?';
+  const buttonLabel = kind === 'Tomb' ? (resume ? 'Resume the Royal Tomb' : 'Build the Royal Tomb') : kind === 'TombPause' ? 'Pause the Royal Tomb' : kind === 'RetireVeteran' ? goal.unitAction ?? 'Retire this veteran' : kind === 'Sakoku' ? 'Close the country' : kind === 'SakokuReopen' ? 'Reopen the country' : goal.action;
   return <dialog ref={dialog} className="modal end-turn-confirmation war-prompt goal-dialog" aria-labelledby={title} aria-describedby={description} data-goal-dialog={kind}
     onCancel={(e) => { e.preventDefault(); close(); }}
     onKeyDown={(e) => { if (e.key.toLowerCase() === 'c' && !e.repeat && !e.metaKey && !e.ctrlKey && !e.altKey && !e.shiftKey) { e.preventDefault(); close(); } }}>
@@ -214,7 +266,11 @@ export function GoalActionDialog() {
       </div>
       <div className="war-prompt-main">
         <h2 id={title} className="war-prompt-head"><RingMedallion icon={goal.icon} tone="gilt" size={30} /><span>{heading}</span></h2>
-        <p id={description}>{kind === 'Sakoku'
+        <p id={description}>{kind === 'Tomb'
+          ? <>While the work is on, none of your cities builds or grows. Gold and Science still come in, and you can still buy with Gold.{tomb!.turns > 0 && <> <b data-testid="tomb-count">{tomb!.turns} of {tomb!.target} turns</b> are already done.</>}{tombSite && <> It will stand in <b>{tombSite}</b>.</>}</>
+          : kind === 'TombPause'
+          ? <>Stop the work on the tomb. The count is kept: <b data-testid="tomb-count">{tomb!.turns} of {tomb!.target} turns</b> stay done.</>
+          : kind === 'Sakoku'
           ? <>Take the vow of Sakoku, in public: every empire sees the closed country and its count.</>
           : kind === 'SakokuReopen'
             ? <>Open the country again. You have been closed {Math.min(sakoku?.turns ?? 0, sakokuTurns)} of {sakokuTurns} turns{sakoku?.holding ? ' and hold the VP now' : ''}.</>
@@ -260,11 +316,22 @@ export function GoalActionDialog() {
             {noRoom.map((c) => <tr key={c.id}><th scope="row">{c.name}</th><td><span className="muted">no free tile of its territory for a camp</span></td></tr>)}
           </tbody>
         </table>}
+        {kind === 'Tomb' && <table className="goal-rows" aria-label="What each city stops while the work is on">
+          <thead><tr><th scope="col">City</th><th scope="col">While the work is on</th></tr></thead>
+          <tbody>{tombCities.map((c) => <tr key={c.id}>
+            <th scope="row">{c.name}</th>
+            <td className="cost">{c.detail?.producing ? <>{itemName(c.detail.producing, me.faction)} waits · no growth</> : 'No growth'}</td>
+          </tr>)}</tbody>
+        </table>}
         {kind === 'Broadcast' && <ul className="goal-receivers" aria-label="Empires that receive technologies">
           {receivers.map(({ id, p }) => <li key={id}><PortraitRoundel faction={p.faction} size={30} color={playerColor(id)} /><span>{empireOfPlayer(view, id)}</span></li>)}
         </ul>}
         <div className="war-prompt-for-you"><span className="war-prompt-label">For you</span><ul className="for-you-list">
-          {kind === 'Sakoku'
+          {kind === 'Tomb'
+            ? <ForYouLine tone="gain"><Amount sign="+" n={vp} unit="VP" /> while you hold its city, once the tomb stands: {tombLeft} more {tombLeft === 1 ? 'turn' : 'turns'} of work.</ForYouLine>
+            : kind === 'TombPause'
+            ? <ForYouLine tone="gain">Your cities build and grow again when this turn ends.</ForYouLine>
+            : kind === 'Sakoku'
             ? <ForYouLine tone="gain"><Amount sign="+" n={vp} unit="VP" /> after {sakokuTurns} turns closed.</ForYouLine>
             : kind === 'SakokuReopen'
               ? <ForYouLine tone="cost">{sakoku?.holding ? <><Amount sign="−" n={vp} unit="VP" /> now, and the </> : 'The '}{sakoku?.turns ?? 0} turns already closed are lost: closing again starts the count at zero.</ForYouLine>
@@ -279,6 +346,9 @@ export function GoalActionDialog() {
             <ForYouLine tone="cost">{rows.length} {rows.length === 1 ? 'city shrinks' : 'cities shrink'}: their yields and city strength fall with population{tiles ? `, and ${tiles} ${tiles === 1 ? 'tile' : 'tiles'} of territory return to the map` : ''}.</ForYouLine>
             <ForYouLine tone="cost">Rivals will see a thin empire.</ForYouLine>
           </>}
+          {kind === 'Tomb' && <ForYouLine tone="cost">{tombCities.length === 1 ? 'Your city stops' : `All ${tombCities.length} of your cities stop`} building and growing for {tombLeft} {tombLeft === 1 ? 'turn' : 'turns'}.</ForYouLine>}
+          {kind === 'Tomb' && <ForYouLine tone="note">You may pause at any time: the count is kept.</ForYouLine>}
+          {kind === 'TombPause' && <ForYouLine tone="cost">The tomb waits: {tombLeft} {tombLeft === 1 ? 'turn' : 'turns'} of work still to do.</ForYouLine>}
           {kind === 'SakokuReopen' && <ForYouLine tone="gain">You can declare war and sign Alliances again, and technologies others know get cheaper for you again.</ForYouLine>}
           {kind === 'Broadcast' && <ForYouLine tone="cost">Every rival learns {broadcast!.techs_each} technologies without paying for them: {receivers.length} {receivers.length === 1 ? 'empire' : 'empires'} are stronger for it.</ForYouLine>}
           {kind === 'CallTheWild' && <>
@@ -287,7 +357,7 @@ export function GoalActionDialog() {
             <ForYouLine tone="cost">A rival that clears a camp takes the usual Gold and ends your VP. You get no Gold for clearing the camps you raised, and a city founded later has none until you call again.</ForYouLine>
           </>}
           {kind === 'RetireVeteran' && retiree && <ForYouLine tone="cost">Your {retireName} (level {entry?.level}, {retiree.hp} HP) leaves the army for good. It cannot be brought back, and the army is weaker by that veteran.</ForYouLine>}
-          <ForYouLine tone="note">Ordered now, it resolves when the turn ends. Cancel it {kind === 'RetireVeteran' ? 'from the unit panel' : 'from the race panel'} until then.</ForYouLine>
+          <ForYouLine tone="note">It happens when the turn ends. Until then you can cancel it from {kind === 'RetireVeteran' ? 'the unit panel' : 'the Victory race (G)'}.</ForYouLine>
         </ul></div>
       </div>
     </div>

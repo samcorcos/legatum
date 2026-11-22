@@ -614,7 +614,12 @@ export const SWARM_GOAL: FactionGoal = {
 };
 
 export const FACTION_GOAL: Record<Faction, FactionGoal> = {
-  Egypt: { name: 'No faction goal yet', live: false, icon: 'building-granary', rule: () => 'No faction goal yet', detail: () => 'No faction goal yet' },
+  Egypt: {
+    name: 'The Royal Tomb', live: goalLive('Egypt'), held: goalHeld('Egypt'), heldItem: 'its city', icon: 'goal-royal-tomb', action: 'Build the Royal Tomb',
+    rule: () => `Build the Royal Tomb: ${RULES.tombTurns} turns in which no city builds or grows. Whoever holds its city scores ${goalVp('Egypt')} VP`,
+    ask: () => `Build the Royal Tomb: ${RULES.tombTurns} turns in which no city builds or grows`,
+    detail: () => `While you build it, none of your cities builds or grows. After ${RULES.tombTurns} turns of work it stands in your capital. Whoever holds that city scores ${goalVp('Egypt')} VP`,
+  },
   Aztecs: SWARM_GOAL,
   Switzerland: {
     name: 'The Reserve', live: goalLive('Switzerland'), icon: 'yield-gold',
@@ -668,7 +673,12 @@ export const FACTION_GOAL: Record<Faction, FactionGoal> = {
     rule: () => `Share your learning once: every rival gains ${RULES.signalFreeTechs} free technologies of its choice`,
     detail: () => `Share your learning once: every living empire outside your team gains ${RULES.signalFreeTechs} free technologies of its choice, at once`,
   },
-  Rome: { name: 'No faction goal yet', live: false, icon: 'city', rule: () => 'No faction goal yet', detail: () => 'No faction goal yet' },
+  Rome: {
+    name: 'Colonia Victrix', live: goalLive('Rome'), held: goalHeld('Rome'), heldItem: 'its city', icon: 'goal-colonia',
+    rule: () => `Found a city with a level ${RULES.coloniaLevel} melee veteran within ${RULES.coloniaBorderReach} tiles of a rival's land. Whoever holds it scores ${goalVp('Rome')} VP`,
+    ask: () => `Found a city with a level ${RULES.coloniaLevel} melee veteran within ${RULES.coloniaBorderReach} tiles of a rival's land`,
+    detail: () => `Found a city with a level ${RULES.coloniaLevel} melee veteran within ${RULES.coloniaBorderReach} tiles of a rival's land. Whoever holds that city scores ${goalVp('Rome')} VP`,
+  },
 };
 
 
@@ -677,16 +687,13 @@ const fmtInt = (n: number) => n.toLocaleString('en-US');
 export const factionGoalRule = (faction: Faction): string => FACTION_GOAL[faction].rule();
 /** What a goal scores, in words: "+2 VP once, kept for good" or "+2 VP while held". */
 export const factionGoalTerms = (faction: Faction): string => {
-  if (faction === 'Rome') return 'No faction goal yet';
   const g = FACTION_GOAL[faction];
   return `+${goalVp(faction)} VP ${g.held ? `while you hold ${g.heldItem ?? 'it'}` : g.live ? 'while held' : 'once, kept for good'}`;
 };
 /** The goal as one line (the picker, the Guide). */
 const goalLine = (faction: Faction): string => {
-  if (faction === 'Egypt') return 'No faction goal yet.';
-  if (faction === 'Rome') return 'No faction goal yet.';
   const g = FACTION_GOAL[faction];
-  if (faction === 'Byzantium') return `${g.name}: ${g.detail()}.`;
+  if (faction === 'Byzantium' || faction === 'Rome' || faction === 'Egypt') return `${g.name}: ${g.detail()}.`;
   return `${g.name}: ${g.detail()} (+${goalVp(faction)} ${g.held ? `VP while you hold ${g.heldItem ?? 'it'}` : g.live ? 'VP while held' : 'VP once, kept for good'}).`;
 };
 
@@ -694,7 +701,7 @@ export const FLOWER_WARS = 'Flower Wars: when Aztec melee units help kill an ene
 export const AZTEC_NO_HORSES = RULES.aztecNoHorses;
 export const HORSE_MOUNTED = RULES.horseMounted as UnitKind[];
 export const FACTION_INFO: Record<Faction, FactionInfo> = {
-  Egypt: factionInfo('egypt', 'Egypt', 'The river builds everything.', `Egyptian cities get double Food. Food beyond what their people eat builds whatever the city is working on, units and Settlers included${RULES.egyptNileBuildPercent === 100 ? '' : `: ${RULES.egyptNileBuildPercent} progress for every 100 Food`}.`, uniquePieceText(UNIQUE_PIECE.Egypt, 'Egypt'), 'No faction goal yet.', "Egypt has no Production. A city that is building doesn't grow: switch it to Grow to grow it."),
+  Egypt: factionInfo('egypt', 'Egypt', 'The river builds everything.', `Egyptian cities get double Food. Food beyond what their people eat builds whatever the city is working on, units and Settlers included${RULES.egyptNileBuildPercent === 100 ? '' : `: ${RULES.egyptNileBuildPercent} progress for every 100 Food`}.`, uniquePieceText(UNIQUE_PIECE.Egypt, 'Egypt'), goalLine('Egypt'), "Egypt has no Production. A city that is building doesn't grow: switch it to Grow to grow it."),
   Aztecs: factionInfo('aztecs', 'Aztecs', 'War feeds the city. Torches carry the New Fire.', FLOWER_WARS, '', goalLine('Aztecs'), AZTEC_NO_HORSES + '.'),
   Switzerland: factionInfo("switzerland", "Switzerland", "Guard the passes. Keep the accounts.", `${swissTollRule()} ${swissInterestRule()} ${SWISS_CHEAP_BUYS}`, uniquePieceText(UNIQUE_PIECE.Switzerland), goalLine('Switzerland'), `Military unit upkeep is triple: 3 Gold a turn instead of 1. ${SWISS_CAPTURE_RULE}`),
   India: factionInfo("india", "India", "Akbar's regional courts bind a populous empire.", `Cities can be founded 3 tiles apart. +1 Food in every city. Each other Indian city within ${RULES.indiaNetworkRadius} tiles adds ${RULES.indiaNetworkPercentPerCity}% to Food and Production.`, uniquePieceText(UNIQUE_PIECE.India), goalLine('India'), `Non-capital cities send no Gold to your treasury until they have a Revenue Office, then half the Gold they make. Corruption cuts all four city yields by ${RULES.indiaYieldPercentPerHex}% per tile beyond ${RULES.indiaCapitalRadius} from the capital, up to 100%. Production never falls below 3.`),

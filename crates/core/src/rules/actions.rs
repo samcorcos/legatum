@@ -68,6 +68,30 @@ pub fn sakoku_blocker(state: &GameState, p: PlayerId, close: bool) -> Option<Str
     None
 }
 
+/// Why `p` can't start (`build`) or pause work on its royal tomb now, or None.
+pub fn tomb_blocker(state: &GameState, p: PlayerId, build: bool) -> Option<String> {
+    if goals::rule(state, p) != GoalRule::Tomb {
+        return Some("Only Egypt can build the Royal Tomb".into());
+    }
+    if goals::switched_off(state, p) {
+        return Some(goals::SWITCHED_OFF.into());
+    }
+    let working = goals::tomb_working(state, p);
+    if !build {
+        return (!working).then(|| "The Royal Tomb is not being built".to_string());
+    }
+    if working {
+        return Some("The Royal Tomb is already being built".into());
+    }
+    if let Some(city) = goals::tomb_city(state, p) {
+        return Some(format!("The Royal Tomb already stands in {}", city.name));
+    }
+    if goals::tomb_site(state, p).is_none() {
+        return Some("The Royal Tomb needs a city".into());
+    }
+    None
+}
+
 /// Why `p` can't broadcast now, or None.
 pub fn broadcast_blocker(state: &GameState, p: PlayerId) -> Option<String> {
     let player = state.player(p);
@@ -209,6 +233,7 @@ pub fn validate_action(state: &GameState, player: PlayerId, action: &Action) -> 
     match action {
         Action::Swarm => swarm_blocker(state, player).map_or(Ok(()), Err),
         Action::Sakoku { close } => sakoku_blocker(state, player, *close).map_or(Ok(()), Err),
+        Action::Tomb { build } => tomb_blocker(state, player, *build).map_or(Ok(()), Err),
         Action::Broadcast => broadcast_blocker(state, player).map_or(Ok(()), Err),
         Action::RetireVeteran { unit } => retire_blocker(state, player, *unit).map_or(Ok(()), Err),
         Action::CallTheWild => wild_blocker(state, player).map_or(Ok(()), Err),
@@ -337,6 +362,7 @@ pub fn apply_actions(
         match action {
             Action::Swarm => swarm(state, player, events),
             Action::Sakoku { close } => sakoku(state, player, *close, events),
+            Action::Tomb { build } => tomb(state, player, *build, events),
             Action::Broadcast => broadcast(state, player, events),
             Action::RetireVeteran { unit } => retire_veteran(state, player, *unit, events),
             Action::CallTheWild => call_the_wild(state, player, events),
@@ -388,6 +414,17 @@ fn sakoku(state: &mut GameState, player: PlayerId, close: bool, events: &mut Vec
         let turns = state.player_mut(player).sakoku_turns.take().unwrap_or(0);
         events.push(Event::SakokuReopened { player, turns });
     }
+}
+
+fn tomb(state: &mut GameState, player: PlayerId, build: bool, events: &mut Vec<Event>) {
+    let p = state.player_mut(player);
+    p.tomb_work = build;
+    let turns = p.tomb_turns;
+    events.push(if build {
+        Event::TombStarted { player, turns }
+    } else {
+        Event::TombPaused { player, turns }
+    });
 }
 
 fn broadcast(state: &mut GameState, player: PlayerId, events: &mut Vec<Event>) {
@@ -506,6 +543,37 @@ pub struct SakokuView {
     pub blocker: Option<String>,
 }
 
+/// Egypt's royal tomb: whether the work is on, the count toward it, and why the next move can't
+/// be ordered. Own view only; rivals see the work and its count on the public player.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct TombView {
+    /// The work is on: no city builds or grows.
+    pub working: bool,
+    /// Turn ends counted toward the tomb.
+    pub turns: u32,
+    /// Turn ends the tomb needs.
+    pub target: u32,
+    /// The city the tomb would stand in if the work finished now.
+    pub site: Option<CityId>,
+    /// The tomb's city, once it stands (in anyone's hands).
+    pub tomb: Option<CityId>,
+    /// Why the next move (starting, or pausing while it is on) can't be ordered now.
+    pub blocker: Option<String>,
+}
+
+/// Rome's Colonia Victrix while none stands: the level its founder needs and the veterans who
+/// have it. Own view only.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ColoniaFoundersView {
+    /// The promotion level the founder needs (`goals::COLONIA_LEVEL`).
+    pub level: u8,
+    /// The highest level among the empire's melee units.
+    pub best: u8,
+    /// Melee veterans of that level, in id order: each founds the Colonia on a site beside a
+    /// rival's border.
+    pub founders: Vec<UnitId>,
+}
+
 /// The Athens' broadcast: whether it can be ordered, why not, and who receives.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct BroadcastView {
@@ -574,6 +642,10 @@ pub struct WildView {
 pub struct ActionsView {
     pub swarm: Option<SwarmView>,
     pub sakoku: Option<SakokuView>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tomb: Option<TombView>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub colonia: Option<ColoniaFoundersView>,
     pub broadcast: Option<BroadcastView>,
     pub free_techs: Option<FreeTechsView>,
     pub retire: Option<RetireView>,
@@ -594,6 +666,41 @@ pub fn view(state: &GameState, me: PlayerId) -> ActionsView {
             target: goals::sakoku_target(),
             holding: goals::sakoku_holding(state, me),
             blocker: sakoku_blocker(state, me, !closed),
+        });
+    }
+    if goals::rule(state, me) == GoalRule::Tomb && !goals::switched_off(state, me) {
+        let working = goals::tomb_working(state, me);
+        out.tomb = Some(TombView {
+            working,
+            turns: player.tomb_turns,
+            target: goals::TOMB_TURNS,
+            site: goals::tomb_site(state, me),
+            tomb: goals::tomb_city(state, me).map(|c| c.id),
+            blocker: tomb_blocker(state, me, !working),
+        });
+    }
+    if goals::colonia_open(state, me) {
+        let melee: Vec<(UnitId, u8)> = state
+            .units
+            .values()
+            .filter(|u| {
+                u.owner == me && crate::data::unit_class(u.kind) == Some(crate::UnitClass::Melee)
+            })
+            .map(|u| {
+                (
+                    u.id,
+                    crate::rules::promotion::level_for(player.faction, u.xp),
+                )
+            })
+            .collect();
+        out.colonia = Some(ColoniaFoundersView {
+            level: goals::COLONIA_LEVEL,
+            best: melee.iter().map(|m| m.1).max().unwrap_or(0),
+            founders: melee
+                .iter()
+                .filter(|m| m.1 >= goals::COLONIA_LEVEL)
+                .map(|m| m.0)
+                .collect(),
         });
     }
     if goals::rule(state, me) == GoalRule::Swarm && !player.faction_goal_done {

@@ -46,6 +46,7 @@ To find the full entry for a line, search `docs/learnings/` for the words in the
 - An AI-only ablation can call a faction drawback "backwards" when the AI overspends; read it against human play. [2026-11]
 - Describe what the AI actually does from a recorded tape, not from its configured priority list. [2026-10]
 - A gate keyed on a state the action itself changes closes mid-action: Rome's one-city war gate keyed on "no veteran" shut as soon as the siege promoted its units, and the army walked home. Key gates on the campaign, not on its side effects. [2026-11]
+- A "go beside the city" search that filters out tiles our own units hold stalls forever when our own shooter parks on the only approach tile (a fallen coastal city held at 0 HP for 888 turns). Treat own non-capturing units on approach tiles as movable, and leave cities the ordinary passes can already reach alone: staging on free tiles beside any fallen city moved a held-out cell by -29 pp. [2026-11]
 
 ## Simulations and measurement
 

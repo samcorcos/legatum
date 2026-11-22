@@ -862,6 +862,12 @@ pub struct PlayerPublic {
     /// Sakoku: the country is closed, with the turn ends it has been (public).
     #[serde(default)]
     pub sakoku_turns: Option<u32>,
+    /// This empire is building its royal tomb (public): none of its cities builds or grows.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub tomb_work: bool,
+    /// Turn ends of work this empire has put toward its royal tomb (public).
+    #[serde(default, skip_serializing_if = "crate::state::is_zero_u32")]
+    pub tomb_turns: u32,
     /// The rule this empire's goal follows (public; absent in views from before it existed:
     /// use [`PlayerPublic::rule`]).
     #[serde(default)]
@@ -1100,6 +1106,18 @@ pub struct ImperialDiwanView {
     pub city: CityId,
 }
 
+/// A city that carries a faction goal's 2 VP for whoever holds it (Rome's Colonia Victrix,
+/// Egypt's royal tomb): the empire whose goal it is, the holder, and the city with its place and
+/// name. Public to every empire, in fog and on unexplored land too, like the Heir.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct GoalCityView {
+    pub of: PlayerId,
+    pub holder: PlayerId,
+    pub city: CityId,
+    pub at: Hex,
+    pub name: String,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PlayerView {
     #[serde(
@@ -1107,6 +1125,10 @@ pub struct PlayerView {
         skip_serializing_if = "crate::experiments::RuleExperiments::is_default"
     )]
     pub rule_experiments: crate::experiments::RuleExperiments,
+    /// The game started with the AI-only teams allied in pairs (`GameSetup::ai_alliances`).
+    /// Public setup fact; omitted when false.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub ai_alliances: bool,
     pub diplomacy: Shared<crate::diplomacy::DiplomacyView>,
     pub turn: u32,
     pub turn_limit: Option<u32>,
@@ -1168,6 +1190,16 @@ pub struct PlayerView {
     pub courier_halls: Vec<CourierHallView>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub imperial_diwans: Vec<ImperialDiwanView>,
+    /// Each Colonia Victrix on the map and who holds it. Public: rivals see the city is worth 2 VP.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub colonias: Vec<GoalCityView>,
+    /// Each royal tomb on the map and who holds it. Public: rivals see the city is worth 2 VP.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub royal_tombs: Vec<GoalCityView>,
+    /// Where each royal tomb under construction will stand (`goals::tomb_site`), for every
+    /// empire whose work is on. Public, like the work and its count: rivals see the city to watch.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub tomb_sites: Vec<GoalCityView>,
     /// Your team's aircraft, each in one city's hangar (`rules::air`); nobody else's are visible.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub aircraft: Vec<AircraftView>,
@@ -1573,6 +1605,8 @@ pub fn public_view(state: &GameState) -> PublicView {
             cities: state.cities_of(p.id).count() as u32,
             faction_goal_done: p.faction_goal_done,
             sakoku_turns: p.sakoku_turns,
+            tomb_work: p.tomb_work,
+            tomb_turns: p.tomb_turns,
             goal_rule: Some(crate::goals::rule(state, p.id)),
             era: objectives::era_of(state, p.id),
             gold: if p.alive { p.gold } else { 0 },
@@ -1742,6 +1776,8 @@ pub(crate) fn order_check_view(state: &GameState, me: PlayerId) -> PlayerView {
                 cities: 0,
                 faction_goal_done: p.faction_goal_done,
                 sakoku_turns: p.sakoku_turns,
+                tomb_work: p.tomb_work,
+                tomb_turns: p.tomb_turns,
                 goal_rule: Some(crate::goals::rule(state, p.id)),
                 era: objectives::era_of(state, p.id),
                 gold: 0,
@@ -2024,6 +2060,7 @@ pub fn player_view_cached(
     let (Some(income), Some(forecasts)) = (income, forecasts) else {
         return PlayerView {
             rule_experiments: state.setup.rule_experiments,
+            ai_alliances: !state.setup.ai_alliance_pairs().is_empty(),
             diplomacy: crate::diplomacy::view(state, me).into(),
             turn: state.turn,
             turn_limit: state.setup.turn_limit,
@@ -2051,6 +2088,9 @@ pub fn player_view_cached(
             actions: Default::default(),
             courier_halls: crate::goals::courier_halls(state),
             imperial_diwans: crate::goals::imperial_diwans(state),
+            colonias: crate::goals::colonias(state),
+            royal_tombs: crate::goals::royal_tombs(state),
+            tomb_sites: crate::goals::tomb_sites(state),
             aircraft: aircraft_views(state, team),
             air_sightings: Vec::new(),
             air_contacts: Vec::new(),
@@ -2162,6 +2202,7 @@ pub fn player_view_cached(
 
     PlayerView {
         rule_experiments: state.setup.rule_experiments,
+        ai_alliances: !state.setup.ai_alliance_pairs().is_empty(),
         diplomacy: crate::diplomacy::view(state, me).into(),
         turn: state.turn,
         turn_limit: state.setup.turn_limit,
@@ -2205,6 +2246,9 @@ pub fn player_view_cached(
         actions: crate::rules::actions::view(state, me),
         courier_halls: crate::goals::courier_halls(state),
         imperial_diwans: crate::goals::imperial_diwans(state),
+        colonias: crate::goals::colonias(state),
+        royal_tombs: crate::goals::royal_tombs(state),
+        tomb_sites: crate::goals::tomb_sites(state),
         aircraft: aircraft_views(state, team),
         air_sightings: state
             .aircraft

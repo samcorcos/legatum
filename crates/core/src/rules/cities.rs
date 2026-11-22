@@ -916,15 +916,14 @@ pub fn found_city(
             .setup
             .rule_experiments
             .rule_off(crate::experiments::FactionRule::RomeLegionary);
+    let colonia = military_founder && crate::goals::founds_colonia(state, unit);
     state.units.remove(&settler);
-    Ok(found_city_at(
-        state,
-        owner,
-        pos,
-        military_founder,
-        legionary,
-        events,
-    ))
+    let id = found_city_at(state, owner, pos, military_founder, legionary, events);
+    if colonia {
+        // Scoring reports it this turn end (`scoring::check_held_goal`), publicly.
+        state.player_mut(owner).colonia_city = Some(id);
+    }
+    Ok(id)
 }
 
 /// The shared founding effects for an ordered founder and a map-generated starting capital.

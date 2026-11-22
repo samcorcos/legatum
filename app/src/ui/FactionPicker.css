@@ -160,6 +160,9 @@
   display: grid;
   place-items: center;
 }
+.fs-portrait-random img {
+  object-position: 50% 50%;
+}
 .fs-portrait-random .random-mark {
   width: 72px;
   height: 72px;

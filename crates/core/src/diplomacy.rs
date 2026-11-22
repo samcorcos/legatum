@@ -333,6 +333,28 @@ impl DiplomacyState {
         }
     }
 
+    /// An Alliance in force from turn 1 (`GameSetup::ai_alliances`), as if signed on the first
+    /// turn: the pair has met, the 10-turn protected window runs from turn 1, and it carries no
+    /// coalition target. Later it behaves like any other Alliance.
+    pub fn start_alliance(&mut self, a: TeamId, b: TeamId) {
+        self.meet(a, b);
+        self.next_treaty_id += 1;
+        let security = SecurityTreaty {
+            id: self.next_treaty_id,
+            started_turn: 1,
+            protected_until: 1 + ALLIANCE_PROTECTED_TURNS,
+            coalition_target: None,
+        };
+        if let Some(r) = self.relations.iter_mut().find(|r| r.between(a, b)) {
+            r.state = RelationState::Alliance;
+            r.effective_turn = 1;
+            r.version += 1;
+            r.war_id = None;
+            r.declarers.clear();
+            r.security = Some(security);
+        }
+    }
+
     /// Record that two teams have met (normally done by `visibility::update_explored`).
     pub fn meet(&mut self, a: TeamId, b: TeamId) {
         if let Some(contacts) = self.contacts.as_mut().filter(|_| a != b) {

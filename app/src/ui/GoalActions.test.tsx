@@ -99,6 +99,9 @@ it('a ready goal is one decision: the title is the action, the line is what it s
   // A goal that takes several steps counts toward its VP; a one-time act keeps it for good.
   expect(goalDecisionText('Retire', 2).line).toBe('Counts toward +2 VP');
   expect(goalDecisionText('Broadcast', 2)).toEqual({ title: 'Share the Learning', line: '+2 VP, kept for good' });
+  // Rome: the offer selects the veteran, and says when no site is known yet.
+  expect(goalDecisionText('Colonia', 2, true)).toEqual({ title: 'Veteran ready: Colonia Victrix', line: `Level ${RULES.coloniaLevel} melee veteran · +2 VP while you hold it`, act: 'Select the veteran' });
+  expect(goalDecisionText('Colonia', 2, false).line).toBe(`No site known yet: explore within ${RULES.coloniaBorderReach} tiles of a rival's land`);
   // The dock's primary leads even with a unit selected: it is not a routine decision, so no outlined stepped-back button.
   expect(unitCardLeads([goal!], { kind: 'unit', id: 0 })).toBe(false);
 });

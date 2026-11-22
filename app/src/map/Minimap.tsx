@@ -4,7 +4,8 @@ import type { PlayerView } from '../types';
 import { playerColor } from '../theme';
 import { usePhoneLayout } from '../ui/usePhoneLayout';
 import { centerOnWorld, mapViewport, onMapCamera } from './camera';
-import { MAP_STYLES } from './style';
+import { MAP_STYLES, mapPlayerColor } from './style';
+import { pingsFor } from '../teamPing';
 import './minimap.css';
 import { useCityAlarms } from '../ui/useCityAlarms';
 import { cityNear, drawMinimapBase, drawMinimapOverlay, minimapLayout, miniToWorld, type MinimapInk } from './minimapView';
@@ -67,8 +68,10 @@ function MinimapCanvas({ view, maxW, maxH, onPick, label }: CanvasProps) {
   // Dots and the viewport frame: redrawn when the view changes or the main camera moves.
   const cityAlarms = useCityAlarms();
   const alarms = useMemo(() => new Map(cityAlarms.map((a) => [a.cityId, a.kind] as const)), [cityAlarms]);
-  const latest = useRef({ view, base, layout, dpr, alarms });
-  latest.current = { view, base, layout, dpr, alarms };
+  const allPings = useGame((st) => st.pings);
+  const pingMarks = useMemo(() => pingsFor(view, allPings).map((p) => ({ hex: p.hex, color: mapPlayerColor(p.from) })), [view, allPings]);
+  const latest = useRef({ view, base, layout, dpr, alarms, pingMarks });
+  latest.current = { view, base, layout, dpr, alarms, pingMarks };
   useEffect(() => {
     let frame = 0;
     const paint = () => {
@@ -76,13 +79,13 @@ function MinimapCanvas({ view, maxW, maxH, onPick, label }: CanvasProps) {
       const canvas = ref.current, ctx = canvas?.getContext('2d');
       if (!canvas || !ctx) return;
       const f = latest.current;
-      drawMinimapOverlay(ctx, f.base, f.view, f.layout, f.dpr, playerColor, INK, mapViewport(), f.alarms);
+      drawMinimapOverlay(ctx, f.base, f.view, f.layout, f.dpr, playerColor, INK, mapViewport(), f.alarms, f.pingMarks);
     };
     const schedule = () => { if (!frame) frame = requestAnimationFrame(paint); };
     paint();
     const off = onMapCamera(schedule);
     return () => { off(); cancelAnimationFrame(frame); };
-  }, [view, base, layout, dpr, alarms]);
+  }, [view, base, layout, dpr, alarms, pingMarks]);
 
   const local = (e: { clientX: number; clientY: number }) => {
     const r = ref.current!.getBoundingClientRect();

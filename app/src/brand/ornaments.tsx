@@ -41,16 +41,6 @@ export function Star({ size = 10, className }: { size?: number; className?: stri
   );
 }
 
-/** A rule ending in a diamond used around the title kicker; `flip` mirrors it. */
-export function DecoRule({ width = 48, flip }: { width?: number; flip?: boolean }) {
-  return (
-    <svg className="deco-rule" width={width} height="8" viewBox={`0 0 ${width} 8`} aria-hidden style={flip ? { transform: 'scaleX(-1)' } : undefined}>
-      <path d={`M0 4H${width - 10}`} stroke="currentColor" strokeWidth="1" />
-      <path d={`M${width - 8} 4l4 -4l4 4l-4 4z`} fill="currentColor" />
-    </svg>
-  );
-}
-
 /** Deco sunburst: the house star over nine rays (at most one per screen region). */
 export function Fan({ width = 48 }: { width?: number }) {
   return (
@@ -81,6 +71,10 @@ export function PanelHead({ title, sub, right, kicker }: { title: ReactNode; sub
     </header>
   );
 }
+
+const randomPortrait = import.meta.glob<string>('../assets/art/random-choice-360.jpg', { eager: true, query: '?url', import: 'default' });
+/** The Random choice's painting on the faction sheet: a still life of cast knucklebones on an unfinished chart (no people of its own). */
+export const RANDOM_PORTRAIT_URL: string | null = Object.values(randomPortrait)[0] ?? null;
 
 /** The paired historical people portrait (360 px JPEG) for a faction. */
 export function leaderPortraitUrl(faction: string): string | null {

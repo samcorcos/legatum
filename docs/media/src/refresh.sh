@@ -31,9 +31,12 @@ node "$here/teaser.mjs" "$masters" "$work/captions" "$out/legatum-teaser.mp4" --
 
 # README loops: name, master, start, seconds, width, fps, quality, optional crop (w:h:x:y in the 1920x1080 master).
 loop() {
-  local name="$1" clip="$2" ss="$3" t="$4" w="$5" fps="$6" q="$7" crop="${8:-}" src="$masters/$2.mp4"
+  local name="$1" clip="$2" ss="$3" t="$4" w="$5" fps="$6" q="$7" crop="${8:-}" pad="${9:-}" src="$masters/$2.mp4"
+  # pad: a colour (0xRRGGBB) that widens a taller crop to 16:9, so loops that share a README table row line up.
+  local vf="crop=$crop"
+  [ -n "$pad" ] && vf="$vf,pad=w=ceil(ih*16/9/2)*2:h=ih:x=(ow-iw)/2:y=0:color=$pad"
   if [ -n "$crop" ]; then
-    ffmpeg -y -loglevel error -ss "$ss" -t "$t" -i "$src" -vf "crop=$crop" -c:v libx264 -crf 12 -preset fast "$work/crop-$name.mp4"
+    ffmpeg -y -loglevel error -ss "$ss" -t "$t" -i "$src" -vf "$vf" -c:v libx264 -crf 12 -preset fast "$work/crop-$name.mp4"
     "$here/webp.sh" "$work/crop-$name.mp4" "$out/$name.webp" 0 "$t" "$w" "$fps" "$q"
   else
     "$here/webp.sh" "$src" "$out/$name.webp" "$ss" "$t" "$w" "$fps" "$q"
@@ -46,5 +49,4 @@ loop() {
 ffmpeg -y -loglevel error -ss 2.0 -i "$out/legatum-teaser.mp4" -i "$here/play-mark.png" -filter_complex overlay -frames:v 1 -q:v 3 "$out/teaser-poster.jpg"
 
 node "$here/banner.mjs"
-node "$here/diagrams.mjs"
 ls -l "$out"/*.mp4 "$out"/*.webp "$out"/*.jpg | awk '{printf "%8.2f MB  %s\n", $5/1048576, $9}'

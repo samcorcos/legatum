@@ -67,3 +67,7 @@ dialog.co-sheet::backdrop { background: var(--scrim); }
 .co-idle-mark { display: inline-grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; background: var(--accent); color: var(--panel); font: 700 11px/1 var(--sans); }
 
 .co-num .bad { color: var(--bad); }
+
+/* Egypt's Royal Tomb: every city is stopped while the work is on. */
+.co-tomb .co-build-top svg { color: var(--gilt, #8f6f1c); }
+.co-tomb-count { color: var(--ink-2); }

@@ -20,6 +20,7 @@ import { STRENGTH_PERCENT } from './promotion';
 import { distance, hexEq } from './hex';
 import { releasedGarrison } from './releasedGarrison';
 import { sakokuTarget } from './sakoku';
+import { GOAL_CITY_ICON, GOAL_CITY_TITLE, goalCityKindOf } from './goalCities';
 import { cityHits, forceText, fromText } from './siege';
 import { foundCityBlocker } from './settlement';
 import { claimedTile, growthUnlocks } from './milestones';
@@ -612,6 +613,54 @@ function hallGoalLine(e: GoalEvent, ctx: ReportContext): ReportLine {
   if (mine(taker)) return line('victory', `${subject(taker)} took the Yam Relay Station${where} from ${whom(ctx, from)}: the open road is ${taker === ctx.me ? 'yours' : 'your team’s'} now, and every empire crosses ${taker === ctx.me ? 'your' : 'its'} land at Peace${gain}`, { ...opts, tone: 'good' });
   if (mine(from)) return line('victory', `${subject(taker)} took the Yam Relay Station${where} from ${from === ctx.me ? 'you' : whom(ctx, from)}: the open road and the points went with the city. Retake it to get them back${from === ctx.me ? ' (−' + e.vp + ' VP)' : ''}`, { ...opts, tone: 'bad' });
   return line('victory', `${who(ctx, taker)} took the Yam Relay Station${where}: every empire may now cross ${possessiveOf(who(ctx, taker))} land at Peace`, { ...opts, tone: 'neutral' });
+}
+
+/**
+ * Rome's Colonia Victrix and Egypt's Royal Tomb: held goals in a city. A capture is one line from
+ * the new holder's gain, with the old holder's loss folded in (see `formatEvents`); a founding is
+ * the Colonia's first line (the tomb's `TombRaised` folds into this one); a loss with no new
+ * holder is its city razed.
+ */
+function goalCityGoalLine(e: GoalEvent, ctx: ReportContext): ReportLine {
+  const kind = goalCityKindOf(e.faction)!;
+  const title = GOAL_CITY_TITLE[kind];
+  const mine = (p: PlayerId) => p === ctx.me || ctx.team.includes(p);
+  const ours = ctx.playerFaction?.(ctx.me) === e.faction;
+  // "your Colonia Victrix" for Rome itself, "Rome's Colonia Victrix" for everyone else.
+  const whose = ours ? `your ${title}` : `${possessiveOf(e.faction)} ${title}`;
+  const events = ctx.events ?? [];
+  const base = { weight: 2, icon: GOAL_CITY_ICON[kind] } as const;
+  if (e.type === 'FactionGoalLost') {
+    const razed = events.find((x): x is Extract<Event, { type: 'CityRazed' }> => x.type === 'CityRazed' && x.from === e.player);
+    const lost = mine(e.player) ? ` (−${e.vp} VP)` : '';
+    const again = ours ? (kind === 'colonia' ? 'Found another' : 'Build another') : kind === 'colonia' ? 'Rome may found another' : 'Egypt may build another';
+    const text = razed
+      ? `${cap(whose)} is gone: ${ctx.cityName(razed.city)} was razed. ${again}`
+      : `${who(ctx, e.player)} lost ${whose}: nobody scores until its city is retaken`;
+    return line('victory', `${text}${lost}`, { ...base, players: [e.player], ...(razed ? { at: razed.at } : {}), tone: mine(e.player) ? 'bad' : 'neutral' });
+  }
+  const taker = e.player;
+  const gain = mine(taker) ? ` (+${e.vp} VP while you hold it)` : '';
+  const captured = events.find((x): x is Extract<Event, { type: 'CityCaptured' }> => x.type === 'CityCaptured' && x.to === taker);
+  if (!captured) {
+    const founded = kind === 'colonia' ? events.find((x): x is Extract<Event, { type: 'CityFounded' }> => x.type === 'CityFounded' && x.owner === taker) : undefined;
+    const raised = kind === 'tomb' ? events.find((x): x is Extract<Event, { type: 'TombRaised' }> => x.type === 'TombRaised' && x.player === taker) : undefined;
+    const name = founded?.name ?? raised?.name;
+    const where = founded?.at ?? raised?.at;
+    const text = kind === 'colonia'
+      ? (taker === ctx.me ? `You founded ${name ?? 'a city'}: it is your Colonia Victrix${gain}` : `${who(ctx, taker)} founded its Colonia Victrix${name ? ` at ${name}` : ''}: ${e.vp} VP to whoever holds it`)
+      : (taker === ctx.me ? `The Royal Tomb stands in ${name ?? 'your capital'}: your cities build and grow again${gain}` : `${possessiveOf(who(ctx, taker))} Royal Tomb stands${name ? ` in ${name}` : ''}: ${e.vp} VP to whoever holds it`);
+    return line('victory', text, { ...base, players: [taker], ...(where ? { at: where } : {}), tone: mine(taker) ? 'good' : 'neutral' });
+  }
+  const from = captured.from;
+  const city = ctx.cityName(captured.city);
+  const opts = { ...base, players: [taker, from], at: ctx.cityPos(captured.city) };
+  if (mine(taker)) {
+    const text = ours && taker === ctx.me ? `You retook your ${title}, ${city}` : `${who(ctx, taker)} took ${whose}, ${city}, from ${whom(ctx, from)}`;
+    return line('victory', `${text}${gain}`, { ...opts, tone: 'good' });
+  }
+  if (mine(from)) return line('victory', `${who(ctx, taker)} took ${whose}, ${city}: retake the city to score again${from === ctx.me ? ` (−${e.vp} VP)` : ''}`, { ...opts, tone: 'bad' });
+  return line('victory', `${who(ctx, taker)} took ${whose}, ${city}, from ${whom(ctx, from)}: ${who(ctx, taker)} now scores the ${e.vp} VP`, { ...opts, tone: 'neutral' });
 }
 
 /** Format one event, with its report icon. UnitMoved steps are collapsed by `formatEvents`. */
@@ -1263,6 +1312,7 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
         players: [e.player], weight: 2, tone: mine(e.player) ? 'bad' : 'good',
       });
     case 'FactionGoalCompleted':
+      if (goalCityKindOf(e.faction)) return goalCityGoalLine(e, ctx);
       if (e.faction === 'Byzantium') return heirGoalLine(e, ctx);
       if (e.faction === 'Mongols') return hallGoalLine(e, ctx);
       if (e.faction === 'India') {
@@ -1280,6 +1330,7 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
         tone: toneFor(e.player),
       });
     case 'FactionGoalLost':
+      if (goalCityKindOf(e.faction)) return goalCityGoalLine(e, ctx);
       if (e.faction === 'Byzantium') return heirGoalLine(e, ctx);
       if (e.faction === 'Mongols') return hallGoalLine(e, ctx);
       if (e.faction === 'India') return line('victory', `${who(ctx, e.player)} lost the Imperial Diwan (−${e.vp} VP): retake its city to score again`, {
@@ -1310,6 +1361,25 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
         details: [cities],
       });
     }
+    case 'TombStarted': {
+      const left = Math.max(0, RULES.tombTurns - e.turns);
+      return line('victory', e.player === ctx.me
+        ? `You began work on the Royal Tomb: no city builds or grows while it goes on. ${turnsWord(left)} of work left`
+        : `${who(ctx, e.player)} is building its Royal Tomb: its cities do not build or grow. ${turnsWord(left)} of work left`, {
+        players: [e.player], weight: 2, tone: 'neutral', icon: 'goal-royal-tomb',
+      });
+    }
+    case 'TombPaused':
+      return line('victory', e.player === ctx.me
+        ? `You paused the Royal Tomb at ${e.turns} of ${RULES.tombTurns} turns: your cities build and grow again. The count is kept`
+        : `${who(ctx, e.player)} paused its Royal Tomb at ${e.turns} of ${RULES.tombTurns} turns: its cities build and grow again`, {
+        players: [e.player], weight: 2, tone: 'neutral', icon: 'goal-royal-tomb',
+      });
+    case 'TombRaised':
+      // The goal's own line (`FactionGoalCompleted`) names the city and the points; this one stands alone only without it.
+      return line('victory', e.player === ctx.me ? `The Royal Tomb stands in ${e.name}: your cities build and grow again` : `${possessiveOf(who(ctx, e.player))} Royal Tomb stands in ${e.name}`, {
+        at: e.at, players: [e.player], weight: 2, tone: mine(e.player) ? 'good' : 'neutral', icon: 'goal-royal-tomb',
+      });
     case 'SakokuClosed': {
       const turns = sakokuTarget();
       return line('victory', mine(e.player)
@@ -1598,7 +1668,9 @@ export function formatEvents(events: Event[], ctx: ReportContext): ReportLine[] 
     // A hand-over of the Imperial Diwan is one line, from the new holder's gain.
     // The birth line says it all: the first completion of Byzantium's goal is the same event.
     if (e.type === 'FactionGoalCompleted' && e.faction === 'Byzantium' && !heirLoss(events) && events.some((x) => x.type === 'HeirBorn' && x.owner === e.player)) continue;
-    if (e.type === 'FactionGoalLost' && (e.faction === 'Byzantium' || e.faction === 'Mongols' || e.faction === 'India') && events.some((x) => x.type === 'FactionGoalCompleted' && x.faction === e.faction)) continue;
+    // The tomb's goal line says it stands, so its TombRaised line folds into it.
+    if (e.type === 'TombRaised' && events.some((x) => x.type === 'FactionGoalCompleted' && x.faction === 'Egypt' && x.player === e.player)) continue;
+    if (e.type === 'FactionGoalLost' && (e.faction === 'Byzantium' || e.faction === 'Mongols' || e.faction === 'India' || e.faction === 'Rome' || e.faction === 'Egypt') && events.some((x) => x.type === 'FactionGoalCompleted' && x.faction === e.faction)) continue;
     if (e.type === 'FactionGoalLost' && events.some((x) => x.type === 'SakokuReopened' && x.player === e.player)) continue;
     // The Age line tells who entered the era first, so the first empire's own entry line folds into it.
     if (e.type === 'EraEntered' && e.first && events.some((x) => x.type === 'AgeBegan' && x.era === e.era)) continue;

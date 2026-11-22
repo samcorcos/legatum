@@ -164,6 +164,8 @@ impl ViewBuilder {
                 cities: 0,
                 faction_goal_done: true,
                 sakoku_turns: None,
+                tomb_work: false,
+                tomb_turns: 0,
                 goal_rule: None,
                 era: 1,
                 gold: 0,
@@ -181,6 +183,7 @@ impl ViewBuilder {
             view: PlayerView {
                 army_breakdown: Vec::new(),
                 rule_experiments: legatum_core::experiments::RuleExperiments::default(),
+                ai_alliances: false,
                 // Existing tactical fixtures explicitly model the legacy all-war rules.
                 diplomacy: legatum_core::diplomacy::DiplomacyView {
                     replies: Vec::new(),
@@ -258,6 +261,9 @@ impl ViewBuilder {
                 actions: Default::default(),
                 courier_halls: Vec::new(),
                 imperial_diwans: Vec::new(),
+                colonias: Vec::new(),
+                royal_tombs: Vec::new(),
+                tomb_sites: Vec::new(),
                 aircraft: Vec::new(),
                 air_sightings: Vec::new(),
                 air_contacts: Vec::new(),
@@ -910,6 +916,13 @@ pub fn assert_valid(view: &PlayerView, orders: &[Order]) {
                             "Sakoku ordered while unavailable"
                         )
                     }
+                    Action::Tomb { build } => assert!(
+                        view.actions
+                            .tomb
+                            .as_ref()
+                            .is_some_and(|t| t.working != *build && t.blocker.is_none()),
+                        "Royal tomb ordered while unavailable"
+                    ),
                     Action::Broadcast => assert!(
                         view.actions
                             .broadcast

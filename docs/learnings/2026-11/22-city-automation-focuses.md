@@ -1,4 +1,4 @@
-## 2026-11-22: City automation focuses: Military, Economy and project streams (rules 54)
+## 2026-11-22: City automation focuses: Military, Economy and project streams (rules 55)
 
 - **Balanced automation was the AI's own `choose_item`**, so a Balanced city built whatever the Hard AI would, outdated units included; and `composition::obsolete` never marks the melee line outdated (it assumes the upgrade waits on Iron), which is how late-game Spearmen survived. Automation no longer calls `choose_item`: Military uses `composition::best_buildable_in_line` (the best unit of a line buildable now, resources included), which the hill-climb thread will reuse for the AI's own cities.
 - **A favoured option floored at value 1 scores 0** in `automated_choice`'s integer score (`value * 60 / (turns + 60)`), so ties fell to enum order and a Cataphract beat a Knight. Military now ranks by `composition::quality` (unit generation) first.

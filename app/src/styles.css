@@ -135,11 +135,6 @@ p {
   flex: none;
   color: var(--accent);
 }
-.deco-rule {
-  display: none;
-  flex: none;
-  color: var(--accent);
-}
 .fan {
   display: none;
   margin: 0 auto 4px;
@@ -516,27 +511,9 @@ p {
   justify-content: center;
   line-height: 0;
 }
-.title-kicker {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  margin-top: 28px;
-  font: 600 13px/1 var(--sans);
-  letter-spacing: 0.42em;
-  text-transform: uppercase;
-  color: var(--accent);
-}
-.title-kicker .deco-rule {
-  display: block;
-}
-.title-tag {
-  margin: 16px 0 40px;
-  font: italic 400 24px/1.2 var(--display);
-  color: var(--ink);
-}
 /* The menu sits on a thin paper slip (the double-rule frame) so it reads over the painting. */
 .title-menu {
+  margin-top: 40px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -718,12 +695,8 @@ dialog.settings-modal::backdrop {
     width: 396px !important; /* the Wordmark component sizes itself inline */
     height: 84px !important;
   }
-  .title-kicker {
-    margin-top: 20px;
-  }
-  .title-tag {
-    margin: 12px 0 24px;
-    font-size: 21px;
+  .title-menu {
+    margin-top: 28px;
   }
   .title-actions .btn.big.primary {
     min-height: 68px;
@@ -741,14 +714,11 @@ dialog.settings-modal::backdrop {
 /* Laptop heights up to 760px: the Scenarios entry added a row, so tighten the menu one step so
    every entry fits inside the slip. */
 @media (max-height: 760px) {
-  .title-kicker { margin-top: 12px; }
-  .title-tag { margin: 6px 0 14px; }
+  .title-menu { margin-top: 20px; }
   .title-settings { margin-top: 6px; padding-top: 6px; }
 }
-/* Short windows: the tagline and some button padding give their room to a message, so the menu still ends above the footer. */
+/* Short windows: some button padding gives its room to a message, so the menu still ends above the footer. */
 @media (max-height: 760px) {
-  .title-screen:has(.title-notice) .title-tag { display: none; }
-  .title-screen:has(.title-notice) .title-kicker { margin-bottom: 14px; }
   .title-screen:has(.title-notice) .title-notice { margin-bottom: 10px; padding: 8px 12px; font-size: 13px; line-height: 1.35; }
   .title-screen:has(.title-notice) .title-actions .btn.big:not(.primary) { padding-top: 3px; padding-bottom: 1px; }
 }
@@ -759,19 +729,13 @@ dialog.settings-modal::backdrop {
     width: 300px !important;
     height: 64px !important;
   }
-  .title-kicker { margin-top: 12px; font-size: 12px; }
-  .title-tag { margin: 8px 0 14px; font-size: 18px; }
-  .title-menu { padding: 14px 24px 8px; }
+  .title-menu { margin-top: 16px; padding: 14px 24px 8px; }
+  /* With a game open, the menu gives up that gap so the online Multiplayer menu clears the footer (UI review of PR #104). */
+  .title-screen:has(.title-resume) .title-menu { margin-top: 0; }
   .title-actions .btn.big.primary { min-height: 60px; margin-bottom: 6px; }
   .title-actions .btn.big:not(.primary) { padding: 6px 16px 4px; }
   .title-settings { margin-top: 4px; padding-top: 4px; }
   .title-foot { bottom: 30px; }
-  /* With a game open, Resume adds a row and the slip ran into the footer at 1000x600 (UX review,
-     2026-11-21): the tagline gives its room, as it does for a message. */
-  .title-screen:has(.title-resume) .title-tag { display: none; }
-  /* ...and its kicker line too: the Multiplayer menu (name box, three online buttons) with Resume still ended 2 px
-     below the footer, and with a notice a row more (UI review of PR #21, 2026-11-22). */
-  .title-screen:has(.title-resume) .title-kicker { display: none; }
   .title-actions .btn.big.primary.title-resume { min-height: 52px; margin-bottom: 2px; }
 }
 @keyframes rise {
@@ -888,6 +852,9 @@ dialog.settings-modal::backdrop {
 .map-canvas.is-peaceful {
   cursor: pointer;
 }
+.map-canvas.is-pinging {
+  cursor: crosshair;
+}
 .peace-hint {
   max-width: 260px;
   padding: 10px 14px 8px;
@@ -1000,6 +967,10 @@ dialog.settings-modal::backdrop {
   font: 600 16px/1 var(--num-font);
 }
 .gold-hoard-readout { font: 600 9.5px/1.1 var(--sans); color: var(--ink-2); white-space: nowrap; }
+/* Egypt's tomb work while it is on: every city is stopped, so the count stays in the top bar. */
+.tomb-readout { display: inline-flex; align-items: center; gap: 5px; color: var(--ink); font: 600 12px/1.1 var(--sans); white-space: nowrap; }
+.tomb-readout svg { color: var(--gilt, #8f6f1c); }
+.tomb-readout .tomb-short { display: none; }
 .faction-goal-progress { display: grid; gap: 3px; padding: 4px 8px; border-left: 3px solid var(--gilt); background: color-mix(in srgb, var(--gilt) 10%, var(--panel)); font: 600 11px/1.25 var(--sans); color: var(--ink); cursor: help; }
 .faction-goal-meter { display: block; height: 4px; overflow: hidden; border-radius: 2px; background: color-mix(in srgb, var(--gilt) 20%, var(--panel)); box-shadow: inset 0 0 0 1px var(--rule); }
 .faction-goal-meter i { display: block; height: 100%; background: var(--gilt); }
@@ -1042,6 +1013,11 @@ dialog.settings-modal::backdrop {
   .topbar[data-compact~='brand'] .brand { display: none; }
   /* The Switzerland' hoard readout is also in the race row and the Gold tooltip. */
   .topbar[data-compact~='hoard'] .gold-hoard-readout { display: none; }
+  /* Egypt's tomb readout: icon and "6/15" with a thin progress underline, early, so the brand and Gold income stay. */
+  .topbar[data-compact~='tomb'] .tomb-readout .tomb-long { display: none; }
+  .topbar[data-compact~='tomb'] .tomb-readout .tomb-short { display: inline; font: 600 16px/1 var(--num-font); }
+  .topbar[data-compact~='tomb'] .tomb-readout { position: relative; padding-bottom: 4px; }
+  .topbar[data-compact~='tomb'] .tomb-readout::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: linear-gradient(to right, var(--gilt, #8f6f1c) var(--tomb-done, 0%), var(--rule-2, #cbbd9c) var(--tomb-done, 0%)); }
   /* Keep painted art legible; narrow chips shed figures before art. */
   .topbar[data-compact~='art'] .supply-stat .supply-art { width: 24px; height: 24px; }
   .topbar[data-compact~='erachip'] .supply-stat b { font-size: 0; }
@@ -1440,6 +1416,9 @@ dialog.settings-modal::backdrop {
 .up-status.bad {
   color: var(--bad);
 }
+/* Rome: a veteran that founds the Colonia Victrix wears the laurel line under his level. */
+.up-colonia { display: flex; align-items: center; gap: 5px; margin: 3px 0 0; font: 600 11.5px/1.3 var(--sans); color: var(--ink); }
+.up-colonia svg { flex: 0 0 auto; color: #8f6f1c; }
 .up-status-why {
   grid-column: 2;
   margin: 2px 0 0;
@@ -1776,6 +1755,8 @@ dialog.settings-modal::backdrop {
 }
 .capital-note .capital-star { flex: none; margin-top: 2px; }
 .city-panel > .cp-capital { padding: 4px 14px; }
+.cp-goal-city { display: flex; align-items: flex-start; gap: 6px; font: 600 12px/1.3 var(--sans); color: var(--ink); }
+.cp-goal-city svg { flex: 0 0 auto; color: var(--gilt, #8f6f1c); margin-top: 1px; }
 .cp-kicker .capital-star { display: block; }
 /* Every other city's kicker: a plain dot, so the star only ever means an original capital. */
 .kicker-dot { width: 4px; height: 4px; border-radius: 50%; background: currentColor; opacity: 0.7; flex: none; }
@@ -2800,6 +2781,8 @@ dialog.settings-modal::backdrop {
   text-transform: uppercase;
   color: var(--primary-sub);
 }
+/* What Return does, when it is not the title's own act ("Select the veteran"). */
+.cta-act { display: flex; align-items: center; justify-content: center; gap: 6px; font: 600 10px/1.2 var(--sans); letter-spacing: 0.18em; text-transform: uppercase; color: var(--primary-sub); }
 .cta-production {
   height: auto;
   min-height: 64px;
@@ -2979,6 +2962,7 @@ dialog.settings-modal::backdrop {
 .tilecard-row.ruin {
   color: var(--accent);
 }
+.tilecard-goal-city svg { color: var(--gilt, #8f6f1c); vertical-align: -2px; }
 .tilecard-row.good {
   color: var(--good);
   font-weight: 600;
@@ -4204,6 +4188,8 @@ dialog.gameover::backdrop {
 .city-panel .cp-now-name { font-size: 20px; }
 .cp-now-line { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; min-width: 0; }
 .cp-now-turns { flex-shrink: 0; white-space: nowrap; }
+/* Egypt's Royal Tomb: "12/50 stored · waits for the tomb" may wrap rather than clip. */
+.cp-now-turns.wrap { flex-shrink: 1; white-space: normal; min-width: 0; }
 .city-panel .cp-now-line .cp-now-name { font-size: 16px; }
 /* The sticky head is a name and three numbers on one line at every window height (1440x900 used to wrap Health onto a second
    line and spend 110 px; astra full review 2026-10-31, section 3). */

@@ -17,6 +17,7 @@ import { empireOfPlayer, livingPlayers } from './empires';
 import { playerColor, playerInk } from './theme';
 import { buildTracks, teamHold, type TeamHold } from './vp';
 import { sakokuLine, sakokuStatus, type SakokuStatus } from './sakoku';
+import { goalCities, GOAL_CITY_TITLE, goalCityKindOf, tombPublicLine, tombStatus, type TombStatus } from './goalCities';
 import { aiLevel } from './aiLevel';
 
 type SourceKind = 'work' | 'goal' | 'era' | 'capital';
@@ -116,6 +117,8 @@ export interface VpEmpire {
   isMine: boolean;
   /** Sakoku: this empire has closed the country (public), with its countdown. */
   sakoku?: SakokuStatus | null;
+  /** Egypt's Royal Tomb work (public): under way or paused, with its count; null when none is counted. */
+  tomb?: TombStatus | null;
   /** Its current Gold, public to every player. */
   gold: number;
   /** Its original capital still stands in its team's hands (public); the last team that holds one wins. */
@@ -288,7 +291,8 @@ export function buildVpModel(view: PlayerView): VpModel {
     const s: Source = {
       id: goalId(p.id), kind: 'goal', name: g.name, icon: g.icon, vp: factionGoalVp(p.faction),
       rule: factionGoalRule(p.faction), detail: g.detail(),
-      terms: `${FACTION_INFO[p.faction].name} only · ${held ? 'Held goal' : factionGoalTerms(p.faction)}`,
+      terms: p.faction === 'Rome' ? 'Only Rome can found it' : p.faction === 'Egypt' ? 'Only Egypt can build it'
+        : `${FACTION_INFO[p.faction].name} only · ${held ? 'Held goal' : factionGoalTerms(p.faction)}`,
       live: g.live || held, owners, own: own(owners), only: p.id, faction: p.faction, facts: [], unit: '', held: held || undefined,
     };
     if (held) {
@@ -298,7 +302,11 @@ export function buildVpModel(view: PlayerView): VpModel {
     }
     const closed = sakokuStatus(p);
     if (p.id === me) s.progress = ownGoalProgress(view);
-    else if (p.goal_rule === 'Sakoku') {
+    else if (p.goal_rule === 'Tomb' && !owners.length) {
+      // The work is public: whether it is on and its count are everyone's facts (core `PlayerPublic.tomb_work`, `tomb_turns`).
+      const st = tombStatus(p);
+      s.facts = [{ id: p.id, value: st?.turns ?? 0, label: st ? tombPublicLine(st) : 'No work on the Royal Tomb yet' }];
+    } else if (p.goal_rule === 'Sakoku') {
       // The vow is public: the closed state, the countdown and whether the VP holds are everyone's facts.
       s.facts = [{ id: p.id, value: closed?.turns ?? 0, label: closed ? sakokuLine(closed) : 'Country open' }];
       s.privacy = 'Lost if it reopens the country';
@@ -318,7 +326,7 @@ export function buildVpModel(view: PlayerView): VpModel {
     const live = [...works, ...capitalSources, ...goals].filter((s) => s.owners.includes(p.id) && s.live);
     return {
       id: p.id, team: p.team, name: nameOf(p.id), faction: p.faction, aiLevel: aiLevel(p), color: playerColor(p.id), ink: playerInk(p.id),
-      isMe: p.id === me, isMine: team.has(p.id), power: p.power ?? 0, lead: p.lead_percent ?? 0, decadence: p.decadence_percent ?? 0, gold: p.gold ?? 0, capitalStands: p.capital_stands ?? true, sakoku: sakokuStatus(p), held: [...kept, ...live], goal,
+      isMe: p.id === me, isMine: team.has(p.id), power: p.power ?? 0, lead: p.lead_percent ?? 0, decadence: p.decadence_percent ?? 0, gold: p.gold ?? 0, capitalStands: p.capital_stands ?? true, sakoku: sakokuStatus(p), tomb: p.goal_rule === 'Tomb' ? tombStatus(p) : null, held: [...kept, ...live], goal,
     };
   });
 
@@ -379,6 +387,13 @@ function heldPlace(view: PlayerView, of: PlayerId, faction: Faction): { pos: Hex
     const city = diwan && view.cities.find((c) => c.id === diwan.city);
     return city ? { pos: city.pos, seen: city.visible, city: city.name } : undefined;
   }
+  const kind = goalCityKindOf(faction);
+  if (kind) {
+    // Rome's Colonia and Egypt's tomb are public with their tile and name, through fog and on unexplored land.
+    const g = goalCities(view).find((x) => x.kind === kind && x.of === of);
+    const city = g && view.cities.find((c) => c.id === g.city);
+    return g ? { pos: g.at, seen: !!city?.visible, city: g.name } : undefined;
+  }
   return undefined;
 }
 
@@ -393,6 +408,12 @@ function heldHoldNote(view: PlayerView, faction: Faction, holders: PlayerId[], a
   if (faction === 'India') {
     if (!holders.length) return 'Nobody holds the Imperial Diwan yet';
     return `${names} ${verb} the Imperial Diwan${at?.city ? ` in ${at.city}` : ''}`;
+  }
+  const kind = goalCityKindOf(faction);
+  if (kind) {
+    const title = GOAL_CITY_TITLE[kind];
+    if (!holders.length) return `No ${title} stands.`;
+    return `${names} ${verb} the ${title}${at?.city ? ` in ${at.city}` : ''}.`;
   }
   const who = holders.length ? `${names} ${verb} the Heir` : at?.barbarian ? 'Barbarians hold the Heir: nobody scores until the camp is cleared' : 'Nobody holds the Heir now';
   return `${who}${at ? (at.seen ? ' · in view' : ' · out of sight') : ''}`;

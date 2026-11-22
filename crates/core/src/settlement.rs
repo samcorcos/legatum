@@ -347,6 +347,9 @@ pub struct SettlementSite {
     pub band: SiteBand,
     /// A visible foreign border makes an unseen city within spacing range possible.
     pub border_risk: bool,
+    /// Rome only: this founder, founding here, founds the Colonia Victrix (`goals`).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub colonia: bool,
     /// What the quality is made of, for the hover (explained sites only).
     pub resources: Vec<SiteResource>,
     pub wonders: Vec<SiteWonder>,
@@ -871,13 +874,21 @@ fn candidates(
 
 /// The top three recommendable sites: highest band first, so a marker never sits on a lower band
 /// than a later one, then the travel-adjusted score (nearer and safer first), then tile order.
+/// For a Colonia Victrix founder with any known Colonia site, only those sites rank (a Colonia
+/// site sits by a rival border by definition, so the border-risk filter does not apply to them).
+/// UI ranking only: `score` and `quality`, which the AI reads, are unchanged.
 fn rank_sites(view: &PlayerView, reserved: &[Hex], sites: &mut [SettlementSite]) {
+    let colonia_only = sites.iter().any(|s| s.colonia);
     let mut ranked: Vec<_> = sites
         .iter()
         .enumerate()
         .filter(|(_, s)| {
             s.score > 0
-                && !s.border_risk
+                && (if colonia_only {
+                    s.colonia
+                } else {
+                    !s.border_risk
+                })
                 && s.threats == 0
                 && s.travel_turns.is_some_and(|t| t <= RECOMMEND_TRAVEL_TURNS)
                 && !reserved.iter().any(|h| {
@@ -908,6 +919,9 @@ pub struct SettlementScore {
     pub quality: i32,
     pub band: SiteBand,
     pub border_risk: bool,
+    /// Rome only: this founder, founding here, founds the Colonia Victrix (`goals`).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub colonia: bool,
     pub rank: Option<u8>,
     pub travel_turns: Option<i32>,
 }
@@ -928,6 +942,7 @@ pub fn settlement_scores(
             quality: s.quality,
             band: s.band,
             border_risk: s.border_risk,
+            colonia: s.colonia,
             rank: s.rank,
             travel_turns: s.travel_turns,
         })
@@ -972,6 +987,7 @@ fn analyze_sites(
     if unit.owner != view.me || (unit.kind != UnitKind::Settler && !roman_founder) {
         return Vec::new();
     }
+    let colonia_founder = crate::goals::known_colonia_founder(view, unit);
     let own: Vec<_> = view.cities.iter().filter(|c| c.owner == view.me).collect();
     let capital = own.iter().find(|c| c.is_capital);
     let travel = travel_field(view, unit, true, i32::MAX);
@@ -1134,6 +1150,7 @@ fn analyze_sites(
                 quality,
                 band: SiteBand::of(quality),
                 border_risk: facts.risk,
+                colonia: colonia_founder && crate::goals::known_colonia_site(view, pos),
                 resources: if explain { site_resources(view, pos) } else { Vec::new() },
                 wonders: if explain { site_wonders_near(view, pos) } else { Vec::new() },
                 breakdown,

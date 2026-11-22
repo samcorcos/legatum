@@ -32,6 +32,8 @@ export default defineConfig({
     __BUILD_DESCRIBE__: JSON.stringify(describe),
     __APP_VERSION__: JSON.stringify(pkg.version),
     __RULES_VERSION__: JSON.stringify(rulesVersion),
+    // The build's UTC time, for the title screen's "Last updated" line (src/buildTime.ts).
+    __BUILD_TIME__: JSON.stringify(process.env.LEGATUM_BUILD_TIME || new Date().toISOString()),
   },
   // A relative base, so the build works from any folder of a static host.
   base: './',

@@ -2,8 +2,9 @@ import type { SettlementSite } from '../types';
 import { WONDER_INFO, WONDER_PERCENT, wonderYieldWord } from '../wonders';
 import { useState } from 'react';
 import type { Yields } from '../types';
-import { YieldIcon, signed } from '../ui/bits';
+import { Icon, YieldIcon, signed } from '../ui/bits';
 import { Amounts } from '../ui/Amounts';
+import { COLONIA_SITE_LEAD } from '../goalCities';
 import { usePlacedCard, type CardAnchor } from '../ui/usePlacedCard';
 import { bandRange, bandTitle, qualityLines, qualityParts, settleSummary, siteVerdict, SETTLE_BANDS } from './settleAdvice';
 
@@ -20,6 +21,8 @@ function NearbyWonders({ site }: { site: SettlementSite }) {
 function SettlementSummary({ site, faction }: { site: SettlementSite; faction?: string }) {
   const verdict = siteVerdict(site, faction);
   return <>
+    {/* Rome's goal leads the card: a city founded here is the Colonia Victrix. */}
+    {site.colonia && <p className="settlement-colonia" data-testid="settle-colonia"><Icon name="goal-colonia" size={16} /><span><Amounts text={COLONIA_SITE_LEAD} /></span></p>}
     <p className="settlement-summary" data-settle-band={site.band} title={bandTitle(site)}><i className={`settle-swatch band-${site.band.toLowerCase()}`} aria-hidden="true" /><span><b>{verdict.head}:</b> {verdict.rest}</span></p>
     <ul className="settlement-reasons" aria-label="Key numbers for this spot">{qualityLines(site).map((line) => <li key={line.id} data-settle-line={line.id}><Amounts text={line.text} /></li>)}</ul>
     <NearbyWonders site={site} />

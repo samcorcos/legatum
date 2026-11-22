@@ -1,0 +1,49 @@
+/* A quiet strip at the foot of the right sidebar: it never competes with the turn's primary button above it. */
+.ping-row {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  background: var(--tip-bg);
+  border: var(--slip-border);
+}
+/* The quiet rule border, not the heavier ink box of the neighbouring controls. */
+.btn.ping-btn {
+  border: 1px solid var(--rule-2);
+}
+/* Armed: the shared ink "on" fill (the same as a selected segment), never the accent red. */
+.btn.ping-btn.on {
+  color: var(--primary-ink);
+  background: var(--primary-bg);
+  border-color: var(--primary-bg);
+}
+.btn.ping-btn.on .kbd {
+  color: var(--primary-sub);
+  background: transparent;
+  border-color: var(--primary-rule);
+}
+.ping-hint {
+  flex: 1 1 100%;
+  order: 3;
+  font-size: 12px;
+  line-height: 1.3;
+  color: var(--ink-2);
+}
+/* A teammate's ping is an event: named, outlined so it looks like a button before hover, and in the ink rather than quiet. */
+.btn.ping-go {
+  flex: 1 1 100%;
+  order: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: normal;
+  font-size: 12px;
+  text-transform: none;
+  letter-spacing: 0;
+  text-align: left;
+  border: 1.5px solid var(--ink);
+  background: var(--panel);
+}

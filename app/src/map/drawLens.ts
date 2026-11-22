@@ -5,7 +5,7 @@ import type { Camera } from './render';
 import type { Rect } from './compass';
 import { SETTLE_BANDS, type SiteBand } from './settleAdvice';
 import { MAP_STYLES } from './style';
-import { FONTS } from './sprites';
+import { CAPITAL_GILT, FONTS } from './sprites';
 import { yieldIconSize } from './yieldIcons';
 
 /** Each band's colour and how much of it covers the ground, from the shared tokens (the legend reads the same ones). */
@@ -39,13 +39,15 @@ export function drawLens(ctx: CanvasRenderingContext2D, tiles: LensTile[], cam: 
   const r = HEX_SIZE * cam.zoom;
   const metrics = lensMetrics(r);
   ctx.save();
+  // The house VP gilt (the capital seal's ring).
+  const COLONIA_GILT = CAPITAL_GILT;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.font = `700 ${metrics.font}px ${FONTS[look].sans}`;
   const L = MAP_STYLES[look].lens;
   const { paper, ink } = L;
   const washes = pass === 'tint' && tiles.some((tile) => tile.band) ? settleColors(look) : null;
-  const badges: { rank: number; x: number; y: number; below: number }[] = [];
+  const badges: { rank: number; x: number; y: number; below: number; colonia?: boolean }[] = [];
   for (const tile of tiles) {
     // Yield tiles have no tint or chip: yieldIcons.ts draws their icon clusters.
     if (tile.yields) continue;
@@ -69,6 +71,14 @@ export function drawLens(ctx: CanvasRenderingContext2D, tiles: LensTile[], cam: 
       }
       // The top three: an ink line with a paper edge outside it, so the ring shows on the deepest green too.
       if (tile.rank) { ctx.strokeStyle = paper; ctx.lineWidth = MAP_STYLES[look].pen.line + 2.4; ctx.stroke(); ctx.strokeStyle = ink; ctx.lineWidth = MAP_STYLES[look].pen.line; ctx.stroke(); }
+      // Rome's Colonia Victrix: a site where the selected veteran founds it wears a gilt ring inside the hex (the legend names it).
+      if (tile.colonia) {
+        ctx.beginPath(); hexPath(ctx, x, y, r * 0.74);
+        ctx.globalAlpha = tile.faded ? 0.75 : 1;
+        ctx.strokeStyle = ink; ctx.lineWidth = Math.max(3.6, r * 0.14) + 1.6; ctx.stroke();
+        ctx.strokeStyle = COLONIA_GILT; ctx.lineWidth = Math.max(3.6, r * 0.14); ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
       continue;
     }
     // Pure tint treatments carry no chip.
@@ -106,14 +116,15 @@ export function drawLens(ctx: CanvasRenderingContext2D, tiles: LensTile[], cam: 
       const medallion = medallionAbove(tile.index);
       const above = medallion ? Math.max(r * (onUnit ? 0.9 : 0.8), medallion + 12) : r * (onUnit ? 0.9 : 0.8);
       // With the Yields overlay on, the badge keeps below its tile, past the tile's own icons and clear of the next row's, rather than over the icons of the tile above.
-      badges.push({ rank: tile.rank, x, y: center - above, below: center + Math.max(r * 0.8 + (opts.yieldsOn ? 6 : 0), (unitBottom ?? 0) + 11) });
+      badges.push({ rank: tile.rank, colonia: tile.colonia, x, y: center - above, below: center + Math.max(r * 0.8 + (opts.yieldsOn ? 6 : 0), (unitBottom ?? 0) + 11) });
     }
   }
   // A badge keeps off the tokens too, where it can: the units on a recommended site are what a player needs to see.
   const tokenRects: Rect[] = badges.length ? [...unitBottoms].map(([index, bottom]) => ({ x: (centerX(index, mapWidth) - cam.x) * cam.zoom + width / 2 - r * 0.55, y: (centerY(index, mapWidth) - cam.y) * cam.zoom + height / 2 - r * 0.6, w: r * 1.1, h: bottom + r * 0.6 })) : [];
   const placed: { x: number; y: number; w: number }[] = [];
   for (const badge of badges.sort((a, b) => a.rank - b.rank)) {
-    const w = badge.rank === 1 ? (metrics.compact ? 50 : 68) : 28;
+    // A Colonia founder's markers name the Colonia and wear the ring's gilt.
+    const w = badge.rank === 1 ? (badge.colonia ? (metrics.compact ? 86 : 116) : (metrics.compact ? 50 : 68)) : 28;
     const clampX = (x: number) => Math.max(w / 2 + 4, Math.min(width - w / 2 - 4, x));
     const clampY = (y: number) => Math.max(14, Math.min(height - 14, y));
     // A tight cluster can require a side step as well as a vertical one. Keep the rank order,
@@ -136,15 +147,16 @@ export function drawLens(ctx: CanvasRenderingContext2D, tiles: LensTile[], cam: 
     if (!position) continue;
     const { x, y } = position;
     // At overview zoom nearby recommendations need a short leader to stay distinct.
-    ctx.fillStyle = ctx.strokeStyle = L.badge;
+    ctx.fillStyle = ctx.strokeStyle = badge.colonia ? COLONIA_GILT : L.badge;
     const anchor = Math.abs(y - badge.below) < Math.abs(y - badge.y) ? badge.below : badge.y;
     if (x !== badge.x || y !== anchor) {
       ctx.beginPath(); ctx.moveTo(badge.x, anchor); ctx.lineTo(x, y); ctx.lineWidth = 1.5; ctx.stroke();
     }
     ctx.fillRect(x - w / 2, y - 10, w, 20);
-    ctx.fillStyle = L.badgeText;
+    if (badge.colonia) { ctx.strokeStyle = ink; ctx.lineWidth = 1; ctx.strokeRect(x - w / 2 + 0.5, y - 9.5, w - 1, 19); }
+    ctx.fillStyle = badge.colonia ? ink : L.badgeText;
     ctx.font = `700 ${metrics.compact ? 9 : 12}px ${FONTS[look].sans}`;
-    ctx.fillText(badge.rank === 1 ? 'Best spot' : `#${badge.rank}`, x, y);
+    ctx.fillText(badge.rank === 1 ? (badge.colonia ? 'Best Colonia site' : 'Best spot') : `#${badge.rank}`, x, y);
     placed.push({ x, y, w });
   }
   ctx.restore();

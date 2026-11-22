@@ -18,7 +18,11 @@ export function usePlacedCard<T extends HTMLElement>(anchor: CardAnchor | undefi
     const el = ref.current;
     const parent = el?.offsetParent as HTMLElement | null;
     if (!el || !parent) return;
-    const area = { left: 0, top: 56, right: parent.clientWidth, bottom: parent.clientHeight };
+    // The card stays over the map: never under the right sidebar (the 1000x600 laptop has little room either side).
+    const side = document.querySelector<HTMLElement>('.right-sidebar');
+    const sideLeft = side ? side.getBoundingClientRect().left - parent.getBoundingClientRect().left : Infinity;
+    const right = sideLeft > el.offsetWidth + 40 && sideLeft < parent.clientWidth ? sideLeft - 6 : parent.clientWidth;
+    const area = { left: 0, top: 56, right, bottom: parent.clientHeight };
     const next = placeCard(anchor, { width: el.offsetWidth, height: el.offsetHeight }, area, anchor.avoid);
     setPos((p) => (p && p.left === next.left && p.top === next.top ? p : next));
   });

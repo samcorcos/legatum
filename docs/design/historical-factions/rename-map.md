@@ -33,7 +33,7 @@ Decision: 2026-10-10. The eight playable factions represent real peoples and his
 
 ## Setting and language
 
-- Title screen: **Legatum — A contest through history** / “Build a civilization. Contest its legacy.”
+- Title screen: the Legatum wordmark alone (the tagline and “A contest through history” line were removed, user 2026-11-22).
 - Guide opening: eight historical peoples meet on a shared game map of ruins, cities and contested roads. The map is a historical thought experiment, not one place or date where all eight met.
 - The Relay: remove the fallen interstellar communications network from setting prose. The Mongol **yam** is a faction-specific relay system. Generic `Relay Uplink`, its technology and generic building remain for the era overhaul, with temporary incongruity.
 - “The Race for the Legacy” → **The Contest for History**. Victory points continue to work the same way.

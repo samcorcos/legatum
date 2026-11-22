@@ -6,6 +6,8 @@ use std::{cell::RefCell, collections::VecDeque, rc::Rc, sync::Arc};
 pub(crate) const MAX_CONNECTIONS: usize = 32;
 pub(crate) const QUEUE_CAPACITY: usize = 16;
 pub(crate) const QUEUE_BYTES: usize = 8 * 1024 * 1024;
+/// Map pings waiting for one connection; a new one pushes the oldest out.
+pub(crate) const PING_CAPACITY: usize = 8;
 
 #[derive(Clone, Debug)]
 pub(crate) struct Close {
@@ -42,6 +44,8 @@ struct Inner {
     bytes: usize,
     seats: Latest,
     staging: Latest,
+    /// Teammates' map pings, newest last: only the latest few are kept.
+    pings: VecDeque<Arc<str>>,
     close: Option<Close>,
     admitted: bool,
     admitted_changed: bool,
@@ -87,6 +91,14 @@ impl Sender {
         self.0.borrow_mut().seats.set(Some(snapshot));
     }
 
+    pub(crate) fn ping(&self, text: &Arc<str>) {
+        let mut inner = self.0.borrow_mut();
+        if inner.pings.len() >= PING_CAPACITY {
+            inner.pings.pop_front();
+        }
+        inner.pings.push_back(text.clone());
+    }
+
     pub(crate) fn staging(&self, snapshot: Option<&Arc<str>>) {
         self.0.borrow_mut().staging.set(snapshot);
     }
@@ -129,6 +141,7 @@ impl Receiver {
         }
         let mut texts: Vec<String> = inner.reliable.drain(..).flatten().collect();
         inner.bytes = 0;
+        texts.extend(inner.pings.drain(..).map(|p| p.to_string()));
         texts.extend(inner.seats.take().map(|s| s.to_string()));
         texts.extend(inner.staging.take().map(|s| s.to_string()));
         drop(inner);
@@ -191,6 +204,24 @@ mod tests {
         assert!(receiver.drain().texts.is_empty());
         sender.staging(Some(&Arc::from("room")));
         assert_eq!(receiver.drain().texts, ["room"]);
+    }
+
+    #[test]
+    fn map_pings_keep_only_the_latest_few_and_never_fill_the_reliable_queue() {
+        let (sender, receiver) = channel();
+        for i in 0..PING_CAPACITY + 3 {
+            sender.ping(&Arc::from(format!("p{i}")));
+        }
+        for _ in 0..QUEUE_CAPACITY {
+            sender.send(&[ServerMessage::Pong]).unwrap();
+        }
+        let texts = receiver.drain().texts;
+        let pings: Vec<_> = texts
+            .iter()
+            .filter(|t| t.starts_with('p') && *t != r#"{"type":"pong"}"#)
+            .collect();
+        assert_eq!(pings.len(), PING_CAPACITY);
+        assert_eq!(pings[0], "p3");
     }
 
     #[test]

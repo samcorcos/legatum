@@ -42,6 +42,10 @@ const SETS = [
   { name: 'improvement-icons', kind: 'mono', crop: 'full', sizes: [16, 24], items: pick(join(A, 'icons'), /\.svg$/).filter((i) => /^(improvement-|effect-)/.test(i.id)) },
   { name: 'yield-icons', kind: 'mono', crop: 'full', sizes: [16, 20], items: pick(join(A, 'icons'), /\.svg$/).filter((i) => /^(yield-|vp$)/.test(i.id)) },
   { name: 'ui-marks', kind: 'mono', crop: 'full', sizes: [16, 24], items: pick(join(A, 'icons'), /\.svg$/).filter((i) => /^(ui-|mark-|fortify$|capital$|city$|ruin$)/.test(i.id)) },
+  // Faction-goal marks and the marks they could be mistaken for on a banner, a race row or a ledger cell (VP, cities, the goal buildings).
+  { name: 'goal-marks', kind: 'mono', crop: 'full', sizes: [16, 24], items: pick(join(A, 'icons'), /\.svg$/).filter((i) => /^(goal-|vp$|city$|capital$|building-pyramids$|building-courierhall$|building-imperialdiwan$|building-warshrine$|unit-heir$|ui-camp$)/.test(i.id)).concat(
+    // Egypt's emblem beside its Royal Tomb mark, so the two are checked apart.
+    pick(join(A, 'heraldry'), /\.svg$/).filter((i) => i.id === 'glyph-egypt')) },
   { name: 'title-milestone-icons', kind: 'mono', crop: 'full', sizes: [24, 32], items: pick(join(A, 'icons'), /\.svg$/).filter((i) => /^(title-|milestone-)/.test(i.id)) },
   { name: 'faction-glyphs', kind: 'mono', crop: 'full', sizes: [16, 24], items: pick(join(A, 'heraldry'), /\.svg$/).filter((i) => i.id.startsWith('glyph-')) },
   { name: 'faction-seals', kind: 'mono', crop: 'full', sizes: [40, 56], items: pick(join(A, 'heraldry'), /\.svg$/).filter((i) => i.id.startsWith('seal-')) },

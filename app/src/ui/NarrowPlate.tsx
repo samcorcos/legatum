@@ -33,7 +33,6 @@ export function NarrowPlate({ onContinue }: { onContinue: () => void }) {
   return (
     <main className="crash-screen" data-testid="narrow-plate">
       <div className="crash-card" role="dialog" aria-modal="true" aria-labelledby="narrow-title">
-        <p className="crash-kicker">Legatum</p>
         <h1 id="narrow-title">Made for a bigger screen</h1>
         <p className="crash-text">The map and panels are cramped on a phone. Open Legatum on a laptop or desktop for the full map.</p>
         <div className="crash-actions">

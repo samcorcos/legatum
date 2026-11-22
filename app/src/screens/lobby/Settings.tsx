@@ -1,4 +1,4 @@
-import { offeredLevels, DIFFICULTY_INFO, MAP_SIZES, MAX_TURN_LIMIT, levelOf, mapSizeLabel, notes, setDifficulty, setMapSize, type AiLevel, type Lobby, type MapSizeId, validTurnLimit } from '../../lobby';
+import { aiOnlyTeams, offeredLevels, DIFFICULTY_INFO, MAP_SIZES, MAX_TURN_LIMIT, levelOf, mapSizeLabel, notes, setDifficulty, setMapSize, type AiLevel, type Lobby, type MapSizeId, validTurnLimit } from '../../lobby';
 import { randomSeed } from './randomSeed';
 
 const LEVEL_SUB: Record<AiLevel, string> = { Easy: 'Forgiving', Normal: 'Standard', Hard: 'Ruthless', Training: 'Research tool' };
@@ -76,6 +76,12 @@ export function Settings({ lobby, onChange }: { lobby: Lobby; onChange?: (l: Lob
         { id: 'On', label: 'On', sub: 'Camps raid cities' },
         { id: 'Off', label: 'Off', sub: 'No barbarians' },
       ]} onChange={change && ((value: 'On' | 'Off') => change({ barbarians: value === 'On' }))} />
+      {aiOnlyTeams(lobby) >= 2 && (
+        <Segmented label="AI alliances" value={lobby.aiAlliances ? 'On' : 'Off'} options={[
+          { id: 'On', label: 'On', sub: 'AI empires start allied in pairs' },
+          { id: 'Off', label: 'Off', sub: 'Each AI empire starts alone' },
+        ]} onChange={change && ((value: 'On' | 'Off') => change({ aiAlliances: value === 'On' }))} />
+      )}
       {anyAi && onChange && (
         <Segmented
           label="AI level (all AI empires)"

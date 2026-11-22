@@ -4,7 +4,7 @@ import { parseAutosave, useGame, type SaveFile } from '../store';
 import { listAutosaves, type AutosaveRecord } from '../platform/autosaveStore';
 import { ReplaceGameDialog } from '../ui/ReplaceGameDialog';
 import { pickSaveFile } from '../ui/GameMenu';
-import { DecoRule, Fan, Wordmark } from '../brand/ornaments';
+import { Fan, Wordmark } from '../brand/ornaments';
 import { openGuide } from '../ui/guideState';
 import { HintSettings } from '../ui/FirstGameHints';
 import { HapticsSettings } from '../ui/HapticsSettings';
@@ -17,6 +17,7 @@ import { DEFAULT_PLAYER_NAME, MAX_PLAYER_NAME, rememberPlayerName, savedPlayerNa
 import { TitleArt } from './TitleArt';
 import { usePerfOverlay } from '../ui/PerfOverlay';
 import { buildLabel } from '../buildLabel';
+import { buildTime } from '../buildTime';
 import { PRIVACY_URL, uploadsGames } from '../platform/gameUpload';
 import { isOlderVersionMessage, loadErrorMessage, olderAutosaveMessage, parseSaveFile, saveHasCurrentRules, saveRulesVersion } from '../saveErrors';
 import { buildForSave, isBehind, navigate, newestUrl, pageLaunch, takeHandedOffSave } from '../platform/versions';
@@ -50,19 +51,12 @@ export function TitleScreen() {
         <h1 className="title-logo">
           <Wordmark height={112} />
         </h1>
-        <div className="title-kicker">
-          <DecoRule width={72} />
-          <span>A Contest Through History</span>
-          <DecoRule width={72} flip />
-        </div>
-        <p className="title-tag">Build a civilization. Contest its legacy.</p>
         <div className="title-menu">
           {menu === 'main' ? <MainMenu onMultiplayer={() => setMenu('multi')} /> : <MultiplayerMenu onBack={() => setMenu('main')} />}
         </div>
       </div>
       <div className="title-foot">
-        <span>{buildLabel}</span>
-        <span>Explore · expand · build · compete</span>
+        <span>{buildTime ? `${buildLabel} · Last updated ${buildTime}` : buildLabel}</span>
       </div>
     </div>
   );
@@ -197,7 +191,7 @@ function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
         <button className="btn big quiet" onClick={() => { set({ error: null }); goto('scenarios'); }}>
           Scenarios
         </button>
-        <button className="btn big quiet" onClick={openGuide}>How to Play <span className="btn-sub">The field guide · ?</span></button>
+        <button className="btn big quiet" onClick={openGuide}>How to Play</button>
         <Settings />
       </div>
       {uploadsGames() && (
@@ -231,7 +225,7 @@ function MultiplayerMenu({ onBack }: { onBack: () => void }) {
   const codeNote = joinCodeProblem(code);
   const typed = name.trim();
   const shown = cleanRoomName(typed);
-  const listedAs = typed && shown !== typed ? (shown ? `Shown in the game list as “${shown}”.` : 'The game list will show “Game” and four characters.') : null;
+  const listedAs = typed && shown !== typed ? (shown ? `Shown in the game list as “${shown}”.` : 'Listed as “Game” and four characters.') : null;
   // After a refusal that pressing Host Game again cannot fix, Host Game is not the next action: Join Game is.
   const hostCannotRetry = hosting === 'failed' && !!refusal && retryWouldFail(refusal.kind);
   const hostPrimary = hosting === 'failed' && !views && !hostCannotRetry;

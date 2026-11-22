@@ -18,13 +18,15 @@ diplomacy (`DeclareWar{against,breach}`, `BreakTreaty` = leave an Alliance,
 `SetScienceConversion` after the last technology);
 and **one-time empire actions** through a single variant, `Action { action }` (`orders.rs::Action`,
 serde tag `"action"`: `{"type":"Action","action":{"action":"Sakoku","close":true}}`): `Swarm` (the Aztecs' New Fire),
-`Sakoku{close}` (Japan closes or reopens the country), `Broadcast`,
+`Sakoku{close}` (Japan closes or reopens the country), `Tomb{build}` (Egypt starts or pauses work on the Royal Tomb, rules 54), `Broadcast`,
 `ChooseFreeTechs{techs}`, `RetireVeteran{unit}` (a unit action: several veterans may retire in one turn,
 each once), and `CallTheWild` (`ClaimObjective`, the Demobilise card's order, was removed in rules 40); later goal increments add their variants here, never a new order shape.
 Checks are `rules/actions.rs::validate_action` (run by `validate_orders`: each action once per turn;
 retirements beyond what completes the goal are refused), resolution is `apply_actions` right after the
-city orders (spending free picks first), and `PlayerView.actions` (`ActionsView`: `swarm`, `sakoku`, `broadcast`,
+city orders (spending free picks first), and `PlayerView.actions` (`ActionsView`: `swarm`, `sakoku`, `tomb`, `colonia` (Rome's level-3 founders, a preview only), `broadcast`,
 `free_techs`, `retire`, `wild`) says what is available, why not, and previews it.
+
+**Team map pings (no rules change).** A human on a team with another human can ping a tile; the teammates see a ring there until the turn ends. It is not an order and is never in the game state, a save or a tape. Online it is a host message (`ClientMessage::MapPing`, `ServerMessage::MapPing`, `crates/wasm/src/host/mod.rs`, `outbox.rs::Sender::ping`), relayed only to seats on the sender's team, 24 per seat per planning turn; hot seat keeps it in the store (`app/src/teamPing.ts`). The host's `welcome` says `map_pings` so older hosts are never sent one.
 
 **Co-op Gold gifts (rules 50, Sam 2026-11-22; `Order::GiveGold{to,amount}`, `rules/gifts.rs`).** An empire gives Gold to a
 living teammate (same team, not itself, not Barbarians). Validation (`validate_gifts`): each gift at least 1, all of a

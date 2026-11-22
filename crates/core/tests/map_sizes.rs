@@ -29,6 +29,7 @@ fn setup(seed: u64, w: i32, h: i32, players: usize) -> GameSetup {
             .collect(),
         turn_limit: Some(150),
         legacy_all_war: false,
+        ai_alliances: false,
         barbarians: false,
         rule_experiments: Default::default(),
     }

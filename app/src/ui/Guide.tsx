@@ -1,5 +1,5 @@
 import { useEffect, useRef, type CSSProperties } from 'react';
-import { Fan, Wordmark } from '../brand/ornaments';
+import { Wordmark } from '../brand/ornaments';
 import { GUIDE_SECTIONS, GuideContent } from './GuideContent';
 import { isGuideShortcut, useGuide } from './guideState';
 import { closeTips } from './Tip';
@@ -69,7 +69,7 @@ export function Guide() {
     >
       <header className="guide-head">
         <div>
-          <div className="guide-imprint"><Wordmark height={18} /><span>A field guide to the inheritance</span></div>
+          <div className="guide-imprint"><Wordmark height={18} /></div>
           <h1 id="guide-title">How to Play</h1>
         </div>
         <button ref={closeButton} className="btn quiet guide-close" onClick={close} aria-label="Close guide">
@@ -84,16 +84,14 @@ export function Guide() {
               <span className="guide-chapter-number">0{i + 1}</span>{s.label}
             </button>
           ))}
-          <div className="guide-nav-note"><Fan width={64} /><p>History is made by those who build.<br />Its legacy is contested.</p></div>
         </nav>
         <div ref={page} className="guide-page" tabIndex={0} role="region" aria-labelledby="guide-chapter-title">
-          <div className="guide-label">Chapter 0{GUIDE_SECTIONS.indexOf(chapter) + 1}</div>
           <h2 id="guide-chapter-title">{chapter.label}</h2>
           <GuideContent section={section} />
         </div>
       </div>
       {/* Key hints only where there is a keyboard (playtest-6: the phone showed "? Guide · Esc Return"). */}
-      <footer className="guide-foot"><span>Explore · expand · build · compete</span>{!touch && <span><kbd>?</kbd> Guide &nbsp; <kbd>Esc</kbd> Return</span>}</footer>
+      {!touch && <footer className="guide-foot"><span><kbd>?</kbd> Guide &nbsp; <kbd>Esc</kbd> Return</span></footer>}
     </dialog>
   );
 }

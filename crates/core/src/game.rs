@@ -45,6 +45,10 @@ pub fn blank_game(setup: &GameSetup, map: Map) -> GameState {
             goal_holder: None,
             hall_city: None,
             diwan_city: None,
+            colonia_city: None,
+            tomb_work: false,
+            tomb_turns: 0,
+            tomb_city: None,
             faction_goal_reached_before: false,
             free_techs_pending: 0,
             free_techs_from: None,
@@ -66,6 +70,9 @@ pub fn blank_game(setup: &GameSetup, map: Map) -> GameState {
             let mut d = crate::diplomacy::DiplomacyState::new(teams.iter().copied());
             if setup.rule_experiments.start_met {
                 d.meet_all(&teams);
+            }
+            for (a, b) in setup.ai_alliance_pairs() {
+                d.start_alliance(a, b);
             }
             d
         }),

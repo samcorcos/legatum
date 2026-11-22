@@ -471,6 +471,20 @@ impl Planner<'_> {
             {
                 continue;
             }
+            // The Colonia's founder rests to heal for its founding (`plan_colonia`): a refit
+            // walk would undo that rest (seed 9000 game 118 lost two turns of healing to it).
+            if self.colonia_founder == Some(u.id) {
+                if self.decision_trace.is_some() {
+                    let mut row = crate::DecisionOption::new(
+                        "colonia",
+                        format!("unit={:?} modernization return", u.id),
+                        "gated_out",
+                    );
+                    row.gate = Some("Colonia founder keeps its rest".into());
+                    self.note_option(row);
+                }
+                continue;
+            }
             let Some((gain, cost, steps)) = self.refit(u) else {
                 continue;
             };
@@ -749,6 +763,50 @@ pub(crate) mod tests {
             !p.orders
                 .iter()
                 .any(|o| matches!(o,Order::SkipUnit{unit} if *unit==id))
+        );
+    }
+
+    #[test]
+    fn modernization_return_leaves_the_resting_colonia_founder_alone() {
+        // The same staging hold as above, but the unit is Rome's Colonia founder resting to
+        // heal (`plan_colonia`): the refit walk would cost it that rest.
+        let mut v = saved(3);
+        v.economy.gold = 1500;
+        let id = v
+            .units
+            .iter()
+            .find(|u| u.owner == v.me && u.kind == UnitKind::Pikeman)
+            .unwrap()
+            .id;
+        let home = v.units.iter().find(|u| u.id == id).unwrap().pos;
+        let away = home
+            .neighbors()
+            .into_iter()
+            .find(|h| v.index(*h).is_some() && !v.units.iter().any(|u| u.pos == *h))
+            .unwrap();
+        let index = v.index(away).unwrap();
+        v.tiles[index].owner = None;
+        v.units.iter_mut().find(|u| u.id == id).unwrap().pos = away;
+        v.units.retain(|u| u.owner == v.me);
+        let mut p = fixture::planner(&v, 1);
+        p.decisions.modernization_return = 100;
+        p.unit_order(id, Order::SkipUnit { unit: id });
+        p.colonia_founder = Some(id);
+        let u = p
+            .ctx
+            .own_units
+            .iter()
+            .find(|u| u.id == id)
+            .copied()
+            .unwrap();
+        p.return_for_modernization(&[u]);
+        assert!(
+            p.orders.contains(&Order::SkipUnit { unit: id })
+                && !p.orders.iter().any(
+                    |o| matches!(o,Order::MoveUnit{unit,..}|Order::MoveUnitPath{unit,..} if *unit==id)
+                ),
+            "the rest stands: {:?}",
+            p.orders
         );
     }
 

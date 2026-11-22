@@ -90,6 +90,11 @@ pub struct CampaignMemory {
     /// within spacing), so it rescouts instead of ordering the same found again.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub found_tried: Vec<(UnitId, legatum_core::Hex, u32)>,
+    /// Gene `rome_colonia` (`goal_colonia.rs::colonia_lock_guard`): enemy cities whose capture
+    /// waited a turn so the Colonia's founder would not be locked in them (city tile, turn).
+    /// A capture waits at most one turn in a row.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub colonia_waits: Vec<(legatum_core::Hex, u32)>,
     /// Plain Hard's Settler guard (`hard_defense.rs`): the escort kept beside each Settler, by
     /// Settler, until it founds its city or is back in one of ours. Absent when no Settler
     /// has an escort, so saves without one keep their shape.

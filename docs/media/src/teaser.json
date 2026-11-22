@@ -4,9 +4,8 @@
   "fade": 0.2,
   "music": { "file": "app/public/audio/music/war.m4a", "ss": 4.0, "fadeIn": 0.25, "fadeOut": 3.0, "gain": 1.6 },
   "end": {
-    "kicker": "A HISTORICAL 4X ON A HEX MAP",
     "tagline": ["Empires rise and fall.", "Some are remembered."],
-    "foot": [["OPEN SOURCE"], ["GITHUB.COM/SAMCORCOS/LEGATUM"]]
+    "foot": [["PLAYLEGATUM.COM"]]
   },
   "shots": [
     { "clip": "battle", "ss": 0.25, "t": 3.6, "caption": "Empires rise and fall.", "captionIn": 0.1, "crop": [24, 14, 1872, 1053], "sqx": 280 },

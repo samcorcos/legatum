@@ -52,6 +52,22 @@ export function reservedSettlements(view: PlayerView, unit: number, orders: Orde
 }
 export const settlementScores = (view: PlayerView, unit: UnitView, reserved: Hex[]): SettlementScore[] =>
   JSON.parse(Game.settlement_sites(JSON.stringify(view), unit.id, JSON.stringify(reserved)));
+const coloniaSiteCache = new WeakMap<PlayerView, boolean | null>();
+/**
+ * Rome: whether any site this view knows founds the Colonia Victrix for its first founder. It is the Settle lens's own
+ * engine call (`settlement_sites`, the `colonia` flag), made at most once per view and remembered, so the dock and the
+ * unit card need no per-turn scan in core. Null when there is no founder or the engine is not loaded (callers then
+ * keep the plain wording).
+ */
+export function coloniaSiteKnown(view: PlayerView): boolean | null {
+  if (coloniaSiteCache.has(view)) return coloniaSiteCache.get(view)!;
+  const id = view.actions?.colonia?.founders[0];
+  const unit = id === undefined ? undefined : view.units.find((u) => u.id === id);
+  let known: boolean | null = null;
+  if (unit) try { known = settlementScores(view, unit, []).some((s) => s.colonia); } catch { known = null; }
+  coloniaSiteCache.set(view, known);
+  return known;
+}
 export const settlementSite = (view: PlayerView, unit: UnitView, pos: Hex, reserved: Hex[]): SettlementSite | null =>
   JSON.parse(Game.settlement_site(JSON.stringify(view), unit.id, pos.q, pos.r, JSON.stringify(reserved)));
 /** Detailed sites for tests and inspected advice; the live map uses the compact score list. */

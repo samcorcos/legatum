@@ -34,6 +34,10 @@ Paired, unnamed adult portraits, one for each of the eleven peoples: nine finish
 
 For the paired portraits, `people-<faction>.png` (archived outside git, not in the tree) is 1024 × 1024, `people-<faction>-512.png` is 512 × 512, and `people-<faction>-360.jpg` is 360 × 360 JPEG quality 88. The `.prompt.txt` file beside each original records its prompt and any final image edit. Japan is not a playable people: its portrait was removed on 2026-11-21 (git history has it), and the older review sheets in `docs/design/historical-factions/` and `docs/design/art-pass-2/` still show it.
 
+## Random choice painting (2026-11-22)
+
+`random-choice-360.jpg` fills the faction sheet's portrait frame when Random is chosen (`RANDOM_PORTRAIT_URL` in `src/brand/ornaments.tsx`), where it used to be a plain dice icon beside eleven painted peoples. It is a still life in the people portraits' oil technique: three cast knucklebones on an unfinished sea chart, since Random has no people of its own. The small roundels keep their "?" mark, which reads better at 38 px. Prompt and provenance in `random-choice.prompt.txt`.
+
 ## Moment vignettes (art exploration, 2026-10-10)
 
 `moments/` holds nine square historical celebration paintings and three 16:9 takeover paintings for review. Each has a generated master PNG, a 512 px PNG derivative, a 256 px JPEG derivative at quality 88, and an adjacent `.prompt.txt`. These assets are not wired into the app. Compare directions and see the card-height budget in `docs/design/moment-vignettes/README.md` and `moment-vignettes-directions.png`.

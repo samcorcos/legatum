@@ -12,9 +12,11 @@ import { aircraftNeedingOrders, type Hold } from './airWing';
 import { strikeRange } from './airText';
 import { goalDecisionText, readyGoalAction } from './goalDecision';
 import { AUTOMATION_NO_CHOICE, cityAutomationPreview } from './automation';
+import { tombOnAfterOrders } from './goalCities';
+import { coloniaSiteKnown } from './settlement';
 
 export type DecisionTarget = { kind: 'unit' | 'city' | 'siege'; id: number } | { kind: 'air'; id: number; city?: number } | { kind: 'research' } | { kind: 'freeTechs' } | { kind: 'diplomacy'; id: number; team: number }
-  | { kind: 'goal'; action: 'Swarm' | 'Sakoku' | 'Broadcast' | 'CallTheWild' | 'Retire'; title: string; line: string }
+  | { kind: 'goal'; action: 'Swarm' | 'Sakoku' | 'Broadcast' | 'CallTheWild' | 'Retire' | 'Colonia'; title: string; line: string; act?: string }
   | { kind: 'treasury'; target: { kind: 'unit' | 'city'; id: number } | null };
 /** `issue`: why the unit's queued order fails; `fix`: that as one sentence naming the unit. */
 /** `healed`: a unit whose Heal order ended at full health in the turn that just resolved. */
@@ -88,7 +90,7 @@ function siegeDecisions(view: PlayerView, seen: { turn: number; cities: number[]
     .map((a): PendingDecision => ({ kind: 'siege', id: a.cityId, label: `${a.name} is under attack: ${a.forecast.text.charAt(0).toLowerCase()}${a.forecast.text.slice(1)}` }));
 }
 
-export function pendingDecisions(view: PlayerView, orders: Order[], errors: OrderError[] = [], local?: { humans: number[]; orders: Order[][]; errors: OrderError[][]; siegeSeen?: Record<number, { turn: number; cities: number[] }>; airHeld?: Record<number, Hold>; seat?: number; report?: LocalReport; goalDecisionSeen?: Record<number, boolean> }): PendingDecision[] {
+export function pendingDecisions(view: PlayerView, orders: Order[], errors: OrderError[] = [], local?: { humans: number[]; orders: Order[][]; errors: OrderError[][]; siegeSeen?: Record<number, { turn: number; cities: number[] }>; airHeld?: Record<number, Hold>; seat?: number; report?: LocalReport; goalDecisionSeen?: Record<number, boolean>; selection?: { kind: string; id?: number } | null }): PendingDecision[] {
   const healed = healedUnits(view, local);
   if (view.finished || view.players.find((p) => p.id === view.me)?.alive === false) return [];
   const valid = orders.filter((_, i) => !errors.some((e) => e.index === i));
@@ -110,12 +112,12 @@ export function pendingDecisions(view: PlayerView, orders: Order[], errors: Orde
         label: `Call to arms: ${teamName(view, c.ally)} asks you to join its war on ${teamName(view, c.target)} (answer by turn ${c.respond_by})` })),
     // A rival's broadcast left free technologies to choose: the prompt persists until they are chosen.
     ...siegeDecisions(view, local?.siegeSeen?.[view.me]),
-    ...[readyGoalAction(view, valid, local?.goalDecisionSeen ?? {})].filter((g): g is NonNullable<typeof g> => !!g)
-      .map((g): PendingDecision => { const t = goalDecisionText(g.kind, g.vp); return { kind: 'goal', action: g.kind, title: t.title, line: t.line, label: `${t.title}: ${t.line}` }; }),
+    ...[readyGoalAction(view, valid, local?.goalDecisionSeen ?? {}, local?.selection?.kind === 'unit' ? local.selection.id ?? null : null)].filter((g): g is NonNullable<typeof g> => !!g)
+      .map((g): PendingDecision => { const t = goalDecisionText(g.kind, g.vp, g.kind === 'Colonia' ? coloniaSiteKnown(view) : null); return { kind: 'goal', action: g.kind, title: t.title, line: t.line, act: t.act, label: `${t.title}: ${t.line}` }; }),
     ...(view.actions?.free_techs && !valid.some((o) => o.type === 'Action' && o.action.action === 'ChooseFreeTechs')
       ? [{ kind: 'freeTechs' as const, label: `Choose ${freeTechTarget(view)} free ${freeTechTarget(view) === 1 ? 'technology' : 'technologies'}` }] : []),
     ...[treasuryDecision(view, valid)].filter((d): d is PendingDecision => d !== null),
-    ...view.cities.filter((c) => c.owner === view.me && unchosen.has(c.id)).sort((a, b) => a.id - b.id)
+    ...view.cities.filter((c) => c.owner === view.me && unchosen.has(c.id) && !tombOnAfterOrders(view, valid)).sort((a, b) => a.id - b.id)
       .map((c): PendingDecision => ({ kind: 'city', id: c.id, label: `Choose what ${c.name} builds · ${AUTOMATION_NO_CHOICE}` })),
     // The founding decision is already made: the first playable choice is the capital's build.
     ...(view.turn === 1 ? idleCityDecisions : []),

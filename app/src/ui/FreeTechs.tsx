@@ -88,7 +88,6 @@ export function FreeTechsPrompt() {
         </span>}
       </div>
       <div className="alarm-title">
-        <div className="alarm-kicker">{captured ? 'Spoils of Athens' : 'A broadcast reaches you'}</div>
         <h1 id={title}>Choose {n} {n === 1 ? 'technology' : 'technologies'}</h1>
         {captured && <p className="alarm-empire">You captured {captured} from Athens: choose one free technology.</p>}
         {from && !captured && <p className="alarm-empire">{empireTitle(view, from.team)} shared its learning: every rival gains {free.pending} free {free.pending === 1 ? 'technology' : 'technologies'} of its own choice.</p>}

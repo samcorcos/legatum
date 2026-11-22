@@ -20,6 +20,12 @@ export interface CopyRule {
 
 /** Mechanics-speak and code terms: describe what the player gets, not the integer maths behind it. */
 export const BANNED: CopyRule[] = [
+  { pattern: /\brace sidebar\b/i, reason: 'the panel is called the Victory race (master, 2026-11-22)', instead: '"Victory race"', source: true },
+  { pattern: /\bresolve[sd]? when the turn ends\b/i, reason: 'code-speak (plain-language review, 2026-11-22)', instead: '"it happens when the turn ends"', source: true },
+  { pattern: /\b(?:Gold|Science|Food|Production) (?:and (?:Gold|Science|Food|Production) )?go(?:es)? on\b/i, reason: 'vague (plain-language review, 2026-11-22)', instead: '"Gold and Science still come in."', source: true },
+  { pattern: /\bmelee veteran of level\b/i, reason: 'wordy (plain-language review, 2026-11-22)', instead: '"a level 3 melee veteran"', source: true },
+  { pattern: /\bqualif(?:y|ies|ied|ying)\b/i, reason: 'rulebook jargon (plain-language review, 2026-11-22: "a site qualifies")', instead: '"A site counts if it is within 2 tiles of a rival\'s land."', source: true },
+  { pattern: /\bAIs\b/, reason: 'say AI empires in player text (UI review, 2026-11-22)', instead: '"AI empires"', source: true },
   { pattern: /\bNearest you know\b/i, reason: 'reads oddly (plain-language review, 2026-11-22)', instead: '"Nearest known: Sarai (Mongols), 5 tiles from your city Ajmer."', source: true },
   { pattern: /\bPeace (?:ends|would end|ended) (?:all|every) (?:wars?|conflicts?)\b/i, reason: 'Peace ends only the war between its two named teams', instead: 'name that war and any wars that continue', source: true },
   { pattern: /\bPeace (?:covers|includes|binds) (?:their |your )?allies\b/i, reason: 'Alliances stay, but allies are not included in a Peace', instead: 'Peace is between the two named teams', source: true },
@@ -135,7 +141,7 @@ export const BANNED: CopyRule[] = [
   { pattern: /\bstays banked in [A-Z]/, reason: 'bookkeeping word order for what a city keeps (8.9.23 UI review: "Granary progress 12 stays banked in Astra")', instead: '"Astra keeps the 12 Production already put into the Granary."', source: true },
   { pattern: /\bwindows from your connection\b/i, reason: 'awkward, and the others may be other people on the same network (relay messages review)', instead: '"people on your internet connection"', source: true },
   { pattern: /\bsent too quickly\b|\btoo much (?:was )?sent\b/i, reason: 'passive network talk with no subject (relay messages review)', instead: '"You are sending too much, too fast."', source: true },
-  { pattern: /“Game” with a number/, reason: 'the default name is "Game" and four characters, not a number (relay messages review)', instead: '"The game list will show “Game” and four characters."', source: true },
+  { pattern: /“Game” with a number/, reason: 'the default name is "Game" and four characters, not a number (relay messages review)', instead: '"Listed as “Game” and four characters."', source: true },
 ];
 
 /**

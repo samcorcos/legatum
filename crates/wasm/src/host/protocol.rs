@@ -55,6 +55,11 @@ pub(crate) enum ClientMessage {
         alongside: Vec<AlongsideAttack>,
     },
     Ping,
+    /// A map ping for the sender's teammates (never stored in the game). Only sent when the
+    /// host's `welcome` said `map_pings`.
+    MapPing {
+        hex: Hex,
+    },
     StagingWatch {
         #[serde(default)]
         host: bool,
@@ -113,6 +118,10 @@ pub(crate) enum ServerMessage {
         seat: usize,
         game_id: String,
         orders: Vec<Order>,
+        /// This host relays map pings between teammates. Omitted when false, so a host from
+        /// before pings looks the same as one that has them switched off.
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        map_pings: bool,
     },
     SeatToken {
         seat: usize,
@@ -152,6 +161,12 @@ pub(crate) enum ServerMessage {
         message: String,
     },
     Pong,
+    /// A teammate pinged a tile this planning turn (`ClientMessage::MapPing`).
+    MapPing {
+        from: PlayerId,
+        hex: Hex,
+        turn: u32,
+    },
     Staging {
         state: StagingState,
     },

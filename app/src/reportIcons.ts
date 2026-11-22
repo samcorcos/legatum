@@ -39,9 +39,10 @@ export function eventIcon(e: Event, faction?: (player: number) => Faction | unde
     case 'GoldGiven': return 'yield-gold';
     case 'CapitalLost': return 'vp';
     case 'FactionGoalCompleted': return FACTION_GOAL[e.faction]?.icon ?? 'emblem-milestone';
-    case 'FactionGoalLost': return e.faction === 'Byzantium' ? 'unit-heirtothethrone' : e.faction === 'Mongols' ? 'building-yamrelaystation' : 'ui-trend-down';
+    case 'FactionGoalLost': return e.faction === 'Byzantium' ? 'unit-heirtothethrone' : e.faction === 'Mongols' ? 'building-yamrelaystation' : e.faction === 'Rome' ? 'goal-colonia' : e.faction === 'Egypt' ? 'goal-royal-tomb' : 'ui-trend-down';
     case 'SwarmUnleashed': return SWARM_GOAL.icon;
     case 'SakokuClosed': case 'SakokuReopened': return 'ui-sakoku';
+    case 'TombStarted': case 'TombPaused': case 'TombRaised': return 'goal-royal-tomb';
     case 'SignalBroadcast': return 'building-lyceum';
     case 'RoadsLaid': return 'building-yamrelaystation';
     case 'VeteranRetired': return 'building-agoge';

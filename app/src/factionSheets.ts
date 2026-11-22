@@ -36,7 +36,7 @@ export interface FactionSheet {
   piecePairs?: boolean;
   /** Three-word identity shown on the gallery tile. */
   identity: string;
-  /** An early design: playable, but with no faction goal yet (Egypt and Rome; marked on the tile and sheet). */
+  /** An early design, tagged on the tile and sheet: not yet through a playtest (Egypt, until the user has played it), or with no faction goal yet (none now). */
   early?: true;
   /** 2-3 sentence lore paragraph in the existing voice. */
   lore: string;
@@ -104,11 +104,10 @@ export const FACTION_SHEETS: Record<Faction, FactionSheet> = {
       { strength: 'Royal Granary replaces the Granary and gives +3 Food total.', strengthIcon: 'building-royalgranary', onCard: true },
       specialRow('Egypt', 'unit-medjay'),
     ],
-    counteredBy: 'Strike while its cities are busy growing, and take its Food-rich sites.',
+    counteredBy: 'Strike while its cities are busy growing or working on the Royal Tomb, and take its Food-rich sites.',
   },
   Rome: {
     identity: 'Veterans found cities',
-    early: true,
     lore: 'Roman veterans received land after military service. In play, each new city costs a seasoned soldier, leaving fewer defenders in the field.',
     ratings: { aggression: 4, economy: 2, complexity: 3 },
     pairs: [

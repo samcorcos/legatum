@@ -11,6 +11,7 @@ import { closeTips, Tip } from './Tip';
 import type { CityBuildFocus, Faction } from '../types';
 import { FOCUS_CYCLE, focusLabel, setCityAutomation } from '../automation';
 import { cityRows, DEFAULT_CITY_SORT, nextSort, sortRows, type CityRow, type CitySort, type CitySortKey } from '../citiesOverview';
+import { TOMB_CITY_NOTE, tombOnAfterOrders, tombShort } from '../goalCities';
 import './citiesOverview.css';
 
 const SORT_KEY = 'legatum.cities-sort.v1';
@@ -38,7 +39,9 @@ const COLUMNS: { key: CitySortKey; label: string; yield?: 'food' | 'production' 
   { key: 'build', label: 'Building', hint: 'Sort by what needs you most: idle cities first, then the nearest to finishing' },
 ];
 
-function BuildCell({ row, faction }: { row: CityRow; faction?: Faction }) {
+function BuildCell({ row, faction, tomb }: { row: CityRow; faction?: Faction; tomb?: boolean }) {
+  // Egypt's Royal Tomb work stops every city: the row says so rather than "Idle".
+  if (tomb) return <Tip content={TOMB_CITY_NOTE}><span className="co-building co-tomb" data-testid="city-tomb"><span className="co-build-top"><Icon name="goal-royal-tomb" size={14} /><span className="co-build-name">Royal Tomb</span></span><span className="co-sub">{row.build ? `${row.build.name} waits` : 'Nothing queued'}</span></span></Tip>;
   if (row.focus && !row.build) return <span className="co-building" data-testid="city-auto-wait">Choosing at Ready<span className="co-sub">{focusLabel(row.focus, faction)}</span></span>;
   if (row.idle || !row.build) {
     return <span className="co-idle" data-testid="city-idle"><span className="co-idle-mark" aria-hidden="true">!</span><b>Idle</b><span className="co-sub">choose what it builds</span></span>;
@@ -86,7 +89,9 @@ export function CitiesOverview() {
   if (!shown || !view) return null;
   const faction = view.players.find((p) => p.id === view.me)?.faction;
   const close = () => set({ citiesOpen: false });
-  const idle = rows.filter((r) => r.idle).length;
+  const tomb = tombOnAfterOrders(view, orders ?? []);
+  const tombNow = view.actions?.tomb;
+  const idle = tomb ? 0 : rows.filter((r) => r.idle).length;
   const sortBy = (key: CitySortKey) => { const next = nextSort(sort, key); setSort(next); saveSort(next); };
   const go = (row: CityRow) => {
     set({ citiesOpen: false });
@@ -117,7 +122,7 @@ export function CitiesOverview() {
           <span className="co-kick"><Star size={8} /> Your empire · turn {view.turn}</span>
           <h2 id="co-title">Cities</h2>
         </div>
-        <p className="co-count" data-testid="cities-count"><b>{rows.length}</b> {rows.length === 1 ? 'city' : 'cities'}{idle > 0 && <> · <b className="co-idle-count">{idle} idle</b></>}</p>
+        <p className="co-count" data-testid="cities-count"><b>{rows.length}</b> {rows.length === 1 ? 'city' : 'cities'}{idle > 0 && <> · <b className="co-idle-count">{idle} idle</b></>}{tomb && tombNow && <> · <span className="co-tomb-count" data-testid="cities-tomb">{tombShort({ working: true, turns: tombNow.turns, target: tombNow.target, left: tombNow.target - tombNow.turns })}: no city builds or grows</span></>}</p>
         <p className="co-help">Click a heading to sort. Click a city to go to it.</p>
         <button ref={closeButton} className="btn quiet co-close" onClick={close} aria-label="Close cities">Close <kbd className="kbd">Esc</kbd></button>
       </header>
@@ -152,7 +157,7 @@ export function CitiesOverview() {
             </thead>
             <tbody>
               {rows.map((row) => (
-                <tr key={row.id} data-testid="city-row" data-city={row.id} className={row.idle ? 'idle' : undefined} onClick={() => go(row)}>
+                <tr key={row.id} data-testid="city-row" data-city={row.id} className={row.idle && !tomb ? 'idle' : undefined} onClick={() => go(row)}>
                   <td className="co-select" onClick={(e) => e.stopPropagation()}><input type="checkbox" aria-label={`Select ${row.name}`} checked={selected.includes(row.id)} onChange={(e) => setSelected((ids) => e.target.checked ? [...ids, row.id] : ids.filter((id) => id !== row.id))} /></td>
                   <th scope="row" className="co-name">
                     <button type="button" className="co-city" onClick={(e) => { e.stopPropagation(); go(row); }} aria-label={`Go to ${row.name}`}>
@@ -167,7 +172,7 @@ export function CitiesOverview() {
                   <td className="co-num">{row.gold}</td>
                   <td className="co-num">{row.science}</td>
                   <td className="co-def"><Tip content={row.strengthRule}><span><b>{row.strength}</b><span className="co-sub">{row.fort ?? 'No Walls'}{row.hp < row.maxHp && <span className="co-hurt"> · HP {row.hp}/{row.maxHp}</span>}</span></span></Tip></td>
-                  <td className="co-buildcell"><BuildCell row={row} faction={faction} /></td>
+                  <td className="co-buildcell"><BuildCell row={row} faction={faction} tomb={tomb} /></td>
                   <td className="co-go" aria-hidden="true"><span className="co-chevron">›</span></td>
                 </tr>
               ))}

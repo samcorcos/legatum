@@ -194,6 +194,7 @@ fn arena(seed: u64, teams: &[u8]) -> GameState {
         height: 12,
         turn_limit: Some(150),
         legacy_all_war: false,
+        ai_alliances: false,
         barbarians: false,
         rule_experiments: Default::default(),
         players: teams

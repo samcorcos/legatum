@@ -217,6 +217,11 @@ pub enum Action {
     /// `goals::sakoku_target` turn ends closed, it scores regardless of enemy units in its
     /// land. Reopening loses the VP and restarts the count.
     Sakoku { close: bool },
+    /// Egypt, the Valley of the Kings (`goals::GoalRule::Tomb`): `build: true` starts work on the
+    /// royal tomb, `false` pauses it. While the work is on none of the empire's cities builds or
+    /// grows; after `goals::TOMB_TURNS` turn ends of work (the count is kept across a pause) the
+    /// tomb stands in the capital and whoever holds that city scores.
+    Tomb { build: bool },
     /// Athens, Share the Signal: every living empire outside the broadcaster's team
     /// gains free technologies of its own choice. Completes the Athens' goal for good.
     Broadcast,

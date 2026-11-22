@@ -50,6 +50,7 @@ impl Planner<'_> {
             || (city.is_capital && self.decisions.hollow_march & SPARE_CAPITAL == 0)
             || self.wonder_guard_city(city)
             || self.hall_guard_city(city)
+            || self.goal_city_guard(city)
         {
             return false;
         }

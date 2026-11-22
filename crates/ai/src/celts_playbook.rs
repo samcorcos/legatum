@@ -43,6 +43,7 @@ impl Planner<'_> {
             || self.own_original_capital(c)
             || self.wonder_guard_city(c)
             || self.hall_guard_city(c)
+            || self.goal_city_guard(c)
             || self.heir_unguarded(c)
         {
             return false;

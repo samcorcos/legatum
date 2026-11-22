@@ -10,6 +10,7 @@ import { formatBreakdown } from '../format';
 import { ownerName } from '../barbarians';
 import { productionStallText } from '../cityProgress';
 import { AUTOMATION_NO_CHOICE, cityAutomationFocus, cityAutomationPreview } from '../automation';
+import { tombOnAfterOrders } from '../goalCities';
 
 export { productionStallText };
 
@@ -332,6 +333,8 @@ export function cityProductionWarning(city: CityView, orders: Order[] = [], fact
 
 /** Bring a city that lost a wonder race, then the one wasting the most production, to the front of the Choose production CTA. */
 export function idleCitiesNeedingProduction(view: PlayerView, orders: Order[]): CityView[] {
+  // While Egypt works on the Royal Tomb no city builds, so none asks for a build.
+  if (tombOnAfterOrders(view, orders)) return [];
   const unchosen = new Set(cityAutomationPreview(view, orders)?.unchosen_cities ?? []);
   // A city ordered razed burns at the turn boundary: it has nothing to build (8.9.29, turn 102 loop).
   const razing = new Set(orders.flatMap((o) => (o.type === 'Raze' ? [o.city] : [])));

@@ -4,12 +4,13 @@
 // it the seat's faction at once and shows its sheet. There is no hover preview and no confirm
 // button; Close (or Return, or Esc) just closes the dialog and the choice stays.
 import { useEffect, useId, useRef, useState } from 'react';
-import { FACTIONS, FACTION_GOAL, FACTION_INFO, factionGoalTerms, factionGoalVp, type FactionGoal } from '../data';
+import { RULES, FACTIONS, FACTION_GOAL, FACTION_INFO, factionGoalTerms, factionGoalVp, type FactionGoal } from '../data';
 import { FACTION_SHEETS, sheetCards } from '../factionSheets';
 import type { FactionChoice } from '../lobby';
 import { Icon, Kbd } from './bits';
 import { Amounts } from './Amounts';
 import { MedallionRow, PieceCard, PortraitFrame, PortraitRoundel, StarDivider } from './premium';
+import { RANDOM_PORTRAIT_URL } from '../brand/ornaments';
 import { useCoarsePointer } from './useCoarsePointer';
 import './FactionPicker.css';
 
@@ -158,7 +159,7 @@ export function FactionPicker({
             <div className="fs-sheet paper-grain" id={sheetId} data-testid="faction-sheet">
               <div className="fs-hero">
                 <PortraitFrame faction={null} className="fs-portrait fs-portrait-random">
-                  <Icon name="ui-random" size={72} className="random-mark" />
+                  {RANDOM_PORTRAIT_URL ? <img src={RANDOM_PORTRAIT_URL} alt="" draggable={false} /> : <Icon name="ui-random" size={72} className="random-mark" />}
                 </PortraitFrame>
                 <div className="fs-hero-text">
                   <div className="fs-sheet-name">Random</div>
@@ -196,6 +197,7 @@ const FACT_ICONS = { lose: 'ui-trend-down', counter: 'unit-spearman' } as const;
 /** Where in the game a goal is acted on (only goals with an action of their own). */
 const goalWhere = (faction: Exclude<FactionChoice, 'Random'>, goal: FactionGoal): string | null => {
   if (faction === 'Sparta') return 'In the game: Retire this veteran on its unit card, or use the Victory race (G).';
+  if (faction === 'Rome') return `In the game: select a level ${RULES.coloniaLevel} melee veteran and open the Settle lens; gilt rings mark the sites.`;
   return goal.action ? `In the game: ${goal.action} in the Victory race (G).` : null;
 };
 

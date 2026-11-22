@@ -56,6 +56,13 @@
 .vhc-goal-progress { font: 600 9px/1.15 var(--num-font); color: var(--ink-2); min-width: 0; }
 .vhc-goal-wrap.mine { flex: 0 1 auto; min-width: 0; max-width: 100%; padding: 1px 4px 1px 1px; border-radius: 12px; background: color-mix(in srgb, var(--gilt) 12%, var(--panel)); }
 .vhc-goal-open .medallion { background: transparent; box-shadow: none; }
+/* A goal city's open token (Colonia Victrix, Royal Tomb): the goal's mark in the dashed ring. Egypt's carries the tomb's
+   count, so the ring becomes a pill: gilt-ruled while the work is on, plain and muted while paused. */
+.vhc-goal-open.goal-city { color: var(--oi); }
+.vhc-goal-open.tomb { width: auto; min-width: 20px; padding: 0 5px 0 3px; border-radius: 10px; display: inline-flex; gap: 2px; }
+.vhc-goal-open.tomb.working { border-color: var(--gilt); border-style: dashed; color: var(--ink); }
+.vhc-goal-open.tomb.paused { color: var(--ink-2); }
+.vhc-tomb-count { font: 700 10px/1 var(--num-font, var(--sans)); }
 .vhc-open-tok { all: unset; box-sizing: border-box; position: relative; display: inline-flex; align-items: center; gap: 1px; border-radius: 50%; cursor: pointer; }
 .vhc-open-tok small { font: 700 8.5px/1 var(--sans); color: var(--muted); }
 /* The rate that lead costs, every yield: red with a down arrow (colour is never alone). */
@@ -133,6 +140,7 @@
 /* A legacy Sakoku vow: a torii mark and countdown beside the empire's tokens (the icon and figure identify it). */
 .vhc-closed { display: inline-flex; align-items: center; gap: 3px; height: 20px; padding: 0 5px 0 4px; border-radius: 10px; cursor: help; font: 700 10.5px/1 var(--num-font, var(--sans)); color: var(--ink-2); background: color-mix(in srgb, var(--ink) 6%, var(--panel)); box-shadow: inset 0 0 0 1px var(--rule-2); white-space: nowrap; }
 .vhc-closed.holding { color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--gilt); background: color-mix(in srgb, var(--gilt) 14%, var(--panel)); }
+.vhc-tomb.working { color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--gilt); }
 .vhc-closed.blocked { color: var(--bad); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bad) 55%, transparent); }
 
 /* ---------- Room for the rows (raceFit.ts, VpTrack.tsx): the race is the panel's job, so its furniture is tight ---------- */

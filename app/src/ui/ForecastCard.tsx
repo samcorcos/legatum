@@ -4,6 +4,8 @@ import { attacksInMelee, itemName, RULES } from '../data';
 import { distance, hexEq } from '../hex';
 import { isCalmRouteNote } from '../path';
 import { BreakdownTable } from './bits';
+import { GOAL_CITY_ICON, goalCityCaptureLine, goalCityCaptures } from '../goalCities';
+import { RingMedallion } from './ringMedallion';
 import { VpSeal } from './vpParts';
 import { capitalMark } from '../capitalMark';
 import { playerColor } from '../theme';
@@ -215,6 +217,9 @@ export function ForecastCard({
       {city && capturePointFor(view, city, unit.owner) && !ranged &&
         // The point a capture scores leads the card, in gilt under the header: it can decide the attack (8.9.23 review: it sat in the grey footnotes).
         <div className="forecast-vp" data-testid="forecast-capital-vp"><VpSeal vp={1} className="inline" /><span>+1 VP while you hold {city.name}</span></div>}
+      {city && !ranged && !(faction === 'Celts' && city.founder !== unit.owner) && goalCityCaptures(view, city.id, unit.owner).map(({ g, vp }) =>
+        // A goal city's points go with a capture (Rome's Colonia, Egypt's tomb), the same gilt line as the capital's.
+        <div key={g.kind} className="forecast-vp" data-testid={`forecast-goal-${g.kind}`}><RingMedallion icon={GOAL_CITY_ICON[g.kind]} tone="gilt" size={22} /><span>{goalCityCaptureLine(view, g, vp)}</span></div>)}
       {outriderEscapes && <div className="forecast-risk forecast-outrider" data-testid="forecast-outrider">If the {m.defName} moves this turn, it gets away.</div>}
       {m.aftermath?.severe && <AftermathLine m={m} />}
       {m.defUnit?.military && outclasses(m.defUnit.kind as UnitKind, defFaction, unit.kind as UnitKind, faction, f.defender_strength.total, f.attacker_strength.total) && (

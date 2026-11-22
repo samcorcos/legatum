@@ -346,6 +346,34 @@ pub struct GoalProgress {
     pub turns: Option<Dist>,
 }
 
+/// Rome's Colonia Victrix and Egypt's royal tomb over every seat of that faction
+/// (`goal_city_telemetry`): founded or raised, held, lost, and the work or founder behind it.
+#[derive(Clone, Debug, Default, PartialEq, Serialize)]
+pub struct GoalCitySummary {
+    pub seats: u32,
+    /// Seats whose goal city stood at some point, and the first turn it did.
+    pub established: u32,
+    pub established_turn: Option<Dist>,
+    /// Seats that scored the goal's VP themselves at some point.
+    pub scored: u32,
+    pub held_at_end: u32,
+    /// Seats whose goal city a rival held at the end, and seats whose city changed hands at all.
+    pub rival_holds_at_end: u32,
+    pub changed_hands: u32,
+    /// Rome: seats that had a level-3 melee unit while the Colonia was open, the first turn,
+    /// and the seat-turns with one, of which no legal Colonia site existed on the map.
+    pub founder_seats: u32,
+    pub founder_turn: Option<Dist>,
+    pub founder_turns: u64,
+    pub no_site_turns: u64,
+    /// Egypt: seats that started the work, the first start, and the work turns and pauses
+    /// summed over starting seats.
+    pub work_seats: u32,
+    pub work_started_turn: Option<Dist>,
+    pub work_turns: u64,
+    pub work_pauses: u64,
+}
+
 #[derive(Clone, Debug, Default, PartialEq, Serialize)]
 pub struct OpeningMetric {
     pub reached_empires: usize,
@@ -419,6 +447,8 @@ pub struct Summary {
     pub by_difficulty: BTreeMap<AiDifficulty, WinRate>,
     pub by_faction_difficulty: BTreeMap<Faction, BTreeMap<AiDifficulty, WinRate>>,
     pub goal_progress: BTreeMap<Faction, GoalProgress>,
+    /// Rome and Egypt only: their held goal cities in detail.
+    pub goal_cities: BTreeMap<Faction, GoalCitySummary>,
     pub winner_vp: Option<Dist>,
     /// Final VP of every player: vp -> count.
     pub vp_histogram: BTreeMap<u32, u32>,
@@ -511,6 +541,8 @@ pub fn summarize(records: &[GameRecord]) -> Summary {
     let mut lengths = Vec::new();
     let mut lengths_by_outcome: BTreeMap<Outcome, Vec<u32>> = BTreeMap::new();
     let mut goal_turns: BTreeMap<Faction, Vec<u32>> = BTreeMap::new();
+    // Per faction: established, founder and work-start turns.
+    let mut goal_city_turns: BTreeMap<Faction, [Vec<u32>; 3]> = BTreeMap::new();
     let (mut seats, mut cities, mut techs, mut elims) = (0u64, 0u64, 0u64, 0u64);
     for r in records {
         s.telemetry.observe(Sample {
@@ -557,6 +589,31 @@ pub fn summarize(records: &[GameRecord]) -> Summary {
                     goal.reached += 1;
                     goal_turns.entry(p.faction).or_default().push(*turn);
                 }
+                if let Some(g) = t.goal_cities.get(&p.id) {
+                    let c = s.goal_cities.entry(p.faction).or_default();
+                    let turns = goal_city_turns.entry(p.faction).or_default();
+                    c.seats += 1;
+                    if let Some(turn) = g.established_turn {
+                        c.established += 1;
+                        turns[0].push(turn);
+                    }
+                    c.scored += u32::from(g.first_scored_turn.is_some());
+                    c.held_at_end += u32::from(g.held_at_end);
+                    c.rival_holds_at_end += u32::from(g.rival_holds_at_end);
+                    c.changed_hands += u32::from(g.holder_changes > 0 || g.rival_held_turns > 0);
+                    if let Some(turn) = g.founder_turn {
+                        c.founder_seats += 1;
+                        turns[1].push(turn);
+                    }
+                    c.founder_turns += u64::from(g.founder_turns);
+                    c.no_site_turns += u64::from(g.no_site_turns);
+                    if let Some(turn) = g.work_started_turn {
+                        c.work_seats += 1;
+                        turns[2].push(turn);
+                    }
+                    c.work_turns += u64::from(g.work_turns);
+                    c.work_pauses += u64::from(g.work_pauses);
+                }
             }
             let b = s.by_brain.entry(p.brain.clone()).or_default();
             b.seats += 1;
@@ -595,6 +652,12 @@ pub fn summarize(records: &[GameRecord]) -> Summary {
             f64::from(goal.reached) / f64::from(goal.seats)
         };
         goal.turns = Dist::of(goal_turns.remove(f).unwrap_or_default());
+    }
+    for (f, [established, founder, work]) in goal_city_turns {
+        let c = s.goal_cities.entry(f).or_default();
+        c.established_turn = Dist::of(established);
+        c.founder_turn = Dist::of(founder);
+        c.work_started_turn = Dist::of(work);
     }
     s.by_faction.values_mut().for_each(rate);
     let winning_seats: u32 = s.by_faction.values().map(|w| w.wins).sum();
@@ -1081,6 +1144,52 @@ pub fn render_markdown(meta: &RunMeta, s: &Summary, records: &[GameRecord]) -> S
             g.reached,
             100.0 * g.rate
         );
+    }
+
+    if !s.goal_cities.is_empty() {
+        let median =
+            |d: &Option<Dist>| d.as_ref().map_or("-".to_string(), |d| d.median.to_string());
+        o += "\n## Goal cities (Rome's Colonia, Egypt's tomb)\n\nPer seat of the faction: its goal city \
+              stood (median first turn), the seat scored it, held it at the end, a rival held it at the \
+              end, it changed hands. Rome: seats with a level-3 melee unit while the Colonia was open \
+              (median first turn) and the share of those seat-turns with no legal Colonia site on the \
+              map. Egypt: seats that started the work (median first start), work turns and pauses per \
+              starting seat.\n\n\
+              | Faction | Seats | Stood | Turn | Scored | Held at end | Rival holds | Changed hands | Level 3 | Turn | No site | Started | Turn | Work turns | Pauses |\n\
+              | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n";
+        for (f, c) in &s.goal_cities {
+            let per = |n: u64, d: u32| {
+                if d == 0 {
+                    "-".to_string()
+                } else {
+                    format!("{:.1}", n as f64 / f64::from(d))
+                }
+            };
+            let share = if c.founder_turns == 0 {
+                "-".to_string()
+            } else {
+                format!(
+                    "{:.0}%",
+                    100.0 * c.no_site_turns as f64 / c.founder_turns as f64
+                )
+            };
+            o += &format!(
+                "| {f:?} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {share} | {} | {} | {} | {} |\n",
+                c.seats,
+                c.established,
+                median(&c.established_turn),
+                c.scored,
+                c.held_at_end,
+                c.rival_holds_at_end,
+                c.changed_hands,
+                c.founder_seats,
+                median(&c.founder_turn),
+                c.work_seats,
+                median(&c.work_started_turn),
+                per(c.work_turns, c.work_seats),
+                per(c.work_pauses, c.work_seats),
+            );
+        }
     }
 
     o += "\n## Distributions\n\n| Metric | Min | P10 | Median | P90 | Max |\n\

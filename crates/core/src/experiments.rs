@@ -119,6 +119,8 @@ faction_rules! {
     // The Nile (designer, 2026-11-21): doubled Food, no Production, surplus Food builds and a
     // Grow project grows. Switching it off restores the earlier rule (`EgyptConstruction`).
     EgyptNile => ("egypt_nile", Egypt, Strength),
+    RomeGoal => ("rome_goal", Rome, Strength),
+    EgyptGoal => ("egypt_goal", Egypt, Strength),
 }
 
 impl FactionRule {

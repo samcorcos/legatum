@@ -35,7 +35,7 @@ class RuleTable(unittest.TestCase):
         rows = ar.rule_table()
         names = [n for n, _, _ in rows]
         self.assertEqual(len(names), len(set(names)))
-        # Egypt and Rome have no faction goal (`GoalRule::None` in crates/core/src/goals.rs).
+        # Egypt and Rome had no faction goal when this fixture was recorded (they gained goals at rules 54).
         no_goal = {"egypt", "rome"}
         for faction in ar.FACTION_NAMES:
             kinds = [k for n, f, k in rows if f == faction]

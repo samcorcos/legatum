@@ -57,6 +57,8 @@
 .moment-card.loss .moment-effect .amt { color: var(--bad); font-weight: 700; }
 .moment-effect.plain > span { text-align: center; }
 .moment-card.loss .moment-crest { filter: grayscale(0.6); opacity: 0.85; }
+/* A loss shows the same painting as its gain, drained to grey like a fallen leader's portrait. */
+.moment-card.loss .moment-wonder-art { filter: grayscale(1) contrast(0.92) brightness(0.8); }
 .moment-card.legendary { max-width: 100%; padding: 26px 36px 14px; border-top-width: 10px; border-bottom-width: 10px; background: linear-gradient(180deg, #d3ab4428, transparent 70%), var(--panel); }
 .moment-card.legendary .moment-heading { flex-direction: column; gap: 12px; }
 .moment-card.legendary h2 { font-size: clamp(28px, 3vw, 42px); font-weight: 700; letter-spacing: .015em; text-wrap: balance; }
@@ -241,6 +243,8 @@
 /* Wonder art on the discovery card. */
 .moment-wonder-art { display: block; width: 104px; height: 104px; object-fit: contain; flex: none; }
 @media (max-width: 960px) { .moment-wonder-art { width: 56px; height: 56px; } }
+/* A legendary card's picture is sized to the card: plinth paintings have wide transparent margins, so 104 px leaves the building about 60 px tall. */
+@media (min-width: 961px) and (min-height: 701px) { .moment-card.legendary .moment-wonder-art { width: 156px; height: 156px; } }
 
 /*
  * The unlock reveal (moments-fx, 2026-10-24; kept restrained after the user's "cheesy" verdict): the seal settles onto

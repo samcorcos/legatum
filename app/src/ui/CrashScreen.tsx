@@ -274,7 +274,6 @@ export function CrashCard({ error, kind = 'crash', handlers }: { error: unknown;
         data-kind={kind}
         onKeyDown={onKeyDown}
       >
-        <p className="crash-kicker">Legatum</p>
         <h1 id="crash-title">{heading}</h1>
         <p id="crash-text" className="crash-text">{sentence}</p>
         <div className="crash-actions">
