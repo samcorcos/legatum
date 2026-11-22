@@ -10,6 +10,7 @@ Newest first. One entry per non-obvious finding: what we learned, the evidence, 
 - **The online host could not stay native.** The Mac app embedded `legatum-server`, which dialed the Cloudflare relay. In the browser the authoritative host (game, staging, AI) runs in the host's tab as WASM and a JS tunnel speaks the relay's frame format; the LAN server is gone, since the relay replaces it and the designer's firewall blocked LAN anyway.
 - **Scenario folder drop-ins existed only because the app could read a folder.** On the web a scenario ships by merging to master (the Pages deploy), and playtests are Pages previews (`scripts/deploy-preview.sh <label>`).
 - **`npm run e2e:hosted` is not in `tools/ci/local-ci.sh`,** so its title assertions went stale when co-op moved into the browser (it still expected a disabled Host Game). Run it by hand (`scripts/build-web.sh --skip-wasm && cd app && npm run e2e:hosted`) whenever the title or multiplayer menu changes.
+
 ## 2026-11-22: Online co-op runs in the host's browser tab; what moving the server into WASM taught (`claude/browser-host`)
 
 - **The old server's host logic needed no transport to work.** `host.rs`, staging, protocol, events and admission moved into `crates/wasm/src/host` almost unchanged once the async outbox became a synchronous queue drained by the caller (`NetHost::drain`). The 29 server protocol tests still pass, driven synchronously in `crates/wasm/tests/net_host.rs`. `crates/server` (axum/tokio, CLI, LAN, embedded relay client) is deleted.
