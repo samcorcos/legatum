@@ -12,6 +12,7 @@
 #   code                    .progress/docs-review/<branch>.ok from legatum-docs-reviewer
 #   player text             .progress/plain-review/<branch>.ok from legatum-plain-language-reviewer
 #   UI                      .progress/ui-review/<branch>.ok from legatum-ui-reviewer
+#   art, art-related code   .progress/art-review/<branch>.ok from legatum-art-reviewer
 #
 # Fires when a command runs `git merge <branch>` in a checkout whose current branch is master (any form:
 # `git -C DIR merge`, `cd DIR && git merge`, chained or piped commands, redirections such as `2>&1`, `bash -c '...'`).
@@ -265,6 +266,9 @@ if problems:
     if "ui" in todo:
         steps.append("run the `legatum-ui-reviewer` agent on the branch (it writes .progress/ui-review/"
                      "<branch-with-slashes-as-dashes>.ok when its verdict is ship or ship with known issues)")
+    if "art" in todo:
+        steps.append("run the `legatum-art-reviewer` agent on the branch (it writes .progress/art-review/"
+                     "<branch-with-slashes-as-dashes>.ok when its verdict is pass or pass with follow-ups)")
     if "plain" in todo:
         steps.append("run the `legatum-plain-language-reviewer` agent on the branch and apply its rewrites (it writes "
                      ".progress/plain-review/<branch-with-slashes-as-dashes>.ok when the player text is plain)")
