@@ -69,3 +69,28 @@ it('a site missing from the allow-list keeps its games queued', async () => {
   await archive.retryGameHistory();
   expect(fetch).toHaveBeenCalledOnce();
 });
+
+it('historyToRecord adds coach_answers only for uploads and only when there are answers', async () => {
+  const { historyToRecord } = await import('./gameUpload');
+  const client = { archive: () => recording(), publicArchive: () => recording() };
+  const answers = [{ type: 'answer', turn: 3, answer: 'because' }];
+  expect(JSON.parse(historyToRecord(client, answers)).coach_answers).toEqual(answers);
+  expect(historyToRecord(client, [])).toBe(recording());
+  vi.stubEnv('VITE_LEGATUM_GAMES_URL', '');
+  vi.resetModules();
+  const local = await import('./gameUpload');
+  expect(local.historyToRecord(client, answers)).toBe(recording());
+});
+
+it('exporting a retained history strips coach_answers (the engine refuses unknown keys)', async () => {
+  const { historyToRecord } = await import('./gameUpload');
+  const json = historyToRecord({ archive: () => recording() }, [{ type: 'answer' }]);
+  expect(json).toContain('coach_answers');
+  let blob: Blob | null = null;
+  vi.stubGlobal('CompressionStream', undefined);
+  vi.spyOn(URL, 'createObjectURL').mockImplementation((b) => { blob = b as Blob; return 'blob:x'; });
+  vi.stubGlobal('document', { createElement: () => ({ click: () => {} }) });
+  const archive = await import('./archive');
+  await archive.exportGameHistory(json);
+  expect(JSON.parse(await (blob as unknown as Blob).text())).not.toHaveProperty('coach_answers');
+});

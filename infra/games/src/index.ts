@@ -74,7 +74,7 @@ async function gunzip(bytes: ArrayBuffer): Promise<string | null> {
 /** The record's shape, and the rule that matters most: no seat carries a name a player typed. */
 export function checkRecord(id: string, record: unknown): Metadata | string {
   if (!record || typeof record !== "object") return "not a game record";
-  const r = record as { metadata?: Metadata; tape?: unknown };
+  const r = record as { metadata?: Metadata; tape?: unknown; coach_answers?: unknown };
   const m = r.metadata;
   if (!m || typeof m !== "object" || !r.tape || typeof r.tape !== "object") return "not a game record";
   if (m.schema_version !== 1) return "unknown schema version";
@@ -86,6 +86,11 @@ export function checkRecord(id: string, record: unknown): Metadata | string {
   for (const [i, s] of m.seats.entries()) {
     const name = DEFAULT_NAME_RE.exec(String(s?.name));
     if (!name || name[1] !== (s.human ? "Player" : "AI") || Number(name[2]) !== i + 1) return "seat names must be the defaults";
+  }
+  // The player's coach-question answers ride along as an optional list of objects.
+  if (r.coach_answers !== undefined) {
+    const a = r.coach_answers;
+    if (!Array.isArray(a) || a.length > 2000 || a.some((x) => !x || typeof x !== "object" || Array.isArray(x))) return "bad coach answers";
   }
   return m;
 }
