@@ -43,6 +43,7 @@ Current rules only, one line each with the date and who. Detail, the user's full
 - Number anything that needs his answer so he can reply by number (user, 2026-11-21).
 - Be a thought partner: recommend with reasons, push back when evidence says so, offer alternatives to his ideas, and say plainly when an earlier claim was wrong (user, 2026-10-31).
 - Decide on judgement; ask only when genuinely unsure (user, 2026-10-31).
+- Never ask him to capture data by hand (screenshots of the frame-rate readout, game exports): his games upload themselves with per-turn `frame_times`; fetch them, and add telemetry (nothing that identifies a player or device) when a report needs data the game does not record yet (user, 2026-11-22).
 - Talk in plain language with concrete numbers and a one-line takeaway (user, 2026-10-09).
 - Parallelize to the maximum and estimate in wall-clock hours at parallel speed; name the critical path; never quote human-team days (user, 2026-11-21).
 - Never idle the AI work while waiting for a playtest (user, 2026-10-29/30). Long paid runs show interim evidence (user, 2026-10-09).

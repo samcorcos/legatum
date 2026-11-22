@@ -8,6 +8,7 @@
 // save() is opaque (u64 bitset words): store the string as-is, never re-serialize it.
 // forecast() returns BattleForecast JSON or the string "null". A Rust panic throws
 // RuntimeError "unreachable" (real message on console.error); recreate from the last save.
+import type { TurnFrameTime } from './frameTelemetry';
 import type { GameClient } from './client';
 import type { WhyCategory, WhyQuestion } from './why';
 import type { TrainingEngine, TrainingFinish, TrainingProgress } from './training';
@@ -39,6 +40,7 @@ interface WasmGame {
   archive(): string;
   public_archive?(): string;
   record_turn_time?(turn: number, endedAt: string, activeSeconds: number, era: number, sessionId: string): void;
+  record_frame_time?(timeJson: string): void;
   fork_archive(): void;
   attach_scenario(scenarioJson: string): void;
   scenario_status(): string;
@@ -197,6 +199,9 @@ export class WasmClient implements GameClient, TrainingEngine {
   publicArchive(): string { return this.g.public_archive ? this.g.public_archive() : this.g.archive(); }
   recordTurnTime(turn: number, endedAt: string, activeSeconds: number, era: number, sessionId: string) {
     this.g.record_turn_time?.(turn, endedAt, activeSeconds, era, sessionId);
+  }
+  recordFrameTime(time: TurnFrameTime) {
+    this.g.record_frame_time?.(JSON.stringify(time));
   }
   forkArchive(): void { this.g.fork_archive(); }
 

@@ -472,6 +472,14 @@ const FLAME = 'rgb(176,98,46)';
  * fires at their feet once it is badly hurt, and at 0 HP a breach (rubble spilled from the wall and a heavier pall).
  * `damage` is 0..1 (1 = 0 HP). A pure function of the clock, so a still frame never looks dead.
  */
+/**
+ * Everything drawSiegeAmbient can paint for a city at `at` (CSS px), with room to spare: rubble below and
+ * left of the centre, puffs rising up to about 1.9 hexes and drifting right with the wind as they swell.
+ */
+export function siegeAmbientBox(at: Pt, hp: number): { x: number; y: number; w: number; h: number } {
+  return { x: at.x - hp * 1.2, y: at.y - hp * 2.8, w: hp * 3.2, h: hp * 3.7 };
+}
+
 export function drawSiegeAmbient(ctx: CanvasRenderingContext2D, at: Pt, damage: number, seed: number, t: number, hp: number) {
   if (damage <= 0) return;
   const p = at;

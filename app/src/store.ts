@@ -61,6 +61,8 @@ import { listAutosaves, newCampaignId, readPendingOrders, writeAutosave as keepA
 import { abandonGameHistory, recordGameHistory } from './platform/archive';
 import { historyToRecord } from './platform/gameUpload';
 import { currentActivePlaySeconds, currentPlaySessionId, resetActivePlayTurn } from './activePlayTime';
+import { takeTurnFrameTime } from './frameTelemetry';
+import { mapViewport } from './map/camera';
 import { cancelTurnFeedback, feel, feedbackForTurn, playTurnFeedback } from './feel';
 import { newRun, saveRecord, type ScenarioEntry, type ScenarioFeedback, type ScenarioRun, type ScenarioStatus } from './scenarios/scenarios';
 import { saveScenarioRun, type SavedRun } from './platform/scenarioRuns';
@@ -1096,6 +1098,15 @@ export const useGame = create<State>((set, get) => {
           client.recordTurnTime(views[0].turn, endedAt, activeSeconds, era, currentPlaySessionId());
         } catch (e) {
           console.error('legatum: turn play time was not recorded', e);
+        }
+      }
+      if (!get().scenario && client.recordFrameTime) {
+        try {
+          const map = mapViewport();
+          client.recordFrameTime(takeTurnFrameTime(views[0].turn, { units: views[0].units.length, cities: views[0].cities.length,
+            zoom: map?.zoom ?? 0, canvasPixels: map ? map.w * map.h * (globalThis.devicePixelRatio || 1) ** 2 : 0 }));
+        } catch (e) {
+          console.error('legatum: turn frame times were not recorded', e);
         }
       }
       resetActivePlayTurn();
