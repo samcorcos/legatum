@@ -72,6 +72,43 @@ fn pick<'a, T>(rng: &mut Rng, items: &'a [T]) -> &'a T {
     &items[rng.range(0, items.len() as i64 - 1) as usize]
 }
 
+/// Every state real play reaches must load: three full all-Hard games, saved and loaded through
+/// `parse_state` (and so `check_state`) every few turns and at the end, coming back identical.
+#[test]
+fn every_state_of_full_all_hard_games_round_trips_through_save_validation() {
+    const EVERY: u32 = 5;
+    const CAP: u32 = 450;
+    for seed in [1, 2, 3] {
+        let mut setup = GameSetup::all_ai(seed);
+        for p in &mut setup.players {
+            p.difficulty = legatum_core::AiDifficulty::Hard;
+        }
+        let mut session = Session::new(&setup, |_| BrainKind::Scripted);
+        let check = |state: &legatum_core::GameState| {
+            let loaded = parse_state(&state_to_json(state)).unwrap_or_else(|e| {
+                panic!(
+                    "seed {seed} turn {}: a reached state was refused: {e}",
+                    state.turn
+                )
+            });
+            assert!(
+                loaded == *state,
+                "seed {seed} turn {}: round trip",
+                state.turn
+            );
+        };
+        while !session.state.finished && session.state.turn < CAP {
+            if session.state.turn % EVERY == 0 {
+                check(&session.state);
+            }
+            let orders = session.ai_orders();
+            session.step(&orders);
+        }
+        assert!(session.state.finished, "seed {seed}: the game must finish");
+        check(&session.state);
+    }
+}
+
 #[test]
 fn a_mutated_save_loads_views_and_resolves_without_panicking() {
     let cases: u64 = std::env::var("LEGATUM_SAVE_FUZZ_CASES")
