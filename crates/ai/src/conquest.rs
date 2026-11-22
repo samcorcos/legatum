@@ -262,6 +262,18 @@ impl Planner<'_> {
     }
 
     /// Gene `value_first_target` is on for this faction.
+    /// Gene `roman_finish_siege`: Rome has a campaign under way. The siege's own XP promotes
+    /// its units, and that first veteran must not close the one-city gate on the city they
+    /// are about to take.
+    fn roman_campaign_live(&self) -> bool {
+        self.decisions.roman_finish_siege > 0
+            && (self.campaigns.active.is_some()
+                || matches!(
+                    self.routed_plan().map(|p| &p.kind),
+                    Some(crate::plan::PlanKind::Campaign { .. })
+                ))
+    }
+
     /// Own cities needed before a conquest city is nominated. Gene `roman_early_war`: Rome
     /// founds only with veterans, and its surest first promotions are a war; without a
     /// veteran in hand, its first city is enough (owner, 2026-11-21: the rule "forces you
@@ -271,11 +283,11 @@ impl Planner<'_> {
         if self.faction == Faction::Rome
             && self.decisions.roman_founders > 0
             && self.decisions.roman_early_war > 0
-            && !self.ctx.own_units.iter().any(|u| {
+            && (!self.ctx.own_units.iter().any(|u| {
                 u.level >= 1
                     && legatum_core::data::unit_class(u.kind)
                         == Some(legatum_core::UnitClass::Melee)
-            })
+            }) || self.roman_campaign_live())
         {
             needed.min(1)
         } else {
@@ -804,8 +816,9 @@ mod tests {
     }
 
     /// Gene `roman_early_war`: Rome with one city and no veteran names a conquest city (its
-    /// second city needs a veteran, and a war is the surest first promotion); with a veteran in
-    /// hand, or the gene off, it keeps the shared two-city gate.
+    /// second city needs a veteran, and a war is the surest first promotion); with the gene
+    /// off, or a veteran in hand and no campaign under way, it keeps the shared two-city gate.
+    /// Gene `roman_finish_siege`: a campaign's own promotions do not close the gate.
     #[test]
     fn a_one_city_rome_without_a_veteran_names_a_conquest_city() {
         let mut v = ViewBuilder::new(32, 20)
@@ -830,21 +843,32 @@ mod tests {
                 war_id: Some(1),
                 declarers: vec![v.team],
             });
-        let rome = |v: &PlayerView, early_war: i32| {
+        let rome = |v: &PlayerView, early_war: i32, campaign: bool| {
             let mut p = hard(v);
             p.decisions = crate::DecisionParams::builtin_for(Faction::Rome);
             p.decisions.conquest_min_cities = 2;
             p.decisions.roman_founders = 1;
             p.decisions.roman_early_war = early_war;
+            p.decisions.roman_finish_siege = 1;
+            if campaign {
+                p.campaigns.active = Some(crate::campaign::Campaign {
+                    target: CityId(3),
+                    start_turn: 1,
+                    committed: vec![legatum_core::UnitId(11), legatum_core::UnitId(12)],
+                    deadline: None,
+                    expected_value: 100,
+                    target_was_unwalled: true,
+                });
+            }
             p.conquest_city().map(|c| c.id)
         };
-        assert_eq!(rome(&v, 1), Some(CityId(3)));
-        assert_eq!(rome(&v, 0), None);
+        assert_eq!(rome(&v, 1, false), Some(CityId(3)));
+        assert_eq!(rome(&v, 0, false), None);
         v.units.iter_mut().find(|u| u.id.0 == 11).unwrap().level = 1;
-        assert_eq!(
-            rome(&v, 1),
-            None,
-            "a veteran in hand founds the second city"
-        );
+        // With no campaign under way, a veteran in hand founds the second city first.
+        assert_eq!(rome(&v, 1, false), None);
+        // Gene `roman_finish_siege`: a promotion earned mid-campaign keeps the target named
+        // (the owner's Laurion siege: the first veteran closed the gate on a falling city).
+        assert_eq!(rome(&v, 1, true), Some(CityId(3)));
     }
 }

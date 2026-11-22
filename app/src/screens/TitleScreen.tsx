@@ -1,5 +1,5 @@
 import { CALENDAR_NOTE, calendarLabel } from '../data';
-import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { useId, useLayoutEffect, useRef, useState } from 'react';
 import { readAutosave, useGame, type SaveFile } from '../store';
 import { pickSaveFile } from '../ui/GameMenu';
 import { DecoRule, Fan, Wordmark } from '../brand/ornaments';
@@ -8,7 +8,6 @@ import { HintSettings } from '../ui/FirstGameHints';
 import { HapticsSettings } from '../ui/HapticsSettings';
 import { SoundSettings } from '../ui/SoundSettings';
 import { CombatFxSettings } from '../ui/CombatFxSettings';
-import { canQuit, quitApp } from '../tauri';
 import { DEFAULT_PLAYER_NAME, MAX_PLAYER_NAME, rememberPlayerName, savedPlayerName } from '../platform/online';
 import { TitleArt } from './TitleArt';
 import { usePerfOverlay } from '../ui/PerfOverlay';
@@ -85,8 +84,7 @@ function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
   const error = useGame((s) => s.error);
   const busy = useGame((s) => s.busy);
   const views = useGame((s) => s.views);
-  const [auto, setAuto] = useState<SaveFile | null>(null);
-  const [checkingAuto, setCheckingAuto] = useState(true);
+  const [auto] = useState<SaveFile | null>(readAutosave);
   const [, refresh] = useState(0);
   const olderAuto = !!auto && (!saveHasCurrentRules(auto.game) || olderAutosaves.has(auto.savedAt));
   const unreadableAuto = !!auto && unreadableAutosaves.has(auto.savedAt);
@@ -97,13 +95,6 @@ function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
     else if (failure) unreadableAutosaves.add(save.savedAt);
     if (failure) refresh((n) => n + 1);
   };
-  useEffect(() => {
-    let active = true;
-    void readAutosave().then((save) => {
-      if (active) { setAuto(save); setCheckingAuto(false); }
-    });
-    return () => { active = false; };
-  }, []);
   // While a message shows, starting a new game is the way forward, so it takes the primary slot.
   const newGamePrimary = !views && (!auto || !!error || olderAuto || unreadableAuto);
   const continuePrimary = !views && !!auto && !error && !olderAuto && !unreadableAuto;
@@ -125,7 +116,7 @@ function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
           {olderAuto ? 'Saved game (older version)' : unreadableAuto ? 'Saved game (unreadable)' : 'Continue'}
           <span className="btn-sub">
             {olderAuto ? 'Cannot continue with these rules' : unreadableAuto ? "This save file is damaged"
-              : auto ? `${auto.names.join(' & ')} · turn ${auto.turn} · ${calendarLabel(auto.turn)} · ${new Date(auto.savedAt).toLocaleString()}` : checkingAuto ? 'Checking autosaves…' : 'No autosave yet'}
+              : auto ? `${auto.names.join(' & ')} · turn ${auto.turn} · ${calendarLabel(auto.turn)} · ${new Date(auto.savedAt).toLocaleString()}` : 'No autosave yet'}
           </span>
         </button>
         <button className="btn big quiet" onClick={() => pickSaveFile((save) => loadSave(save, true), (m) => set({ error: m }))}>
@@ -136,11 +127,6 @@ function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
         </button>
         <button className="btn big quiet" onClick={openGuide}>How to Play <span className="btn-sub">The field guide · ?</span></button>
         <Settings />
-        {canQuit() && (
-          <button className="btn big quiet" onClick={() => quitApp().catch((e) => set({ error: `Could not quit: ${String(e)}` }))}>
-            Quit
-          </button>
-        )}
       </div>
       {uploadsGames() && (
         <p className="title-hosted-note title-upload-note">
@@ -161,18 +147,37 @@ function MultiplayerMenu({ onBack }: { onBack: () => void }) {
   // Online play: Host Game runs the game in this tab and opens its game room. A build with no relay has
   // no game list, so it offers hot seat only.
   const [hosting, setHosting] = useState<'idle' | 'starting' | 'failed'>('idle');
+  // Host from a save has its own busy and failed state, so a retry stays on the button the player pressed.
+  const [resuming, setResuming] = useState<'idle' | 'starting' | 'failed'>('idle');
+  const busy = hosting === 'starting' || resuming === 'starting';
   const [hostError, setHostError] = useState<string | null>(null);
   const [name, setName] = useState(() => savedPlayerName() ?? DEFAULT_PLAYER_NAME);
   const hostOnline = async () => {
     const who = name.trim().slice(0, MAX_PLAYER_NAME) || DEFAULT_PLAYER_NAME;
     rememberPlayerName(who);
     setHosting('starting');
+    setResuming('idle');
     setHostError(null);
     const failure = await useGame.getState().hostOnline(who);
     if (failure) {
       setHostError(failure);
       setHosting('failed');
     }
+  };
+
+  const hostFromSave = () => {
+    const who = name.trim().slice(0, MAX_PLAYER_NAME) || DEFAULT_PLAYER_NAME;
+    rememberPlayerName(who);
+    setHostError(null);
+    setHosting('idle');
+    void pickSaveFile(async (save) => {
+      setResuming('starting');
+      const failure = await useGame.getState().hostOnlineFromSave(who, save);
+      if (failure) {
+        setHostError(failure);
+        setResuming('failed');
+      }
+    }, (message) => { setHostError(message); setResuming('failed'); });
   };
 
   return (
@@ -192,19 +197,26 @@ function MultiplayerMenu({ onBack }: { onBack: () => void }) {
                 className="lobby-input"
                 value={name}
                 maxLength={MAX_PLAYER_NAME}
-                disabled={hosting === 'starting'}
+                disabled={busy}
                 onChange={(e) => setName(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter' && hosting !== 'starting') void hostOnline(); }}
+                onKeyDown={(e) => { if (e.key === 'Enter' && !busy) void hostOnline(); }}
               />
             </label>
-            <button className={`btn big ${hosting === 'failed' && !views ? 'primary' : ''}`} disabled={hosting === 'starting'} onClick={hostOnline}>
+            <button className={`btn big ${hosting === 'failed' && !views ? 'primary' : ''}`} disabled={busy} onClick={hostOnline}>
               Host Game
               <span className="btn-sub">
                 {hosting === 'starting' ? <><span className="spinner" /> Opening your game…</>
                   : hosting === 'failed' ? 'Try again' : 'Open a game that others can find and join'}
               </span>
             </button>
-            <button className={`btn big ${!views && hosting === 'idle' ? 'primary' : ''}`} disabled={hosting === 'starting'} onClick={() => goto('online')}>
+            <button className={`btn big ${resuming === 'failed' && !views ? 'primary' : ''}`} disabled={busy} onClick={hostFromSave}>
+              Host from a save…
+              <span className="btn-sub">
+                {resuming === 'starting' ? <><span className="spinner" /> Opening your game…</>
+                  : resuming === 'failed' ? 'Try again' : 'Carry on an online game from its save file'}
+              </span>
+            </button>
+            <button className={`btn big ${!views && hosting === 'idle' && resuming === 'idle' ? 'primary' : ''}`} disabled={busy} onClick={() => goto('online')}>
               Join Game
               <span className="btn-sub">See the games that are open now</span>
             </button>

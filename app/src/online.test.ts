@@ -133,7 +133,7 @@ describe('a relayed game that goes away', () => {
     code = 404;
     await vi.advanceTimersByTimeAsync(4100);
     expect(serverBase()).toBe('');
-    expect(useGame.getState()).toMatchObject({ screen: 'title', error: 'This game has ended.', lan: null });
+    expect(useGame.getState()).toMatchObject({ screen: 'title', error: 'This game has ended.', net: null });
   });
 
   it('says the host is away on 503 and keeps waiting', async () => {

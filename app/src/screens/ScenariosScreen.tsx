@@ -9,12 +9,11 @@ import { LobbyFrame } from './LobbyScreen';
 import { factionColor } from '../theme';
 import { factionName } from '../data';
 import { Icon } from '../ui/bits';
-import { loadDropins } from '../platform/scenarioDropins';
 import { PortraitFrame, PortraitRoundel } from '../ui/premium';
 import { eraArt } from '../celebrate/eraArt';
 import {
-  SOON_SLOTS, aiResultLine, bestResultLine, leadTarget, mergeDropins, readRecords, scenarioCatalog, targetText, turnsWord,
-  type Catalog, type ScenarioEntry, type ScenarioRecord, type ScenarioTarget, type SoonSlot, type UnavailableScenario,
+  SOON_SLOTS, aiResultLine, bestResultLine, leadTarget, readRecords, scenarioCatalog, targetText, turnsWord,
+  type ScenarioEntry, type ScenarioRecord, type ScenarioTarget, type SoonSlot,
 } from '../scenarios/scenarios';
 import '../ui/Scenarios.css';
 
@@ -47,7 +46,7 @@ function ScenarioCard({ entry, record, on, onOpen }: { entry: ScenarioEntry; rec
       <span className="lab-art" style={artStyle(lab.era)}>
         <PortraitRoundel faction={f.faction} size={54} color={factionColor(f.faction)} className="lab-roundel" />
         <span className="lab-len">About {f.minutes} min · {turnsWord(f.objective.turns)}</span>
-        {lab.opponent ? <span className="lab-opp">Fixed opponent</span> : entry.fromFolder && <span className="lab-opp">Added file</span>}
+        {lab.opponent && <span className="lab-opp">Fixed opponent</span>}
       </span>
       <span className="lab-body">
         <span className="lab-title">{f.title}</span>
@@ -68,20 +67,6 @@ function SoonCard({ slot }: { slot: SoonSlot }) {
         <span className="lab-question">{slot.question}</span>
         <span className="lab-blurb">{slot.blurb}</span>
         <span className="lab-results"><span className="lab-ai">Waiting for {slot.waitingFor}.</span></span>
-      </span>
-    </div>
-  );
-}
-
-/** A scenario file in the user's folder that cannot be played, shown greyed out with why. */
-function UnavailableCard({ item }: { item: UnavailableScenario }) {
-  return (
-    <div className="lab-card soon" role="option" aria-selected={false} aria-disabled data-testid={`lab-unavailable-${item.file}`}>
-      <span className="lab-art soon-art"><span className="lab-len">Cannot be played</span></span>
-      <span className="lab-body">
-        <span className="lab-title">{item.title}</span>
-        <span className="lab-question" title={item.detail}>{item.reason}</span>
-        <span className="lab-results"><span className="lab-ai">File: {item.file}</span></span>
       </span>
     </div>
   );
@@ -163,26 +148,18 @@ export function ScenariosScreen() {
   const error = useGame((s) => s.error);
   const startScenario = useGame((s) => s.startScenario);
   const bundled = useMemo(scenarioCatalog, []);
-  // The desktop app also lists scenario files from the user's folder, read each time the Lab opens.
-  const [folder, setFolder] = useState<Catalog>({ entries: bundled, unavailable: [] });
-  useEffect(() => {
-    let live = true;
-    void loadDropins().then((files) => { if (live && files.length) setFolder(mergeDropins(bundled, files)); });
-    return () => { live = false; };
-  }, [bundled]);
   // Type to filter: every word typed must appear in the card's title, faction, question or blurb.
   const [filter, setFilter] = useState('');
   const words = filter.toLowerCase().split(/\s+/).filter(Boolean);
   const matches = (text: string) => words.every((w) => text.toLowerCase().includes(w));
-  const entries = folder.entries.filter((e) => matches(`${e.file.title} ${factionName(e.file.faction)} ${e.file.lab?.question ?? ''} ${e.file.lab?.blurb ?? ''}`));
-  const unavailable = folder.unavailable.filter((u) => matches(u.title));
+  const entries = bundled.filter((e) => matches(`${e.file.title} ${factionName(e.file.faction)} ${e.file.lab?.question ?? ''} ${e.file.lab?.blurb ?? ''}`));
   const soon = words.length ? [] : SOON_SLOTS;
   const filterBox = useRef<HTMLInputElement>(null);
   const records = useMemo(readRecords, []);
-  const [selected, setSelected] = useState(() => folder.entries.find((e) => !records[e.file.id])?.file.id ?? folder.entries[0]?.file.id);
+  const [selected, setSelected] = useState(() => bundled.find((e) => !records[e.file.id])?.file.id ?? bundled[0]?.file.id);
   const [view, setView] = useState<'list' | 'brief'>('list');
   const scroller = useRef<HTMLDivElement>(null);
-  const below = useCardsBelow(scroller, view === 'list', entries.length + unavailable.length + soon.length);
+  const below = useCardsBelow(scroller, view === 'list', entries.length + soon.length);
   const entry = entries.find((e) => e.file.id === selected) ?? entries[0];
   const start = () => {
     if (entry && !busy) void startScenario(entry);
@@ -240,7 +217,7 @@ export function ScenariosScreen() {
   return (
     <LobbyFrame title={view === 'brief' && entry ? entry.file.title : 'Scenario Lab'} onBack={back} backDisabled={!!busy} error={error} dock={dock}>
       <div className="scn-scroll" ref={scroller}>
-        {folder.entries.length === 0 ? (
+        {bundled.length === 0 ? (
           <p className="scn-intro">No scenarios are bundled with this build.</p>
         ) : view === 'brief' && entry ? (
           <Briefing entry={entry} record={records[entry.file.id]} />
@@ -250,9 +227,9 @@ export function ScenariosScreen() {
             <div className="lab-filter">
               <input ref={filterBox} autoFocus type="search" value={filter} onChange={(e) => setFilter(e.target.value)}
                 placeholder="Type to filter by name, people or question" aria-label="Filter scenarios" data-testid="lab-filter" />
-              {words.length > 0 && <span className="lab-filter-count" data-testid="lab-filter-count">{entries.length} of {folder.entries.length}</span>}
+              {words.length > 0 && <span className="lab-filter-count" data-testid="lab-filter-count">{entries.length} of {bundled.length}</span>}
             </div>
-            {words.length > 0 && entries.length + unavailable.length === 0 && (
+            {words.length > 0 && entries.length === 0 && (
               <p className="scn-intro" data-testid="lab-filter-empty">No scenario matches "{filter.trim()}". Press Esc to clear the filter.</p>
             )}
             <div className="lab-grid" role="listbox" aria-label="Scenarios">
@@ -260,7 +237,6 @@ export function ScenariosScreen() {
                 <ScenarioCard key={e.file.id} entry={e} record={records[e.file.id]} on={e.file.id === entry?.file.id}
                   onOpen={() => { setSelected(e.file.id); setView('brief'); }} />
               ))}
-              {unavailable.map((item) => <UnavailableCard key={item.file} item={item} />)}
               {soon.map((slot) => <SoonCard key={slot.id} slot={slot} />)}
             </div>
           </>

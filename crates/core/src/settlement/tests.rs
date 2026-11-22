@@ -547,3 +547,27 @@ fn calibrate_site_bands() {
         );
     }
 }
+
+#[test]
+fn an_egyptian_settler_values_land_by_its_nile_food_and_no_production() {
+    let (mut v, u) = fixture();
+    for t in &mut v.tiles {
+        t.terrain = Some(Terrain::Hills);
+    }
+    let plain = site_potential(&v, u.pos).0;
+    assert!(plain.production > 0);
+    let me = v.me;
+    v.players.iter_mut().find(|p| p.id == me).unwrap().faction = Faction::Egypt;
+    let nile = site_potential(&v, u.pos).0;
+    assert_eq!(nile.production, 0, "Egypt has no Production");
+    let site = settlement_site(&v, &u, &[], u.pos).unwrap();
+    assert_eq!(site.potential_yields, nile, "the memoised sums agree");
+    assert_eq!(site.center_yields.production, 0);
+    for t in &mut v.tiles {
+        t.terrain = Some(Terrain::Grassland);
+    }
+    let grass = site_potential(&v, u.pos).0;
+    let pct = v.rule_experiments.egypt_nile_food_percent();
+    v.players.iter_mut().find(|p| p.id == me).unwrap().faction = Faction::Byzantium;
+    assert_eq!(grass.food, site_potential(&v, u.pos).0.food * pct / 100);
+}

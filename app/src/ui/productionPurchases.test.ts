@@ -146,14 +146,14 @@ describe('purchase previews', () => {
     const { client, city, disband, buy } = fixture();
     const view = client.view(0);
     const cityView = view.cities.find((c) => c.id === city.id)!;
-    const lan = remote();
+    const remoteClient = remote();
     expect(client.validate(0, [buy])).toEqual([{ index: 0, message: expect.stringContaining('No free spawn tile') }]);
     expect(client.validate(0, [disband, buy])).toEqual([]);
     expect(client.validate(0, [buy, disband])).toEqual([]);
-    const preview = purchasePreviews(lan, cityView, view, [disband], client.validate(0, [disband]));
+    const preview = purchasePreviews(remoteClient, cityView, view, [disband], client.validate(0, [disband]));
     expect(preview.options.get(itemKey(soldier))?.reason).toBeNull();
     for (const orders of [[disband, buy], [buy, disband]]) {
-      expect(previews(lan, view, orders).get(itemKey(soldier))).toMatchObject({ reason: null, selected: true });
+      expect(previews(remoteClient, view, orders).get(itemKey(soldier))).toMatchObject({ reason: null, selected: true });
     }
   });
 
@@ -346,28 +346,28 @@ describe('purchase previews', () => {
     const { client, disband, buy } = fixture();
     const view = client.view(0);
     const socket = new FakeSocket('ws://unused/ws');
-    const lan = new RemoteClient(0, 'P0', socket.url, () => socket);
-    lan.token = 'fixture-token';
-    lan.connect();
+    const remoteClient = new RemoteClient(0, 'P0', socket.url, () => socket);
+    remoteClient.token = 'fixture-token';
+    remoteClient.connect();
     socket.open();
     socket.push({ type: 'welcome', seat: 0, game_id: 'preview-fixture', orders: [] });
     socket.push({ type: 'view', view });
     try {
       const orders = [disband, buy];
-      lan.syncOrders(orders);
+      remoteClient.syncOrders(orders);
       const errors = [{ index: 1, message: 'Purchase rejected by server' }];
       socket.push({ type: 'validation', errors });
       const sent = [...socket.sent];
-      const validate = vi.spyOn(lan, 'validate');
-      expect(previews(lan, view, orders, errors).get(itemKey(soldier))?.reason).toBe(errors[0].message);
-      previews(lan, view, [disband]);
-      previews(lan, view, []);
+      const validate = vi.spyOn(remoteClient, 'validate');
+      expect(previews(remoteClient, view, orders, errors).get(itemKey(soldier))?.reason).toBe(errors[0].message);
+      previews(remoteClient, view, [disband]);
+      previews(remoteClient, view, []);
       expect(validate).not.toHaveBeenCalled();
       expect(socket.sent).toEqual(sent);
-      expect(lan.pendingOrders()).toEqual(orders);
-      expect(lan.validate(0, orders)).toEqual(errors);
+      expect(remoteClient.pendingOrders()).toEqual(orders);
+      expect(remoteClient.validate(0, orders)).toEqual(errors);
     } finally {
-      lan.disconnect(false);
+      remoteClient.disconnect(false);
     }
   });
 });

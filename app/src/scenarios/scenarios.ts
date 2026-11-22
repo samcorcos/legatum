@@ -109,8 +109,6 @@ export interface ScenarioFile {
 export interface ScenarioEntry {
   file: ScenarioFile;
   text: string;
-  /** Read from the player's scenarios folder rather than bundled with the build. */
-  fromFolder?: boolean;
 }
 
 /**
@@ -153,65 +151,6 @@ export function scenarioCatalog(): ScenarioEntry[] {
 /** Scenarios built and measured but held back until a change lands (`lab.requires`), for tests. */
 export function heldBackCatalog(): ScenarioEntry[] {
   return parseAll(Object.values(raw)).filter((e) => e.file.lab?.requires);
-}
-
-/** One file of the scenarios folder as the desktop app reports it (`scenario_dropins` in app/src-tauri). */
-export interface DropinFile {
-  file: string;
-  /** The file's text when it could be read. */
-  text: string | null;
-  /** Why the Lab cannot offer it; null when it is good. */
-  reason: string | null;
-}
-
-/** A folder file the Lab shows greyed out, with why it cannot be played. */
-export interface UnavailableScenario {
-  file: string;
-  title: string;
-  reason: string;
-  /** The engine's own words, for a tooltip, when `reason` is a plain-language stand-in. */
-  detail?: string;
-}
-
-export interface Catalog {
-  entries: ScenarioEntry[];
-  unavailable: UnavailableScenario[];
-}
-
-const sentence = (s: string) => `${s[0].toUpperCase()}${s.slice(1)}${/[.!?]$/.test(s) ? '' : '.'}`;
-
-/**
- * The bundled scenarios plus the files of the player's scenarios folder. A good file replaces the
- * bundled scenario with the same id. A file that cannot be used is never dropped: it comes back in
- * `unavailable` with its reason ("Made for rules version 24; this app is 23.").
- */
-export function mergeDropins(bundled: ScenarioEntry[], dropins: DropinFile[]): Catalog {
-  const byId = new Map(bundled.map((e) => [e.file.id, e]));
-  const unavailable: UnavailableScenario[] = [];
-  for (const d of dropins) {
-    let parsed: Partial<ScenarioFile> | null = null;
-    try {
-      const v = d.text === null ? null : JSON.parse(d.text) as unknown;
-      parsed = v && typeof v === 'object' ? v as Partial<ScenarioFile> : null;
-    } catch {
-      parsed = null;
-    }
-    const stem = d.file.replace(/\.json$/, '');
-    const title = typeof parsed?.title === 'string' && parsed.title ? parsed.title : stem;
-    const held = parsed?.lab?.requires;
-    const reason = d.reason ?? (held ? `waits for a change: ${held}` : parsed?.format !== 'legatum-scenario' || !parsed.lab || typeof parsed.id !== 'string' ? 'is not a Lab scenario' : null);
-    if (reason !== null || !d.text || !parsed) {
-      const unreadable = reason !== null && /^(invalid scenario|not a scenario file|scenario state)/i.test(reason);
-      unavailable.push(unreadable
-        ? { file: d.file, title, reason: 'This file is not a readable scenario.', detail: sentence(reason) }
-        : { file: d.file, title, reason: sentence(reason ?? 'cannot be read') });
-      continue;
-    }
-    byId.set(parsed.id as string, { file: parsed as ScenarioFile, text: d.text, fromFolder: true });
-  }
-  const entries = [...byId.values()]
-    .sort((a, b) => (a.file.lab?.order ?? 1000) - (b.file.lab?.order ?? 1000) || a.file.title.localeCompare(b.file.title));
-  return { entries, unavailable };
 }
 
 /** A question that has no scenario yet: its card is listed but cannot be started. */

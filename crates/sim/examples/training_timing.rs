@@ -1,5 +1,5 @@
-//! Training mode timing: seconds per turn of the native battle search, as the desktop app runs
-//! it (all cores, the 15 s cap, a real clock), in an all-Training-AI game.
+//! Training mode timing: seconds per turn of the native battle search (all cores, the 15 s cap,
+//! a real clock), in an all-Training-AI game.
 //!
 //!   LEGATUM_ROLLOUT_THREADS=16 cargo run --release -p legatum-sim --example training_timing --
 //!       [--players 6] [--turns 150] [--seed 7100003] [--cap-ms 15000] [--log FILE]

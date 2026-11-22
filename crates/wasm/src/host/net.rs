@@ -252,6 +252,11 @@ impl NetHost {
         self.host.take_recordings()
     }
 
+    /// Opens every seat but the host's own for guests (hosting from a save file).
+    pub fn open_guest_seats(&mut self) {
+        self.host.open_guest_seats();
+    }
+
     /// The live game's save, for the host's own copy on demand.
     pub fn save_game(&self) -> Result<String, String> {
         self.host.save_game()
@@ -330,6 +335,16 @@ impl BrowserHost {
 
     pub fn take_save(&mut self) -> Option<String> {
         self.0.take_save()
+    }
+
+    /// Opens every seat but the host's own for guests (hosting from a save file).
+    pub fn open_guest_seats(&mut self) {
+        self.0.open_guest_seats();
+    }
+
+    /// The live game's save right now, for the host's "Save to file" (empty when there is no game).
+    pub fn save_game(&self) -> Result<String, wasm_bindgen::JsError> {
+        crate::js(self.0.save_game())
     }
 
     /// A JSON array of recording JSON strings.

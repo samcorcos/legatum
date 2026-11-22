@@ -2,6 +2,8 @@
 
 The durable list of everything the user has asked for since the first playtest, 2026-09-27. Nothing here gets dropped. Each item has an owner and a status; update this file whenever one moves. The user plays from the frozen build at /Applications/Legatum.app (tag `playtest-1`). Fixes reach them only as a new tagged build (`playtest-2`, …) when they ask.
 
+> 2026-11-22: the desktop (Tauri) app, the iOS simulator build, the native `legatum-server` and LAN play were dropped; the game is web-only. Rows below that mention them are history.
+
 Status key: **todo** · **queued** (Astra task) · **in progress** · **review** (on a branch, awaiting the lead's check) · **done** (merged and verified on master) · **decision** (waiting for the user)
 
 ## A. UI quality: the full QA pass
