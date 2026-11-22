@@ -2,6 +2,14 @@
 
 Newest first. One entry per non-obvious finding: what we learned, the evidence, and what we changed. Correct or delete entries that turn out to be wrong.
 
+## 2026-11-22: Fable review batch: held capital VP, Alliance waiver, buy-under-threat experiment, seeded ties (rules 50, `claude/review-rules-batch`)
+
+- **Held capital VP needs no new save field.** The point is computed live (`scoring::capitals_held`: owner holds an `original_capital` whose founder is on another team, barbarians excluded), like a world wonder. `Player::capitals_taken` is gone. `CapitalTaken`/`CapitalLost` events come from diffing `CaptureVpSnapshot::capitals` (pre-turn holders) against the post-turn holders in `scoring::update_with_capture_snapshot`, so a city that changes hands twice in a turn reports only the net change. A hold breaks the same turn the city is lost, through the ordinary `vp_holds` check.
+- **Consequence: Celts no longer score a capital by sacking it.** The sack burns the city, so there is nothing left to hold. Watch the Celts in the next balance run.
+- **Alliance waiver reads "either side".** `diplomacy::upkeep_waived_by` waives an Alliance's upkeep when either allied team is at War with a third team that `scoring::near_victory` (alive, and on a hold or within `NEAR_VICTORY_VP` = 2 of its target). The Gold breakdown shows two lines (the upkeep, then the waiver as a minus) because `Breakdown::add` drops zero lines. The AI's treaty pricing (`crates/ai/src/diplomacy.rs`) still assumes the ordinary upkeep.
+- **Same-turn ties use `rng::seeded_order`.** Keys are drawn in sorted item order, then items are sorted by (key, item), so the result does not depend on the order of the input. Tile buys: losing empires' first `BuyTile` for a contested tile is deferred until after every empire's city orders, then fails as "already owned". Eras: `eras::draw_same_turn_firsts` redraws only eras first claimed this turn. Wonders: `cities::wonder_race_order` puts the bigger overflow first, then draws, and only reorders the cities that finish a Great Work this turn.
+- **A shared `CARGO_TARGET_DIR` across worktrees of the same repo is unsafe.** Workspace path crates hash to the same `-C metadata` in every worktree, so one worktree's `legatum-core` rlib silently replaces another's. Clippy failed on a field that existed in this worktree's source. Use one target directory per worktree when several agents build at once.
+
 ## 2026-11-22: Egypt's tiles still showed Production: the Nile lives on city totals, not tiles (`claude/project-thread-h0s4wd`)
 
 - **Cause.** Core applies the Nile in `economy::nile` to a city's totals, so every per-tile number (`economy::owner_tile_yields`, the view's `next_claim.yields`, `improvement_preview.gain`) is the plain tile yield. The app's map yield icons, tile card, "Next tile" claim and improvement cards read those and showed Egypt Production it never gets, and Food at half its real value.

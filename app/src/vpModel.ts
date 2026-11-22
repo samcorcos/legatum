@@ -150,7 +150,7 @@ export interface VpRow {
 }
 
 export interface VpModel {
-  /** Public permanent points for each empire's first captures of original capitals. */
+  /** Public held points: the rival original capitals each empire holds now. */
   capitals: { owner: PlayerId; names: string[] }[];
   deck?: boolean;
   gold?: number;
@@ -239,8 +239,8 @@ export function buildVpModel(view: PlayerView): VpModel {
   const works = [baseWork, ...extraWorks];
   const capitalSources: Source[] = alive.flatMap((p) => (p.capitals_taken ?? []).map(([id, name]) => ({
     id: `capital-${p.id}-${id}`, kind: 'capital' as const, name, icon: 'city', vp: 1,
-    rule: `${p.name}’s first capture of the original capital ${name}: +1 VP, kept for good`,
-    terms: 'Kept for good · once per capital per captor', live: false,
+    rule: `${p.name} holds the original capital ${name}: 1 VP while holding it`,
+    terms: 'Held · follows the city', live: true, held: true,
     owners: [p.id], own: own([p.id]), facts: [{ id: p.id, value: 1, label: name }], unit: '',
   })));
 

@@ -1414,28 +1414,8 @@ pub fn capture_city(
     } else {
         None
     };
-    // Score before the Celtic sack removes the city. Only a rival of the founder scores: neither
-    // the founder nor its teammates do for retaking it. Every other captor records this city id
-    // only once, regardless of owner.
-    if let Some(c) = state.cities.get(&city)
-        && c.original_capital
-        && state.team_of(c.founder) != state.team_of(captor)
-        && c.owner != captor
-    {
-        let name = c.name.clone();
-        if state
-            .player_mut(captor)
-            .capitals_taken
-            .insert(city, name.clone())
-            .is_none()
-        {
-            events.push(Event::CapitalTaken {
-                captor,
-                capital: city,
-                name,
-            });
-        }
-    }
+    // An original capital's VP is held, not scored here: `scoring::vp` counts it while a rival of
+    // its founder owns it, and end-of-turn scoring reports the change of hands.
     let rules = state.setup.rule_experiments;
     // A city the captor founded comes home intact (designer, 2026-11-14): the sack is for
     // everyone else's cities, teammates' included.
@@ -3093,59 +3073,38 @@ mod tests {
                 if *city == c && *tech_city == c)));
     }
 
+    fn holds_capital_point(s: &GameState, p: PlayerId, capital: CityId) -> bool {
+        crate::scoring::vp(s, p).contains(&(crate::VpSource::CapitalTaken { capital }, 1))
+    }
+
     #[test]
-    fn original_capital_point_is_per_captor_per_city_and_survives_retake_and_save() {
-        let mut s = game(&[0, 1, 0]);
+    fn an_original_capital_point_is_held_by_whoever_owns_it_now() {
+        let mut s = game(&[0, 1, 2]);
         let capital = city(&mut s, 1, hex(5, 5), 3);
         let mut events = Vec::new();
         capture_city(&mut s, capital, PlayerId(0), &mut events);
-        assert!(events.iter().any(
-            |e| matches!(e, Event::CapitalTaken { captor, capital: id, .. }
-            if *captor == PlayerId(0) && *id == capital)
-        ));
-        assert!(
-            crate::scoring::vp(&s, PlayerId(0))
-                .contains(&(crate::VpSource::CapitalTaken { capital }, 1))
-        );
-        events.clear();
-        capture_city(&mut s, capital, PlayerId(1), &mut events);
+        // Scored by holding it, not by the capture: end-of-turn scoring reports the change.
         assert!(
             !events
                 .iter()
                 .any(|e| matches!(e, Event::CapitalTaken { .. }))
         );
-        capture_city(&mut s, capital, PlayerId(0), &mut events);
-        assert_eq!(
-            events
-                .iter()
-                .filter(|e| matches!(e, Event::CapitalTaken { .. }))
-                .count(),
-            0
-        );
-        events.clear();
+        assert!(holds_capital_point(&s, PlayerId(0), capital));
+        // A third empire takes it: the point moves with the city.
         capture_city(&mut s, capital, PlayerId(2), &mut events);
-        assert_eq!(
-            events
-                .iter()
-                .filter(|e| matches!(e, Event::CapitalTaken { .. }))
-                .count(),
-            1
-        );
+        assert!(!holds_capital_point(&s, PlayerId(0), capital));
+        assert!(holds_capital_point(&s, PlayerId(2), capital));
+        // The founder takes it back: nobody scores it.
+        capture_city(&mut s, capital, PlayerId(1), &mut events);
         assert!(
-            crate::scoring::vp(&s, PlayerId(2))
-                .contains(&(crate::VpSource::CapitalTaken { capital }, 1))
+            (0..3).all(|p| !holds_capital_point(&s, PlayerId(p), capital)),
+            "the founder never scores its own capital"
         );
+        // Taking it again scores again: the point is held, not once per captor.
+        capture_city(&mut s, capital, PlayerId(0), &mut events);
+        assert!(holds_capital_point(&s, PlayerId(0), capital));
         let loaded: GameState = serde_json::from_value(serde_json::to_value(&s).unwrap()).unwrap();
-        assert_eq!(
-            loaded.player(PlayerId(0)).capitals_taken,
-            s.player(PlayerId(0)).capitals_taken
-        );
-        let mut old = serde_json::to_value(&s).unwrap();
-        for player in old["players"].as_array_mut().unwrap() {
-            player.as_object_mut().unwrap().remove("capitals_taken");
-        }
-        let old: GameState = serde_json::from_value(old).unwrap();
-        assert!(old.players.iter().all(|p| p.capitals_taken.is_empty()));
+        assert!(holds_capital_point(&loaded, PlayerId(0), capital));
     }
 
     #[test]
@@ -3154,28 +3113,13 @@ mod tests {
         let mut s = game(&[0, 1, 0]);
         let capital = city(&mut s, 0, hex(5, 5), 3);
         let mut events = Vec::new();
-        // The rival takes it and scores, as every rival of the founder does.
         capture_city(&mut s, capital, PlayerId(1), &mut events);
-        assert_eq!(
-            events
-                .iter()
-                .filter(|e| matches!(e, Event::CapitalTaken { .. }))
-                .count(),
-            1
-        );
-        events.clear();
-        // The founder's teammate takes it back from the rival: nothing is scored.
+        assert!(holds_capital_point(&s, PlayerId(1), capital));
+        // The founder's teammate takes it back from the rival: nothing is scored, and the rival's
+        // point is gone.
         capture_city(&mut s, capital, PlayerId(2), &mut events);
-        assert!(
-            !events
-                .iter()
-                .any(|e| matches!(e, Event::CapitalTaken { .. }))
-        );
-        assert!(s.player(PlayerId(2)).capitals_taken.is_empty());
-        assert!(
-            !crate::scoring::vp(&s, PlayerId(2))
-                .contains(&(crate::VpSource::CapitalTaken { capital }, 1))
-        );
+        assert!(!holds_capital_point(&s, PlayerId(2), capital));
+        assert!(!holds_capital_point(&s, PlayerId(1), capital));
     }
 
     #[test]
@@ -3189,16 +3133,12 @@ mod tests {
         s.cities.get_mut(&replacement).unwrap().is_capital = true;
         let mut events = Vec::new();
         capture_city(&mut s, replacement, PlayerId(0), &mut events);
-        assert!(
-            events
-                .iter()
-                .all(|e| !matches!(e, Event::CapitalTaken { .. }))
-        );
-        assert!(s.player(PlayerId(0)).capitals_taken.is_empty());
+        assert!(crate::scoring::capitals_held(&s, PlayerId(0)).is_empty());
+        assert!(!holds_capital_point(&s, PlayerId(0), replacement));
     }
 
     #[test]
-    fn celtic_sack_of_original_capital_scores_before_burning_it() {
+    fn celtic_sack_of_original_capital_burns_it_and_scores_nothing() {
         let mut s = game(&[0, 1]);
         s.setup.rule_experiments.apply("objectives=deck").unwrap();
         let capital = city(&mut s, 1, hex(5, 5), 3);
@@ -3206,18 +3146,11 @@ mod tests {
         let mut events = Vec::new();
         capture_city(&mut s, capital, PlayerId(0), &mut events);
         assert!(!s.cities.contains_key(&capital));
-        assert!(
-            events
-                .iter()
-                .any(|e| matches!(e, Event::CapitalTaken { capital: id, .. } if *id == capital))
-        );
         assert!(events.iter().any(
             |e| matches!(e, Event::CityRazed { city, original_capital: true, ordered: false, .. } if *city == capital)
         ));
-        assert!(
-            crate::scoring::vp(&s, PlayerId(0))
-                .contains(&(crate::VpSource::CapitalTaken { capital }, 1))
-        );
+        // The capital is gone, so nobody holds its point.
+        assert!(!holds_capital_point(&s, PlayerId(0), capital));
     }
 
     fn razed(events: &[Event]) -> Event {

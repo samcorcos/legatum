@@ -39,10 +39,10 @@ pub(crate) fn held_vp_at_city(city: &CityView) -> i32 {
 }
 
 impl Planner<'_> {
-    /// The +1 VP an original capital still holds for a rival: 1 while some other empire, neither
-    /// us nor the capital's founder, has not yet scored this city. A rival that retakes it scores
-    /// it, and razing the city removes it from the pool for good (designer ruling 2026-11-01:
-    /// every city can be razed, original capitals included).
+    /// The 1 VP an original capital we hold would give a rival that takes it from us: 1 while
+    /// some other empire, neither us nor the capital's founder, could hold it (rules 50: the point
+    /// is held, so `capitals_taken` lists only current holders). Razing the city removes it from
+    /// the pool (designer ruling 2026-11-01: every city can be razed, original capitals included).
     pub(crate) fn rival_capital_vp(&self, city: &CityView) -> i32 {
         if !city.original_capital {
             return 0;
@@ -70,6 +70,20 @@ impl Planner<'_> {
                 && !p.capitals_taken.iter().any(|(id, _)| *id == city.id)
         });
         i32::from(open)
+    }
+
+    /// The 1 VP we score while we hold `city`, a rival's original capital (rules 50: held, not
+    /// kept for good; mirrors `legatum_core::scoring::capitals_held`).
+    pub(crate) fn own_capital_vp(&self, city: &CityView) -> i32 {
+        let v = self.view();
+        let team_of = |p| v.players.iter().find(|q| q.id == p).map(|q| q.team);
+        i32::from(
+            city.original_capital
+                && city.owner == self.ctx.me
+                && city
+                    .original_capital_of
+                    .is_some_and(|f| team_of(f) != team_of(self.ctx.me)),
+        )
     }
 
     /// Whether to raze captured city `i` (`ctx.own_cities[i]`) under `raze_value`.
@@ -136,7 +150,10 @@ impl Planner<'_> {
             })
             .count() as i32;
         let site_vp = held_vp_at_city(city) * VP_GOLD;
-        let worth = output - decadence + (vp * VP_GOLD) + site_vp;
+        // Rules 50: a rival's original capital scores for us only while we hold it, so razing
+        // it gives that point up.
+        let worth =
+            output - decadence + (vp * VP_GOLD) + site_vp + self.own_capital_vp(city) * VP_GOLD;
         // A rival that takes an original capital from us scores its point; razing denies it.
         let rival_point = (self.rival_capital_vp(city) + self.capital_restore_vp(city)) * VP_GOLD;
         // Defence: the visible pressure on it against the troops standing by.

@@ -347,7 +347,7 @@ export interface UpkeepPreview {
 }
 
 /** Core `economy::BuyBlock`, serialized snake_case. */
-export type BuyBlock = 'already_bought' | 'resistance' | 'settler_population' | 'not_buyable' | 'walls_need_production' | 'no_spawn_tile' | 'resource' | 'not_enough_gold';
+export type BuyBlock = 'already_bought' | 'resistance' | 'settler_population' | 'not_buyable' | 'walls_need_production' | 'no_spawn_tile' | 'resource' | 'not_enough_gold' | 'egypt_buildings_need_food' | 'under_threat';
 
 export interface ProductionOption {
   item: ProductionItem;
@@ -1168,6 +1168,7 @@ export type Event =
   | { type: 'CityCaptured'; city: CityId; from: PlayerId; to: PlayerId; bounty?: number }
   | { type: 'AthensCityCaptured'; city: CityId; from: PlayerId; to: PlayerId }
   | { type: 'CapitalTaken'; captor: PlayerId; capital: CityId; name: string }
+  | { type: 'CapitalLost'; player: PlayerId; capital: CityId; name: string }
   | { type: 'CityRazed'; city: CityId; from: PlayerId; by: PlayerId; at: Hex; original_capital?: boolean; sack_gold?: number; camp?: Hex; ordered?: boolean }
   | { type: 'BuildingDismantled'; city: CityId; owner: PlayerId; building: BuildingKind; reason: string }
   | { type: 'ItemBought'; city: CityId; owner: PlayerId; item: ProductionItem; gold: number }
@@ -1335,6 +1336,8 @@ export interface RuleSwitches {
   objectives_deck?: boolean;
   walls_cost?: number;
   decadence_slope?: number; vp_target?: number;
+  /** Experiment: a city can't buy a military unit while an enemy unit at War is within 2 tiles. */
+  no_purchase_under_threat?: boolean;
 }
 
 /** What end_turn returns. `turn` is the turn just resolved; `hash` is a u64 as a decimal string. */

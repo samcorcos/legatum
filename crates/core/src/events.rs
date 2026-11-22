@@ -396,9 +396,17 @@ pub enum Event {
         from: PlayerId,
         to: PlayerId,
     },
-    /// Public, permanent VP awarded on this empire's first capture of this original capital.
+    /// Public: this empire now holds a rival's original capital and scores its 1 VP while it
+    /// holds it (reported at the end of the turn it changed hands, like a world wonder).
     CapitalTaken {
         captor: PlayerId,
+        capital: CityId,
+        name: String,
+    },
+    /// Public: this empire no longer holds a rival's original capital it scored (retaken by
+    /// anyone, or razed), so its 1 VP is gone the same turn.
+    CapitalLost {
+        player: PlayerId,
         capital: CityId,
         name: String,
     },

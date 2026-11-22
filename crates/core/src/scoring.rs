@@ -1,4 +1,4 @@
-//! Victory points: era objectives, capital captures, Great Works and faction goals.
+//! Victory points: era objectives, held rival capitals, Great Works and faction goals.
 //! Metric and VP math live here; `update` (run at the end of each turn) applies changes.
 
 use crate::economy;
@@ -6,6 +6,7 @@ use crate::events::Event;
 use crate::goals::{self, GoalKind};
 use crate::state::GameState;
 use crate::types::*;
+use std::collections::BTreeMap;
 
 /// An empire's Power: the average of its total yields (Food + Production + Gold + Science) over
 /// the trailing window. Public. Zero before the first turn is recorded.
@@ -168,8 +169,8 @@ pub fn vp(state: &GameState, p: PlayerId) -> Vec<(VpSource, u32)> {
             out.push((VpSource::EraObjective { era: *era }, 1));
         }
     }
-    for capital in state.player(p).capitals_taken.keys() {
-        out.push((VpSource::CapitalTaken { capital: *capital }, 1));
+    for (capital, _) in capitals_held(state, p) {
+        out.push((VpSource::CapitalTaken { capital }, 1));
     }
     for (of, holder) in goals::holders(state) {
         if holder == p {
@@ -191,6 +192,67 @@ pub fn vp(state: &GameState, p: PlayerId) -> Vec<(VpSource, u32)> {
     out
 }
 
+/// VP for each rival original capital held (Sam, 2026-11-22, via the Fable review): held like a
+/// world wonder, not kept for good.
+pub const CAPITAL_VP: u32 = 1;
+
+/// The rival original capitals `p` holds now, by city id, with their names. Each is worth
+/// `CAPITAL_VP` while `p` holds it: an original capital founded by an empire of another team.
+/// Retaken by anyone or razed, the point is gone the same turn.
+pub fn capitals_held(state: &GameState, p: PlayerId) -> Vec<(CityId, String)> {
+    let team = state.team_of(p);
+    state
+        .cities
+        .values()
+        .filter(|c| c.owner == p && c.original_capital && state.team_of(c.founder) != team)
+        .map(|c| (c.id, c.name.clone()))
+        .collect()
+}
+
+/// Who holds each rival original capital that scores now: city id to (holder, city name).
+/// Barbarians never score.
+pub(crate) fn capital_holders(state: &GameState) -> BTreeMap<CityId, (PlayerId, String)> {
+    state
+        .cities
+        .values()
+        .filter(|c| {
+            c.original_capital
+                && !c.owner.is_barbarian()
+                && state.team_of(c.founder) != state.team_of(c.owner)
+        })
+        .map(|c| (c.id, (c.owner, c.name.clone())))
+        .collect()
+}
+
+/// Report every capital point that changed hands since `before` (the start of the turn), the
+/// way a world wonder's change of hands is reported: the old holder's loss, then the new
+/// holder's gain.
+fn check_capitals(
+    state: &GameState,
+    before: &BTreeMap<CityId, (PlayerId, String)>,
+    events: &mut Vec<Event>,
+) {
+    let now = capital_holders(state);
+    for (capital, (old, name)) in before {
+        if now.get(capital).map(|h| h.0) != Some(*old) {
+            events.push(Event::CapitalLost {
+                player: *old,
+                capital: *capital,
+                name: name.clone(),
+            });
+        }
+    }
+    for (capital, (new, name)) in &now {
+        if before.get(capital).map(|h| h.0) != Some(*new) {
+            events.push(Event::CapitalTaken {
+                captor: *new,
+                capital: *capital,
+                name: name.clone(),
+            });
+        }
+    }
+}
+
 pub fn vp_total(state: &GameState, p: PlayerId) -> u32 {
     vp(state, p).iter().map(|(_, v)| v).sum()
 }
@@ -201,6 +263,21 @@ pub fn team_vp(state: &GameState, team: TeamId) -> u32 {
         .into_iter()
         .map(|p| vp_total(state, p))
         .sum()
+}
+
+/// How close to its target a team must be for others to treat it as about to win: within this
+/// many VP (the race panel's public near-victory warning uses the same line).
+pub const NEAR_VICTORY_VP: u32 = 2;
+
+/// Whether `team` is close to winning by VP: alive and on a victory hold, or within
+/// `NEAR_VICTORY_VP` of its target. Public: every input is on the race panel.
+pub fn near_victory(state: &GameState, team: TeamId) -> bool {
+    let members = state.team_members(team);
+    if !members.iter().any(|p| state.player(*p).alive) {
+        return false;
+    }
+    state.vp_holds.contains_key(&team)
+        || team_vp(state, team).saturating_add(NEAR_VICTORY_VP) >= team_target(state, team)
 }
 
 /// The solo VP target times the number of team members.
@@ -241,6 +318,7 @@ pub fn update_with_capture_snapshot(
     for id in (0..state.players.len()).map(|i| PlayerId(i as u8)) {
         check_great_work(state, id, events);
     }
+    check_capitals(state, &vp.capitals, events);
     check_victory(state, events);
 }
 
@@ -721,5 +799,123 @@ mod capitals_victory_tests {
         let mut s = game(&[0, 0]);
         capital(&mut s, 0, 2);
         assert_eq!(won_by(&mut s).0, None);
+    }
+}
+
+#[cfg(test)]
+mod held_capital_tests {
+    use super::*;
+    use crate::objectives::CaptureVpSnapshot;
+    use crate::rules::test_support::{city, game, hex};
+
+    /// One turn end: `change` happens during the turn, then scoring runs against the
+    /// start-of-turn snapshot, as `resolve_turn` does.
+    fn turn(s: &mut GameState, change: impl FnOnce(&mut GameState)) -> Vec<Event> {
+        let snapshot = CaptureVpSnapshot::new(s);
+        change(s);
+        let mut events = Vec::new();
+        update_with_capture_snapshot(s, &mut events, &snapshot);
+        events
+    }
+
+    fn holds(events: &[Event], started: bool, team: u8) -> bool {
+        events.iter().any(|e| match e {
+            Event::VictoryHoldStarted { team: t, .. } => started && *t == TeamId(team),
+            Event::VictoryHoldBroken { team: t, .. } => !started && *t == TeamId(team),
+            _ => false,
+        })
+    }
+
+    #[test]
+    fn a_held_capital_point_moves_with_the_city_and_breaks_the_hold_the_same_turn() {
+        let mut s = game(&[0, 1, 2]);
+        s.setup.rule_experiments.vp_target = Some(1);
+        city(&mut s, 0, hex(2, 5), 3);
+        let rome = city(&mut s, 1, hex(8, 5), 3);
+        city(&mut s, 2, hex(14, 5), 3);
+        let owner = |s: &mut GameState, p: u8| s.cities.get_mut(&rome).unwrap().owner = PlayerId(p);
+
+        // Player 0 takes it: its point arrives and its hold starts.
+        let events = turn(&mut s, |s| owner(s, 0));
+        assert!(events.iter().any(|e| matches!(e,
+            Event::CapitalTaken { captor: PlayerId(0), capital, .. } if *capital == rome)));
+        assert_eq!(vp_total(&s, PlayerId(0)), CAPITAL_VP);
+        assert!(holds(&events, true, 0));
+        assert_eq!(s.vp_holds.get(&TeamId(0)), Some(&1));
+
+        // Holding it on, the hold counts up and nothing is reported again.
+        let events = turn(&mut s, |_| {});
+        assert!(
+            !events
+                .iter()
+                .any(|e| matches!(e, Event::CapitalTaken { .. }))
+        );
+        assert_eq!(s.vp_holds.get(&TeamId(0)), Some(&2));
+
+        // A third empire takes it: the point leaves player 0 the same turn, its hold breaks and
+        // the new holder's hold starts.
+        let events = turn(&mut s, |s| owner(s, 2));
+        let lost = events
+            .iter()
+            .position(|e| matches!(e, Event::CapitalLost { player: PlayerId(0), capital, .. } if *capital == rome))
+            .expect("player 0 loses the point");
+        let taken = events
+            .iter()
+            .position(|e| {
+                matches!(
+                    e,
+                    Event::CapitalTaken {
+                        captor: PlayerId(2),
+                        ..
+                    }
+                )
+            })
+            .expect("player 2 gains it");
+        assert!(
+            lost < taken,
+            "the loss is reported first, like a world wonder"
+        );
+        assert_eq!(vp_total(&s, PlayerId(0)), 0);
+        assert!(holds(&events, false, 0));
+        assert!(!s.vp_holds.contains_key(&TeamId(0)));
+        assert!(holds(&events, true, 2));
+
+        // The founder takes it back: nobody holds the point.
+        let events = turn(&mut s, |s| owner(s, 1));
+        assert!(events.iter().any(|e| matches!(
+            e,
+            Event::CapitalLost {
+                player: PlayerId(2),
+                ..
+            }
+        )));
+        assert!(
+            !events
+                .iter()
+                .any(|e| matches!(e, Event::CapitalTaken { .. }))
+        );
+        assert!(holds(&events, false, 2));
+        assert!((0..3).all(|p| vp_total(&s, PlayerId(p)) == 0));
+    }
+
+    #[test]
+    fn razing_a_held_capital_loses_its_point() {
+        let mut s = game(&[0, 1, 2]);
+        city(&mut s, 0, hex(2, 5), 3);
+        let rome = city(&mut s, 1, hex(8, 5), 3);
+        city(&mut s, 2, hex(14, 5), 3);
+        turn(&mut s, |s| {
+            s.cities.get_mut(&rome).unwrap().owner = PlayerId(0)
+        });
+        assert_eq!(
+            capitals_held(&s, PlayerId(0)),
+            vec![(rome, s.cities[&rome].name.clone())]
+        );
+        let events = turn(&mut s, |s| {
+            s.cities.remove(&rome);
+        });
+        assert!(events.iter().any(|e| matches!(e,
+            Event::CapitalLost { player: PlayerId(0), capital, .. } if *capital == rome)));
+        assert!(capitals_held(&s, PlayerId(0)).is_empty());
     }
 }

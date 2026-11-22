@@ -374,7 +374,7 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
           deltas: [{ counter: 'vp', amount: -e.vp }], loss: true, emblem: 'captured' }); break;
       }
       case 'CityCaptured': {
-        // The permanent capital point has its own Tier A card for every viewer.
+        // The held capital point has its own Tier A card for every viewer.
         if (events.some((x) => x.type === 'CapitalTaken' && x.capital === e.city) && team.has(e.to)) break;
         // The Courier Hall's city is told by the Hall's own moment (the road and the points went with it).
         if (after.courier_halls?.some((h) => h.city === e.city)) break;
@@ -480,11 +480,10 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
           ?? cities.get(e.capital)?.original_capital_of ?? null;
         const from = victim !== null ? empireOfPlayer(after, victim) : null;
         const card = { tier: ours ? 'legendary' as const : 'major' as const, at, title: e.name, kicker: from ? `Original capital taken from ${from}` : 'Original capital taken',
-          effect: `${ours ? '+1 VP, kept for good' : `${who} scores +1 VP, kept for good`}${workVp ? ` · +${workVp} held VP from ${works.map((x) => BUILDING_NAME[x.building]).join(' and ')}` : ''}`,
+          effect: `${ours ? '+1 VP while you hold it' : `${who} scores 1 VP while holding it`}${workVp ? ` · +${workVp} held VP from ${works.map((x) => BUILDING_NAME[x.building]).join(' and ')}` : ''}`,
           lore: ours ? `${e.name}’s gates are yours.` : `${e.name} has fallen to ${who}.`,
-          details: ['Taking it again later scores nothing more.',
-            ...(workVp ? [`${works.map((x) => BUILDING_NAME[x.building]).join(' and ')} scores ${workVp} VP only while held.`] : []),
-            ...(events.some((x) => x.type === 'CityRazed' && x.city === e.capital && !x.ordered) ? ['The Celts sacked and burned the capital on capture.'] : [])],
+          details: ['The point is lost if anyone takes the city or it is razed.',
+            ...(workVp ? [`${works.map((x) => BUILDING_NAME[x.building]).join(' and ')} scores ${workVp} VP only while held.`] : [])],
           deltas: ours ? [{ counter: 'vp' as const, amount: 1 + workVp }] : [], emblem: 'captured' as const,
           ...(victim !== null && faction(victim) ? { frame: faction(victim)! } : {}), seal: 1, ...(ours ? {} : { loss: true }) };
         if (ours) push(i, e.captor, card);

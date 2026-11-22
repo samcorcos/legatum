@@ -262,7 +262,7 @@ it('a captured city is a major card with what you gain; a lost city is a sober l
   expect(map([{ type: 'CityCaptured', city: city.id, from: rival.id, to: rival.id + 1 }])).toEqual([]);
 });
 
-it('a first original-capital capture is one Tier A point card for the captor and every rival', () => {
+it('an original-capital capture is one Tier A point card for the captor and every rival', () => {
   const city = view.cities.find((c) => c.owner === 0)!;
   const rival = view.players.find((p) => p.team !== view.team)!;
   const events: Event[] = [
@@ -272,14 +272,14 @@ it('a first original-capital capture is one Tier A point card for the captor and
   const after = structuredClone(view);
   after.cities = after.cities.map((c) => c.id === city.id ? { ...c, owner: rival.id } : c);
   const rivalCard = momentsForTurn(events, 0, view, after).find((m) => m.owner === rival.id);
-  expect(rivalCard).toMatchObject({ tier: 'major', title: city.name, kicker: `Original capital taken from ${empireOfPlayer(after, 0)}`, effect: `${empireOfPlayer(after, rival.id)} scores +1 VP, kept for good`, loss: true, seal: 1, frame: view.players.find((p) => p.id === 0)!.faction });
-  expect(rivalCard!.details[0]).toBe('Taking it again later scores nothing more.');
+  expect(rivalCard).toMatchObject({ tier: 'major', title: city.name, kicker: `Original capital taken from ${empireOfPlayer(after, 0)}`, effect: `${empireOfPlayer(after, rival.id)} scores 1 VP while holding it`, loss: true, seal: 1, frame: view.players.find((p) => p.id === 0)!.faction });
+  expect(rivalCard!.details[0]).toBe('The point is lost if anyone takes the city or it is razed.');
   const rivalAfter = structuredClone(after);
   rivalAfter.team = rival.team;
   const ownCards = momentsForTurn(events, rival.id, view, rivalAfter).filter((m) => m.owner === rival.id);
   expect(ownCards).toHaveLength(1);
   expect(ownCards[0].deltas).toEqual([{ counter: 'vp', amount: 1 }]);
-  expect(ownCards[0]).toMatchObject({ tier: 'legendary', effect: '+1 VP, kept for good', lore: `${city.name}’s gates are yours.`, seal: 1 });
+  expect(ownCards[0]).toMatchObject({ tier: 'legendary', effect: '+1 VP while you hold it', lore: `${city.name}’s gates are yours.`, seal: 1 });
   expect(ownCards[0].loss).toBeUndefined();
 });
 

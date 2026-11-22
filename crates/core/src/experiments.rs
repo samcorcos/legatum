@@ -276,6 +276,10 @@ pub struct RuleExperiments {
     /// Each owned city costs max(city count - 2, 0) Gold per turn.
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub city_upkeep: bool,
+    /// A city cannot buy a military unit while an enemy military unit at War stands within two
+    /// tiles of it (Sam, 2026-11-22, via the Fable review; judged on his Swiss and Mongol games).
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub no_purchase_under_threat: bool,
     /// Coalition pressure adds 10 points per city per permanent-team member beyond two.
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub expansion_coalitions: bool,
@@ -473,6 +477,7 @@ impl RuleExperiments {
             "city-research" => self.city_research = true,
             "city-upkeep" => self.city_upkeep = true,
             "expansion-coalitions" => self.expansion_coalitions = true,
+            "no-purchase-under-threat" => self.no_purchase_under_threat = true,
             "frontier-cities" => self.frontier_cities = true,
             "market-plunder" => self.market_plunder = true,
             "wall-masonry" => self.wall_masonry = true,

@@ -747,9 +747,6 @@ pub struct Player {
     /// VP v2: each era this empire has entered, from the second on (`objectives`).
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub eras: BTreeMap<u8, crate::objectives::EraRecord>,
-    /// Original capitals captured at least once by this empire, with names retained after a sack.
-    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    pub capitals_taken: BTreeMap<CityId, String>,
     /// Permanently chosen on completion; captured buildings never populate this field.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub great_work_completed: Option<BuildingKind>,
@@ -931,7 +928,6 @@ static BARBARIAN_PLAYER: std::sync::LazyLock<Player> = std::sync::LazyLock::new(
     decadence_percent: 0,
     fight: crate::objectives::FightStats::ZERO,
     eras: BTreeMap::new(),
-    capitals_taken: BTreeMap::new(),
     great_work_completed: None,
     great_work_holder: None,
     faction_goal_done: false,

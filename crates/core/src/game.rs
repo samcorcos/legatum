@@ -38,7 +38,6 @@ pub fn blank_game(setup: &GameSetup, map: Map) -> GameState {
             decadence_percent: 0,
             fight: Default::default(),
             eras: Default::default(),
-            capitals_taken: Default::default(),
             great_work_completed: None,
             great_work_holder: None,
             faction_goal_done: false,

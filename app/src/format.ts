@@ -1197,8 +1197,12 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
         details: [wonderBonusSentence(e.wonder)],
       });
     case 'CapitalTaken':
-      return line('victory', `${who(ctx, e.captor)} captured the original capital ${e.name}: +1 VP, kept for good`, {
+      return line('victory', `${who(ctx, e.captor)} took the original capital ${e.name}: +1 VP while holding it`, {
         at: ctx.cityPos(e.capital), players: [e.captor], weight: 2, tone: toneFor(e.captor),
+      });
+    case 'CapitalLost':
+      return line('victory', `${who(ctx, e.player)} no longer ${e.player === ctx.me ? 'hold' : 'holds'} the original capital ${e.name}: −1 VP`, {
+        at: ctx.cityPos(e.capital), players: [e.player], weight: 2, tone: e.player === ctx.me ? 'bad' : 'neutral',
       });
     case 'EraEntered': {
       // Public, 1-based era (2 Classical .. 8 Future), sent the turn the previous era's last technology landed: every

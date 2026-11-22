@@ -692,6 +692,9 @@ pub fn era_of(state: &GameState, p: PlayerId) -> u8 {
 pub struct CaptureVpSnapshot {
     vp: BTreeMap<TeamId, u32>,
     leader: Option<TeamId>,
+    /// Who held each scoring rival original capital at the start of the turn
+    /// (`scoring::capital_holders`), so end-of-turn scoring reports its change of hands.
+    pub(crate) capitals: BTreeMap<CityId, (PlayerId, String)>,
 }
 
 impl CaptureVpSnapshot {
@@ -712,7 +715,11 @@ impl CaptureVpSnapshot {
         let leader = top
             .next()
             .and_then(|(team, _)| top.next().is_none().then_some(*team));
-        Self { vp, leader }
+        Self {
+            vp,
+            leader,
+            capitals: scoring::capital_holders(state),
+        }
     }
 
     fn ahead(&self, victim: TeamId, taker: TeamId) -> bool {

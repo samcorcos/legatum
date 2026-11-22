@@ -89,7 +89,7 @@ export function nearFacts(a: Alarm, view: PlayerView): { tone: Tone; text: strin
   else {
     const kinds = new Map<string, number>();
     for (const p of view.players.filter((p) => members.has(p.id))) for (const [src, vp] of p.vp_sources) kinds.set(src.kind, (kinds.get(src.kind) ?? 0) + vp);
-    const names: Record<string, string> = { GreatWork: 'world wonders', FactionGoal: 'faction goals', EraObjective: 'era objectives', CapitalTaken: 'captured capitals' };
+    const names: Record<string, string> = { GreatWork: 'world wonders', FactionGoal: 'faction goals', EraObjective: 'era objectives', CapitalTaken: 'held rival capitals' };
     const text = [...kinds].filter(([, vp]) => vp > 0).map(([k, vp]) => `${vp} from ${names[k] ?? k}`).join(', ');
     if (text) facts.push({ tone: 'neutral', text: `Their VP: ${text}.` });
   }

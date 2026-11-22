@@ -1842,7 +1842,7 @@ mod tests {
     use super::*;
     use legatum_core::game::blank_game;
     use legatum_core::state::Map;
-    use legatum_core::{CityId, Faction, GameSetup, TeamId, Terrain};
+    use legatum_core::{Faction, GameSetup, TeamId, Terrain};
 
     #[test]
     fn isolated_start_distance_uses_initial_capitals() {
@@ -2043,9 +2043,17 @@ mod tests {
         // Elimination does not erase banked score in core scoring.
         state.players[1].alive = false;
         state.players[1].faction_goal_done = true;
-        state.players[0]
-            .capitals_taken
-            .insert(CityId(42), "Rival capital".into());
+        // Player 0 holds the original capital of player 2 (another team): 1 VP while held.
+        let settler = legatum_core::game::spawn_unit(
+            &mut state,
+            PlayerId(2),
+            legatum_core::UnitKind::Settler,
+            legatum_core::Hex::from_offset(0, 0),
+        );
+        legatum_core::rules::cities::found_city(&mut state, settler, &mut Vec::new()).unwrap();
+        for city in state.cities.values_mut() {
+            city.owner = PlayerId(0);
+        }
         let collector = Collector::default();
         let scores = collector.finish(&state, 0).final_scores;
         assert_eq!(scores.players[&0].total, 3);

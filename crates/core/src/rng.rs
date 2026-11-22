@@ -13,6 +13,23 @@ pub mod purpose {
     pub const CITY_CAPTURE: u64 = 7;
     pub const BARBARIANS: u64 = 8;
     pub const OBJECTIVES: u64 = 9;
+    /// Same-turn ties between empires (Sam, 2026-11-22, via the Fable review): no seat is
+    /// favoured by its id. Two empires buying one tile, entering an era first, finishing a world
+    /// wonder with the same overflow.
+    pub const TILE_CONTEST: u64 = 10;
+    pub const ERA_FIRST: u64 = 11;
+    pub const WONDER_RACE: u64 = 12;
+}
+
+/// `items` in a seeded random order, the same for the same `(seed, parts)` whatever order they
+/// came in: each gets an independent draw, and the order is by draw (then by the item itself).
+pub fn seeded_order<T: Ord + Copy>(seed: u64, parts: &[u64], items: &[T]) -> Vec<T> {
+    let mut sorted = items.to_vec();
+    sorted.sort();
+    let mut rng = Rng::derive(seed, parts);
+    let mut keyed: Vec<(u64, T)> = sorted.into_iter().map(|t| (rng.next_u64(), t)).collect();
+    keyed.sort();
+    keyed.into_iter().map(|(_, t)| t).collect()
 }
 
 /// SplitMix64.

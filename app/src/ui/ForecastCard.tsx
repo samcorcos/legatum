@@ -214,7 +214,7 @@ export function ForecastCard({
       </div>
       {city && capturePointFor(view, city, unit.owner) && !ranged &&
         // The point a capture scores leads the card, in gilt under the header: it can decide the attack (8.9.23 review: it sat in the grey footnotes).
-        <div className="forecast-vp" data-testid="forecast-capital-vp"><VpSeal vp={1} className="inline" /><span>+1 VP, kept for good: your first capture of {city.name}</span></div>}
+        <div className="forecast-vp" data-testid="forecast-capital-vp"><VpSeal vp={1} className="inline" /><span>+1 VP while you hold {city.name}</span></div>}
       {outriderEscapes && <div className="forecast-risk forecast-outrider" data-testid="forecast-outrider">If the {m.defName} moves this turn, it gets away.</div>}
       {m.aftermath?.severe && <AftermathLine m={m} />}
       {m.defUnit?.military && outclasses(m.defUnit.kind as UnitKind, defFaction, unit.kind as UnitKind, faction, f.defender_strength.total, f.attacker_strength.total) && (
@@ -390,9 +390,10 @@ function Side({
   );
 }
 
-/** Whether capturing this city scores the original-capital VP for the unit's owner: a rival of the founder who has not scored it yet. */
+/** Whether capturing this city gives the unit's owner the original-capital VP to hold: it is a rival of the founder and does not hold the city already (core `scoring::capitals_held`). */
 function capturePointFor(view: PlayerView, city: { id: number; owner: number; original_capital?: boolean; original_capital_of?: number | null }, captor: number): boolean {
   const mark = capitalMark(view, city);
   if (!mark || mark.own || mark.teammate || city.owner === captor) return false;
-  return !view.players.find((p) => p.id === captor)?.vp_sources.some(([src]) => src.kind === 'CapitalTaken' && src.capital === city.id);
+  const captorTeam = view.players.find((p) => p.id === captor)?.team;
+  return captorTeam === undefined || view.players.find((p) => p.id === mark.founder)?.team !== captorTeam;
 }

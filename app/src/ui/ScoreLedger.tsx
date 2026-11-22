@@ -66,13 +66,13 @@ function GoalCell({ model, e, held }: { model: VpModel; e: VpEmpire; held: boole
   </div>;
 }
 
-/** The capitals row: one token per original capital this empire took first, in its ink. */
+/** The capitals row: one token per rival first capital this empire holds now, in its ink. */
 function CapitalCell({ model, e }: { model: VpModel; e: VpEmpire }) {
   const names = model.capitals.find((c) => c.owner === e.id)?.names ?? [];
   const who = e.isMe ? 'You' : e.name;
-  if (!names.length) return <div className="sl-cell"><Socket title={`${who} ${e.isMe ? 'have' : 'has'} taken no rival's original capital yet`} /><small className="sl-under">None yet</small></div>;
+  if (!names.length) return <div className="sl-cell"><Socket title={`${who} ${e.isMe ? 'hold' : 'holds'} no rival's first capital`} /><small className="sl-under">None held</small></div>;
   return <div className="sl-cell">
-    <span className="sl-tokens">{names.map((n) => <Token key={n} e={e} icon="city" title={`${who}: first capture of ${n} · +1 VP, kept for good`} />)}</span>
+    <span className="sl-tokens">{names.map((n) => <Token key={n} e={e} icon="city" title={`${who} ${e.isMe ? 'hold' : 'holds'} ${n} · 1 VP while ${e.isMe ? 'you hold' : 'it holds'} it`} />)}</span>
     <small className="sl-under">{names.join(', ')}</small>
   </div>;
 }
@@ -122,13 +122,13 @@ function RowDetail({ model, s, kind }: { model: VpModel; s?: Source; kind: 'work
   }
   if (kind === 'capital') {
     return <div className="sl-detail">
-      <p className="sl-detail-rule">+1 for each rival's first capital you take. Taking the same capital again later scores nothing more, and the point stays yours if you lose or raze the city.</p>
+      <p className="sl-detail-rule">Hold a rival's first capital: 1 VP while you hold it. You lose the point if anyone takes the city or you raze it.</p>
       <ul className="sl-goals">
         {model.empires.map((e) => {
           const names = model.capitals.find((c) => c.owner === e.id)?.names ?? [];
           return <li key={e.id} className={e.isMe ? 'me' : ''} style={empireVars(e)}>
             <CrestMedallion faction={e.faction} color={e.ink} size={18} />
-            <div><span className="sl-goal-title"><b>{e.isMe ? 'You' : e.name}</b></span><span className="sl-goal-rule">{names.length ? names.join(', ') : 'No capital taken yet'}</span></div>
+            <div><span className="sl-goal-title"><b>{e.isMe ? 'You' : e.name}</b></span><span className="sl-goal-rule">{names.length ? names.join(', ') : 'No rival capital held'}</span></div>
             <span className={`sl-goal-state${names.length ? ' done' : ''}`}>{names.length} VP</span>
           </li>;
         })}
@@ -166,11 +166,11 @@ function rowsOf(model: VpModel): { kept: Row[]; held: Row[]; eras: Row[] } {
   const kept: Row[] = [
     ...model.works.filter((s) => !s.live && !s.held).map((s): Row => ({ id: s.id, kind: 'work', name: s.name, rule: 'Complete a world wonder', vp: s.vp, s })),
     { id: 'goal', kind: 'goal', name: 'Faction goals', rule: 'Kept once scored', vp: 2 },
-    { id: 'capitals-taken', kind: 'capital', name: 'Capitals taken', rule: 'First capture of each rival original capital', vp: 1 },
   ];
   const held: Row[] = [
     ...model.works.filter((s) => s.live || s.held).map((s): Row => ({ id: s.id, kind: 'work', name: s.name, rule: s.rule, vp: s.vp, s })),
     { id: 'held-goal', kind: 'heldGoal', name: 'Faction goals', rule: 'Lost when the condition or item is lost', vp: 2 },
+    { id: 'capitals-held', kind: 'capital', name: 'Rival capitals', rule: "Hold a rival's first capital: 1 VP while you hold it", vp: 1 },
   ];
   const eras: Row[] = model.eras.map((s): Row => ({
     id: s.id, kind: 'era', name: s.era!.eraName, numeral: roman(s.era!.era), rule: '', vp: s.vp, s,
@@ -262,7 +262,7 @@ export function ScoreLedger({ model, turn, close, closeRef }: { model: VpModel; 
         <span className="sl-kick"><Star size={8} /> Victory points · turn {turn}</span>
         <h2 id="vh-sheet-title">Every Way to Score</h2>
       </div>
-      <p className="sl-win">The first team to hold <b>{target} VP</b> for 10 turns wins. World wonders and held goals can change hands; era and capital points stay earned.</p>
+      <p className="sl-win">The first team to hold <b>{target} VP</b> for 10 turns wins. World wonders, rival capitals and held goals can change hands; era points stay earned.</p>
       <button ref={closeRef} type="button" className="btn vh-close" onClick={close} aria-label="Close objectives">Close <kbd className="kbd">Esc</kbd></button>
     </header>
     <div className="sl-body" ref={body}>
@@ -274,9 +274,9 @@ export function ScoreLedger({ model, turn, close, closeRef }: { model: VpModel; 
           </tr>
         </thead>
         <tbody>
-          {section('Kept for good', 'Faction goals +2 each · capitals taken +1 each', 'vp')}
+          {section('Kept for good', 'Faction goals +2 each', 'vp')}
           {kept.map(renderRow)}
-          {section('Held', '+2 each · you lose these if you lose the city, tile or condition', 'vp')}
+          {section('Held', 'World wonders and goals +2 each · rival capitals +1 each · you lose these if you lose the city, tile or condition', 'vp')}
           {held.map(renderRow)}
           {section(model.deck ? 'Ages' : 'Eras', model.deck ? '+1 each, kept for good · score an Age with its one card, any time after it begins' : '+1 each, kept for good · score an era with any one of its three objectives, once you have entered it', 'milestone-six-techs')}
           {eras.map(renderRow)}

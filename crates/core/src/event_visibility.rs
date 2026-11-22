@@ -160,6 +160,7 @@ pub fn visible_events(
                 Event::GreatWorkCompleted { .. }
                 | Event::GreatWorkLost { .. }
                 | Event::CapitalTaken { .. }
+                | Event::CapitalLost { .. }
                 | Event::AthensCityCaptured { .. }
                 | Event::EraEntered { .. }
                 | Event::FactionGoalCompleted { .. }

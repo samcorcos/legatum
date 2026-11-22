@@ -653,7 +653,7 @@ pub enum IndustryProject {
 pub enum VpSource {
     /// VP v2: the permanent point for scoring an era's public objective.
     EraObjective { era: u8 },
-    /// A permanent point for this empire's first capture of a rival original capital.
+    /// 1 VP while this empire holds a rival's original capital (`scoring::capitals_held`).
     CapitalTaken { capital: CityId },
     /// The Great Work built by `of`, scored by the current holder of its tile.
     GreatWork { of: PlayerId },

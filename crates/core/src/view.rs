@@ -840,7 +840,8 @@ pub struct PlayerPublic {
     pub vp: u32,
     /// Every VP this empire scores, by typed source (`VpSource`).
     pub vp_sources: Vec<(VpSource, u32)>,
-    /// Public names of original capitals this empire has scored, including sacked cities.
+    /// Public: the rival original capitals this empire holds now, each worth 1 VP while held
+    /// (`scoring::capitals_held`). A capital retaken or razed leaves the list.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub capitals_taken: Vec<(CityId, String)>,
     /// Whether this empire's original capital still stands in its own team's hands.
@@ -1537,11 +1538,7 @@ pub fn public_view(state: &GameState) -> PublicView {
             alive: p.alive,
             vp: scoring::vp_total(state, p.id),
             vp_sources: scoring::vp(state, p.id),
-            capitals_taken: p
-                .capitals_taken
-                .iter()
-                .map(|(id, name)| (*id, name.clone()))
-                .collect(),
+            capitals_taken: scoring::capitals_held(state, p.id),
             capital_stands: scoring::capital_stands(state, p.id),
             cities: state.cities_of(p.id).count() as u32,
             faction_goal_done: p.faction_goal_done,
