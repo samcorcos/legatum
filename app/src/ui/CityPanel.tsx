@@ -41,7 +41,7 @@ import { ForeignCityActions } from './ForeignCityActions';
 import { CityBorders } from './CityBorders';
 import { ProgressBar } from './ProgressBar';
 import { claimSummary, growthProgress, territoryCounts, yieldsText } from '../cityProgress';
-import { revealIdleProductionPicker } from './cityPanelScroll';
+import { revealBelowStickyHead, revealIdleProductionPicker } from './cityPanelScroll';
 import { LevyNote } from './Levy';
 import { CompanyShop } from './CompanyShop';
 import { canHire } from '../company';
@@ -193,6 +193,16 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     if (orders.some((o) => (o.type === 'SetProduction' || o.type === 'SetProductionQueue') && o.city === city.id)) return;
     revealIdleProductionPicker(scroller);
   }, [city.id, city.owner, view.me]);
+  // A production warning that appears while the panel is scrolled to the build list (Ready with an automated
+  // city that has nothing to pick) would sit half under the sticky head: scroll it whole into view once.
+  const shownWarning = useRef<string | null>(null);
+  useLayoutEffect(() => {
+    const scroller = panel.current, warning = scroller?.querySelector<HTMLElement>('.production-warning') ?? null;
+    const key = warning ? `${city.id}:${warning.textContent}` : null;
+    if (key === shownWarning.current) return;
+    shownWarning.current = key;
+    if (scroller && warning) revealBelowStickyHead(scroller, warning);
+  });
   // The star marks the original capital for the whole game (the scoring rule), not the current capital. In the common case, your own
   // founding city, the line is a tooltip so it costs the build list no room; any other original capital prints it under the head.
   const capMark = capitalMark(view, city);

@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { expect, it } from 'vitest';
-import { revealIdleProductionPicker } from './cityPanelScroll';
+import { revealBelowStickyHead, revealIdleProductionPicker } from './cityPanelScroll';
 
 function rect(top: number, height: number): DOMRect {
   return { x: 0, y: top, top, bottom: top + height, left: 0, right: 300, width: 300, height, toJSON: () => ({}) } as DOMRect;
@@ -66,4 +66,21 @@ it("keeps a damaged city's healing line just under the sticky head instead of sc
 
   expect(status.getBoundingClientRect().top).toBe(head.getBoundingClientRect().bottom);
   expect(status.getBoundingClientRect().bottom).toBeLessThanOrEqual(scroller.getBoundingClientRect().bottom);
+});
+
+it('keeps the red production warning whole below the sticky head', () => {
+  const { scroller, head } = picker(600);
+  const warning = document.createElement('div');
+  warning.className = 'production-warning';
+  Object.defineProperty(warning, 'getBoundingClientRect', { value: () => rect(230 - scroller.scrollTop, 36) });
+  head.after(warning);
+
+  revealIdleProductionPicker(scroller);
+  expect(warning.getBoundingClientRect().top).toBeGreaterThanOrEqual(head.getBoundingClientRect().bottom);
+
+  // Scrolled past it (the build list in view when the warning appears): scroll back just enough.
+  scroller.scrollTop = 120;
+  expect(revealBelowStickyHead(scroller, warning)).toBe(true);
+  expect(warning.getBoundingClientRect().top).toBe(head.getBoundingClientRect().bottom);
+  expect(revealBelowStickyHead(scroller, warning)).toBe(false);
 });
