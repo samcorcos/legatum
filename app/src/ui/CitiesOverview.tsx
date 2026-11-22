@@ -39,7 +39,7 @@ const COLUMNS: { key: CitySortKey; label: string; yield?: 'food' | 'production' 
 ];
 
 function BuildCell({ row, faction }: { row: CityRow; faction?: Faction }) {
-  if (row.focus && !row.build) return <span className="co-building" data-testid="city-auto-wait">Choosing at Ready<span className="co-sub">{row.focus} focus</span></span>;
+  if (row.focus && !row.build) return <span className="co-building" data-testid="city-auto-wait">Choosing at Ready<span className="co-sub">{focusLabel(row.focus, faction)}</span></span>;
   if (row.idle || !row.build) {
     return <span className="co-idle" data-testid="city-idle"><span className="co-idle-mark" aria-hidden="true">!</span><b>Idle</b><span className="co-sub">choose what it builds</span></span>;
   }
@@ -159,7 +159,7 @@ export function CitiesOverview() {
                       {row.isCapital && <span className="co-capital" title="Capital"><Star size={9} /></span>}
                       {row.name}
                     </button>
-                    {row.focus && <span className="co-auto-badge">{row.focus}</span>}
+                    {row.focus && <span className="co-auto-badge">{focusLabel(row.focus, faction)}</span>}
                   </th>
                   <td className="co-pop"><b>{row.population}</b><span className={`co-sub${row.growthBad ? ' bad' : ''}`}>{row.growthText}</span></td>
                   <td className="co-num"><span className={row.foodNet < 0 ? 'bad' : undefined}>{signed(row.foodNet)}</span><span className="co-sub" title={`${row.food} Food from tiles, ${row.food - row.foodNet} eaten by its population`}>{row.food} grown</span></td>

@@ -191,7 +191,10 @@ mod tests {
         // Iron in hand: Pikemen replace Spearmen, from either end of the line.
         let iron = only(&[Spearman, Pikeman, Archer, Horseman]);
         assert_eq!(best_buildable_in_line(Spearman, iron), Some(Pikeman));
-        assert_eq!(best_buildable_in_line(MechanisedInfantry, iron), Some(Pikeman));
+        assert_eq!(
+            best_buildable_in_line(MechanisedInfantry, iron),
+            Some(Pikeman)
+        );
         assert!(outdated_by_buildable(Spearman, iron));
         assert!(!outdated_by_buildable(Pikeman, iron));
         // No Iron: the Spearman is the best melee unit left, so it is not outdated.
@@ -203,6 +206,9 @@ mod tests {
         assert_eq!(best_buildable_in_line(Scout, |_| true), None);
         assert_eq!(best_buildable_in_line(Knight, |_| false), None);
         // Aircraft follow their own upgrade chain.
-        assert_eq!(best_buildable_in_line(Biplane, only(&[Biplane, Fighter, Bomber])), Some(Fighter));
+        assert_eq!(
+            best_buildable_in_line(Biplane, only(&[Biplane, Fighter, Bomber])),
+            Some(Fighter)
+        );
     }
 }

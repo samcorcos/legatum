@@ -1352,7 +1352,7 @@ export function bannerMeters(c: CityView, faction?: Faction, focus: CityBuildFoc
     const auto = focus ? { label: 'Auto', icon: FOCUS_ICON[focus] } : undefined;
     out.push(production.state === 'idle'
       // An automated idle city chooses at Ready: it shows its focus, not the red "Build" prompt.
-      ? auto ? { kind: 'production', fraction: 0, text: 'Auto', paused: true, icon: auto.icon, inkIcon: true } : { kind: 'production', fraction: 0, text: 'Build', bad: true, icon: null }
+      ? auto ? { kind: 'production', fraction: 0, text: 'Auto', paused: true, icon: auto.icon, inkIcon: focus === 'Military' || focus === 'Economy' } : { kind: 'production', fraction: 0, text: 'Build', bad: true, icon: null }
       : {
         kind: 'production', fraction: q24(production.needed > 0 ? production.stored / production.needed : 0),
         text: production.state === 'building' ? (production.turns !== null ? String(production.turns) : '–') : '–',

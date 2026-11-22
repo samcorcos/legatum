@@ -1174,28 +1174,38 @@ impl Planner<'_> {
         // with the other's kind only when its own has nothing (user, 2026-11-01: a Military city
         // built a Farm and a Granary). Economy never trains units, and neither focus trains
         // Settlers, Scouts or other civilians: expansion and exploring stay the player's call.
-        let scored: Vec<(bool, i32, ProductionItem)> = d.options.iter().filter_map(|opt| {
-            let unit = match opt.item {
-                ProductionItem::Unit { unit } => Some(unit),
-                _ => None,
-            };
-            if matches!(opt.item, ProductionItem::Project { .. })
-                || unit.is_some_and(|u| focus == CityBuildFocus::Economy || !composition::is_combat(u))
-                || unit.is_some_and(|u| composition::outdated_by_buildable(u, buildable))
-                || opt.resource_blocker.is_some()
-                || !open(opt.item)
-                || unit.is_some_and(|u| self.troop_unfunded(ci, c, u))
-                || (d.producing == Some(opt.item) && unit.is_none())
-            { return None; }
-            let favored = (focus == CityBuildFocus::Military) == is_military_unit(opt.item);
-            let value = self.item_value(ci, c, opt, &tally) - self.wonder_tile_penalty(opt);
-            // Hard may see no use for one more unit in peacetime; the player's focus says otherwise.
-            let value = if favored { value.max(1) } else { value };
-            if value <= 0 { return None; }
-            let score = value * 60 / (opt.turns.clamp(0, 400) + 60)
-                + value * opt.production_banked.clamp(0, opt.cost.max(1)) / opt.cost.max(1) / 2;
-            Some((favored, score, opt.item))
-        }).collect();
+        let scored: Vec<(bool, i32, ProductionItem)> = d
+            .options
+            .iter()
+            .filter_map(|opt| {
+                let unit = match opt.item {
+                    ProductionItem::Unit { unit } => Some(unit),
+                    _ => None,
+                };
+                if matches!(opt.item, ProductionItem::Project { .. })
+                    || unit.is_some_and(|u| {
+                        focus == CityBuildFocus::Economy || !composition::is_combat(u)
+                    })
+                    || unit.is_some_and(|u| composition::outdated_by_buildable(u, buildable))
+                    || opt.resource_blocker.is_some()
+                    || !open(opt.item)
+                    || unit.is_some_and(|u| self.troop_unfunded(ci, c, u))
+                    || (d.producing == Some(opt.item) && unit.is_none())
+                {
+                    return None;
+                }
+                let favored = (focus == CityBuildFocus::Military) == is_military_unit(opt.item);
+                let value = self.item_value(ci, c, opt, &tally) - self.wonder_tile_penalty(opt);
+                // Hard may see no use for one more unit in peacetime; the player's focus says otherwise.
+                let value = if favored { value.max(1) } else { value };
+                if value <= 0 {
+                    return None;
+                }
+                let score = value * 60 / (opt.turns.clamp(0, 400) + 60)
+                    + value * opt.production_banked.clamp(0, opt.cost.max(1)) / opt.cost.max(1) / 2;
+                Some((favored, score, opt.item))
+            })
+            .collect();
         let any_favored = scored.iter().any(|(favored, _, _)| *favored);
         // Military trains the newest generation it can (Sam: "the most advanced military units");
         // value only chooses within it. A unit floored at value 1 scores 0, so value alone would
@@ -6686,7 +6696,10 @@ mod automation_tests {
             .build();
         let pick = |focus| city_automation_choice(&view, CityId(1), focus);
         assert!(
-            matches!(pick(CityBuildFocus::Economy), Some(ProductionItem::Building { .. })),
+            matches!(
+                pick(CityBuildFocus::Economy),
+                Some(ProductionItem::Building { .. })
+            ),
             "{:?}",
             pick(CityBuildFocus::Economy)
         );
@@ -6831,9 +6844,9 @@ mod automation_tests {
             .build();
         let d = view.cities[0].detail.as_ref().unwrap();
         let buildable = |unit| {
-            d.options.iter().any(|o| {
-                o.item == ProductionItem::Unit { unit } && o.resource_blocker.is_none()
-            })
+            d.options
+                .iter()
+                .any(|o| o.item == ProductionItem::Unit { unit } && o.resource_blocker.is_none())
         };
         let pick = city_automation_choice(&view, CityId(1), CityBuildFocus::Military);
         let Some(ProductionItem::Unit { unit }) = pick else {
@@ -6846,15 +6859,17 @@ mod automation_tests {
         // Block every resource-hungry option: the pick is still the best of what remains.
         let mut starved = view.clone();
         for o in &mut starved.cities[0].detail.as_mut().unwrap().options {
-            if matches!(o.item, ProductionItem::Unit { .. }) && legatum_core::resources::item_need(o.item).is_some() {
+            if matches!(o.item, ProductionItem::Unit { .. })
+                && legatum_core::resources::item_need(o.item).is_some()
+            {
                 o.resource_blocker = Some("needs Iron".into());
             }
         }
         let d = starved.cities[0].detail.as_ref().unwrap();
         let open = |unit| {
-            d.options.iter().any(|o| {
-                o.item == ProductionItem::Unit { unit } && o.resource_blocker.is_none()
-            })
+            d.options
+                .iter()
+                .any(|o| o.item == ProductionItem::Unit { unit } && o.resource_blocker.is_none())
         };
         let pick = city_automation_choice(&starved, CityId(1), CityBuildFocus::Military);
         let Some(ProductionItem::Unit { unit }) = pick else {

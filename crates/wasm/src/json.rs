@@ -130,7 +130,7 @@ pub fn upgrade_from_49(json: &str) -> Result<GameState, String> {
     let v: Value = serde_json::from_str(json).map_err(|e| format!("invalid JSON: {e}"))?;
     match v.get("save_version").and_then(Value::as_u64) {
         None if carries_rules_49_fields(&v) => upgrade_value_from_49(v),
-        None | Some(50) | Some(51) | Some(52) => upgrade_value_from_50(v),
+        None | Some(50) | Some(51) | Some(52) | Some(53) => upgrade_value_from_50(v),
         Some(49) => upgrade_value_from_49(v),
         Some(n) if n == u64::from(legatum_core::RULES_VERSION) => parse_state(json),
         Some(n) => Err(format!(
@@ -148,16 +148,17 @@ pub fn carries_rules_49_fields(v: &Value) -> bool {
         .is_some_and(|ps| ps.iter().any(|p| p.get("capitals_taken").is_some()))
 }
 
-/// The rules-50, rules-51 or rules-52 to rules-53 upgrade of a parsed state: the identity. Rules 51
+/// The rules-50 to rules-53 upgrade to rules 54 of a parsed state: the identity. Rules 51
 /// changes how peaceful units contest a tile, rules 52 renames identifiers (the old names still
 /// parse through serde aliases) and rules 53 changes who counts for Humble the mighty
-/// (`objectives::humbles`, judged each turn from the turn-start VP); neither changes a field, and
-/// a capture counted under the older rules stays counted.
+/// (`objectives::humbles`, judged each turn from the turn-start VP); rules 54 adds city
+/// automation focuses and the Food project (the old `Balanced` focus parses as `Economy`). None
+/// changes a field, and a capture counted under the older rules stays counted.
 pub fn upgrade_value_from_50(v: Value) -> Result<GameState, String> {
     state_from_value(v, false)
 }
 
-/// The rules-49 to rules-50 upgrade of a parsed state (then rules 51 to 53, which change no field):
+/// The rules-49 to rules-50 upgrade of a parsed state (then rules 51 to 54, which change no field):
 /// - `Player::capitals_taken` (49: every original capital the empire ever captured, kept for good)
 ///   is gone. Rules 50 derives a held capital's point from who holds it now, so a capital the
 ///   taker still holds keeps scoring and one it lost stops. A Celtic entry whose city no longer
@@ -313,8 +314,9 @@ mod tests {
         // rival capital's VP is held, so `Player::capitals_taken` is gone, and a 49 save is refused.
         // Rules 51: peaceful contests, a resolution change only. Rules 52: identifiers renamed.
         // Rules 53: who counts for Humble the mighty; the save shape is unchanged, and the app
-        // refuses a 52 save (only the simulation upgrade reads it).
-        assert_eq!(legatum_core::RULES_VERSION, 53);
+        // refuses a 52 save (only the simulation upgrade reads it). Rules 54: city automation
+        // focuses and the Food project; the save shape only gains values, and the app refuses a 53 save.
+        assert_eq!(legatum_core::RULES_VERSION, 54);
         let mut setup = GameSetup::all_ai(3);
         setup.players[0].faction = legatum_core::Faction::Egypt;
         let mut state = legatum_core::new_game(&setup);
@@ -337,7 +339,7 @@ mod tests {
         );
         assert_eq!(state.cities[&city].producing, Some(grow), "{events:?}");
         let save = state_to_json(&state);
-        assert!(save.contains("\"save_version\":53"));
+        assert!(save.contains("\"save_version\":54"));
         assert!(!save.contains("capitals_taken"));
         assert!(
             state
@@ -348,11 +350,11 @@ mod tests {
         assert!(save.contains("\"Grow\""));
         assert_eq!(parse_state(&save).unwrap(), state);
         let mut old: Value = serde_json::from_str(&save).unwrap();
-        old["save_version"] = Value::from(52);
+        old["save_version"] = Value::from(53);
         assert!(
             parse_state(&old.to_string())
                 .unwrap_err()
-                .contains("incompatible rules version: saved Some(52), current 53")
+                .contains("incompatible rules version: saved Some(53), current 54")
         );
         assert_eq!(upgrade_from_49(&old.to_string()).unwrap(), state);
     }

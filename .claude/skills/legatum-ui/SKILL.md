@@ -72,6 +72,7 @@ This file holds the current rules, one line each. The user's words, dates, as-bu
 - Eliminated empires leave active lists; the race panel always shows the race (extras shrink first) (user, 2026-10-06, 2026-10-17).
 - Lobby: Easy, Normal and Hard only; a new Single Player lobby starts at the map size's default count (6 on Standard); choosing a map size snaps the count; no game-type preset bar (2026-11-21, user 2026-11-03, 2026-10-06, 2026-10-27). Two settings never share a name (user, 2026-11-15).
 - No "coalition" in the UI; say the plain facts (user, 2026-11-11).
+- A select or chip gets a fixed width only when its longest option fits; when option labels change, check the longest at 1000x600. A reason line never repeats its heading or mentions a queue the city doesn't have. A banner icon that stands for a yield is drawn in that yield's colour, not ink (UI review, 2026-11-22, PR #98).
 
 ## Look and feel
 

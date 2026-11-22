@@ -771,13 +771,13 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
 
   /** Idle with nothing queued: the control sits on the "Choose what ... builds" line, so it never scrolls out of view above the cards and costs no extra row. */
   const idleChoice = city.owner === view.me && !producing && queue.length === 0;
-  const autoSelect = <select id={`city-automation-${city.id}`} aria-label={`Automate ${city.name}`} title={buildFocus ? buildFocus === 'Food' && owner?.faction === 'Egypt' ? 'Runs Grow and builds nothing else.' : FOCUS_TIP[buildFocus] : 'Pick a focus and the city chooses its builds. Spends no Gold.'} value={buildFocus ?? ''}
+  const autoSelect = <select id={`city-automation-${city.id}`} aria-label={`Automate ${city.name}`} title={buildFocus ? buildFocus === 'Food' && owner?.faction === 'Egypt' ? 'Runs Grow and builds nothing else.' : FOCUS_TIP[buildFocus] : 'Pick a focus: the city picks its builds or runs a project. Spends no Gold.'} value={buildFocus ?? ''}
     disabled={view.finished} onChange={(e) => editOrders((list) => setCityAutomation(list, city.id, (e.target.value || null) as CityBuildFocus | null))}>
     <option value="">Off</option>{FOCUS_CYCLE.map((f) => <option key={f} value={f}>{focusLabel(f, owner?.faction)}</option>)}
   </select>;
   const autoReason = buildFocus && productionWarning !== AUTOMATION_NO_CHOICE ? <p className="cp-automation-reason">{autoPick
     ? autoPickReason(autoPick, buildFocus, city, view)
-    : buildFocus === 'Military' || buildFocus === 'Economy' ? `Your queue goes first. When it empties, the city picks a ${buildFocus} build.` : buildFocus === 'Food' && owner?.faction === 'Egypt' ? 'Your queue goes first. When it empties, the city runs Grow.' : `Your queue goes first. When it empties, the city runs its ${focusLabel(buildFocus, owner?.faction)}.`}</p> : null;
+    : buildFocus === 'Military' || buildFocus === 'Economy' ? `Your queue goes first. When it empties, the city picks ${buildFocus === 'Economy' ? 'an' : 'a'} ${buildFocus} build.` : buildFocus === 'Food' && owner?.faction === 'Egypt' ? 'Your queue goes first. When it empties, the city runs Grow.' : `Your queue goes first. When it empties, the city runs its ${focusLabel(buildFocus, owner?.faction)}.`}</p> : null;
   const automationRow = city.owner === view.me ? <section className="cp-automation" aria-label="City building automation">
     <label htmlFor={`city-automation-${city.id}`}>Automate <kbd className="kbd" title="I: on or off with your last focus. Shift+I: next focus.">I</kbd></label>
     {autoSelect}
@@ -998,7 +998,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
         </div>}
       </div>
       {idleChoice && buyTile('row')}
-      {idleChoice && autoReason && <div className="cp-block cp-auto-note">{autoReason}</div>}
+      {idleChoice && autoPick && autoReason && <div className="cp-block cp-auto-note">{autoReason}</div>}
 
 
       {growOption && <><div className="cp-sub">Growth</div><div className="prod-list">{renderOption(growOption)}</div></>}

@@ -38,7 +38,8 @@ it('sets a distinct building focus without replacing the current production orde
   act(() => { select.value = 'Science'; select.dispatchEvent(new Event('change', { bubbles: true })); });
   expect(useGame.getState().orders[0]).toContainEqual({ type: 'SetCityAutomation', city: useGame.getState().views![0].cities[0].id, focus: 'Science' });
   expect(useGame.getState().orders[0].some((o) => o.type === 'SetProduction' || o.type === 'SetProductionQueue')).toBe(false);
-  expect(host.textContent).toContain('Your queue goes first. When it empties, the city runs its Science project.');
+  // An idle city has no queue: the heading names the focus, and no reason line repeats it.
+  expect(host.textContent).not.toContain('Your queue goes first');
   // An automated idle city is not asking for a choice: the heading says when it chooses, and the control stays beside the gold line, in view.
   const title = host.querySelector('.cp-choose-title')!;
   expect(title.textContent).toBe('Chooses at Ready · Science project');
