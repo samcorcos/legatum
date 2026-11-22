@@ -11,6 +11,7 @@ import { HapticsSettings } from '../ui/HapticsSettings';
 import { SoundSettings } from '../ui/SoundSettings';
 import { CombatFxSettings } from '../ui/CombatFxSettings';
 import { cleanRoomName } from '../net/roomName';
+import { JOIN_CODE_MAX, joinCodeProblem, typedJoinCode } from '../net/joinCode';
 import { retryLine, retryWouldFail } from '../net/browserHost';
 import { DEFAULT_PLAYER_NAME, MAX_PLAYER_NAME, rememberPlayerName, savedPlayerName } from '../platform/online';
 import { TitleArt } from './TitleArt';
@@ -225,6 +226,9 @@ function MultiplayerMenu({ onBack }: { onBack: () => void }) {
   const [hostError, setHostError] = useState<string | null>(null);
   const [name, setName] = useState(() => savedPlayerName() ?? DEFAULT_PLAYER_NAME);
   // The game list drops symbols and emoji; say so before the name is used.
+  // An optional code that locks the game: guests type it once to take a seat. It stays in this tab.
+  const [code, setCode] = useState('');
+  const codeNote = joinCodeProblem(code);
   const typed = name.trim();
   const shown = cleanRoomName(typed);
   const listedAs = typed && shown !== typed ? (shown ? `Shown in the game list as “${shown}”.` : 'The game list will show “Game” and four characters.') : null;
@@ -233,12 +237,13 @@ function MultiplayerMenu({ onBack }: { onBack: () => void }) {
   const hostPrimary = hosting === 'failed' && !views && !hostCannotRetry;
   const joinPrimary = !views && !busy && resuming !== 'failed' && !hostPrimary;
   const hostOnline = async () => {
+    if (codeNote) return;
     const who = name.trim().slice(0, MAX_PLAYER_NAME) || DEFAULT_PLAYER_NAME;
     rememberPlayerName(who);
     setHosting('starting');
     setResuming('idle');
     setHostError(null);
-    const failure = await useGame.getState().hostOnline(who);
+    const failure = await useGame.getState().hostOnline(who, code || undefined);
     if (failure) {
       setHostError(failure);
       setHosting('failed');
@@ -246,13 +251,14 @@ function MultiplayerMenu({ onBack }: { onBack: () => void }) {
   };
 
   const hostFromSave = () => {
+    if (codeNote) return;
     const who = name.trim().slice(0, MAX_PLAYER_NAME) || DEFAULT_PLAYER_NAME;
     rememberPlayerName(who);
     setHostError(null);
     setHosting('idle');
     void pickSaveFile(async (save) => {
       setResuming('starting');
-      const failure = await useGame.getState().hostOnlineFromSave(who, save);
+      const failure = await useGame.getState().hostOnlineFromSave(who, save, code || undefined);
       if (failure) {
         setHostError(failure);
         setResuming('failed');
@@ -271,30 +277,50 @@ function MultiplayerMenu({ onBack }: { onBack: () => void }) {
         </button>
         {online?.relay ? (
           <>
-            <label className="host-name">
-              {/* The note replaces the label while it shows, so it adds no height to a menu that is already tight. */}
-              {listedAs === null ? <span>Your name in the game list</span> : <span className="host-name-note">{listedAs}</span>}
-              <input
-                className="lobby-input"
-                aria-label="Your name in the game list"
-                value={name}
-                maxLength={MAX_PLAYER_NAME}
-                disabled={busy}
-                onChange={(e) => setName(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter' && !busy) void hostOnline(); }}
-              />
-            </label>
-            <button className={`btn big ${hostPrimary ? 'primary' : ''}`} disabled={busy} onClick={hostOnline}>
+            <div className="host-fields">
+              <label className="host-name">
+                {/* The note replaces the label while it shows, so it adds no height to a menu that is already tight. */}
+                {listedAs === null ? <span>Your name in the game list</span> : <span className="host-name-note">{listedAs}</span>}
+                <input
+                  className="lobby-input"
+                  aria-label="Your name in the game list"
+                  value={name}
+                  maxLength={MAX_PLAYER_NAME}
+                  disabled={busy}
+                  onChange={(e) => setName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && !busy) void hostOnline(); }}
+                />
+              </label>
+              <label className="host-name host-code">
+                <span>Join code</span>
+                <input
+                  className="lobby-input"
+                  aria-label="Join code (optional)"
+                  placeholder="Optional"
+                  value={code}
+                  maxLength={JOIN_CODE_MAX}
+                  autoComplete="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
+                  disabled={busy}
+                  onChange={(e) => setCode(typedJoinCode(e.target.value))}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && !busy) void hostOnline(); }}
+                />
+              </label>
+            </div>
+            <button className={`btn big ${hostPrimary ? 'primary' : ''}`} disabled={busy || !!codeNote} onClick={hostOnline}>
               Host Game
               <span className="btn-sub">
                 {hosting === 'starting' ? <><span className="spinner" /> Opening your game…</>
+                  : codeNote ? codeNote
                   : hosting === 'failed' ? (refusal ? retryLine(refusal.kind, refusal.retryAfterS) : 'Try again') : 'Open a game that others can find and join'}
               </span>
             </button>
-            <button className={`btn big ${resuming === 'failed' && !views ? 'primary' : ''}`} disabled={busy} onClick={hostFromSave}>
+            <button className={`btn big ${resuming === 'failed' && !views ? 'primary' : ''}`} disabled={busy || !!codeNote} onClick={hostFromSave}>
               Host from a save…
               <span className="btn-sub">
                 {resuming === 'starting' ? <><span className="spinner" /> Opening your game…</>
+                  : codeNote ? codeNote
                   : resuming === 'failed' ? 'Try again' : 'Carry on an online game from its save file'}
               </span>
             </button>

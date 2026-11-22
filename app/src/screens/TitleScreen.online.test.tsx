@@ -42,7 +42,7 @@ it('Host Game opens the game in this tab with the player name', async () => {
   const start = hosting(async () => null);
   await act(async () => must(/^Host Game/).click());
   await flush();
-  expect(start).toHaveBeenCalledWith('A Legatum player');
+  expect(start).toHaveBeenCalledWith('A Legatum player', undefined);
   expect(localStorage.getItem('legatum.playerName')).toBe('A Legatum player');
   expect(host.querySelector('.title-notice')).toBeNull();
 });
@@ -77,7 +77,7 @@ it('the name field is prefilled, can be changed, and is saved and sent', async (
   await act(async () => { set.call(input, 'Bo'); input.dispatchEvent(new Event('input', { bubbles: true })); });
   await act(async () => must(/^Host Game/).click());
   await flush();
-  expect(start).toHaveBeenCalledWith('Bo');
+  expect(start).toHaveBeenCalledWith('Bo', undefined);
   expect(localStorage.getItem('legatum.playerName')).toBe('Bo');
 });
 
@@ -141,11 +141,11 @@ it('the name note replaces the label, so it adds no height', async () => {
       input.dispatchEvent(new Event('input', { bubbles: true }));
     });
   };
-  const label = () => host.querySelector('.host-name > span')!;
+  const label = () => host.querySelector('.host-name:not(.host-code) > span')!;
   expect(label().textContent).toBe('Your name in the game list');
   await type('Ada \u{1F600}');
   expect(label().textContent).toBe('Shown in the game list as “Ada”.');
   await type('\u{1F600}\u{1F600}');
   expect(label().textContent).toBe('The game list will show “Game” and four characters.');
-  expect(host.querySelectorAll('.host-name > span').length).toBe(1);
+  expect(host.querySelectorAll('.host-name:not(.host-code) > span').length).toBe(1);
 });

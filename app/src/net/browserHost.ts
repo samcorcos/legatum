@@ -25,6 +25,8 @@ export interface HostEngine {
   take_save(): string | undefined;
   /** Hosting from a save file: opens every seat but the host's own for guests. */
   open_guest_seats(): void;
+  /** Sets or clears the join code (4 to 12 letters or digits). It stays in the engine; nothing sends it out. */
+  set_join_code(code?: string | null): void;
   /** The live game's save right now; throws when there is no game. */
   save_game(): string;
   take_recordings(): string;
@@ -36,6 +38,8 @@ export interface RoomAnnounce {
   build: string;
   rules_version: number;
   protocol: number;
+  /** The game has a join code. The code itself never leaves the engine. */
+  locked?: boolean;
 }
 
 export interface RoomKey {

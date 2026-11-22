@@ -30,6 +30,8 @@ class FakeEngine implements HostEngine {
   new_game() { this.save = 'saved'; }
   load_game() {}
   open_guest_seats() {}
+  joinCode: string | null | undefined;
+  set_join_code(code?: string | null) { this.joinCode = code; }
   save_game() { if (!this.live) throw new Error('No game in progress'); return 'live save'; }
   live = true;
   configure_staging() {}
@@ -60,7 +62,7 @@ class FakeTunnel implements TunnelSocket {
 
 let engine: FakeEngine;
 let tunnels: FakeTunnel[];
-let calls: { url: string; method?: string }[];
+let calls: { url: string; method?: string; body?: string }[];
 let statusCode: number;
 let timers: { f: () => void; ms: number; every: boolean; dead: boolean }[];
 
@@ -69,8 +71,8 @@ const options = (over: Partial<ConstructorParameters<typeof BrowserHost>[0]> = {
   announce: { name: 'Ada', build: 'b', rules_version: 1, protocol: 1 },
   engine,
   socket: (url: string) => { const t = new FakeTunnel(url); tunnels.push(t); return t; },
-  fetch: async (url: string, init?: { method?: string }) => {
-    calls.push({ url, method: init?.method });
+  fetch: async (url: string, init?: { method?: string; body?: string }) => {
+    calls.push({ url, method: init?.method, body: init?.body });
     const body = url.endsWith('/rooms') ? { room: `room${calls.length}`, host_key: 'k' } : {};
     const status = url.endsWith('/rooms') ? 200 : statusCode;
     return { ok: status < 300, status, json: async () => body, text: async () => JSON.stringify(body) };
@@ -103,13 +105,26 @@ beforeEach(() => {
 it('announces the room, opens the tunnel and pushes the status and lobby row', async () => {
   const host = new BrowserHost(options());
   const key = await host.start();
-  expect(calls[0]).toEqual({ url: 'https://relay.test/rooms', method: 'POST' });
+  expect(calls[0]).toMatchObject({ url: 'https://relay.test/rooms', method: 'POST' });
   expect(key).toEqual({ room: 'room1', host_key: 'k' });
   expect(tunnels[0].url).toBe('wss://relay.test/rooms/room1/host?key=k');
   expect(tunnels[0].binaryType).toBe('arraybuffer');
   tunnels[0].open();
   expect(tunnels[0].frames().map((f) => [f.conn, f.kind])).toEqual([[0, KIND_STATUS], [0, KIND_SUMMARY]]);
   expect(frameText(tunnels[0].frames()[0])).toBe(engine.statusText);
+});
+
+it('tells the relay only that the game is locked, never the code, and leaves the code in the engine', async () => {
+  engine.set_join_code('WOLF42');
+  const host = new BrowserHost(options({ announce: { name: 'Ada', build: 'b', rules_version: 1, protocol: 1, locked: true } }));
+  await host.start();
+  tunnels[0].open();
+  const body = JSON.parse(calls[0].body!) as Record<string, unknown>;
+  expect(body.locked).toBe(true);
+  expect(calls.map((c) => c.body ?? '').join('')).not.toContain('WOLF42');
+  const sent = tunnels[0].frames().map((f) => frameText(f)).join('');
+  expect(sent).not.toContain('WOLF42');
+  expect(engine.joinCode).toBe('WOLF42');
 });
 
 it('routes guest frames to the engine and its replies back, chunking long ones', async () => {

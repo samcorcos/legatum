@@ -1,7 +1,7 @@
 // The online staging room, as specified in plans/game-protocol.md.
 import type { AiDifficulty, Faction } from './types';
 import { MAP_SIZES, levelFields, levelOf, mapDimensions, readDifficultyPreference, type Lobby, type MapSizeId, type Slot } from './lobby';
-import { apiFetch, rememberSeat, rememberedSeat, defaultWsUrl, defaultSocketFactory, serverBase, type ServerStatus, type SocketFactory, type SocketLike } from './remote';
+import { apiFetch, joinCodeToSend, rememberSeat, rememberedSeat, defaultWsUrl, defaultSocketFactory, serverBase, type ServerStatus, type SocketFactory, type SocketLike } from './remote';
 
 // ---- Flag ----
 
@@ -58,8 +58,9 @@ export interface StagingState {
 
 export type StagingClientMsg =
   | { type: 'staging_watch'; host?: boolean }
-  | { type: 'staging_take'; seat: number; name: string; token?: string }
+  | { type: 'staging_take'; seat: number; name: string; token?: string; code?: string }
   | { type: 'staging_release'; seat: number }
+  | { type: 'staging_remove'; seat: number }
   | { type: 'staging_update'; name?: string; faction?: Faction | 'Random' }
   | { type: 'staging_ready'; ready: boolean }
   | { type: 'staging_leave' }
@@ -220,7 +221,7 @@ export interface StagingEvents {
   started(seat: number, gameId: string, token: string): void;
   seatLost(message: string): void;
   closed(): void;
-  error(message: string): void;
+  error(message: string, code?: string): void;
 }
 
 const OPEN = 1;
@@ -262,7 +263,7 @@ export class StagingClient {
     sock.onopen = () => {
       if (this.socket !== sock || this.stopped) return;
       this.send({ type: 'staging_watch', ...(this.host ? { host: true } : {}) });
-      if (this.seat !== null) this.send({ type: 'staging_take', seat: this.seat, name: this.name, token: this.token });
+      if (this.seat !== null) this.send(this.takeMessage(this.seat, this.name));
       if (this.pendingUpdate) {
         this.send({ type: 'staging_update', ...this.pendingUpdate });
         this.pendingUpdate = null;
@@ -307,7 +308,13 @@ export class StagingClient {
     if (this.seat !== seat) this.token = undefined;
     this.seat = seat;
     this.name = name;
-    this.send({ type: 'staging_take', seat, name, token: this.token });
+    this.send(this.takeMessage(seat, name));
+  }
+
+  /** A seat claim; the typed join code rides along (the host ignores it on a rejoin with the seat's own credential). */
+  private takeMessage(seat: number, name: string): StagingClientMsg {
+    const code = joinCodeToSend();
+    return { type: 'staging_take', seat, name, token: this.token, ...(code ? { code } : {}) };
   }
 
   update(p: { name?: string; faction?: Faction | 'Random' }) {
@@ -325,6 +332,11 @@ export class StagingClient {
   /** One-shot host action; keep the host's own reservation and credential. */
   release(seat: number): boolean {
     return this.send({ type: 'staging_release', seat });
+  }
+
+  /** One-shot host action: take a remote player out of a seat; the seat stays closed until the host opens it. */
+  remove(seat: number): boolean {
+    return this.send({ type: 'staging_remove', seat });
   }
 
   /** Keep ownership until the server acknowledges release; never queue an offline leave. */
@@ -407,8 +419,19 @@ export class StagingClient {
           break;
         }
         if (msg.code === 'seat_taken') this.disconnect();
+        if (msg.code === 'removed') {
+          // The host took this player out. The seat is closed; this client keeps watching the room.
+          this.forget();
+          this.events.seatLost?.(msg.message);
+          break;
+        }
+        if (msg.code === 'join_code_needed' || msg.code === 'wrong_join_code') {
+          // The claim failed: stop asking for this seat until the player tries again.
+          this.seat = null;
+          this.token = undefined;
+        }
         if (msg.code === 'seat_occupied' || msg.code === 'seat_reserved' || msg.code === 'seat_expired' || msg.code === 'not_open') this.forget();
-        this.events.error?.(msg.message);
+        this.events.error?.(msg.message, msg.code);
         break;
     }
   }
