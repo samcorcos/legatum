@@ -15,7 +15,7 @@ Every 15 minutes (launchd, `io.legatum.game-analysis`), `analyse_games.py poll`:
 3. Analyses each game that is due:
    - finished or abandoned: once per upload;
    - still in progress but idle for 6 hours with new turns since its last report: a checkpoint report;
-   - fewer than 10 turns: skipped; a game that fails 3 times on the same upload is left for a person.
+   - fewer than 10 turns: skipped; a game that fails 3 times on the same upload is left for a person. If the reviewer itself is down (a trivial canary call fails too, e.g. the Claude login expired), the failure does not count against the game: the run stops and you get one notification (`reviewer_down` in the ledger) until a review works again.
 4. For each game, in `reports/<game id>/`:
    - `facts.md`: standings, wars, expansion, losses, key events, the AI incident detector and the coach
      questions with the player's answers. The replay uses the engine the game was played on: `game_dump` and

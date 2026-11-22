@@ -66,7 +66,7 @@ sets the preview's own address), `scripts/build-web.sh` runs `tools/release/carr
 `LEGATUM_CARRY_ASSETS_FROM=https://legatum-game.pages.dev scripts/build-web.sh`.
 
 Every web build, and CI's app build, also runs `tools/release/check-dist-refs.mjs`: it fails if the JS, CSS or HTML
-points to a file the build does not contain.
+points to a file the build does not contain (a link to a folder, such as `/`, counts when the folder has an `index.html`).
 
 ## Third-party licence notices
 
