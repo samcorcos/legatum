@@ -1,4 +1,4 @@
-// Reader for the evolution run log (docs/ai-evolution-log.md). Shared by the dashboard's Evolution
+// Reader for the evolution run log (docs/archive/ai-evolution-log.md). Shared by the dashboard's Evolution
 // panel, the morning report and the film. It only reads the log, tolerates a run that is still
 // being written (a torn last line is skipped) and never looks at evolution internals.
 import fs from "node:fs";

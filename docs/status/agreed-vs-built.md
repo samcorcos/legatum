@@ -2,7 +2,7 @@
 
 A standing ledger of what the designer decided or approved, set against what is on `master`. First cut 2026-10-31 (master `03f4e2369`), written by the delivery audit. The ops supervisor updates it every run; a decision is not finished until its row says `done`.
 
-**Sources swept (2026-10-10 onward):** the design doc decisions log (110 rows, 10-10 to 10-31); decisions marked "user" in the `legatum-design`, `legatum-factions`, `legatum-ui`, `legatum-art` and `legatum-workflow` skills; `docs/status/review-plan-2026-10-18.md` (approved in full); `docs/status/next-tasks.md` and `tracker.md` including the "Decisions-log rows owed" lines; `.progress/astra-queue/hold/` and `running/`; every unmerged `astra/*` and `claude/*` branch.
+**Sources swept (2026-10-10 onward):** the design doc decisions log (110 rows, 10-10 to 10-31); decisions marked "user" in the `legatum-design`, `legatum-factions`, `legatum-ui`, `legatum-art` and `legatum-workflow` skills; `docs/archive/review-plan-2026-10-18.md` (approved in full); `docs/status/next-tasks.md` and `tracker.md` including the "Decisions-log rows owed" lines; `.progress/astra-queue/hold/` and `running/`; every unmerged `astra/*` and `claude/*` branch.
 
 **Status words:** `done` (on master, seen in code or the rules reference) / `built-not-merged` (a branch holds finished work; head named) / `running` (an agent or task is on it now) / `not started` (counts as dropped unless a deferral is cited) / `parked` (reason and source cited) / `superseded` (by which decision) / `abandoned` / `process` (a working rule, not a deliverable).
 

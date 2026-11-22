@@ -6,7 +6,7 @@
 | [../ARCHITECTURE.md](../ARCHITECTURE.md) | Crate graph, turn pipeline, determinism, clients, saves, AI layers. |
 | [engineering-notes.md](engineering-notes.md) | Dated engine, determinism, AI measurement, testing, and UI boundary lessons from development. |
 | [game-archive.md](game-archive.md) | The game-recording format used for analysis. |
-| [ai-evolution.md](ai-evolution.md), [ai-competitiveness.md](ai-competitiveness.md), [ai-proxy-benchmark.md](ai-proxy-benchmark.md), [human-playbook-benchmark.md](human-playbook-benchmark.md), [strategy-diversity.md](strategy-diversity.md), [opening-league.md](opening-league.md) | How the AI is measured and improved. |
+| [ai-evolution.md](archive/ai-evolution.md), [ai-competitiveness.md](ai-competitiveness.md), [ai-proxy-benchmark.md](archive/ai-proxy-benchmark.md), [human-playbook-benchmark.md](archive/human-playbook-benchmark.md), [strategy-diversity.md](strategy-diversity.md), [opening-league.md](archive/opening-league.md) | How the AI is measured and improved. |
 | [sim-results/](sim-results/) | Methodology for the simulation benchmarks (the raw run output is not published). |
 | [design/](design/) | Design notes and art-direction records, with prompts. |
 | [research/](research/) | Background research on 4X design. |

@@ -1,9 +1,11 @@
+> Archived 2026-11-22: kept for history; it no longer describes the project.
+
 # Opening league
 
 ## In the game: cities fire back; Hard v2 is opt-in
 
 - **City strike** (`city-strike` below) is a default rule; the genomes were tuned with it. `no-city-strike` turns it off; the old `city-strike` flag still parses and changes nothing. A city at 0 HP doesn't fire. The former TypeScript client mirrors it, and the turn report, attack forecast and Guide explain it.
-- **Hard v2 is not the app's Hard.** The app's Hard seats play the scripted Hard. Hard v2 (`crates/ai/src/hard_v2.rs`) is available only through the `hard-v2-ai` setup switch (`legatum-sim --hard-v2`, or `--rules-experiment hard-v2-ai`), which `legatum_wasm::session::make_brain` honours, and through the sim's per-seat tools below. Validation on 2026-09-30 ([results](sim-results/2026-09-30-hard-v2-validation.md)) found it easier for a strong player than the scripted Hard: it fights less and doesn't gang up on the leader.
+- **Hard v2 is not the app's Hard.** The app's Hard seats play the scripted Hard. Hard v2 (`crates/ai/src/hard_v2.rs`) is available only through the `hard-v2-ai` setup switch (`legatum-sim --hard-v2`, or `--rules-experiment hard-v2-ai`), which `legatum_wasm::session::make_brain` honours, and through the sim's per-seat tools below. Validation on 2026-09-30 ([results](../sim-results/2026-09-30-hard-v2-validation.md)) found it easier for a strong player than the scripted Hard: it fights less and doesn't gang up on the leader.
 - What Hard v2 does: each Hard seat draws one opening at game start, a seeded, deterministic weighted draw (seat brain seed) from the league's equilibrium mixture, with every named opening between 10% and 40% by default (`--floor`, `--cap`; the committed table uses a 25% cap) so games vary and whole tables rarely mirror one opening. The draw is global, since the league isn't faction-conditioned. A drawn opening plays its tuned genome with the behaviour primitives on and uses its phase machine below; drawing `Default` plays the scripted Hard. Opening memory lives in the brain, so a loaded save redraws the same opening but restarts its phase memory.
 
 The genomes and weights are generated data, `crates/ai/src/tuned_openings.rs`. Refresh them from a league run (the psro directory, or its parent), then run the checks:
@@ -111,11 +113,11 @@ Every per-game player record includes `ai_primitives` to identify participation 
 
 For league analysis, compare declarations with wars that fought, escort exposure with losses, and treasury peaks with purchases. An unescorted turn is not automatically a failure: threat thresholds and the wait timeout can deliberately permit it. Win rates from one seat mix are smoke evidence, not proof of balance or a counter matrix.
 
-The [100-game behaviour primitive smoke](sim-results/2026-09-30-behaviour-primitives.md) reports every counter and each opening's win rate with Hard AI, default rules and all primitives enabled. It finished 100/100 games by VP, with zero stalls and zero panics.
+The [100-game behaviour primitive smoke](../sim-results/2026-09-30-behaviour-primitives.md) reports every counter and each opening's win rate with Hard AI, default rules and all primitives enabled. It finished 100/100 games by VP, with zero stalls and zero panics.
 
 ## Head-to-head duels
 
-The [duel tools](../tools/duel/README.md) run actual two-empire games on small maps,
+The [duel tools](../../tools/duel/README.md) run actual two-empire games on small maps,
 with mirrored opening assignments and map-paired statistics. They are independent
 of `tools/league` (which remains on `evolution/league-phase2`). Run
 `python3 tools/duel/duel.py --run .progress/duel --seeds 100` for 200 games per pair,

@@ -1,6 +1,8 @@
+> Archived 2026-11-22: kept for history; it no longer describes the project.
+
 # Human-proxy benchmark
 
-`ProxyBrain` is a fixed opponent for step 1 of [AI competitiveness](ai-competitiveness.md).
+`ProxyBrain` is a fixed opponent for step 1 of [AI competitiveness](../ai-competitiveness.md).
 It receives only `PlayerView`, has no persistent state or random decisions, and uses the same
 orders, resources, movement and combat rules as every other player. It does not read telemetry.
 
@@ -28,7 +30,7 @@ Work can wait behind a defender or existing investment when its two points would
 coalition stronger than the proxy; projects already underway and immediate winning projects
 proceed. This is an estimate from public information, not a prediction of unseen movement.
 
-The [v4 recalibration report](sim-results/2026-09-28-proxy-v4-recalibration.md) compares v3 and
+The [v4 recalibration report](../sim-results/2026-09-28-proxy-v4-recalibration.md) compares v3 and
 v4 on the same master containing alliances and coalitions, with both Peace and legacy War
 starts. The previous v3 report predates those rules.
 
@@ -61,11 +63,11 @@ This remains a deterministic approximation, not a guarantee against unseen attac
 pact breaches. Public army-title totals are available to every player; they do not reveal unseen
 unit locations or composition. V3 does not call the scripted opponent's diplomacy planner.
 
-The [version 3 calibration report](sim-results/2026-09-28-proxy-v3-diplomacy.md) records Peace
+The [version 3 calibration report](../sim-results/2026-09-28-proxy-v3-diplomacy.md) records Peace
 and legacy War results against the pre-alliance Hard AI, with deterministic replay and exact check
 receipts.
 
-The [version 2 calibration report](sim-results/2026-09-28-proxy-v2-calibration.md) records 300
+The [version 2 calibration report](../sim-results/2026-09-28-proxy-v2-calibration.md) records 300
 rotated Standard games per difficulty on master `ca7e3f7`: 89.0% wins against Easy, 74.0% against
 Normal and 83.0% against Hard, with median winning turns 202, 216.5 and 203. All 900 games
 passed deterministic replay checks. **This still misses the requested yardstick:** Normal is
@@ -160,7 +162,7 @@ aggregate denominators, and incident rates. Keep large JSON, tapes, binaries and
 outside Git; commit a compact Markdown receipt with commands, paths and checksums. The
 three committed `proxy-vs-*-standard` reports use 300 games each, starting at seed 700001.
 
-The first [900-game baseline](sim-results/2026-09-27-proxy-baseline-comparison.md) is pinned to
+The first [900-game baseline](../sim-results/2026-09-27-proxy-baseline-comparison.md) is pinned to
 `31b8eaf53cd9f6bd52d26fad3a097d899d03afe1`, before the +2 capital Science and scout/garrison
 tactics changes merged from master at handoff. Its win rates (40.0% / 18.0% / 24.3%) did not reproduce the expected human
 strength. Treat this as an initial policy baseline; further Proxy calibration is needed before

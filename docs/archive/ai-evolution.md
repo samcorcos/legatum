@@ -1,3 +1,5 @@
+> Archived 2026-11-22: kept for history; it no longer describes the project.
+
 # AI evolution: decision genes, paired selection, and held-out adoption gates
 
 `tools/evolve/` tunes the scripted AI's decisions with CMA-ES. The harness never changes the
@@ -64,7 +66,7 @@ python3 tools/evolve/calibrate.py \
 ```
 
 The projected SE at the new fourfold game budget and the measured current-rules calibration are
-recorded in [the v2 evidence report](sim-results/2026-09-28-evolution-v2.md). Projection resamples
+recorded in [the v2 evidence report](../sim-results/2026-09-28-evolution-v2.md). Projection resamples
 old games; current-rules measurement uses new games. Neither proves that an evolved AI is better.
 Small improvements remain unresolved: the harness reports that uncertainty instead of promoting
 an apparent win from an easier seed block.

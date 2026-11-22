@@ -59,7 +59,7 @@ telemetry patch was used in both executables; it does not affect decisions or ha
 | Sparta | 26 | 33 | 6.50% | 8.25% |
 | Athens | 41 | 37 | 10.25% | 9.25% |
 
-The Proxy cohort follows `docs/ai-proxy-benchmark.md`: Proxy v4, Peace start,
+The Proxy cohort follows `docs/archive/ai-proxy-benchmark.md`: Proxy v4, Peace start,
 rotating seat and faction, Standard, seven scripted Hard opponents, barbarians off,
 no turn limit, 128 games per executable on seeds 700001–700128. Each seat and faction
 appears 16 times; every seat/faction pair appears twice. All 128 games on each side

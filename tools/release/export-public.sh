@@ -110,7 +110,7 @@ for _ in 1; do
   extra=()
   while IFS= read -r f; do
     case "$f" in
-      docs/sim-results/*.md|docs/sim-results/*/*.md|docs/analysis/*.md|docs/ai-evolution-log.md)
+      docs/sim-results/*.md|docs/sim-results/*/*.md|docs/analysis/*.md|docs/archive/*.md)
         if [ -n "$(git -C "$repo" ls-tree --name-only "$commit" -- "$f")" ] && [ ! -e "$out/$f" ]; then extra+=("$f"); fi;;
     esac
   done < <(python3 -I "$here/check-links.py" "$out" --missing-paths)

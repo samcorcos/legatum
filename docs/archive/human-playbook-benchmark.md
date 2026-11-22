@@ -1,14 +1,16 @@
+> Archived 2026-11-22: kept for history; it no longer describes the project.
+
 # Human playbook benchmark (Proxy v5)
 
 For the separate opt-in v6 policy, use `--proxy-version 6` and see the
-[v6 comparison and reproduction commands](sim-results/2026-10-01-human-playbook-v6.md).
+[v6 comparison and reproduction commands](../sim-results/2026-10-01-human-playbook-v6.md).
 V5 and the default version selector retain their existing behavior.
 
 V5 is an opt-in simulator opponent built from the playtest-3 plan: expand to about
 three cities, assemble a ranged army, take a nearby weak city's territory, then
 consolidate and pursue science and victory projects. It is a calibration candidate,
 not an assertion that a simulated player is as strong as the designer. See the
-[400-game measurement](sim-results/2026-10-01-human-playbook-benchmark.md) for its
+[400-game measurement](../sim-results/2026-10-01-human-playbook-benchmark.md) for its
 strength and remaining limitations on the current engine.
 
 ```sh

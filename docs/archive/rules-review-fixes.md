@@ -1,3 +1,5 @@
+> Archived 2026-11-22: kept for history; it no longer describes the project.
+
 # Rules review fixes
 
 All 11 findings from `.reviews/astra-review-rules.md` were covered by regression tests written and run before their corresponding fixes. The core suite grew from 130 to 148 tests. Existing tests that encoded civilian destruction, live fog information, or nontransferable earned production were corrected.
@@ -28,4 +30,4 @@ Verification on `astra/fix-rules-review`:
 - `git diff --check`: passed.
 - `cargo run --release -p legatum-sim -- --games 100 --seed 1 --determinism --label post-fix`: exit 0. Seeds 1–100 each played twice with identical per-turn hashes; save/load retained the final hash. Zero panics, 88 VP victories, 10 turn-limit victories, 2 draws, average 123.9 turns, 4.7 seconds simulation wall time.
 
-The full simulation results are in [the Markdown report](sim-results/2026-09-26-post-fix.md) and the per-game JSON (`sim-results/2026-09-26-post-fix.json`; raw run output, not in the public repository).
+The full simulation results are in [the Markdown report](../sim-results/2026-09-26-post-fix.md) and the per-game JSON (`sim-results/2026-09-26-post-fix.json`; raw run output, not in the public repository).

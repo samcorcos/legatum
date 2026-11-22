@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Morning report: node tools/film/report.mjs <run-dir>  ->  <run-dir>/report.html
 // A self-contained page (inline CSS, fonts and SVG, no scripts) in the editorial variant.
-// It reads only the run log (docs/ai-evolution-log.md). Every number names the generation, the
+// It reads only the run log (docs/archive/ai-evolution-log.md). Every number names the generation, the
 // checkpoint or the game it comes from (pillar 5).
 import fs from "node:fs";
 import { toolBrandCss, wordmark } from "../design/brand.mjs";
