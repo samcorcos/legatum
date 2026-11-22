@@ -77,8 +77,9 @@ ready for review.
 
 `CLAUDE.md` describes further gates before anything lands on `master`: `tools/gates/check.py`, an AI
 documentation review and, for UI changes, an AI UI review. The maintainer runs those himself on your
-branch. You do not need to run them or produce their marker files, and a pull request is not held up for
-lacking them. They may lead to follow-up commits or requests.
+branch: each required reviewer posts its verdict as a PR comment that names the reviewer and the head
+commit SHA, and the merger checks those comments are present for the PR's head before merging. You do not
+need to run them or post those verdicts, and a pull request is not held up for lacking them. They may lead to follow-up commits or requests.
 
 - Keep a change focused, with tests that fail before and pass after.
 - Describe what changed for a player and what you ran. Include screenshots for UI changes (at 1000x600 and
