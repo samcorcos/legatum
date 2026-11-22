@@ -7,9 +7,11 @@ import { AUTOSAVE_KEY, saveFile, useGame, type SaveFile } from '../store';
 import { FixtureClient } from '../test/fixtureEngine';
 import { IDBFactory } from 'fake-indexeddb';
 import { RULES } from '../data';
+import { loadFromFile } from '../platform/files';
 import { resetAutosaveStoreForTests, writeAutosave } from '../platform/autosaveStore';
 
 vi.mock('./TitleArt', () => ({ TitleArt: () => null }));
+vi.mock('../platform/files', async (orig) => ({ ...(await orig<typeof import('../platform/files')>()), loadFromFile: vi.fn() }));
 let root: Root;
 const wait = (ms: number) => act(async () => { await new Promise((r) => setTimeout(r, ms)); });
 const show = async (el: import('react').ReactElement) => { await act(async () => root.render(el)); await act(async () => { await new Promise((r) => setTimeout(r, 300)); }); };
@@ -140,4 +142,34 @@ it('with no earlier turn to fall back on, Continue is retitled and disabled and 
   expect(continueButton().textContent).toContain('Saved game (unreadable)');
   expect(continueButton().disabled).toBe(true);
   expect(host.querySelector('.title-actions .primary')?.textContent).toMatch(/^Single Player/);
+});
+
+it('Load Game asks before a chosen file replaces a saved game, and loads at once when none is saved', async () => {
+  const save = await aSave();
+  vi.mocked(loadFromFile).mockResolvedValue(JSON.stringify(save));
+  const loadButton = () => [...host.querySelectorAll('button')].find((b) => b.textContent?.startsWith('Load Game'))!;
+  const dialog = () => host.querySelector('[data-testid="replace-game"]');
+  HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogElement) { this.setAttribute('open', ''); };
+  // Nothing saved: no question.
+  await show(<TitleScreen />);
+  await press(loadButton());
+  expect(dialog()).toBeNull();
+  expect(useGame.getState().screen).toBe('game');
+  // A saved game: the question comes first and Go back changes nothing.
+  act(() => root.unmount());
+  useGame.setState(useGame.getInitialState(), true);
+  root = createRoot(host);
+  await slot(save, 3);
+  await show(<TitleScreen />);
+  await press(loadButton());
+  expect(dialog()).not.toBeNull();
+  expect(dialog()!.textContent).toContain('The game in the file takes its place');
+  expect(useGame.getState().screen).not.toBe('game');
+  const buttons = [...dialog()!.querySelectorAll('button')];
+  await press(buttons.find((b) => b.textContent === 'Go back')!);
+  expect(dialog()).toBeNull();
+  expect(useGame.getState().screen).not.toBe('game');
+  await press(loadButton());
+  await press([...dialog()!.querySelectorAll('button')].find((b) => b.textContent === 'Load the file')!);
+  expect(useGame.getState().screen).toBe('game');
 });

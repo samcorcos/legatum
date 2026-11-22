@@ -2,6 +2,7 @@ import { CALENDAR_NOTE, calendarLabel } from '../data';
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { parseAutosave, useGame, type SaveFile } from '../store';
 import { listAutosaves, type AutosaveRecord } from '../platform/autosaveStore';
+import { ReplaceGameDialog } from '../ui/ReplaceGameDialog';
 import { pickSaveFile } from '../ui/GameMenu';
 import { DecoRule, Fan, Wordmark } from '../brand/ornaments';
 import { openGuide } from '../ui/guideState';
@@ -110,11 +111,20 @@ function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
     }
     if (failure) refresh((n) => n + 1);
   };
+  // A file chosen with Load Game replaces the saved game in progress, so it asks first, like a new game does.
+  const [chosen, setChosen] = useState<{ save: SaveFile; saved: { label: string; turn: number } } | null>(null);
+  const askThenLoad = async (save: SaveFile) => {
+    const [newest] = await listAutosaves();
+    if (newest) setChosen({ save, saved: { label: newest.label, turn: newest.turn } });
+    else await loadSave(save, true);
+  };
   // While a message shows, starting a new game is the way forward, so it takes the primary slot.
   const newGamePrimary = !views && records !== null && (!auto || !!error || olderAuto || unreadableAuto);
   const continuePrimary = !views && !!auto && !error && !olderAuto && !unreadableAuto;
   return (
     <>
+      {chosen && <ReplaceGameDialog file saved={chosen.saved} onCancel={() => setChosen(null)}
+        onStart={() => { const { save } = chosen; setChosen(null); void loadSave(save, true); }} />}
       <TitleNotice error={error ?? (olderAuto ? olderAutosaveMessage(auto?.playtest) : skipped !== null ? `Your latest save (turn ${skipped}) could not be opened. Continue opens turn ${auto?.turn} instead.` : null)} />
       <div className="title-actions">
         <ResumeButton />
@@ -134,7 +144,7 @@ function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
               : auto ? `${auto.names.join(' & ')} · turn ${auto.turn} · ${calendarLabel(auto.turn)} · ${new Date(auto.savedAt).toLocaleString()}` : records === null ? 'Looking for your game…' : 'No autosave yet'}
           </span>
         </button>
-        <button className="btn big quiet" onClick={() => pickSaveFile((save) => loadSave(save, true), (m) => set({ error: m }))}>
+        <button className="btn big quiet" onClick={() => pickSaveFile(askThenLoad, (m) => set({ error: m }))}>
           Load Game…
         </button>
         <button className="btn big quiet" onClick={() => { set({ error: null }); goto('scenarios'); }}>
@@ -162,18 +172,37 @@ function MultiplayerMenu({ onBack }: { onBack: () => void }) {
   // Online play: Host Game runs the game in this tab and opens its game room. A build with no relay has
   // no game list, so it offers hot seat only.
   const [hosting, setHosting] = useState<'idle' | 'starting' | 'failed'>('idle');
+  // Host from a save has its own busy and failed state, so a retry stays on the button the player pressed.
+  const [resuming, setResuming] = useState<'idle' | 'starting' | 'failed'>('idle');
+  const busy = hosting === 'starting' || resuming === 'starting';
   const [hostError, setHostError] = useState<string | null>(null);
   const [name, setName] = useState(() => savedPlayerName() ?? DEFAULT_PLAYER_NAME);
   const hostOnline = async () => {
     const who = name.trim().slice(0, MAX_PLAYER_NAME) || DEFAULT_PLAYER_NAME;
     rememberPlayerName(who);
     setHosting('starting');
+    setResuming('idle');
     setHostError(null);
     const failure = await useGame.getState().hostOnline(who);
     if (failure) {
       setHostError(failure);
       setHosting('failed');
     }
+  };
+
+  const hostFromSave = () => {
+    const who = name.trim().slice(0, MAX_PLAYER_NAME) || DEFAULT_PLAYER_NAME;
+    rememberPlayerName(who);
+    setHostError(null);
+    setHosting('idle');
+    void pickSaveFile(async (save) => {
+      setResuming('starting');
+      const failure = await useGame.getState().hostOnlineFromSave(who, save);
+      if (failure) {
+        setHostError(failure);
+        setResuming('failed');
+      }
+    }, (message) => { setHostError(message); setResuming('failed'); });
   };
 
   return (
@@ -193,19 +222,26 @@ function MultiplayerMenu({ onBack }: { onBack: () => void }) {
                 className="lobby-input"
                 value={name}
                 maxLength={MAX_PLAYER_NAME}
-                disabled={hosting === 'starting'}
+                disabled={busy}
                 onChange={(e) => setName(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter' && hosting !== 'starting') void hostOnline(); }}
+                onKeyDown={(e) => { if (e.key === 'Enter' && !busy) void hostOnline(); }}
               />
             </label>
-            <button className={`btn big ${hosting === 'failed' && !views ? 'primary' : ''}`} disabled={hosting === 'starting'} onClick={hostOnline}>
+            <button className={`btn big ${hosting === 'failed' && !views ? 'primary' : ''}`} disabled={busy} onClick={hostOnline}>
               Host Game
               <span className="btn-sub">
                 {hosting === 'starting' ? <><span className="spinner" /> Opening your game…</>
                   : hosting === 'failed' ? 'Try again' : 'Open a game that others can find and join'}
               </span>
             </button>
-            <button className={`btn big ${!views && hosting === 'idle' ? 'primary' : ''}`} disabled={hosting === 'starting'} onClick={() => goto('online')}>
+            <button className={`btn big ${resuming === 'failed' && !views ? 'primary' : ''}`} disabled={busy} onClick={hostFromSave}>
+              Host from a save…
+              <span className="btn-sub">
+                {resuming === 'starting' ? <><span className="spinner" /> Opening your game…</>
+                  : resuming === 'failed' ? 'Try again' : 'Carry on an online game from its save file'}
+              </span>
+            </button>
+            <button className={`btn big ${!views && hosting === 'idle' && resuming === 'idle' ? 'primary' : ''}`} disabled={busy} onClick={() => goto('online')}>
               Join Game
               <span className="btn-sub">See the games that are open now</span>
             </button>
