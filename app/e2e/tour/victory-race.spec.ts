@@ -141,7 +141,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await stageHoldings(page);
     await page.mouse.move(5, size.height / 2);
     await shot(page, size, '80a-vp-chip-2-empires');
-    await page.getByRole('button', { name: /^Every way to score/ }).click();
+    await page.locator('button.vh-chip').click();
     await expect(page.getByTestId('objective-sheet')).toBeVisible();
     await page.mouse.move(5, size.height - 5);
     await expect(page.locator('.sl-col')).toHaveCount(2);
@@ -161,7 +161,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await expect(page.getByTestId('turn-number')).toHaveText('1', { timeout: 60_000 });
     await expect(page.locator('.loading-screen')).toHaveCount(0);
     await stageHoldings(page);
-    await page.getByRole('button', { name: /^Every way to score/ }).click();
+    await page.locator('button.vh-chip').click();
     await expect(page.getByTestId('objective-sheet')).toBeVisible();
     await page.mouse.move(5, size.height - 5);
     await expect(page.locator('.sl-col')).toHaveCount(8);

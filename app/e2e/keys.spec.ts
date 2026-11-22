@@ -118,12 +118,12 @@ test('Return first closes what covers the map, then selects the next decision (G
   await expect(page.getByRole('complementary', { name: 'Diplomacy', exact: true })).toBeVisible();
   await page.keyboard.press('Enter');
   await expect(page.getByRole('complementary', { name: 'Diplomacy', exact: true })).toHaveCount(0);
-  await page.getByRole('button', { name: 'Score ledger', exact: true }).click();
+  await page.getByRole('region', { name: 'Victory race', exact: true }).getByRole('button', { name: 'Score ledger', exact: true }).click();
   await expect(page.getByTestId('objective-sheet')).toBeVisible();
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('objective-sheet')).toHaveCount(0);
   // The top bar's VP chip opens the same sheet, and Escape closes it.
-  await page.getByRole('button', { name: /^Every way to score/ }).click();
+  await page.locator('button.vh-chip').click();
   await expect(page.getByTestId('objective-sheet')).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('objective-sheet')).toHaveCount(0);

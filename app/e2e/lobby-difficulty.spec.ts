@@ -28,6 +28,6 @@ test('an 8.9.11 Hard profile starts a game with every AI on Hard', async ({ page
   await expect(page.locator('.empire-pick-level')).toHaveCount(3);
   await expect(page.locator('.empire-pick-level').first()).toHaveText('AI · Hard');
   await page.getByRole('button', { name: 'Close diplomacy' }).click();
-  await page.getByRole('button', { name: 'Score ledger', exact: true }).click();
+  await page.getByRole('region', { name: 'Victory race', exact: true }).getByRole('button', { name: 'Score ledger', exact: true }).click();
   await expect(page.locator('.sl-ai-level')).toHaveCount(3);
 });

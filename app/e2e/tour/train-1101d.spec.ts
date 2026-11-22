@@ -224,7 +224,7 @@ for (const size of SIZES) test.describe(`train 1101d ${size.name}`, () => {
     await shot(page, size, 'd33-capital-taken-rival-card');
     await dismissCelebrations(page);
     // The ledger with a capital taken.
-    await page.getByRole('button', { name: /^Every way to score/ }).click();
+    await page.locator('button.vh-chip').click();
     const sheet = page.getByTestId('objective-sheet');
     await expect(sheet.locator('.sl-table')).toBeVisible();
     await sheet.locator('[data-row="capitals-held"]').scrollIntoViewIfNeeded();
