@@ -1244,8 +1244,9 @@ fn germany_industry_runs_each_turn_without_completion_or_purchase() {
         ));
         s = next;
     }
+    // Every empire can run projects (Sam, 2026-11-22), at a lower rate than Germany.
     s.player_mut(P).faction = Faction::India;
-    assert!(!economy::can_produce(
+    assert!(economy::can_produce(
         &s,
         &s.cities[&c],
         ProductionItem::Project {
@@ -1394,7 +1395,7 @@ fn research_cards_show_only_what_helps_the_faction() {
         (walls.name.as_str(), walls.city_strength),
         ("Alpine Redoubt", 15)
     );
-    assert!(!data::available_to_faction(
+    assert!(data::available_to_faction(
         Faction::India,
         ProductionItem::Project {
             project: IndustryProject::Gold

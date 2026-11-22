@@ -1504,6 +1504,7 @@ impl Planner<'_> {
                 .options
                 .iter()
                 .filter(|o| !matches!(o.item, ProductionItem::Unit { .. }))
+                .filter(|o| self.gold_swap_allows(o.item))
                 .filter(|o| {
                     self.remitted_city_gold(c, o.yields.total.gold)
                         > self.remitted_city_gold(c, d.yields.total.gold)
@@ -2899,7 +2900,11 @@ impl Planner<'_> {
                 .as_ref()?
                 .options
                 .iter()
-                .filter(|o| !matches!(o.item, ProductionItem::Unit { .. }) && o.item != diwan)
+                .filter(|o| {
+                    !matches!(o.item, ProductionItem::Unit { .. })
+                        && o.item != diwan
+                        && self.gold_swap_allows(o.item)
+                })
                 .max_by_key(|o| (o.yields.total.gold, -o.turns, std::cmp::Reverse(o.item)))
                 .map(|o| o.item)
         } else {
@@ -3768,6 +3773,14 @@ impl Planner<'_> {
             || matches!(d.producing, Some(ProductionItem::Project { .. }));
         best.map(|(_, item)| item)
             .or_else(|| store_full.then(|| self.idle_project(d, None)).flatten())
+    }
+
+    /// Whether a Gold-seeking swap (a campaign's Gold clock, a paused troop) may pick `item`. A
+    /// swapped-out build keeps its banked Production but a project banks nothing, so only
+    /// Germany's projects (twice everyone's rate) are worth it; every other empire runs a
+    /// project only when nothing is worth building (`idle_project`).
+    pub(crate) fn gold_swap_allows(&self, item: ProductionItem) -> bool {
+        !matches!(item, ProductionItem::Project { .. }) || self.faction == Faction::Germany
     }
 
     /// What a city with nothing worth building runs instead (Sam, 2026-11-22: never junk such as
@@ -5462,6 +5475,7 @@ impl Planner<'_> {
                 && let Some(opt) = d
                     .options
                     .iter()
+                    .filter(|o| self.gold_swap_allows(o.item))
                     .filter(|o| {
                         !matches!(
                             o.item,

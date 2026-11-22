@@ -200,6 +200,7 @@ impl Planner<'_> {
                 .options
                 .iter()
                 .filter(|o| !matches!(o.item, ProductionItem::Unit { .. }))
+                .filter(|o| self.gold_swap_allows(o.item))
                 .filter(|o| pause || self.remitted_city_gold(c, o.yields.total.gold) > current_gold)
                 .max_by_key(|o| {
                     (

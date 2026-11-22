@@ -53,11 +53,17 @@ impl Brain for RandomBrain {
         cities.sort_by_key(|c| c.id);
         for c in cities {
             let d = c.detail.as_ref().expect("filtered");
-            if d.producing.is_none() && !d.options.is_empty() {
-                let i = pick(&mut rng, d.options.len());
+            // Only items that finish: a never-ending project would park the city for good.
+            let finite: Vec<_> = d
+                .options
+                .iter()
+                .filter(|o| !matches!(o.item, legatum_core::ProductionItem::Project { .. }))
+                .collect();
+            if d.producing.is_none() && !finite.is_empty() {
+                let i = pick(&mut rng, finite.len());
                 orders.push(Order::SetProduction {
                     city: c.id,
-                    item: d.options[i].item,
+                    item: finite[i].item,
                 });
             }
         }
