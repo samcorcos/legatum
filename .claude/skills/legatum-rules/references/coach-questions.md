@@ -1,0 +1,28 @@
+# Coach questions
+
+Part of the Legatum rules reference (index: `index.md`). Answers: What does the app-side Coach questions option do (no rules change)?
+Moved verbatim from `game-rules.md` on 2026-11-22, in the original order; the original section headings are kept inside.
+
+## Coach questions (designer, 2026-11-15; app-side, no rules change)
+
+An option at game setup ("Coach questions" in the lobby's game settings, off by default, sets the AI level to Hard). It changes no rule, no order and no state hash. It is kept in the app's save wrapper (`SaveFile.why`: the toggle, asked keys, last question and skipped categories), not in the game state. It is separate from the "Training" AI level (the battle search for AI seats, `crates/ai/src/training.rs`).
+
+When he ends a turn, a shadow `ScriptedBrain` (Hard, its own seed `brain_seed ^ 0x5748595f54524149`, never saved, cold after a load) plans his seat from `player_view` and `legatum_ai::why::review` compares that plan with his submitted orders (`Game::why_review`, read-only on the game). At most one question comes back per turn. Candidates rank by materiality, a question never repeats a key (the standing fact) and never repeats the previous turn's category. What triggers one (`crates/ai/src/why.rs`):
+
+| Category | Fires when | Constant |
+| --- | --- | --- |
+| War and peace | he declares war, offers peace, or accepts peace and Hard would not, or Hard would and he did not; explicitly refusing a Peace offer that Hard plans to accept also asks. Offers are named as offers; a war Hard declined includes its relevant plan-trace reason when available. | any difference; materiality 1,000,000 |
+| Window | at war for 10 turns, a city damaged or threatened, he spent no Gold, and an affordable running shadow treasury buys military items or upgrades on at least 3 turns. It names the purchases; improvements alone do not count. All shadow Gold spending reduces the treasury. | `WINDOW_TURNS` 10, `WINDOW_HARD_BUY_TURNS` 3, `THREAT_RANGE` 3 |
+| Garrison | he orders a city's garrison out while Hard keeps it in and the units in reach can capture or forecast at least 25% of remaining city HP damage next turn. Scouts and other non-capturing units are excluded; barbarians do not threaten walled cities. A unit completing production or affordable to buy counts as a replacement defender. | `SERIOUS_CITY_DAMAGE_PERCENT` 25; one per city per war; materiality 950,000 |
+| Border army | a rival has at least 4 visible military units within 6 tiles of a city, with at least twice the local defenders' strength, and he gives no response that turn | `BORDER_RANGE` 6, `BORDER_MIN_UNITS` 4, `BORDER_DEFENCE_RATIO` 2 |
+| War reserve | a new enemy war starts with at least 4 visible units near one of his cities while his Gold exceeds the shadow's accumulated reserve by 500 | `GOLD_RESERVE_GAP` 500, `WAR_RESERVE_MIN_UNITS` 4 |
+| Great Work | he starts one while at war | materiality 850,000 |
+| Purchase | Hard would have spent 500 or more Gold on `BuyItem` this turn and he bought nothing, or the reverse (a key per 20-turn bucket) | `PURCHASE_GOLD` 500; at most 3 asked |
+| Production | his manually selected new `SetProduction` differs from Hard's pick and Hard's score is 4 or more times his item's; automated cities and queued items are skipped | `PRODUCTION_RATIO_X100` 400; at most 2 asked |
+| Settler site | he founds on a tile Hard values at half or less of its best site for that Settler (`settler_diagnosis` notes), or Hard founds with a Settler he gave no order; the question names the new city and both sites | `SETTLE_RATIO_X100` 200 |
+
+Routine questions scale down by each VP of lead over the best rival (`why.rs::vp_lead`). Production and purchase also scale with the city's share of empire Production (`why.rs::stake`), capped at 200,000. Production, purchase, war window and war reserve questions stop when the seat is at its VP target, holding it, or one faction-goal scoring action from it. Every category gets an early-turn bonus through turn 60. After two skips in the same category, its materiality threshold doubles for the rest of that game (`SKIPS_TO_RAISE_THRESHOLD`, `SKIPPED_THRESHOLD_MULTIPLIER`). Asked keys and skips persist in the app save wrapper. `SetCityAutomation` and `CityDetail.build_automation` suppress automated production questions.
+
+The card (`WhyCard.tsx`) floats under the top bar and takes focus when a question arrives. Cmd or Ctrl+Return sends; Skip skips. Esc or the Later button only hides it behind a "Coach question" button in the same spot, keeping any draft (user, 2026-11-21); the question stays waiting. While the turn report is open the button stays out of the way, and Answer or Answer now closes the report before the card returns. The latest turn report (L) lists the waiting question with Answer, or the last answered or skipped one; a skipped one has Answer now, which restores it, removes that skip from `skipped`, and appends a second line for the same question (the later line is the answer that counts). The recent question and the hidden state are app memory only, not saved; a new or loaded game clears them.
+
+Answers (his words, or `skipped`) become JSON lines with the question, evidence and build, kept in `WhyMemory.answers` (last 500; saved in the save file and the autosave, and uploaded with the game as the top-level `coach_answers` key of the upload body only, never in what the engine parses) and in memory for the session (`why.ts::unwrittenAnswers`; the desktop app that wrote them to disk was dropped 2026-11-22). A question skipped and then answered late has two lines (`skipped`, then his words) with the same `turn`, `category` and `question`; read the later line as the answer.
