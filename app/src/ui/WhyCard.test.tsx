@@ -3,8 +3,8 @@
 // at most one waiting (a new one counts the old as skipped) and remembers what was asked.
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { useGame } from '../store';
-import { NO_WHY, answerLine, remember, unwrittenAnswers, type WhyQuestion } from '../why';
+import { useGame, saveFile } from '../store';
+import { MAX_SAVED_ANSWERS, NO_WHY, answerLine, remember, unwrittenAnswers, withAnswer, type WhyQuestion } from '../why';
 import { WhyCard } from './WhyCard';
 import { CoachLine } from './TurnReport';
 
@@ -109,4 +109,21 @@ it('remembers each asked key once and the last category, and the answer line car
   expect(line.answer).toBe('skipped');
   expect(line.evidence).toEqual({ his: ['DeclareWar'], hard: [] });
   vi.fn();
+});
+
+it('answers are kept in the saved coach memory, a late answer adds a second line, and the list is capped', () => {
+  useGame.setState({ whyQuestion: q({ turn: 30, key: 'k9' }) });
+  useGame.getState().answerWhy(null);
+  useGame.getState().showWhy();
+  useGame.getState().answerWhy('late reason');
+  const answers = useGame.getState().why.answers!;
+  expect(answers.map((a) => a.answer)).toEqual(['skipped', 'late reason']);
+  expect(answers[1]).toMatchObject({ turn: 30, question: q().text });
+  const file = saveFile({ kind: 'wasm', save: () => 'x' } as never, [{ turn: 30, me: 0, players: [] }] as never);
+  expect(file.why?.answers).toHaveLength(2);
+  expect(JSON.parse(JSON.stringify(file)).why.answers[1].answer).toBe('late reason');
+  let memory = NO_WHY;
+  for (let i = 0; i < MAX_SAVED_ANSWERS + 5; i++) memory = withAnswer(memory, answerLine('g', q({ turn: i }), 'a'));
+  expect(memory.answers).toHaveLength(MAX_SAVED_ANSWERS);
+  expect(memory.answers![MAX_SAVED_ANSWERS - 1].turn).toBe(MAX_SAVED_ANSWERS + 4);
 });
