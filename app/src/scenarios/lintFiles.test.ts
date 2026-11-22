@@ -1,5 +1,5 @@
-// The copy lint for scenario files that are not bundled yet: the pre-merge gate (tools/gates/scenario.py) and
-// tools/scenarios/publish.sh run it on a file with LEGATUM_LINT_SCENARIOS=<path>[:<path>...] so a Lab scenario
+// The copy lint for scenario files that are not bundled yet: the pre-merge gate (tools/gates/scenario.py)
+// runs it on a file with LEGATUM_LINT_SCENARIOS=<path>[:<path>...] so a Lab scenario
 // can ship without the full test suite. The same blocks the bundled scenarios are held to in
 // ui/textArtifacts.test.tsx: title, briefing, objective, card text, opponent and what the scenario tests.
 // Without the variable it checks nothing and passes.

@@ -100,7 +100,7 @@ describe.skipIf(!available)('production controls on the Rust engine', () => {
     expect(client.view(0).cities.find((c) => c.id === city.id)!.detail!.production_queue).toEqual([{ kind: 'Unit', unit: 'Scout' }]);
   });
 
-  it('never submits speculative purchase orders while rendering a LAN city', async () => {
+  it('never submits speculative purchase orders while rendering an online city', async () => {
     const { client, city, view } = await renderCity();
     const validate = vi.fn(() => []);
     const remote = Object.assign(Object.create(client), { kind: 'remote', validate });
@@ -113,7 +113,7 @@ describe.skipIf(!available)('production controls on the Rust engine', () => {
     expect(useGame.getState().orders[0]).toEqual([]);
   });
 
-  it('updates LAN affordability reasons after an earlier purchase reserves gold', async () => {
+  it('updates online affordability reasons after an earlier purchase reserves gold', async () => {
     const { client, city, view } = await renderCity(0, 130);
     const validate = vi.fn(() => []);
     const remote = Object.assign(Object.create(client), { kind: 'remote', validate });

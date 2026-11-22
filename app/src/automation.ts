@@ -20,7 +20,7 @@ export function automatedUnits(view: PlayerView, orders: Order[]): UnitView[] {
   return view.units.filter((u) => u.owner === view.me && isExploring(u, orders)).sort((a, b) => a.id - b.id);
 }
 
-/** Both local and LAN seats plan from exactly the view displayed in their client. */
+/** Both local and online seats plan from exactly the view displayed in their client. */
 export async function addAutomatedOrders(view: PlayerView, orders: Order[]): Promise<Order[]> {
   const units = automatedUnits(view, orders);
   if (!units.length) return orders;

@@ -19,7 +19,7 @@ places are:
 - app/src/assets/      unit, city, era, leader, people, resource and key art, icons and heraldry
 - app/public/terrain/  terrain sprites
 - app/public/wonders/  natural-wonder sprites
-- app/src-tauri/icons/ and app/public/favicon*, apple-touch-icon.png  the app icon
+- app/public/favicon*, apple-touch-icon.png  the app icon
 - docs/media/          screenshots, diagrams and film
 - docs/design/         design-review images
 

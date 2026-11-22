@@ -33,7 +33,7 @@ sample: s3://example-sims-{}123456789012/box/jobs
 [private-ip]
 # RFC 1918 addresses. Made-up ones are fine in tests; prose and examples use <lan-ip> or an RFC 5737 address.
 (?<![0-9.])(?:10\.[0-9]{1,3}|192\.168|172\.(?:1[6-9]|2[0-9]|3[01]))\.[0-9]{1,3}\.[0-9]{1,3}(?![0-9.])
-allow-path: (^|/)tests?/|\.test\.tsx?$|^app/e2e/|^crates/server/src/auth\.rs$|^app/src-tauri/src/online\.rs$
+allow-path: (^|/)tests?/|\.test\.tsx?$|^app/e2e/|^crates/server/src/auth\.rs$
 sample: the host is at 192.168{}.1.77
 
 [family]

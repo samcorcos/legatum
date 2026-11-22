@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# The map in real WebKit on this Mac (the engine of the Tauri app's WKWebView), which Playwright's Linux WebKit and
+# The map in real WebKit on this Mac (the engine of Safari), which Playwright's Linux WebKit and
 # Chromium do not reproduce: playtest 8.9.4 showed rectangles of water on land that appeared in about half of fresh
 # loads until the chunk readback in TerrainCache.renderChunk (docs/learnings.md, 2026-10-18).
 #

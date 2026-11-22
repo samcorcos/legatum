@@ -4,8 +4,7 @@
 Usage:
   tools/scenarios/compare.py <run.json> [--baseline <id>-baseline.json] [--scenario scenarios/<id>.json]
 
-The run file is what the app saves when a scenario ends (~/LegatumData/scenarios/ on desktop,
-<server saves>/scenarios/ for the web and phone builds). The baseline comes from
+The run file is what the browser downloads when a scenario ends. The baseline comes from
 `legatum-sim scenario scenarios/<id>.json --runs 50 --difficulty hard` and defaults to
 docs/sim-results/scenarios/<id>-baseline.json. Prints:
   1. the human score against the AI's score distribution;

@@ -68,7 +68,7 @@ export function TopBar() {
   const orders = useGame((s) => s.orders[s.seat]);
   const errors = useGame((s) => s.errors[s.seat]);
   const set = useGame((s) => s.set);
-  const lan = useGame((s) => (s.client?.kind === 'remote' ? s.lan : null));
+  const net = useGame((s) => (s.client?.kind === 'remote' ? s.net : null));
   const phone = usePhoneLayout();
   const bar = useRef<HTMLElement>(null);
   useTopBarCompaction(bar, phone);
@@ -168,10 +168,10 @@ export function TopBar() {
         </div>
       </div>
       <div className="tb-right">
-        {lan && (
-          <Tip content={lan.status.is_local ? 'You host this game in this tab. Keep it open.' : lan.conn === 'open' ? 'Connected to the host' : 'Connection lost: reconnecting automatically'} className={`net ${lan.conn}`}>
-            <span className={`conn-dot ${lan.conn === 'open' ? 'on' : 'warn'}`} />
-            {lan.conn === 'open' ? 'Online' : lan.conn === 'taken' ? 'Seat taken' : 'Reconnecting'}
+        {net && (
+          <Tip content={net.status.is_local ? 'You host this game in this tab. Keep it open.' : net.conn === 'open' ? 'Connected to the host' : 'Connection lost: reconnecting automatically'} className={`net ${net.conn}`}>
+            <span className={`conn-dot ${net.conn === 'open' ? 'on' : 'warn'}`} />
+            {net.conn === 'open' ? 'Online' : net.conn === 'taken' ? 'Seat taken' : 'Reconnecting'}
 
           </Tip>
         )}
