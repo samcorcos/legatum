@@ -32,7 +32,7 @@ for (const [width, height] of [[1000, 600], [1440, 900]] as const) {
     expect(headlineFit.top).toBeGreaterThanOrEqual(-1);
     expect(headlineFit.bottom).toBeLessThanOrEqual(1);
     await scroll.evaluate((el) => { el.scrollTop = 0; });
-    await race.getByRole('button', { name: 'All objectives', exact: true }).click();
+    await race.getByRole('button', { name: 'Score ledger', exact: true }).click();
     const sheet = page.getByTestId('objective-sheet');
     await expect(sheet).toBeVisible();
     const head = sheet.locator('.sl-head'), body = sheet.locator('.sl-body');

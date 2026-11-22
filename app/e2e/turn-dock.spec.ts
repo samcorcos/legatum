@@ -31,7 +31,7 @@ for (const look of ['atlas'] as const) {
     await expectSidebarReachable(page);
     await page.locator('.sidebar-scroll').evaluate(el => { el.scrollTop = 0; });
     // The Victory Race links stay clickable.
-    await page.getByRole('button', { name: /^All objectives/ }).click();
+    await page.getByRole('region', { name: 'Victory race', exact: true }).getByRole('button', { name: 'Score ledger', exact: true }).click();
     await expect(page.getByTestId('objective-sheet')).toBeVisible();
   });
 }
@@ -73,7 +73,7 @@ for (const humans of [1, 2, 3]) {
     const scroll = (await page.locator('.sidebar-scroll').boundingBox())!;
     expect(scroll.y + scroll.height).toBeLessThanOrEqual(cta.y);
     // The objective sheet is a modal: it covers the dock while open and gives it back whole on Escape.
-    await page.getByRole('button', { name: 'All objectives', exact: true }).click();
+    await page.locator('button.vh-chip').click();
     await expect(page.getByTestId('objective-sheet')).toBeVisible();
     const sheet = (await page.getByTestId('objective-sheet').boundingBox())!;
     expect(sheet.y).toBeGreaterThanOrEqual(0);

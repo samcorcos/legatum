@@ -58,10 +58,10 @@ test('declining Switzerland’s Alliance, then declaring War and attacking, neve
   await open(page);
   const cta = page.locator('.seatbar .cta').first();
   await revealSidebar(page, 'standings');
-  const inboxButton = page.getByRole('button', { name: /^Diplomacy inbox/ });
-  const inbox = page.getByRole('complementary', { name: 'Diplomacy inbox' });
+  const inboxButton = page.getByRole('button', { name: /^Diplomacy( \(\d+\))?$/ });
+  const inbox = page.getByRole('complementary', { name: 'Diplomacy', exact: true });
   await expect(cta).toContainText('Respond to offer');
-  await expect(inboxButton).toHaveText('Diplomacy inbox (1)');
+  await expect(inboxButton).toHaveText('Diplomacy (1)');
 
   // 1. Decline the offer: it is answered.
   await cta.click();
@@ -86,7 +86,7 @@ test('declining Switzerland’s Alliance, then declaring War and attacking, neve
 
   // The war ends the offer: no "Respond to offer", no inbox count, and the card says why.
   await expect(cta).not.toContainText('Respond to offer');
-  await expect(inboxButton).toHaveText('Diplomacy inbox');
+  await expect(inboxButton).toHaveText('Diplomacy');
   await inboxButton.click();
   await expect(inbox).toContainText('Ended by your War on');
   await expect(inbox.getByRole('button', { name: 'Decline', exact: true })).toHaveCount(0);

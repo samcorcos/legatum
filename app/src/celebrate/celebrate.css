@@ -27,18 +27,19 @@
 .moment-emblem-art { display: block; width: 90%; height: 90%; background-color: var(--ink); -webkit-mask-size: contain; mask-size: contain; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; }
 .moment-card.loss .moment-emblem-art { background-color: var(--ink-2); }
 @media (hover: hover) {
-  .moment-link:hover, .moment-more:hover {
+  .moment-more:hover {
     background: var(--panel-3);
     color: var(--ink);
   }
 }
 .moment-effect:active, .moment-dismiss:active, .moment-more:active { opacity: .75; }
-.moment-link:active { background: var(--panel-3); }
-.moment-show-map:active { opacity: 1; background: var(--panel-3); color: var(--ink); }
 .moment-lore { font: italic 500 19px/1.3 var(--display); color: var(--ink-2); margin: 12px 0 8px; }
 .moment-card footer { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; }
-.moment-link { border: 1px solid var(--rule); background: transparent; color: var(--ink); font: 500 11px var(--sans); padding: 8px 12px; min-height: 44px; cursor: pointer; touch-action: manipulation; }
-.moment-show-map { border-color: var(--accent); color: var(--accent); font-weight: 700; }
+/* One filled primary with its Return key (pillar 9); the turn report is L, not a second button. */
+.moment-primary { min-height: 44px; padding: 6px 18px; touch-action: manipulation; }
+/* The city a wonder card is about, on its own line right under the title (the kicker names the event). */
+.moment-heading:has(.moment-place) { flex-wrap: wrap; }
+.moment-place { flex: none; width: 100%; margin: -8px 0 0; font: 600 13px/1.3 var(--sans); letter-spacing: .02em; color: var(--ink-2); }
 .moment-dismiss { position: absolute; top: 0; right: 0; z-index: 2; min-width: 44px; min-height: 44px; border: 0; background: transparent; color: var(--ink); font-size: 24px; cursor: pointer; }
 .moment-details { font: 12px/1.45 var(--sans); text-align: left; padding: 0 8px; color: var(--ink-2); }
 .moment-details p { margin: 4px 0; }
@@ -74,6 +75,7 @@
   .moment-card:has(.moment-vignette) { max-height: calc(100dvh - var(--story-top) - 145px); }
   .moment-heading:has(.moment-vignette) { flex-wrap: wrap; gap: 6px 0; }
   .moment-heading:has(.moment-vignette) h2 { order: -1; flex: 0 0 100%; }
+  .moment-heading:has(.moment-vignette) .moment-place { order: -1; margin: 0 0 4px; }
 }
 @media (max-width: 960px) {
   .moment-lane { gap: 4px; }
@@ -97,7 +99,8 @@
   .legendary .moment-crest > .medallion.moment-emblem { width: 44px !important; height: 44px !important; }
   .moment-effect { margin-top: 4px; padding: 4px 8px; font-size: 12px; }
   .moment-card footer { gap: 8px; margin-top: 4px; }
-  .moment-link { padding: 6px 12px; }
+  .moment-primary { min-height: 36px; padding: 4px 12px; }
+  .moment-place { display: none; }
   .moment-more { justify-self: end; font-size: 11px; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -232,7 +235,7 @@
   .moment-card.legendary h2 { font-size: 25px; }
   .moment-card.legendary .moment-effect { margin-top: 6px; min-height: 32px; padding: 4px 8px; }
   .moment-card.legendary .moment-lore { font-size: 15px; margin: 6px 0 4px; }
-  .moment-card.legendary .moment-link { min-height: 38px; padding: 6px 12px; }
+  .moment-card.legendary .moment-primary { min-height: 38px; padding: 4px 16px; }
 }
 
 /* Wonder art on the discovery card. */

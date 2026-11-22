@@ -64,7 +64,7 @@ for (const size of SIZES) test.describe(`celts barbarian peace ${size.name}`, ()
       await page.evaluate(() => { const m = (window as unknown as { legatumMap: { camera: { zoom: number }; redraw(): void } }).legatumMap; m.camera.zoom = 1.25; m.redraw(); });
       // The Threat lens: barbarians draw no danger for the Celts.
       await page.getByRole('radio', { name: 'Threat', exact: true }).first().click();
-      if (faction === 'Celts') await expect(page.locator('.lens-empty')).toHaveText('Nothing in sight can attack you next turn. Barbarians never attack you.');
+      if (faction === 'Celts') await expect(page.locator('.lens-empty')).toHaveText("Nothing in sight can attack you next turn. Barbarians don't attack you.");
       await page.mouse.move(5, size.height / 2);
       await page.waitForTimeout(400);
       await shot(page, size, `cb-${label}-02a-threat-lens`);
@@ -81,7 +81,7 @@ for (const size of SIZES) test.describe(`celts barbarian peace ${size.name}`, ()
       // The wounded Soldier beside a barbarian: no "wounded next to enemies" warning for the Celts.
       await selectThing(page, 'unit', setup.wounded);
       await page.waitForTimeout(500);
-      if (faction === 'Celts') await expect(page.getByTestId('strength-key')).toContainText('barbarians never attack you');
+      if (faction === 'Celts') await expect(page.getByTestId('strength-key')).toContainText("barbarians don't attack you");
       await page.mouse.move(5, size.height / 2);
       await shot(page, size, `cb-${label}-03-wounded-unit`);
       // The ranged unit in the city: hover Auto-fire for its tooltip.

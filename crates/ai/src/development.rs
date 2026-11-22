@@ -87,8 +87,16 @@ impl Planner<'_> {
             data::CITY_CENTER_YIELDS + data::terrain_yields(self.faction, center),
             |sum, (_, y)| sum + *y,
         );
+        // Gene `site_terrain_weight`: every owned ring-one tile is worked, so the whole known
+        // ring's terrain Production is the new city's early Production, not just its best two.
+        let ring_production: i32 = if self.decisions.site_terrain_weight > 0 {
+            workers.iter().map(|(_, y)| y.production).sum()
+        } else {
+            0
+        };
         100 + (yields.production - data::CITY_MIN_PRODUCTION).max(0) * 20
             + (yields.food - 4).clamp(-2, 4) * 5
+            + ring_production * self.decisions.site_terrain_weight
     }
 
     /// Do not consume every small income payment finishing buildings while a frontier
@@ -433,5 +441,57 @@ mod tests {
             Some(settler),
             "finish the colony already on its way"
         );
+    }
+
+    /// Gene `site_terrain_weight`: the whole known ring-one terrain Production counts, so a
+    /// ring of Hills and Forest outranks a Grassland ring with the same best two tiles; unknown
+    /// and foreign tiles count for nothing; 0 leaves the multiplier as it was.
+    #[test]
+    fn ring_one_terrain_production_weighs_a_site_only_with_the_gene() {
+        use crate::scripted::Planner;
+        use legatum_core::{Hex, Terrain};
+        let rich = Hex::new(6, 8);
+        let plain = Hex::new(16, 8);
+        let mut v = ViewBuilder::new(24, 16).city(1, ME, off(1, 1), 3).build();
+        let set = |v: &mut legatum_core::PlayerView, h: Hex, t: Terrain| {
+            let i = v.index(h).unwrap();
+            v.tiles[i].terrain = Some(t);
+            v.tiles[i].explored = true;
+            v.tiles[i].owner = None;
+        };
+        for (center, ring) in [(rich, Terrain::Hills), (plain, Terrain::Grassland)] {
+            set(&mut v, center, Terrain::Plains);
+            for (k, h) in center.neighbors().into_iter().enumerate() {
+                // Both rings share their best two tiles: two Forests.
+                set(&mut v, h, if k < 2 { Terrain::Forest } else { ring });
+            }
+        }
+        let score = |v: &legatum_core::PlayerView, h: Hex, weight: i32| {
+            let mut p = Planner::new(
+                v,
+                crate::Knobs::for_faction(Faction::India),
+                Faction::India,
+                1,
+            );
+            p.difficulty = legatum_core::AiDifficulty::Hard;
+            p.decisions.site_terrain_weight = weight;
+            p.settlement_productivity(h)
+        };
+        assert_eq!(
+            score(&v, rich, 0),
+            score(&v, plain, 0),
+            "off: only the best two tiles count"
+        );
+        // Rich ring: 2 Forests + 4 Hills = 12 Production; plain ring: 2 Forests = 4.
+        assert_eq!(score(&v, rich, 10) - score(&v, rich, 0), 120);
+        assert_eq!(score(&v, plain, 10) - score(&v, plain, 0), 40);
+        // A Hills tile in fog or under a foreign border is not counted.
+        let hidden = rich.neighbors()[2];
+        let i = v.index(hidden).unwrap();
+        v.tiles[i].explored = false;
+        let foreign = rich.neighbors()[3];
+        let j = v.index(foreign).unwrap();
+        v.tiles[j].owner = Some(ENEMY);
+        assert_eq!(score(&v, rich, 10) - score(&v, rich, 0), 80);
     }
 }

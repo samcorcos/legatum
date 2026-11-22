@@ -61,6 +61,7 @@
 .right-sidebar .vp-foot { padding: 5px 12px; display: flex; justify-content: space-between; }
 .right-sidebar .vp-foot .link { font-size: 12px; }
 .right-sidebar .turn-details { display: contents; }
+.right-sidebar .turn-details.quiet:not(:has(.siege-alerts, .air-watch)) { display: none; }
 .right-sidebar .turn-details > .ph { padding: 6px 12px 2px; border-top: 1px solid var(--rule); }
 .right-sidebar .turn-details > .ph h3 { font-size: 17px; }
 .right-sidebar .turn-details > .ph .ph-sub { margin-top: 0; font-size: 12px; }
@@ -95,6 +96,17 @@
 .right-sidebar .race-headline { position: sticky; top: 0; z-index: 3; background: var(--panel); }
 .right-sidebar .sidebar-scroll { scroll-padding-top: 94px; }
 .right-sidebar .sidebar-scroll summary { scroll-margin-top: 94px; }
+/* A short window: the sticky standing is one line with a rule under it, so the rows that scroll beneath it lose
+   as little as they can and visibly pass under an edge instead of being sliced mid-row. */
+@media (max-height: 700px) {
+  .right-sidebar .race-headline { padding-bottom: 4px; border-bottom: 1px solid var(--rule-2); }
+  .right-sidebar .race-score { gap: 8px; }
+  .right-sidebar .race-score > svg { width: 20px; height: 20px; padding: 3px; }
+  .right-sidebar .race-score > span { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 8px; }
+  .right-sidebar .race-score b { display: inline; font-size: 21px; }
+  .right-sidebar .sidebar-scroll { scroll-padding-top: 44px; }
+  .right-sidebar .sidebar-scroll summary { scroll-margin-top: 44px; }
+}
 /* On a short laptop screen with the unit dock open, keep the race headline and turn action in a slim rail. */
 @media (min-width: 961px) and (max-width: 1100px) and (max-height: 700px) {
   .game:has(.unit-panel) { --race-width: 196px; }
@@ -118,7 +130,7 @@
 .right-sidebar .sidebar-objective { padding-block: 5px; }
 .right-sidebar .sidebar-objective-stake { font: 500 12px var(--sans); margin: 0 0 0 auto; }
 .right-sidebar .sidebar-section-link { align-items: center; gap: 6px; margin-bottom: 5px; }
-/* A World Age's line ("Age of Classical · 1 VP") has its own row under the heading, so a narrow rail never wraps it into the title. */
+/* A World Age's line ("Classical Age · 1 VP") has its own row under the heading, so a narrow rail never wraps it into the title. */
 .right-sidebar .sidebar-section-link.age { flex-wrap: wrap; }
 .right-sidebar .sidebar-section-link.age .sidebar-objective-stake { order: 2; flex: 1 0 100%; margin: 0; text-align: left; }
 .right-sidebar .vhc-hold-meter { height: 5px; }

@@ -42,6 +42,6 @@ test('units outside a just-captured city are ready for orders, without stale mov
   await page.keyboard.press('Escape');
   const outside = mine.find((u) => !inside.includes(u))!;
   await page.evaluate((id) => (window as unknown as GameWindow).legatum.getState().select({ kind: 'unit', id }, true), outside.id);
-  await expect(page.locator('.unit-panel')).toContainText('Awaiting orders');
+  await expect(page.locator('.unit-panel')).toContainText('Needs orders');
   await expect(page.locator('.unit-panel')).not.toContainText('Moving to');
 });

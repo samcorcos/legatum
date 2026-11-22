@@ -224,18 +224,26 @@ export function Tip({
     const outside = (e: PointerEvent) => {
       if (!ref.current?.contains(e.target as Node) && !document.getElementById(id)?.contains(e.target as Node)) close();
     };
-    // Hover tooltips go away on any scroll; a pinned breakdown follows its trigger.
+    // Hover tooltips go away on any scroll; a pinned breakdown follows its trigger. A tip that has
+    // just closed (the pointer left as the list scrolled) is still listening until React detaches
+    // these, and must not be given a position again: that brought it back, stuck over the panel.
     const scrolled = (e: Event) => {
-      if (document.getElementById(id)?.contains(e.target as Node)) return;
+      if (!modeRef.current || document.getElementById(id)?.contains(e.target as Node)) return;
       if (modeRef.current === 'hover') close();
       else if (ref.current) setRect(ref.current.getBoundingClientRect());
     };
-    const reposition = () => { if (ref.current) setRect(ref.current.getBoundingClientRect()); };
+    const reposition = () => { if (modeRef.current && ref.current) setRect(ref.current.getBoundingClientRect()); };
+    // A hover tip whose trigger leaves the view without a scroll (a panel collapses, a list reflows) goes too.
+    const gone = mode === 'hover' && ref.current && typeof IntersectionObserver !== 'undefined'
+      ? new IntersectionObserver((entries) => { if (entries.some((x) => !x.isIntersecting && x.boundingClientRect.width > 0)) close(); })
+      : null;
+    if (gone && ref.current) gone.observe(ref.current);
     window.addEventListener('resize', reposition);
     document.addEventListener('scroll', scrolled, true);
     document.addEventListener('keydown', dismiss, true);
     document.addEventListener('pointerdown', outside, true);
     return () => {
+      gone?.disconnect();
       window.removeEventListener('resize', reposition);
       document.removeEventListener('scroll', scrolled, true);
       document.removeEventListener('keydown', dismiss, true);
@@ -254,7 +262,7 @@ export function Tip({
   const hoverBody = isRich ? (
     <>
       {autoSummary && <div className="tip-summary">{withAmounts(autoSummary)}</div>}
-      <div className="tip-more">{controlTip ? 'ⓘ for the full breakdown' : 'Click for the full breakdown'}</div>
+      {controlTip && <div className="tip-more">ⓘ for the full breakdown</div>}
     </>
   ) : withAmounts(content);
 
@@ -412,7 +420,7 @@ function Bubble({ id, rect, trigger, placement, children, mode, onClose }: {
       id={id}
       role={pinned ? 'dialog' : 'tooltip'}
       aria-label={pinned ? 'Breakdown' : undefined}
-      hidden={!rect}
+      hidden={!rect || !mode}
       className={`tip-bubble ${pinned ? 'tip-pinned' : 'tip-hover'}`}
       style={{ left: pos?.left ?? -9999, top: pos?.top ?? -9999, opacity: pos ? 1 : 0 }}
     >

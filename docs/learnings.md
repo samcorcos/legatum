@@ -55,6 +55,7 @@ To find the full entry for a line, search its month file for the words in the li
 - Cloud-container timings vary about 6% run to run; compare base and head built side by side, interleaved, best of three (`tools/perf/lean_check.py`). [2026-11]
 - Sim JSON reports are committed only as `.md` plus `gzip -9` JSON; raw `docs/sim-results/*.json` is gitignored. Run logs have leaked account details into git: scrub before committing. [2026-09, 2026-11]
 - Measure faction identity per faction, never in aggregate (pillar 8 is about the best and worst faction). [2026-10]
+- Winner's curse: the best value on sweep seeds, or a sequential test stopped at a boundary, overstates the effect; confirm on fresh seeds before landing. Judge on end-of-game VP share, VP and wins: VP share at T100 inflates tiny edges because seats hold about 1.2 VP then. [2026-11]
 
 ## UI
 

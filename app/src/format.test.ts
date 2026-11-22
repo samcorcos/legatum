@@ -18,6 +18,7 @@ import {
   objectiveCloseLines,
   settlerSiteLines,
   upkeepText,
+  plainOrderError,
   type ReportContext,
 } from './format';
 
@@ -722,11 +723,11 @@ describe('upkeepText', () => {
     expect(upkeepText(null)).toBe('No upkeep');
   });
 
-  it('says a unit is free while slots remain, naming how many are left', () => {
+  it('says a unit is free while free units remain, naming how many more', () => {
     expect(upkeepText({ free: true, free_slots_left: 1, rate: 1, gold_per_turn_after: 5 }))
-      .toBe('Upkeep: free · 1 of 2 slots left');
+      .toBe('Upkeep: free (1 more free unit)');
     expect(upkeepText({ free: true, free_slots_left: 2, rate: 1, gold_per_turn_after: 5 }))
-      .toBe('Upkeep: free · 2 of 2 slots left');
+      .toBe('Upkeep: free (2 more free units)');
   });
 
   it('shows the paid rate once free slots run out', () => {
@@ -857,4 +858,8 @@ describe('objectiveCloseLines', () => {
     // The next turn it is still one away: the line does not repeat.
     expect(objectiveCloseLines(after, after)).toEqual([]);
   });
+});
+
+it('says a full military-unit cap in words, not a fraction', () => {
+  expect(plainOrderError('Astra cannot produce Spearman: Levies full: 3 of 2')).toBe("Astra can't train a Spearman: you have 3 military units and room for 2.");
 });

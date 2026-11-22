@@ -368,7 +368,7 @@ describe('victory hold lines', () => {
   });
 
   it('a broken hold is bad for the team and its allies and good for everyone else', () => {
-    expect(formatEvents([broken(0)], allied)[0]).toMatchObject({ tone: 'bad', text: 'Your hold on 10 VP was broken after 6 of 10 turns', icon: 'vp' });
+    expect(formatEvents([broken(0)], allied)[0]).toMatchObject({ tone: 'bad', text: 'Your hold on 10 VP was broken after 6 of 10 turns', icon: 'ui-alert' });
     expect(formatEvents([broken(3)], allied)[0].tone).toBe('bad');
     expect(formatEvents([broken(2)], allied)[0]).toMatchObject({ tone: 'good', text: "Team 2's hold on 10 VP was broken after 6 of 10 turns" });
     const brokenEarly = ev({ type: 'VictoryHoldBroken', team: 2, turns_held: 3, vp: 9, target: 10 });

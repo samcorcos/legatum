@@ -134,7 +134,8 @@ for (const size of SIZES) test.describe(`diplomacy moments ${size.name}`, () => 
       }
       if (kind === 'allianceEnded') {
         await expect(modal.locator('.alarm-title')).toContainText('Alliance ended');
-        expect((await modal.innerText()).match(/\bended\b/gi)).toHaveLength(1);
+        // The ribbon names the event (ALLIANCE ENDED); the body below the headline does not repeat it.
+        expect((await modal.locator('.alarm-body').innerText()).match(/\bended\b/gi)).toBeNull();
       }
       await page.mouse.move(1, 330);
       await shot(page, size, `33-${label}`);

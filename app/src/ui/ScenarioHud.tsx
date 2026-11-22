@@ -7,7 +7,7 @@ import { PortraitFrame, Ribbon } from './premium';
 import { factionColor } from '../theme';
 import { FELT_CHOICES, OUTCOME_TITLE, compareToAi, leadTarget, targetText, turnsText, type FeltLike, type ScenarioTarget } from '../scenarios/scenarios';
 import { closeTips } from './Tip';
-import { Icon } from './bits';
+import { Icon, NotMetMark } from './bits';
 import './Scenarios.css';
 
 function Conditions({ sc }: { sc: ActiveScenario }) {
@@ -15,7 +15,7 @@ function Conditions({ sc }: { sc: ActiveScenario }) {
     <ul className="scn-conditions">
       {sc.status.conditions.map((c) => (
         <li key={c.label} className={c.met ? 'met' : 'unmet'}>
-          <span className="scn-mark" aria-hidden><Icon name={c.met ? 'ui-check' : 'ui-cross'} size={12} /></span>
+          <span className="scn-mark" aria-hidden>{c.met ? <Icon name="ui-check" size={12} /> : <NotMetMark size={12} />}</span>
           <span>{c.label}{c.keep ? ' (every turn)' : ''}</span>
           <b>{c.progress}</b>
         </li>

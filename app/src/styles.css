@@ -98,7 +98,9 @@ p {
   background: var(--field);
   border: 1px solid var(--rule-2);
   vertical-align: 1px;
+  text-transform: none;
 }
+:is(.btn, .act, .cta, .prod, .link) kbd { text-transform: none; }
 .yield-icon,
 .icon {
   vertical-align: -3px;
@@ -107,6 +109,7 @@ p {
 .ui-mark {
   vertical-align: -2px;
 }
+.not-met-mark { display: inline-block; box-sizing: border-box; vertical-align: -1px; border: 1.5px solid currentColor; border-radius: 50%; color: var(--ink-2); }
 .mask-icon,
 .faction-mark,
 .wordmark {
@@ -1019,9 +1022,7 @@ dialog.settings-modal::backdrop {
   /* Compaction steps set by TopBar (TOP_BAR_COMPACTION) when the bar is crowded. */
   /* First step: the "Pop." and "Armed" words go; the figures stay (their tooltips name them). */
   .topbar[data-compact~='counts'] .count-label { display: none; }
-  /* The levy keeps its word (8.9.14 review: a bare "3/2" with an alert icon does not say what is full); it sheds its icon instead. */
-  .topbar[data-compact~='counts'] .levy-counter .count-label { display: inline; }
-  .topbar[data-compact~='counts'] .levy-counter .count-icon { display: none; }
+  /* The levy keeps its soldier icon beside the figure (its tooltip names it), so "3 / 2" never stands alone. */
   /* The words give way to an icon, so a bare number never stands alone. */
   .topbar .count-icon { display: none; }
   .topbar[data-compact~='counts'] .count-icon { display: inline-block; vertical-align: -2px; margin-right: 1px; }
@@ -1802,6 +1803,8 @@ dialog.settings-modal::backdrop {
 }
 .foreign-city .empire-relation {
   margin-right: 4px;
+  border: 0;
+  padding: 0;
   font: 600 10px/1 var(--sans);
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -2116,9 +2119,9 @@ dialog.settings-modal::backdrop {
 }
 /* The chosen (or pending) build: accent frame, a tinted fill and a check in place of the chevron. */
 .prod.active {
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 10%, var(--field));
-  box-shadow: inset 3px 0 0 var(--accent);
+  border-color: var(--ink);
+  background: color-mix(in srgb, var(--ink) 8%, var(--field));
+  box-shadow: inset 3px 0 0 var(--ink);
 }
 /* Picked this turn but not yet resolved: say so on the row itself. */
 .prod.pending /* G11: an item waiting for its strategic resource says why and when (pillar 5). */
@@ -4168,7 +4171,8 @@ dialog.gameover::backdrop {
 .queue-name { font: 600 13px/1.25 var(--sans); color: var(--ink); overflow-wrap: anywhere; }
 .queue-sub { font: 400 11px/1.25 var(--sans); color: var(--ink-2); white-space: nowrap; }
 .queue-turns { white-space: nowrap; }
-.queue-badge { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 3px; border: 1px solid var(--accent); border-radius: 50%; font-size: 11px; color: var(--ink); background: var(--field); }
+/* Queue positions are square: the round numbered disc is a seat (player) number. */
+.queue-badge { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 3px; border: 1px solid var(--accent); border-radius: 2px; font-size: 11px; color: var(--ink); background: var(--field); }
 .production-queue button { display: inline-grid; place-items: center; width: 26px; height: 26px; min-width: 26px; padding: 0; border: 1px solid var(--rule-2); background: var(--panel-2); color: var(--ink); cursor: pointer; }
 .production-queue button:last-child { margin-right: 1px; }
 .production-queue button:disabled { opacity: .35; cursor: default; }
@@ -4239,6 +4243,10 @@ dialog.gameover::backdrop {
 .cp-buyline { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 2px 8px; margin: 3px 14px; border-block: 1px solid var(--rule); }
 .purchase-status { margin: 3px 14px; padding: 4px 0; border-block: 1px solid var(--rule); font-size: 11px; line-height: 1.35; color: var(--ink-2); }
 .cp-buyline .purchase-status { margin: 0; border: 0; }
+/* "Automate" shares the spend line: a narrow focus menu keeps both on one row at 320 px. */
+.cp-buyline .cp-automation-inline { gap: 3px; font-size: 11px; }
+.cp-buyline .cp-automation-inline select { width: 72px; padding: 2px 2px; }
+.cp-buyline { column-gap: 6px; }
 .purchase-status button { border: 0; background: none; color: var(--accent); text-decoration: underline; cursor: pointer; }
 .production-choice { display: grid; grid-template-columns: minmax(0, 1fr) 92px; background: var(--field); }
 .building-line { display: grid; gap: 2px; }
@@ -4375,7 +4383,7 @@ dialog.gameover::backdrop {
 /* Persistent research plan, shared by the top bar and research dialog. */
 .research-slot { display: flex; align-items: center; min-width: 0; height: 100%; }
 .research-slot .research-chip { min-height: 44px; }
-.research-queue-number { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; min-width: 22px; height: 22px; padding: 0 4px; border-radius: 50%; background: var(--accent); color: var(--panel); font: 600 12px/1 var(--sans); }
+.research-queue-number { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; min-width: 22px; height: 22px; padding: 0 4px; border-radius: 2px; background: var(--accent); color: var(--panel); font: 600 12px/1 var(--sans); }
 @media (max-width: 900px) {
   .research-slot { max-width: 100%; }
 }

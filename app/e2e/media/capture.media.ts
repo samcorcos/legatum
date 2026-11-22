@@ -166,7 +166,7 @@ test('late-race', async ({ page }) => {
   const rec = await startRecording(page, 'late-race');
   await page.waitForTimeout(1400);
   const race = page.getByRole('region', { name: 'Victory race', exact: true });
-  await glide(page, race.getByRole('button', { name: 'All objectives', exact: true }), true);
+  await glide(page, race.getByRole('button', { name: 'Score ledger', exact: true }), true);
   await page.waitForTimeout(2600);
   await page.keyboard.press('Escape');
   await page.waitForTimeout(600);

@@ -50,7 +50,7 @@ export function rosterLine(view: PlayerView, owner: PlayerId, count: number): st
 /** What a hired unit is: strength, shot and moves in its seller's own version (core `company`: the Company is the seller's unit). */
 export function companyStats(seller: Faction, kind: UnitKind): string {
   const s = unitStatsFor(seller, kind);
-  return `${s.strength} melee${s.ranged ? `, ${s.ranged} ranged at range ${s.range}` : ''}, ${s.moves} moves`;
+  return `${s.strength} strength${s.ranged ? `, ${s.ranged} ranged · range ${s.range}` : ''}, ${s.moves} moves`;
 }
 
 /** The seller's name for the unit ("Eagle Warrior" from the Aztecs). */

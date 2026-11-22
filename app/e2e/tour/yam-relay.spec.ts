@@ -38,7 +38,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await shot(page, size, '95e-hall-race-token-card');
     await page.mouse.move(5, size.height / 2);
     // The goal slip on the objectives sheet says where it stands and shows it on the map.
-    await page.getByRole('region', { name: 'Victory race', exact: true }).getByRole('button', { name: 'All objectives', exact: true }).click();
+    await page.getByRole('region', { name: 'Victory race', exact: true }).getByRole('button', { name: 'Score ledger', exact: true }).click();
     const sheet = page.getByTestId('objective-sheet');
     await expect(sheet).toBeVisible();
     await sheet.locator('.sl-row.k-heldGoal button').click();
@@ -122,7 +122,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await page.locator('.sidebar-standings > summary').click();
     await page.locator('.panel.vp .vhc-tok[data-held]').first().hover();
     await page.mouse.move(5, size.height / 2);
-    await page.getByRole('region', { name: 'Victory race', exact: true }).getByRole('button', { name: 'All objectives', exact: true }).click();
+    await page.getByRole('region', { name: 'Victory race', exact: true }).getByRole('button', { name: 'Score ledger', exact: true }).click();
     await expect(page.getByTestId('objective-sheet')).toBeVisible();
     await shot(page, size, '95l-hall-rival-goal-slip');
   });

@@ -41,7 +41,7 @@ test('arrows pan and Return selects decisions after mouse clicks, with the turn 
 
   // Open the routine first-turn report from the menu; it must not block panning or Enter.
   await page.getByRole('button', { name: 'Menu', exact: true }).click();
-  await page.getByRole('button', { name: 'Last turn report (L)', exact: true }).click();
+  await page.getByRole('button', { name: 'Turn report (L)', exact: true }).click();
   await expect(page.getByRole('complementary', { name: 'Turn report' })).toBeVisible();
   expect(await pans(page), 'arrows pan with the turn report open').toBe(true);
 
@@ -89,7 +89,7 @@ test('Return first closes what covers the map, then selects the next decision (G
   await endPlanning(page);
   await expect(page.getByTestId('turn-number')).toHaveText('2');
   await page.getByRole('button', { name: 'Menu', exact: true }).click();
-  await page.getByRole('button', { name: 'Last turn report (L)', exact: true }).click();
+  await page.getByRole('button', { name: 'Turn report (L)', exact: true }).click();
   const report = page.getByRole('complementary', { name: 'Turn report' });
   await expect(report).toBeVisible();
   const selection = () => page.evaluate(() => JSON.stringify((window as unknown as { legatum: { getState(): { selection: unknown } } }).legatum.getState().selection));
@@ -114,16 +114,16 @@ test('Return first closes what covers the map, then selects the next decision (G
 
   // The diplomacy inbox and the objective sheet close on Return as well.
   await revealSidebar(page, 'standings');
-  await page.getByRole('button', { name: /^Diplomacy inbox/ }).click();
-  await expect(page.getByRole('complementary', { name: 'Diplomacy inbox' })).toBeVisible();
+  await page.getByRole('button', { name: /^Diplomacy( \(\d+\))?$/ }).click();
+  await expect(page.getByRole('complementary', { name: 'Diplomacy', exact: true })).toBeVisible();
   await page.keyboard.press('Enter');
-  await expect(page.getByRole('complementary', { name: 'Diplomacy inbox' })).toHaveCount(0);
-  await page.getByRole('button', { name: 'All objectives', exact: true }).click();
+  await expect(page.getByRole('complementary', { name: 'Diplomacy', exact: true })).toHaveCount(0);
+  await page.getByRole('region', { name: 'Victory race', exact: true }).getByRole('button', { name: 'Score ledger', exact: true }).click();
   await expect(page.getByTestId('objective-sheet')).toBeVisible();
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('objective-sheet')).toHaveCount(0);
   // The top bar's VP chip opens the same sheet, and Escape closes it.
-  await page.getByRole('button', { name: /^Every way to score/ }).click();
+  await page.locator('button.vh-chip').click();
   await expect(page.getByTestId('objective-sheet')).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('objective-sheet')).toHaveCount(0);

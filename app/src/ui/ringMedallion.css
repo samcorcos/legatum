@@ -89,7 +89,15 @@
   height: 38%;
   border-radius: 50%;
   color: var(--panel);
-  background: var(--good);
+  background: var(--ink);
   box-shadow: 0 0 0 1px var(--panel);
 }
 .te.bad .te-sign { background: var(--bad); }
+/* Small (a pin, a badge): the ring and its colour carry it; the sign would be a speck. */
+.te.sm:not(.bad) .te-sign { display: none; }
+.te.sm.bad .te-sign { width: 46%; height: 46%; }
+.te.sm .te-ring { top: 8%; bottom: 8%; }
+
+/* Report lines: an era's numeral seal and a natural wonder's own painting stand in the ring. */
+.rm .rm-numeral { font-family: var(--display); font-weight: 700; line-height: 1; letter-spacing: -0.02em; }
+.rm .rm-wonder { border-radius: 50%; object-fit: cover; display: block; }

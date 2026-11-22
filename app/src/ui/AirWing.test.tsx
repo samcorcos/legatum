@@ -145,7 +145,7 @@ describe.skipIf(!available)('the air wing of a city, on the Rust engine', () => 
     const fighter = card(901);
     expect(fighter.getAttribute('data-air-state')).toBe('guard');
     // Unanswered, so the status says it is awaiting orders (red), not that it is settled.
-    expect(fighter.querySelector('.up-status')?.textContent).toBe('Awaiting orders · on guard over 4 tiles around Waypost Seven');
+    expect(fighter.querySelector('.up-status')?.textContent).toBe('Needs orders · on guard over 4 tiles around Waypost Seven');
     expect(fighter.textContent).toContain('No enemy unit or city is visible within 5 tiles');
     expect(fighter.textContent).not.toContain('or rebase it');
     // The fixture has one city, so Rebase explains why it is unavailable.
@@ -162,7 +162,7 @@ describe.skipIf(!available)('the air wing of a city, on the Rust engine', () => 
     render(quiet);
     const bomber = card(900);
     expect(bomber.getAttribute('data-air-state')).toBe('idle');
-    expect(bomber.querySelector('.up-status')?.textContent).toBe('Awaiting orders · no targets within 8 tiles');
+    expect(bomber.querySelector('.up-status')?.textContent).toBe('Needs orders · no targets within 8 tiles');
     expect(bomber.textContent).toContain('Wait for a target, or skip this turn.');
     expect(bomber.textContent).not.toMatch(/rebase it/i);
     expect(bomber.textContent).toContain('No enemy unit or city is visible within 8 tiles of Waypost Seven');

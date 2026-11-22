@@ -141,6 +141,7 @@ decision_params! {
     staging_damage_percent: 100, 50, 200, "Safety charge on forecast damage during assault staging";
     escort_home_distance: 2, 0, 6, "Escort settlement sites farther than this from home";
     escort_search_distance: 6, 2, 12, "Maximum distance to recruit a free settler escort";
+    site_terrain_weight: 20, 0, 200, "Hard: percent added to a candidate site's settlement value per point of terrain Production on its explored ring-one tiles that are unowned or ours (every owned ring-one tile is worked, so the whole ring is the new city's early Production, not just its best two tiles; the designer's new cities in recorded games out-produce Hard's through ring-one Hills and Forest); 0: off";
     settler_min_site_score: 60, 20, 120, "Minimum preferred site score when training and moving settlers";
     settler_max_site_distance: 10, 4, 20, "Maximum preferred settlement distance from home";
     settler_travel_penalty: 0, 0, 20, "Extra site score penalty per travel turn";

@@ -4,7 +4,7 @@ import { coreFixture } from '../../src/test/coreFixture';
 import { researchFixture } from '../../src/test/researchFixture';
 import { contextFromViews, formatEvents } from '../../src/format';
 import { FACTION_INFO } from '../../src/data';
-import { SIZES, loadFixture, selectThing, shot, type GameWindow } from './helpers';
+import { SIZES, loadFixture, parkMouse, selectThing, shot, type GameWindow } from './helpers';
 
 for (const size of SIZES) test.describe(`Greece Captive ${size.name}`, () => {
   test.use({ viewport: { width: size.width, height: size.height } });
@@ -18,7 +18,7 @@ for (const size of SIZES) test.describe(`Greece Captive ${size.name}`, () => {
     const sheet = stage.getByTestId('faction-sheet');
     await expect(sheet).toContainText('A rival that captures one of your cities gets one free technology');
     await expect(sheet).toContainText('Capture an Athenian city for one free technology');
-    await page.mouse.move(size.width - 2, size.height - 2);
+    await parkMouse(page);
     await shot(page, size, '01-athens-sheet');
   });
 
@@ -32,7 +32,7 @@ for (const size of SIZES) test.describe(`Greece Captive ${size.name}`, () => {
     await selectThing(page, 'city', city.id);
     const card = page.getByTestId('foreign-city-actions');
     await expect(card).toContainText('Capture it: +1 free technology');
-    await page.mouse.move(size.width - 2, size.height - 2);
+    await parkMouse(page);
     await shot(page, size, '02-rival-city-card');
 
     const view = await page.evaluate(() => {
@@ -44,6 +44,7 @@ for (const size of SIZES) test.describe(`Greece Captive ${size.name}`, () => {
     await page.evaluate((report) => (window as unknown as GameWindow).legatum.getState().set({ report, alarmSeen: [], reportOpen: true }), report);
     const opened = page.getByRole('complementary', { name: 'Turn report' });
     await expect(opened).toContainText(`Captured ${city.name} from Athens: you gain one free technology`);
+    await parkMouse(page);
     await shot(page, size, '03-free-tech-turn-report');
   });
 });

@@ -39,8 +39,8 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     Object.assign(rel, { state: 'Alliance', effective_turn: 12, guarantee_until: 15, version: 1, security: { id: 1, started_turn: 12, protected_until: 22 } });
     await loadFixture(page, coreFixture(state), 20);
     await revealSidebar(page, 'standings');
-    await page.getByRole('button', { name: /^Diplomacy inbox/ }).click();
-    const inbox = page.getByRole('complementary', { name: 'Diplomacy inbox' });
+    await page.getByRole('button', { name: /^Diplomacy( \(\d+\))?$/ }).click();
+    const inbox = page.getByRole('complementary', { name: 'Diplomacy', exact: true });
     await expect(inbox).toBeVisible();
     await page.mouse.move(5, size.height / 2);
     const dir = `test-results/diplomacy-text/${size.name}`;

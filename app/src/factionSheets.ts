@@ -77,7 +77,7 @@ const SPECIAL_BUILDINGS: Partial<Record<Faction, BuildingKind[]>> = {
 /** Rules a card must state because its numbers cannot: the Agoge's levels (the Yam and Diwan are told by the goal block). */
 const BUILDING_RULE: Partial<Record<BuildingKind, string>> = { WarShrine: BUILDING_STATS.WarShrine.summary };
 
-const requiresText = (tech: TechId | null): string[] => tech ? [`Requires ${TECH_NAME[tech]}.`] : [];
+const requiresText = (tech: TechId | null): string[] => tech ? [`Needs ${TECH_NAME[tech]}.`] : [];
 
 const sheetCard = (faction: Faction, item: ProductionItem, text: string[]): SheetCard => {
   const against = pieceAgainst(faction, item);
@@ -180,7 +180,7 @@ export const FACTION_SHEETS: Record<Faction, FactionSheet> = {
     ratings: { aggression: 4, economy: 3, complexity: 4 },
     pairs: [
       { strength: `A sack carries off ${RULES.celtsSackGoldPerPopulation} Gold per population and raises a warband camp near the ruins.`, price: "Celts can't keep cities they capture: they sack and burn them. A city you founded comes home intact when you retake it.", strengthIcon: 'yield-gold', priceIcon: 'city' },
-      { strength: 'Barbarians never attack the Celts, all game. No camp, scout or raider touches your units, cities or Settlers, and the warband camps you raise raid your rivals only.', strengthIcon: 'ui-camp' },
+      { strength: "Barbarians don't attack the Celts.", strengthIcon: 'ui-camp' },
       specialRow('Celts', 'unit-gaesatae'),
     ],
     counteredBy: 'Garrison your cities and build Walls: a sacked city is gone, but a held one costs the Celts their army.',

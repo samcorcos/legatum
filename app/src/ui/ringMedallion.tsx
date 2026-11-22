@@ -7,6 +7,8 @@ import type { CSSProperties, ReactNode } from 'react';
 import { emblemUrl } from '../celebrate/RewardEmblem';
 import type { Emblem } from '../celebrate/moments';
 import { Star } from '../brand/ornaments';
+import type { Wonder } from '../types';
+import { wonderArt } from '../wonders';
 import { Icon, MaskIcon } from './bits';
 import './ringMedallion.css';
 
@@ -14,6 +16,9 @@ export type RingTone = 'good' | 'bad' | 'neutral' | 'gilt' | 'hollow';
 
 /** An icon by name, including the reward emblems (`emblem-*`) and treaty glyphs (`treaty-*`) the plain Icon lacks. */
 export function Glyph({ name, size, color }: { name: string; size: number; color?: string }) {
+  // An era's numeral seal ("era-numeral:III") and a natural wonder's own painting ("wonder:MountFuji"), for the report lines.
+  if (name.startsWith('era-numeral:')) return <span className="rm-numeral" style={{ fontSize: Math.round(size * 0.78) }}>{name.slice(12)}</span>;
+  if (name.startsWith('wonder:')) return <img className="rm-wonder" src={wonderArt(name.slice(7) as Wonder, 'b')} alt="" width={size} height={size} />;
   if (name.startsWith('treaty-')) return <Star size={size * 0.8} className="rm-star" />;
   if (name.startsWith('emblem-')) {
     const url = emblemUrl(name.slice(7) as Emblem);
@@ -50,7 +55,7 @@ export function TreatyEmblem({ kind, size = 40 }: { kind: TreatyKind; size?: num
   const bad = kind === 'War';
   const label = kind;
   return (
-    <span className={`te ${kind.toLowerCase()}${bad ? ' bad' : ''}`} style={{ '--te': `${size}px` } as CSSProperties} role="img" aria-label={`${label} emblem`}>
+    <span className={`te ${kind.toLowerCase()}${bad ? ' bad' : ''}${size < 22 ? ' sm' : ''}`} style={{ '--te': `${size}px` } as CSSProperties} role="img" aria-label={`${label} emblem`}>
       <span className="te-ring a" />
       {kind === 'Alliance' && <span className="te-ring b" />}
       <Star size={Math.round(size * 0.38)} className="te-star" />

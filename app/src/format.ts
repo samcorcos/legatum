@@ -12,7 +12,7 @@ import { techCardUnlocks, techUnlockSummary } from './ui/techCardUnlocks';
 import { eraName } from './ui/eraResearch';
 import { cardName } from './ageCards';
 import { CITY_HEAL, CITY_HP, cityCanFire } from './combat';
-import { BUILDING_NAME, FACTION_ADJECTIVE, FACTION_GOAL, factionGoalVp, RULES, TECH_NAME, CAPTURE_RESISTANCE_TURNS, eraScaled, factionGoalRule, UNIT_NAME, itemName, pluralUnit } from './data';
+import { BUILDING_NAME, unitIconName, FACTION_ADJECTIVE, FACTION_GOAL, factionGoalVp, RULES, TECH_NAME, CAPTURE_RESISTANCE_TURNS, eraScaled, factionGoalRule, UNIT_NAME, itemName, pluralUnit } from './data';
 import { closeObjectives } from './eraObjectives';
 import { bearing, empireNameOf, empireOfPlayer, empireTitle, PEOPLE_NAME, placeName } from './empires';
 import { CAMP_CLEAR_GOLD, isBarbarian } from './barbarians';
@@ -392,16 +392,12 @@ export function cityFireStatus(view: PlayerView, city: CityView): { fires: boole
   return { fires: true, text: `${wall}: fires at units within 2 tiles` };
 }
 
-/** Each empire's first 2 military units are free; every extra costs 1 Gold/turn, 3 for the
- * Switzerland. Scouts and civilians never cost upkeep and never use a free slot. One rule, one wording: the production picker, unit panel
- * and Guide all describe upkeep this way. */
-const FREE_MILITARY_UNITS = 2;
-
-/** A production card's upkeep line, for a unit not yet built (legatum-ui: "every build card
+/** Each empire's first 2 military units are free (core `FREE_MILITARY_UNITS`); every extra costs 1 Gold/turn, 3 for Switzerland. Scouts and civilians never cost upkeep.
+ * A production card's upkeep line, for a unit not yet built (legatum-ui: "every build card
  * shows its ongoing cost"). Undefined `upkeep` means a Scout or civilian (Settlers included): no upkeep. */
 export function upkeepText(upkeep?: UpkeepPreview | null): string {
   if (!upkeep) return 'No upkeep';
-  if (upkeep.free) return `Upkeep: free · ${upkeep.free_slots_left} of ${FREE_MILITARY_UNITS} slots left`;
+  if (upkeep.free) return `Upkeep: free (${upkeep.free_slots_left === 1 ? '1 more free unit' : `${upkeep.free_slots_left} more free units`})`;
   return `Upkeep: −${upkeep.rate} Gold/turn`;
 }
 
@@ -1405,6 +1401,7 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
     case 'SiegeBought':
       return line('economy', `${unitLabel(ctx, e.unit, e.owner)} bought Siege for ${e.gold} Gold: its attacks on a city ignore enemy Walls`, {
         players: [e.owner],
+        icon: ctx.unitKind(e.unit) ? unitIconName(ctx.unitKind(e.unit)!, ctx.playerFaction?.(e.owner)) : undefined,
       });
     case 'UnitUpgraded':
       return line('economy', `${unitLabel(ctx, e.unit, e.owner)} upgraded to ${itemName({ kind: 'Unit', unit: e.to }, ctx.playerFaction?.(e.owner))} for ${e.gold} Gold`, {
@@ -1471,7 +1468,7 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
         at: e.at,
         players: ctx.team,
         weight: 1,
-        details: [`Destroy its guard, then move a military unit onto the camp for ${CAMP_CLEAR_GOLD} Gold. ${ctx.playerFaction?.(ctx.me) === 'Celts' ? 'Barbarians never attack you.' : 'Its scouts bring raiders to cities they find.'}`],
+        details: [`Destroy its guard, then move a military unit onto the camp for ${CAMP_CLEAR_GOLD} Gold. ${ctx.playerFaction?.(ctx.me) === 'Celts' ? "Barbarians don't attack you." : 'Its scouts bring raiders to cities they find.'}`],
       });
     case 'BarbarianScoutSpotted':
       return line('combat', `A barbarian scout spotted ${ctx.cityName(e.city)} and is heading home. Kill it before it reaches its camp, or raiders will follow.`, {
@@ -1509,7 +1506,7 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
  * line ("moved 3 hexes to x,y").
  */
 /**
- * A core order refusal in the words a player reads: "Astra can't train a Spearman: your levies are full (3 of 2)."
+ * A core order refusal in the words a player reads: "Astra can't train a Spearman: you have 3 military units and room for 2."
  * Other reasons keep core's wording after the contraction.
  */
 export function plainOrderError(message: string): string {
@@ -1518,7 +1515,7 @@ export function plainOrderError(message: string): string {
   const [, city, item, why] = m;
   const levy = /^Levies full: (\d+) of (\d+)$/.exec(why);
   const article = /^[AEIOU]/.test(item) ? 'an' : 'a';
-  if (levy) return `${city} can't train ${article} ${item}: your levies are full (${levy[1]} of ${levy[2]}).`;
+  if (levy) return `${city} can't train ${article} ${item}: you have ${levy[1]} military units and room for ${levy[2]}.`;
   return `${city} can't build ${item}: ${plainBlocker(why)}.`;
 }
 

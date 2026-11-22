@@ -124,7 +124,7 @@ function main() {
   const rule ='='.repeat(100);
   const lines = [];
   lines.push('Legatum: third-party licence notices', '');
-  lines.push(`This ${opt.scope === 'web' ? 'web build' : 'app'} includes the open-source components listed below, each under its own licence.`);
+  lines.push(`This web build includes the open-source components listed below, each under its own licence.`);
   lines.push("Legatum's own code is MIT licensed and its original artwork is CC BY 4.0: https://github.com/samcorcos/legatum");
   lines.push('Music and sound effects are CC0 1.0; their credits are in the game under How to Play, Credits.', '');
   const mpl = list.filter((c) => c.kind === 'crate' && spdxIds(c.licence).includes('MPL-2.0') && !/\bOR\b/i.test(c.licence ?? ''));
@@ -151,7 +151,7 @@ function main() {
   fs.mkdirSync(path.dirname(opt.out), { recursive: true });
   fs.writeFileSync(opt.out, lines.join('\n'));
   const crateCount = list.filter((c) => c.kind === 'crate').length;
-  console.log(`wrote ${path.relative(ROOT, opt.out)} (${opt.scope}: ${crateCount} crates, ${list.length - crateCount} npm packages, ${texts.size} licence texts, ${Math.round(fs.statSync(opt.out).size / 1024)} KB)`);
+  console.log(`wrote ${path.relative(ROOT, opt.out)} (${crateCount} crates, ${list.length - crateCount} npm packages, ${texts.size} licence texts, ${Math.round(fs.statSync(opt.out).size / 1024)} KB)`);
 }
 
 try {

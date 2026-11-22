@@ -114,7 +114,7 @@ for (const size of SIZES) test.describe(`ui review 1103 ${size.name}`, () => {
 
   test('the ledger world wonder row opened, and the Guide chapter', async ({ page }) => {
     await openLateRace(page);
-    await page.getByRole('button', { name: /^Every way to score/ }).click();
+    await page.locator('button.vh-chip').click();
     const sheet = page.getByTestId('objective-sheet');
     await expect(sheet.locator('.sl-table')).toBeVisible();
     const row = sheet.locator('tr.sl-row.k-work').first().locator('button.sl-row-btn');

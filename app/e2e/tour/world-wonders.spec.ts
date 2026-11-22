@@ -4,7 +4,7 @@ import { improvementCity } from '../../src/test/improvementsFixture';
 import { contextFromViews, formatEvents } from '../../src/format';
 import { empireOfPlayer } from '../../src/empires';
 import type { Event } from '../../src/types';
-import { SIZES, loadFixture, selectThing, shot, type GameWindow } from './helpers';
+import { SIZES, loadFixture, primaries, selectThing, shot, type GameWindow } from './helpers';
 
 for (const size of SIZES) test.describe(`world wonder race ${size.name}`, () => {
   test.use({ viewport: { width: size.width, height: size.height } });
@@ -48,8 +48,11 @@ for (const size of SIZES) test.describe(`world wonder race ${size.name}`, () => 
       const v = st.views![st.seat];
       st.set({ report: { turn: v.turn, hash: 'wrl', events: [events], lines: [[]] }, reportOpen: false });
     }, { events: [event] });
-    await expect(page.locator('.moment-card', { hasText: 'A wonder race lost' })).toBeVisible();
+    await expect(page.locator('.moment-card', { hasText: 'Wonder race lost' })).toBeVisible();
     await page.mouse.move(5, size.height / 2);
+    // The card owns Return: the turn dock steps back and drops its key chip (one primary on screen).
+    expect(await primaries(page), 'one primary with a moment card up').toBe(1);
+    await expect(page.locator('.seatbar .cta .kbd', { hasText: /^Return$/ })).toHaveCount(0);
     await shot(page, size, 'wonder-race-lost-moment-card');
   });
 

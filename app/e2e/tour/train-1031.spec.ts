@@ -29,9 +29,9 @@ for (const size of SIZES) test.describe(`train-1031 ${size.name}`, () => {
     await loadFixture(page, coreFixture(f), 2);
     await selectThing(page, 'city', mine[3].id); // Geneva, idle
     await park(page);
-    await expect(page.getByRole('combobox', { name: /Build automatically in/ })).toBeVisible();
+    await expect(page.getByRole('combobox', { name: /^Automate / })).toBeVisible();
     await shot(page, size, '01-city-panel-automation-off');
-    await page.getByRole('combobox', { name: /Build automatically in/ }).selectOption('Science');
+    await page.getByRole('combobox', { name: /^Automate / }).selectOption('Science');
     await park(page);
     await shot(page, size, '02-city-panel-automation-science');
     await selectThing(page, 'city', mine[0].id); // Bern, building a Market
@@ -130,8 +130,8 @@ for (const size of SIZES) test.describe(`train-1031 ${size.name}`, () => {
       const p = await ctx.newPage();
       await loadFixture(p, allianceCoreSave(), 50);
       await revealSidebar(p, 'standings');
-      await p.getByRole('button', { name: /^Diplomacy inbox/ }).click();
-      const panel = p.getByRole('complementary', { name: 'Diplomacy inbox' });
+      await p.getByRole('button', { name: /^Diplomacy( \(\d+\))?$/ }).click();
+      const panel = p.getByRole('complementary', { name: 'Diplomacy', exact: true });
       await park(p);
       await shot(p, size, '17-diplomacy-inbox-tab');
       await panel.getByRole('tab', { name: 'Relations' }).click();
