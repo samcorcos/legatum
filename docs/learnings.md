@@ -2,6 +2,17 @@
 
 Newest first. One entry per non-obvious finding: what we learned, the evidence, and what we changed. Correct or delete entries that turn out to be wrong.
 
+## 2026-11-22: Uploaded games are analysed on the Mac (`tools/games`)
+
+- **Uploads were never read.** Since the web-only change every game reached R2, but nothing looked at it, and coach answers were not saved at all (fixed in the same branch). `tools/games/analyse_games.py` polls the games Worker's private read API (`/v1/read/games`, bearer `READ_TOKEN`; 404 without it, so the API's existence is not advertised), keeps `~/LegatumData/game-analysis/ledger.json` (one row per game, analysed once per upload etag), and writes `reports/<game id>/facts.md` + `review.md`.
+- **Replay needs the game's own engine.** A record only replays on the commit it was played on, so the job builds `game_dump` and `legatum-analyze` at `metadata.engine_commit` and caches them per commit. `game_dump` replays from the tape's setup: on a partial recording (`initial_state` set) it reports every turn as a hash mismatch, which is not a bug; the job skips it there and trusts `legatum-analyze`, which replays from the saved state.
+- **`claude -p` with `--add-dir DIR "prompt"` loses the prompt:** `--add-dir` is variadic and swallows it ("was read as a value of --add-dir"). Send the prompt on stdin.
+- **Coach answers are not engine data.** The upload carries them as a top-level `coach_answers` key; the Rust `Recording` denies unknown fields, so anything that feeds a record back to the engine (export, `legatum-analyze`) must strip it first.
+
+## 2026-11-22: Coach answers were silently dropped after the web-only change (`claude/coach-answers-saved`)
+
+- **Cause:** `writeAnswer` only appended to a module-level array (`unwrittenAnswers`); the desktop app that used to write it to disk was removed, so answers died with the tab while the designer was answering in a real game.
+- **Fix:** answers now live in `WhyMemory.answers` (last 500, so the save file and localStorage autosave carry them; old saves load with none) and the hosted build's upload copy carries them as top-level `coach_answers` (`historyToRecord`). The engine's `Recording` has `deny_unknown_fields`, so the key exists only in the upload copy: `exportGameHistory` strips it and `client.archive()` never has it. The Worker accepts an array of at most 2000 objects. README Privacy says so; the title notice does not (a third line overflowed the footer at 1000x600).
 ## 2026-11-22: A new order kind is dropped silently unless the app's decoder knows it (PR 31 UI review)
 
 - **`ORDER_KINDS` in `app/src/orderDecoding.ts` is a hand-kept copy of `core::orders::Order`.** `decodeOrders` runs on every order list that comes from storage or the relay (`remote.ts`). It drops a kind it doesn't know, with only a console warning, and `describeOrder` shows "Unknown order (GiveGold)". `GiveGold` was added to the core, the TypeScript union and `describeOrder`, but not to the set. So a queued gift showed as unknown, and an online guest's gift would never have reached the host. tsc can't catch this, because the set is typed `Set<Order['type']>` and a missing member is legal. A test now checks that a `GiveGold` order survives `decodeOrders`, and the give-gold tour asserts the pending-orders line.

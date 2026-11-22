@@ -63,7 +63,7 @@ import { currentActivePlaySeconds, currentPlaySessionId, resetActivePlayTurn } f
 import { cancelTurnFeedback, feel, feedbackForTurn, playTurnFeedback } from './feel';
 import { newRun, saveRecord, type ScenarioEntry, type ScenarioFeedback, type ScenarioRun, type ScenarioStatus } from './scenarios/scenarios';
 import { saveScenarioRun, type SavedRun } from './platform/scenarioRuns';
-import { NO_WHY, answerLine, remember as rememberWhy, writeAnswer, type WhyEngine, type WhyMemory, type WhyQuestion } from './why';
+import { NO_WHY, answerLine, remember as rememberWhy, MAX_SAVED_ANSWERS, withAnswer, writeAnswer, type WhyEngine, type WhyMemory, type WhyQuestion } from './why';
 import { TrainingDriver, reportLine as trainingReportLine, trainingCapMs, writeTrainingLog, type TrainingEngine, type TrainingProgress, type TrainingUi } from './training';
 import { setSeatFactions } from './theme';
 
@@ -471,7 +471,7 @@ let noticedCampaign: string | null = null;
 function writeAutosave(client: GameClient, views: PlayerView[]) {
   if (client.archive && (views[0].finished || (views[0].turn - 1) % 5 === 0)) {
     try {
-      void recordGameHistory(historyToRecord(client as { archive(): string })).catch((error) => useGame.getState().set({ error: String(error) }));
+      void recordGameHistory(historyToRecord(client as { archive(): string }, useGame.getState().why.answers)).catch((error) => useGame.getState().set({ error: String(error) }));
     } catch (error) { useGame.getState().set({ error: `Could not record game history: ${String(error)}` }); }
   }
   const game = campaign;
@@ -578,7 +578,7 @@ export const useGame = create<State>((set, get) => {
     // A scenario's history is saved with its run, never in the game archive.
     if (previous !== client && previous?.archive && !get().scenario) {
       try {
-        const history = historyToRecord(previous as { archive(): string });
+        const history = historyToRecord(previous as { archive(): string }, get().why.answers);
         const replacingSameGame = client.archive && JSON.parse(client.archive()).metadata.game_id === JSON.parse(history).metadata.game_id;
         if (!replacingSameGame) void abandonGameHistory(history).catch((error) => set({ error: String(error) }));
       }
@@ -1147,7 +1147,9 @@ export const useGame = create<State>((set, get) => {
       });
       const client = get().client;
       const game = (client as unknown as Partial<WhyEngine> | null)?.trainingGameId?.() ?? 'unknown';
-      writeAnswer(answerLine(game, q, answer));
+      const line = answerLine(game, q, answer);
+      writeAnswer(line);
+      set({ why: withAnswer(get().why, line) });
     },
     showWhy: () => {
       // Reopened from the turn report: the report closes so the card never covers it.
@@ -1459,7 +1461,7 @@ export const useGame = create<State>((set, get) => {
         measureTurn('loadClient', () => client.load(save.game));
         if (forkHistory) client.forkArchive?.();
         measureTurn('afterLoad', () => afterLoad(client));
-        if (save.why?.enabled) set({ why: { enabled: true, asked: save.why.asked ?? [], last: save.why.last ?? null, skipped: save.why.skipped ?? [] } });
+        if (save.why?.enabled) set({ why: { enabled: true, asked: save.why.asked ?? [], last: save.why.last ?? null, skipped: save.why.skipped ?? [], answers: Array.isArray(save.why.answers) ? save.why.answers.slice(-MAX_SAVED_ANSWERS) : [] } });
         campaign = resumeCampaign ?? newCampaignId();
         resumeCampaign = null;
         if (get().views) measureTurn('loadAutosave', () => writeAutosave(client, get().views!));

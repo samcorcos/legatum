@@ -871,7 +871,7 @@ Verify UI changes with Playwright screenshots at the three sizes and attach them
 
 - A notice about data leaving the player's device says "uploaded" or "sent to us", never "saved": players read "saved" as their own local save. Storage words such as "bucket" stay out of anything a player reads.
 - Small centred notes that can wrap to two lines use `text-wrap: balance`, so a link or a lone word doesn't dangle on the second line.
-- The hosted title screen (with `VITE_LEGATUM_GAMES_URL` set) has about 10px to spare at 1000x600: any further hosted-only line on the main menu needs a layout change, not just another line.
+- The hosted title screen (with `VITE_LEGATUM_GAMES_URL` set) has about 10px to spare at 1000x600: the upload notice must stay 2 lines. A third line ("Coach question answers go with them.", PR #33, 2026-11-22) pushed the menu card over the footer text, so that fact went to the README Privacy section instead. Any further hosted-only line on the main menu needs a layout change, not just another line. The standard tour build has uploads off, so shoot the hosted title separately (uploads on, with and without Resume) and check the menu bottom is at or above the footer top.
 
 ## From the browser co-op review (2026-11-22, the host's tab runs the game)
 

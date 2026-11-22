@@ -10,6 +10,9 @@ promise to players).
   replays the orders to recompute the hashes (`Recording::anonymized`). The Worker refuses any other seat name.
 - Stored as `games/<YYYY-MM>/<game id>.json.gz`, with custom metadata for listing without downloading:
   `outcome`, `turns`, `engine`, `winner`, `seats` (`Faction*:Difficulty`, `*` for a human seat).
+- The record may carry the player's coach-question answers as a top-level `coach_answers` list (at most 2000
+  objects; the Worker refuses anything else). It is not part of the engine's `Recording`, which denies unknown
+  keys, so strip it before feeding a record to the engine.
 - Only pages listed in `ALLOWED_ORIGINS` (`wrangler.jsonc`) may upload: the site, its preview deploys and
   local dev. Bodies are capped at 4 MiB gzipped and 64 MiB unpacked.
 - It keeps nothing about the sender. Observability (request logs) is off on purpose: logs would hold IP
@@ -38,9 +41,18 @@ then uploads games there and allows the page to connect to it. Without it the we
 
 ## Reading the games
 
+By hand:
+
 ```
 npx wrangler r2 object get legatum-games/games/2026-11/<game id>.json.gz --file game.json.gz --remote
 ```
 
 Unzip it and take the `tape` key: that is the Tape JSON the simulator's examples replay (`game_dump`,
-`audit_states`). The bucket is private; there is no public read path.
+`audit_states`). The bucket is private and no page can read it.
+
+The analysis job on the developer's Mac (`tools/games`, see its README) reads through a private API on the same
+Worker: `GET /v1/read/games?cursor=` lists the stored games with their metadata and `GET /v1/read/games/<key>`
+returns one record, still gzipped. It needs `Authorization: Bearer <READ_TOKEN>`; `READ_TOKEN` is a Worker secret
+(`npx wrangler secret put READ_TOKEN`, at least 32 characters, or `tools/games/install-mac.sh --token`). Without
+the secret, or with a wrong token, every `/v1/read/` path answers 404, so its existence is not advertised. It
+ignores `ALLOWED_ORIGINS`, so no browser page is allowed to use it.
