@@ -1742,3 +1742,41 @@ fn research_queue_survives_lan_restart_advances_and_hides_rival_plans() {
             .any(|e| e["type"] == "ResearchQueueAdvanced")
     );
 }
+
+/// "Save to file" then "Host from a save": the host's save, kept as a file, starts a new host on a
+/// fresh browser with the same turn and seat names, and the same text loads as a solo game.
+#[test]
+fn host_save_file_resumes_on_a_fresh_browser_and_loads_solo() {
+    let first = Disk::new();
+    let server = Running::start(&first);
+    server.create(&setup());
+    let (mut a, _) = server.join(0);
+    let (mut b, _) = server.join(1);
+    a.ready(true);
+    b.ready(true);
+    a.turn(2, 0);
+    b.turn(2, 1);
+    let file = server.save();
+    let before = server.status();
+    drop((a, b));
+    drop(server);
+
+    // A different browser: its disk holds nothing but the file the host chose.
+    let fresh = Disk::new();
+    *fresh.save.borrow_mut() = Some(file.clone());
+    let resumed = Running::start(&fresh);
+    let after = resumed.status();
+    assert_eq!(after["turn"], before["turn"]);
+    assert_eq!(after["has_game"], true);
+    let names = |status: &Value| -> Vec<Value> {
+        status["seats"].as_array().unwrap().iter().map(|s| s["name"].clone()).collect()
+    };
+    assert_eq!(names(&after), names(&before));
+    assert_eq!(resumed.save(), file);
+    // The host reclaims its own seat, as after a reload.
+    let (_, view) = resumed.join(0);
+    assert_eq!(view.turn, 2);
+
+    let solo = legatum_wasm::Game::from_save_json(&file);
+    assert!(solo.is_ok(), "an online save is a normal engine save");
+}

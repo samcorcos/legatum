@@ -29,6 +29,8 @@ class FakeEngine implements HostEngine {
   summary() { return '{"players":1}'; }
   new_game() { this.save = 'saved'; }
   load_game() {}
+  save_game() { if (!this.live) throw new Error('No game in progress'); return 'live save'; }
+  live = true;
   configure_staging() {}
   close_staging() {}
   start_staging() { return '{"code":"not_ready","message":"Not everyone is ready."}'; }
@@ -237,4 +239,11 @@ it("the host's own socket and admin calls reach the engine in the tab", async ()
   sock.close();
   await closed;
   expect(engine.disconnected).toEqual([1]);
+});
+
+it('saveGame hands over the live save on demand, or null when there is no game', () => {
+  const host = new BrowserHost(options());
+  expect(host.saveGame()).toBe('live save');
+  engine.live = false;
+  expect(host.saveGame()).toBeNull();
 });

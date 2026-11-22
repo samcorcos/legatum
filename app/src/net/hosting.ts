@@ -66,16 +66,21 @@ export interface HostingEvents {
  * Opens a room on the relay and runs the game in this tab. With `resume` (a reloaded host tab), reconnects to
  * that room and resumes the saved game. Rejects when the relay cannot be reached.
  */
-export async function startHosting(relay: string, announce: RoomAnnounce, resume: HostingRecord | null = null, events: HostingEvents = {}): Promise<BrowserHost> {
-  const save = resume ? savedGame() : null;
+export async function startHosting(relay: string, announce: RoomAnnounce, resume: HostingRecord | null = null, events: HostingEvents = {}, fromSave: string | null = null): Promise<BrowserHost> {
+  const save = fromSave ?? (resume ? savedGame() : null);
   if (active) stopHosting();
   const mod = (await loadWasmModule()) as unknown as { BrowserHost: new (save?: string | null) => HostEngine };
   let engine: HostEngine;
-  try {
-    engine = new mod.BrowserHost(save);
-  } catch {
-    // A save this build cannot resume: start clean rather than not at all.
-    engine = new mod.BrowserHost(null);
+  if (fromSave) {
+    // A save the player chose: say so when this build cannot host it, never start a different game.
+    engine = new mod.BrowserHost(fromSave);
+  } else {
+    try {
+      engine = new mod.BrowserHost(save);
+    } catch {
+      // A save this build cannot resume: start clean rather than not at all.
+      engine = new mod.BrowserHost(null);
+    }
   }
   const host: BrowserHost = new BrowserHost({
     relay,
@@ -102,8 +107,15 @@ export async function startHosting(relay: string, announce: RoomAnnounce, resume
   }
   active = host;
   remember({ relay, announce, room: host.room! });
+  // A game chosen from a file is kept right away, so a reload of this tab resumes it too.
+  if (fromSave) keepSave(fromSave);
   setLocalEndpoint({ fetch: host.fetch, socket: () => host.socket() });
   return host;
+}
+
+/** The hosted game's save right now (what "Save to file" writes), or null when this tab hosts no game. */
+export function hostedGameSave(): string | null {
+  return active?.saveGame() ?? null;
 }
 
 /** Closes this tab's room for everyone, if it hosts one. */

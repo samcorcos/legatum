@@ -175,6 +175,20 @@ function MultiplayerMenu({ onBack }: { onBack: () => void }) {
     }
   };
 
+  const hostFromSave = () => {
+    const who = name.trim().slice(0, MAX_PLAYER_NAME) || DEFAULT_PLAYER_NAME;
+    rememberPlayerName(who);
+    setHostError(null);
+    void pickSaveFile(async (save) => {
+      setHosting('starting');
+      const failure = await useGame.getState().hostOnlineFromSave(who, save);
+      if (failure) {
+        setHostError(failure);
+        setHosting('failed');
+      }
+    }, (message) => setHostError(message));
+  };
+
   return (
     <>
       <TitleNotice error={error ?? hostError} />
@@ -203,6 +217,10 @@ function MultiplayerMenu({ onBack }: { onBack: () => void }) {
                 {hosting === 'starting' ? <><span className="spinner" /> Opening your game…</>
                   : hosting === 'failed' ? 'Try again' : 'Open a game that others can find and join'}
               </span>
+            </button>
+            <button className="btn big" disabled={hosting === 'starting'} onClick={hostFromSave}>
+              Host from a save…
+              <span className="btn-sub">Carry on an online game from its save file</span>
             </button>
             <button className={`btn big ${!views && hosting === 'idle' ? 'primary' : ''}`} disabled={hosting === 'starting'} onClick={() => goto('online')}>
               Join Game

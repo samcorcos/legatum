@@ -22,6 +22,8 @@ export interface HostEngine {
   close_staging(): void;
   start_staging(): string;
   take_save(): string | undefined;
+  /** The live game's save right now; throws when there is no game. */
+  save_game(): string;
   take_recordings(): string;
   free?(): void;
 }
@@ -141,6 +143,15 @@ export class BrowserHost {
     this.tickTimer = this.timers.every(() => this.tick(), TICK_MS);
     this.connect();
     return this.key;
+  }
+
+  /** The live game's save right now, for the host's "Save to file"; null when there is no game. */
+  saveGame(): string | null {
+    try {
+      return this.engine.save_game() || null;
+    } catch {
+      return null;
+    }
   }
 
   /** Closes the room for good: `bye`, then the tunnel and every in-tab socket. */

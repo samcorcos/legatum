@@ -28,7 +28,8 @@ guest tab                 --wss-->  Cloudflare Worker (infra/relay)  <--wss (dia
 - **Limits**: the game lives in the host's tab. Closing that tab (or its browser) ends the game for everyone
   (the relay drops the room after 120 s, or at once on `bye` when the host leaves through the menu). A reload of
   the host tab resumes the game in the same room from the save kept in `sessionStorage`; a reload of a guest
-  tab rejoins its room and seat. A new tab cannot take over a hosted game. A WASM panic (a host bug) stops the
+  tab rejoins its room and seat. A new tab cannot take over a hosted game. To outlive the tab, the host
+  saves to a file (game menu, host only) and later hosts from it (see "Save to file and host from a save"). A WASM panic (a host bug) stops the
   game: Rust's `catch_unwind` does not work in WASM.
 
 ## Relay HTTP and WebSocket API (Worker, `infra/relay/`)
@@ -112,6 +113,13 @@ already). The host's own in-tab connection never sees chunks.
 - Saves: the engine hands over the live game's save whenever it changes; `hosting.ts` keeps it (and the room
   key) in `sessionStorage` so a reload resumes. Game histories go to the browser's archive (`recordGameHistory`)
   like a local game's. Resumed seats get fresh credentials: the host reclaims its seat, guests take theirs again.
+- Save to file and host from a save: the host's game menu offers Save to file, which writes the engine's current
+  save (`BrowserHost.save_game`) in the normal `legatum-save` envelope with `online: true`. The engine save is the
+  same format as a solo save, so Load from file opens it as a solo game too. Title > Multiplayer > Host from a
+  save picks a file and calls `hostOnlineFromSave`, which starts a new room with `new BrowserHost(save)`
+  (`startHosting`'s `fromSave`; an unreadable chosen save is an error, never a fresh game). Seat names carry
+  over. Seat credentials are not saved, so every seat starts reserved: the host takes seat 0 on the seat screen
+  and opens the other seats from the seat bar, then guests join from the list. A new room has a new id and key.
 - Seat credentials are 256-bit random hex from `crypto.getRandomValues`.
 
 ## Build (`scripts/build-web.sh`)

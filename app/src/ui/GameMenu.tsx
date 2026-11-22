@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { saveFile, useGame, type SaveFile } from '../store';
+import { hostedSaveText, saveFile, useGame, type SaveFile } from '../store';
 import { openGuide } from './guideState';
 import { HintSettings } from './FirstGameHints';
 import { HapticsSettings } from './HapticsSettings';
@@ -21,6 +21,18 @@ export async function saveGameToFile() {
     await saveToFile(JSON.stringify(s), s.turn);
   } catch (e) {
     useGame.getState().set({ error: String(e) });
+  }
+}
+
+/** The online host's "Save to file…": the game as the host engine holds it now, so it can be hosted again. */
+export async function saveHostedGameToFile() {
+  const { set, views } = useGame.getState();
+  try {
+    const text = hostedSaveText();
+    if (!text || !views?.length) return set({ error: 'There is no game to save yet.' });
+    await saveToFile(text, views[0].turn);
+  } catch (e) {
+    set({ error: String(e) });
   }
 }
 
@@ -113,6 +125,12 @@ export function GameMenu() {
               <hr />
             </>
           )}
+          {kind === 'remote' && hostHere && (
+            <>
+              <button onClick={() => (saveHostedGameToFile(), setOpen(false))}>Save to file…</button>
+              <hr />
+            </>
+          )}
           <HintSettings />
           <HapticsSettings />
           <SoundSettings />
@@ -137,7 +155,7 @@ export function GameMenu() {
             <button onClick={() => (goto('title'), setOpen(false))}>Exit to title</button>
           )}
           <div className="menu-foot">
-            {kind !== 'remote' ? 'Autosaved each turn' : hostHere ? 'Online game · you host it, so keep this tab open' : 'Online game · the host keeps the game'}
+            {kind !== 'remote' ? 'Autosaved each turn' : hostHere ? 'Online game · you host it: keep this tab open, or save to a file' : 'Online game · the host keeps the game'}
           </div>
           {/* Troubleshooting only: reachable, but out of the player's way. */}
           <details className="menu-advanced">

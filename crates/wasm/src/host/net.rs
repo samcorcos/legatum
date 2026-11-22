@@ -332,6 +332,11 @@ impl BrowserHost {
         self.0.take_save()
     }
 
+    /// The live game's save right now, for the host's "Save to file" (empty when there is no game).
+    pub fn save_game(&self) -> Result<String, wasm_bindgen::JsError> {
+        crate::js(self.0.save_game())
+    }
+
     /// A JSON array of recording JSON strings.
     pub fn take_recordings(&mut self) -> String {
         serde_json::to_string(&self.0.take_recordings()).expect("strings serialize")
