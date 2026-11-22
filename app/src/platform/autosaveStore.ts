@@ -1,7 +1,7 @@
 // Where the game's autosaves live: the browser's own database, a few turns deep, with the old single
 // localStorage slot as the fallback. Nothing here knows about the game: a record is text plus the little the
 // title screen needs to show it. ui/CrashScreen.tsx keeps a tiny duplicate of the read side (it must not
-// import anything from the game), so keep DB_NAME, the store names and the record shape in step with it.
+// use anything from the game), so keep AUTOSAVE_DB, the store names and the record shape in step with it.
 //
 // - Rolling: each campaign (one game) keeps its newest AUTOSAVE_SLOTS turns, one record per turn.
 // - Atomic per record: the new record is written first, the old ones pruned after, so a failed or cut-off
