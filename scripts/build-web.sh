@@ -3,7 +3,7 @@
 # Cloudflare Pages. Online games run in the host player's tab and reach other players through the relay
 # (infra/relay, plans/online-play.md), so no game server sits behind these files.
 #   1. the WASM engine (crates/wasm -> app/src/wasm-pkg)
-#   2. the third-party licence notices (app/public/THIRD_PARTY_LICENSES.txt, web scope)
+#   2. the third-party licence notices (app/public/THIRD_PARTY_LICENSES.txt)
 #   3. the web UI, with the relay's address baked in (app/src/platform/online.ts)
 #   4. the host files from app/hosted/ (_headers, whose connect-src names the relay, and 404.html)
 # LEGATUM_GAMES_URL (optional) is the game-upload Worker (infra/games): every game played on the build is sent
@@ -22,9 +22,9 @@ if [ "${1:-}" != "--skip-wasm" ]; then scripts/build-wasm.sh; fi
 
 cd app
 [ -d node_modules ] || npm ci
-node ../tools/release/third-party-licenses.mjs --scope web
+node ../tools/release/third-party-licenses.mjs
 
-# The title screen shows this label; it carries the app version (package.json, the same as tauri.conf.json).
+# The title screen shows this label; it carries the app version (package.json).
 version="$(node -p "require('./package.json').version")"
 commit="$(git rev-parse --short=7 HEAD 2>/dev/null || true)"
 export LEGATUM_BUILD_LABEL="${LEGATUM_BUILD_LABEL:-Version $version${commit:+ · web $commit}}"
@@ -39,7 +39,7 @@ games_url="${games_url%/}"
 if [ -n "$games_url" ] && ! [[ "$games_url" =~ ^https://[A-Za-z0-9.-]+$ ]]; then
   echo "LEGATUM_GAMES_URL must be an https origin such as https://legatum-games.example.workers.dev" >&2; exit 1
 fi
-VITE_LEGATUM_HOSTED=1 VITE_LEGATUM_RELAY_URL="$relay" VITE_LEGATUM_GAMES_URL="$games_url" npm run build
+VITE_LEGATUM_RELAY_URL="$relay" VITE_LEGATUM_GAMES_URL="$games_url" npm run build
 
 cp hosted/404.html dist/
 if [ -z "$relay" ]; then

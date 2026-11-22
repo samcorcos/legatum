@@ -1,7 +1,6 @@
 import { IDBFactory } from 'fake-indexeddb';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 
-vi.mock('@tauri-apps/api/core', () => ({ isTauri: () => false }));
 vi.mock('../remote', () => ({ rememberedSeat: () => null }));
 
 const ID = 'web-1795310626069-619872b4c1b6c000-89f1f0f11637b000';
@@ -10,7 +9,6 @@ const recording = (id = ID) => JSON.stringify({ metadata: { game_id: id, turn_co
 beforeEach(() => {
   vi.resetModules();
   vi.stubGlobal('indexedDB', new IDBFactory());
-  vi.stubEnv('VITE_LEGATUM_HOSTED', '1');
   vi.stubEnv('VITE_LEGATUM_GAMES_URL', 'https://games.example/');
 });
 afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });

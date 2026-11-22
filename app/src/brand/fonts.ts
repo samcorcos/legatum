@@ -1,4 +1,4 @@
-// Bundled faces (OFL) so the desktop app works offline under its CSP. Latin subsets only.
+// Bundled faces (OFL), served with the game under its CSP (no font CDN). Latin subsets only.
 // Atlas: Cormorant (display, italics) + Libre Franklin (labels, numerals).
 import '@fontsource/cormorant/latin-400.css';
 import '@fontsource/cormorant/latin-500.css';

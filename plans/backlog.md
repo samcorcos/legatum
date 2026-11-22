@@ -1,5 +1,7 @@
 # Backlog
 
+> 2026-11-22: the desktop (Tauri) app, the native `legatum-server` and LAN play were dropped; the game is web-only. Rows below that mention them are history. Online play: plans/online-play.md.
+
 **Balance philosophy (user, 2026-09-26):** asymmetry over balance, TI4 not Eclipse. Keep factions bold and even lopsided; balance only prevents a faction that dominates (>~20% of its seats) or never matters (<~6%). Never homogenize factions to even out win rates.
 
 Prioritized work toward the first playable, grouped by increment. The Ops supervisor keeps the Astra queue fed from items marked `ready`; the lead (Claude) owns this file, reviews all results and merges. Statuses: `ready` (can start now), `blocked (<why>)`, `doing (<who>)`, `done`.
@@ -28,7 +30,6 @@ Owner hints: **astra** = gpt-6-astra via `tools/astra/runner.sh` (write tasks ge
 | B10 | Sim report: battles, captures, eliminations, VP-source breakdown (titles vs milestones vs goals), turn-50 leader win rate | astra | ready |
 | B17 | UI polish: unit move animations, battle forecast tooltip, turn report polish | claude | done (first pass) |
 | B20 | Implement the chosen art direction across the whole UI (tokens + components + map rendering + title screen). Default: C "Heir's Court" chrome + B's map lettering until the user picks | claude | done (polish follow-ups: key-art title, loading, fog, Tauri perf = polish agent) |
-| B21 | Save to file in the Mac app (Tauri dialog plugin instead of browser download) | claude | ready |
 
 ## v0.4 Motorcycle: balance, AI, determinism
 
@@ -52,7 +53,7 @@ Owner hints: **astra** = gpt-6-astra via `tools/astra/runner.sh` (write tasks ge
 | --- | --- | --- | --- |
 | B11 | Browser end-to-end tests (Playwright) for new game, a few turns, save/load, LAN join | astra + claude | merged; spec drift fix in progress (claude) |
 | B12 | In-game How to play (from the guide) and first-turn hints | claude | blocked (how-to-play guide) |
-| B14 | Security review of the LAN server (it listens on the LAN) | astra | queued: staging-security-review |
+| B14 | Security review of online play (the relay and the in-browser host) | astra | queued |
 | B16 | Colorblind-safe player colors and legibility review | astra | queued: a11y-atlas |
 | B19 | Final review: Astra + Claude code reviews of everything, fix confirmed findings | astra + lead | blocked (all) |
 
@@ -60,10 +61,9 @@ Owner hints: **astra** = gpt-6-astra via `tools/astra/runner.sh` (write tasks ge
 
 | ID | Item | Owner | Status |
 | --- | --- | --- | --- |
-| M1 | Skateboard: touch-playable on iPhone (touch map controls, tap breakdowns, on-screen turn controls; Tauri iOS on the iPhone simulator) | astra + claude | in progress |
-| M2 | Scooter: iPhone portrait layout, safe areas, background autosave, Saves list, haptics and motion | astra | planned (next) |
-| M3 | Bicycle: TestFlight on both players' phones, LAN guest join from the app, icons and launch screen | claude + astra | planned (needs Team ID and App Store Connect API key) |
-| M4 | Later: Android build, LAN host auto-discovery | astra | nice to have |
+| M1 | Skateboard: touch-playable in iPhone Safari (touch map controls, tap breakdowns, on-screen turn controls) | astra + claude | in progress |
+| M2 | Scooter: iPhone portrait layout, safe areas, autosave when hidden, motion and sound | astra | planned (next) |
+| M3 | Bicycle: an online game between two phones, reconnect on return, home-screen icon and manifest | claude + astra | planned |
 
 ## Presentation and data (2026-09-27)
 

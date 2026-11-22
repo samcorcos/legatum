@@ -27,7 +27,7 @@ export async function celebrationFixture(tier: Tier, count = 1): Promise<void> {
   useGame.setState({ client, humans: [0], views: [after], screen: 'game', booted: true, seat: 0,
     orders: [[]], errors: [[]], ready: [false], selection: null, mode: 'normal',
     reportOpen: false, reportFocus: undefined, techOpen: false, vpExpanded: false, busy: null, error: null,
-    anim: null, focus: { hex: city.pos, seq: 1 }, lan: null, lastHash: `fixture-${tier}`,
+    anim: null, focus: { hex: city.pos, seq: 1 }, net: null, lastHash: `fixture-${tier}`,
     report: { turn: after.turn - 1, hash: `fixture-${tier}`, events: [events], moments: [moments], lines: [formatEvents(events, contextFromViews(before, after))] },
   });
   window.__feelLog = [];
@@ -51,7 +51,7 @@ export async function campCelebrationFixture(): Promise<void> {
   useGame.setState({ client, humans: [0], views: [after], screen: 'game', booted: true, seat: 0,
     orders: [[]], errors: [[]], ready: [false], selection: null, mode: 'normal',
     reportOpen: false, reportFocus: undefined, techOpen: false, vpExpanded: false, busy: null, error: null,
-    anim: null, focus: { hex: city.pos, seq: 1 }, lan: null, lastHash: hash,
+    anim: null, focus: { hex: city.pos, seq: 1 }, net: null, lastHash: hash,
     report: { turn: after.turn - 1, hash, events: [events], moments: [moments], lines: [formatEvents(events, contextFromViews(before, after))] },
   });
   window.__feelLog = [];
@@ -84,7 +84,7 @@ export async function unlockCelebrationFixture(buildable = true, researching = t
   useGame.setState({ client, humans: [0], views: [after], screen: 'game', booted: true, seat: 0,
     orders: [[]], errors: [[]], ready: [false], selection: null, mode: 'normal', unlockReopen: null,
     reportOpen: false, reportFocus: undefined, techOpen: false, vpExpanded: false, busy: null, error: null,
-    anim: null, focus: { hex: city.pos, seq: 1 }, lan: null, lastHash: 'fixture-unlock',
+    anim: null, focus: { hex: city.pos, seq: 1 }, net: null, lastHash: 'fixture-unlock',
     report: { turn: after.turn - 1, hash: 'fixture-unlock', events: [events], moments: [moments], lines: [formatEvents(events, contextFromViews(before, after))] },
   });
   window.__feelLog = [];
@@ -128,7 +128,7 @@ export async function rewardFixture(kind: RewardKind): Promise<void> {
   useGame.setState({ client, humans: [0], views: [after], screen: 'game', booted: true, seat: 0,
     orders: [[]], errors: [[]], ready: [false], selection: null, mode: 'normal', unlockReopen: null,
     reportOpen: false, reportFocus: undefined, techOpen: false, vpExpanded: false, busy: null, error: null,
-    anim: null, focus: { hex: at, seq: 1 }, lan: null, lastHash: hash,
+    anim: null, focus: { hex: at, seq: 1 }, net: null, lastHash: hash,
     report: { turn: after.turn - 1, hash, events: [events], moments: [moments], lines: [formatEvents(events, contextFromViews(before, after))] },
   });
   window.__feelLog = [];

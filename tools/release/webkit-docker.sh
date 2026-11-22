@@ -5,7 +5,7 @@
 #
 # Why: Playwright WebKit on macOS captures screenshots through WindowServer, which aborted three
 # times and logged the user out (docs/learnings.md, 2026-10-07). app/playwright.config.ts refuses
-# WebKit on darwin; this is the only way to run it. The Mac app is WKWebView, so WebKit coverage of
+# WebKit on darwin; this is the only way to run it. Safari is WebKit, so WebKit coverage of
 # e2e/tour and e2e/exit-to-title.spec.ts still matters (a WebKit-only blur bug).
 # tools/release/check.sh calls this as its WebKit step.
 #
@@ -19,8 +19,8 @@
 #            `wrangler dev` inside the container, so the container needs only the dist and the relay's packages.
 #          - node_modules: `npm ci` inside Docker volume legatum-webkit-nm-<hash of package-lock.json>;
 #            the host's node_modules is never mounted or touched.
-#          - The worktree is mounted read-only; app/ is copied into the container (minus node_modules,
-#            src-tauri) and only app/test-results is writable from the host.
+#          - The worktree is mounted read-only; app/ is copied into the container (minus node_modules)
+#            and only app/test-results is writable from the host.
 # Limits : --cpus=4, one named container (legatum-webkit-<pid>-<time>), stopped only by this script on exit/signal.
 # Extra args go to `playwright test` (default reporter is list); env LEGATUM_WEBKIT_SPECS overrides the spec list.
 set -uo pipefail
@@ -94,7 +94,7 @@ start=$(date +%s)
 docker run --rm --init --ipc=host --cpus=4 --name "$name" \
   -v "$W":/src:ro -v "$nm":/work/app/node_modules -v "$rnm":/work/infra/relay/node_modules -v "$results":/work/app/test-results \
   -e LEGATUM_E2E_BROWSER="${LEGATUM_E2E_BROWSER:-webkit}" -e LEGATUM_WEBKIT_WORKERS="$workers" -e CI=1 -e SPECS="$specs" -e LEGATUM_WEBKIT_TIMEOUT="${LEGATUM_WEBKIT_TIMEOUT:-}" "$image" bash -euc '
-    tar -C /src --exclude=app/node_modules --exclude=app/test-results --exclude=app/test-results-webkit --exclude=app/src-tauri --exclude=app/playwright-report -cf - app | tar -C /work -xf -
+    tar -C /src --exclude=app/node_modules --exclude=app/test-results --exclude=app/test-results-webkit --exclude=app/playwright-report -cf - app | tar -C /work -xf -
     tar -C /src --exclude=infra/relay/node_modules -cf - infra/relay | tar -C /work -xf -
     cd /work/app
     exec npx playwright test $SPECS --workers="$LEGATUM_WEBKIT_WORKERS" --reporter=list --timeout="${LEGATUM_WEBKIT_TIMEOUT:-120000}" "$@"

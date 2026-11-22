@@ -120,7 +120,7 @@ These used a test client or fixture helper and now assert against the WASM engin
 - `app/src/store.automation.test.ts`
 - `app/src/store.autosave.test.ts`
 - `app/src/store.feel.test.ts`
-- `app/src/store.lanExit.test.ts`
+- `app/src/store.onlineExit.test.ts`
 - `app/src/store.observer.test.ts`
 - `app/src/store.remote.test.ts`
 - `app/src/store.test.ts`
@@ -140,7 +140,7 @@ These used a test client or fixture helper and now assert against the WASM engin
 - `app/src/ui/Levy.test.tsx`
 - `app/src/ui/ObjectiveSheet.test.tsx`
 - `app/src/ui/PhoneSheet.test.tsx`
-- `app/src/ui/SeatBar.lan.test.tsx`
+- `app/src/ui/SeatBar.online.test.tsx`
 - `app/src/ui/SeatBar.test.tsx`
 - `app/src/ui/TechPanel.test.tsx`
 - `app/src/ui/TitleChips.test.tsx`

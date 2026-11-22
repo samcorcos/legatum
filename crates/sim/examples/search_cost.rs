@@ -1,8 +1,7 @@
 //! Wall time of Hard+Search decisions on a quiet pool (pillar 7).
 //!   search_cost <search-spec> [games] [first-seed]
 //! Plays 1v1 duel-matrix games one at a time (Small map, Standard, Hard): seat i mod 2 is
-//! Hard+Search, the other plain Hard. Rollouts use the whole rayon global pool, as a
-//! desktop app would. Prints per-turn decision time of the search seat and of both seats.
+//! Hard+Search, the other plain Hard. Rollouts use the whole rayon global pool. Prints per-turn decision time of the search seat and of both seats.
 use legatum_ai::search::{SearchBrain, SearchConfig};
 use legatum_ai::{Brain, ScriptedBrain};
 use legatum_core::{AiDifficulty, Faction, GameSetup, PlayerId, player_view, resolve_turn};

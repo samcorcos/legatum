@@ -19,7 +19,7 @@ export function FirstGameHints() {
   // The report and the diplomacy inbox share the hint's story area: one at a time.
   // Scenarios are for players who know the game: their objective bar takes the hint's place.
   const paused = useGame((s) => !!s.scenario || !!s.busy || !!s.endTurnConfirmation || s.techOpen || s.reportOpen || s.diplomacyOpen || !!s.ready[s.seat] || !!s.place ||
-    (s.client?.kind === 'remote' && s.lan?.conn !== 'open'));
+    (s.client?.kind === 'remote' && s.net?.conn !== 'open'));
   const guideOpen = useGuide((s) => s.open);
   const { enabled, seen, resetVersion, markSeen } = useHintPreferences();
   const [active, setActive] = useState<{ id: HintId; version: number } | null>(null);

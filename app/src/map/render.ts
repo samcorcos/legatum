@@ -830,14 +830,13 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
     }
     // An alarmed banner is drawn after the units (below), so attackers beside it never cover its name or HP.
     if (bannerAboveUnits(c.owner, view.me, alarmed, foreignUnitBeside(view, c.pos))) { if (motion && motion.sx !== 1) ctx.restore(); continue; }
-    const p = { x, y: y + hexPx * BANNER_BOTTOM };
     const r = drawBanner(ctx, look, spec, x, y, fs, dpr, alpha);
     const hpNow = cityHp(c);
     if (meters.length) drawBannerMeters(ctx, look, meters, x, r.y + r.h + (c.visible && hpNow < c.max_hp ? 6 : 1), dpr);
     if (c.visible && hpNow < c.max_hp) {
       const f = Math.max(0, hpNow / c.max_hp);
       const bw = Math.min(r.w - 16, 72);
-      const bx = p.x - bw / 2;
+      const bx = x - bw / 2;
       const by = r.y + r.h + 1;
       ctx.fillStyle = TOKEN_INK.atlas.paper;
       ctx.fillRect(bx, by, bw, 4);
@@ -1380,13 +1379,15 @@ function cityBanners(view: PlayerView, cam: Camera, w: number, h: number, dpr: n
       const cover = { x: farCity.x - seal.ax, y: farCity.y - seal.ay, w: seal.w, h: seal.h + (siege.has(c.id) ? 10 : 0) };
       return [{ c, spec, x: p.x, y: p.y, fs, alpha, cover, meters: [] as BannerMeter[], far: farCity }];
     }
-    const y = p.y - hexPx * BANNER_BOTTOM;
-    const rect = bannerRect(look, spec, p.x, y, fs, dpr);
     // Own cities only (rivals' Food, borders and production are private): growth, border and
     // production meters, readable from normal zoom in, so the player can watch them without
     // opening the city.
     const meters = mine && c.visible && hexPx >= 20 ? bannerMeters(c, faction, focusOf(c)) : [];
     const metersH = meters.length ? bannerMetersSize(look, meters, dpr).h + 1 : 0;
+    // The block (plate and meters) ends BANNER_BOTTOM above the centre, over the town's roofline: the meters are a fixed
+    // 17 px, so hung under the plate they covered the top of the town, most of it at small zoom.
+    const y = p.y - hexPx * BANNER_BOTTOM - metersH;
+    const rect = bannerRect(look, spec, p.x, y, fs, dpr);
     const cover = { ...rect, h: rect.h + (siege.has(c.id) ? SIEGE_BAR_H + SIEGE_BAR_GAP + 3 : c.visible && c.hp < c.max_hp ? 6 : 0) + metersH };
     return [{ c, spec, x: p.x, y, fs, alpha, meters, cover, far: null as FarCity | null }];
   });

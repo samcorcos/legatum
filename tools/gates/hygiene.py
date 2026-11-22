@@ -38,7 +38,7 @@ from common import allowed, cat_files, changed_files, diff_added, git, show  # n
 import scrub  # noqa: E402
 
 BINARY_CAP = 2_000_000
-ART = re.compile(r"^(app/src/assets/|app/public/|app/src-tauri/icons/|docs/media/|docs/design/|tools/design/)")
+ART = re.compile(r"^(app/src/assets/|app/public/|docs/media/|docs/design/|tools/design/)")
 FIXTURES = re.compile(r"(^|/)(tests?/fixtures|e2e/saves|test/fixtures|testdata)/")
 SECRET = re.compile(
     r"AKIA[0-9A-Z]{16}|ASIA[0-9A-Z]{16}|-----BEGIN (?:RSA |EC |DSA |OPENSSH |PGP )?PRIVATE KEY"
