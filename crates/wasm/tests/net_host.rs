@@ -401,7 +401,8 @@ fn two_seats_resolve_native_turn_with_private_views_and_restartable_autosave() {
     orders.insert(PlayerId(0), orders_a);
     orders.insert(PlayerId(1), orders_b);
     native.step(&orders);
-    assert_eq!(turn_a["hash"], native.state.hash().to_string());
+    // Every seat sees the same masked value; the state hash itself is never sent.
+    assert_ne!(turn_a["hash"], native.state.hash().to_string());
     for (seat, view) in [(0, view_a), (1, view_b)] {
         let received: PlayerView = serde_json::from_value(view["view"].clone()).unwrap();
         assert_eq!(received, player_view(&native.state, PlayerId(seat)));
@@ -438,13 +439,13 @@ fn two_seats_resolve_native_turn_with_private_views_and_restartable_autosave() {
     let (mut b, _) = restarted.join(1);
     a.ready(true);
     b.ready(true);
-    let turn = a.turn(3, 0);
+    a.turn(3, 0);
     b.turn(3, 1);
     let orders = native.ai_orders();
     native.step(&orders);
     assert_eq!(
-        turn["hash"],
-        native.state.hash().to_string(),
+        game_json::parse_state(&restarted.save()).unwrap(),
+        native.state,
         "recreated AI brains continue identically"
     );
 }
@@ -1143,12 +1144,16 @@ fn staging_three_clients_start_in_human_order_and_resolve_native_first_turn() {
         }
     }
     native.step(&orders);
-    for (seat, peer) in peers.iter_mut().enumerate() {
-        assert_eq!(
-            peer.turn(2, seat as u8)["hash"],
-            native.state.hash().to_string()
-        );
-    }
+    let hashes: Vec<Value> = peers
+        .iter_mut()
+        .enumerate()
+        .map(|(seat, peer)| peer.turn(2, seat as u8)["hash"].clone())
+        .collect();
+    assert!(hashes.windows(2).all(|pair| pair[0] == pair[1]));
+    assert_eq!(
+        game_json::parse_state(&server.save()).unwrap(),
+        native.state
+    );
     assert_eq!(
         game_json::parse_state(&server.save()).unwrap(),
         native.state

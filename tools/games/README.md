@@ -48,6 +48,11 @@ Anyone can upload a game, so everything in an upload is treated as hostile:
   of 500 characters in `facts.md` (with runs of `=` thinned, so nobody can fake the prompt's end-of-data
   marker), and `review.md` starts with an "untrusted" line for whoever reads it next.
   Codex cannot turn its shell off, so it is opt-in (`LEGATUM_REVIEWER=codex,claude`) and runs `-s read-only`.
+- An agent that has tools (the nightly perf supervisor, the coach) never reads a raw record. The perf supervisor runs
+  `analyse_games.py telemetry [--hours N] [--limit N]`, which prints one JSON line per recently uploaded game
+  holding only whole numbers that passed a range check (`telemetry_numbers`; rows with any bad field are
+  dropped, and no string from a record is copied). The Worker checks a record's metadata and coach answers
+  only, so the tape and telemetry of an upload can hold any text. The coach reads `facts.md`.
 - `install-mac.sh --token` hands the token to `wrangler` and `security` on stdin, never as an argument, so it
   never shows in the process list.
 - Every command has a timeout, so a crafted tape or a stuck model cannot hold the job's lock.

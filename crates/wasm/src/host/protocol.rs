@@ -132,6 +132,8 @@ pub(crate) enum ServerMessage {
         /// The new planning turn, matching the following view and autosave.
         turn: u32,
         events: Vec<crate::host::events::VisibleEvent>,
+        /// A decimal u64 that is the same for every seat this turn. It is the state hash masked
+        /// with a key only the host holds, never the state hash itself.
         hash: String,
         finished: bool,
         winner: Option<TeamId>,

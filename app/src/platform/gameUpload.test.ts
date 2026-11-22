@@ -30,6 +30,33 @@ it('the hosted build uploads each history gzipped and then drops its local copy'
   expect(fetch).not.toHaveBeenCalled();
 });
 
+it('sends one random upload key per game, the same for every checkpoint of that game', async () => {
+  const fetch = vi.fn().mockImplementation(async () => new Response('{}', { status: 200 }));
+  vi.stubGlobal('fetch', fetch);
+  const kept = new Map<string, string>();
+  vi.stubGlobal('localStorage', { getItem: (k: string) => kept.get(k) ?? null, setItem: (k: string, v: string) => { kept.set(k, v); } });
+  const { uploadGameHistory, uploadKey } = await import('./gameUpload');
+  const other = 'web-1795310626070-0000000000000001-0000000000000002';
+  await uploadGameHistory(recording());
+  await uploadGameHistory(recording());
+  await uploadGameHistory(recording(other));
+  const keys = fetch.mock.calls.map(([, init]) => ((init as RequestInit).headers as Record<string, string>)['X-Upload-Key']);
+  expect(keys[0]).toMatch(/^[0-9a-f]{32}$/);
+  expect(keys[1]).toBe(keys[0]);
+  expect(keys[2]).toMatch(/^[0-9a-f]{32}$/);
+  expect(keys[2]).not.toBe(keys[0]);
+  expect(uploadKey(ID)).toBe(keys[0]);
+});
+
+it('uploads without a key where the browser keeps no storage, and drops a game locked to another key', async () => {
+  const fetch = vi.fn().mockResolvedValue(new Response('{}', { status: 409 }));
+  vi.stubGlobal('fetch', fetch);
+  vi.stubGlobal('localStorage', { getItem: () => { throw new Error('blocked'); }, setItem: () => { throw new Error('blocked'); } });
+  const { uploadGameHistory } = await import('./gameUpload');
+  expect(await uploadGameHistory(recording())).toBe(true);
+  expect(((fetch.mock.calls[0] as [string, RequestInit])[1].headers as Record<string, string>)['X-Upload-Key']).toBeUndefined();
+});
+
 it('keeps the game queued while offline and sends it on the next try', async () => {
   const fetch = vi.fn().mockRejectedValueOnce(new TypeError('offline')).mockResolvedValue(new Response('{}', { status: 200 }));
   vi.stubGlobal('fetch', fetch);

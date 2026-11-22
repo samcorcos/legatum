@@ -98,7 +98,8 @@ under the Worker's Variables) without a code change; a missing or unusable value
   are kept, everything else (emoji, symbols, invisible and direction-changing characters) is dropped,
   whitespace collapses, combining marks are limited to 3 per letter and the name is cut to 40 visible
   characters. An empty result, or a name containing a term from `BLOCKED_NAME_TERMS` in `src/shared.ts`
-  (empty for now: add entries there), becomes `Game <first 4 characters of the room id>`. `POST /rooms`
+  (a short list of slurs and crude words, matched anywhere in the name with spaces and punctuation
+  removed; add entries there, leaving out any that sit inside ordinary words), becomes `Game <first 4 characters of the room id>`. `POST /rooms`
   returns the name it kept as `name`. The build label holds letters, digits, spaces and `. · ( ) _ + -` only,
   and starts with a letter or digit; anything else is refused with 400.
 - `POST /rooms` may carry `locked: true` (a boolean, default false; any other type is refused with 400). It means the

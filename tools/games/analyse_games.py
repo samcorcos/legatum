@@ -14,6 +14,7 @@ Every run (launchd, every 15 minutes; tools/games/install-mac.sh):
 Heavy work (engine builds) waits for mains power, the Mac's battery rule. Standard library only.
 
 Usage: analyse_games.py poll [--home DIR] [--force] [--only KEY] [--no-review] [--dry-run]
+       analyse_games.py telemetry [--hours N] [--limit N]  (numbers only, for agents; see telemetry_numbers)
        analyse_games.py facts RECORD.json[.gz] [--events events.jsonl] [--narrative n.md]  (facts.md to stdout)
 """
 from __future__ import annotations
@@ -267,6 +268,79 @@ def frame_summary(frames: list[dict]) -> str | None:
             f"(frame p95 {worst['frame_p95_ms10'] / 10:.0f} ms, {worst['units']} units in view); input lag p95 worst "
             f"{laggy['input_p95_ms']} ms on turn {laggy['turn']}; long tasks {long_ms / 1000:.1f} s; "
             f"map draw mean {draw_mean:.1f} ms")
+
+
+GAME_KEY_RE = re.compile(r"^games/\d{4}-\d{2}/web-\d{13}-[0-9a-f]{16}-[0-9a-f]{16}\.json\.gz$")
+
+
+def whole(value, top: int = 10**9) -> int | None:
+    """An uploaded field as a whole number in range, or None. Text never passes."""
+    return value if isinstance(value, int) and not isinstance(value, bool) and 0 <= value <= top else None
+
+
+def telemetry_numbers(record) -> dict:
+    """What an agent with tools may see of an uploaded record: numbers only.
+
+    A record is written by a stranger. Every value returned here is a whole number that was checked, or a
+    number computed from such; no string from the record is copied, so nothing in an upload can reach the
+    agent as text. Rows with any bad field are dropped."""
+    out: dict = {}
+    if not isinstance(record, dict):
+        return out
+    meta = record.get("metadata") if isinstance(record.get("metadata"), dict) else {}
+    out["turns"] = whole(meta.get("turn_count"), 10_000) or 0
+    times = [t for t in (record.get("turn_times") or []) if isinstance(t, dict)
+             and whole(t.get("turn"), 10_000) is not None and whole(t.get("active_seconds"), 10**6) is not None]
+    if times:
+        secs = sorted(t["active_seconds"] for t in times)
+        slowest = max(times, key=lambda t: t["active_seconds"])
+        out.update(timed_turns=len(times), play_seconds=sum(secs), turn_seconds_p50=secs[len(secs) // 2],
+                   turn_seconds_p95=secs[min(len(secs) - 1, len(secs) * 95 // 100)],
+                   turn_seconds_max=slowest["active_seconds"], turn_seconds_max_turn=slowest["turn"])
+    frames = [f for f in (record.get("frame_times") or []) if isinstance(f, dict) and f.get("frames")
+              and all(whole(f.get(k)) is not None for k in FRAME_FIELDS)]
+    if frames:
+        worst = sorted(frames, key=lambda f: f["frame_p95_ms10"], reverse=True)[:3]
+        laggy = max(frames, key=lambda f: f["input_p95_ms"])
+        draws = sum(f["map_draws"] for f in frames)
+        out.update(frame_turns=len(frames), frames=sum(f["frames"] for f in frames),
+                   slow_frames=sum(f["slow_frames"] for f in frames),
+                   long_task_ms=sum(f["long_task_ms"] for f in frames),
+                   map_draw_mean_ms10=sum(f["map_draw_mean_ms10"] * f["map_draws"] for f in frames) // max(1, draws),
+                   input_p95_ms_max=laggy["input_p95_ms"], input_p95_ms_max_turn=laggy["turn"],
+                   # What was on screen on the worst turns, to read a slope from; extra fields only when checked.
+                   worst_turns=[{**{k: f[k] for k in ("turn", "frame_p95_ms10", "slow_frames", "input_p95_ms",
+                                                      "map_draw_mean_ms10", "units")},
+                                 **{k: f[k] for k in ("cities", "zoom100", "canvas_mp10") if whole(f.get(k)) is not None}}
+                                for f in worst])
+    return out
+
+
+def telemetry(args) -> int:
+    """Print one JSON line of checked numbers per recently uploaded game. This is the only way an agent with
+    tools reads players' games (`.claude/agents/legatum-perf-supervisor.md`)."""
+    base = os.environ.get("LEGATUM_GAMES_URL", DEFAULT_URL).rstrip("/")
+    token = read_token()
+    since = dt.datetime.now(dt.timezone.utc) - dt.timedelta(hours=args.hours)
+    shown = 0
+    for g in list_games(base, token):
+        key = g.get("key")
+        try:
+            uploaded = parse_iso(g.get("uploaded"))
+        except (TypeError, ValueError):
+            uploaded = None
+        if not isinstance(key, str) or not GAME_KEY_RE.match(key) or not uploaded or uploaded < since:
+            continue
+        if shown >= args.limit:
+            break
+        try:
+            numbers = telemetry_numbers(download(base, token, key))
+        except (OSError, ValueError, EOFError):
+            numbers = {"unreadable": 1}
+        # The key passed GAME_KEY_RE: digits, hex and fixed words only.
+        print(json.dumps({"game": key, **numbers}, sort_keys=True))
+        shown += 1
+    return 0
 
 
 # Keys the website adds to the uploaded copy only; the engine's Recording denies unknown fields, so they are
@@ -698,6 +772,9 @@ def main() -> int:
         x.add_argument("--home", default="~/LegatumData/game-analysis")
         if name == "exclude":
             x.add_argument("--reason", required=True, help="one line, kept in the ledger and the index")
+    t = sub.add_parser("telemetry", help="checked numbers only, one JSON line per recently uploaded game")
+    t.add_argument("--hours", type=int, default=26, help="games uploaded in the last N hours")
+    t.add_argument("--limit", type=int, default=200, help="at most this many games")
     f = sub.add_parser("facts")
     f.add_argument("record")
     f.add_argument("--events")
@@ -707,6 +784,8 @@ def main() -> int:
         return poll(args)
     if args.cmd in ("exclude", "include"):
         return exclude(args)
+    if args.cmd == "telemetry":
+        return telemetry(args)
     raw = Path(args.record).read_bytes()
     record = json.loads(gzip.decompress(raw) if raw[:2] == b"\x1f\x8b" else raw)
     events = [json.loads(line) for line in open(args.events)] if args.events else None
