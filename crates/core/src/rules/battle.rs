@@ -1397,6 +1397,12 @@ pub fn capture_city(
     captor: PlayerId,
     events: &mut Vec<Event>,
 ) {
+    // Barbarians besiege cities but never take them (`rules::barbarians`). Movement never names
+    // one as a captor; refusing here keeps the resolver from reaching for the barbarians' missing
+    // player record (`GameState::player_mut`) if a caller ever does.
+    if captor.is_barbarian() {
+        return;
+    }
     // Pay once per city and captor, including a Celtic capture that immediately sacks it.
     let captive_from = if greece_captive_available(state, city, captor) {
         let from = state.cities[&city].owner;
