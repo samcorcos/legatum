@@ -16,6 +16,7 @@ import {
   MAX_GUESTS,
   MAX_GUEST_MSG,
   MAX_HOST_MSG,
+  MAX_STATUS_BYTES,
   REASON_TOO_MANY_FROM_IP,
   RoomAnnounce,
   SocketRate,
@@ -262,6 +263,8 @@ export class Room extends DurableObject<Env> {
         return;
       }
       case KIND_STATUS: {
+        // Anyone can read this back from `/api/status`: a real status is a few KiB, so a large one is not one.
+        if (payload.length > MAX_STATUS_BYTES) return;
         const text = dec.decode(payload);
         try {
           const v = JSON.parse(text);

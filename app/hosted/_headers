@@ -2,11 +2,14 @@
 # scripts/build-web.sh copies it into app/dist, and e2e-hosted/serve.mjs applies it in the smoke test).
 # Content-Security-Policy: 'wasm-unsafe-eval' lets the engine compile, 'unsafe-inline' styles are React's
 # style attributes, and connect-src names the online-play relay (scripts/build-web.sh swaps in another one
-# when the build sets one).
+# when the build sets one). Strict-Transport-Security keeps a returning browser on https, and
+# Cross-Origin-Opener-Policy stops a page that opened the game from holding a handle to its window.
 /*
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Cross-Origin-Opener-Policy: same-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
   Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://legatum-relay.sam-1e7.workers.dev wss://legatum-relay.sam-1e7.workers.dev; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'
 
