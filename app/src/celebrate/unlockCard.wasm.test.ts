@@ -5,7 +5,6 @@ import { FACTIONS, TECHS, techHasBenefit } from '../data';
 import { WasmClient } from '../wasmClient';
 import { coreFixture } from '../test/coreFixture';
 import { researchFixture } from '../test/researchFixture';
-import { steppingStoneText } from '../ui/techCardUnlocks';
 import type { Faction, PlayerView, TechId } from '../types';
 import { momentsForTurn } from './moments';
 import { contextFromViews, formatEvent } from '../format';
@@ -31,18 +30,11 @@ describe.skipIf(!available)('the unlock card for every technology', () => {
     }
   });
 
-  it('shows unlocks as tiles with a plain sentence each, or says the tech is a stepping stone', () => {
+  it('shows unlocks as tiles with a plain sentence each: every card a faction researches gives it something', () => {
     for (const [faction, view] of views) for (const tech of TECHS) {
+      // A tech with nothing for the faction is skipped: known from the start, never researched (Egypt: Bronze Working).
+      if (!techHasBenefit(faction, tech)) continue;
       const card = unlockCardFor(view, tech);
-      if (!techHasBenefit(faction, tech)) {
-        expect(card.tiles, `${faction} ${tech}`).toEqual([]);
-        const { headline, leadsTo } = card.steppingStone!;
-        const plain = `${headline} · ${leadsTo![0].toLowerCase()}${leadsTo!.slice(1)}`;
-        expect(plain).toBe(steppingStoneText(tech, faction));
-        expect(card.show).toBeNull();
-        continue;
-      }
-      expect(card.steppingStone, `${faction} ${tech}`).toBeNull();
       expect(card.tiles.length, `${faction} ${tech}`).toBeGreaterThan(0);
       for (const tile of card.tiles) if (tile.key && !tile.locked) expect(tile.sentence, `${faction} ${tech} ${tile.name}`).toMatch(/^((Build|Train|Upgrade|Add) ((a|an|the) )?[A-Z][^:]*: .+|Build it on a chosen tile; its holder scores \+2 VP\..*)/);
     }
@@ -81,7 +73,6 @@ describe.skipIf(!available)('the unlock card for every technology', () => {
     expect(names('India', 'CropRotation')).toContain('Farms and Pastures upgrade: Irrigated Farm, Ranch (+1 Food)');
     expect(names('Byzantium', 'IronWorking')).toContain('Mines upgrade: Deep Mine (+1 Gold on Copper, +1 Production on Iron and Coal)');
     // The Mongols raise Walls from the Medieval era, so their Masonry card lists Walls like everyone's.
-    expect(unlockCardFor(views.get('Mongols')!, 'Masonry').steppingStone).toBeNull();
     expect(names('Mongols', 'Masonry')).not.toEqual([]);
     // ...but cannot raise them yet: the tile says so, from the core view, in place of the sentence and the price.
     const walls = unlockCardFor(views.get('Mongols')!, 'Masonry').tiles.find((t) => t.name === 'Walls')!;
@@ -89,7 +80,7 @@ describe.skipIf(!available)('the unlock card for every technology', () => {
     expect(walls.sentence).toBe(walls.locked);
     expect(walls.cost).toBeNull();
     expect(unlockCardFor(views.get('India')!, 'Masonry').tiles.find((t) => t.name === 'Walls')!.locked).toBeNull();
-    expect(unlockCardFor(views.get('Byzantium')!, 'PrintingPress').steppingStone).toBeFalsy();
+    expect(unlockCardFor(views.get('Byzantium')!, 'PrintingPress').tiles).not.toEqual([]);
   });
 
   it('names the research that continues and the city that builds the unlock', () => {

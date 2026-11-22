@@ -10159,7 +10159,7 @@
   "rocketArtilleryRange": 3,
   "rollMax": 120,
   "rollMin": 80,
-  "saveVersion": 48,
+  "saveVersion": 49,
   "settlerCostStep": 50,
   "siege": {
     "baseGold": 160,
@@ -19198,7 +19198,6 @@
       ],
       "Flight": [],
       "FusionPower": [
-        "+5 Production in every city",
         "Factories and Research Labs need no Coal or Oil"
       ],
       "GreenRevolution": [],
@@ -19223,12 +19222,9 @@
       ],
       "Machinery": [
         "Composite Archers can upgrade to Crossbowmen",
-        "Siege units now ignore Castles",
-        "+1 Production per Workshop family"
+        "Siege units now ignore Castles"
       ],
-      "Masonry": [
-        "Quarries upgrade: Deep Quarry (+1 Production)"
-      ],
+      "Masonry": [],
       "MassMobilisation": [
         "Trench Infantry can upgrade to Infantry"
       ],
@@ -19259,16 +19255,13 @@
       ],
       "Railways": [
         "Units that start a turn on a road get +2 moves",
-        "Roadworks link cities within 12 tiles",
-        "Mines +1 Production"
+        "Roadworks link cities within 12 tiles"
       ],
       "RecursiveAi": [
-        "Reveal the whole map to your team; units still need sight",
-        "+20% Production in every city"
+        "Reveal the whole map to your team; units still need sight"
       ],
       "ReplaceableParts": [
-        "Riflemen can upgrade to Trench Infantry",
-        "Factories +2 Production"
+        "Riflemen can upgrade to Trench Infantry"
       ],
       "Rifling": [
         "Musketmen can upgrade to Riflemen"

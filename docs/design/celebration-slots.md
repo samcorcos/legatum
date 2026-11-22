@@ -28,7 +28,7 @@ dock's own Return badge is hidden meanwhile. End Turn stays clickable under it. 
 card waits (it is not rendered, so it never hides behind the dialog, and Esc goes to the dialog first), then
 returns. The turn report's "researched X · unlocks Y" line reopens it (`unlockReopen` in the store; it plays
 alone). A research finishes at most once per empire per turn, so there is at most one such card per turn; a
-partner's tech stays a small lane card. A "No benefit" stepping stone gets a quieter card with no crest or rays.
+partner's tech stays a small lane card. There is no "No benefit" card: a tech that gives a faction nothing is skipped at game start (rules 49, `data::skipped_techs`), so every researched tech has something to show.
 Reduced motion removes the arrival and ray animation like every other card.
 
 **Era-up takeover (the second exception).** Your own `EraEntered` holds a full-screen takeover
