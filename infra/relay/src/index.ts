@@ -29,6 +29,8 @@ function withHeaders(resp: Response): Response {
   // Open CORS on purpose: the hosted web build (any origin, including preview deployments) calls the relay, and an origin
   // check stops no one who scripts requests directly. The limits below are what bound abuse.
   out.headers.set("Access-Control-Allow-Origin", "*");
+  // A browser on another origin can read only the headers listed here: without this the Retry-After on a 429 is hidden from the app.
+  out.headers.set("Access-Control-Expose-Headers", "Retry-After");
   out.headers.set("Cache-Control", "no-store");
   return out;
 }

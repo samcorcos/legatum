@@ -117,11 +117,7 @@ The [100-game behaviour primitive smoke](../sim-results/2026-09-30-behaviour-pri
 
 ## Head-to-head duels
 
-The [duel tools](../../tools/duel/README.md) run actual two-empire games on small maps,
-with mirrored opening assignments and map-paired statistics. They are independent
-of `tools/league` (which remains on `evolution/league-phase2`). Run
-`python3 tools/duel/duel.py --run .progress/duel --seeds 100` for 200 games per pair,
-or `duel_evolve.py` for CMA-ES against active opponents and historical genomes.
+The duel harness (`tools/duel`) was removed on 2026-11-22; it remains in git history, with the commands in the dated sim-results that used it.
 The simulator's opt-in `--players`, `--map-size`, `--factions`, and `--mirror`
 flags preserve default eight-player setups and tapes. Duel evidence measures
 opening counters in 1v1; it does not establish eight-player leader containment.

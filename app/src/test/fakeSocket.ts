@@ -24,9 +24,9 @@ export class FakeSocket implements SocketLike {
   push(msg: ServerMsg | StagingServerMsg) {
     this.onmessage?.({ data: JSON.stringify(msg) });
   }
-  drop(code = 1006) {
+  drop(code = 1006, reason = '') {
     this.readyState = 3;
-    this.onclose?.({ code });
+    this.onclose?.({ code, reason });
   }
   types() {
     return this.sent.map((m) => m.type);

@@ -4,32 +4,107 @@
 // or start (main.tsx renders the card in place of the app).
 //
 // This file must keep working when the rest of the app is broken, so it imports nothing from the game
-// (no store, no data, no platform code): it reads the autosave straight from localStorage under the key
-// the store writes (store.ts AUTOSAVE_KEY) and names the file the way platform/files.ts does.
-// When autosaves move to IndexedDB, `readAutosaveText` must read from there too (keep it a plain,
-// dependency-free read, and keep the localStorage fallback for saves written by older builds).
+// (no store, no data, no platform code). It reads the autosaves straight from the browser's database and
+// from the old localStorage slot, the way platform/autosaveStore.ts writes them: that module's database
+// name, store name, record shape and skipped-slots key are duplicated below on purpose. It names the file
+// the way platform/files.ts does.
 import { Component, useEffect, useRef, useState, type ErrorInfo, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
 import { buildLabel } from '../buildLabel';
 import './crash.css';
 
-/** store.ts AUTOSAVE_KEY. Duplicated on purpose: this screen must not import the store. */
+/** store.ts AUTOSAVE_KEY (the single slot older builds wrote). Duplicated on purpose: this screen must not import the store. */
 export const CRASH_AUTOSAVE_KEY = 'legatum.autosave.v1';
+/** platform/autosaveStore.ts AUTOSAVE_DB, its saves store, and SKIPPED_SLOTS_KEY. */
+const AUTOSAVE_DB = 'legatum-autosave-v1';
+const SKIPPED_KEY = 'legatum.autosave.skipped.v1';
+/** Per tab: the turn the card was last shown for and how many times, so a repeat can offer the turn before. */
+const CRASH_MARKER_KEY = 'legatum.crash.v1';
 
 export type CrashKind = 'crash' | 'engine';
 
-/** The raw autosave text and its turn, or null when there is none or storage is blocked. */
-export function readAutosaveText(): { text: string; turn: number | null } | null {
+interface StoredSave { id: string; turn: number | null; savedAt: string; text: string }
+
+/** Every record in the autosave database. Empty when there is none or it cannot be read; never creates the database. */
+function readDatabase(): Promise<StoredSave[]> {
+  return new Promise((resolve) => {
+    const none = () => resolve([]);
+    const timer = setTimeout(none, 1500);
+    const done = (found: StoredSave[]) => { clearTimeout(timer); resolve(found); };
+    try {
+      if (typeof indexedDB === 'undefined') return done([]);
+      const request = indexedDB.open(AUTOSAVE_DB);
+      // The database does not exist yet: stop it being created empty.
+      request.onupgradeneeded = () => { try { request.transaction?.abort(); } catch { /* already gone */ } };
+      request.onerror = () => done([]);
+      request.onblocked = () => done([]);
+      request.onsuccess = () => {
+        const db = request.result;
+        try {
+          if (!db.objectStoreNames.contains('saves')) { db.close(); return done([]); }
+          const all = db.transaction('saves', 'readonly').objectStore('saves').getAll();
+          all.onsuccess = () => {
+            db.close();
+            done((all.result as Partial<StoredSave & { turn: unknown }>[]).filter((r) => typeof r?.text === 'string' && typeof r.id === 'string')
+              .map((r) => ({ id: r.id!, turn: Number.isInteger(r.turn) ? (r.turn as number) : null, savedAt: typeof r.savedAt === 'string' ? r.savedAt : '', text: r.text! })));
+          };
+          all.onerror = () => { db.close(); done([]); };
+        } catch { try { db.close(); } catch { /* closed */ } done([]); }
+      };
+    } catch {
+      done([]);
+    }
+  });
+}
+
+const timeOf = (save: StoredSave) => { const t = Date.parse(save.savedAt); return Number.isFinite(t) ? t : -1; };
+
+/** Every autosave this browser holds, newest first, minus the slots the player stepped back from. */
+async function readAutosaves(): Promise<StoredSave[]> {
+  const saves = await readDatabase();
   try {
     const text = window.localStorage.getItem(CRASH_AUTOSAVE_KEY);
-    if (!text) return null;
-    let turn: number | null = null;
-    try {
-      const parsed = JSON.parse(text) as { turn?: unknown };
-      if (typeof parsed?.turn === 'number' && Number.isInteger(parsed.turn)) turn = parsed.turn;
-    } catch { /* A damaged save is still worth keeping as a file. */ }
-    return { text, turn };
+    if (text) {
+      let turn: number | null = null;
+      let savedAt = '';
+      try {
+        const parsed = JSON.parse(text) as { turn?: unknown; savedAt?: unknown };
+        if (typeof parsed?.turn === 'number' && Number.isInteger(parsed.turn)) turn = parsed.turn;
+        if (typeof parsed?.savedAt === 'string') savedAt = parsed.savedAt;
+      } catch { /* A damaged save is still worth keeping as a file. */ }
+      // The old slot also holds a save the database refused: take it when it is newer than what the database has.
+      if (!saves.length || (savedAt && !saves.some((s) => s.savedAt === savedAt))) saves.push({ id: `legacy:${turn}`, turn, savedAt, text });
+    }
+  } catch { /* storage blocked */ }
+  let skipped: unknown = [];
+  try { skipped = JSON.parse(window.localStorage.getItem(SKIPPED_KEY) ?? '[]'); } catch { /* none */ }
+  return saves.filter((s) => !(Array.isArray(skipped) && skipped.includes(s.id))).sort((a, b) => timeOf(b) - timeOf(a) || (b.turn ?? 0) - (a.turn ?? 0));
+}
+
+/** The newest autosave's raw text and its turn, or null when there is none or storage is blocked. */
+export async function readAutosaveText(): Promise<{ text: string; turn: number | null } | null> {
+  const [newest] = await readAutosaves();
+  return newest ? { text: newest.text, turn: newest.turn } : null;
+}
+
+/** "Reload on the previous turn": hide the newest slot, so the one before it is what Continue offers after the reload. */
+async function stepBack(): Promise<void> {
+  const [newest] = await readAutosaves();
+  if (!newest) return;
+  try {
+    const skipped = JSON.parse(window.localStorage.getItem(SKIPPED_KEY) ?? '[]') as unknown;
+    window.localStorage.setItem(SKIPPED_KEY, JSON.stringify([...(Array.isArray(skipped) ? skipped : []), newest.id]));
+  } catch { /* blocked: Reload still works */ }
+}
+
+/** Counts how many times this card has shown for this turn in this tab (a Reload keeps the tab's count). */
+function noteCrash(turn: number | null): number {
+  try {
+    const kept = JSON.parse(window.sessionStorage.getItem(CRASH_MARKER_KEY) ?? 'null') as { turn?: unknown; count?: unknown } | null;
+    const count = kept && kept.turn === turn && typeof kept.count === 'number' ? kept.count + 1 : 1;
+    window.sessionStorage.setItem(CRASH_MARKER_KEY, JSON.stringify({ turn, count }));
+    return count;
   } catch {
-    return null;
+    return 1;
   }
 }
 
@@ -38,7 +113,7 @@ export const autosaveFileName = (turn: number | null) => (turn === null ? 'legat
 
 /** Writes the autosave to a file the player keeps. Returns false when there is nothing to save or it failed. */
 export async function downloadAutosave(): Promise<boolean> {
-  const save = readAutosaveText();
+  const save = await readAutosaveText();
   if (!save) return false;
   try {
     const url = URL.createObjectURL(new Blob([save.text], { type: 'application/json' }));
@@ -102,12 +177,15 @@ async function copyText(text: string): Promise<boolean> {
 export interface CrashHandlers {
   reload: () => void;
   save: () => Promise<boolean>;
+  /** Hides the newest autosave so Continue offers the turn before it, then reloads. */
+  previous: () => Promise<void>;
   copy: (text: string) => Promise<boolean>;
 }
 
 const DEFAULT_HANDLERS: CrashHandlers = {
   reload: () => window.location.reload(),
   save: downloadAutosave,
+  previous: async () => { await stepBack(); window.location.reload(); },
   copy: copyText,
 };
 
@@ -117,7 +195,9 @@ export function CrashCard({ error, kind = 'crash', handlers }: { error: unknown;
   const cardRef = useRef<HTMLDivElement>(null);
   const reloadRef = useRef<HTMLButtonElement>(null);
   const detailsRef = useRef<HTMLTextAreaElement>(null);
-  const [hasSave] = useState(() => readAutosaveText() !== null);
+  // What is saved, and whether this is the second time the card shows for the same turn (then the turn before is on offer).
+  const [saved, setSaved] = useState<{ any: boolean; again: boolean; earlier: boolean } | null>(null);
+  const counted = useRef(false);
   const [saveNote, setSaveNote] = useState<string | null>(null);
   const [copyNote, setCopyNote] = useState<string | null>(null);
   const [manual, setManual] = useState<string | null>(null);
@@ -131,6 +211,12 @@ export function CrashCard({ error, kind = 'crash', handlers }: { error: unknown;
     document.addEventListener('focusin', keep);
     return () => document.removeEventListener('focusin', keep);
   }, []);
+
+  useEffect(() => {
+    if (counted.current) return;
+    counted.current = true;
+    void readAutosaves().then((all) => setSaved({ any: all.length > 0, again: kind === 'crash' && all.length > 0 && noteCrash(all[0].turn) >= 2, earlier: all.length > 1 }));
+  }, [kind]);
 
   // When copying failed, the text to copy by hand takes focus (its onFocus selects it all).
   useEffect(() => {
@@ -163,11 +249,15 @@ export function CrashCard({ error, kind = 'crash', handlers }: { error: unknown;
     else { setCopyNote('Could not copy. Select the text below and copy it.'); setManual(text); }
   };
 
+  const hasSave = !!saved?.any;
   const engine = kind === 'engine';
   const heading = engine ? 'The game could not load' : 'Something went wrong';
+  const goBack = !engine && !!saved?.again && saved.earlier;
   const sentence = engine
     ? 'The game did not finish loading. Check your connection, then reload the page.'
-    : hasSave
+    : goBack
+      ? 'The game hit the same error again. Choose Reload on the previous turn, then Continue, to go back one turn.'
+      : hasSave
       ? 'The game hit an error. Your last finished turn is saved in this browser. Reload, then choose Continue.'
       : 'The game hit an error. Reload to start again.';
 
@@ -175,7 +265,7 @@ export function CrashCard({ error, kind = 'crash', handlers }: { error: unknown;
     <main className="crash-screen">
       <div
         ref={cardRef}
-        className="crash-card"
+        className={`crash-card${goBack ? ' wide' : ''}`}
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="crash-title"
@@ -192,8 +282,9 @@ export function CrashCard({ error, kind = 'crash', handlers }: { error: unknown;
             Reload <span className="kbd">Return</span>
           </button>
           {hasSave && <button type="button" className="btn" onClick={() => void onSave()}>Save to file</button>}
-          <button type="button" className="btn" onClick={() => void onCopy()}>Copy error details</button>
+          {goBack && <button type="button" className="btn" onClick={() => void act.previous()}>Reload on the previous turn</button>}
         </div>
+        <p className="crash-more"><button type="button" className="btn quiet" onClick={() => void onCopy()}>Copy error details</button></p>
         <div role="status">
           {saveNote && <p className="crash-note">{saveNote}</p>}
           {copyNote && <p className="crash-note">{copyNote}</p>}

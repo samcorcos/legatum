@@ -76,3 +76,12 @@ it.each(['connecting', 'welcomed'] as const)('Back cancels a %s join, clears bus
   });
   expect(useGame.getState()).toMatchObject({ screen: 'game', busy: null, client: { kind: 'remote' } });
 });
+
+it('shows a connection notice right under the lede, above the seats, as an alert', () => {
+  act(() => useGame.setState({ error: 'Too many people on your internet connection have joined this game. Close any extra windows, then pick your seat again.' }));
+  const notice = host.querySelector('.toast')!;
+  expect(notice.getAttribute('role')).toBe('alert');
+  const seats = host.querySelector('.join-seats')!;
+  expect(notice.compareDocumentPosition(seats) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(host.querySelector('.setup-lede')!.nextElementSibling).toBe(notice);
+});

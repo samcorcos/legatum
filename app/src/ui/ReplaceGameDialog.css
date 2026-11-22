@@ -1,0 +1,4 @@
+/* The replace-game question looks the same on the lobby and the title screen: left-aligned, in the heading type of the crash card. */
+dialog.replace-game, dialog.replace-game * { text-align: left; }
+dialog.replace-game h2 { margin: 0 0 10px; font: var(--display-weight) 26px/1.15 var(--display); color: var(--ink); }
+dialog.replace-game p { margin: 0 0 10px; font: 400 15px/1.45 var(--sans); }
