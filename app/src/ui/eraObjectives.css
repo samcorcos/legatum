@@ -110,6 +110,10 @@
 .eor-col h4 small { margin-left: 6px; font: 500 12px/1.3 var(--sans); color: var(--ink-2); }
 .eor-col .eo-sub { margin: 0; }
 .eor-col .eo-lines { gap: 3px; }
+/* Before any Age: a status line, not a call to action. The heading and its sentence share a line and wrap rather than clip; the border is a quiet rule, unlike a button's ink frame. */
+.era-objectives-research.no-obj { grid-template-columns: minmax(0, 1fr); }
+.era-objectives-research.no-obj .eor-col { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 10px; padding: 4px 12px; border: 1px solid var(--rule-2); box-shadow: none; background: color-mix(in srgb, var(--gilt) 5%, var(--panel)); }
+.era-objectives-research.no-obj .eor-col h4 { margin: 0; }
 
 /* ---------- A squeezed race panel, opened by choice: the block shrinks itself (VpTrack.tsx sets data-level until your row and one more are whole) ---------- */
 /* 1: the next era is its one-line heading, and the "earlier era still open" line goes (it is a link in the heading). */
@@ -136,7 +140,4 @@
   .eor-col .eo-lines.inline .eo-num { text-align: left; }
   /* The first era's header keeps the instruction and drops the aside: a card's name, art and buttons need the room. */
   .eor-col .eo-by-design { display: none; }
-  /* The first era has no objective: its column is one line, and the next era's three fit on one line beside it. The Next column says how far away they are. */
-  .era-objectives-research.no-obj { grid-template-columns: 190px minmax(0, 1fr); }
-  .era-objectives-research.no-obj .eor-col.current .eo-sub { display: none; }
 }
