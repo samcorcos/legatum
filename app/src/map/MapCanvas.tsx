@@ -337,8 +337,9 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
 
   // Hovering a tile only previews a path when the command there is a move or an attack; over the
   // player's own unit or city it shows a select ring instead (see map/intent.ts).
-  const intent = view && hover ? pointerIntent(view, ownSel, hover.hex, mode) : 'none';
-  const previewTarget = previewDestination(intent, hover?.hex ?? null, (mode !== 'ranged' ? activePreview?.target : null) ?? dragTarget, pendingMove);
+  const intent = view && hover && !pingMode ? pointerIntent(view, ownSel, hover.hex, mode) : 'none';
+  // Armed Ping owns the hover: no route, no move forecast, no select ring (a ghost ping ring is drawn instead).
+  const previewTarget = pingMode ? null : previewDestination(intent, hover?.hex ?? null, (mode !== 'ranged' ? activePreview?.target : null) ?? dragTarget, pendingMove);
   const pathInfo = useMemo(() => {
     if (!view || !ownSel || !previewTarget || hexEq(previewTarget, ownSel.pos)) return null;
     const { path: p, risk, danger, crossed } = previewRoute(view, ownSel.pos, previewTarget, orders, ownSel.id, { avoidEnemyReach: true });
@@ -533,12 +534,12 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
     return plane && city ? { plane, unit: aircraftAsUnit(plane, city) } : null;
   }, [view, airOverlay, hover, air.plane]);
   const airForecast: BattleForecast | null = useMemo(() => {
-    if (!client || !view || !airShot || !hover) return null;
+    if (!client || !view || !airShot || !hover || pingMode) return null;
     try { return client.forecast(view.me, airShot.plane.id, hover.hex, 'Ranged'); } catch { return null; }
-  }, [client, view, airShot, hover, forecastTick]);
+  }, [client, view, airShot, hover, forecastTick, pingMode]);
 
   // Battle forecast when hovering an enemy with a military unit selected.
-  const forecastTarget = activePreview?.target ?? hover?.hex;
+  const forecastTarget = pingMode ? undefined : activePreview?.target ?? hover?.hex;
   const blockedShot = mode === 'ranged' && ownSel && view && forecastTarget
     && distance(ownSel.pos, forecastTarget) <= ownSel.range
     ? shotBlockReason(view, ownSel.pos, forecastTarget, ownSel.kind) : null;
@@ -610,6 +611,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
     goalPreview,
     hover,
     hoverSelect: false,
+    pingArmed: pingMode,
     lens,
     lensTiles,
     overlays,
@@ -626,7 +628,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
     scenarioTargets,
     siege,
   });
-  const nextFrame = { anchoringPreview: !!activePreview, lens, lensTiles, overlays, yieldTiles: overlayTiles.yields, borderTiles: overlayTiles.borders, view, selUnit, selection, pathInfo, pathAttack, pendingLines, pendingMarks, cityFocuses, cityBuilds, rangedTiles, goalPreview, territoryOverlay, tileBuys, improveOverlay, placeOverlay, airOverlay, hover, hoverSelect: intent === 'select', cues, arrow, pings: livePings, anim, seat, reducedMotion, combatFx: { enabled: combatFx.enabled }, celebration, scenarioTargets, siege };
+  const nextFrame = { anchoringPreview: !!activePreview, lens, lensTiles, overlays, yieldTiles: overlayTiles.yields, borderTiles: overlayTiles.borders, view, selUnit, selection, pathInfo, pathAttack, pendingLines, pendingMarks, cityFocuses, cityBuilds, rangedTiles, goalPreview, territoryOverlay, tileBuys, improveOverlay, placeOverlay, airOverlay, hover, hoverSelect: intent === 'select', pingArmed: pingMode, cues, arrow, pings: livePings, anim, seat, reducedMotion, combatFx: { enabled: combatFx.enabled }, celebration, scenarioTargets, siege };
   // Redraw only when something the map draws changed: a render for a card or a panel leaves the canvas alone.
   // A change of the tile under the pointer alone repaints only the hover mark and the route (hoverClipBoxes).
   if (hoverOnlyChange(frame.current, nextFrame)) hoverDirty.current = true;
@@ -1047,6 +1049,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
         pulseTime: still ? 0 : t,
         hover: f.hover?.hex ?? null,
         hoverSelect: f.hoverSelect,
+        pingArmed: f.pingArmed,
         lens: f.lens,
         lensTiles: f.lensTiles,
         overlays: f.overlays,

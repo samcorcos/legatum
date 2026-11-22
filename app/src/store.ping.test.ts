@@ -134,3 +134,16 @@ it('online: a host from before pings gets no ping message and the control stays 
   expect(useGame.getState().sendPing(HEX)).toBe(false);
   expect(socket.types()).not.toContain('map_ping');
 });
+
+it('an armed Ping never survives a seat switch (hot seat hand-over) or a turn change', async () => {
+  await hotSeat();
+  const s = () => useGame.getState();
+  s().setPingMode(true);
+  expect(s().pingMode).toBe(true);
+  s().setSeat(1);
+  expect(s().pingMode).toBe(false);
+  s().setPingMode(true);
+  expect(s().pingMode).toBe(true);
+  s().setSeat(0);
+  expect(s().pingMode).toBe(false);
+});

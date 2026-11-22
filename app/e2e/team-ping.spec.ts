@@ -28,21 +28,22 @@ for (const [w, h] of [[1000, 600], [1440, 900]]) {
     const control = page.getByTestId('ping-control');
     await expect(control).toBeInViewport({ ratio: 1 });
     const button = page.getByTestId('ping-button');
-    await expect(button).toHaveText('Ping');
+    await expect(button).toHaveText(/^Ping\s*P$/);
     if (SHOTS) await page.screenshot({ path: `${SHOTS}/ping-control-${w}x${h}.png` });
     await button.click();
-    await expect(button).toHaveText('Click a tile');
+    await expect(button).toHaveText(/^Cancel ping\s*Esc$/);
+    await expect(page.getByTestId('ping-hint')).toHaveText('Click a tile to ping it');
     await expect(button).toHaveAttribute('aria-pressed', 'true');
     // Click the map a little off centre: the tile there is the ping.
     const map = page.locator('[data-game-map]');
     const box = (await map.boundingBox())!;
     await page.mouse.click(box.x + box.width * 0.45, box.y + box.height * 0.5);
-    await expect(button).toHaveText('Ping');
+    await expect(button).toHaveText(/^Ping\s*P$/);
     expect(await pingCount(page)).toBe(1);
     if (SHOTS) await page.screenshot({ path: `${SHOTS}/ping-live-${w}x${h}.png` });
     // The teammate takes the device: the ring and a way to it are there.
     await page.keyboard.press('2');
-    await expect(page.getByTestId('ping-go')).toHaveText('Go to ping');
+    await expect(page.getByTestId('ping-go')).toHaveText(/pinged · Go to ping$/);
     await expect(page.getByTestId('ping-go')).toBeInViewport({ ratio: 1 });
     await page.waitForTimeout(700);
     if (SHOTS) await page.screenshot({ path: `${SHOTS}/ping-teammate-${w}x${h}.png` });

@@ -61,6 +61,11 @@ This file holds the current rules, one line each. The user's words, dates, as-bu
 - Every unit names its owner in words and emblem, never by colour alone; each faction has its preferred colour in every game (user, 2026-10-18, 2026-11-11).
 - No raw coordinates anywhere: name places relative to cities.
 - A tile-chosen build is placed on the map like Civ's districts; buying a tile starts from one obvious button (user, 2026-10-29, 2026-11-20).
+- A map targeting mode owns the hover: while Ping (or any armed mode) waits for a click, no route, move forecast or select ring shows; a ghost of the mark follows the pointer (UI review of team pings, 2026-11-22).
+- An armed mode never survives a seat switch or a turn change.
+- A teammate's message arrives as an event: a named sender, and a control that looks like a button before hover and works from anywhere on the map ("Bo pinged · Go to ping"); live marks also show on the minimap.
+- A map mark in an empire's colour is checked for the reddest and the palest empire (Sparta, Germany), has its own shape (the ping is a ring with four ticks), and carries an ink keyline outside its halo. Marks sit under city banners.
+- A toggle's "on" state uses the shared ink fill (`--primary-bg`), never the accent red; a toggle with a key shows it as a key chip ("Ping P", "Cancel ping Esc").
 
 ## Cities, units and lists
 

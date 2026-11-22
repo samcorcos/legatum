@@ -1744,7 +1744,8 @@ export const useGame = create<State>((set, get) => {
       if (get().client?.kind === 'remote') return; // one seat per browser in online play
       const views = get().views;
       if (!views || seat < 0 || seat >= views.length) return;
-      set({ seat, selection: null, mode: 'normal', anim: null, endTurnConfirmation: null, warPrompt: null, attacker: null, notice: null });
+      // An armed Ping never survives a hand-over: the next player must not ping by accident.
+      set({ seat, selection: null, mode: 'normal', anim: null, endTurnConfirmation: null, warPrompt: null, attacker: null, notice: null, pingMode: false });
       if (views) {
         const first = nextUnitNeedingOrders(views[seat], get().orders[seat], null);
         if (first) get().select({ kind: first.kind, id: first.id }, true);
