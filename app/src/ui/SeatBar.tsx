@@ -166,9 +166,10 @@ export function SeatBar({ phoneDetails = false, onOpenDetails, race }: { phoneDe
   const scenario = useGame((s) => s.scenario);
   const remote = useGame((s) => s.client?.kind === 'remote');
   const disconnected = remote && net?.conn !== 'open';
-  // The host's seat list stays open while another seat can be opened (a lost player) or removed (a connected one).
+  // The host's seat list opens by itself only while a lost player's seat can be opened. Remove is rare
+  // and waits behind Turn details, so the race stays in view (UI review, 2026-11-22).
   const hostCanOpenSeat = remote && net?.status.is_local && net.seats.some((st) =>
-    st.seat !== net.mySeat && (st.connected || st.reserved !== false));
+    st.seat !== net.mySeat && !st.connected && st.reserved !== false);
   if (!views) return null;
   const view = views[seat];
   const eliminated = isEliminated(view);

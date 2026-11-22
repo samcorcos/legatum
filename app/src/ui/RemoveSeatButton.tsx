@@ -7,8 +7,12 @@ import { useEffect, useRef, useState } from 'react';
 export function RemoveSeatButton({ name, onRemove, disabled = false }: { name: string; onRemove: () => void; disabled?: boolean }) {
   const [asking, setAsking] = useState(false);
   const keep = useRef<HTMLButtonElement>(null);
+  const confirm = useRef<HTMLSpanElement>(null);
   useEffect(() => {
-    if (asking) keep.current?.focus({ preventScroll: true });
+    if (!asking) return;
+    keep.current?.focus({ preventScroll: true });
+    // The whole question must be in view: a destructive button half under a pinned bar is a trap.
+    confirm.current?.scrollIntoView?.({ block: 'nearest' });
   }, [asking]);
   if (!asking) {
     return (
@@ -19,6 +23,7 @@ export function RemoveSeatButton({ name, onRemove, disabled = false }: { name: s
   }
   return (
     <span
+      ref={confirm}
       className="remove-confirm"
       role="alertdialog"
       aria-label={`Remove ${name}?`}
