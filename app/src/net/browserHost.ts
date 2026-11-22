@@ -5,6 +5,7 @@
 //   - the host's own UI: an in-tab socket and status/admin calls, so RemoteClient and the staging room work
 //     unchanged, as the one `local` (host) connection.
 import type { FetchLike, ServerStatus, SocketLike } from '../remote';
+import { cleanRoomName } from './roomName';
 import { type Frame, CHUNK_BYTES, KIND_BYE, KIND_CLOSE, KIND_DATA, KIND_OPEN, KIND_PING, KIND_STATUS, KIND_SUMMARY, chunkText, decodeFrame, encodeFrame, frameText } from './tunnel';
 
 /** The engine's host, as wasm-bindgen exports it. */
@@ -69,7 +70,9 @@ export interface HostOptions {
   /** The tunnel's state, and the room it serves (it changes only if the relay forgot the room). */
   onTunnel?: (state: TunnelState, room: RoomKey) => void;
   socket?: (url: string) => TunnelSocket;
-  fetch?: (url: string, init?: { method?: string; body?: string; headers?: Record<string, string>; signal?: AbortSignal; cache?: 'no-store' }) => Promise<{ ok: boolean; status: number; json(): Promise<unknown>; text(): Promise<string> }>;
+  fetch?: (url: string, init?: { method?: string; body?: string; headers?: Record<string, string>; signal?: AbortSignal; cache?: 'no-store' }) => Promise<{ ok: boolean; status: number; headers?: { get(name: string): string | null }; json(): Promise<unknown>; text(): Promise<string> }>;
+  /** The relay refused to announce the room again (it had forgotten it); the host keeps trying. */
+  onRefused?: (refusal: RelayRefusal) => void;
   now?: () => number;
   timers?: Timers;
 }
@@ -101,6 +104,77 @@ const browserTimers: Timers = {
   every: (f, ms) => setInterval(f, ms),
   stop: (t) => clearInterval(t as ReturnType<typeof setInterval>),
 };
+
+/** Why the relay would not list a room. The `message` is a short plain sentence the host can read as it is. */
+export type RefusalKind = 'too_fast' | 'too_many' | 'full' | 'closed' | 'offline' | 'other';
+
+export class RelayRefusal extends Error {
+  constructor(readonly kind: RefusalKind, readonly detail: string, readonly retryAfterS: number | null = null) {
+    super(refusalMessage(kind, retryAfterS));
+  }
+}
+
+/** Live rooms one internet address may hold. Mirrors MAX_ROOMS_PER_IP in infra/relay/src/shared.ts (the server's number is
+ * the one that counts; a changed server value only changes this wording, never what is allowed). */
+export const MAX_ROOMS_PER_ADDRESS = 2;
+
+/** What the host reads for each refusal: what happened and the one next step. */
+export function refusalMessage(kind: RefusalKind, retryAfterS: number | null = null): string {
+  switch (kind) {
+    case 'too_fast': {
+      if (retryAfterS === null) return 'You have opened too many games lately. Try again in a few minutes.';
+      const minutes = Math.max(1, Math.ceil(retryAfterS / 60));
+      return `You have opened too many games lately. Try again in ${minutes} ${minutes === 1 ? 'minute' : 'minutes'}.`;
+    }
+    case 'too_many':
+      return `Your internet connection already has ${MAX_ROOMS_PER_ADDRESS} games open. Close one before hosting another.`;
+    case 'full':
+      return 'The game list is full right now. Try again in a few minutes.';
+    case 'closed':
+      return 'Hosting new games is paused. Try again later.';
+    case 'offline':
+      return 'Could not open your game. Check your internet connection and try again.';
+    default:
+      return 'Could not open your game. Try again.';
+  }
+}
+
+/** What Host Game's sub-line says after a refusal. Only a refusal that a retry can fix says "Try again". */
+export function retryLine(kind: RefusalKind, retryAfterS: number | null = null): string {
+  switch (kind) {
+    case 'too_fast': {
+      if (retryAfterS === null) return 'Try again in a few minutes';
+      const minutes = Math.max(1, Math.ceil(retryAfterS / 60));
+      return `Try again in ${minutes} ${minutes === 1 ? 'minute' : 'minutes'}`;
+    }
+    case 'too_many':
+      return 'Close one of your games first';
+    case 'closed':
+      return 'Paused for now';
+    default:
+      return 'Try again';
+  }
+}
+
+/** A refusal where pressing Host Game again right away cannot work, so it is not the next action. */
+export const retryWouldFail = (kind: RefusalKind): boolean => kind === 'too_fast' || kind === 'too_many' || kind === 'closed';
+
+/**
+ * The relay answers POST /rooms: 429 (the creation rate, or the per-address room cap) and 503 (paused or full).
+ * A browser calling the relay from another origin can read Retry-After only if the relay exposes it, so the two 429s are
+ * also told apart by their body text, which the relay has always sent.
+ */
+export function refusalFor(status: number, error: string | undefined, retryAfter: string | null): RelayRefusal {
+  const detail = `The relay refused the room (${status}): ${error ?? 'no reason given'}`;
+  if (status === 429) {
+    const secs = retryAfter !== null && /^\d{1,6}$/.test(retryAfter.trim()) ? Number(retryAfter.trim()) : null;
+    if (secs !== null || /too quickly|too fast/i.test(error ?? '')) return new RelayRefusal('too_fast', detail, secs);
+    if (/games? open/i.test(error ?? '')) return new RelayRefusal('too_many', detail);
+    return new RelayRefusal('other', detail);
+  }
+  if (status === 503) return new RelayRefusal(/paused/i.test(error ?? '') ? 'closed' : 'full', detail);
+  return new RelayRefusal('other', detail);
+}
 
 /** https://relay -> wss://relay; http -> ws (tests). */
 export function wsBase(relay: string): string {
@@ -318,14 +392,14 @@ export class BrowserHost {
       res = await fetchImpl(`${this.relay}/rooms`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ ...this.options.announce, name: this.options.announce.name.slice(0, 80), build: this.options.announce.build.slice(0, 40) }),
+        body: JSON.stringify({ ...this.options.announce, name: cleanRoomName(this.options.announce.name), build: this.options.announce.build.slice(0, 40) }),
       });
     } catch (e) {
-      throw new Error(`Cannot reach the relay: ${String(e)}`);
+      throw new RelayRefusal('offline', `Cannot reach the relay: ${String(e)}`);
     }
     if (!res.ok) {
       const body = (await res.json().catch(() => ({}))) as { error?: string };
-      throw new Error(`The relay refused the room (${res.status}): ${body.error ?? 'no reason given'}`);
+      throw refusalFor(res.status, body.error, res.headers?.get('retry-after') ?? null);
     }
     const key = (await res.json()) as RoomKey;
     if (typeof key?.room !== 'string' || typeof key.host_key !== 'string') throw new Error('Unexpected relay response');
@@ -391,7 +465,8 @@ export class BrowserHost {
         if (neverOpened && (await this.roomGone())) {
           try {
             this.key = await this.announce();
-          } catch {
+          } catch (e) {
+            if (e instanceof RelayRefusal && !this.stopped) this.options.onRefused?.(e);
             if (!this.stopped) this.scheduleReconnect(true);
             return;
           }

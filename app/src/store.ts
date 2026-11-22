@@ -53,6 +53,7 @@ import {
 import { StagingClient, type StagingState } from './staging';
 import { rememberPlayerName, online, type OnlineInfo } from './platform/online';
 import { hostedGameSave, hostingRecord, startHosting, stopHosting } from './net/hosting';
+import { RelayRefusal } from './net/browserHost';
 import { HOST_AWAY, HOST_OFFLINE, connectionFirst, roomBase } from './platform/relayLobby';
 import { checkSaveText } from './platform/saveLimits';
 import { listAutosaves, newCampaignId, readPendingOrders, writeAutosave as keepAutosave, writePendingOrders, type AutosaveRecord } from './platform/autosaveStore';
@@ -283,6 +284,8 @@ interface State {
   net: NetState | null;
   /** A build with online play: the relay and version to match; null otherwise. */
   online: OnlineInfo | null;
+  /** Why the game server last refused to list this tab's game (null when it did not); the title menu branches its Host Game button on it. */
+  hostRefusal: RelayRefusal | null;
   /** The online staging room: the room as last broadcast, and this browser's seat in it. */
   staging: StagingState | null;
   stagingSeat: number | null;
@@ -823,10 +826,19 @@ export const useGame = create<State>((set, get) => {
   };
 
   /** The host learns when guests cannot reach its game, and when a game history could not be kept. */
+  /** The relay's last refusal to list this tab's room again, shown instead of the plain "reconnecting" note. */
+  let hostRefusal: string | null = null;
   const hostingEvents = () => ({
     tunnel: (state: string) => {
-      if (state === 'reconnecting') set({ error: HOST_OFFLINE });
-      else if (get().error === HOST_OFFLINE) set({ error: null });
+      if (state === 'reconnecting') set({ error: hostRefusal ?? HOST_OFFLINE });
+      else if (state === 'open' && (get().error === HOST_OFFLINE || get().error === hostRefusal)) {
+        hostRefusal = null;
+        set({ error: null });
+      } else if (get().error === HOST_OFFLINE) set({ error: null });
+    },
+    refused: (r: RelayRefusal) => {
+      hostRefusal = r.message;
+      set({ error: r.message, hostRefusal: r });
     },
     error: (message: string) => set({ error: message }),
   });
@@ -1154,6 +1166,7 @@ export const useGame = create<State>((set, get) => {
     lastHash: null,
     net: null,
     online: null,
+    hostRefusal: null,
     staging: null,
     stagingSeat: null,
     stagingConnected: false,
@@ -1250,11 +1263,12 @@ export const useGame = create<State>((set, get) => {
       const relay = get().online?.relay;
       if (!relay) return 'This version has no online play.';
       const info = get().online!;
-      set({ error: null });
+      set({ error: null, hostRefusal: null });
       try {
         await startHosting(relay, { name, build: info.build, rules_version: info.rules_version, protocol: info.protocol }, null, hostingEvents());
-      } catch {
-        return 'Could not open your game. Check your internet connection and try again.';
+      } catch (e) {
+        if (e instanceof RelayRefusal) set({ hostRefusal: e });
+        return e instanceof RelayRefusal ? e.message : 'Could not open your game. Check your internet connection and try again.';
       }
       rememberSeat(null);
       const status = await fetchStatus();

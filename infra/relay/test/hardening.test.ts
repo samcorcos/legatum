@@ -178,6 +178,8 @@ describe("room creation limits", () => {
     expect(after).toBeGreaterThan(0);
     expect(after).toBeLessThanOrEqual(100);
     expect(r.headers.get("access-control-allow-origin")).toBe("*");
+    // a page on another origin can read Retry-After only when the relay exposes it
+    expect(r.headers.get("access-control-expose-headers")).toMatch(/\bRetry-After\b/i);
     // a refused attempt does not spend a token, and other addresses are not affected
     expect((await post(vars, announce("elsewhere"), freshIp())).status).toBe(200);
   });

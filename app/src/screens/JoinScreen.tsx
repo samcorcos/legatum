@@ -40,6 +40,7 @@ export function JoinScreen() {
           Every player plays on their own computer. Pick an open seat to command that empire. Turn{' '}
           {net.status.turn} is being planned.
         </p>
+        {error && <div className="toast bad inline" role="alert">{error}</div>}
         <div className="join-seats">
           {seats.map((s, i) => {
             const info = FACTION_INFO[s.faction];
@@ -61,7 +62,8 @@ export function JoinScreen() {
                   </div>
                 </div>
                 <div className="join-rule">
-                  Strength: {FACTION_SHEETS[s.faction].pairs[0].strength} Price: {FACTION_SHEETS[s.faction].pairs[0].price} Goal: {info.goal}
+                  Strength: {FACTION_SHEETS[s.faction].pairs[0].strength}
+                  {FACTION_SHEETS[s.faction].pairs[0].price ? ` Price: ${FACTION_SHEETS[s.faction].pairs[0].price}` : ''} Goal: {info.goal}
                 </div>
                 <div className="join-status">
                   <span className={`conn-dot ${s.connected ? 'on' : ''}`} />
@@ -72,7 +74,6 @@ export function JoinScreen() {
             );
           })}
         </div>
-        {error && <div className="toast bad inline">{error}</div>}
         <ReclaimSeatButton />
       </div>
     </div>

@@ -28,7 +28,7 @@ jobs:
       code: ${{ steps.diff.outputs.code }}
       rust-groups: ${{ steps.groups.outputs.names }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -56,7 +56,7 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -70,14 +70,14 @@ jobs:
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
       - name: Personal-data scan of the tracked tree
         run: tools/release/test-scrub.sh
       - name: Install pinned Rust toolchain
         run: rustup show
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           key: lint
           save-if: ${{ github.ref == 'refs/heads/master' }}
@@ -101,16 +101,16 @@ jobs:
         group: ${{ fromJSON(needs.changes.outputs.rust-groups) }}
     name: rust-test (${{ matrix.group }})
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
       - name: Install pinned Rust toolchain
         run: rustup show
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           key: release-${{ matrix.group }}
           save-if: ${{ github.ref == 'refs/heads/master' }}
-      - uses: taiki-e/install-action@v2
+      - uses: taiki-e/install-action@25f51f6b1bf4e18876107cece836f4f77ac17c8c # v2.90.7
         with:
           tool: cargo-nextest@0.9.100
           fallback: none
@@ -125,16 +125,16 @@ jobs:
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
       - name: Install pinned Rust toolchain
         run: rustup show
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           key: wasm
           save-if: ${{ github.ref == 'refs/heads/master' }}
-      - uses: taiki-e/install-action@v2
+      - uses: taiki-e/install-action@25f51f6b1bf4e18876107cece836f4f77ac17c8c # v2.90.7
         with:
           tool: wasm-pack@0.15.0
           fallback: none
@@ -143,7 +143,7 @@ jobs:
         run: scripts/build-wasm.sh
         env:
           LEGATUM_PLAYTEST_PROFILE: 1
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: wasm-pkg
           path: app/src/wasm-pkg
@@ -158,15 +158,15 @@ jobs:
         shard: [1, 2, 3]
     name: app-test (${{ matrix.shard }} of 3)
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version-file: .nvmrc
           cache: npm
           cache-dependency-path: app/package-lock.json
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: wasm-pkg
           path: app/src/wasm-pkg
@@ -184,15 +184,15 @@ jobs:
     needs: wasm
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version-file: .nvmrc
           cache: npm
           cache-dependency-path: app/package-lock.json
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: wasm-pkg
           path: app/src/wasm-pkg

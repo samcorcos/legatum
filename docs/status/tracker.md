@@ -2,7 +2,7 @@
 
 This is what's owed to the user, what's waiting on the user, open bug reports, and the next build. The hourly supervisor keeps it current and the lead updates it whenever something is promised or delivered. A promise in chat counts. Dates are 2026.
 
-**Review plan (approved 2026-10-18):** the checklist for the 13 Codex code reviews, with the user's decisions D1-D13, is `docs/status/review-plan-2026-10-18.md`. Open items there count as promised work; the supervisor should flag stale ones.
+**Review plan (approved 2026-10-18):** the checklist for the 13 Codex code reviews, with the user's decisions D1-D13, is `docs/archive/review-plan-2026-10-18.md`. Open items there count as promised work; the supervisor should flag stale ones.
 
 ## Promised to the user
 
