@@ -1,8 +1,8 @@
 # Contributing to Legatum
 
 Thanks for looking. Legatum is a historical 4X on a hex map: a deterministic Rust engine, scripted AI,
-a headless simulation runner, and a React/TypeScript UI that runs the same engine as WASM (browser,
-Tauri desktop shell, or a LAN host).
+a headless simulation runner, and a React/TypeScript UI that runs the same engine as WASM in the browser,
+including the host of an online game.
 
 Anyone may open an issue or a pull request. The maintainer, Sam Corcos, decides what merges. The project
 is pre-release and changes quickly, so for anything larger than a fix, open an issue first and say what you
@@ -31,7 +31,6 @@ You need:
 - Python 3 (`python3`): `scripts/build-wasm.sh` and the art test run small Python tools. On a Mac it comes
   with the Xcode command line tools.
 - For the app tests: Playwright's Chromium, installed once with `cd app && npx playwright install chromium`
-- For the Mac app only: the Xcode command line tools
 
 ```sh
 git clone https://github.com/samcorcos/legatum && cd legatum
@@ -44,12 +43,10 @@ Other entry points:
 
 ```sh
 cargo run --release -p legatum-sim -- --help    # headless simulation runner
-./scripts/lan-host.sh                           # serve the app and the authoritative game on your LAN
-scripts/build-mac-app.sh                        # macOS app bundle, unsigned (see app/README.md)
 scripts/build-web.sh                            # the hosted web build, as deployed (static files in app/dist)
 ```
 
-Releases (the web deploy, the signed Mac app, the secrets each needs) are described in
+Releases (the web deploy, the secrets it needs) are described in
 [docs/ops/releasing.md](docs/ops/releasing.md).
 
 ## Test
@@ -59,7 +56,7 @@ Run what your change touches, and everything before you open a pull request:
 ```sh
 cargo fmt --all --check
 cargo clippy --workspace --all-targets -- -D warnings
-cargo test --workspace --release                # engine, AI, sim, server, WASM bindings
+cargo test --workspace --release                # engine, AI, sim, WASM bindings and online host
 scripts/build-wasm.sh && cd app && npm ci && npx playwright install chromium && npm test && npm run build
 ```
 
@@ -90,7 +87,7 @@ lacking them. They may lead to follow-up commits or requests.
 
 ## The rules that matter
 
-1. **One engine.** All game rules live in `crates/core`. The UI, the server and the simulation runner call
+1. **One engine.** All game rules live in `crates/core`. The UI, the online host and the simulation runner call
    it; nothing re-implements a rule in TypeScript or Python. If the UI needs a number, the engine
    computes it.
 2. **Determinism.** Integer maths only, seeded RNG streams, no dependence on hash-map iteration order.

@@ -1,5 +1,7 @@
 # Backlog
 
+> 2026-11-22: the desktop (Tauri) app, the native `legatum-server` and LAN play were dropped; the game is web-only. Rows below that mention them are history. Online play: plans/online-play.md.
+
 **Balance philosophy (user, 2026-09-26):** asymmetry over balance, TI4 not Eclipse. Keep factions bold and even lopsided; balance only prevents a faction that dominates (>~20% of its seats) or never matters (<~6%). Never homogenize factions to even out win rates.
 
 Prioritized work toward the first playable, grouped by increment. The Ops supervisor keeps the Astra queue fed from items marked `ready`; the lead (Claude) owns this file, reviews all results and merges. Statuses: `ready` (can start now), `blocked (<why>)`, `doing (<who>)`, `done`.
