@@ -847,3 +847,9 @@ Verify UI changes with Playwright screenshots at the three sizes and attach them
 - **A note that says "choose X" carries X's button (UI review, 2026-11-22).** Put the button inside the note or right beside it, never below the fold (Egypt's "Grow instead →" sits in the Nile note).
 - **Breakdowns add up from top to bottom (UI review, 2026-11-22).** A row that converts a yield comes after a total that still includes it, and no row contradicts a total above it ("Surplus 118 · Goes into the Granary −118 Food, +118 progress · Left to grow 0").
 - **A price must still read as a cost when it shares an icon with a yield on the same card** (Royal Granary: "50 Food" beside "+3 Food"). Today the price is plain ink with no sign and the yield is green with "+"; a dedicated cost treatment for price chips is an open follow-up.
+
+## From the game-upload review (2026-11-22, title-screen upload notice)
+
+- A notice about data leaving the player's device says "uploaded" or "sent to us", never "saved": players read "saved" as their own local save. Storage words such as "bucket" stay out of anything a player reads.
+- Small centred notes that can wrap to two lines use `text-wrap: balance`, so a link or a lone word doesn't dangle on the second line.
+- The hosted title screen (with `VITE_LEGATUM_GAMES_URL` set) has about 10px to spare at 1000x600: any further hosted-only line on the main menu needs a layout change, not just another line.

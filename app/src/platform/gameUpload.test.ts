@@ -61,3 +61,13 @@ it('records the name-free history when uploads are on, the full one otherwise', 
   vi.resetModules();
   expect((await import('./gameUpload')).historyToRecord(client)).toBe('full');
 });
+
+it('a site missing from the allow-list keeps its games queued', async () => {
+  const fetch = vi.fn().mockResolvedValue(new Response('{}', { status: 403 }));
+  vi.stubGlobal('fetch', fetch);
+  const archive = await import('./archive');
+  await archive.recordGameHistory(recording());
+  fetch.mockClear();
+  await archive.retryGameHistory();
+  expect(fetch).toHaveBeenCalledOnce();
+});

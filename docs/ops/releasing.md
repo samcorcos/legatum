@@ -31,7 +31,7 @@ a notice and deploys nothing, so forks stay green.
 | `CLOUDFLARE_ACCOUNT_ID` | secret | The Cloudflare account that owns the Pages project. |
 | `CLOUDFLARE_PAGES_PROJECT` | variable, optional | The Pages project name. Default `legatum-game` (`legatum` belongs to someone else). Project names are unique across Cloudflare: if `legatum-game` is taken, creation fails with a clear message; set this to a free name. The address becomes `https://<name>.pages.dev`. |
 | `LEGATUM_SITE_URL` | variable, optional | The public address used in the link-preview tags, for a custom domain. Default: `homepage` in `app/package.json`. |
-| `LEGATUM_GAMES_URL` | variable, optional | The game-upload Worker (`infra/games`, deployed separately). Set, every game played on the site is uploaded there and the page may connect to it; unset, nothing is uploaded. |
+| `LEGATUM_GAMES_URL` | variable, optional | The game-upload Worker (`infra/games`, deployed separately). Set, every game played on the site is uploaded there and the page may connect to it; unset, nothing is uploaded. A custom domain must also be added to `ALLOWED_ORIGINS` in `infra/games/wrangler.jsonc`, or the Worker refuses its uploads (they stay queued in the browser). |
 
 ### What the hosted build is
 

@@ -32,8 +32,9 @@ export async function uploadGameHistory(json: string): Promise<boolean> {
       method: 'PUT', body, headers: { 'Content-Type': 'application/octet-stream' }, signal: AbortSignal.timeout(30000),
     });
     if (response.ok) return true;
-    // 400/403/404/413/422: this record will never be accepted; retrying cannot help.
-    return response.status >= 400 && response.status < 500 && response.status !== 408 && response.status !== 429;
+    // 400/404/413/422: this record will never be accepted; retrying cannot help. A 403 means this site is missing
+    // from the Worker's ALLOWED_ORIGINS, a setup mistake that a fix can cure, so the game stays queued.
+    return [400, 404, 413, 422].includes(response.status);
   } catch {
     return false;
   }

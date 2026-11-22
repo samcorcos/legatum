@@ -122,7 +122,12 @@ These clips are recorded from the running game.
 
 ### Privacy
 
-Every game played in the browser version is uploaded to the project, so we can measure how well the AI plays and find bugs. What is sent is the game's record: the setup, every turn's orders, the score each turn and how long turns took. Player names are replaced with "Player 1", "AI 2" and so on before anything leaves your browser, and the server refuses a record with any other name. Nothing else is sent: no account, no email, no cookies and no tracking. The server does not keep IP addresses or request logs. The records are stored in a private bucket that only the maintainer can read; they may be used to train and test the game's AI. Uploads cannot be turned off in the browser version. The Mac app and builds from source upload nothing.
+Every game played in the browser version is uploaded to us, so we can measure how well the AI plays and find bugs.
+
+- **What is sent:** the game's record: the setup, every turn's orders, the score each turn and how long turns took. Player names are replaced with "Player 1", "AI 2" and so on before anything leaves your browser, and the server refuses a record with any other name.
+- **What is not sent:** no account, no email, no cookies and no tracking. Legatum keeps no IP addresses or request logs.
+- **Who can read it:** the records are stored privately and only the maintainer can read them. They may be used to train and test the game's AI.
+- **Turning it off:** uploads cannot be turned off in the browser version. The Mac app and builds from source upload nothing.
 
 ### Build it from source
 

@@ -301,4 +301,5 @@ div.seat {
 .title-upload-note {
   margin-top: 12px;
   text-align: center;
+  text-wrap: balance;
 }

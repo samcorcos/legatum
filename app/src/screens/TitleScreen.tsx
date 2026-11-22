@@ -149,7 +149,7 @@ function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
       </div>
       {uploadsGames() && (
         <p className="title-hosted-note title-upload-note">
-          Games played here are saved, without player names, to improve the AI.{' '}
+          Games you play here are uploaded, without player names, to help improve the AI.{' '}
           <a href={PRIVACY_URL} target="_blank" rel="noreferrer">Privacy</a>
         </p>
       )}
