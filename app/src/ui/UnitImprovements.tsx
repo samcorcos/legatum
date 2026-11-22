@@ -30,7 +30,7 @@ export function improvementReason(reason: string | null, resource: Resource | nu
   const subject = reason.startsWith('Siege: ') ? 'Siege' : 'Upgrade';
   const fix = `claim ${s.supplied.total ? `another ${resource}` : withArticle(resource)} deposit or build ${aWorks(resource)} (+${supplyPerMine(faction)})`;
   const state = !s.supplied.total ? `You have no ${resource}`
-    : (s.idle?.length ?? 0) ? `You have ${s.supplied.total} ${resource} for ${s.used.total} needs`
+    : (s.idle?.length ?? 0) ? `You have ${s.supplied.total} ${resource}, and ${s.used.total} are in use`
     : (s.held?.length ?? 0) ? `You have ${s.supplied.total} ${resource}, none spare (${s.held?.length ?? 0} reserved for construction)`
     : `All ${s.supplied.total} ${resource} are in use`;
   return `${subject} needs 1 ${resource}. ${state}: ${fix}.`;

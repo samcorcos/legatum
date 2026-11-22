@@ -34,7 +34,7 @@ export function LevyCounter() {
     <div><b>{levyText(l)}</b></div>
     <div>{THIN_LEVIES}</div>
     {view && <CompanyRoster view={view} owner={view.me} className="levy-tip-company" />}
-    {l.units > l.cap && <div>{l.units - l.cap} over the cap: no unit is disbanded, but none can be raised until you are back under it.</div>}
+    {l.units > l.cap && <div>You are {l.units - l.cap} over the limit. No unit is disbanded, but you can't raise more until you are under it.</div>}
     {full && <div className="levy-tip-full">No new military unit can be started, bought or finished until you have one unit fewer or one city more.</div>}
   </>}>
     <span aria-label={levyText(l)}>{full && <Icon name="ui-alert" size={12} className="ui-mark" />} <Icon name="unit-soldier" size={12} className="count-icon ui-mark" label={LEVY_CHIP_LABEL} /><span className="count-label">Military units </span><b>{l.units} / {l.cap}</b>{full && ` · ${levyState(l)}`}</span>

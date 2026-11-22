@@ -173,8 +173,8 @@ it('does not compact unrelated engine refusals or call reserved/idle supply in u
   view.supply![0].held = ['Forge in Kyoto'];
   expect(improvementReason(NO_IRON, 'Iron', view)).toContain('reserved for construction');
   view.supply![0].idle = ['Pikeman'];
-  expect(improvementReason(NO_IRON, 'Iron', view)).toContain('You have 6 Iron for 6 needs: claim another Iron deposit or build a Mine (+1).');
-  expect(improvementReason(`Siege: ${NO_IRON[0].toLowerCase()}${NO_IRON.slice(1)}`, 'Iron', view)).toMatch(/^Siege needs 1 Iron\. You have 6 Iron for 6 needs: /);
+  expect(improvementReason(NO_IRON, 'Iron', view)).toContain('You have 6 Iron, and 6 are in use: claim another Iron deposit or build a Mine (+1).');
+  expect(improvementReason(`Siege: ${NO_IRON[0].toLowerCase()}${NO_IRON.slice(1)}`, 'Iron', view)).toMatch(/^Siege needs 1 Iron\. You have 6 Iron, and 6 are in use: /);
 });
 
 it('computes promotion-aware upgrade gains and preserves a lost bow in the visible effect', async () => {
