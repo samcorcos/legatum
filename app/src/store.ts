@@ -55,6 +55,7 @@ import { rememberPlayerName, online, type OnlineInfo } from './platform/online';
 import { hostingRecord, startHosting, stopHosting } from './net/hosting';
 import { HOST_AWAY, HOST_OFFLINE, connectionFirst, roomBase } from './platform/relayLobby';
 import { checkSaveText } from './platform/saveLimits';
+import { listAutosaves, newCampaignId, readPendingOrders, writeAutosave as keepAutosave, writePendingOrders, type AutosaveRecord } from './platform/autosaveStore';
 import { abandonGameHistory, recordGameHistory } from './platform/archive';
 import { historyToRecord } from './platform/gameUpload';
 import { currentActivePlaySeconds, currentPlaySessionId, resetActivePlayTurn } from './activePlayTime';
@@ -289,6 +290,8 @@ interface State {
   /** Bumped when an async forecast arrives so the map re-asks. */
   forecastTick: number;
   scenario: ActiveScenario | null;
+  /** The browser would not keep the latest autosave: the notice offering Save to file shows (once per game). */
+  autosaveNotice: boolean;
 
   goto(screen: Screen): void;
   openSetup(mode: SetupMode): void;
@@ -320,6 +323,8 @@ interface State {
   leaveStagingSeat(): void;
   startGame(setup: GameSetup, options?: { training?: boolean }): Promise<void>;
   loadSave(save: SaveFile, forkHistory?: boolean): Promise<void>;
+  /** Continue from a stored autosave: the same game keeps its slots, and this turn's unsent orders come back. */
+  continueAutosave(record: AutosaveRecord, save: SaveFile): Promise<void>;
   /** Start a scenario: its state with the seat as the only human, scored by the engine. */
   startScenario(entry: ScenarioEntry): Promise<void>;
   /** Attach the player's feedback to the finished run and save the run again. */
@@ -402,7 +407,7 @@ export function saveFile(client: GameClient, views: PlayerView[]): SaveFile {
   };
 }
 
-function parseAutosave(raw: string | null): SaveFile | null {
+export function parseAutosave(raw: string | null): SaveFile | null {
   try {
     if (!raw) return null;
     checkSaveText(raw);
@@ -415,9 +420,19 @@ function parseAutosave(raw: string | null): SaveFile | null {
   }
 }
 
-export function readAutosave(): SaveFile | null {
-  try { return parseAutosave(localStorage.getItem(AUTOSAVE_KEY)); } catch { return null; /* Storage may be blocked. */ }
+/** The newest autosave that reads as a save, or null. */
+export async function readAutosave(): Promise<SaveFile | null> {
+  for (const record of await listAutosaves()) {
+    const save = parseAutosave(record.text);
+    if (save) return save;
+  }
+  return null;
 }
+
+/** The game now on screen: its autosaves share this id (autosaveStore.ts). Changes only when a new game or a file replaces it. */
+let campaign = newCampaignId();
+let resumeCampaign: string | null = null;
+let noticedCampaign: string | null = null;
 
 function writeAutosave(client: GameClient, views: PlayerView[]) {
   if (client.archive && (views[0].finished || (views[0].turn - 1) % 5 === 0)) {
@@ -425,12 +440,22 @@ function writeAutosave(client: GameClient, views: PlayerView[]) {
       void recordGameHistory(historyToRecord(client as { archive(): string })).catch((error) => useGame.getState().set({ error: String(error) }));
     } catch (error) { useGame.getState().set({ error: `Could not record game history: ${String(error)}` }); }
   }
+  const game = campaign;
+  const failed = () => {
+    // The game goes on, but never silently: one calm notice per game offers Save to file.
+    if (noticedCampaign === game) return;
+    noticedCampaign = game;
+    useGame.getState().set({ autosaveNotice: true });
+  };
   try {
-    const contents = JSON.stringify(saveFile(client, views));
+    const save = saveFile(client, views);
+    const contents = JSON.stringify(save);
     checkSaveText(contents);
-    localStorage.setItem(AUTOSAVE_KEY, contents);
+    void keepAutosave({ campaign: game, turn: save.turn, savedAt: save.savedAt, label: save.names.join(' & '), text: contents })
+      .then(() => { if (useGame.getState().autosaveNotice) useGame.getState().set({ autosaveNotice: false }); })
+      .catch(failed);
   } catch {
-    // Storage full or blocked: autosave is best-effort.
+    failed();
   }
 }
 
@@ -459,6 +484,25 @@ export const useGame = create<State>((set, get) => {
     } catch (e) {
       return [{ index: -1, message: String(e) }];
     }
+  };
+
+  /** Puts back the orders kept for this turn, silently dropping any the engine now refuses. */
+  const restorePendingOrders = (text: string) => {
+    let kept: unknown;
+    try { kept = JSON.parse(text); } catch { return; }
+    if (!Array.isArray(kept)) return;
+    const { orders, errors, ready } = get();
+    const nextOrders = orders.map((_, seat) => {
+      let list: Order[] = Array.isArray(kept[seat]) ? kept[seat] : [];
+      for (let pass = 0; pass < 4 && list.length; pass++) {
+        const bad = validateSeat(seat, list);
+        if (!bad.length) break;
+        list = bad.some((e) => e.index < 0) ? [] : list.filter((_, i) => !bad.some((e) => e.index === i));
+      }
+      return list;
+    });
+    if (!nextOrders.some((list) => list.length)) return;
+    set({ orders: nextOrders, errors: errors.map((_, seat) => validateSeat(seat, nextOrders[seat])), ready: ready.map(() => false) });
   };
 
   // The last good save string, to recover after a WASM panic (which leaves the module unusable
@@ -1086,6 +1130,7 @@ export const useGame = create<State>((set, get) => {
     booted: false,
     forecastTick: 0,
     scenario: null,
+    autosaveNotice: false,
 
     goto: (screen) => {
       if (screen !== 'game') stopResolving();
@@ -1320,6 +1365,7 @@ export const useGame = create<State>((set, get) => {
         if (capital) get().select({ kind: 'city', id: capital.id }, true);
         if (options?.training) set({ why: { ...NO_WHY, enabled: true } });
         const views = get().views;
+        campaign = newCampaignId();
         if (views) writeAutosave(client, views);
       } catch (e) {
         const message = e instanceof Error ? e.message : String(e);
@@ -1339,12 +1385,25 @@ export const useGame = create<State>((set, get) => {
         if (forkHistory) client.forkArchive?.();
         measureTurn('afterLoad', () => afterLoad(client));
         if (save.why?.enabled) set({ why: { enabled: true, asked: save.why.asked ?? [], last: save.why.last ?? null, skipped: save.why.skipped ?? [] } });
+        campaign = resumeCampaign ?? newCampaignId();
+        resumeCampaign = null;
         if (get().views) measureTurn('loadAutosave', () => writeAutosave(client, get().views!));
       } catch (e) {
+        resumeCampaign = null;
         const message = e instanceof Error ? e.message : String(e);
         const refusal = isMissingWasmError(message) ? message : loadErrorMessage(e, save.playtest);
         set({ busy: null, error: get().screen === 'game' ? `${refusal} Your current game is unchanged.` : refusal });
       }
+    },
+
+    continueAutosave: async (record, save) => {
+      resumeCampaign = record.campaign;
+      await get().loadSave(save);
+      resumeCampaign = null;
+      if (get().error || !get().views) return;
+      const turn = get().views![0].turn;
+      const kept = await readPendingOrders(record.campaign, turn);
+      if (kept !== null && get().views?.[0].turn === turn) restorePendingOrders(kept);
     },
 
     startScenario: async (entry) => {
@@ -1644,3 +1703,37 @@ useGame.subscribe((state, previous) => {
 useGame.subscribe((state, previous) => {
   if (state.screen !== previous.screen || state.client !== previous.client || state.seat !== previous.seat) cancelTurnFeedback();
 });
+
+// Orders entered for the turn in progress are kept beside its autosave, a moment after each change, and come back on Continue.
+let ordersTimer: ReturnType<typeof setTimeout> | null = null;
+let ordersKept = '';
+/** True while orders sit unsaved because the browser would not keep them: only then does closing the tab warn. */
+let ordersAtRisk = false;
+function keepOrdersNow() {
+  ordersTimer = null;
+  const s = useGame.getState();
+  if (!s.client || s.client.kind === 'remote' || !s.views || s.scenario) { ordersAtRisk = false; return; }
+  const turn = s.views[0].turn;
+  const pending = s.orders.some((list) => list.length > 0);
+  const text = pending ? JSON.stringify(s.orders) : null;
+  const key = `${campaign}:${turn}:${text}`;
+  if (key === ordersKept) return;
+  ordersKept = key;
+  writePendingOrders({ campaign, turn, text })
+    .then(() => { if (ordersKept === key) ordersAtRisk = false; })
+    .catch(() => { if (ordersKept === key) ordersAtRisk = pending; });
+}
+useGame.subscribe((state, previous) => {
+  if (state.orders === previous.orders && state.views === previous.views) return;
+  if (ordersTimer !== null) clearTimeout(ordersTimer);
+  ordersTimer = setTimeout(keepOrdersNow, 400);
+});
+if (typeof window !== 'undefined') {
+  // A reload right after an order: write it now instead of waiting out the pause.
+  window.addEventListener('pagehide', () => { if (ordersTimer !== null) { clearTimeout(ordersTimer); keepOrdersNow(); } });
+  window.addEventListener('beforeunload', (event) => {
+    if (!ordersAtRisk) return;
+    event.preventDefault();
+    event.returnValue = '';
+  });
+}
