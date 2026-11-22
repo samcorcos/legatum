@@ -22,7 +22,6 @@ import { htmlBlocks } from './textArtifacts';
 import { hallCardText } from '../ui/goalText';
 import { FactionSheetView } from '../ui/FactionPicker';
 import { GUIDE_SECTIONS, GuideContent } from '../ui/GuideContent';
-import { steppingStoneText } from '../ui/techCardUnlocks';
 import { LEVY_CHIP_LABEL } from '../ui/Levy';
 import { afterTechnologies } from '../ui/EraObjectives';
 import { tileDefenceText } from '../ui/TileCard';
@@ -98,7 +97,7 @@ export function techText(): TextGroup[] {
   const out: TextGroup[] = [];
   for (const t of TECHS) {
     out.push({ label: `tech ${TECH_NAME[t]}`, blocks: [TECH_STATS[t].blurb, TECH_QUOTE[t]] });
-    for (const f of FACTIONS) out.push({ label: `tech ${TECH_NAME[t]} for ${f}`, blocks: [...techCardEffectsFor(f, t), steppingStoneText(t, f)] });
+    for (const f of FACTIONS) out.push({ label: `tech ${TECH_NAME[t]} for ${f}`, blocks: techCardEffectsFor(f, t) });
   }
   return out;
 }

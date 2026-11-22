@@ -5,7 +5,7 @@ import { Amount } from './Amounts';
 import { BreakdownTable, Icon } from './bits';
 import { arrivalText, costParts, diffusionLine, eraNumeral, eraRows, eraFirst, turnsText, type EraRow, type QueueSlot } from './eraResearch';
 import { Tip } from './Tip';
-import { steppingStoneText, techCardUnlocks } from './techCardUnlocks';
+import { techCardUnlocks } from './techCardUnlocks';
 import { BenefitLedger } from './BenefitLedger';
 import { empireOfPlayer } from '../empires';
 
@@ -38,7 +38,6 @@ export function EraCard({ view, tech: option, faction, queueIndex, slot, stored,
   const parts = costParts(option.cost);
   const discount = [diffusionLine(parts)].filter((x): x is string => !!x);
   const unlocks = techCardUnlocks(view.research, t, faction);
-  const stepping = unlocks.length ? null : steppingStoneText(t, faction);
   const cost = option.cost.total;
   const progress = researching ? Math.min(stored, cost) : 0;
   const state = known ? 'Researched' : researching ? 'Researching' : queued ? `Queue ${queueIndex + 1}` : 'Available';
@@ -54,7 +53,7 @@ export function EraCard({ view, tech: option, faction, queueIndex, slot, stored,
     e.preventDefault();
     pick(e.shiftKey);
   };
-  return <article className={`era-card ${known ? 'known' : researching ? 'researching' : queued ? 'queued' : 'available'}${selected ? ' chosen' : ''}${stepping ? ' stepping' : ''}${picked ? ' picked' : ''}`}
+  return <article className={`era-card ${known ? 'known' : researching ? 'researching' : queued ? 'queued' : 'available'}${selected ? ' chosen' : ''}${picked ? ' picked' : ''}`}
     data-tech={t} data-state={state.toLowerCase().replace(/ \d+$/, '')} aria-label={`${TECH_NAME[t]}. ${state}. ${when}.`}
     tabIndex={known ? undefined : 0} data-enter-activates={known ? undefined : ''} onClick={known ? undefined : onClick} onKeyDown={known ? undefined : onKeyDown}
     // Shift+click must not select text across the cards.
@@ -65,13 +64,12 @@ export function EraCard({ view, tech: option, faction, queueIndex, slot, stored,
     </span>}
     <header className="era-card-head">
       <span className="era-seal" aria-hidden="true">{known ? <Icon name="ui-check" size={13} /> : eraNumeral(option.era)}</span>
-      <h4 className={`era-card-name${TECH_NAME[t].split(' ').some((w) => w.length > 12) ? ' long-word' : ''}`}><span className={`era-card-title${stepping ? ' stepping' : ''}`}>{TECH_NAME[t]}</span></h4>
+      <h4 className={`era-card-name${TECH_NAME[t].split(' ').some((w) => w.length > 12) ? ' long-word' : ''}`}><span className="era-card-title">{TECH_NAME[t]}</span></h4>
       <button type="button" className="era-details-chevron" aria-expanded={selected} aria-label={`${selected ? 'Hide' : 'Show'} details of ${TECH_NAME[t]}`} title={selected ? 'Hide details' : 'Details: cost and what it unlocks'} onClick={() => onDetails(t)}>
         <Icon name={selected ? 'ui-chevron-up' : 'ui-chevron-down'} size={12} />
       </button>
     </header>
-    {stepping ? <div className="era-stepping" title={stepping}><b>{stepping}</b></div>
-    : <BenefitLedger entries={unlocks} faction={faction} />}
+    <BenefitLedger entries={unlocks} faction={faction} />
     {!known && <>
       <div className="era-cost">
         <Tip content={<BreakdownTable b={option.cost} title="Research cost" unit="Science" />} summary={`Research cost: ${cost} Science`}>

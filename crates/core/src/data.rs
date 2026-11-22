@@ -895,6 +895,8 @@ pub enum CardEffect {
     HorseUpgrade,
     /// Concerns Siege (the Gold upgrade that ignores Walls).
     Siege,
+    /// Adds only Production, which the Nile takes from Egypt.
+    Production,
     Other,
 }
 
@@ -923,7 +925,7 @@ pub fn tech_card_effect_list(tech: TechId) -> &'static [(&'static str, CardEffec
         Machinery => &[
             ("Composite Archers can upgrade to Crossbowmen", Other),
             ("Siege units now ignore Castles", Siege),
-            ("+1 Production per Workshop family", Other),
+            ("+1 Production per Workshop family", Production),
         ],
         CropRotation => &[
             (
@@ -955,11 +957,11 @@ pub fn tech_card_effect_list(tech: TechId) -> &'static [(&'static str, CardEffec
         Railways => &[
             ("Units that start a turn on a road get +2 moves", Other),
             ("Roadworks link cities within 12 tiles", Other),
-            ("Mines +1 Production", Other),
+            ("Mines +1 Production", Production),
         ],
         ReplaceableParts => &[
             ("Riflemen can upgrade to Trench Infantry", Other),
-            ("Factories +2 Production", Other),
+            ("Factories +2 Production", Production),
         ],
         Combustion => &[
             ("Cavalry can upgrade to Early Tanks", HorseUpgrade),
@@ -983,7 +985,7 @@ pub fn tech_card_effect_list(tech: TechId) -> &'static [(&'static str, CardEffec
         ],
         Robotics => &[("Mechanised Infantry can upgrade to Hunter-Killers", Other)],
         FusionPower => &[
-            ("+5 Production in every city", Other),
+            ("+5 Production in every city", Production),
             ("Factories and Research Labs need no Coal or Oil", Other),
         ],
         StealthTechnology => &[
@@ -1006,9 +1008,9 @@ pub fn tech_card_effect_list(tech: TechId) -> &'static [(&'static str, CardEffec
                 "Reveal the whole map to your team; units still need sight",
                 Other,
             ),
-            ("+20% Production in every city", Other),
+            ("+20% Production in every city", Production),
         ],
-        Masonry => &[("Quarries upgrade: Deep Quarry (+1 Production)", Other)],
+        Masonry => &[("Quarries upgrade: Deep Quarry (+1 Production)", Production)],
         Philosophy => &[("+1 Science in every city", CityScience)],
         BronzeWorking | Currency | Writing | Education | Banking | Industrialization | Flight
         | Electricity | Electronics | GreenRevolution => &[],
@@ -1023,7 +1025,8 @@ pub fn tech_card_effects(tech: TechId) -> Vec<&'static str> {
         .collect()
 }
 
-/// The immediate effects this faction can use: Aztecs have no horse units to upgrade.
+/// The immediate effects this faction can use: Aztecs have no horse units to upgrade, and Egypt
+/// (the Nile) has no Production to add to.
 pub fn tech_card_effects_for(faction: Faction, tech: TechId) -> Vec<&'static str> {
     tech_card_effects_for_rules(FactionRuleSet::EMPTY, faction, tech)
 }
@@ -1035,9 +1038,11 @@ pub fn tech_card_effects_for_rules(
     tech: TechId,
 ) -> Vec<&'static str> {
     let no_horses = faction == Faction::Aztecs && !off.contains(FactionRule::AztecsNoHorses);
+    let no_production = faction == Faction::Egypt && !off.contains(FactionRule::EgyptNile);
     let effects: Vec<&'static str> = tech_card_effect_list(tech)
         .iter()
         .filter(|(_, effect)| !no_horses || *effect != CardEffect::HorseUpgrade)
+        .filter(|(_, effect)| !no_production || *effect != CardEffect::Production)
         .map(|(label, _)| *label)
         .collect();
     effects
@@ -1056,8 +1061,8 @@ pub fn production_items() -> impl Iterator<Item = ProductionItem> {
 }
 
 /// Whether researching `tech` directly gives this faction anything: an item it can build that
-/// does something for it, or an immediate effect. A tech without
-/// a benefit is only a stepping stone to the techs that require it.
+/// does something for it, an immediate effect, or a strategic resource reveal. A faction skips a
+/// tech without a benefit (`skipped_techs`): it never researches a card that does nothing.
 pub fn tech_has_benefit(
     rules: crate::experiments::RuleExperiments,
     faction: Faction,
@@ -1069,6 +1074,28 @@ pub fn tech_has_benefit(
             item_requires_for_rules(rules, item) == Some(tech)
                 && available_to_faction_rules(rules.faction_rules_off, faction, item)
         })
+}
+
+/// Technologies that give this faction nothing (`tech_has_benefit` is false). Every empire starts
+/// knowing them, so no faction ever researches a card that does nothing for it (user,
+/// 2026-11-22: "there shouldn't be a tech that you get just to advance the era"). Egypt skips
+/// Bronze Working: the Nile leaves it no Production, so the Workshop is unavailable to it.
+pub fn skipped_techs(
+    rules: crate::experiments::RuleExperiments,
+    faction: Faction,
+) -> impl Iterator<Item = TechId> {
+    TechId::ALL
+        .into_iter()
+        .filter(move |&tech| !tech_has_benefit(rules, faction, tech))
+}
+
+/// Whether this faction skips `tech` (`skipped_techs`).
+pub fn tech_skipped(
+    rules: crate::experiments::RuleExperiments,
+    faction: Faction,
+    tech: TechId,
+) -> bool {
+    !tech_has_benefit(rules, faction, tech)
 }
 
 /// Whether `tech` reveals a strategic resource. Every faction's later buildings and units draw

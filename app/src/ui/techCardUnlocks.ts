@@ -1,4 +1,4 @@
-import { BUILDING_NAME, FACTION_INFO, UNIT_NAME, isGreatWork, itemKey, itemName, pluralUnit, buildingIconName, techCardEffectsFor, unitIconName } from '../data';
+import { BUILDING_NAME, UNIT_NAME, isGreatWork, itemKey, itemName, pluralUnit, buildingIconName, techCardEffectsFor, unitIconName } from '../data';
 import type { BuildingKind, Faction, ResearchView, TechId, TechUnlock, UnitKind } from '../types';
 import { YIELD_KEYS, YIELD_LABEL, type YieldKey } from './yieldKeys';
 import { revealedByTech, unitNeed } from '../resources';
@@ -72,7 +72,8 @@ export function techCardUnlocks(research: ResearchView, tech: TechId, faction: F
         ? buildingIconName(unlock.item.building, faction)
         : 'yield-production',
     kind: unlock.item.kind,
-    yields: YIELD_KEYS.filter((k) => unlock.yields[k]).map((k) => [k, unlock.yields[k]]),
+    // The Nile: Egypt has no Production, so a building's or wonder's Production is not shown to it.
+    yields: YIELD_KEYS.filter((k) => unlock.yields[k] && !(k === 'production' && faction === 'Egypt')).map((k) => [k, unlock.yields[k]]),
     unlock,
     strength: unlock.unit_ranged ? `${unlock.unit_ranged} ranged` : unlock.unit_strength ? `${unlock.unit_strength} strength` : unlock.city_strength ? `+${unlock.city_strength} city strength` : null,
     upgradeFrom: null,
@@ -150,15 +151,4 @@ function rank(entry: TechCardUnlock) {
   if (/^Reveals (Iron|Niter|Coal|Oil|Silicon) on the map/.test(entry.label)) return 3;
   if (entry.kind === 'Improvement' || entry.upgrades.length) return 3;
   return /can upgrade to/.test(entry.label) ? 5 : 4;
-}
-
-/** A tech that gives this faction nothing directly: it still counts toward finishing the era. */
-export function steppingStone(_tech: TechId, faction: Faction) {
-  return { headline: `No benefit for ${FACTION_INFO[faction].name}`, leadsTo: 'Counts toward the next era' };
-}
-
-/** "No benefit for Byzantium · counts toward the next era" */
-export function steppingStoneText(tech: TechId, faction: Faction): string {
-  const { headline, leadsTo } = steppingStone(tech, faction);
-  return `${headline} · ${leadsTo[0].toLowerCase()}${leadsTo.slice(1)}`;
 }
