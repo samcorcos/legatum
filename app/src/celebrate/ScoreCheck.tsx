@@ -1,6 +1,8 @@
-import { useEffect, useRef } from 'react';
-import { feel } from '../feel';
+import { useEffect, useLayoutEffect, useRef } from 'react';
+import { feel, useCombatFx } from '../feel';
 import { CrestMedallion } from '../brand/ornaments';
+import { Icon } from '../ui/bits';
+import { useReducedMotion } from '../ui/useReducedMotion';
 import { eraArt } from './eraArt';
 import type { Moment } from './moments';
 import type { Box, ScoreCheckCard } from './scoreCheck';
@@ -8,29 +10,89 @@ import './scoreCheck.css';
 
 const LEGEND: { state: Box['state']; text: string }[] = [
   { state: 'kept', text: 'Scored, kept for good' },
-  { state: 'held', text: 'Held: you lose it if you lose the city or goal' },
+  { state: 'held', text: 'Held: you lose it if someone takes it from you' },
   { state: 'new', text: 'New this Age' },
   { state: 'open', text: 'Still to win' },
   { state: 'later', text: 'Age to come' },
 ];
 
+const CREST = 32;
+const BOX = 24, GAP = 4;
+/** The capital star the map draws (`CapitalStarGlyph`'s path): filled for a capital you have, outlined for one still to take. */
+const STAR = 'M0 -5.4L1.6 -1.6L5.4 0L1.6 1.6L0 5.4L-1.6 1.6L-5.4 0L-1.6 -1.6Z';
+
+/** What a box shows: the capital's star, the wonder's or goal's icon, or the Age's numeral. */
+function BoxFace({ box }: { box: Box }) {
+  if (box.star) return <svg width={14} height={14} viewBox="-6 -6 12 12" aria-hidden="true"><path d={STAR} fill={box.state === 'open' ? 'none' : 'currentColor'} stroke="currentColor" strokeWidth={0.9} strokeLinejoin="round" /></svg>;
+  if (box.icon) return <Icon name={box.icon} size={16} />;
+  return <>{box.mark}</>;
+}
+
+/**
+ * The tally (premium pass, user 2026-11-22): every empire's crest walks up the track from 0 to its VP, one space at a
+ * time like a pawn, then your boxes ink in one by one and the new Age's card glows in last. About two seconds; none
+ * under reduced motion or with animations off; a click on the sheet or track finishes it at once, and Continue works
+ * throughout. Web Animations only, so the finished layout is the one the tests measure.
+ */
+function useTally(root: React.RefObject<HTMLDivElement | null>, id: string, off: boolean) {
+  const running = useRef<Animation[]>([]);
+  useLayoutEffect(() => {
+    const el = root.current;
+    if (off || !el) return;
+    const zero = el.querySelector<HTMLElement>('[data-testid=score-track] li[data-vp="0"] .sc-pieces');
+    const animations: Animation[] = [];
+    const animate = (node: HTMLElement, frames: Keyframe[], options: KeyframeAnimationOptions) => {
+      if (typeof node.animate !== 'function') return;
+      const a = node.animate(frames, { fill: 'backwards', ...options });
+      a.finished?.catch(() => undefined); // cancelled on close: not an error
+      animations.push(a);
+    };
+    const from = zero?.getBoundingClientRect();
+    el.querySelectorAll<HTMLElement>('.sc-piece').forEach((piece, i) => {
+      const vp = Number(piece.dataset.vp);
+      if (!from || !vp) return;
+      const at = piece.getBoundingClientRect();
+      const dx = from.left + from.width / 2 - (at.left + at.width / 2);
+      animate(piece, [{ transform: `translateX(${dx}px)`, opacity: 0 }, { opacity: 1, offset: 0.12 }, { transform: 'none', opacity: 1 }],
+        { duration: Math.min(1100, 220 + vp * 90), delay: 420 + i * 45, easing: 'cubic-bezier(.3,.75,.25,1)' });
+    });
+    el.querySelectorAll<HTMLElement>('.sc-sheet .sc-row .sc-box.kept, .sc-sheet .sc-row .sc-box.held').forEach((box, i) => {
+      animate(box, [{ transform: 'scale(1.7)', opacity: 0 }, { transform: 'scale(1)', opacity: 1 }], { duration: 240, delay: 760 + i * 80, easing: 'cubic-bezier(.2,.9,.3,1.25)' });
+    });
+    const inked = el.querySelectorAll('.sc-sheet .sc-row .sc-box.kept, .sc-sheet .sc-row .sc-box.held').length;
+    el.querySelectorAll<HTMLElement>('.sc-sheet .sc-row .sc-box.new').forEach((box) => {
+      animate(box, [{ transform: 'scale(.6)', opacity: 0, boxShadow: '0 0 0 rgb(236 196 108 / 0)' }, { transform: 'scale(1.15)', opacity: 1, boxShadow: '0 0 18px rgb(236 196 108 / 1)', offset: 0.6 }, { transform: 'scale(1)', opacity: 1 }],
+        { duration: 520, delay: 860 + inked * 80, easing: 'ease-out' });
+    });
+    running.current = animations;
+    return () => { animations.forEach((a) => a.cancel()); running.current = []; };
+  }, [root, id, off]);
+  return () => running.current.forEach((a) => a.finish());
+}
+
 /**
  * The Age score check (legatum-ui "Big moments"): when a World Age begins, every player gets this takeover, after their own
- * era-up if they opened the Age. The score track shows who is ahead; your sheet shows every way to score as boxes, with
- * how to win the next point. It is held like the era-up: Continue, Return or Esc close it, nothing else does.
+ * era-up if they opened the Age. The score track shows who is ahead; your sheet shows every way to score as boxes that
+ * draw the thing itself (an Age's numeral, a capital's star, a wonder's or goal's icon), with how to win the next point.
+ * It is held like the era-up: Continue, Return or Esc close it, nothing else does.
  */
 export function ScoreCheck({ moment, dismiss }: { moment: Moment; dismiss(): void }) {
   const card: ScoreCheckCard = moment.scoreCheck!;
   const art = eraArt(card.era - 1);
+  const motionOff = useReducedMotion();
+  const animationsOn = useCombatFx((s) => s.enabled);
+  const reduced = motionOff || !animationsOn;
+  const root = useRef<HTMLDivElement>(null);
   const primary = useRef<HTMLButtonElement>(null);
   useEffect(() => { primary.current?.focus({ preventScroll: true }); }, [moment.id]);
-  return <div key={moment.id} className="era-takeover score-check" role="dialog" aria-modal="true" aria-label={`Score check: the ${card.name} Age begins`}
+  const finish = useTally(root, moment.id, reduced);
+  return <div ref={root} key={moment.id} className={`era-takeover score-check ${reduced ? 'reduced' : ''}`} role="dialog" aria-modal="true" aria-label={`Score check: the ${card.name} Age begins`}
     data-testid="score-check" data-era={card.era}>
     <div className="et-art" aria-hidden="true">
       {art && <img src={art.small} srcSet={`${art.small} 1280w, ${art.large} 1920w`} sizes="100vw" alt="" draggable={false} />}
     </div>
     <div className="sc-wash" aria-hidden="true" />
-    <div className="sc-body">
+    <div className="sc-body" onPointerDown={finish}>
       <header className="sc-head">
         <div>
           <div className="sc-kicker">{card.replay ? `The ${card.name} Age · the score now · Turn ${card.turn}` : `The ${card.name} Age begins · Turn ${card.turn}`}</div>
@@ -43,7 +105,7 @@ export function ScoreCheck({ moment, dismiss }: { moment: Moment; dismiss(): voi
         <ol style={{ gridTemplateColumns: `repeat(${card.track.length}, minmax(0, 1fr))` }}>
           {card.track.map((s) => <li key={s.vp} className={`${s.pieces.some((p) => p.isMine) ? 'mine' : ''} ${s.vp === card.target ? 'win' : ''}`} data-vp={s.vp}>
             <span className="sc-pieces">
-              {s.pieces.map((p) => <span key={p.id} className={`sc-piece${p.isMine ? ' mine' : ''}`} title={`${p.name}: ${s.vp} VP`}><CrestMedallion faction={p.faction} color={p.color} size={24} /></span>)}
+              {s.pieces.map((p) => <span key={p.id} className={`sc-piece${p.isMine ? ' mine' : ''}`} data-vp={s.vp} title={`${p.name}: ${s.vp} VP`}><CrestMedallion faction={p.faction} color={p.color} size={CREST} /></span>)}
             </span>
             <span className="sc-space">{s.vp === card.target ? `${s.vp} · Win` : s.vp}</span>
           </li>)}
@@ -56,7 +118,8 @@ export function ScoreCheck({ moment, dismiss }: { moment: Moment; dismiss(): voi
         <div className="sc-row sc-cols" aria-hidden="true"><span>Your sheet</span><span>Scored and open</span><span>How to score more</span><span>VP left</span></div>
         {card.lines.map((l) => <div key={l.key} className={`sc-row${l.fresh ? ' fresh' : ''}`} data-line={l.key}>
           <span className="sc-name"><b>{l.name}</b><small>{l.terms}</small></span>
-          <span className="sc-boxes">{l.boxes.map((b, i) => <span key={i} className={`sc-box ${b.state}`} title={b.title} aria-label={b.title}>{b.mark}</span>)}</span>
+          <span className="sc-boxes">{l.boxes.map((b, i) => <span key={i} className={`sc-box ${b.state}`} title={b.title} aria-label={b.title} data-span={b.span ?? 1}
+            style={b.span && b.span > 1 ? { width: BOX * b.span + GAP * (b.span - 1) } : undefined}><BoxFace box={b} /></span>)}</span>
           <span className="sc-how"><b>{l.how}</b>{l.detail && <small title={l.detail}>{l.detail}</small>}</span>
           <span className="sc-open">{l.open > 0 ? `+${l.open}` : '–'}</span>
         </div>)}

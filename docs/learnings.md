@@ -5427,3 +5427,10 @@ Replayed from his autosave tape with `decision_audit --seat 4 --diff-only --sett
 - **Tests:** `store.turnFailure.test.ts` makes the fixture engine throw once, twice and three times. There is no e2e that forces an engine trap: the crash specs have no such hook.
 - **First-run tour:** `e2e/tour/first-run-hints.spec.ts` starts from empty storage with the hints ON (every other tour sets `enabled: false`), picks a people and plays the first two turns, one shot per hint, at both sizes.
 - **Found by the first-run tour (hints ON):** the capital's panel is already open on turn 1, so "Select your capital and choose something to build" was stale (now "Choose something for your capital to build"); "Open Technologies (T)" named a top-bar button that the 1000x600 bar has folded away (now "Press T or click Research at the top, then pick one"). Open: after a production order is queued, the city banner still shows "? Build" until the turn resolves.
+
+## 2026-11-22: The score check's tally animation
+- **Animate with the Web Animations API and `fill: 'backwards'`, not CSS keyframes on the resting element.** The resting layout is the real one from the first frame, so the e2e fit checks and screenshots measure the finished screen, and `animation.finish()` on any pointerdown ends the tally at once.
+- **happy-dom's `Element.animate` returns animations whose `finished` promise rejects with AbortError on `cancel()`.** Unhandled, vitest reports it as an error after the tests pass; catch `finished` when you create the animation.
+- **A Playwright `click()` on a takeover panel scrolled the fixed full-screen dialog in the 1440x900 run** (the header ended up at y -9). Use `dispatchEvent('pointerdown')` to test a click-to-skip.
+- **At 1000x600 a track space is about 80 px wide, so two 32 px crests fit per row**; three empires on one VP stack upward (`flex-wrap: wrap-reverse`). A two-row min-height on `.sc-pieces` pushed the header off the top at 1000x600.
+
