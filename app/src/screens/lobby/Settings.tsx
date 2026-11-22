@@ -78,8 +78,8 @@ export function Settings({ lobby, onChange }: { lobby: Lobby; onChange?: (l: Lob
       ]} onChange={change && ((value: 'On' | 'Off') => change({ barbarians: value === 'On' }))} />
       {aiOnlyTeams(lobby) >= 2 && (
         <Segmented label="AI alliances" value={lobby.aiAlliances ? 'On' : 'Off'} options={[
-          { id: 'On', label: 'On', sub: 'AIs start allied in pairs' },
-          { id: 'Off', label: 'Off', sub: 'Every AI starts alone' },
+          { id: 'On', label: 'On', sub: 'AI empires start allied in pairs' },
+          { id: 'Off', label: 'Off', sub: 'Each AI empire starts alone' },
         ]} onChange={change && ((value: 'On' | 'Off') => change({ aiAlliances: value === 'On' }))} />
       )}
       {anyAi && onChange && (

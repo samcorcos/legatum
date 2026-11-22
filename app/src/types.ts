@@ -915,6 +915,8 @@ export interface ArmyContribution {
 export interface PlayerView {
   army_breakdown?: ArmyContribution[];
   rule_experiments?: RuleSwitches;
+  /** The game started with the AI-only teams allied in pairs. Omitted when off. */
+  ai_alliances?: boolean;
   diplomacy: DiplomacyView;
   turn: number;
   turn_limit: number | null;

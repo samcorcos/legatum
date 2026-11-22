@@ -89,6 +89,10 @@ This file holds the current rules, one line each. The user's words, dates, as-bu
 - **Tour helpers import only modules without `?url` asset imports** (Playwright can't load them): keep pure helpers such as `roman` in `brand/roman.ts`, not in an asset-importing `.tsx`.
 - **Copy changes update tour assertions in the same change:** grep `app/e2e/tour` for the old string; the tour is not in local CI.
 
+## From the co-op preset review (2026-11-22)
+- **A default-on setting that changes the rules is never hidden (UI review, 2026-11-22, AI alliances):** it shows in the Start button's sub-line ("8 empires · standard map · AI empires allied in pairs") and is said once in the game where its effect is read (the Diplomacy Relations note: "In this game the AI empires started allied in pairs."). The game reads the flag from the view (`PlayerView.ai_alliances`), never from the lobby, so a loaded game says it too.
+- **"Allies" means Alliance partners only; players on one team are "teammates" (UI review, 2026-11-22).** The lobby's Victory card says "Teammates share vision and victory." Player text says "AI empires", never "AIs" (`copyRules.ts`).
+
 ## Game text: plain language
 
 Every word a player reads (sheets, cards, the Guide, tooltips, breakdowns, report lines, refusals) follows this guide (user, 2026-10-17: "'per complete pair' is not normal language... is there a rule... to make sure we use normal language"). The cause of the bad wording was agents translating code literally (`floor(pop / 2)` became "per complete pair"). Write what the player gets, not how the code computes it.

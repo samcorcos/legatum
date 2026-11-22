@@ -395,6 +395,11 @@ export function aiOnlyTeams(l: Lobby): number {
   return teams(l).filter((t) => t.slots.every((i) => l.slots[i].kind === 'ai')).length;
 }
 
+/** True when the setup turns AI alliances on: the same condition `buildSetup` uses. */
+export function aiAlliancesOn(l: Lobby): boolean {
+  return !!l.aiAlliances && aiOnlyTeams(l) >= 2;
+}
+
 /** Problems that block starting the game, locally or on the online host. */
 export function problems(l: Lobby): string[] {
   const p: string[] = [];
@@ -435,5 +440,5 @@ export function buildSetup(l: Lobby): GameSetup {
     return p;
   });
   const size = mapDimensions(l.mapSize);
-  return { seed: l.seed, width: size.width, height: size.height, players, turn_limit: l.turnLimit, barbarians: l.barbarians !== false, ...(l.aiAlliances && aiOnlyTeams(l) >= 2 ? { ai_alliances: true } : {}) };
+  return { seed: l.seed, width: size.width, height: size.height, players, turn_limit: l.turnLimit, barbarians: l.barbarians !== false, ...(aiAlliancesOn(l) ? { ai_alliances: true } : {}) };
 }

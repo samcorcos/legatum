@@ -3,7 +3,7 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { aiOnlyTeams, applyPreset, buildSetup, newLobby } from '../../lobby';
+import { aiAlliancesOn, aiOnlyTeams, applyPreset, buildSetup, newLobby } from '../../lobby';
 import { configFromLobby, lobbyFromStaging, type StagingState } from '../../staging';
 import { Settings } from './Settings';
 
@@ -52,7 +52,7 @@ it('the lobby shows the setting and the host can turn it off', () => {
   const render = () => act(() => root.render(<Settings lobby={lobby} onChange={(l) => { lobby = l; render(); }} />));
   render();
   expect(radio('AI alliances', 'On').getAttribute('aria-checked')).toBe('true');
-  expect(host.textContent).toContain('AIs start allied in pairs');
+  expect(host.textContent).toContain('AI empires start allied in pairs');
   act(() => radio('AI alliances', 'Off').click());
   expect(lobby.aiAlliances).toBe(false);
   expect('ai_alliances' in buildSetup(lobby)).toBe(false);
@@ -62,4 +62,12 @@ it('a read-only view shows the setting without a way to change it', () => {
   act(() => root.render(<Settings lobby={newLobby('hotseat', '42')} />));
   expect(radio('AI alliances', 'On').getAttribute('aria-checked')).toBe('true');
   expect(radio('AI alliances', 'Off').hasAttribute('disabled')).toBe(true);
+});
+
+it('the Start button line and the setup agree on when AI alliances are on', () => {
+  const coop = newLobby('hotseat', '42');
+  expect(aiAlliancesOn(coop)).toBe(true);
+  expect(aiAlliancesOn({ ...coop, aiAlliances: false })).toBe(false);
+  expect(aiAlliancesOn(newLobby('solo', '42'))).toBe(false);
+  expect(aiAlliancesOn(coop)).toBe('ai_alliances' in buildSetup(coop));
 });

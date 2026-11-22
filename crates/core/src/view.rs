@@ -1103,6 +1103,10 @@ pub struct PlayerView {
         skip_serializing_if = "crate::experiments::RuleExperiments::is_default"
     )]
     pub rule_experiments: crate::experiments::RuleExperiments,
+    /// The game started with the AI-only teams allied in pairs (`GameSetup::ai_alliances`).
+    /// Public setup fact; omitted when false.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub ai_alliances: bool,
     pub diplomacy: Shared<crate::diplomacy::DiplomacyView>,
     pub turn: u32,
     pub turn_limit: Option<u32>,
@@ -2013,6 +2017,7 @@ pub fn player_view_cached(
     let (Some(income), Some(forecasts)) = (income, forecasts) else {
         return PlayerView {
             rule_experiments: state.setup.rule_experiments,
+            ai_alliances: !state.setup.ai_alliance_pairs().is_empty(),
             diplomacy: crate::diplomacy::view(state, me).into(),
             turn: state.turn,
             turn_limit: state.setup.turn_limit,
@@ -2151,6 +2156,7 @@ pub fn player_view_cached(
 
     PlayerView {
         rule_experiments: state.setup.rule_experiments,
+        ai_alliances: !state.setup.ai_alliance_pairs().is_empty(),
         diplomacy: crate::diplomacy::view(state, me).into(),
         turn: state.turn,
         turn_limit: state.setup.turn_limit,

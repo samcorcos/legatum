@@ -181,6 +181,7 @@ impl ViewBuilder {
             view: PlayerView {
                 army_breakdown: Vec::new(),
                 rule_experiments: legatum_core::experiments::RuleExperiments::default(),
+                ai_alliances: false,
                 // Existing tactical fixtures explicitly model the legacy all-war rules.
                 diplomacy: legatum_core::diplomacy::DiplomacyView {
                     replies: Vec::new(),
