@@ -2,6 +2,13 @@
 
 Newest first. One entry per non-obvious finding: what we learned, the evidence, and what we changed. Correct or delete entries that turn out to be wrong.
 
+## 2026-11-22: Art audit pass: map grade on card art, floating unlock pieces, converging faces (`claude/art-pass-1122`)
+
+- **The washed-out wonder cards were the map's palette grade.** `landmark-atlas-edit.py` grades wonders and Great Works so they sit beside the towns on the map, and the same 256/128/64 files served the research cards. The map now reads `assets/landmarks/<slug>-256.png` (`landmarkArtUrl`) and the cards get the ungraded copy (`tools/art/card-grade.py`), no regeneration needed.
+- **Five unlock pieces had no ground** (the three Siege-line effects reused the floating siege props; India's two buildings were cut out without a plot), and the Supermarket read as clip art. Repainted with Codex image generation on the Mac (Remote Control, 4 at a time), two variants each, 28 images in about 6 minutes, none refused.
+- **The stock magenta key erases thin parts of a small subject:** chhatri columns and a sling's ropes vanished, leaving domes and the pouch floating. `tools/art/unlock-art.py` crops and enlarges the subject before using `unit-art.py`'s edge key.
+- **Portrait edits that change only one face work first time** with an edit prompt that pins everything else ("the woman must not change at all").
+
 ## 2026-11-22: Web games upload to R2; player names are inside the state hash
 
 - **The hosted web build kept every game only in the browser.** Histories queue in IndexedDB (`legatum-game-archive-v1`) and `deliver()` returned false on the hosted build, so they sat there until the player used Export game history. A designer's Hard game (Athens, 145 turns) was still recoverable from that queue after he left it, but a cleared browser would have lost it. Now `deliver()` uploads to the `infra/games` Worker when the build has `LEGATUM_GAMES_URL`, and a success acknowledges (deletes) the local copy.

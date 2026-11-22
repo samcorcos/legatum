@@ -32,4 +32,3 @@ The date range is the range of dates the repository's own records give (prompt h
 
 - No prompt is stored for the map improvements, the six original resource medallions, the aircraft plan sprites or the parchment texture.
 - Where a set was generated from one shared prompt (terrain, city sets, camps and ruins), there is one prompt for the set, not one per file.
-- The Hunter-Killer miniature, the Aztec portrait and a group of unlock pieces are queued for regeneration (see `units/README.md` and the `legatum-art` skill); their rows above describe the files as they are now.
