@@ -5150,6 +5150,103 @@ exports[`WASM diplomacy behavior > population is territory: growth claims a tile
       },
     },
     {
+      "buy_block": "not_buyable",
+      "buy_blocker": "Food project cannot be bought",
+      "buy_cost": null,
+      "buy_quote": null,
+      "cost": 0,
+      "item": {
+        "kind": "Project",
+        "project": "Food",
+      },
+      "production_banked": 0,
+      "production_stored": 0,
+      "turns": -1,
+      "yields": {
+        "focus": "Balanced",
+        "focus_reason": "building Food project",
+        "sources": [
+          {
+            "label": "City center",
+            "yields": {
+              "food": 4,
+              "gold": 1,
+              "production": 1,
+              "science": 0,
+            },
+          },
+          {
+            "label": "Worked tiles",
+            "yields": {
+              "food": 12,
+              "gold": 0,
+              "production": 0,
+              "science": 0,
+            },
+          },
+          {
+            "label": "Minimum city production",
+            "yields": {
+              "food": 0,
+              "gold": 0,
+              "production": 2,
+              "science": 0,
+            },
+          },
+          {
+            "label": "Capital",
+            "yields": {
+              "food": 0,
+              "gold": 0,
+              "production": 2,
+              "science": 2,
+            },
+          },
+          {
+            "label": "Food project (25% of Production)",
+            "yields": {
+              "food": 1,
+              "gold": 0,
+              "production": 0,
+              "science": 0,
+            },
+          },
+        ],
+        "total": {
+          "food": 17,
+          "gold": 1,
+          "production": 5,
+          "science": 2,
+        },
+        "worked": [
+          {
+            "q": 0,
+            "r": 6,
+          },
+          {
+            "q": 0,
+            "r": 7,
+          },
+          {
+            "q": 1,
+            "r": 5,
+          },
+          {
+            "q": 1,
+            "r": 7,
+          },
+          {
+            "q": 2,
+            "r": 5,
+          },
+          {
+            "q": 2,
+            "r": 6,
+          },
+        ],
+      },
+    },
+    {
       "buy_blocker": null,
       "buy_cost": 60,
       "buy_quote": {
@@ -6736,6 +6833,138 @@ exports[`WASM diplomacy behavior > population is territory: growth claims a tile
         ],
         "total": {
           "food": 21,
+          "gold": 1,
+          "production": 7,
+          "science": 3,
+        },
+        "worked": [
+          {
+            "q": 11,
+            "r": 6,
+          },
+          {
+            "q": 12,
+            "r": 6,
+          },
+          {
+            "q": 12,
+            "r": 7,
+          },
+          {
+            "q": 13,
+            "r": 4,
+          },
+          {
+            "q": 13,
+            "r": 5,
+          },
+          {
+            "q": 13,
+            "r": 7,
+          },
+          {
+            "q": 14,
+            "r": 5,
+          },
+          {
+            "q": 14,
+            "r": 6,
+          },
+        ],
+      },
+    },
+    {
+      "buy_block": "not_buyable",
+      "buy_blocker": "Food project cannot be bought",
+      "buy_cost": null,
+      "buy_quote": null,
+      "cost": 0,
+      "item": {
+        "kind": "Project",
+        "project": "Food",
+      },
+      "production_banked": 0,
+      "production_stored": 0,
+      "turns": -1,
+      "yields": {
+        "focus": "Balanced",
+        "focus_reason": "building Food project",
+        "sources": [
+          {
+            "label": "City center",
+            "yields": {
+              "food": 4,
+              "gold": 1,
+              "production": 1,
+              "science": 0,
+            },
+          },
+          {
+            "label": "Worked tiles",
+            "yields": {
+              "food": 16,
+              "gold": 0,
+              "production": 0,
+              "science": 0,
+            },
+          },
+          {
+            "label": "Minimum city production",
+            "yields": {
+              "food": 0,
+              "gold": 0,
+              "production": 2,
+              "science": 0,
+            },
+          },
+          {
+            "label": "Citizens",
+            "yields": {
+              "food": 0,
+              "gold": 0,
+              "production": 0,
+              "science": 1,
+            },
+          },
+          {
+            "label": "Capital",
+            "yields": {
+              "food": 0,
+              "gold": 0,
+              "production": 2,
+              "science": 2,
+            },
+          },
+          {
+            "label": "India network",
+            "yields": {
+              "food": 1,
+              "gold": 0,
+              "production": 0,
+              "science": 0,
+            },
+          },
+          {
+            "label": "Giant's Causeway (+25%)",
+            "yields": {
+              "food": 0,
+              "gold": 0,
+              "production": 2,
+              "science": 0,
+            },
+          },
+          {
+            "label": "Food project (25% of Production)",
+            "yields": {
+              "food": 1,
+              "gold": 0,
+              "production": 0,
+              "science": 0,
+            },
+          },
+        ],
+        "total": {
+          "food": 22,
           "gold": 1,
           "production": 7,
           "science": 3,
