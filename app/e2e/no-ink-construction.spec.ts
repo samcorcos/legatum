@@ -11,9 +11,9 @@ type MapWindow = GameWindow & { legatumMap: { camera: { x: number; y: number; zo
 
 const SITE = fromOffset(4, 5);
 const cases = [
-  { name: 'wonder-stage1', producing: { kind: 'Wonder', building: 'RelayUplink', tile: SITE }, stored: 90, buildings: ['Walls', 'Castle'] },
-  { name: 'wonder-stage2', producing: { kind: 'Wonder', building: 'RelayUplink', tile: SITE }, stored: 270, buildings: ['Walls', 'Castle'] },
-  { name: 'wonder-stage3', producing: { kind: 'Wonder', building: 'RelayUplink', tile: SITE }, stored: 480, buildings: ['Walls', 'Castle'] },
+  { name: 'wonder-stage1', producing: { kind: 'Wonder', building: 'GreatLibrary', tile: SITE }, stored: 90, buildings: ['Walls', 'Castle'] },
+  { name: 'wonder-stage2', producing: { kind: 'Wonder', building: 'GreatLibrary', tile: SITE }, stored: 270, buildings: ['Walls', 'Castle'] },
+  { name: 'wonder-stage3', producing: { kind: 'Wonder', building: 'GreatLibrary', tile: SITE }, stored: 480, buildings: ['Walls', 'Castle'] },
   { name: 'walls-in-progress', producing: { kind: 'Building', building: 'Walls' }, stored: 40, buildings: [] },
   { name: 'granary-in-progress', producing: { kind: 'Building', building: 'Granary' }, stored: 15, buildings: [] },
 ];

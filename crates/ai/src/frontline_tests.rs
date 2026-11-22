@@ -9,7 +9,7 @@ const GRANARY: ProductionItem = ProductionItem::Building {
     building: BuildingKind::Granary,
 };
 const SOLDIER: ProductionItem = ProductionItem::Unit {
-    unit: UnitKind::Soldier,
+    unit: UnitKind::Spearman,
 };
 
 fn tally() -> Tally {
@@ -25,8 +25,8 @@ fn tally() -> Tally {
     }
 }
 
-/// Athens: city 1 has an enemy Soldier two tiles away and no garrison, so the frontline check
-/// wants a defender there; city 2, far from it, can buy a Granary for 80. City 1's Soldier is
+/// Athens: city 1 has an enemy Spearman two tiles away and no garrison, so the frontline check
+/// wants a defender there; city 2, far from it, can buy a Granary for 80. City 1's Spearman is
 /// quoted at `soldier` (None: no unit can be bought there).
 fn view(gold: i32, soldier: Option<i32>) -> legatum_core::PlayerView {
     let mut view = ViewBuilder::new(32, 20)
@@ -35,7 +35,7 @@ fn view(gold: i32, soldier: Option<i32>) -> legatum_core::PlayerView {
         .gold(gold)
         .city(1, ME, Hex::from_offset(5, 5), 5)
         .city(2, ME, Hex::from_offset(19, 5), 5)
-        .unit(50, ENEMY, UnitKind::Soldier, Hex::from_offset(7, 5))
+        .unit(50, ENEMY, UnitKind::Spearman, Hex::from_offset(7, 5))
         .build();
     view.economy.gold_per_turn.total = 50;
     let d = view.cities[0].detail.as_mut().unwrap();
@@ -98,7 +98,7 @@ fn a_threatened_city_that_cannot_buy_a_defender_does_not_stop_other_purchases() 
 
 #[test]
 fn an_unaffordable_defender_keeps_its_price_and_an_affordable_one_is_bought_first() {
-    // A 300-Gold Soldier the 200-Gold treasury can't pay: the Granary would spend the Gold
+    // A 300-Gold Spearman the 200-Gold treasury can't pay: the Granary would spend the Gold
     // the defender needs, so nothing is bought.
     let v = view(200, Some(300));
     let mut p = planner(&v);

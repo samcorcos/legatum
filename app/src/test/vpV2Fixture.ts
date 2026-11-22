@@ -27,7 +27,7 @@ const V2_ERAS: EraView[] = [
   {
     era: 4, name: 'Renaissance', entered_by: [], scored_by: [],
     objectives: [
-      { slot: 0, family: 'Build', text: 'Add a Bank to 3 more cities', target: 3, objective: { kind: 'Buildings', building: 'Clearinghouse', cities: 3 } },
+      { slot: 0, family: 'Build', text: 'Add a Bank to 3 more cities', target: 3, objective: { kind: 'Buildings', building: 'Bank', cities: 3 } },
       { slot: 1, family: 'Expand', text: 'Gain 100 tiles of territory', target: 100, objective: { kind: 'Territory', n: 100 } },
       { slot: 2, family: 'Fight', text: 'Veterans: earn 4 promotions in battle', target: 4, objective: { kind: 'Veterans', n: 4 } },
     ],
@@ -35,7 +35,7 @@ const V2_ERAS: EraView[] = [
   {
     era: 5, name: 'Industrial', entered_by: [], scored_by: [],
     objectives: [
-      { slot: 0, family: 'Build', text: 'Add a Forge to 4 more cities', target: 4, objective: { kind: 'Buildings', building: 'MachineShop', cities: 4 } },
+      { slot: 0, family: 'Build', text: 'Add a Forge to 4 more cities', target: 4, objective: { kind: 'Buildings', building: 'Forge', cities: 4 } },
       { slot: 1, family: 'Expand', text: 'Gain 8 cities', target: 8, objective: { kind: 'Cities', n: 8 } },
       { slot: 2, family: 'Fight', text: 'Breach: capture a walled city', target: 1, objective: { kind: 'Breach' } },
     ],
@@ -51,7 +51,7 @@ const V2_ERAS: EraView[] = [
   {
     era: 7, name: 'Future', entered_by: [], scored_by: [],
     objectives: [
-      { slot: 0, family: 'Build', text: 'Add a Research Lab to 4 more cities', target: 4, objective: { kind: 'Buildings', building: 'InferenceCore', cities: 4 } },
+      { slot: 0, family: 'Build', text: 'Add a Research Lab to 4 more cities', target: 4, objective: { kind: 'Buildings', building: 'ResearchLab', cities: 4 } },
       { slot: 1, family: 'Expand', text: 'Gain 160 tiles of territory', target: 160, objective: { kind: 'Territory', n: 160 } },
       { slot: 2, family: 'Fight', text: 'Humble the mighty: capture a city from an empire ahead of you on VP', target: 1, objective: { kind: 'HumbleTheMighty' } },
     ],
@@ -167,7 +167,7 @@ export function withScoreCheck(base: PlayerView): PlayerView {
     ...(e.era === 2 ? [{ player: me.id, slot: 0, turn: 60 }, ...live.filter((p) => p.vp_sources.some(([s]) => s.kind === 'EraObjective' && s.era === 2) && p.id !== me.id).map((p) => ({ player: p.id, slot: 0, turn: 70 }))] : []),
     ...(e.era === 3 ? [{ player: rival.id, slot: 0, turn: 88 }] : []),
   ] }));
-  view.great_works = [{ player: me.id, completed: 'RelayUplink', building: null, city: null, progress: 0, cost: 600, production_per_turn: 0, turns: null, blocker: null }];
+  view.great_works = [{ player: me.id, completed: 'GreatLibrary', building: null, city: null, progress: 0, cost: 600, production_per_turn: 0, turns: null, blocker: null }];
   view.turn = 92;
   return view;
 }

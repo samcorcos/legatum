@@ -248,8 +248,8 @@ live('wonder151', async (page) => {
   const from = 112, to = 151;
   await loadRaw(page, spineSave(from, (g) => {
     const c = Object.values(g.cities as Record<string, any>).find((x) => x.name === 'Bellinzona');
-    c.producing = { kind: 'Wonder', building: 'RelayUplink', tile: { q: 3, r: 25 } };
-    if (!c.buildings.includes('Laboratory')) c.buildings.push('Laboratory');
+    c.producing = { kind: 'Wonder', building: 'GreatLibrary', tile: { q: 3, r: 25 } };
+    if (!c.buildings.includes('Library')) c.buildings.push('Library');
     c.production_queue = [];
     c.production_stored = 0;
   }), from);
@@ -264,7 +264,7 @@ live('wonder151', async (page) => {
   await film(page, 'wonder151', (to - from + 1) * perTurn, () => cam, [], async (i) => {
     if (i % perTurn === 0) {
       await resolveTurn(page, from + Math.floor(i / perTurn), spineOrders(from + Math.floor(i / perTurn)));
-      progress.push(await onState<{ stored: number; cost: number; built: boolean }>(page, `(s) => { const c = s.views[s.seat].cities.find(c => c.name === 'Bellinzona'); return { stored: c.detail?.production_stored ?? 0, cost: c.detail?.production_cost ?? 600, built: c.great_works.includes('RelayUplink') }; }`));
+      progress.push(await onState<{ stored: number; cost: number; built: boolean }>(page, `(s) => { const c = s.views[s.seat].cities.find(c => c.name === 'Bellinzona'); return { stored: c.detail?.production_stored ?? 0, cost: c.detail?.production_cost ?? 600, built: c.great_works.includes('GreatLibrary') }; }`));
     }
   }, 100);
   writeFileSync(join(OUT, 'wonder151.progress.json'), JSON.stringify(progress, null, 2));

@@ -118,7 +118,7 @@ impl Brain for HumanPlaybookV6Brain {
             .filter(|o| {
                 o.item
                     == ProductionItem::Unit {
-                        unit: UnitKind::Ranger,
+                        unit: UnitKind::Archer,
                     }
             })
             .filter_map(|o| o.buy_cost)
@@ -576,8 +576,8 @@ impl Plan<'_> {
         use UnitKind::*;
         let count = |u| counts.get(&u).copied().unwrap_or(0);
         let cities = self.ctx.own_cities.len();
-        let ranged = count(Ranger) + count(Marksman);
-        let melee = count(Soldier) + count(Trooper) + count(AssaultTrooper);
+        let ranged = count(Archer) + count(Crossbowman);
+        let melee = count(Spearman) + count(Pikeman) + count(Musketman);
         let threatened = self
             .ctx
             .enemy_units
@@ -644,8 +644,8 @@ impl Plan<'_> {
                 };
                 base + if ranged_unit { 20 } else { 0 }
                     + match unit {
-                        Marksman | AssaultTrooper => 15,
-                        Trooper => 10,
+                        Crossbowman | Musketman => 15,
+                        Pikeman => 10,
                         _ => 0,
                     }
             }
@@ -659,7 +659,7 @@ impl Plan<'_> {
                         }
                     }
                     Workshop => 660,
-                    Laboratory => 710,
+                    Library => 710,
                     Granary => {
                         if self.goal_pending(Faction::Celts)
                             || c.is_capital && self.goal_pending(Faction::Germany)
@@ -669,11 +669,11 @@ impl Plan<'_> {
                             400
                         }
                     }
-                    College => 530,
-                    MachineShop => 450,
-                    Hydroponics | Supermarket => 420,
-                    Clearinghouse | StockExchange => 430,
-                    BroodHall => {
+                    University => 530,
+                    Forge => 450,
+                    Mill | Supermarket => 420,
+                    Bank | StockExchange => 430,
+                    RiceStorehouse => {
                         if c.is_capital && self.goal_pending(Faction::Germany) {
                             705
                         } else {
@@ -710,12 +710,12 @@ impl Plan<'_> {
                             50
                         }
                     }
-                    StarFort | RelayUplink | Pyramids | HagiaSophia | EiffelTower | IterReactor
-                    | PlanetaryFoundry | WorldExchange | CourierHall | ImperialDiwan
-                    | Roadworks | AirDefence => -200,
-                    InferenceCore => 520,
-                    Autoworks => 440,
-                    WarShrine => 80,
+                    StarFort | GreatLibrary | Pyramids | HagiaSophia | EiffelTower
+                    | IterFusionReactor | RoyalArsenal | GrandBazaar | YamRelayStation
+                    | ImperialDiwan | Roadworks | AirDefence => -200,
+                    ResearchLab => 520,
+                    Factory => 440,
+                    Agoge => 80,
                 }
             }
         }

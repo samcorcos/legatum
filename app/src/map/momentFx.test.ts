@@ -27,7 +27,7 @@ describe('payoff moments plan', () => {
     const before = view(tiles([[CITY, 0], [chosen, 0]]), [{ id: 4, owner: 0, pos: CITY }]);
     const after = view(tiles([[CITY, 0], [chosen, 0]]), [{ id: 4, owner: 0, pos: CITY }]);
     for (const [v, stored] of [[before, 90], [after, 270]] as const) {
-      v.cities[0].detail = { producing: { kind: 'Wonder', building: 'RelayUplink', tile: chosen }, production_stored: stored, production_cost: 600 } as PlayerView['cities'][number]['detail'];
+      v.cities[0].detail = { producing: { kind: 'Wonder', building: 'GreatLibrary', tile: chosen }, production_stored: stored, production_cost: 600 } as PlayerView['cities'][number]['detail'];
     }
     const plan = buildMomentPlan([], before, after, 0)!;
     expect(plan.builds).toHaveLength(1);
@@ -41,7 +41,7 @@ describe('payoff moments plan', () => {
     const chosen = { q: 7, r: 6 };
     const before = view(tiles([[CITY, 0], [chosen, 0]]), [{ id: 4, owner: 0, pos: CITY }]);
     const after = view(tiles([[CITY, 0], [chosen, 0]]), [{ id: 4, owner: 0, pos: CITY }]);
-    after.cities[0].detail = { producing: { kind: 'Wonder', building: 'RelayUplink', tile: chosen }, production_stored: 60, production_cost: 600 } as PlayerView['cities'][number]['detail'];
+    after.cities[0].detail = { producing: { kind: 'Wonder', building: 'GreatLibrary', tile: chosen }, production_stored: 60, production_cost: 600 } as PlayerView['cities'][number]['detail'];
     const plan = buildMomentPlan([], before, after, 0)!;
     expect(plan.builds[0]).toMatchObject({ city: 4, at: chosen, from: 0, to: .1 });
     if (!CONSTRUCTION_ANIMATION) return;
@@ -146,7 +146,7 @@ describe('payoff moments plan', () => {
   it.skipIf(!CONSTRUCTION_ANIMATION)('raises finished buildings one after another with the wonder last, and holds walls until they are sketched in', () => {
     const v = view(tiles([[CITY, 0]]), [{ id: 4, owner: 0, pos: CITY }, { id: 5, owner: 0, pos: { q: 10, r: 6 } }]);
     const events = [
-      { type: 'ProductionCompleted', city: 5, owner: 0, item: { kind: 'Building', building: 'RelayUplink' } },
+      { type: 'ProductionCompleted', city: 5, owner: 0, item: { kind: 'Building', building: 'GreatLibrary' } },
       { type: 'ProductionCompleted', city: 4, owner: 0, item: { kind: 'Building', building: 'Walls' } },
     ] as Event[];
     const plan = buildMomentPlan(events, v, v, 400)!;
@@ -181,10 +181,10 @@ describe('payoff moments plan', () => {
 
   it('starts the moments when the combat playback has finished moving', () => {
     const v = view(tiles(), []);
-    const units = { ...v, units: [{ id: 8, owner: 0, kind: 'Soldier', pos: { q: 3, r: 4 }, hp: 100, military: true }] } as unknown as PlayerView;
+    const units = { ...v, units: [{ id: 8, owner: 0, kind: 'Spearman', pos: { q: 3, r: 4 }, hp: 100, military: true }] } as unknown as PlayerView;
     const combat = buildCombatPlan([
       { type: 'UnitMoved', unit: 8, owner: 0, from: { q: 3, r: 4 }, to: { q: 4, r: 4 } },
-      { type: 'UnitDestroyed', unit: 9, owner: 2, unit_kind: 'Soldier', at: { q: 5, r: 4 } },
+      { type: 'UnitDestroyed', unit: 9, owner: 2, unit_kind: 'Spearman', at: { q: 5, r: 4 } },
     ] as Event[], units, units);
     expect(movesEnd(combat, 0)).toBe(combat!.moves.get(8)![0].t1);
     expect(movesEnd(null, 700)).toBe(700);
@@ -192,12 +192,12 @@ describe('payoff moments plan', () => {
 
   it('stamps treaties on both capitals early in the turn and the score late, and glints a promoted unit after the moves', () => {
     const v = view(tiles(), [{ id: 4, owner: 0, pos: CITY, is_capital: true } as never, { id: 9, owner: 2, pos: { q: 14, r: 6 }, is_capital: true } as never]);
-    const withUnit = { ...v, units: [{ id: 3, owner: 0, kind: 'Soldier', pos: { q: 7, r: 6 }, hp: 100, military: true }] } as unknown as PlayerView;
+    const withUnit = { ...v, units: [{ id: 3, owner: 0, kind: 'Spearman', pos: { q: 7, r: 6 }, hp: 100, military: true }] } as unknown as PlayerView;
     const relation = { a: 0, b: 1, state: 'Alliance' };
     const events = [
       { type: 'TreatyActivated', relation },
       { type: 'EraObjectiveScored', player: 2, era: 2, slot: 1, objective: 'Gain 4 cities' },
-      { type: 'UnitPromoted', unit: 3, owner: 0, unit_kind: 'Soldier', level: 1, at: { q: 7, r: 6 } },
+      { type: 'UnitPromoted', unit: 3, owner: 0, unit_kind: 'Spearman', level: 1, at: { q: 7, r: 6 } },
     ] as Event[];
     const plan = buildMomentPlan(events, withUnit, withUnit, 600)!;
     const alliance = plan.seals.filter((x) => x.kind === 'alliance');

@@ -46,41 +46,41 @@ export const UNIT_KINDS: UnitKind[] = RULES.unitOrder as UnitKind[];
 export const CLASS_BONUS_PERCENT: number = RULES.classBonusPercent;
 /** Core `combat::MOUNTED_CITY_PENALTY_PERCENT`: the percent of its base strength a pre-World War mounted unit loses charging a city. */
 export const MOUNTED_CITY_PENALTY_PERCENT: number = RULES.mountedCityPenaltyPercent;
-/** Display names of every unit kind (core `data::unit_name`): the identifiers keep their pre-overhaul spelling, so Soldier is the Spearman. */
+/** Display names of every unit kind (core `data::unit_name`). An identifier is the PascalCase of its display name. */
 export const UNIT_NAME = RULES.unitNames as Record<UnitKind, string>;
 /** Moves of every mounted unit (core `data::MOUNTED_MOVES`). */
 export const MOUNTED_MOVES: number = RULES.mountedMoves;
 /** The Tank's moves (core `data::TANK_MOVES`): one more than the rest of the mounted class; the Autonomous Armour has one more again. */
 export const TANK_MOVES: number = RULES.tankMoves;
-/** The Landship's moves (core `data::LANDSHIP_MOVES`): the first armour is slow. */
-export const LANDSHIP_MOVES: number = RULES.landshipMoves;
+/** The EarlyTank's moves (core `data::EARLY_TANK_MOVES`): the first armour is slow. */
+export const EARLY_TANK_MOVES: number = RULES.earlyTankMoves;
 /** Core `data::indirect_fire`: the gun line that fires over terrain once Steel is known (Howitzer, Artillery, Rocket Artillery, Combat Drone). */
 export const firesIndirect = (kind: UnitKind): boolean => (RULES.indirectFire as readonly string[]).includes(kind);
 export const AUTONOMOUS_ARMOUR_MOVES: number = RULES.autonomousArmourMoves;
 export const BUILDING_KINDS: BuildingKind[] = [
-  'BroodHall',
+  'RiceStorehouse',
   'Granary',
   'Workshop',
   'Market',
-  'Laboratory',
+  'Library',
   'Walls',
-  'RelayUplink',
+  'GreatLibrary',
   'Pyramids',
   'HagiaSophia',
   'EiffelTower',
-  'IterReactor',
-  'Hydroponics',
-  'MachineShop',
-  'WarShrine',
-  'College',
-  'Clearinghouse',
-  'Autoworks',
+  'IterFusionReactor',
+  'Mill',
+  'Forge',
+  'Agoge',
+  'University',
+  'Bank',
+  'Factory',
   'Castle',
   'StarFort',
-  'PlanetaryFoundry',
-  'WorldExchange',
-  'InferenceCore',
-  'CourierHall',
+  'RoyalArsenal',
+  'GrandBazaar',
+  'ResearchLab',
+  'YamRelayStation',
   'ImperialDiwan',
   'Roadworks',
   'StockExchange',
@@ -90,7 +90,7 @@ export const BUILDING_KINDS: BuildingKind[] = [
 /** Every technology in research order: five per era, nine eras (core `eras::TECHS`, exported with the rules). */
 export const TECHS: TechId[] = RULES.techOrder as TechId[];
 export const FACTIONS: Faction[] = ["Switzerland", "India", "Byzantium", "Germany", "Celts", "Mongols", "Sparta", "Athens", "Aztecs", "Egypt", "Rome"];
-export const GREAT_WORK_ICON = 'milestone-relay-uplink';
+export const GREAT_WORK_ICON = 'milestone-great-library';
 export const GREAT_WORK_NAME = 'World wonder';
 export const GREAT_WORK_DESC = 'Complete one of the seven world wonders on a chosen tile. Each can be completed only once in the world. Its holder scores 2 VP, and capturing it transfers those points.';
 export const GREAT_WORK_RULE = 'Complete a world wonder';
@@ -149,7 +149,7 @@ export const CLASS_NAME: Record<UnitClass, string> = { Melee: 'Melee line', Rang
 export const CLASS_NOTE: Record<UnitClass, string> = {
   Melee: `Beats mounted: +${CLASS_BONUS_PERCENT}% strength against mounted units, attacking or defending, before the World War era.`,
   Ranged: 'Beats the melee line: strikes from range with no retaliation.',
-  Mounted: `${MOUNTED_MOVES} moves. Beats ranged: +${CLASS_BONUS_PERCENT}% strength when it charges ranged units, before the World War era; none when they shoot at it. Horses are poor at storming cities: −${MOUNTED_CITY_PENALTY_PERCENT}% strength charging a city. Outrider: a horse can ride away from a melee attacker that didn't start the turn beside it. Armour (from the Landship on) does neither.`,
+  Mounted: `${MOUNTED_MOVES} moves. Beats ranged: +${CLASS_BONUS_PERCENT}% strength when it charges ranged units, before the World War era; none when they shoot at it. Horses are poor at storming cities: −${MOUNTED_CITY_PENALTY_PERCENT}% strength charging a city. Outrider: a horse can ride away from a melee attacker that didn't start the turn beside it. Armour (from the EarlyTank on) does neither.`,
   Air: 'Based in a city; strikes from the air.',
 };
 
@@ -183,31 +183,31 @@ const MOUNTED_NOTE = `${MOUNTED_MOVES} moves; +${CLASS_BONUS_PERCENT}% strength 
 const UNIT_COPY: Record<UnitKind, { summary: string; blurb: string }> = {
   Scout: { summary: 'Explores quickly and finds ruins and rivals', blurb: 'Fast explorer. Finds ruins and rivals.' },
   Settler: { summary: 'Founds a city. Costs 1 population.', blurb: 'Founds a new city. A city needs 2 population to train one, and loses 1 population when it does.' },
-  Heir: { summary: `Whoever holds him scores ${RULES.factionGoals.Byzantium.vp} VP`, blurb: `The last heir of the old empire, a civilian with no strength. Whoever holds him scores ${RULES.factionGoals.Byzantium.vp} VP, so capture him to take the points. Only one at a time, and he cannot be bought.` },
-  Soldier: { summary: 'Holds ground and takes cities; strong against mounted', blurb: `The spear line: holds ground and takes cities. ${MELEE_NOTE}` },
+  HeirToTheThrone: { summary: `Whoever holds him scores ${RULES.factionGoals.Byzantium.vp} VP`, blurb: `The last heir of the old empire, a civilian with no strength. Whoever holds him scores ${RULES.factionGoals.Byzantium.vp} VP, so capture him to take the points. Only one at a time, and he cannot be bought.` },
+  Spearman: { summary: 'Holds ground and takes cities; strong against mounted', blurb: `The spear line: holds ground and takes cities. ${MELEE_NOTE}` },
   Phalangite: { summary: 'Holds ground and takes cities; strong against mounted', blurb: `The pike phalanx of the Classical age. ${MELEE_NOTE}` },
-  Trooper: { summary: 'Holds ground and takes cities; strong against mounted', blurb: `The pike line of the Medieval age. ${MELEE_NOTE}` },
-  AssaultTrooper: { summary: 'Holds ground and takes cities; strong against mounted', blurb: `The musket line of the Renaissance. ${MELEE_NOTE}` },
+  Pikeman: { summary: 'Holds ground and takes cities; strong against mounted', blurb: `The pike line of the Medieval age. ${MELEE_NOTE}` },
+  Musketman: { summary: 'Holds ground and takes cities; strong against mounted', blurb: `The musket line of the Renaissance. ${MELEE_NOTE}` },
   Rifleman: { summary: 'Holds ground and takes cities; strong against mounted', blurb: `The rifle line of the Industrial age. ${MELEE_NOTE}` },
   TrenchInfantry: { summary: 'Holds ground and takes cities; strong against mounted', blurb: `The trench line of the Machine Age. ${MELEE_NOTE}` },
   Infantry: { summary: 'World War infantry; takes cities without class bonuses', blurb: 'The infantry of the World War era. No class bonuses from here on.' },
   MechanisedInfantry: { summary: `Infantry with ${RULES.mechanisedInfantryMoves} moves, keeping pace with armour; takes cities`, blurb: `Modern infantry riding in armoured carriers: ${RULES.mechanisedInfantryMoves} moves instead of 2, so it keeps up with a Tank. Takes cities. No class bonuses from here on.` },
   HunterKiller: { summary: 'Armed autonomous ground robot; takes cities', blurb: `A four-legged armed autonomous robot on the melee line. Mechanised Infantry upgrades to it. No class bonuses from the World War era on.` },
-  Ranger: { summary: 'Strikes from 2 tiles away without retaliation', blurb: 'Strikes from 2 tiles away, with no retaliation.' },
+  Archer: { summary: 'Strikes from 2 tiles away without retaliation', blurb: 'Strikes from 2 tiles away, with no retaliation.' },
   CompositeArcher: { summary: 'Strikes from 2 tiles away without retaliation', blurb: 'Classical composite bow. Strikes from 2 tiles away, with no retaliation.' },
-  Marksman: { summary: 'Strikes from 2 tiles away without retaliation', blurb: 'Medieval crossbow line. Strikes from 2 tiles away, with no retaliation.' },
+  Crossbowman: { summary: 'Strikes from 2 tiles away without retaliation', blurb: 'Medieval crossbow line. Strikes from 2 tiles away, with no retaliation.' },
   Arquebusier: { summary: 'Strikes from 2 tiles away without retaliation', blurb: 'Renaissance gunpowder shooters. Strike from 2 tiles away, with no retaliation.' },
   FieldCannon: { summary: 'Strikes from 2 tiles away without retaliation', blurb: 'Industrial gun line. Strikes from 2 tiles away, with no retaliation.' },
   Howitzer: { summary: 'Indirect fire and full Siege built in', blurb: 'Machine Age gun line. Fires over terrain at targets your team can see, and ignores every tier of Walls. Strikes from 2 tiles away, with no retaliation.' },
   Artillery: { summary: 'Indirect fire and full Siege built in', blurb: 'World War gun line. Fires over terrain at visible targets and ignores every tier of Walls.' },
   RocketArtillery: { summary: `Indirect fire from ${RULES.rocketArtilleryRange} tiles away; full Siege built in`, blurb: `Modern rocket launchers. Strike from ${RULES.rocketArtilleryRange} tiles away, one more than Artillery, with no retaliation. Fire over terrain at targets your team can see, and ignore every tier of Walls.` },
-  Drone: { summary: 'Quick indirect fire and full Siege built in', blurb: 'Future strike drones. Quick, fire over terrain at visible targets, and ignore every tier of Walls.' },
+  CombatDrone: { summary: 'Quick indirect fire and full Siege built in', blurb: 'Future strike drones. Quick, fire over terrain at visible targets, and ignore every tier of Walls.' },
   Horseman: { summary: 'Fast riders; strong against ranged units', blurb: `Fast riders. ${MOUNTED_NOTE}` },
   Cataphract: { summary: 'Armoured riders; strong against ranged units', blurb: `Armoured lancers of the Classical age. ${MOUNTED_NOTE}` },
   Knight: { summary: 'Armoured riders; strong against ranged units', blurb: `Armoured riders of the Medieval age. ${MOUNTED_NOTE}` },
   Cuirassier: { summary: 'Fast riders; strong against ranged units', blurb: `Breastplated heavy horse of the Renaissance. ${MOUNTED_NOTE}` },
   Cavalry: { summary: 'Fast riders; strong against ranged units', blurb: `Sabre cavalry of the Industrial age. ${MOUNTED_NOTE}` },
-  Landship: { summary: `Slow first armour, ${LANDSHIP_MOVES} moves; strong against ranged units`, blurb: `The first armour, of the Machine Age. ${LANDSHIP_MOVES} moves; +${CLASS_BONUS_PERCENT}% strength charging ranged units, none when they shoot at it. Unlike horses it takes no penalty charging a city and cannot ride away from an attack.` },
+  EarlyTank: { summary: `Slow first armour, ${EARLY_TANK_MOVES} moves; strong against ranged units`, blurb: `The first armour, of the Machine Age. ${EARLY_TANK_MOVES} moves; +${CLASS_BONUS_PERCENT}% strength charging ranged units, none when they shoot at it. Unlike horses it takes no penalty charging a city and cannot ride away from an attack.` },
   Tank: { summary: `Heavy armour with ${TANK_MOVES} moves`, blurb: `Armour of the World War era. ${TANK_MOVES} moves. No class bonuses from the World War era on.` },
   MainBattleTank: { summary: `Modern armour with ${TANK_MOVES} moves`, blurb: `Armour of the Modern era, stronger than the Tank. ${TANK_MOVES} moves. No class bonuses.` },
   AutonomousArmour: { summary: `Unmanned armour with ${AUTONOMOUS_ARMOUR_MOVES} moves`, blurb: `Unmanned armour of the Future era. ${AUTONOMOUS_ARMOUR_MOVES} moves. No class bonuses.` },
@@ -248,33 +248,33 @@ export const BUILDING_STATS: Record<
   BuildingKind,
   { cost: number; yields: Partial<Yields>; cityStrength: number; requires: TechId | null; summary: string; blurb: string; warBuilding?: boolean; predecessor?: BuildingKind; minPopulation?: number }
 > = {
-  BroodHall: { cost: 50, yields: { food: 2 }, cityStrength: 0, requires: null, summary: '+2 Food', blurb: 'Not available to any people yet' },
+  RiceStorehouse: { cost: 50, yields: { food: 2 }, cityStrength: 0, requires: null, summary: '+2 Food', blurb: 'Not available to any people yet' },
   Granary: { cost: 50, yields: { food: 2 }, cityStrength: 0, requires: null, summary: '+2 Food', blurb: '+2 Food' },
   Workshop: { cost: 60, yields: { production: 2 }, cityStrength: 0, requires: 'BronzeWorking', summary: '+2 Production', blurb: '+2 Production' },
   Market: { cost: 60, yields: { gold: 3 }, cityStrength: 0, requires: 'Currency', summary: '+3 Gold', blurb: '+3 Gold' },
   ImperialDiwan: { cost: 300, yields: {}, cityStrength: 0, requires: 'Currency', summary: 'Build after every city has a Revenue Office; whoever holds its city scores 2 VP', blurb: 'India only: build after every owned city has a Revenue Office. Whoever holds its city scores 2 VP.' },
-  Laboratory: { cost: 80, yields: { science: 3 }, cityStrength: 0, requires: 'Writing', summary: '+3 Science', blurb: '+3 Science' },
+  Library: { cost: 80, yields: { science: 3 }, cityStrength: 0, requires: 'Writing', summary: '+3 Science', blurb: '+3 Science' },
   Walls: { cost: 100, yields: {}, cityStrength: 10, requires: 'Masonry', warBuilding: true, summary: '+10 city strength; halves HP damage and fires at nearby enemies', blurb: `+10 city strength; ${WALLS_HALF_RULE}, and ${WALLS_FIRE_RULE}` },
-  Supermarket: { cost: 360, yields: { food: 4 }, cityStrength: 0, requires: 'GreenRevolution', predecessor: 'Hydroponics', summary: '+4 Food; upgrades your Mill', blurb: '+4 Food, on top of the Granary and Mill' },
+  Supermarket: { cost: 360, yields: { food: 4 }, cityStrength: 0, requires: 'GreenRevolution', predecessor: 'Mill', summary: '+4 Food; upgrades your Mill', blurb: '+4 Food, on top of the Granary and Mill' },
   AirDefence: { cost: 320, yields: {}, cityStrength: 0, requires: 'GuidedMissiles', summary: 'Meets enemy air strikes on this city', blurb: `Missiles meet each enemy air strike on this city: the strike fails and the aircraft trades damage with a Jet Fighter, one strike a turn. It takes no hangar slot and takes no damage. Stealth Bombers pass it.` },
-  Hydroponics: { cost: 200, yields: { food: 3 }, cityStrength: 0, requires: 'Feudalism', predecessor: 'Granary', summary: '+3 Food; upgrades your Granary', blurb: '+3 Food' },
-  MachineShop: { cost: 320, yields: { production: 3 }, cityStrength: 0, requires: 'IronWorking', predecessor: 'Workshop', minPopulation: 4, summary: '+3 Production; upgrades your Workshop', blurb: '+3 Production' },
-  WarShrine: { cost: 160, yields: {}, cityStrength: 0, requires: 'Chivalry', warBuilding: true, summary: 'Units trained here start one level higher', blurb: 'Spartan military units trained here start one level higher, and veterans retire here to Honour the Veterans. The agoge was Sparta’s military school.' },
-  InferenceCore: { cost: 360, yields: { science: 6 }, cityStrength: 0, requires: 'Electronics', predecessor: 'College', minPopulation: 8, summary: '+6 Science; upgrades your University', blurb: '+6 Science, on top of the Library and University' },
-  College: { cost: 240, yields: { science: 4 }, cityStrength: 0, requires: 'Education', predecessor: 'Laboratory', minPopulation: 5, summary: '+4 Science; upgrades your Library', blurb: '+4 Science' },
-  Clearinghouse: { cost: 200, yields: { gold: 4 }, cityStrength: 0, requires: 'Banking', predecessor: 'Market', minPopulation: 5, summary: '+4 Gold; upgrades your Market', blurb: '+4 Gold' },
-  StockExchange: { cost: 360, yields: { gold: 6 }, cityStrength: 0, requires: 'Electricity', predecessor: 'Clearinghouse', minPopulation: 8, summary: '+6 Gold; upgrades your Bank', blurb: '+6 Gold, on top of the Market and Bank' },
-  Autoworks: { cost: 440, yields: { production: 5 }, cityStrength: 0, requires: 'Industrialization', predecessor: 'MachineShop', minPopulation: 6, summary: '+5 Production; upgrades your Forge', blurb: '+5 Production' },
+  Mill: { cost: 200, yields: { food: 3 }, cityStrength: 0, requires: 'Feudalism', predecessor: 'Granary', summary: '+3 Food; upgrades your Granary', blurb: '+3 Food' },
+  Forge: { cost: 320, yields: { production: 3 }, cityStrength: 0, requires: 'IronWorking', predecessor: 'Workshop', minPopulation: 4, summary: '+3 Production; upgrades your Workshop', blurb: '+3 Production' },
+  Agoge: { cost: 160, yields: {}, cityStrength: 0, requires: 'Chivalry', warBuilding: true, summary: 'Units trained here start one level higher', blurb: 'Spartan military units trained here start one level higher, and veterans retire here to Honour the Veterans. The agoge was Sparta’s military school.' },
+  ResearchLab: { cost: 360, yields: { science: 6 }, cityStrength: 0, requires: 'Electronics', predecessor: 'University', minPopulation: 8, summary: '+6 Science; upgrades your University', blurb: '+6 Science, on top of the Library and University' },
+  University: { cost: 240, yields: { science: 4 }, cityStrength: 0, requires: 'Education', predecessor: 'Library', minPopulation: 5, summary: '+4 Science; upgrades your Library', blurb: '+4 Science' },
+  Bank: { cost: 200, yields: { gold: 4 }, cityStrength: 0, requires: 'Banking', predecessor: 'Market', minPopulation: 5, summary: '+4 Gold; upgrades your Market', blurb: '+4 Gold' },
+  StockExchange: { cost: 360, yields: { gold: 6 }, cityStrength: 0, requires: 'Electricity', predecessor: 'Bank', minPopulation: 8, summary: '+6 Gold; upgrades your Bank', blurb: '+6 Gold, on top of the Market and Bank' },
+  Factory: { cost: 440, yields: { production: 5 }, cityStrength: 0, requires: 'Industrialization', predecessor: 'Forge', minPopulation: 6, summary: '+5 Production; upgrades your Forge', blurb: '+5 Production' },
   Castle: { cost: 240, yields: {  }, cityStrength: 5, requires: 'Chivalry', predecessor: 'Walls', warBuilding: true, summary: '+5 city strength; upgrades your Walls', blurb: '+5 city strength, more each era' },
   StarFort: { cost: 320, yields: {  }, cityStrength: 5, requires: 'Machinery', predecessor: 'Castle', warBuilding: true, summary: '+5 city strength; upgrades your Castle', blurb: '+5 city strength, more each era' },
-  RelayUplink: { cost: 400, yields: {}, cityStrength: 0, requires: 'Philosophy', summary: 'World wonder: whoever holds its tile scores +2 VP', blurb: 'World wonder: whoever holds its tile scores +2 VP. Requires a Library in this city.' },
+  GreatLibrary: { cost: 400, yields: {}, cityStrength: 0, requires: 'Philosophy', summary: 'World wonder: whoever holds its tile scores +2 VP', blurb: 'World wonder: whoever holds its tile scores +2 VP. Requires a Library in this city.' },
   Pyramids: { cost: 360, yields: { production: 1 }, cityStrength: 0, requires: 'Masonry', summary: 'World wonder: +1 Production and +2 held VP', blurb: 'The Pyramids can be completed once in the world. The holder gains +1 Production in its city and +2 VP.' },
   HagiaSophia: { cost: 400, yields: { science: 2 }, cityStrength: 0, requires: 'Machinery', summary: 'World wonder: +2 Science and +2 held VP', blurb: 'Hagia Sophia can be completed once in the world. The holder gains +2 Science in its city and +2 VP.' },
   EiffelTower: { cost: 720, yields: { gold: 3 }, cityStrength: 0, requires: 'Steel', summary: 'World wonder: +3 Gold and +2 held VP', blurb: 'One Eiffel Tower can be completed in the world. The holder gains +3 Gold in its city and +2 VP.' },
-  IterReactor: { cost: 900, yields: { science: 4 }, cityStrength: 0, requires: 'FusionPower', summary: 'World wonder: +4 Science and +2 held VP', blurb: 'The ITER Fusion Reactor can be completed once in the world. The holder gains +4 Science in its city and +2 VP.' },
-  PlanetaryFoundry: { cost: 600, yields: {}, cityStrength: 0, requires: 'Cannonry', summary: 'World wonder: whoever holds its tile scores +2 VP', blurb: 'World wonder: whoever holds its tile scores +2 VP. Requires a Factory in this city.' },
-  WorldExchange: { cost: 600, yields: {}, cityStrength: 0, requires: 'Banking', summary: 'World wonder: whoever holds its tile scores +2 VP', blurb: 'World wonder: whoever holds its tile scores +2 VP. Own two Banks; build in one of them.' },
-  CourierHall: { cost: 600, yields: {}, cityStrength: 0, requires: null, summary: `Links cities by road; whoever holds its tile scores ${RULES.factionGoals.Mongols.vp} VP`, blurb: `Only Mongols can build it, one per empire, on a chosen tile. It replaces that tile's yield and improvement. When finished it lays roads linking every city on the map to its city. Whoever holds its tile scores ${RULES.factionGoals.Mongols.vp} VP and every empire may cross all of the holder's land at Peace. Capture the city to take both; a Celtic sack destroys it.` },
+  IterFusionReactor: { cost: 900, yields: { science: 4 }, cityStrength: 0, requires: 'FusionPower', summary: 'World wonder: +4 Science and +2 held VP', blurb: 'The ITER Fusion Reactor can be completed once in the world. The holder gains +4 Science in its city and +2 VP.' },
+  RoyalArsenal: { cost: 600, yields: {}, cityStrength: 0, requires: 'Cannonry', summary: 'World wonder: whoever holds its tile scores +2 VP', blurb: 'World wonder: whoever holds its tile scores +2 VP. Requires a Factory in this city.' },
+  GrandBazaar: { cost: 600, yields: {}, cityStrength: 0, requires: 'Banking', summary: 'World wonder: whoever holds its tile scores +2 VP', blurb: 'World wonder: whoever holds its tile scores +2 VP. Own two Banks; build in one of them.' },
+  YamRelayStation: { cost: 600, yields: {}, cityStrength: 0, requires: null, summary: `Links cities by road; whoever holds its tile scores ${RULES.factionGoals.Mongols.vp} VP`, blurb: `Only Mongols can build it, one per empire, on a chosen tile. It replaces that tile's yield and improvement. When finished it lays roads linking every city on the map to its city. Whoever holds its tile scores ${RULES.factionGoals.Mongols.vp} VP and every empire may cross all of the holder's land at Peace. Capture the city to take both; a Celtic sack destroys it.` },
   Roadworks: { cost: 140, yields: { gold: 1 }, cityStrength: 0, requires: 'Engineering', summary: '+1 Gold; links cities within 8 tiles (12 with Railways)', blurb: '+1 Gold. Builds roads to cities within 8 tiles, or 12 once you know Railways, including cities founded later. Rivals can use them too.' },
 };
 
@@ -395,7 +395,7 @@ export const TERRAIN_NAME: Record<Terrain, string> = {
   Mountains: 'Mountains',
 };
 
-/** Historical display names (core `data::building_name`); the identifiers keep their old spelling so saves stay stable. */
+/** Display names (core `data::building_name`). An identifier is the PascalCase of its display name. */
 export const BUILDING_NAME = RULES.buildingNames as Record<BuildingKind, string>;
 
 
@@ -480,7 +480,7 @@ const UNIQUE_PIECE: Record<Exclude<Faction, 'Aztecs' | 'Celts'>, UniquePiece> & 
   India: { name: 'Revenue Office', replaces: 'Market', cost: 60, effect: '+3 Gold; non-capital cities remit half the Gold they make', requires: 'Currency', rules: ['Only India can build the Imperial Diwan after every owned city has one.'] },
   // The Tagmatic Soldier is the Pikeman plus 4 design strength on the era curve, read from the stats so a retuned curve follows (a getter, as the Keshig's).
   get Byzantium(): UniquePiece {
-    return { name: 'Tagmatic Soldier', replaces: 'Pikeman', cost: 162, effect: `${unitStatsFor('Byzantium', 'Trooper').strength} strength, 2 moves`, requires: 'Feudalism', rules: ['Phalangite upgrade costs 84 Gold.'] };
+    return { name: 'Tagmatic Soldier', replaces: 'Pikeman', cost: 162, effect: `${unitStatsFor('Byzantium', 'Pikeman').strength} strength, 2 moves`, requires: 'Feudalism', rules: ['Phalangite upgrade costs 84 Gold.'] };
   },
   Germany: { name: 'Ruhr Foundry', replaces: 'Forge', cost: 320, effect: '+6 Production', requires: 'Iron Working', rules: [], other: ['Upgrades a Workshop in a city of 4 or more. Needs Iron.'] },
   Celts: null,
@@ -538,7 +538,7 @@ export const LEVY_EXTRA = 1;
 export const THIN_LEVIES = `Thin levies: you can field at most one military unit per city, plus ${LEVY_EXTRA === 1 ? 'one' : LEVY_EXTRA} more. Aircraft count; Scouts don't. Losing a city never disbands units, but you can't raise new ones until you are back under the limit.`;
 /** Unique-piece prose where a faction has more than one piece. */
 const PIECE_TEXT: Partial<Record<Faction, Partial<Record<string, string>>>> = {
-  Byzantium: { 'u:Trooper': BYZANTIUM_LEGIONARY },
+  Byzantium: { 'u:Pikeman': BYZANTIUM_LEGIONARY },
 };
 /** The build card's own line for a faction piece: the effect first, short enough to read whole in
  * the production list (the tooltip keeps the full text). */
@@ -547,18 +547,18 @@ const CARD_TEXT: Partial<Record<Faction, Partial<Record<string, string>>>> = {
     'u:Cataphract': `Also shoots, at range ${RULES.keshig.range} with no return fire; a shot cannot take a city. Replaces Cataphract.`,
   },
   Sparta: {
-    'u:Soldier': '20 strength, 2 moves. Replaces Spearman.',
-    'b:WarShrine': 'Units trained here start at level 2, and veterans retire here for Honour the Veterans.',
+    'u:Spearman': '20 strength, 2 moves. Replaces Spearman.',
+    'b:Agoge': 'Units trained here start at level 2, and veterans retire here for Honour the Veterans.',
   },
 };
 
 /** Faction variants change the item's effect; the build list reads this instead of the base summary. */
 const CARD_SUMMARY: Partial<Record<Faction, Partial<Record<string, string>>>> = {
   Switzerland: { 'b:Walls': '+15 city strength; halves HP damage and fires at enemies' },
-  Byzantium: { 'u:Trooper': 'Stronger Pikeman; holds ground and takes cities' },
-  Germany: { 'b:MachineShop': '+6 Production', 'b:Autoworks': '+5 Production; upgrades your Ruhr Foundry' },
+  Byzantium: { 'u:Pikeman': 'Stronger Pikeman; holds ground and takes cities' },
+  Germany: { 'b:Forge': '+6 Production', 'b:Factory': '+5 Production; upgrades your Ruhr Foundry' },
   Mongols: { 'u:Cataphract': 'Rides or shoots at range 2; a shot cannot take a city' },
-  Athens: { 'b:Laboratory': '+6 Science' },
+  Athens: { 'b:Library': '+6 Science' },
 };
 
 /** Core `goals::spec`, exported with the rules: every number a goal counts toward comes from here. */
@@ -628,10 +628,10 @@ export const FACTION_GOAL: Record<Faction, FactionGoal> = {
     sheet: () => `Build a Revenue Office in every city, then the Imperial Diwan: whoever holds its city scores ${goalVp('India')} VP`,
   },
   Byzantium: {
-    name: 'The Heir to the Throne', live: goalLive('Byzantium'), held: goalHeld('Byzantium'), heldItem: 'the Heir', icon: 'unit-heir',
+    name: 'The Heir to the Throne', live: goalLive('Byzantium'), held: goalHeld('Byzantium'), heldItem: 'the Heir', icon: 'unit-heirtothethrone',
     rule: () => `Train the Heir and keep him: whoever holds him scores ${goalVp('Byzantium')} VP`,
     ask: () => 'Train the Heir and keep him',
-    detail: () => `Train the Heir and keep him. Whoever holds him scores ${goalVp('Byzantium')} VP; if a rival captures him, be at War and retake him to get the points back. Costs ${UNIT_STATS.Heir.cost} Production · cannot be bought`,
+    detail: () => `Train the Heir and keep him. Whoever holds him scores ${goalVp('Byzantium')} VP; if a rival captures him, be at War and retake him to get the points back. Costs ${UNIT_STATS.HeirToTheThrone.cost} Production · cannot be bought`,
     sheet: () => `Train the Heir and keep him: whoever holds him scores ${goalVp('Byzantium')} VP`,
   },
   Germany: {
@@ -650,14 +650,14 @@ export const FACTION_GOAL: Record<Faction, FactionGoal> = {
     liveNote: 'You lose the VP in any turn a city has no warband camp, and regain it when every city has one again',
   },
   Mongols: {
-    name: 'The Yam Network', live: goalLive('Mongols'), held: goalHeld('Mongols'), heldItem: 'the Yam Relay Station', icon: 'building-courierhall',
+    name: 'The Yam Network', live: goalLive('Mongols'), held: goalHeld('Mongols'), heldItem: 'the Yam Relay Station', icon: 'building-yamrelaystation',
     rule: () => `Build the Yam Relay Station: whoever holds its tile scores ${goalVp('Mongols')} VP`,
     ask: () => 'Build the Yam Relay Station on a tile you choose',
     detail: () => `Build the Yam Relay Station on a chosen tile, one per empire. It replaces that tile's yield and improvement, and lays roads to every city on the map. Whoever holds its tile scores the VP, and every empire's units may cross that holder's land at Peace. Capture the city and both follow you. If the station is destroyed, it can be rebuilt`,
     sheet: () => `Build the Yam Relay Station: whoever holds its tile scores ${goalVp('Mongols')} VP`,
   },
   Sparta: {
-    name: 'Honour the Veterans', live: goalLive('Sparta'), icon: 'building-warshrine', unitAction: 'Retire this veteran',
+    name: 'Honour the Veterans', live: goalLive('Sparta'), icon: 'building-agoge', unitAction: 'Retire this veteran',
     rule: () => `Retire ${goalTarget('Sparta')} veterans in a city with an Agoge`,
     detail: () => `Promote ${goalTarget('Sparta')} veterans to level ${RULES.spartaRetireLevel} or higher, build an Agoge, and retire them there. Each one leaves your army for good`,
   },
@@ -733,10 +733,10 @@ export function factionUnavailableReason(item: ProductionItem, faction: Faction,
   if (faction === 'Aztecs' && item.kind === 'Unit' && HORSE_MOUNTED.includes(item.unit)) return AZTEC_NO_HORSES;
   if (item.kind === 'Project') return item.project === 'Grow' ? 'Only Egyptian cities can choose Grow' : 'Only German cities can run industry projects';
   if (faction === 'Egypt' && item.kind === 'Building' && isWorkshopLine(item.building)) return 'Workshops, Forges and Factories do nothing for Egypt, which has no Production';
-  if (item.kind === 'Building' && item.building === 'BroodHall') return 'No people can build the Rice Storehouse yet';
-  if ((item.kind === 'Building' || item.kind === 'Wonder') && item.building === 'CourierHall') return 'Only Mongols can build the Yam Relay Station';
+  if (item.kind === 'Building' && item.building === 'RiceStorehouse') return 'No people can build the Rice Storehouse yet';
+  if ((item.kind === 'Building' || item.kind === 'Wonder') && item.building === 'YamRelayStation') return 'Only Mongols can build the Yam Relay Station';
   if (faction === 'Mongols' && item.kind === 'Building' && (item.building === 'Walls' || item.building === 'Castle' || item.building === 'StarFort')) return MONGOL_WALLS_REASON;
-  if (item.kind === 'Unit' && item.unit === 'Heir') return 'Only Byzantium can train a Heir to the Throne';
+  if (item.kind === 'Unit' && item.unit === 'HeirToTheThrone') return 'Only Byzantium can train a Heir to the Throne';
   return `Does nothing for ${factionName(faction)}`;
 }
 
@@ -751,7 +751,7 @@ export const IMPROVEMENT_SUMMARY: Record<ImprovementKind, string> = {
   OilWell: 'Adds tile yields and Oil supply',
   Pasture: 'Adds Food to a worked tile; improves automatically later',
   Quarry: 'Adds Production to a worked tile',
-  SaltpeterWorks: 'Adds tile yields and Niter supply',
+  SaltpetreWorks: 'Adds tile yields and Niter supply',
 };
 const PROJECT_COPY: Record<'Gold' | 'Science' | 'Grow', { summary: string; blurb: string }> = {
   Gold: { summary: `Turns ${RULES.germanyProjectGoldPercent}% of city Production into Gold each turn`, blurb: `While it runs, this city builds nothing else, and ${RULES.germanyProjectGoldPercent}% of its Production comes out as Gold every turn. It never finishes: pick another item to stop it.` },
@@ -780,10 +780,10 @@ const MONGOL_WALLS_REASON: string = RULES.mongolWallsReason;
 
 /** Mirrors core `data::faction_excluded_building_at`: the Mongols' Walls line opens in the Medieval era (`era` defaults to it). */
 export function factionExcludedBuilding(faction: Faction, building: BuildingKind, era = MONGOL_WALLS_ERA): string | null {
-  if (faction !== 'Sparta' && building === 'WarShrine') return 'Only Sparta can build an Agoge';
-  if (building === 'BroodHall') return 'No people can build the Rice Storehouse yet';
+  if (faction !== 'Sparta' && building === 'Agoge') return 'Only Sparta can build an Agoge';
+  if (building === 'RiceStorehouse') return 'No people can build the Rice Storehouse yet';
   if (faction !== 'India' && building === 'ImperialDiwan') return 'Only India can build the Imperial Diwan';
-  if (faction !== 'Mongols' && building === 'CourierHall') return 'Only Mongols can build the Yam Relay Station';
+  if (faction !== 'Mongols' && building === 'YamRelayStation') return 'Only Mongols can build the Yam Relay Station';
   if (faction === 'Mongols' && era < MONGOL_WALLS_ERA && (building === 'Walls' || building === 'Castle' || building === 'StarFort')) return MONGOL_WALLS_REASON;
   return null;
 }
@@ -800,11 +800,11 @@ export function availableToFaction(faction: Faction, item: ProductionItem): bool
   if (item.kind === 'Project') return item.project === 'Grow' ? faction === 'Egypt' : faction === 'Germany';
   // The Nile: Egypt has no Production, so the Workshop line would do nothing.
   if (faction === 'Egypt' && item.kind === 'Building' && isWorkshopLine(item.building)) return false;
-  if (item.kind === 'Unit') return (item.unit !== 'Heir' || faction === 'Byzantium') && (faction !== 'Aztecs' || !HORSE_MOUNTED.includes(item.unit)) && (faction !== 'Rome' || item.unit !== 'Settler');
+  if (item.kind === 'Unit') return (item.unit !== 'HeirToTheThrone' || faction === 'Byzantium') && (faction !== 'Aztecs' || !HORSE_MOUNTED.includes(item.unit)) && (faction !== 'Rome' || item.unit !== 'Settler');
   if (item.kind === 'Improvement') return true;
   const b = item.building;
   if (factionExcludedBuilding(faction, b)) return false;
-  return isGreatWork(b) || b === 'WarShrine' || b === 'CourierHall' || b === 'ImperialDiwan' || buildingStatsFor(faction, b).cityStrength > 0
+  return isGreatWork(b) || b === 'Agoge' || b === 'YamRelayStation' || b === 'ImperialDiwan' || buildingStatsFor(faction, b).cityStrength > 0
     || Object.values(buildingStatsFor(faction, b).yields).some((n) => !!n);
 }
 
@@ -820,7 +820,7 @@ const FAMILY_NAMES: Record<string, string> = {
   Granary: 'Granary and Mill', Library: 'Library, University and Research Lab', Market: 'Market and Bank',
 };
 export const familyNames = (faction: Faction | undefined, family: string): string =>
-  family === 'Workshop' ? `Workshop, ${itemName({ kind: 'Building', building: 'MachineShop' }, faction)} and Factory` : FAMILY_NAMES[family];
+  family === 'Workshop' ? `Workshop, ${itemName({ kind: 'Building', building: 'Forge' }, faction)} and Factory` : FAMILY_NAMES[family];
 /** Player-facing wording of core's effect lines: "+1 Food for each Granary and Mill" (not "family"), the viewer's own building names, a true minus. Core names the standard units; the Mongols' Cataphract is the Keshig: Horsemen upgrade into it, and its own upgrade drops the bow. */
 const factionEffectLabel = (faction: Faction, label: string): string => {
   const text = label
@@ -844,12 +844,12 @@ export const FACTION_PIECES: Record<Exclude<Faction, 'Aztecs' | 'Celts'>, { item
   Aztecs: null,
   Switzerland: { item: { kind: 'Building', building: 'Walls' }, name: 'Alpine Redoubt' },
   India: { item: { kind: 'Building', building: 'Market' }, name: 'Revenue Office' },
-  Byzantium: { item: { kind: 'Unit', unit: 'Trooper' }, name: 'Tagmatic Soldier' },
-  Germany: { item: { kind: 'Building', building: 'MachineShop' }, name: 'Ruhr Foundry' },
+  Byzantium: { item: { kind: 'Unit', unit: 'Pikeman' }, name: 'Tagmatic Soldier' },
+  Germany: { item: { kind: 'Building', building: 'Forge' }, name: 'Ruhr Foundry' },
   Celts: null,
   Mongols: { item: { kind: 'Unit', unit: 'Cataphract' }, name: 'Keshig' },
-  Sparta: { item: { kind: 'Unit', unit: 'Soldier' }, name: 'Spartan Hoplite' },
-  Athens: { item: { kind: 'Building', building: 'Laboratory' }, name: 'Lyceum' },
+  Sparta: { item: { kind: 'Unit', unit: 'Spearman' }, name: 'Spartan Hoplite' },
+  Athens: { item: { kind: 'Building', building: 'Library' }, name: 'Lyceum' },
   Egypt: { item: { kind: 'Building', building: 'Granary' }, name: 'Royal Granary' },
   Rome: { item: { kind: 'Building', building: 'Walls' }, name: 'Castrum' },
 };
@@ -891,13 +891,13 @@ export function itemDescription(item: ProductionItem, faction?: Faction): string
   const piece = faction ? FACTION_PIECES[faction] : null;
   const pieceText = faction && (PIECE_TEXT[faction]?.[itemKey(item)] ?? (piece && sameItem(item, piece.item) ? FACTION_INFO[faction].unique : undefined));
   if (faction && pieceText) return pieceText;
-  if (faction === 'Sparta' && item.kind === 'Building' && item.building === 'WarShrine') return BUILDING_STATS.WarShrine.blurb;
+  if (faction === 'Sparta' && item.kind === 'Building' && item.building === 'Agoge') return BUILDING_STATS.Agoge.blurb;
   if (faction === 'Athens' && item.kind === 'Building' && item.building === 'Market') return '+1 Gold';
   if (item.kind === 'Building' && BUILDING_STATS[item.building].predecessor) {
     const stats = BUILDING_STATS[item.building];
     const from = itemName({ kind: 'Building', building: stats.predecessor! }, faction);
     const text = `${stats.blurb}. Upgrades your ${from}.${stats.minPopulation ? ` Needs ${stats.minPopulation} population.` : ''}`;
-    if (faction === 'Germany' && item.building === 'Autoworks') return `${text} ${GERMANY_FACTORY_NOTE}`;
+    if (faction === 'Germany' && item.building === 'Factory') return `${text} ${GERMANY_FACTORY_NOTE}`;
     return faction === 'Mongols' && buildingFamily(item.building) === 'Market' ? `${text} ${MONGOLS_MARKET_NOTE}` : text;
   }
   if (faction === 'Mongols' && item.kind === 'Building' && buildingFamily(item.building) === 'Market') return `${BUILDING_STATS[item.building].blurb}. ${MONGOLS_MARKET_NOTE}`;
@@ -929,7 +929,7 @@ export function itemName(item: ProductionItem, faction?: Faction): string {
 
 /** The viewer's own name for the Forge-slot building, plural ("Forges", "Ruhr Foundries"). */
 export function forgesName(faction?: Faction): string {
-  const name = itemName({ kind: 'Building', building: 'MachineShop' }, faction);
+  const name = itemName({ kind: 'Building', building: 'Forge' }, faction);
   return name.endsWith('y') ? `${name.slice(0, -1)}ies` : `${name}s`;
 }
 
@@ -952,15 +952,15 @@ export function itemKey(item: ProductionItem): string {
 
 // Asset filenames still use stable faction IDs. Display copy is free to change independently.
 const FACTION_UNIT_ICON: Partial<Record<Faction, Partial<Record<UnitKind, string>>>> = {
-  Byzantium: { Trooper: 'unit-tagmatic' },
+  Byzantium: { Pikeman: 'unit-tagmatic' },
   Rome: { Phalangite: 'unit-legionary' },
-  Mongols: { Cataphract: 'unit-keshig' }, Sparta: { Soldier: 'unit-oathbearer' },
-  Aztecs: { Soldier: 'unit-eaglewarrior' }, Egypt: { Soldier: 'unit-medjay' }, Celts: { Phalangite: 'unit-gaesatae' }, Athens: { CompositeArcher: 'unit-peltast' },
-  India: { Knight: 'unit-warelephant' }, Switzerland: { Trooper: 'unit-reislaufer' }, Germany: { Tank: 'unit-panzer' },
+  Mongols: { Cataphract: 'unit-keshig' }, Sparta: { Spearman: 'unit-oathbearer' },
+  Aztecs: { Spearman: 'unit-eaglewarrior' }, Egypt: { Spearman: 'unit-medjay' }, Celts: { Phalangite: 'unit-gaesatae' }, Athens: { CompositeArcher: 'unit-peltast' },
+  India: { Knight: 'unit-warelephant' }, Switzerland: { Pikeman: 'unit-reislaufer' }, Germany: { Tank: 'unit-panzer' },
 };
 const FACTION_BUILDING_ICON: Partial<Record<Faction, Partial<Record<BuildingKind, string>>>> = {
-  Switzerland: { Walls: 'building-customsbastion' }, Germany: { MachineShop: 'building-foundry' },
-  Athens: { Laboratory: 'building-listeninghouse' },
+  Switzerland: { Walls: 'building-customsbastion' }, Germany: { Forge: 'building-foundry' },
+  Athens: { Library: 'building-listeninghouse' },
   India: { Market: 'building-market-india' },
   Egypt: { Granary: 'building-royalgranary' },
   Rome: { Walls: 'building-castrum' },
@@ -973,7 +973,7 @@ export function unitIconName(kind: UnitKind, faction?: Faction): string {
 
 /** A building's icon name: its faction replacement's own icon (Customs Bastion, Brood Hall) when `faction` has one. */
 export function buildingIconName(kind: BuildingKind, faction?: Faction): string {
-  return (faction && FACTION_BUILDING_ICON[faction]?.[kind]) || `building-${kind === 'RelayUplink' ? 'relay-uplink' : kind.toLowerCase()}`;
+  return (faction && FACTION_BUILDING_ICON[faction]?.[kind]) || `building-${kind.toLowerCase()}`;
 }
 
 /** The icon name for a production item (city panel, production picker and map banner meters). */
@@ -1056,13 +1056,13 @@ export function wonderTileText(building: BuildingKind): string {
   const gives = Object.entries(BUILDING_STATS[building].yields).filter(([, n]) => n).map(([k, n]) => `+${n} ${k[0].toUpperCase()}${k.slice(1)}`);
   return `Whoever holds this tile scores +${GREAT_WORK_VP} VP.${gives.length ? ` Its city gets ${gives.join(', ')}.` : ''}`;
 }
-export const GREAT_WORKS = ['Pyramids', 'RelayUplink', 'HagiaSophia', 'WorldExchange', 'PlanetaryFoundry', 'EiffelTower', 'IterReactor'] as const;
+export const GREAT_WORKS = ['Pyramids', 'GreatLibrary', 'HagiaSophia', 'GrandBazaar', 'RoyalArsenal', 'EiffelTower', 'IterFusionReactor'] as const;
 export const isGreatWork = (building: BuildingKind) => (GREAT_WORKS as readonly BuildingKind[]).includes(building);
 export function greatWorkRequirement(building: BuildingKind): [BuildingKind, number] | null {
   switch (building) {
-    case 'PlanetaryFoundry': return ['Autoworks', 1];
-    case 'WorldExchange': return ['Clearinghouse', 2];
-    case 'RelayUplink': return ['Laboratory', 1];
+    case 'RoyalArsenal': return ['Factory', 1];
+    case 'GrandBazaar': return ['Bank', 2];
+    case 'GreatLibrary': return ['Library', 1];
     default: return null;
   }
 }

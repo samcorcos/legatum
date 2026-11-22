@@ -15,7 +15,7 @@ import type { VpModel } from '../vpModel';
 import { noEraHud, setEraHudOpen, useEraHudOpen } from './eraHudOpen';
 import './eraObjectives.css';
 
-const PART_ICON = { eras: 'milestone-six-techs', work: 'milestone-relay-uplink', goal: 'vp' } as const;
+const PART_ICON = { eras: 'milestone-six-techs', work: 'milestone-great-library', goal: 'vp' } as const;
 /** The one rule behind every count (R1), shown wherever progress is. */
 const COUNT_NOTE = 'Counts only what you do after this Age begins and after you last scored an Age';
 const open = () => useGame.getState().set({ vpExpanded: true });
@@ -32,7 +32,7 @@ function Count({ l, preview }: { l: ObjectiveLine; preview: boolean }) {
   return <span className="eo-num" title={note}><b>{l.shown}</b>/{l.target}</span>;
 }
 
-const FAMILY_ICON: Record<ObjectiveLine['family'], string> = { Build: 'building-workshop', Expand: 'city', Fight: 'unit-soldier' };
+const FAMILY_ICON: Record<ObjectiveLine['family'], string> = { Build: 'building-workshop', Expand: 'city', Fight: 'unit-spearman' };
 
 /**
  * An Age's card (a list, so a test fixture can carry more than one). `preview` is an Age that has not begun: it counts nothing yet.

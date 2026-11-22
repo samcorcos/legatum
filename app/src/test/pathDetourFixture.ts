@@ -32,10 +32,10 @@ export function pathDetourFixture() {
   s.tileCity[tileIndex(city.pos, s.width, s.height)] = city.id;
   for (const p of s.players) p.explored.fill(1);
   for (const relation of s.diplomacy!.relations) relation.state = 'War';
-  const attacker = spawnUnit(s, 0, 'Soldier', { q: 20, r: 14 }, false);
-  const upper = spawnUnit(s, 0, 'Soldier', { q: 21, r: 13 }, false);
-  const left = spawnUnit(s, 0, 'Soldier', { q: 20, r: 13 }, false);
-  spawnUnit(s, 1, 'Soldier', { q: 22, r: 14 }, false);
+  const attacker = spawnUnit(s, 0, 'Spearman', { q: 20, r: 14 }, false);
+  const upper = spawnUnit(s, 0, 'Spearman', { q: 21, r: 13 }, false);
+  const left = spawnUnit(s, 0, 'Spearman', { q: 20, r: 13 }, false);
+  spawnUnit(s, 1, 'Spearman', { q: 22, r: 14 }, false);
   refreshVision(s);
   return { fixture: s, attacker: attacker.id, upper: upper.id, left: left.id,
     gap: { q: 21, r: 14 }, target: { q: 22, r: 14 } };

@@ -250,7 +250,7 @@ export function SeatBar({ phoneDetails = false, onOpenDetails, race }: { phoneDe
   } else if (next?.kind === 'unit' || next?.kind === 'air') {
     cta = { label: next.kind === 'unit' && next.issue ? 'Fix order' : needing.length === 1 ? '1 unit needs orders' : `${needing.length} units need orders`,
       // The label already says to fix it; the sub says what is wrong, in one sentence.
-      sub: (next.kind === 'unit' ? next.fix ?? (next.healed ? `${itemName({ kind: 'Unit', unit: view.units.find((u) => u.id === next.id)?.kind ?? 'Soldier' }, view.players.find((p) => p.id === view.me)?.faction)}: healed to full, needs orders` : next.released ? `${itemName({ kind: 'Unit', unit: view.units.find((u) => u.id === next.id)?.kind ?? 'Soldier' }, view.players.find((p) => p.id === view.me)?.faction)}: ${next.released} is secure, needs orders` : undefined) : next.label) ?? 'Next decision', onClick: goToPending, kind: 'todo' };
+      sub: (next.kind === 'unit' ? next.fix ?? (next.healed ? `${itemName({ kind: 'Unit', unit: view.units.find((u) => u.id === next.id)?.kind ?? 'Spearman' }, view.players.find((p) => p.id === view.me)?.faction)}: healed to full, needs orders` : next.released ? `${itemName({ kind: 'Unit', unit: view.units.find((u) => u.id === next.id)?.kind ?? 'Spearman' }, view.players.find((p) => p.id === view.me)?.faction)}: ${next.released} is secure, needs orders` : undefined) : next.label) ?? 'Next decision', onClick: goToPending, kind: 'todo' };
   } else if (nextCity) {
     cta = {
       label: 'Choose production',

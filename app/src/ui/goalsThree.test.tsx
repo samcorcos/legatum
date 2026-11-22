@@ -17,7 +17,7 @@ let host: HTMLElement, root: Root, view: PlayerView, client: FixtureClient;
 const byzantium = () => view.players.find((p) => p.faction === 'Byzantium')!;
 const rival = () => view.players.find((p) => p.team !== view.team && p.id !== byzantium().id)!;
 const heir = (owner: number, of = byzantium().id): UnitView => ({
-  ...view.units.find((u) => u.owner === view.me)!, id: 7777, kind: 'Heir', owner, heir_of: of, military: false, hp: 100, strength: 0,
+  ...view.units.find((u) => u.owner === view.me)!, id: 7777, kind: 'HeirToTheThrone', owner, heir_of: of, military: false, hp: 100, strength: 0,
   pos: view.units.find((u) => u.owner === view.me)!.pos,
 });
 
@@ -50,7 +50,7 @@ describe('the Heir’s unit panel text', () => {
     expect(lost[1].tone).toBe('bad');
     expect(heirLines(heir(255), view)[1].text).toMatch(/^Held by barbarians: nobody scores/);
     expect(heirLines(heir(view.me), view)[1].text).toContain('You hold him: +2 VP');
-    expect(heirLines({ ...heir(view.me), kind: 'Soldier' }, view)).toEqual([]);
+    expect(heirLines({ ...heir(view.me), kind: 'Spearman' }, view)).toEqual([]);
   });
 
   it('Disband on a Heir to the Throne asks first and says it forfeits the 2 VP; Keep him closes it', () => {

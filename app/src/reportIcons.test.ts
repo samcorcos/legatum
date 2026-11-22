@@ -20,7 +20,7 @@ it('event icons come from existing art: a capture wears the captured emblem', ()
     { type: 'CityFounded', city: 1, owner: 0, name: 'A', at: { q: 0, r: 0 } } as unknown as Event,
     { type: 'CityGrew', city: 1, owner: 0, population: 2 } as unknown as Event,
     { type: 'TechResearched', player: 0, tech: 'Writing' },
-    { type: 'GreatWorkCompleted', player: 0, of: 0, building: 'RelayUplink', vp: 2, again: false },
+    { type: 'GreatWorkCompleted', player: 0, of: 0, building: 'GreatLibrary', vp: 2, again: false },
     { type: 'ItemBought', city: 1, owner: 0, item: { kind: 'Unit', unit: 'Scout' }, gold: 30 },
     { type: 'ProductionCompleted', city: 1, owner: 0, item: { kind: 'Building', building: 'Walls' } },
   ];

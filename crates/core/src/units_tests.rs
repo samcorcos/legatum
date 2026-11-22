@@ -10,10 +10,10 @@ const LINES: [(UnitClass, [UnitKind; 9]); 3] = [
     (
         UnitClass::Melee,
         [
-            UnitKind::Soldier,
+            UnitKind::Spearman,
             UnitKind::Phalangite,
-            UnitKind::Trooper,
-            UnitKind::AssaultTrooper,
+            UnitKind::Pikeman,
+            UnitKind::Musketman,
             UnitKind::Rifleman,
             UnitKind::TrenchInfantry,
             UnitKind::Infantry,
@@ -24,15 +24,15 @@ const LINES: [(UnitClass, [UnitKind; 9]); 3] = [
     (
         UnitClass::Ranged,
         [
-            UnitKind::Ranger,
+            UnitKind::Archer,
             UnitKind::CompositeArcher,
-            UnitKind::Marksman,
+            UnitKind::Crossbowman,
             UnitKind::Arquebusier,
             UnitKind::FieldCannon,
             UnitKind::Howitzer,
             UnitKind::Artillery,
             UnitKind::RocketArtillery,
-            UnitKind::Drone,
+            UnitKind::CombatDrone,
         ],
     ),
     (
@@ -43,7 +43,7 @@ const LINES: [(UnitClass, [UnitKind; 9]); 3] = [
             UnitKind::Knight,
             UnitKind::Cuirassier,
             UnitKind::Cavalry,
-            UnitKind::Landship,
+            UnitKind::EarlyTank,
             UnitKind::Tank,
             UnitKind::MainBattleTank,
             UnitKind::AutonomousArmour,
@@ -55,7 +55,10 @@ const LINES: [(UnitClass, [UnitKind; 9]); 3] = [
 fn every_unit_has_a_class_except_scouts_and_civilians() {
     for kind in UnitKind::ALL {
         let class = data::unit_class(kind);
-        let combat_unit = !matches!(kind, UnitKind::Scout | UnitKind::Settler | UnitKind::Heir);
+        let combat_unit = !matches!(
+            kind,
+            UnitKind::Scout | UnitKind::Settler | UnitKind::HeirToTheThrone
+        );
         assert_eq!(class.is_some(), combat_unit, "{kind:?}");
     }
     for (class, line) in LINES {
@@ -91,7 +94,7 @@ fn each_line_upgrades_one_step_at_a_time_to_a_stronger_dearer_unit_of_a_later_er
 
 #[test]
 fn every_class_unit_unlocks_with_a_technology_of_its_own_era_or_from_the_start() {
-    let from_the_start = [UnitKind::Soldier, UnitKind::Ranger, UnitKind::Horseman];
+    let from_the_start = [UnitKind::Spearman, UnitKind::Archer, UnitKind::Horseman];
     for kind in UnitKind::ALL {
         if data::unit_class(kind).is_none() {
             continue;
@@ -106,7 +109,7 @@ fn every_class_unit_unlocks_with_a_technology_of_its_own_era_or_from_the_start()
     // Spearman, Archer and Horseman are the triangle from turn one (era overhaul proposal).
     assert_eq!(data::unit_era_tier(UnitKind::Horseman), 0);
     assert_eq!(data::unit_era_tier(UnitKind::Knight), 2);
-    assert_eq!(data::unit_era_tier(UnitKind::AssaultTrooper), 3);
+    assert_eq!(data::unit_era_tier(UnitKind::Musketman), 3);
 }
 
 #[test]
@@ -115,8 +118,8 @@ fn mounted_units_have_four_moves_the_armour_five_and_six_and_nobody_else_does() 
         let moves = data::unit_stats(kind).moves;
         if kind == UnitKind::Tank || kind == UnitKind::MainBattleTank {
             assert_eq!(moves, data::TANK_MOVES, "{kind:?}");
-        } else if kind == UnitKind::Landship {
-            assert_eq!(moves, data::LANDSHIP_MOVES, "{kind:?}");
+        } else if kind == UnitKind::EarlyTank {
+            assert_eq!(moves, data::EARLY_TANK_MOVES, "{kind:?}");
         } else if kind == UnitKind::AutonomousArmour {
             assert_eq!(moves, data::AUTONOMOUS_ARMOUR_MOVES, "{kind:?}");
         } else if data::unit_class(kind) == Some(UnitClass::Mounted) {
@@ -130,13 +133,13 @@ fn mounted_units_have_four_moves_the_armour_five_and_six_and_nobody_else_does() 
 #[test]
 fn historical_names() {
     let names: Vec<_> = [
-        UnitKind::Soldier,
-        UnitKind::Ranger,
+        UnitKind::Spearman,
+        UnitKind::Archer,
         UnitKind::Horseman,
-        UnitKind::Trooper,
-        UnitKind::Marksman,
+        UnitKind::Pikeman,
+        UnitKind::Crossbowman,
         UnitKind::Knight,
-        UnitKind::AssaultTrooper,
+        UnitKind::Musketman,
         UnitKind::Rifleman,
         UnitKind::FieldCannon,
         UnitKind::Cavalry,
@@ -144,7 +147,7 @@ fn historical_names() {
         UnitKind::Artillery,
         UnitKind::Tank,
         UnitKind::HunterKiller,
-        UnitKind::Drone,
+        UnitKind::CombatDrone,
         UnitKind::AutonomousArmour,
     ]
     .map(data::unit_name)
@@ -181,8 +184,8 @@ fn the_class_bonus_is_the_triangle_and_nothing_else() {
     let pct = |k: UnitKind| data::unit_stats(k).strength * combat::CLASS_BONUS_PERCENT / 100;
     // Before the Modern era (user, 2026-10-20: the triangle ends there); Infantry, Tank and
     // Artillery onward have none (`the_triangle_ends_at_the_modern_era`).
-    let melee = [Soldier, Trooper, AssaultTrooper, Rifleman];
-    let ranged = [Ranger, Marksman, FieldCannon];
+    let melee = [Spearman, Pikeman, Musketman, Rifleman];
+    let ranged = [Archer, Crossbowman, FieldCannon];
     let mounted = [Horseman, Knight, Cavalry];
     for m in melee {
         for h in mounted {
@@ -208,13 +211,13 @@ fn the_class_bonus_is_the_triangle_and_nothing_else() {
         Tank,
         AutonomousArmour,
         Artillery,
-        Drone,
+        CombatDrone,
     ] {
         for other in [
-            Soldier,
+            Spearman,
             Horseman,
             Cavalry,
-            Ranger,
+            Archer,
             FieldCannon,
             Tank,
             Infantry,
@@ -223,7 +226,7 @@ fn the_class_bonus_is_the_triangle_and_nothing_else() {
             assert_eq!(bonus(other, modern), 0, "{other:?} vs {modern:?}");
         }
     }
-    assert_eq!(bonus(Soldier, Soldier), 0);
+    assert_eq!(bonus(Spearman, Spearman), 0);
     assert_eq!(bonus(Scout, Horseman), 0);
 }
 
@@ -241,10 +244,10 @@ fn pre_modern_riders_stand_well_above_their_eras_melee_line() {
     // massacre. The Tank and the Autonomous Armour, past the triangle, keep their own numbers.
     use UnitKind::*;
     for (melee, rider) in [
-        (Soldier, Horseman),
+        (Spearman, Horseman),
         (Phalangite, Cataphract),
-        (Trooper, Knight),
-        (AssaultTrooper, Cuirassier),
+        (Pikeman, Knight),
+        (Musketman, Cuirassier),
         (Rifleman, Cavalry),
     ] {
         let (m, h) = (data::unit_stats(melee), data::unit_stats(rider));
@@ -286,7 +289,7 @@ fn a_rider_storms_a_city_a_little_below_the_melee_lines_strength() {
         "{:?}",
         fight.attacker_strength.parts
     );
-    let spear = data::unit_stats(UnitKind::Soldier).strength;
+    let spear = data::unit_stats(UnitKind::Spearman).strength;
     assert!(
         fight.attacker_strength.total < spear && fight.attacker_strength.total >= spear - 3,
         "{}",
@@ -301,7 +304,7 @@ fn a_rider_storms_a_city_a_little_below_the_melee_lines_strength() {
     assert_eq!(f.attacker_strength.parts, fight.attacker_strength.parts);
     // A spear line, a shot and the Tank onward pay nothing.
     assert_eq!(
-        combat::mounted_city_penalty(Faction::India, UnitKind::Soldier, false),
+        combat::mounted_city_penalty(Faction::India, UnitKind::Spearman, false),
         0
     );
     assert_eq!(
@@ -359,9 +362,9 @@ fn has(parts: &[(String, i32)], label: &str, value: i32) -> bool {
 #[test]
 fn a_spear_line_unit_gets_the_bonus_attacking_and_defending_against_a_horseman() {
     let mut s = game(&[0, 1]);
-    let spear = unit(&mut s, 0, UnitKind::Soldier, hex(4, 4));
+    let spear = unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
     let horse = unit(&mut s, 1, UnitKind::Horseman, hex(5, 4));
-    let spear_bonus = combat::class_bonus_strength(data::unit_stats(UnitKind::Soldier).strength);
+    let spear_bonus = combat::class_bonus_strength(data::unit_stats(UnitKind::Spearman).strength);
     assert_eq!(spear_bonus, 8, "40% of the Spearman's 20");
     let (att, def) = strengths(&s, spear, horse, FightKind::Melee);
     assert!(
@@ -389,7 +392,7 @@ fn a_spear_line_unit_gets_the_bonus_attacking_and_defending_against_a_horseman()
 fn a_horseman_gets_the_bonus_charging_archers_and_none_under_their_fire() {
     let mut s = game(&[0, 1]);
     let horse = unit(&mut s, 0, UnitKind::Horseman, hex(4, 4));
-    let archer = unit(&mut s, 1, UnitKind::Ranger, hex(5, 4));
+    let archer = unit(&mut s, 1, UnitKind::Archer, hex(5, 4));
     let horse_bonus = combat::class_bonus_strength(data::unit_stats(UnitKind::Horseman).strength);
     assert_eq!(horse_bonus, 10, "40% of the Horseman's 26");
     let (att, _) = strengths(&s, horse, archer, FightKind::Melee);
@@ -410,8 +413,8 @@ fn a_horseman_gets_the_bonus_charging_archers_and_none_under_their_fire() {
 #[test]
 fn ranged_has_no_class_bonus_against_the_melee_line_and_melee_has_none_against_ranged() {
     let mut s = game(&[0, 1]);
-    let archer = unit(&mut s, 0, UnitKind::Ranger, hex(3, 4));
-    let spear = unit(&mut s, 1, UnitKind::Soldier, hex(5, 4));
+    let archer = unit(&mut s, 0, UnitKind::Archer, hex(3, 4));
+    let spear = unit(&mut s, 1, UnitKind::Spearman, hex(5, 4));
     let (att, def) = strengths(&s, archer, spear, FightKind::Ranged);
     assert!(att.iter().chain(&def).all(|(l, _)| !l.contains("against")));
     let (att, def) = strengths(&s, spear, archer, FightKind::Melee);
@@ -450,14 +453,14 @@ fn a_mounted_archers_shot_gives_a_mounted_target_no_bonus_and_the_spear_line_kee
     let mut s = game(&[0, 1]);
     let keshig = unit(&mut s, 0, data::KESHIG_KIND, hex(3, 4));
     let horse = unit(&mut s, 1, UnitKind::Horseman, hex(5, 4));
-    let spear = unit(&mut s, 1, UnitKind::Soldier, hex(5, 5));
+    let spear = unit(&mut s, 1, UnitKind::Spearman, hex(5, 5));
     let (_, def) = strengths(&s, keshig, horse, FightKind::Ranged);
     assert!(
         def.iter()
             .all(|(l, _)| l != combat::MOUNTED_VS_RANGED_LABEL),
         "{def:?}"
     );
-    let spear_bonus = combat::class_bonus_strength(data::unit_stats(UnitKind::Soldier).strength);
+    let spear_bonus = combat::class_bonus_strength(data::unit_stats(UnitKind::Spearman).strength);
     let (_, def) = strengths(&s, keshig, spear, FightKind::Melee);
     assert!(
         has(&def, combat::MELEE_VS_MOUNTED_LABEL, spear_bonus),
@@ -479,7 +482,7 @@ fn the_ai_estimates_give_a_mounted_target_of_a_shot_no_bonus() {
 #[test]
 fn the_forecast_shows_the_same_class_bonus_as_the_fight() {
     let mut s = game(&[0, 1]);
-    let spear = unit(&mut s, 0, UnitKind::Soldier, hex(4, 4));
+    let spear = unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
     let horse = unit(&mut s, 1, UnitKind::Horseman, hex(5, 4));
     let view = player_view(&s, PlayerId(0));
     let f = forecast_attack(&view, spear, hex(5, 4)).unwrap();
@@ -489,7 +492,7 @@ fn the_forecast_shows_the_same_class_bonus_as_the_fight() {
     assert!(has(
         &f.attacker_strength.parts,
         combat::MELEE_VS_MOUNTED_LABEL,
-        combat::class_bonus_strength(data::unit_stats(UnitKind::Soldier).strength)
+        combat::class_bonus_strength(data::unit_stats(UnitKind::Spearman).strength)
     ));
 }
 
@@ -508,7 +511,7 @@ fn faction_rules_follow_the_class_through_the_lineage() {
     // Celts: the melee line is ordinary (the -2 design strength was removed 2026-11-02);
     // Byzantium: sturdier veterans, not Spearmen. The +4 is a design number: it rides the era
     // curve with the unit.
-    for kind in [UnitKind::Soldier, UnitKind::Trooper, UnitKind::Infantry] {
+    for kind in [UnitKind::Spearman, UnitKind::Pikeman, UnitKind::Infantry] {
         let (c, o) = (
             data::unit_stats_for(Faction::Celts, kind),
             data::unit_stats_for(Faction::Switzerland, kind),
@@ -516,8 +519,8 @@ fn faction_rules_follow_the_class_through_the_lineage() {
         assert_eq!((c.strength, c.cost), (o.strength, o.cost), "{kind:?}");
     }
     assert_eq!(
-        data::unit_stats_for(Faction::Byzantium, UnitKind::Soldier).strength,
-        data::unit_stats(UnitKind::Soldier).strength
+        data::unit_stats_for(Faction::Byzantium, UnitKind::Spearman).strength,
+        data::unit_stats(UnitKind::Spearman).strength
     );
     assert_eq!(
         data::unit_stats_for(Faction::Byzantium, UnitKind::Rifleman).strength,
@@ -566,7 +569,7 @@ fn a_horseman_covers_four_tiles_in_a_turn_and_a_spearman_two() {
     use crate::rules::test_support::{no_orders, resolve_units};
     let mut s = game(&[0, 1]);
     let horse = unit(&mut s, 0, UnitKind::Horseman, hex(1, 4));
-    let spear = unit(&mut s, 0, UnitKind::Soldier, hex(1, 6));
+    let spear = unit(&mut s, 0, UnitKind::Spearman, hex(1, 6));
     crate::rules::test_support::goto(&mut s, horse, hex(9, 4));
     crate::rules::test_support::goto(&mut s, spear, hex(9, 6));
     let (next, _) = resolve_units(&s, &no_orders());
@@ -597,7 +600,7 @@ fn every_class_has_exactly_one_unit_in_every_era_with_growing_steps() {
             "{class:?} strength steps do not grow: {steps:?}"
         );
         // Industrial to Modern, through the Machine Age, is still a big step (the armour's own
-        // numbers make the mounted one small: Cavalry 79, Landship 86, Tank 94).
+        // numbers make the mounted one small: Cavalry 79, EarlyTank 86, Tank 94).
         assert!(
             class == UnitClass::Mounted || steps[4] + steps[5] >= steps[3],
             "{class:?} the Machine Age halves are too small: {steps:?}"
@@ -758,14 +761,14 @@ fn the_tank_has_five_moves_the_autonomous_armour_six_and_the_rest_of_the_mounted
     );
     const { assert!(data::AUTONOMOUS_ARMOUR_MOVES > data::TANK_MOVES) };
     assert_eq!(
-        data::unit_stats(UnitKind::Landship).moves,
-        data::LANDSHIP_MOVES
+        data::unit_stats(UnitKind::EarlyTank).moves,
+        data::EARLY_TANK_MOVES
     );
-    const { assert!(data::LANDSHIP_MOVES < MOUNTED_MOVES) };
+    const { assert!(data::EARLY_TANK_MOVES < MOUNTED_MOVES) };
     for kind in LINES[2].1 {
         if !matches!(
             kind,
-            UnitKind::Landship
+            UnitKind::EarlyTank
                 | UnitKind::Tank
                 | UnitKind::MainBattleTank
                 | UnitKind::AutonomousArmour

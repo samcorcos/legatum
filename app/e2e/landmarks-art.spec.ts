@@ -12,9 +12,9 @@ import type { BuildingKind, Hex } from '../src/types';
 
 const output = path.resolve(process.env.LANDMARK_SHOTS ?? '../docs/design/landmarks');
 const works: [BuildingKind, string][] = [
-  ['RelayUplink', 'great-library'],
-  ['WorldExchange', 'grand-bazaar'],
-  ['PlanetaryFoundry', 'royal-arsenal'],
+  ['GreatLibrary', 'great-library'],
+  ['GrandBazaar', 'grand-bazaar'],
+  ['RoyalArsenal', 'royal-arsenal'],
 ];
 const fixture = citiesFixture();
 fixture.turn = 12;

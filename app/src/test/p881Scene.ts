@@ -65,10 +65,10 @@ export function p881Scene(variant: P881Variant = 'fog') {
     // Turn 30's Horseman is wounded and elsewhere: this is the same charge with the garrison in sight.
     const horse = spawnUnit(s, 0, 'Horseman', { q: 19, r: 11 }, false);
     ids['Horseman#28'] = horse.id;
-    const archer = spawnUnit(s, 1, 'Ranger', { q: 19, r: 13 }, false);
+    const archer = spawnUnit(s, 1, 'Archer', { q: 19, r: 13 }, false);
     archer.fortify = 6;
     ids['Archer#15'] = archer.id;
   }
   refreshVision(s);
-  return { fixture: s, horseman: ids['Horseman#28'], archer: ids['Ranger#15'] ?? ids['Archer#15'], nara: ids.Nara, archerTile: { q: 19, r: 13 } as Hex };
+  return { fixture: s, horseman: ids['Horseman#28'], archer: ids['Archer#15'], nara: ids.Nara, archerTile: { q: 19, r: 13 } as Hex };
 }

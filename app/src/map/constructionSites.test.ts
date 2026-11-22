@@ -10,8 +10,8 @@ function view(k: number, rival = false): PlayerView {
   const tiles = Array.from({ length: 100 }, () => ({ explored: true, visible: !rival, owner: rival ? 1 : 0 })) as PlayerView['tiles'];
   return { me: 0, width: 10, height: 10, tiles, players: [{ id: 0, era: 2 }, { id: 1, era: 2 }],
     cities: [{ id: 7, owner: rival ? 1 : 0, pos: city, name: 'Bellinzona', visible: !rival,
-      construction: { building: 'RelayUplink', tile, stage: constructionStage(k), progress: Math.round(k * 1000) },
-      detail: rival ? null : { producing: { kind: 'Wonder', building: 'RelayUplink', tile }, production_stored: Math.round(k * 600), production_cost: 600 } }] } as unknown as PlayerView;
+      construction: { building: 'GreatLibrary', tile, stage: constructionStage(k), progress: Math.round(k * 1000) },
+      detail: rival ? null : { producing: { kind: 'Wonder', building: 'GreatLibrary', tile }, production_stored: Math.round(k * 600), production_cost: 600 } }] } as unknown as PlayerView;
 }
 
 describe('construction sites', () => {
@@ -24,7 +24,7 @@ describe('construction sites', () => {
     const done = view(.75);
     done.cities[0].construction = null;
     done.cities[0].detail = null;
-    done.tiles[tileIndex(tile, 10, 10)].landmark = { building: 'RelayUplink', city: 7, of: 0 };
+    done.tiles[tileIndex(tile, 10, 10)].landmark = { building: 'GreatLibrary', city: 7, of: 0 };
     expect(landmarksOf(done)[0].tile).toBe(tileIndex(tile, 10, 10));
   });
 

@@ -253,7 +253,7 @@ mod tests {
             *defender = Defender::Unit {
                 unit: UnitId(600),
                 owner,
-                unit_kind: UnitKind::Soldier,
+                unit_kind: UnitKind::Spearman,
             };
             *pos = at;
         }
@@ -336,8 +336,8 @@ mod tests {
         observer.after(&[capture(city)]);
         assert_eq!(observer.seats[&0].soft_target_captures, 1);
         state.cities.get_mut(&city).unwrap().buildings.clear();
-        spawn_unit(&mut state, PlayerId(1), UnitKind::Soldier, Hex::new(12, 5));
-        spawn_unit(&mut state, PlayerId(1), UnitKind::Soldier, Hex::new(13, 5));
+        spawn_unit(&mut state, PlayerId(1), UnitKind::Spearman, Hex::new(12, 5));
+        spawn_unit(&mut state, PlayerId(1), UnitKind::Spearman, Hex::new(13, 5));
         observer.before(&state);
         observer.after(&[capture(city)]);
         assert_eq!(observer.seats[&0].soft_target_captures, 1);

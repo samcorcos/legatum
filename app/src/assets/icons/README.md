@@ -20,11 +20,11 @@ The set is **solid silhouettes with knocked-out detail** (the majority of the or
 | --- | --- |
 | `unit-scout.svg` | Watchful eye with a ringed pupil: recon. |
 | `unit-settler.svg` | A domed tent with a door and a planted pennant. |
-| `unit-soldier.svg` | Crested legionary helmet with visor slot and cheek guards: melee infantry. |
-| `unit-ranger.svg` | Archer: a drawn bow with an arrow on the string; also the ranged-attack mark. |
-| `unit-marksman.svg` | Crossbowman: a crossbow seen from above, bolt loaded (never the Archer's bow). |
-| `unit-trooper.svg` | Pikeman: a slanted pike beside a round shield. |
-| `unit-assaulttrooper.svg` | Musketman: a long matchlock musket at the slope. |
+| `unit-spearman.svg` | Crested legionary helmet with visor slot and cheek guards: melee infantry. |
+| `unit-archer.svg` | Archer: a drawn bow with an arrow on the string; also the ranged-attack mark. |
+| `unit-crossbowman.svg` | Crossbowman: a crossbow seen from above, bolt loaded (never the Archer's bow). |
+| `unit-pikeman.svg` | Pikeman: a slanted pike beside a round shield. |
+| `unit-musketman.svg` | Musketman: a long matchlock musket at the slope. |
 | `unit-horseman.svg` | Mounted line, Ancient: the lineage's first rider. |
 | `unit-knight.svg` | Mounted line, Medieval: shield and lance, side on. |
 | `unit-cavalry.svg` | Mounted line, Industrial. |
@@ -35,15 +35,15 @@ The set is **solid silhouettes with knocked-out detail** (the majority of the or
 | `unit-hunterkiller.svg` | Melee line, Future: the Hunter-Killer, a four-legged armed robot in side view (gun turret on the back, sensor pod at the front, two jointed and two straight legs). |
 | `unit-fieldcannon.svg` | Siege, Renaissance: field gun on a carriage. |
 | `unit-artillery.svg` | Siege, Industrial and Modern: howitzer on a carriage. |
-| `unit-drone.svg` | Ranged, Future: a combat drone. |
+| `unit-combatdrone.svg` | Ranged, Future: a combat drone. |
 | `unit-fighter.svg` | Air, Modern: a single-engine propeller fighter in plan view, banked 42 degrees with a propeller bar at the nose (a straight upright plan view scored 0.74 to 0.76 against `unit-jetbomber` at 16 px; a city hangar unit, never on the map). |
 | `unit-bomber.svg` | Air, Modern: bomber plane, plan view (a city hangar unit, never on the map). |
 | `unit-stealthfighter.svg` | Air, Future: the Stealth Fighter, a faceted arrowhead with a notched tail and a canopy cut-out (hangar unit). |
 | `unit-stealthbomber.svg` | Air, Future: the Stealth Bomber, a flying wing with a saw-toothed rear edge (hangar unit). |
-| `unit-keshig.svg` | Mongol Keshig (the Mongols' Classical mounted unit, replacing the Cataphract; a mounted archer): a horse head in profile with a drawn recurved bow and an arrow flying back over it (the Parthian shot), so it never reads as `unit-horseman` (the head alone) or `unit-ranger` (a bow alone). |
-| `unit-oathbearer.svg` | Sparta Soldier: a closed helm in profile with a visor slit and vents. |
-| `unit-legionary.svg` | Byzantium Trooper, the Varangian Guard (the file keeps its pre-rename name): a long-hafted Dane axe, broad bearded blade with a hole in it, spike on the haft's head and a butt cap. |
-| `unit-heir.svg` | The Byzantium's Heir: a crowned head over a cloak with the house star cut into it (civilian; never the Settler's dome). |
+| `unit-keshig.svg` | Mongol Keshig (the Mongols' Classical mounted unit, replacing the Cataphract; a mounted archer): a horse head in profile with a drawn recurved bow and an arrow flying back over it (the Parthian shot), so it never reads as `unit-horseman` (the head alone) or `unit-archer` (a bow alone). |
+| `unit-oathbearer.svg` | Sparta's Spearman (the Spartan Hoplite; the file keeps its older name): a closed helm in profile with a visor slit and vents. |
+| `unit-legionary.svg` | Byzantium Pikeman, the Varangian Guard (the file keeps its pre-rename name): a long-hafted Dane axe, broad bearded blade with a hole in it, spike on the haft's head and a butt cap. |
+| `unit-heirtothethrone.svg` | The Byzantium's Heir: a crowned head over a cloak with the house star cut into it (civilian; never the Settler's dome). |
 
 ## Tile improvements
 Built by a city on a resource tile (`itemIcon` resolves `improvement-<kind>`); the picker rows use them (the map shows an improvement as land art, or as a ring badge when zoomed out).
@@ -61,32 +61,32 @@ Every tier of a family has its own drawing that keeps one cue of the base buildi
 | File | Description |
 | --- | --- |
 | `building-granary.svg` | Two banded storage silos. |
-| `building-hydroponics.svg` | Mill (Granary upgrade): a gabled mill house and its water wheel over the race. |
-| `building-arcology.svg` | Hydroponics upgrade: a stepped habitat tower with a sprout cut into it. |
+| `building-mill.svg` | Mill (Granary upgrade): a gabled mill house and its water wheel over the race. |
+| `building-arcology.svg` | Mill upgrade: a stepped habitat tower with a sprout cut into it. |
 | `building-workshop.svg` | Sawtooth-roof factory with chimney and windows. |
-| `building-machineshop.svg` | Workshop upgrade: a drill press over a workpiece. |
-| `building-autoworks.svg` | Machine Shop upgrade: a gear above a conveyor belt. |
+| `building-forge.svg` | Workshop upgrade: a drill press over a workpiece. |
+| `building-factory.svg` | Forge upgrade: a gear above a conveyor belt. |
 | `building-market.svg` | Market stall with scalloped awning, counter, and coin. |
 | `building-market-india.svg` | India Revenue Office: Mughal court arch and account scroll, distinct from the market stall. |
 | `building-imperialdiwan.svg` | Imperial Diwan: the central court pavilion and treasury ledger. |
-| `building-clearinghouse.svg` | Market upgrade: balance scales. |
-| `building-worldexchange.svg` | Grand Bazaar: a globe on a stand with a meridian ring. |
+| `building-bank.svg` | Market upgrade: balance scales. |
+| `building-grandbazaar.svg` | Grand Bazaar: a globe on a stand with a meridian ring. |
 | `building-pyramids.svg` | World wonder: two pyramid silhouettes on a shared ground line. |
 | `building-hagiasophia.svg` | World wonder: broad central dome, smaller supports and flanking minarets. |
 | `building-eiffeltower.svg` | World wonder: tapering tower on a broad base. |
-| `building-iterreactor.svg` | World wonder: concentric tokamak vessel with a central plasma chamber. |
-| `building-laboratory.svg` | Library: an unrolled scroll between its two rollers, lines of writing knocked out. |
-| `building-college.svg` | Laboratory upgrade: a mortarboard with a tassel. |
-| `building-inferencecore.svg` | Research Lab (University upgrade): a microscope. |
+| `building-iterfusionreactor.svg` | World wonder: concentric tokamak vessel with a central plasma chamber. |
+| `building-library.svg` | Library: an unrolled scroll between its two rollers, lines of writing knocked out. |
+| `building-university.svg` | Library upgrade: a mortarboard with a tassel. |
+| `building-researchlab.svg` | Research Lab (University upgrade): a microscope. |
 | `building-walls.svg` | Crenellated wall with an arched gate. |
 | `building-citadel.svg` | Walls upgrade: a keep with a gate and flanking walls. |
-| `building-warshrine.svg` | Sparta: a tapered standing stone with a sword cut into it, point down, guard swept toward the blade (no cross shape). |
-| `building-planetaryfoundry.svg` | Royal Arsenal: a cannon barrel over a pile of shot. |
-| `building-relay-uplink.svg` | Great Library: an open book under a pediment. |
+| `building-agoge.svg` | Sparta: a tapered standing stone with a sword cut into it, point down, guard swept toward the blade (no cross shape). |
+| `building-royalarsenal.svg` | Royal Arsenal: a cannon barrel over a pile of shot. |
+| `building-greatlibrary.svg` | Great Library: an open book under a pediment. |
 | `building-customsbastion.svg` | Switzerland Walls: a sloped bastion with a keyhole portal. |
-| `building-broodhall.svg` | Rice Storehouse (the retired Japan piece, still a building kind in the core): a plastered storehouse under a tiled roof. |
+| `building-ricestorehouse.svg` | Rice Storehouse (the retired Japan piece, still a building kind in the core): a plastered storehouse under a tiled roof. |
 | `building-foundry.svg` | Germany Ruhr Foundry (Forge): a furnace with a flame above its mouth. |
-| `building-courierhall.svg` | Mongols-only Courier Hall: a Portolan compass rose (long cardinal points, short intercardinals, a knocked-out hub) with a fleur-de-lis on the north point, so it never reads as a plain compass ring. The map's plaque is this rose drawn in the holder's tint. |
+| `building-yamrelaystation.svg` | Mongols-only Yam Relay Station: a Portolan compass rose (long cardinal points, short intercardinals, a knocked-out hub) with a fleur-de-lis on the north point, so it never reads as a plain compass ring. The map's plaque is this rose drawn in the holder's tint. |
 | `building-roadworks.svg` | Roadworks: a road narrowing to the horizon, its centre line knocked out in three widening dashes. |
 | `building-listeninghouse.svg` | Athens' Lyceum (replaces the Library): a colonnade under a flat roof, the grove's tree behind it. |
 
@@ -115,7 +115,7 @@ All milestones share a hexagon badge outline.
 | --- | --- |
 | `milestone-six-techs.svg` | Six nodes linked to a hub. |
 | `milestone-twenty-population.svg` | The numeral 20. |
-| `milestone-relay-uplink.svg` | Great Work: the open book in the milestone hexagon. |
+| `milestone-great-library.svg` | Great Work: the open book in the milestone hexagon. |
 
 ## Map and misc
 | File | Description |
@@ -149,7 +149,7 @@ Replace text glyphs (they differ between macOS and Windows, and some render as c
 | `mark-found.svg` | Flag: found a city. |
 | `mark-invalid.svg` | Question mark: an order that cannot run. |
 
-Map pending-order badges reuse `fortify` (hold), `unit-scout` (auto-explore), `unit-ranger` (ranged attack), `ui-alert` (wake), `ui-cross` (disband) and `ui-trend-up` (upgrade). Iron Guard uses `title-strongest-army` (crossed swords).
+Map pending-order badges reuse `fortify` (hold), `unit-scout` (auto-explore), `unit-archer` (ranged attack), `ui-alert` (wake), `ui-cross` (disband) and `ui-trend-up` (upgrade). Iron Guard uses `title-strongest-army` (crossed swords).
 
 ## Faction emblems and logo
 The faction glyphs (and the `faction-*` icon names, which resolve to them) are the heraldry glyphs, see `../heraldry/README.md`. The old standalone `faction-*.svg` emblems are removed.

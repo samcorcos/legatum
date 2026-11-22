@@ -17,11 +17,11 @@ fn hard_strikes_a_massing_field_army_before_it_declares() {
     let mut view = ViewBuilder::new(30, 18)
         .city(1, ME, Hex::new(5, 8), 3)
         .city(2, ENEMY, Hex::new(20, 8), 3)
-        .unit(1, ME, UnitKind::Soldier, Hex::new(7, 8))
-        .unit(2, ME, UnitKind::Soldier, Hex::new(7, 9))
-        .unit(3, ME, UnitKind::Soldier, Hex::new(7, 7))
-        .unit(50, ENEMY, UnitKind::Ranger, Hex::new(8, 8))
-        .unit(51, ENEMY, UnitKind::Ranger, Hex::new(8, 9))
+        .unit(1, ME, UnitKind::Spearman, Hex::new(7, 8))
+        .unit(2, ME, UnitKind::Spearman, Hex::new(7, 9))
+        .unit(3, ME, UnitKind::Spearman, Hex::new(7, 7))
+        .unit(50, ENEMY, UnitKind::Archer, Hex::new(8, 8))
+        .unit(51, ENEMY, UnitKind::Archer, Hex::new(8, 9))
         .build();
     view.players[ME.0 as usize].cities = 1;
     view.players[ENEMY.0 as usize].cities = 1;
@@ -136,11 +136,11 @@ fn give_current_vp(state: &mut GameState, player: PlayerId, eras: u8) {
         .find(|tile| tile.owner == Some(player) && tile.landmark.is_none())
         .expect("owned tile")
         .landmark = Some(legatum_core::landmarks::Landmark {
-        building: legatum_core::BuildingKind::RelayUplink,
+        building: legatum_core::BuildingKind::GreatLibrary,
         city,
         of: player,
     });
-    state.player_mut(player).great_work_completed = Some(legatum_core::BuildingKind::RelayUplink);
+    state.player_mut(player).great_work_completed = Some(legatum_core::BuildingKind::GreatLibrary);
 }
 
 /// An unowned land tile and a neighbour, far from every city and unit.
@@ -178,7 +178,7 @@ fn hard_snipes_an_exposed_settler_with_a_surprise_war_and_then_seeks_peace() {
     let mut state = early_game(711);
     let (site, beside) = open_ground(&state);
     let settler = spawn_unit(&mut state, RIVAL, UnitKind::Settler, site);
-    let soldier = spawn_unit(&mut state, ME, UnitKind::Soldier, beside);
+    let soldier = spawn_unit(&mut state, ME, UnitKind::Spearman, beside);
     let rival = state.player(RIVAL).team;
     let view = player_view(&state, ME);
     assert!(!view.at_war(ME, RIVAL));
@@ -233,14 +233,14 @@ fn a_guarded_settler_is_not_sniped_and_normal_difficulty_never_plans() {
     let mut state = early_game(711);
     let (site, beside) = open_ground(&state);
     spawn_unit(&mut state, RIVAL, UnitKind::Settler, site);
-    spawn_unit(&mut state, ME, UnitKind::Soldier, beside);
+    spawn_unit(&mut state, ME, UnitKind::Spearman, beside);
     let guard = site
         .neighbors()
         .into_iter()
         .find(|h| *h != beside && state.map.get(*h).is_some_and(|t| t.terrain.is_land()))
         .unwrap();
     let unguarded = state.clone();
-    spawn_unit(&mut state, RIVAL, UnitKind::Soldier, guard);
+    spawn_unit(&mut state, RIVAL, UnitKind::Spearman, guard);
     let orders = hard(&state, ME).orders(&player_view(&state, ME));
     assert!(!orders.iter().any(|o| matches!(o, Order::DeclareWar { .. })));
     let mut normal =
@@ -274,7 +274,7 @@ fn plan_memory_defaults_in_old_saves_and_round_trips() {
         turn: 4,
         city: CityId(1),
         item: ProductionItem::Unit {
-            unit: UnitKind::Soldier,
+            unit: UnitKind::Spearman,
         },
         cost: 40,
         reason: BlockReason::PlanReserve,
@@ -290,7 +290,7 @@ fn plan_memory_defaults_in_old_saves_and_round_trips() {
 #[test]
 fn the_plan_reserve_withdraws_discretionary_purchases_and_logs_them() {
     let item = ProductionItem::Unit {
-        unit: UnitKind::Soldier,
+        unit: UnitKind::Spearman,
     };
     let view = ViewBuilder::new(20, 12)
         .city_with_detail(1, ME, Hex::new(4, 5), 3)
@@ -358,7 +358,7 @@ fn settler_trip_risk_prices_who_can_reach_the_route() {
     let near = ViewBuilder::new(30, 14)
         .city_with_detail(1, ME, Hex::new(2, 6), 3)
         .unit(1, ME, UnitKind::Settler, from)
-        .unit(50, ENEMY, UnitKind::Soldier, Hex::new(8, 9))
+        .unit(50, ENEMY, UnitKind::Spearman, Hex::new(8, 9))
         .build();
     let mut p = crate::scripted::Planner::new(
         &near,
@@ -371,7 +371,7 @@ fn settler_trip_risk_prices_who_can_reach_the_route() {
     let far = ViewBuilder::new(30, 14)
         .city_with_detail(1, ME, Hex::new(2, 6), 3)
         .unit(1, ME, UnitKind::Settler, from)
-        .unit(50, ENEMY, UnitKind::Soldier, Hex::new(25, 12))
+        .unit(50, ENEMY, UnitKind::Spearman, Hex::new(25, 12))
         .build();
     let mut p = crate::scripted::Planner::new(
         &far,
@@ -390,7 +390,7 @@ fn settler_trip_risk_counts_a_distant_army_that_can_intercept_before_founding() 
     let view = ViewBuilder::new(30, 20)
         .city_with_detail(1, ME, Hex::new(2, 6), 3)
         .unit(1, ME, UnitKind::Settler, from)
-        .unit(50, ENEMY, UnitKind::Soldier, Hex::new(16, 13))
+        .unit(50, ENEMY, UnitKind::Spearman, Hex::new(16, 13))
         .build();
     let mut p = crate::scripted::Planner::new(
         &view,
@@ -528,8 +528,8 @@ fn a_hold_plan_garrisons_its_city_by_moving_or_buying() {
     };
     let v = ViewBuilder::new(20, 14)
         .city(1, ME, home, 3)
-        .unit(5, ME, UnitKind::Soldier, Hex::new(9, 6))
-        .unit(9, ENEMY, UnitKind::Soldier, Hex::new(11, 6))
+        .unit(5, ME, UnitKind::Spearman, Hex::new(9, 6))
+        .unit(9, ENEMY, UnitKind::Spearman, Hex::new(11, 6))
         .build();
     assert!(
         hold(&v)
@@ -540,7 +540,7 @@ fn a_hold_plan_garrisons_its_city_by_moving_or_buying() {
     );
     let mut far = ViewBuilder::new(20, 14)
         .city(1, ME, home, 3)
-        .unit(9, ENEMY, UnitKind::Soldier, Hex::new(11, 6))
+        .unit(9, ENEMY, UnitKind::Spearman, Hex::new(11, 6))
         .build();
     far.economy.gold = 500;
     for o in &mut far.cities[0].detail.as_mut().unwrap().options {
@@ -580,7 +580,7 @@ fn hard_goes_to_war_against_a_rival_counting_down_to_victory() {
         .take(3)
         .collect();
     for h in &near {
-        spawn_unit(&mut state, ME, UnitKind::Soldier, *h);
+        spawn_unit(&mut state, ME, UnitKind::Spearman, *h);
     }
     // One quiet turn, so our soldiers have seen the capital.
     state = resolve_turn(&state, &BTreeMap::new()).0;
@@ -632,7 +632,7 @@ fn hard_contains_a_runaway_leader_before_its_hold_and_marches_on_it() {
         .collect();
     assert_eq!(army.len(), 3);
     for h in &army {
-        spawn_unit(&mut state, ME, UnitKind::Soldier, *h);
+        spawn_unit(&mut state, ME, UnitKind::Spearman, *h);
     }
     state = resolve_turn(&state, &BTreeMap::new()).0;
     // The rival leads on 7 of 10: three era points, Great Work and its goal.
@@ -684,12 +684,12 @@ fn hard_contains_a_runaway_leader_before_its_hold_and_marches_on_it() {
         .iter()
         .filter(|o| match o {
             Order::MoveUnit { unit, to } => state.units.get(unit).is_some_and(|u| {
-                u.kind == UnitKind::Soldier && to.distance(capital) < u.pos.distance(capital)
+                u.kind == UnitKind::Spearman && to.distance(capital) < u.pos.distance(capital)
             }),
             _ => false,
         })
         .count();
-    // The new seeded map can put two Soldiers behind terrain while one still advances.
+    // The new seeded map can put two Spearmen behind terrain while one still advances.
     assert!(closer >= 1, "the army marches: {orders:?}");
 }
 
@@ -827,9 +827,9 @@ fn no_new_campaign_is_offered_on_a_stale_picture() {
         let mut view = ViewBuilder::new(16, 16)
             .city(1, ME, Hex::from_offset(4, 4), 3)
             .city(2, ENEMY, near, 3)
-            .unit(10, ME, UnitKind::Soldier, Hex::from_offset(6, 4))
-            .unit(11, ME, UnitKind::Soldier, Hex::from_offset(6, 5))
-            .unit(12, ME, UnitKind::Ranger, Hex::from_offset(5, 4))
+            .unit(10, ME, UnitKind::Spearman, Hex::from_offset(6, 4))
+            .unit(11, ME, UnitKind::Spearman, Hex::from_offset(6, 5))
+            .unit(12, ME, UnitKind::Archer, Hex::from_offset(5, 4))
             .build();
         view.turn = 120;
         view.diplomacy.legacy = false;
@@ -987,7 +987,7 @@ fn a_snipe_declares_only_from_the_next_hex() {
             .city(1, ME, Hex::new(2, 8), 3)
             .city(2, ENEMY, Hex::new(26, 18), 3)
             .unit(1, ME, UnitKind::Scout, Hex::new(10, 8))
-            .unit(2, ME, UnitKind::Soldier, Hex::new(12, 8))
+            .unit(2, ME, UnitKind::Spearman, Hex::new(12, 8))
             .unit(50, ENEMY, UnitKind::Settler, Hex::new(13, 8))
             .build(),
     );
@@ -1016,7 +1016,7 @@ fn a_quiet_garrison_stalks_a_settler_from_ahead() {
         ViewBuilder::new(32, 24)
             .city(1, ME, Hex::new(12, 11), 3)
             .city(2, ENEMY, Hex::new(6, 8), 3)
-            .unit(1, ME, UnitKind::Soldier, Hex::new(12, 11))
+            .unit(1, ME, UnitKind::Spearman, Hex::new(12, 11))
             .unit(50, ENEMY, UnitKind::Settler, settler)
             .build(),
     );

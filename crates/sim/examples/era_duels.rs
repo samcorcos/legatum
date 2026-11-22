@@ -16,22 +16,22 @@ use legatum_core::{
 const ROUNDS: u32 = 6;
 const LINES: [[UnitKind; 7]; 3] = [
     [
-        UnitKind::Soldier,
+        UnitKind::Spearman,
         UnitKind::Phalangite,
-        UnitKind::Trooper,
-        UnitKind::AssaultTrooper,
+        UnitKind::Pikeman,
+        UnitKind::Musketman,
         UnitKind::Rifleman,
         UnitKind::Infantry,
         UnitKind::HunterKiller,
     ],
     [
-        UnitKind::Ranger,
+        UnitKind::Archer,
         UnitKind::CompositeArcher,
-        UnitKind::Marksman,
+        UnitKind::Crossbowman,
         UnitKind::Arquebusier,
         UnitKind::FieldCannon,
         UnitKind::Artillery,
-        UnitKind::Drone,
+        UnitKind::CombatDrone,
     ],
     [
         UnitKind::Horseman,

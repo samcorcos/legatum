@@ -290,7 +290,7 @@ mod late_capture_value_tests {
             let tile = view.index(Hex::new(18, 8)).unwrap();
             view.tiles[tile].owner = Some(ENEMY);
             view.tiles[tile].landmark = Some(Landmark {
-                building: BuildingKind::RelayUplink,
+                building: BuildingKind::GreatLibrary,
                 city: CityId(2),
                 of: ENEMY,
             });
@@ -811,7 +811,7 @@ impl Planner<'_> {
             crate::tuned(
                 self.view()
                     .rule_experiments
-                    .unit_stats_for(self.faction, UnitKind::Soldier)
+                    .unit_stats_for(self.faction, UnitKind::Spearman)
                     .cost,
             )
             .max(1)
@@ -1194,7 +1194,7 @@ impl Planner<'_> {
             return self.earliest_winning_march(view, city);
         }
         // A force in reach is judged by the strike's siege forecast (a fogged city is assumed
-        // to hold one fortified Soldier).
+        // to hold one fortified Spearman).
         let force: Vec<_> = self
             .strike_force(view, city)
             .into_iter()
@@ -1289,7 +1289,7 @@ impl Planner<'_> {
                 .iter()
                 .filter(|u| {
                     u.military
-                        && u.kind == UnitKind::Soldier
+                        && u.kind == UnitKind::Spearman
                         && u.hp >= self.decisions.sparta_expedition_min_hp
                         && u.pos.distance(city.pos) <= self.decisions.open_prize_radius
                 })
@@ -1301,7 +1301,7 @@ impl Planner<'_> {
                     losses: crate::tuned(
                         self.view()
                             .rule_experiments
-                            .unit_stats_for(self.faction, UnitKind::Soldier)
+                            .unit_stats_for(self.faction, UnitKind::Spearman)
                             .cost,
                     ),
                     force,
@@ -1366,7 +1366,7 @@ impl Planner<'_> {
             return 0;
         }
         if city.detail.as_ref().is_some_and(|detail| {
-            data::has_building(&detail.buildings, legatum_core::BuildingKind::MachineShop)
+            data::has_building(&detail.buildings, legatum_core::BuildingKind::Forge)
         }) {
             let foundries = self
                 .ctx
@@ -1374,7 +1374,7 @@ impl Planner<'_> {
                 .iter()
                 .filter(|c| {
                     c.detail.as_ref().is_some_and(|d| {
-                        data::has_building(&d.buildings, legatum_core::BuildingKind::MachineShop)
+                        data::has_building(&d.buildings, legatum_core::BuildingKind::Forge)
                     })
                 })
                 .count() as i32;
@@ -1976,7 +1976,7 @@ impl Planner<'_> {
                     self.ctx
                         .own_units
                         .iter()
-                        .filter(|u| u.kind == UnitKind::Soldier)
+                        .filter(|u| u.kind == UnitKind::Spearman)
                         .map(|u| u.pos.distance(c.pos))
                         .min()
                         .unwrap_or(99),
@@ -1995,7 +1995,7 @@ impl Planner<'_> {
                     self.ctx
                         .own_units
                         .iter()
-                        .filter(|u| u.kind == UnitKind::Soldier)
+                        .filter(|u| u.kind == UnitKind::Spearman)
                         .map(|u| u.pos.distance(c.pos))
                         .min()
                         .unwrap_or(99),
@@ -2193,7 +2193,7 @@ impl Planner<'_> {
 
     /// Gene `war_reaim`: the strength of one defender the owner of `city` could buy there. Rival
     /// treasuries are hidden, so every owner is assumed able to buy one unit per city per turn,
-    /// of the strongest kind it is seen fielding (a Soldier when none is in sight).
+    /// of the strongest kind it is seen fielding (a Spearman when none is in sight).
     fn bought_defender(&self, city: &CityView) -> Option<UnitView> {
         let v = self.view();
         let mut unit = match v
@@ -2207,9 +2207,9 @@ impl Planner<'_> {
                 let mut u = (*self.ctx.own_units.first()?).clone();
                 let stats = v
                     .rule_experiments
-                    .unit_stats_for(v.faction_of(city.owner), UnitKind::Soldier);
+                    .unit_stats_for(v.faction_of(city.owner), UnitKind::Spearman);
                 u.owner = city.owner;
-                u.kind = UnitKind::Soldier;
+                u.kind = UnitKind::Spearman;
                 u.strength = stats.strength;
                 u.ranged = 0;
                 u.range = 0;
@@ -3240,7 +3240,7 @@ impl Planner<'_> {
                                     (tile.explored
                                         && (self.view().passage_allowed(
                                             self.view().me,
-                                            UnitKind::Soldier,
+                                            UnitKind::Spearman,
                                             tile.owner,
                                         ) || tile.owner == owner))
                                         .then_some(tile.move_cost())
@@ -5051,12 +5051,12 @@ mod walled_siege_continuation_tests {
             .city(1, ME, Hex::new(3, 8), 3)
             .city(9, ENEMY, city_pos, 2)
             .walled(9)
-            .unit(1, ME, UnitKind::Ranger, Hex::new(12, 8))
-            .unit(2, ME, UnitKind::Ranger, Hex::new(12, 9))
-            .unit(3, ME, UnitKind::Soldier, Hex::new(12, 7))
-            .unit(4, ME, UnitKind::Ranger, Hex::new(13, 9))
-            .unit(5, ME, UnitKind::Ranger, Hex::new(13, 7))
-            .unit(6, ME, UnitKind::Soldier, Hex::new(11, 8))
+            .unit(1, ME, UnitKind::Archer, Hex::new(12, 8))
+            .unit(2, ME, UnitKind::Archer, Hex::new(12, 9))
+            .unit(3, ME, UnitKind::Spearman, Hex::new(12, 7))
+            .unit(4, ME, UnitKind::Archer, Hex::new(13, 9))
+            .unit(5, ME, UnitKind::Archer, Hex::new(13, 7))
+            .unit(6, ME, UnitKind::Spearman, Hex::new(11, 8))
             .build();
         view.diplomacy.legacy = false;
         let against = view.team_of(ENEMY);
@@ -5117,14 +5117,14 @@ mod wall_staging_tests {
             .city(1, ME, Hex::new(3, 8), 3)
             .city(9, ENEMY, target, 3)
             .walled(9)
-            .unit(1, ME, UnitKind::Ranger, Hex::new(8, 8))
-            .unit(2, ME, UnitKind::Ranger, Hex::new(8, 9))
-            .unit(3, ME, UnitKind::Ranger, Hex::new(9, 8))
-            .unit(4, ME, UnitKind::Ranger, Hex::new(9, 9))
-            .unit(5, ME, UnitKind::Ranger, Hex::new(9, 7))
-            .unit(6, ME, UnitKind::Ranger, Hex::new(10, 8))
-            .unit(7, ME, UnitKind::Soldier, Hex::new(8, 7))
-            .unit(8, ME, UnitKind::Soldier, Hex::new(10, 7))
+            .unit(1, ME, UnitKind::Archer, Hex::new(8, 8))
+            .unit(2, ME, UnitKind::Archer, Hex::new(8, 9))
+            .unit(3, ME, UnitKind::Archer, Hex::new(9, 8))
+            .unit(4, ME, UnitKind::Archer, Hex::new(9, 9))
+            .unit(5, ME, UnitKind::Archer, Hex::new(9, 7))
+            .unit(6, ME, UnitKind::Archer, Hex::new(10, 8))
+            .unit(7, ME, UnitKind::Spearman, Hex::new(8, 7))
+            .unit(8, ME, UnitKind::Spearman, Hex::new(10, 7))
             .build();
         view.diplomacy.legacy = false;
         let against = view.team_of(ENEMY);
@@ -5169,9 +5169,9 @@ mod sparta_expedition_tests {
             .faction(Faction::Sparta)
             .city(1, ME, off(3, 5), 3)
             .city(2, ENEMY, off(18, 5), 3)
-            .unit(1, ME, UnitKind::Soldier, off(5, 5))
-            .unit(2, ME, UnitKind::Soldier, off(5, 6))
-            .unit(3, ME, UnitKind::Soldier, off(5, 7))
+            .unit(1, ME, UnitKind::Spearman, off(5, 5))
+            .unit(2, ME, UnitKind::Spearman, off(5, 6))
+            .unit(3, ME, UnitKind::Spearman, off(5, 7))
             .build();
         v.diplomacy.legacy = false;
         let against = v.team_of(ENEMY);
@@ -5237,11 +5237,11 @@ mod march_past_reach_tests {
             .faction(Faction::Mongols)
             .city(1, ME, off(3, 5), 3)
             .city(2, ENEMY, off(20, 5), 3)
-            .unit(1, ME, UnitKind::Ranger, off(17, 5))
-            .unit(2, ME, UnitKind::Ranger, off(17, 6))
-            .unit(3, ME, UnitKind::Soldier, off(11, 5))
-            .unit(4, ME, UnitKind::Soldier, off(11, 6))
-            .unit(5, ME, UnitKind::Soldier, off(11, 4))
+            .unit(1, ME, UnitKind::Archer, off(17, 5))
+            .unit(2, ME, UnitKind::Archer, off(17, 6))
+            .unit(3, ME, UnitKind::Spearman, off(11, 5))
+            .unit(4, ME, UnitKind::Spearman, off(11, 6))
+            .unit(5, ME, UnitKind::Spearman, off(11, 4))
             .build();
         v.diplomacy.legacy = false;
         let against = v.team_of(ENEMY);

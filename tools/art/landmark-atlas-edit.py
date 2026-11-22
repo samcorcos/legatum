@@ -14,7 +14,7 @@ from PIL import Image, ImageChops, ImageEnhance, ImageFilter
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = "11a70e2baa74f1d42648eb2685fa044321197ce4"
-STEMS = ("building-relayuplink", "building-worldexchange", "building-planetaryfoundry")
+STEMS = ("building-greatlibrary", "building-grandbazaar", "building-royalarsenal")
 
 
 def original(path: Path) -> Image.Image:

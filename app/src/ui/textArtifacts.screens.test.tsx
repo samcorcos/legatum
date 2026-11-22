@@ -53,7 +53,7 @@ it('the diplomacy panel reads cleanly with offers pending, at war, and with an A
   meetAll(s);
   for (const p of s.players) p.gold = 500;
   s.units = s.units.filter((u) => u.owner !== 2);
-  for (let i = 0; i < 4; i++) spawnUnit(s, 2, 'Soldier', fromOffset(10 + i, 10), false);
+  for (let i = 0; i < 4; i++) spawnUnit(s, 2, 'Spearman', fromOffset(10 + i, 10), false);
   show(client.view(0), { diplomacyTeam: 1 });
   hits.push(...audit('diplomacy at peace (row)'));
   s.diplomacy!.relations.find((r) => r.a === 0 && r.b === 1)!.state = 'War';

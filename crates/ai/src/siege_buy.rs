@@ -423,12 +423,12 @@ mod tests {
             .city(1, ME, off(3, 8), 3)
             .city(9, ENEMY, off(12, 8), 3)
             .walled(9)
-            .unit(20, ENEMY, UnitKind::Soldier, off(12, 8));
+            .unit(20, ENEMY, UnitKind::Spearman, off(12, 8));
         for i in 0..6 {
             b = b.unit(
                 i + 1,
                 ME,
-                UnitKind::Soldier,
+                UnitKind::Spearman,
                 off(6 + i as i32 / 3, 7 + i as i32 % 3),
             );
         }

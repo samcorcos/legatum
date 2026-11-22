@@ -104,7 +104,7 @@ impl Planner<'_> {
         // Gene `prior_needs_army`: the faction prior alone (no army seen massing, no war
         // declared) counts only when the rival's public army is at least `prior_needs_army`
         // percent of ours; a neighbour we already out-muscle cannot rush us (playtest 8.9.2:
-        // AI Sparta, three units to the Mongols' one, spent turns 15-25 on a Ranger and Walls
+        // AI Sparta, three units to the Mongols' one, spent turns 15-25 on an Archer and Walls
         // against them instead of its own rush).
         let v = self.view();
         let army = |p: legatum_core::PlayerId| v.army_of(p);
@@ -250,7 +250,7 @@ impl Planner<'_> {
             city.visible
                 && !city.walls
                 && c.garrison_strength.is_some_and(|s| {
-                    s <= legatum_core::data::unit_stats(UnitKind::Soldier).strength
+                    s <= legatum_core::data::unit_stats(UnitKind::Spearman).strength
                 }),
         );
         50 * soft
@@ -274,7 +274,7 @@ mod tests {
             .known_techs(techs)
             .city(1, ME, off(5, 6), 3)
             .city(2, ENEMY, off(11, 6), 3)
-            .unit(1, ME, UnitKind::Soldier, off(5, 6))
+            .unit(1, ME, UnitKind::Spearman, off(5, 6))
             .build();
         v.players
             .iter_mut()
@@ -311,10 +311,10 @@ mod tests {
             let mut b = ViewBuilder {
                 view: neighbor(Faction::Mongols, techs),
             }
-            .unit(10, ENEMY, UnitKind::Soldier, off(8, 6))
-            .unit(11, ENEMY, UnitKind::Soldier, off(8, 7));
+            .unit(10, ENEMY, UnitKind::Spearman, off(8, 6))
+            .unit(11, ENEMY, UnitKind::Spearman, off(8, 7));
             if shooter {
-                b = b.unit(12, ME, UnitKind::Ranger, off(5, 6));
+                b = b.unit(12, ME, UnitKind::Archer, off(5, 6));
             }
             b.build()
         };

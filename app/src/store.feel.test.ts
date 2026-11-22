@@ -39,7 +39,7 @@ async function localGame() {
 
 function selectFutureSettler(client: FixtureClient) {
   const view = structuredClone(client.view(0));
-  const settler = view.units.find((u) => u.owner === view.me && u.kind === 'Soldier')!;
+  const settler = view.units.find((u) => u.owner === view.me && u.kind === 'Spearman')!;
   view.tiles.forEach((tile) => { tile.explored = true; tile.visible = true; tile.terrain = 'Grassland'; });
   const site = view.tiles.map((_, i) => hexAt(i, view.width)).find((hex) => knownLegalSite(view, hex))!;
   settler.kind = 'Settler'; settler.military = false; settler.pos = site;
@@ -97,7 +97,7 @@ it('advances past a stacked escort after Found City, never selecting a unit on t
 
 it('pairs invalid orders with the visible validation reason instead of commit feedback', async () => {
   const client = await localGame();
-  const unit = client.view(0).units.find((u) => u.owner === 0 && u.kind === 'Soldier')!;
+  const unit = client.view(0).units.find((u) => u.owner === 0 && u.kind === 'Spearman')!;
   useGame.getState().select({ kind: 'unit', id: unit.id });
   vi.spyOn(client, 'validate').mockReturnValue([{ index: 0, message: 'That tile cannot be reached.' }]);
   moveSelected({ q: 1000, r: 1000 });
@@ -132,12 +132,12 @@ it('uses purchase only after local Buy validation, and never when cancelling or 
   const city = view.cities.find((c) => c.owner === 0)!;
   useGame.setState({ views: [view, client.view(1)] });
   useGame.getState().editOrders((o) => setProduction(o, city.id, { kind: 'Building', building: 'Granary' }, null));
-  useGame.getState().editOrders((o) => toggleBuy(o, city.id, { kind: 'Unit', unit: 'Soldier' }), 'purchase');
+  useGame.getState().editOrders((o) => toggleBuy(o, city.id, { kind: 'Unit', unit: 'Spearman' }), 'purchase');
   expect(feel.purchase).toHaveBeenCalledTimes(1);
-  useGame.getState().editOrders((o) => toggleBuy(o, city.id, { kind: 'Unit', unit: 'Soldier' }));
+  useGame.getState().editOrders((o) => toggleBuy(o, city.id, { kind: 'Unit', unit: 'Spearman' }));
   expect(feel.purchase).toHaveBeenCalledTimes(1);
   vi.spyOn(client, 'validate').mockReturnValue([{ index: 1, message: 'Not enough Gold' }]);
-  useGame.getState().editOrders((o) => toggleBuy(o, city.id, { kind: 'Unit', unit: 'Soldier' }), 'purchase');
+  useGame.getState().editOrders((o) => toggleBuy(o, city.id, { kind: 'Unit', unit: 'Spearman' }), 'purchase');
   expect(feel.purchase).toHaveBeenCalledTimes(1);
   expect(feel.invalid).toHaveBeenCalledTimes(1);
 });
@@ -172,18 +172,18 @@ it('applies online feedback only with the new view, using the server-filtered ev
 it('waits for the exact online Buy validation and ignores stale and cancelled requests', async () => {
   const { socket } = await onlineGame();
   useGame.getState().editOrders(() => [{ type: 'SleepUnit', unit: 1 }]);
-  useGame.getState().editOrders((o) => [...o, { type: 'BuyItem', city: 1, item: { kind: 'Unit', unit: 'Soldier' } }], 'purchase');
+  useGame.getState().editOrders((o) => [...o, { type: 'BuyItem', city: 1, item: { kind: 'Unit', unit: 'Spearman' } }], 'purchase');
   expect(feel.purchase).not.toHaveBeenCalled();
   socket.push({ type: 'validation', errors: [] }); // The older Hold request.
   expect(feel.purchase).not.toHaveBeenCalled();
   socket.push({ type: 'validation', errors: [] });
   expect(feel.purchase).toHaveBeenCalledTimes(1);
-  useGame.getState().editOrders(() => [{ type: 'BuyItem', city: 2, item: { kind: 'Unit', unit: 'Soldier' } }], 'purchase');
+  useGame.getState().editOrders(() => [{ type: 'BuyItem', city: 2, item: { kind: 'Unit', unit: 'Spearman' } }], 'purchase');
   useGame.getState().editOrders(() => []);
   socket.push({ type: 'validation', errors: [] });
   expect(feel.purchase).toHaveBeenCalledTimes(1);
   socket.push({ type: 'validation', errors: [] });
-  useGame.getState().editOrders(() => [{ type: 'BuyItem', city: 3, item: { kind: 'Unit', unit: 'Soldier' } }], 'purchase');
+  useGame.getState().editOrders(() => [{ type: 'BuyItem', city: 3, item: { kind: 'Unit', unit: 'Spearman' } }], 'purchase');
   socket.push({ type: 'validation', errors: [{ index: 0, message: 'Buy is blocked' }] });
   expect(feel.purchase).toHaveBeenCalledTimes(1);
   expect(feel.invalid).toHaveBeenCalledTimes(1);

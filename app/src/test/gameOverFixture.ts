@@ -15,11 +15,11 @@ function award(s: MState, p: number, goal: boolean, eras = 6) {
 }
 
 function heldWork(s: MState, p: number) {
-  s.players[p].greatWorkCompleted = 'RelayUplink';
+  s.players[p].greatWorkCompleted = 'GreatLibrary';
   s.players[p].greatWorkHolder = p;
   s.owner[0] = p;
   s.landmark = Array(s.terrain.length).fill(null);
-  s.landmark[0] = { building: 'RelayUplink', city: 0, of: p };
+  s.landmark[0] = { building: 'GreatLibrary', city: 0, of: p };
 }
 
 function gameOverState(kind: GameOverKind): MState {

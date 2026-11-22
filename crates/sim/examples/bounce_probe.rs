@@ -30,7 +30,7 @@ struct Counts {
 }
 
 fn friend_block(reason: &str) -> bool {
-    // Old wording: "blocked by a unit that did not move". New: "blocked by P0's Soldier,
+    // Old wording: "blocked by a unit that did not move". New: "blocked by P0's Spearman,
     // which stayed to attack" / "..., which did not move".
     reason == "blocked by a unit that did not move"
         || (reason.starts_with("blocked by ") && reason.contains(", which "))

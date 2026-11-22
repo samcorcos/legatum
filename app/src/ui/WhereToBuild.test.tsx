@@ -83,7 +83,7 @@ it('shows a blocked city with a readable reason', async () => {
 
 it('marks a once-per-empire building that is already being built elsewhere', async () => {
   const { view, cityIds } = await fixture();
-  const item: ProductionItem = { kind: 'Building', building: 'CourierHall' };
+  const item: ProductionItem = { kind: 'Building', building: 'YamRelayStation' };
   const builder = view.cities.find((city) => city.id === cityIds[0])!;
   const template = builder.detail!.options[0];
   for (const cityId of cityIds) {
@@ -101,10 +101,10 @@ it('marks a once-per-empire building that is already being built elsewhere', asy
 it('opens the city tile picker for a Great Work without queuing a building without a tile', async () => {
   const { view, cityIds } = await fixture();
   view.research.known.push('Philosophy');
-  const item: ProductionItem = { kind: 'Building', building: 'RelayUplink' };
+  const item: ProductionItem = { kind: 'Building', building: 'GreatLibrary' };
   for (const cityId of cityIds) {
     const city = view.cities.find((entry) => entry.id === cityId)!;
-    city.detail!.options.push({ ...city.detail!.options[0], item: { kind: 'Wonder', building: 'RelayUplink', tile: { q: city.pos.q + 1, r: city.pos.r } }, cost: 600, turns: 8, production_stored: 0 });
+    city.detail!.options.push({ ...city.detail!.options[0], item: { kind: 'Wonder', building: 'GreatLibrary', tile: { q: city.pos.q + 1, r: city.pos.r } }, cost: 600, turns: 8, production_stored: 0 });
   }
   const list = render(view, item);
   const action = list.querySelector<HTMLButtonElement>(`[data-city="${cityIds[1]}"] button[aria-label^="Choose tile in Second city:"]`);

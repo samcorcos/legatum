@@ -71,11 +71,11 @@ function scene() {
     return best;
   };
   const spots: Record<string, Hex> = {};
-  for (const t of TERRAINS) { spots[t] = interior(t); spawnUnit(g, 0, 'Soldier', spots[t], false); }
+  for (const t of TERRAINS) { spots[t] = interior(t); spawnUnit(g, 0, 'Spearman', spots[t], false); }
   // A forest cluster: seats 1-3 soldiers, a Scout and a Settler of seat 0, side by side in one wood, so owner colours and unit kinds can be compared.
   const deep = interior('Forest');
   const ring = neighbors(deep).filter((n) => terrainAt(n) === 'Forest' && !taken(n));
-  const cluster: [number, UnitKind][] = [[0, 'Soldier'], [1, 'Soldier'], [2, 'Soldier'], [3, 'Soldier'], [0, 'Scout'], [0, 'Settler']];
+  const cluster: [number, UnitKind][] = [[0, 'Spearman'], [1, 'Spearman'], [2, 'Spearman'], [3, 'Spearman'], [0, 'Scout'], [0, 'Settler']];
   const clusterAt: Hex[] = [];
   cluster.forEach(([seat, kind], k) => {
     // The Settler shares the first Soldier's tile, so a two-unit stack is shot as well.
@@ -88,7 +88,7 @@ function scene() {
   const settler = spawnUnit(g, 0, 'Settler', interior('Plains', 4), false);
   // A lone Soldier in the deepest remaining wood, for the contrast check.
   const lone = interior('Forest');
-  spawnUnit(g, 0, 'Soldier', lone, false);
+  spawnUnit(g, 0, 'Spearman', lone, false);
   const ownerScout = interior('Desert');
   const enemyScout = spawnUnit(g, 2, 'Scout', ownerScout, false);
   // A Scout of seat 0 beside it, so the enemy's tile is in sight and its tile card names its owner.

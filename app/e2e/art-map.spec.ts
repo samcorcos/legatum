@@ -124,9 +124,9 @@ test('seat colour strip', async ({ page }) => {
     g.fillStyle = '#b7c28f'; g.fillRect(0, 0, c.width, 100);
     g.fillStyle = '#d9cc98'; g.fillRect(0, 100, c.width, 100);
     for (let seat = 0; seat < 9; seat++) {
-      drawToken(g, 'atlas', 'Soldier', mapPlayerColor(seat), true, 42 + seat * 64, 36, 16, 1, seat);
+      drawToken(g, 'atlas', 'Spearman', mapPlayerColor(seat), true, 42 + seat * 64, 36, 16, 1, seat);
       drawToken(g, 'atlas', 'Settler', mapPlayerColor(seat), false, 42 + seat * 64, 70, 11, 1, seat);
-      drawToken(g, 'atlas', 'Soldier', mapPlayerColor(seat), true, 42 + seat * 64, 136, 11, 1, seat);
+      drawToken(g, 'atlas', 'Spearman', mapPlayerColor(seat), true, 42 + seat * 64, 136, 11, 1, seat);
       drawPip(g, 'atlas', seat, true, 42 + seat * 64, 176, 6, 1);
     }
   });

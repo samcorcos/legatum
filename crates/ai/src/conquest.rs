@@ -152,7 +152,7 @@ impl Planner<'_> {
             let path = find_path(map, home.pos, c.pos, |h| {
                 let tile = v.tile(h)?;
                 (tile.explored
-                    && (v.passage_allowed(v.me, legatum_core::UnitKind::Soldier, tile.owner)
+                    && (v.passage_allowed(v.me, legatum_core::UnitKind::Spearman, tile.owner)
                         || tile.owner.is_some_and(|p| v.same_team(p, c.owner))))
                 .then(|| tile.move_cost())
                 .flatten()
@@ -478,7 +478,7 @@ mod tests {
     fn stale_best_target_yields_to_fresh_city_and_gets_a_scout() {
         let mut v = cities()
             .unit(10, ME, UnitKind::Scout, off(6, 6))
-            .unit(11, ME, UnitKind::Soldier, off(5, 7))
+            .unit(11, ME, UnitKind::Spearman, off(5, 7))
             .build();
         v.turn = 61;
         let stale = v.cities.iter_mut().find(|c| c.id == CityId(3)).unwrap();
@@ -506,7 +506,7 @@ mod tests {
     #[test]
     fn stale_target_uses_fast_idle_army_when_no_scout_can_go() {
         let mut v = cities()
-            .unit(10, ME, UnitKind::Soldier, off(6, 6))
+            .unit(10, ME, UnitKind::Spearman, off(6, 6))
             .unit(11, ME, UnitKind::Horseman, off(5, 7))
             .build();
         v.turn = 61;
@@ -679,10 +679,10 @@ mod tests {
         let v = cities()
             .walled(3)
             .walled(4)
-            .unit(1, ME, UnitKind::Soldier, off(9, 6))
-            .unit(2, ME, UnitKind::Soldier, off(8, 7))
-            .unit(3, ME, UnitKind::Ranger, off(8, 5))
-            .unit(4, ME, UnitKind::Ranger, off(7, 6))
+            .unit(1, ME, UnitKind::Spearman, off(9, 6))
+            .unit(2, ME, UnitKind::Spearman, off(8, 7))
+            .unit(3, ME, UnitKind::Archer, off(8, 5))
+            .unit(4, ME, UnitKind::Archer, off(7, 6))
             .build();
         assert!(hard(&v).conquest_ready(TeamId(2)));
         let mut remote = v.clone();
@@ -696,16 +696,16 @@ mod tests {
     #[test]
     fn unwalled_infantry_campaign_is_ready_but_firing_walls_need_shooters() {
         let v = cities()
-            .unit(1, ME, UnitKind::Soldier, off(9, 6))
-            .unit(2, ME, UnitKind::Soldier, off(8, 7))
+            .unit(1, ME, UnitKind::Spearman, off(9, 6))
+            .unit(2, ME, UnitKind::Spearman, off(8, 7))
             .build();
         assert!(hard(&v).conquest_ready(TeamId(2)));
 
         let walled = ViewBuilder { view: v.clone() }.walled(3).walled(4).build();
         assert!(!hard(&walled).conquest_ready(TeamId(2)));
         let supported = ViewBuilder { view: walled }
-            .unit(3, ME, UnitKind::Ranger, off(8, 5))
-            .unit(4, ME, UnitKind::Ranger, off(7, 6))
+            .unit(3, ME, UnitKind::Archer, off(8, 5))
+            .unit(4, ME, UnitKind::Archer, off(7, 6))
             .build();
         assert!(hard(&supported).conquest_ready(TeamId(2)));
 
@@ -764,8 +764,8 @@ mod tests {
             let mut view = cities()
                 .walled(3)
                 .walled(4)
-                .unit(1, ME, UnitKind::Soldier, off(9, 6))
-                .unit(2, ME, UnitKind::Ranger, off(8, 7))
+                .unit(1, ME, UnitKind::Spearman, off(9, 6))
+                .unit(2, ME, UnitKind::Archer, off(8, 7))
                 .build();
             view.cities
                 .iter_mut()
@@ -825,8 +825,8 @@ mod tests {
             .faction(Faction::Rome)
             .city(1, ME, off(3, 6), 3)
             .city(3, ENEMY, off(11, 6), 3)
-            .unit(11, ME, UnitKind::Soldier, off(4, 6))
-            .unit(12, ME, UnitKind::Soldier, off(3, 7))
+            .unit(11, ME, UnitKind::Spearman, off(4, 6))
+            .unit(12, ME, UnitKind::Spearman, off(3, 7))
             .build();
         v.diplomacy.legacy = false;
         let rival = v.team_of(ENEMY);

@@ -78,7 +78,7 @@ test('Ready returns an unchosen delegated city to Choose production', async ({ p
     const store = (window as unknown as GameWindow).legatum;
     const s = store.getState();
     const view = s.views![s.seat];
-    store.setState({ views: [{ ...view, cities: view.cities.map((c) => c.id === id ? { ...c, detail: { ...c.detail!, options: c.detail!.options.filter((o) => o.item.kind === 'Unit' && o.item.unit === 'Soldier') } } : c) }] });
+    store.setState({ views: [{ ...view, cities: view.cities.map((c) => c.id === id ? { ...c, detail: { ...c.detail!, options: c.detail!.options.filter((o) => o.item.kind === 'Unit' && o.item.unit === 'Spearman') } } : c) }] });
   }, own);
   await endPlanning(page);
   await expect(page.getByTestId('turn-number')).toHaveText(String(fixture.turn));

@@ -1,3 +1,3 @@
-Edit target: docs/design/unlock-art/masters/building-planetaryfoundry.png. Built-in image edit, precise-object-edit.
+Edit target: docs/design/unlock-art/masters/building-royalarsenal.png. Built-in image edit, precise-object-edit.
 
 Precise-object-edit of finished British Royal Arsenal. Stage 1 on exact transparent 1254px canvas: same aerial camera, compound footprint, scale, irregular parade-ground patch and outline, diffuse daylight, red-brick and stone painterly palette. Low flat-topped brick and stone footing courses trace front gatehouse, symmetric wings, rear workshops and enclosing wall. Cleared ground, stakes, stacks of brick, stone and iron girders, shallow ramp, Industrial lattice crane beside gatehouse, three tiny workers. No complete arch, walls, clock cupola, roofs, chimneys, cannons or ornament. Incomplete geometry, no clipped/faded/outlined finished art, transparent corners, no shadow beyond patch.

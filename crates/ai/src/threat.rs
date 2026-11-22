@@ -1325,7 +1325,7 @@ impl<'a> Planner<'a> {
     /// army could reach it, so they come before the shooter (user, 2026-10-17: seeing Sparta
     /// next door, "the correct reaction is '[uh oh]' and then build walls and archers to defend
     /// yourself as soon as possible"; playtest 8.9.2: walled Tara cost him four Hoplites in two
-    /// turns, while every unwalled city with a Ranger fell). Public information only: visible
+    /// turns, while every unwalled city with an Archer fell). Public information only: visible
     /// armies by their moves, else the rival's nearest known city plus time to train a unit.
     /// Gene `aztecs_playbook` bit `AZTEC_WALLS` (the designer's Aztecs walled every new city
     /// first, opening included): only a visible army sets the deadline, from the first turn.
@@ -1925,7 +1925,7 @@ mod tests {
         v.diplomacy.relations[2].state = RelationState::Peace;
         v.diplomacy.relations[2].declarers.clear();
         let v = ViewBuilder { view: v }
-            .unit(1, ME, UnitKind::Soldier, off(3, 8))
+            .unit(1, ME, UnitKind::Spearman, off(3, 8))
             .unit(50, ENEMY, UnitKind::Horseman, off(9, 8))
             .unit(51, ENEMY, UnitKind::Horseman, off(10, 8))
             .build();
@@ -2022,7 +2022,7 @@ mod tests {
         // His army at our border: unit positioning hands over to live forecasts, production
         // keeps the alarm.
         let door_view = ViewBuilder { view: v.clone() }
-            .unit(70, ENEMY, UnitKind::Soldier, off(5, 8))
+            .unit(70, ENEMY, UnitKind::Spearman, off(5, 8))
             .build();
         let mut door = planner(&door_view, &model, Faction::India);
         genes(&mut door, 1);
@@ -2054,15 +2054,15 @@ mod tests {
         let peer = planner(&peer_army, &model, Faction::India);
         assert_eq!(peer.neighbour_fall_power(peer.ctx.own_cities[0]), 0);
         let door_view = ViewBuilder { view: v.clone() }
-            .unit(70, ENEMY, UnitKind::Soldier, off(5, 8))
+            .unit(70, ENEMY, UnitKind::Spearman, off(5, 8))
             .build();
         let door = planner(&door_view, &model, Faction::India);
         assert_eq!(door.neighbour_fall_power(door.ctx.own_cities[0]), 0);
         let away_view = ViewBuilder { view: v.clone() }
-            .unit(71, ENEMY, UnitKind::Soldier, off(25, 2))
-            .unit(72, ENEMY, UnitKind::Soldier, off(26, 2))
-            .unit(73, ENEMY, UnitKind::Soldier, off(27, 2))
-            .unit(74, ENEMY, UnitKind::Soldier, off(28, 2))
+            .unit(71, ENEMY, UnitKind::Spearman, off(25, 2))
+            .unit(72, ENEMY, UnitKind::Spearman, off(26, 2))
+            .unit(73, ENEMY, UnitKind::Spearman, off(27, 2))
+            .unit(74, ENEMY, UnitKind::Spearman, off(28, 2))
             .build();
         let away = planner(&away_view, &model, Faction::India);
         assert_eq!(away.neighbour_fall_power(away.ctx.own_cities[0]), 0);
@@ -2080,7 +2080,7 @@ mod tests {
     fn public_conquest_and_a_seen_nearby_conqueror_warn_without_revealing_the_city() {
         let mut v = ViewBuilder { view: world() }
             .city(5, THIRD, off(26, 8), 2)
-            .unit(50, ENEMY, UnitKind::Soldier, off(12, 8))
+            .unit(50, ENEMY, UnitKind::Spearman, off(12, 8))
             .build();
         v.players[THIRD.0 as usize].cities = 2;
         v.cities.iter_mut().find(|c| c.id == CityId(4)).unwrap().pos = off(24, 8);
@@ -2105,7 +2105,7 @@ mod tests {
         let mut v = world();
         capture(&mut v, 4, ENEMY);
         v = ViewBuilder { view: v }
-            .unit(50, ENEMY, UnitKind::Soldier, off(12, 8))
+            .unit(50, ENEMY, UnitKind::Spearman, off(12, 8))
             .build();
         crate::fixture::set_army(&mut v, ENEMY, 100);
         let mut model = OpponentAssessments::default();
@@ -2222,14 +2222,14 @@ mod tests {
             vec![Order::SetProduction {
                 city: CityId(1),
                 item: ProductionItem::Unit {
-                    unit: UnitKind::Ranger
+                    unit: UnitKind::Archer
                 }
             }]
         );
         // With a shooter in place and the tech known, Walls come next.
         let (walled, model) = conqueror_next_door_with(&[TechId::Masonry]);
         let walled = ViewBuilder { view: walled }
-            .unit(9, ME, UnitKind::Ranger, off(4, 8))
+            .unit(9, ME, UnitKind::Archer, off(4, 8))
             .build();
         let mut p = planner(&walled, &model, Faction::India);
         p.plan_threat_defense();
@@ -2302,12 +2302,12 @@ mod tests {
             o,
             Order::SetProduction {
                 item: ProductionItem::Unit {
-                    unit: UnitKind::Ranger | UnitKind::Marksman
+                    unit: UnitKind::Archer | UnitKind::Crossbowman
                 },
                 ..
             } | Order::BuyItem {
                 item: ProductionItem::Unit {
-                    unit: UnitKind::Ranger | UnitKind::Marksman
+                    unit: UnitKind::Archer | UnitKind::Crossbowman
                 },
                 ..
             }
@@ -2403,7 +2403,7 @@ mod tests {
         let (v, model) = conqueror_next_door_with(&[TechId::Masonry]);
         let v = ViewBuilder { view: v }.producing(1, walls, 9999).build();
         // Off (playtest 8.9.2's behaviour): no shooter next to the city, so Walls under way
-        // turn into a Ranger.
+        // turn into an Archer.
         let mut p = planner(&v, &model, Faction::India);
         p.decisions.walls_under_way = 0;
         p.plan_threat_defense();
@@ -2412,7 +2412,7 @@ mod tests {
             vec![Order::SetProduction {
                 city: CityId(1),
                 item: ProductionItem::Unit {
-                    unit: UnitKind::Ranger
+                    unit: UnitKind::Archer
                 }
             }]
         );
@@ -2433,7 +2433,7 @@ mod tests {
         // A shooter two hexes out counts as covering a city without Walls under way.
         let (open, model) = conqueror_next_door_with(&[TechId::Masonry]);
         let open = ViewBuilder { view: open }
-            .unit(9, ME, UnitKind::Ranger, off(6, 8))
+            .unit(9, ME, UnitKind::Archer, off(6, 8))
             .build();
         let mut p = planner(&open, &model, Faction::India);
         p.decisions.walls_under_way = 1;
@@ -2451,8 +2451,8 @@ mod tests {
     fn a_conquerors_army_at_the_door_is_acute() {
         let (v, _) = conqueror_next_door();
         let v = ViewBuilder { view: v }
-            .unit(7, ENEMY, UnitKind::Soldier, off(6, 8))
-            .unit(8, ENEMY, UnitKind::Soldier, off(6, 9))
+            .unit(7, ENEMY, UnitKind::Spearman, off(6, 8))
+            .unit(8, ENEMY, UnitKind::Spearman, off(6, 9))
             .build();
         let mut model = OpponentAssessments::default();
         model.update(&v);

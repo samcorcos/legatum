@@ -43,7 +43,7 @@ const endTurn = async () => {
 const orderSomething = () => {
   const view = useGame.getState().views![0];
   const city = view.cities.find((c) => c.owner === view.me)!;
-  useGame.getState().editOrders((o) => setProduction(o, city.id, { kind: 'Unit', unit: 'Soldier' }, null));
+  useGame.getState().editOrders((o) => setProduction(o, city.id, { kind: 'Unit', unit: 'Spearman' }, null));
 };
 const kept = (turn: number) => readPendingOrders(campaignOf.id, turn);
 const campaignOf = { id: '' };

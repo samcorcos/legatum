@@ -89,7 +89,7 @@ fn archived_positions_have_no_legal_garrison_shot_under_terrain_sight() {
         assert!(state.at_war(HUMAN, ME), "T{}", state.turn);
         let garrison = &state.units[&GARRISON];
         assert_eq!(garrison.pos, RESONATOR);
-        assert_eq!(garrison.kind, UnitKind::Ranger);
+        assert_eq!(garrison.kind, UnitKind::Archer);
         assert_eq!(garrison.hp, 100, "the archived Ranger's shots now lack LOS");
         let city = state.cities.values().find(|c| c.pos == RESONATOR).unwrap();
         assert_eq!(
@@ -179,12 +179,12 @@ fn opening_the_archived_corridor_exposes_the_city_but_not_its_garrison() {
 
 #[test]
 fn a_soldier_that_can_take_the_city_next_turn_is_the_more_valuable_target() {
-    // Counterfactual on T34: open the mountain corridor, then the Soldier stands where it attacked from on T35, next to a
+    // Counterfactual on T34: open the mountain corridor, then the Spearman stands where it attacked from on T35, next to a
     // nearly broken city, and the garrison has the 27 HP it had in the archive (before cities
-    // shielded garrisons). The Ranger's volley breaks the 10-HP city in the ranged phase, which
-    // exposes the garrison; the Soldier then fights it in the first movement round and, if it
+    // shielded garrisons). The Archer's volley breaks the 10-HP city in the ranged phase, which
+    // exposes the garrison; the Spearman then fights it in the first movement round and, if it
     // wins, takes the city the same turn. That capture stake, not a fixed melee-first rule,
-    // should outweigh the Ranger, which can only break the city.
+    // should outweigh the Archer, which can only break the city.
     let mut state = archived_states().pop().unwrap();
     assert_eq!(state.turn, 34);
     state.map.get_mut(Hex::new(21, 14)).unwrap().terrain = Terrain::Plains;
@@ -217,9 +217,9 @@ fn a_soldier_that_can_take_the_city_next_turn_is_the_more_valuable_target() {
 
 #[test]
 fn a_soldier_against_a_city_that_cannot_break_is_no_capture_threat() {
-    // The same Soldier beside the full-HP garrison of a city that this turn's fire cannot
+    // The same Spearman beside the full-HP garrison of a city that this turn's fire cannot
     // break: its attack only hits the city, so it carries no capture stake and the garrison
-    // shoots the Ranger, whose volley would otherwise wear the city down.
+    // shoots the Archer, whose volley would otherwise wear the city down.
     let mut state = archived_states().pop().unwrap();
     state.map.get_mut(Hex::new(21, 14)).unwrap().terrain = Terrain::Plains;
     let adjacent = Hex::new(20, 14);
@@ -231,9 +231,9 @@ fn a_soldier_against_a_city_that_cannot_break_is_no_capture_threat() {
         .unwrap();
     city.hp = 200;
     // Replaying the archived orders on current rules (population is territory) now completes a
-    // unit the old replay never built (u53, beside the Soldier), which the Soldier then
-    // threatens more than the Ranger's volley. Drop it: this counterfactual is about the garrison
-    // choosing between the Ranger and a Soldier that cannot capture.
+    // unit the old replay never built (u53, beside the Spearman), which the Spearman then
+    // threatens more than the Archer's volley. Drop it: this counterfactual is about the garrison
+    // choosing between the Archer and a Spearman that cannot capture.
     state.units.remove(&UnitId(53));
     for difficulty in [AiDifficulty::Normal, AiDifficulty::Hard] {
         let orders = decide(&state, difficulty);

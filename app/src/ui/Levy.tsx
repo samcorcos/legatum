@@ -38,7 +38,7 @@ export function LevyCounter() {
     {l.units > l.cap && <div>You are {l.units - l.cap} over the limit. No unit is disbanded, but you can't raise more until you are under it.</div>}
     {full && <div className="levy-tip-full">No new military unit can be started, bought or finished until you have one unit fewer or one city more.</div>}
   </>}>
-    <span aria-label={full ? `${levyText(l)} · ${levyState(l)}` : levyText(l)}>{full && <Icon name="ui-alert" size={12} className="ui-mark" />} <Icon name="unit-soldier" size={12} className="count-icon ui-mark" label={LEVY_CHIP_LABEL} /><span className="count-label">Military units </span><b>{l.units} / {l.cap}</b></span>
+    <span aria-label={full ? `${levyText(l)} · ${levyState(l)}` : levyText(l)}>{full && <Icon name="ui-alert" size={12} className="ui-mark" />} <Icon name="unit-spearman" size={12} className="count-icon ui-mark" label={LEVY_CHIP_LABEL} /><span className="count-label">Military units </span><b>{l.units} / {l.cap}</b></span>
   </Tip>;
 }
 

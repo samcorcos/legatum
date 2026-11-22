@@ -106,7 +106,7 @@ Skateboard first: one Great Work, on the map, advancing every turn, in a real ga
 - `app/src/map/constructionSites.ts` (new): `sitesOf(view)` lists, for each own city whose `detail.producing` is a Great Work or Walls, `{ city, tile, building, era, stage, k, seed }` with `k = production_stored / production_cost`; memoised per view like `landmarksOf`. `landmarks.ts` gives the tile from the turn the work is chosen (`landmarkTile` already takes a city; add the in-progress case so a site and its later landmark share the tile).
 - `app/src/map/constructionFx.ts` (rewrite, keep the name): the site grammar of 2.3 as pure functions of `(site, k, t)`: plot, stock, ramp, crane by era beside the box, scaffold along the stage art's outline at the working line, workers, dust. The outline comes from the stage sprite's alpha (sampled once per sprite and cached). The old generic frame-over-the-box scaffold goes.
 - `render.ts`: draw sites right after `drawLandmarks` (under units, banners and lenses, over terrain and improvements), with the landmarks' `skip` so a tile never draws both.
-- Stage art: `assets/construction/building-relayuplink-stage{1,2,3}.png` from the Codex task; `momentFxDraw.ts`'s `stageImage` lookup already reads that folder.
+- Stage art: `assets/construction/building-greatlibrary-stage{1,2,3}.png` from the Codex task; `momentFxDraw.ts`'s `stageImage` lookup already reads that folder.
 - Settings: sites draw in every animation mode; the step and finish only when animations are on.
 
 ### 4.2 Increment 2: the step and the finish in moments-fx

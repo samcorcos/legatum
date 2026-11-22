@@ -1,1 +1,0 @@
-Lanczos 256 px derivative of building-planetaryfoundry-stage2.png. See building-planetaryfoundry-stage2.prompt.txt for the image edit prompt.

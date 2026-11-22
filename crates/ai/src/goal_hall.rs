@@ -56,7 +56,7 @@ impl Planner<'_> {
         matches!(
             item,
             ProductionItem::Wonder {
-                building: BuildingKind::CourierHall,
+                building: BuildingKind::YamRelayStation,
                 ..
             }
         )
@@ -126,7 +126,7 @@ impl Planner<'_> {
         let cost = self
             .view()
             .rule_experiments
-            .building_stats_for(self.faction, BuildingKind::CourierHall)
+            .building_stats_for(self.faction, BuildingKind::YamRelayStation)
             .cost;
         (cost + d.yields.total.production.max(1) - 1) / d.yields.total.production.max(1)
     }

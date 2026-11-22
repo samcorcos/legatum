@@ -16,9 +16,9 @@ export async function celebrationFixture(tier: Tier, count = 1): Promise<void> {
   const before = client.view(0), after = structuredClone(before);
   const city = after.cities.find((c) => c.owner === 0)!;
   const event: Event = tier === 'minor' ? { type: 'CityGrew', city: city.id, owner: 0, population: 3 }
-    : tier === 'legendary' ? { type: 'ProductionCompleted', city: city.id, owner: 0, item: { kind: 'Building', building: 'PlanetaryFoundry' } }
+    : tier === 'legendary' ? { type: 'ProductionCompleted', city: city.id, owner: 0, item: { kind: 'Building', building: 'RoyalArsenal' } }
     : { type: 'RuinExplored', unit: 2, owner: 0, at: city.pos, reward: tier === 'major'
-      ? { kind: 'Gold', amount: 40, balance: 80, affordable: { city: city.id, item: { kind: 'Unit', unit: 'Soldier' }, cost: 60 } }
+      ? { kind: 'Gold', amount: 40, balance: 80, affordable: { city: city.id, item: { kind: 'Unit', unit: 'Spearman' }, cost: 60 } }
       : { kind: 'Gold', amount: 40, balance: 80, affordable: null } };
   after.economy.gold = 80;
   if (tier === 'minor') city.population = 3;
@@ -118,7 +118,7 @@ export async function rewardFixture(kind: RewardKind): Promise<void> {
     lost: [{ type: 'CityCaptured', city: city.id, from: 0, to: 2 }],
     founded: [{ type: 'CityFounded', city: city.id, owner: 0, name: city.name, at }],
     growth: [{ type: 'CityGrew', city: city.id, owner: 0, population: 2 }],
-    greatwork: [{ type: 'ProductionCompleted', city: city.id, owner: 0, item: { kind: 'Building', building: 'PlanetaryFoundry' } }],
+    greatwork: [{ type: 'ProductionCompleted', city: city.id, owner: 0, item: { kind: 'Building', building: 'RoyalArsenal' } }],
     goal: [{ type: 'FactionGoalCompleted', player: 0, faction: 'India', vp: 3 }],
     'tech-partner': [{ type: 'TechResearched', player: 1, tech: 'BronzeWorking' }],
   };

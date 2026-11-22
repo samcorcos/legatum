@@ -1,5 +1,5 @@
 // Siege on the map (siege study, user 2026-10-18; Siege upgrade 2026-10-22; era caps 2026-10-28): an archer and a spearman with Siege wear siege
-// gear beside them, a spearman without it does not, a Renaissance Arquebusier and AssaultTrooper with Siege wear a bombard and ladders, an
+// gear beside them, a spearman without it does not, a Renaissance Arquebusier and Musketman with Siege wear a bombard and ladders, an
 // Industrial Rifleman and Field Cannon (Siege built in) wear nothing, the forecast against the walled city says what Walls do, and the unit's
 // own Siege note. One shot per era band (8.9.16 review). WASM engine. SIEGE_SHOTS=<dir> picks where the shots go.
 import { test as base, expect, type Page } from '@playwright/test';
@@ -74,7 +74,7 @@ for (const size of [{ width: 1000, height: 600 }, { width: 1440, height: 900 }])
           return { kind: u.kind, open };
         });
       });
-      expect(boxes.map((b) => b.kind).sort()).toEqual(['Arquebusier', 'AssaultTrooper', 'FieldCannon', 'Ranger', 'Rifleman', 'Scout', 'Soldier', 'Soldier']);
+      expect(boxes.map((b) => b.kind).sort()).toEqual(['Arquebusier', 'Musketman', 'FieldCannon', 'Archer', 'Rifleman', 'Scout', 'Spearman', 'Spearman']);
       for (const b of boxes) expect(b, `${b.kind} is framed at ${size.width}x${size.height}`).toMatchObject({ open: true });
     });
 

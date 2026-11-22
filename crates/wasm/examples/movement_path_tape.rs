@@ -26,7 +26,7 @@ fn main() {
     let u = view
         .units
         .iter()
-        .find(|u| u.owner == view.me && u.kind == UnitKind::Soldier)
+        .find(|u| u.owner == view.me && u.kind == UnitKind::Spearman)
         .unwrap();
     let route = state
         .map

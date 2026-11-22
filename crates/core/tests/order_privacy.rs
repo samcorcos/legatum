@@ -118,7 +118,7 @@ fn absent_and_hidden_foreign_cities_have_byte_identical_errors() {
             Order::BuyItem {
                 city,
                 item: ProductionItem::Unit {
-                    unit: UnitKind::Soldier,
+                    unit: UnitKind::Spearman,
                 },
             },
         ]

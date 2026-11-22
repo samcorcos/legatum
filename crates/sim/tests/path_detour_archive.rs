@@ -42,7 +42,7 @@ fn tessitura_turn_38_direct_attack_is_legal() {
         _ => None,
     });
     assert_eq!(detour.map(|p| p.len()), Some(5));
-    // The India Soldier steps back this turn, so the attack becomes a pursuit.
+    // The India Spearman steps back this turn, so the attack becomes a pursuit.
     let first_step = |events: &[Event]| {
         events.iter().find_map(|e| match e {
             Event::UnitMoved { unit, to, .. } if *unit == attacker => Some(*to),

@@ -12,7 +12,7 @@ const recorder = () => {
   });
   return { ctx, out };
 };
-const site = (walls: boolean): ConstructionSite => ({ city: 1, owner: 0, tile: 1, hex: { q: 0, r: 0 }, building: walls ? 'Walls' : 'RelayUplink', era: 1,
+const site = (walls: boolean): ConstructionSite => ({ city: 1, owner: 0, tile: 1, hex: { q: 0, r: 0 }, building: walls ? 'Walls' : 'GreatLibrary', era: 1,
   k: .32, stage: 1, seed: 27, walls });
 // A canvas line drawing of an object is a flat glyph beside painted art (legatum-ui, 2026-11-01).
 const LINE_CALLS = /^(stroke|strokeRect|lineTo|moveTo|arc|ellipse|setLineDash|fillRect|fillText):/;

@@ -50,11 +50,11 @@ function alarmState() {
   s.diplomacy!.betrayals = [BETRAYAL];
   s.diplomacy!.next_treaty_id = 3; s.diplomacy!.next_war_id = 3;
   // The Sparta garrison Brasslock with more on the road; our Soldier and Scout watch from Waystation.
-  spawnUnit(s, 2, 'Trooper', fromOffset(13, 8), false);
-  for (const [c, r] of [[12, 9], [13, 7]]) spawnUnit(s, 2, 'Trooper', fromOffset(c, r), false);
-  spawnUnit(s, 0, 'Soldier', fromOffset(11, 8), false);
+  spawnUnit(s, 2, 'Pikeman', fromOffset(13, 8), false);
+  for (const [c, r] of [[12, 9], [13, 7]]) spawnUnit(s, 2, 'Pikeman', fromOffset(c, r), false);
+  spawnUnit(s, 0, 'Spearman', fromOffset(11, 8), false);
   spawnUnit(s, 0, 'Scout', fromOffset(13, 5), false);
-  spawnUnit(s, 1, 'Soldier', fromOffset(9, 14), false);
+  spawnUnit(s, 1, 'Spearman', fromOffset(9, 14), false);
   refreshVision(s);
   return s;
 }

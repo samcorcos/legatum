@@ -15,13 +15,13 @@ function scene(options: ProductionItem[]) {
 const reason = (pick: ProductionItem, focus: CityBuildFocus, s: ReturnType<typeof scene>) => autoPickReason(pick, focus, s.city, s.view);
 
 it('names a focus building as the focus pick', () => {
-  const s = scene([building('Laboratory'), unit('Horseman')]);
-  expect(reason(building('Laboratory'), 'Science', s)).toBe('Library: Science focus, the best research building available.');
+  const s = scene([building('Library'), unit('Horseman')]);
+  expect(reason(building('Library'), 'Science', s)).toBe('Library: Science focus, the best research building available.');
   expect(reason(building('Market'), 'Gold', scene([building('Market')]))).toBe('Market: Gold focus, the best economy building available.');
 });
 
 it('explains a civilian fallback without inventing a defence exception', () => {
-  const s = scene([building('Granary'), building('Laboratory'), unit('Horseman')]);
+  const s = scene([building('Granary'), building('Library'), unit('Horseman')]);
   expect(reason(building('Granary'), 'Science', s)).toBe('Granary: no Science building can start now, so this is the next best build.');
   expect(reason(building('Granary'), 'Military', s)).toBe("Granary: Not enough Gold to pay another unit's upkeep, so it builds the next best thing.");
 });
@@ -29,7 +29,7 @@ it('explains a civilian fallback without inventing a defence exception', () => {
 it('never falls back to a stock phrase', () => {
   const s = scene([building('Granary')]);
   for (const focus of ['Balanced', 'Science', 'Gold', 'Military'] as const) {
-    for (const pick of [building('Granary'), unit('Settler'), unit('Scout'), unit('Soldier')]) expect(reason(pick, focus, s)).not.toMatch(/best available choice|will choose/);
+    for (const pick of [building('Granary'), unit('Settler'), unit('Scout'), unit('Spearman')]) expect(reason(pick, focus, s)).not.toMatch(/best available choice|will choose/);
   }
   expect(reason(building('Granary'), 'Science', s)).toBe('No Science building available; a Granary is the next best build.');
 });

@@ -96,7 +96,7 @@ for (const [width, height] of [[1440, 900], [1000, 600]] as const) {
     // Exposed since the stronger riders (2026-10-31; Likely lost before), and still severe.
     await expect(after).toHaveAttribute('data-risk', 'Exposed');
     await expect(after).toContainText('2 Spearmen');
-    await expect(after).toContainText(`+${classBonusStrength(unitStatsFor('India', 'Soldier').strength)} vs mounted`);
+    await expect(after).toContainText(`+${classBonusStrength(unitStatsFor('India', 'Spearman').strength)} vs mounted`);
     // Directly under the header, above the two sides.
     const head = (await card.locator('.forecast-head').boundingBox())!, line = (await after.boundingBox())!, sides = (await card.locator('.forecast-sides').boundingBox())!;
     expect(line.y).toBeGreaterThanOrEqual(head.y + head.height - 1);

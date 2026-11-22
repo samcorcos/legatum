@@ -5,15 +5,15 @@ use rayon::prelude::*;
 use serde_json::json;
 
 const LINES: [[UnitKind; 3]; 7] = [
-    [UnitKind::Soldier, UnitKind::Ranger, UnitKind::Horseman],
+    [UnitKind::Spearman, UnitKind::Archer, UnitKind::Horseman],
     [
         UnitKind::Phalangite,
         UnitKind::CompositeArcher,
         UnitKind::Cataphract,
     ],
-    [UnitKind::Trooper, UnitKind::Marksman, UnitKind::Knight],
+    [UnitKind::Pikeman, UnitKind::Crossbowman, UnitKind::Knight],
     [
-        UnitKind::AssaultTrooper,
+        UnitKind::Musketman,
         UnitKind::Arquebusier,
         UnitKind::Cuirassier,
     ],
@@ -21,7 +21,7 @@ const LINES: [[UnitKind; 3]; 7] = [
     [UnitKind::Infantry, UnitKind::Artillery, UnitKind::Tank],
     [
         UnitKind::HunterKiller,
-        UnitKind::Drone,
+        UnitKind::CombatDrone,
         UnitKind::AutonomousArmour,
     ],
 ];

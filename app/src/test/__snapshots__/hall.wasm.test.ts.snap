@@ -122,7 +122,7 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > completion and 
       },
       "cost": 600,
       "item": {
-        "building": "CourierHall",
+        "building": "YamRelayStation",
         "kind": "Wonder",
         "tile": {
           "q": 1,
@@ -250,7 +250,7 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > completion and 
       },
       "cost": 600,
       "item": {
-        "building": "CourierHall",
+        "building": "YamRelayStation",
         "kind": "Wonder",
         "tile": {
           "q": 1,
@@ -378,7 +378,7 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > completion and 
       },
       "cost": 600,
       "item": {
-        "building": "CourierHall",
+        "building": "YamRelayStation",
         "kind": "Wonder",
         "tile": {
           "q": 2,
@@ -506,7 +506,7 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > completion and 
       },
       "cost": 600,
       "item": {
-        "building": "CourierHall",
+        "building": "YamRelayStation",
         "kind": "Wonder",
         "tile": {
           "q": 2,
@@ -634,7 +634,7 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > completion and 
       },
       "cost": 600,
       "item": {
-        "building": "CourierHall",
+        "building": "YamRelayStation",
         "kind": "Wonder",
         "tile": {
           "q": 3,
@@ -762,7 +762,7 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > completion and 
       },
       "cost": 600,
       "item": {
-        "building": "CourierHall",
+        "building": "YamRelayStation",
         "kind": "Wonder",
         "tile": {
           "q": 3,
@@ -890,7 +890,7 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > completion and 
       },
       "cost": 600,
       "item": {
-        "building": "CourierHall",
+        "building": "YamRelayStation",
         "kind": "Wonder",
         "tile": {
           "q": 4,
@@ -1013,7 +1013,7 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > completion and 
     "city": 1,
     "gold": 1200,
     "item": {
-      "building": "CourierHall",
+      "building": "YamRelayStation",
       "kind": "Wonder",
       "tile": {
         "q": 3,
@@ -1026,7 +1026,7 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > completion and 
   {
     "city": 1,
     "item": {
-      "building": "CourierHall",
+      "building": "YamRelayStation",
       "kind": "Wonder",
       "tile": {
         "q": 3,
@@ -1515,7 +1515,7 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > completion and 
     "city": 1,
     "gold": 1200,
     "item": {
-      "building": "CourierHall",
+      "building": "YamRelayStation",
       "kind": "Wonder",
       "tile": {
         "q": 3,
@@ -1528,7 +1528,7 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > completion and 
   {
     "city": 1,
     "item": {
-      "building": "CourierHall",
+      "building": "YamRelayStation",
       "kind": "Wonder",
       "tile": {
         "q": 3,
@@ -1585,7 +1585,7 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > completion and 
 
 exports[`Yam Relay Station and the Mongols goal: WASM behavior > completion and the goal > buying it with Gold completes it the next turn, with the same events 2`] = `
 [
-  "CourierHall",
+  "YamRelayStation",
 ]
 `;
 
@@ -1618,7 +1618,7 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > completion and 
   {
     "city": 1,
     "item": {
-      "building": "CourierHall",
+      "building": "YamRelayStation",
       "kind": "Wonder",
       "tile": {
         "q": 3,
@@ -2394,6 +2394,95 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > completion and 
 ]
 `;
 
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > does not halve a Mongols Archer hit on an open city (only Walls do) 1`] = `
+{
+  "attacker_hp": 100,
+  "attacker_strength": {
+    "parts": [
+      [
+        "Archer (ranged)",
+        15,
+      ],
+    ],
+    "total": 15,
+  },
+  "defender_hp": 200,
+  "defender_strength": {
+    "parts": [
+      [
+        "City",
+        10,
+      ],
+      [
+        "Population",
+        4,
+      ],
+    ],
+    "total": 14,
+  },
+  "expected_damage_to_attacker": 0,
+  "expected_damage_to_defender": 30,
+  "loss_chance": 0,
+  "ranged": true,
+  "win_chance": 0,
+}
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > does not halve a Mongols Archer hit on an open city (only Walls do) 2`] = `
+[
+  {
+    "at": {
+      "q": 6,
+      "r": 8,
+    },
+    "attacker": 1,
+    "attacker_at": {
+      "q": 4,
+      "r": 8,
+    },
+    "attacker_hp_after": 100,
+    "attacker_owner": 0,
+    "attacker_roll": 114,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Archer (ranged)",
+          15,
+        ],
+      ],
+      "total": 15,
+    },
+    "damage_to_attacker": 0,
+    "damage_to_defender": 35,
+    "defender": {
+      "city": 2,
+      "kind": "City",
+      "owner": 1,
+    },
+    "defender_hp_after": 165,
+    "defender_roll": 0,
+    "defender_strength": {
+      "parts": [
+        [
+          "City",
+          10,
+        ],
+        [
+          "Population",
+          4,
+        ],
+      ],
+      "total": 14,
+    },
+    "meeting": false,
+    "ranged": true,
+    "type": "Battle",
+  },
+]
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > does not halve a Mongols Archer hit on an open city (only Walls do) 3`] = `165`;
+
 exports[`Yam Relay Station and the Mongols goal: WASM behavior > does not halve a Mongols Ranger hit on an open city (only Walls do) 1`] = `
 {
   "attacker_hp": 100,
@@ -2571,6 +2660,95 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > does not halve 
 `;
 
 exports[`Yam Relay Station and the Mongols goal: WASM behavior > does not halve a Mongols Soldier hit on an open city (only Walls do) 3`] = `156`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > does not halve a Mongols Spearman hit on an open city (only Walls do) 1`] = `
+{
+  "attacker_hp": 100,
+  "attacker_strength": {
+    "parts": [
+      [
+        "Spearman",
+        20,
+      ],
+    ],
+    "total": 20,
+  },
+  "defender_hp": 200,
+  "defender_strength": {
+    "parts": [
+      [
+        "City",
+        10,
+      ],
+      [
+        "Population",
+        4,
+      ],
+    ],
+    "total": 14,
+  },
+  "expected_damage_to_attacker": 23,
+  "expected_damage_to_defender": 37,
+  "loss_chance": 0,
+  "ranged": false,
+  "win_chance": 0,
+}
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > does not halve a Mongols Spearman hit on an open city (only Walls do) 2`] = `
+[
+  {
+    "at": {
+      "q": 6,
+      "r": 8,
+    },
+    "attacker": 1,
+    "attacker_at": {
+      "q": 5,
+      "r": 8,
+    },
+    "attacker_hp_after": 79,
+    "attacker_owner": 0,
+    "attacker_roll": 116,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "damage_to_attacker": 21,
+    "damage_to_defender": 44,
+    "defender": {
+      "city": 2,
+      "kind": "City",
+      "owner": 1,
+    },
+    "defender_hp_after": 156,
+    "defender_roll": 90,
+    "defender_strength": {
+      "parts": [
+        [
+          "City",
+          10,
+        ],
+        [
+          "Population",
+          4,
+        ],
+      ],
+      "total": 14,
+    },
+    "meeting": false,
+    "ranged": false,
+    "type": "Battle",
+  },
+]
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > does not halve a Mongols Spearman hit on an open city (only Walls do) 3`] = `156`;
 
 exports[`Yam Relay Station and the Mongols goal: WASM behavior > greys out Mongols Walls and Citadels with core-matching reasons 1`] = `
 {
@@ -2751,7 +2929,7 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > production > co
     },
     "cost": 600,
     "item": {
-      "building": "CourierHall",
+      "building": "YamRelayStation",
       "kind": "Wonder",
       "tile": {
         "q": 1,
@@ -2875,7 +3053,7 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > production > co
     },
     "cost": 600,
     "item": {
-      "building": "CourierHall",
+      "building": "YamRelayStation",
       "kind": "Wonder",
       "tile": {
         "q": 1,
@@ -2999,7 +3177,7 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > production > co
     },
     "cost": 600,
     "item": {
-      "building": "CourierHall",
+      "building": "YamRelayStation",
       "kind": "Wonder",
       "tile": {
         "q": 2,
@@ -3123,7 +3301,7 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > production > co
     },
     "cost": 600,
     "item": {
-      "building": "CourierHall",
+      "building": "YamRelayStation",
       "kind": "Wonder",
       "tile": {
         "q": 2,
@@ -3247,7 +3425,7 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > production > co
     },
     "cost": 600,
     "item": {
-      "building": "CourierHall",
+      "building": "YamRelayStation",
       "kind": "Wonder",
       "tile": {
         "q": 3,
@@ -3371,7 +3549,7 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > production > co
     },
     "cost": 600,
     "item": {
-      "building": "CourierHall",
+      "building": "YamRelayStation",
       "kind": "Wonder",
       "tile": {
         "q": 3,
@@ -3651,7 +3829,7 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > production > is
       },
       "cost": 600,
       "item": {
-        "building": "CourierHall",
+        "building": "YamRelayStation",
         "kind": "Wonder",
         "tile": {
           "q": 1,
@@ -3775,7 +3953,7 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > production > is
       },
       "cost": 600,
       "item": {
-        "building": "CourierHall",
+        "building": "YamRelayStation",
         "kind": "Wonder",
         "tile": {
           "q": 1,
@@ -3899,7 +4077,7 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > production > is
       },
       "cost": 600,
       "item": {
-        "building": "CourierHall",
+        "building": "YamRelayStation",
         "kind": "Wonder",
         "tile": {
           "q": 2,
@@ -4023,7 +4201,7 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > production > is
       },
       "cost": 600,
       "item": {
-        "building": "CourierHall",
+        "building": "YamRelayStation",
         "kind": "Wonder",
         "tile": {
           "q": 2,
@@ -4147,7 +4325,7 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > production > is
       },
       "cost": 600,
       "item": {
-        "building": "CourierHall",
+        "building": "YamRelayStation",
         "kind": "Wonder",
         "tile": {
           "q": 3,
@@ -4271,7 +4449,7 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > production > is
       },
       "cost": 600,
       "item": {
-        "building": "CourierHall",
+        "building": "YamRelayStation",
         "kind": "Wonder",
         "tile": {
           "q": 3,
@@ -4547,7 +4725,7 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > production > sa
       },
       "cost": 600,
       "item": {
-        "building": "CourierHall",
+        "building": "YamRelayStation",
         "kind": "Wonder",
         "tile": {
           "q": 1,
@@ -4672,7 +4850,7 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > production > sa
       },
       "cost": 600,
       "item": {
-        "building": "CourierHall",
+        "building": "YamRelayStation",
         "kind": "Wonder",
         "tile": {
           "q": 1,
@@ -4797,7 +4975,7 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > production > sa
       },
       "cost": 600,
       "item": {
-        "building": "CourierHall",
+        "building": "YamRelayStation",
         "kind": "Wonder",
         "tile": {
           "q": 2,
@@ -4922,7 +5100,7 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > production > sa
       },
       "cost": 600,
       "item": {
-        "building": "CourierHall",
+        "building": "YamRelayStation",
         "kind": "Wonder",
         "tile": {
           "q": 2,
@@ -5047,7 +5225,7 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > production > sa
       },
       "cost": 600,
       "item": {
-        "building": "CourierHall",
+        "building": "YamRelayStation",
         "kind": "Wonder",
         "tile": {
           "q": 3,
@@ -5172,7 +5350,7 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > production > sa
       },
       "cost": 600,
       "item": {
-        "building": "CourierHall",
+        "building": "YamRelayStation",
         "kind": "Wonder",
         "tile": {
           "q": 3,
@@ -5307,7 +5485,7 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > production > sa
       },
       "cost": 600,
       "item": {
-        "building": "CourierHall",
+        "building": "YamRelayStation",
         "kind": "Wonder",
         "tile": {
           "q": 1,
@@ -5432,7 +5610,7 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > production > sa
       },
       "cost": 600,
       "item": {
-        "building": "CourierHall",
+        "building": "YamRelayStation",
         "kind": "Wonder",
         "tile": {
           "q": 1,
@@ -5557,7 +5735,7 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > production > sa
       },
       "cost": 600,
       "item": {
-        "building": "CourierHall",
+        "building": "YamRelayStation",
         "kind": "Wonder",
         "tile": {
           "q": 2,
@@ -5682,7 +5860,7 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > production > sa
       },
       "cost": 600,
       "item": {
-        "building": "CourierHall",
+        "building": "YamRelayStation",
         "kind": "Wonder",
         "tile": {
           "q": 2,
@@ -5807,7 +5985,7 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > production > sa
       },
       "cost": 600,
       "item": {
-        "building": "CourierHall",
+        "building": "YamRelayStation",
         "kind": "Wonder",
         "tile": {
           "q": 3,
@@ -5932,7 +6110,7 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > production > sa
       },
       "cost": 600,
       "item": {
-        "building": "CourierHall",
+        "building": "YamRelayStation",
         "kind": "Wonder",
         "tile": {
           "q": 3,
@@ -6044,6 +6222,248 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > production > sa
 `;
 
 exports[`Yam Relay Station and the Mongols goal: WASM behavior > production > says why not: it stands, it stands in a captured city, it is being built or queued elsewhere, and a razed Hall can be rebuilt 12`] = `[]`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Archer: a India mover is shut out of Mongols land at Peace, and let in once a Hall stands there 1`] = `
+[
+  {
+    "at": {
+      "q": 7,
+      "r": 10,
+    },
+    "owner": 1,
+    "reason": "no route to the destination",
+    "toward": {
+      "q": 6,
+      "r": 10,
+    },
+    "type": "MoveBlocked",
+    "unit": 1,
+  },
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": 3,
+      "r": 10,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 2,
+    "owner": 0,
+    "tile": {
+      "q": 0,
+      "r": 3,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 3,
+    "owner": 1,
+    "tile": {
+      "q": 7,
+      "r": 15,
+    },
+    "type": "TileClaimed",
+  },
+]
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Archer: a India mover is shut out of Mongols land at Peace, and let in once a Hall stands there 2`] = `
+{
+  "q": 7,
+  "r": 10,
+}
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Archer: a India mover is shut out of Mongols land at Peace, and let in once a Hall stands there 3`] = `
+[
+  {
+    "from": {
+      "q": 7,
+      "r": 10,
+    },
+    "owner": 1,
+    "to": {
+      "q": 6,
+      "r": 10,
+    },
+    "type": "UnitMoved",
+    "unit": 1,
+  },
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": 3,
+      "r": 10,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 2,
+    "owner": 0,
+    "tile": {
+      "q": 0,
+      "r": 3,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 3,
+    "owner": 1,
+    "tile": {
+      "q": 7,
+      "r": 15,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "at": {
+      "q": 5,
+      "r": 10,
+    },
+    "city": 1,
+    "linked": 2,
+    "owner": 0,
+    "type": "RoadsLaid",
+  },
+  {
+    "faction": "Mongols",
+    "player": 0,
+    "type": "FactionGoalCompleted",
+    "vp": 2,
+  },
+]
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Archer: a India mover is shut out of Mongols land at Peace, and let in once a Hall stands there 4`] = `
+{
+  "q": 6,
+  "r": 10,
+}
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Archer: a Mongols mover enters an India holder’s land with the Hall but is shut out without it 1`] = `
+[
+  {
+    "at": {
+      "q": 7,
+      "r": 10,
+    },
+    "owner": 1,
+    "reason": "no route to the destination",
+    "toward": {
+      "q": 6,
+      "r": 10,
+    },
+    "type": "MoveBlocked",
+    "unit": 1,
+  },
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": 3,
+      "r": 10,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 2,
+    "owner": 0,
+    "tile": {
+      "q": 0,
+      "r": 3,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 3,
+    "owner": 1,
+    "tile": {
+      "q": 7,
+      "r": 15,
+    },
+    "type": "TileClaimed",
+  },
+]
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Archer: a Mongols mover enters an India holder’s land with the Hall but is shut out without it 2`] = `
+{
+  "q": 7,
+  "r": 10,
+}
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Archer: a Mongols mover enters an India holder’s land with the Hall but is shut out without it 3`] = `
+[
+  {
+    "from": {
+      "q": 7,
+      "r": 10,
+    },
+    "owner": 1,
+    "to": {
+      "q": 6,
+      "r": 10,
+    },
+    "type": "UnitMoved",
+    "unit": 1,
+  },
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": 3,
+      "r": 10,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 2,
+    "owner": 0,
+    "tile": {
+      "q": 0,
+      "r": 3,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 3,
+    "owner": 1,
+    "tile": {
+      "q": 7,
+      "r": 15,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "at": {
+      "q": 5,
+      "r": 10,
+    },
+    "city": 1,
+    "linked": 2,
+    "owner": 1,
+    "type": "RoadsLaid",
+  },
+  {
+    "faction": "Mongols",
+    "player": 0,
+    "type": "FactionGoalCompleted",
+    "vp": 2,
+  },
+]
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Archer: a Mongols mover enters an India holder’s land with the Hall but is shut out without it 4`] = `
+{
+  "q": 6,
+  "r": 10,
+}
+`;
 
 exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Arquebusier: a India mover is shut out of Mongols land at Peace, and let in once a Hall stands there 1`] = `
 [
@@ -6587,280 +7007,6 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: 
 `;
 
 exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Artillery: a Mongols mover enters an India holder’s land with the Hall but is shut out without it 4`] = `
-{
-  "q": 6,
-  "r": 10,
-}
-`;
-
-exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > AssaultTrooper: a India mover is shut out of Mongols land at Peace, and let in once a Hall stands there 1`] = `
-[
-  {
-    "at": {
-      "q": 7,
-      "r": 10,
-    },
-    "owner": 1,
-    "reason": "no route to the destination",
-    "toward": {
-      "q": 6,
-      "r": 10,
-    },
-    "type": "MoveBlocked",
-    "unit": 1,
-  },
-  {
-    "city": 1,
-    "owner": 0,
-    "tile": {
-      "q": 3,
-      "r": 10,
-    },
-    "type": "TileClaimed",
-  },
-  {
-    "city": 2,
-    "owner": 0,
-    "tile": {
-      "q": 0,
-      "r": 3,
-    },
-    "type": "TileClaimed",
-  },
-  {
-    "city": 3,
-    "owner": 1,
-    "tile": {
-      "q": 7,
-      "r": 15,
-    },
-    "type": "TileClaimed",
-  },
-  {
-    "idle": 1,
-    "player": 1,
-    "resource": "Niter",
-    "supplied": 0,
-    "type": "SupplyShortage",
-    "used": 1,
-  },
-]
-`;
-
-exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > AssaultTrooper: a India mover is shut out of Mongols land at Peace, and let in once a Hall stands there 2`] = `
-{
-  "q": 7,
-  "r": 10,
-}
-`;
-
-exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > AssaultTrooper: a India mover is shut out of Mongols land at Peace, and let in once a Hall stands there 3`] = `
-[
-  {
-    "from": {
-      "q": 7,
-      "r": 10,
-    },
-    "owner": 1,
-    "to": {
-      "q": 6,
-      "r": 10,
-    },
-    "type": "UnitMoved",
-    "unit": 1,
-  },
-  {
-    "city": 1,
-    "owner": 0,
-    "tile": {
-      "q": 3,
-      "r": 10,
-    },
-    "type": "TileClaimed",
-  },
-  {
-    "city": 2,
-    "owner": 0,
-    "tile": {
-      "q": 0,
-      "r": 3,
-    },
-    "type": "TileClaimed",
-  },
-  {
-    "city": 3,
-    "owner": 1,
-    "tile": {
-      "q": 7,
-      "r": 15,
-    },
-    "type": "TileClaimed",
-  },
-  {
-    "at": {
-      "q": 5,
-      "r": 10,
-    },
-    "city": 1,
-    "linked": 2,
-    "owner": 0,
-    "type": "RoadsLaid",
-  },
-  {
-    "idle": 1,
-    "player": 1,
-    "resource": "Niter",
-    "supplied": 0,
-    "type": "SupplyShortage",
-    "used": 1,
-  },
-  {
-    "faction": "Mongols",
-    "player": 0,
-    "type": "FactionGoalCompleted",
-    "vp": 2,
-  },
-]
-`;
-
-exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > AssaultTrooper: a India mover is shut out of Mongols land at Peace, and let in once a Hall stands there 4`] = `
-{
-  "q": 6,
-  "r": 10,
-}
-`;
-
-exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > AssaultTrooper: a Mongols mover enters an India holder’s land with the Hall but is shut out without it 1`] = `
-[
-  {
-    "at": {
-      "q": 7,
-      "r": 10,
-    },
-    "owner": 1,
-    "reason": "no route to the destination",
-    "toward": {
-      "q": 6,
-      "r": 10,
-    },
-    "type": "MoveBlocked",
-    "unit": 1,
-  },
-  {
-    "city": 1,
-    "owner": 0,
-    "tile": {
-      "q": 3,
-      "r": 10,
-    },
-    "type": "TileClaimed",
-  },
-  {
-    "city": 2,
-    "owner": 0,
-    "tile": {
-      "q": 0,
-      "r": 3,
-    },
-    "type": "TileClaimed",
-  },
-  {
-    "city": 3,
-    "owner": 1,
-    "tile": {
-      "q": 7,
-      "r": 15,
-    },
-    "type": "TileClaimed",
-  },
-  {
-    "idle": 1,
-    "player": 1,
-    "resource": "Niter",
-    "supplied": 0,
-    "type": "SupplyShortage",
-    "used": 1,
-  },
-]
-`;
-
-exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > AssaultTrooper: a Mongols mover enters an India holder’s land with the Hall but is shut out without it 2`] = `
-{
-  "q": 7,
-  "r": 10,
-}
-`;
-
-exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > AssaultTrooper: a Mongols mover enters an India holder’s land with the Hall but is shut out without it 3`] = `
-[
-  {
-    "from": {
-      "q": 7,
-      "r": 10,
-    },
-    "owner": 1,
-    "to": {
-      "q": 6,
-      "r": 10,
-    },
-    "type": "UnitMoved",
-    "unit": 1,
-  },
-  {
-    "city": 1,
-    "owner": 0,
-    "tile": {
-      "q": 3,
-      "r": 10,
-    },
-    "type": "TileClaimed",
-  },
-  {
-    "city": 2,
-    "owner": 0,
-    "tile": {
-      "q": 0,
-      "r": 3,
-    },
-    "type": "TileClaimed",
-  },
-  {
-    "city": 3,
-    "owner": 1,
-    "tile": {
-      "q": 7,
-      "r": 15,
-    },
-    "type": "TileClaimed",
-  },
-  {
-    "at": {
-      "q": 5,
-      "r": 10,
-    },
-    "city": 1,
-    "linked": 2,
-    "owner": 1,
-    "type": "RoadsLaid",
-  },
-  {
-    "idle": 1,
-    "player": 1,
-    "resource": "Niter",
-    "supplied": 0,
-    "type": "SupplyShortage",
-    "used": 1,
-  },
-  {
-    "faction": "Mongols",
-    "player": 0,
-    "type": "FactionGoalCompleted",
-    "vp": 2,
-  },
-]
-`;
-
-exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > AssaultTrooper: a Mongols mover enters an India holder’s land with the Hall but is shut out without it 4`] = `
 {
   "q": 6,
   "r": 10,
@@ -8237,6 +8383,280 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: 
 }
 `;
 
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > CombatDrone: a India mover is shut out of Mongols land at Peace, and let in once a Hall stands there 1`] = `
+[
+  {
+    "at": {
+      "q": 7,
+      "r": 10,
+    },
+    "owner": 1,
+    "reason": "no route to the destination",
+    "toward": {
+      "q": 6,
+      "r": 10,
+    },
+    "type": "MoveBlocked",
+    "unit": 1,
+  },
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": 3,
+      "r": 10,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 2,
+    "owner": 0,
+    "tile": {
+      "q": 0,
+      "r": 3,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 3,
+    "owner": 1,
+    "tile": {
+      "q": 7,
+      "r": 15,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "idle": 1,
+    "player": 1,
+    "resource": "Silicon",
+    "supplied": 0,
+    "type": "SupplyShortage",
+    "used": 1,
+  },
+]
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > CombatDrone: a India mover is shut out of Mongols land at Peace, and let in once a Hall stands there 2`] = `
+{
+  "q": 7,
+  "r": 10,
+}
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > CombatDrone: a India mover is shut out of Mongols land at Peace, and let in once a Hall stands there 3`] = `
+[
+  {
+    "from": {
+      "q": 7,
+      "r": 10,
+    },
+    "owner": 1,
+    "to": {
+      "q": 6,
+      "r": 10,
+    },
+    "type": "UnitMoved",
+    "unit": 1,
+  },
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": 3,
+      "r": 10,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 2,
+    "owner": 0,
+    "tile": {
+      "q": 0,
+      "r": 3,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 3,
+    "owner": 1,
+    "tile": {
+      "q": 7,
+      "r": 15,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "at": {
+      "q": 5,
+      "r": 10,
+    },
+    "city": 1,
+    "linked": 2,
+    "owner": 0,
+    "type": "RoadsLaid",
+  },
+  {
+    "idle": 1,
+    "player": 1,
+    "resource": "Silicon",
+    "supplied": 0,
+    "type": "SupplyShortage",
+    "used": 1,
+  },
+  {
+    "faction": "Mongols",
+    "player": 0,
+    "type": "FactionGoalCompleted",
+    "vp": 2,
+  },
+]
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > CombatDrone: a India mover is shut out of Mongols land at Peace, and let in once a Hall stands there 4`] = `
+{
+  "q": 6,
+  "r": 10,
+}
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > CombatDrone: a Mongols mover enters an India holder’s land with the Hall but is shut out without it 1`] = `
+[
+  {
+    "at": {
+      "q": 7,
+      "r": 10,
+    },
+    "owner": 1,
+    "reason": "no route to the destination",
+    "toward": {
+      "q": 6,
+      "r": 10,
+    },
+    "type": "MoveBlocked",
+    "unit": 1,
+  },
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": 3,
+      "r": 10,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 2,
+    "owner": 0,
+    "tile": {
+      "q": 0,
+      "r": 3,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 3,
+    "owner": 1,
+    "tile": {
+      "q": 7,
+      "r": 15,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "idle": 1,
+    "player": 1,
+    "resource": "Silicon",
+    "supplied": 0,
+    "type": "SupplyShortage",
+    "used": 1,
+  },
+]
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > CombatDrone: a Mongols mover enters an India holder’s land with the Hall but is shut out without it 2`] = `
+{
+  "q": 7,
+  "r": 10,
+}
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > CombatDrone: a Mongols mover enters an India holder’s land with the Hall but is shut out without it 3`] = `
+[
+  {
+    "from": {
+      "q": 7,
+      "r": 10,
+    },
+    "owner": 1,
+    "to": {
+      "q": 6,
+      "r": 10,
+    },
+    "type": "UnitMoved",
+    "unit": 1,
+  },
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": 3,
+      "r": 10,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 2,
+    "owner": 0,
+    "tile": {
+      "q": 0,
+      "r": 3,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 3,
+    "owner": 1,
+    "tile": {
+      "q": 7,
+      "r": 15,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "at": {
+      "q": 5,
+      "r": 10,
+    },
+    "city": 1,
+    "linked": 2,
+    "owner": 1,
+    "type": "RoadsLaid",
+  },
+  {
+    "idle": 1,
+    "player": 1,
+    "resource": "Silicon",
+    "supplied": 0,
+    "type": "SupplyShortage",
+    "used": 1,
+  },
+  {
+    "faction": "Mongols",
+    "player": 0,
+    "type": "FactionGoalCompleted",
+    "vp": 2,
+  },
+]
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > CombatDrone: a Mongols mover enters an India holder’s land with the Hall but is shut out without it 4`] = `
+{
+  "q": 6,
+  "r": 10,
+}
+`;
+
 exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > CompositeArcher: a India mover is shut out of Mongols land at Peace, and let in once a Hall stands there 1`] = `
 [
   {
@@ -8505,6 +8925,280 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: 
 `;
 
 exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > CompositeArcher: a Mongols mover enters an India holder’s land with the Hall but is shut out without it 4`] = `
+{
+  "q": 6,
+  "r": 10,
+}
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Crossbowman: a India mover is shut out of Mongols land at Peace, and let in once a Hall stands there 1`] = `
+[
+  {
+    "at": {
+      "q": 7,
+      "r": 10,
+    },
+    "owner": 1,
+    "reason": "no route to the destination",
+    "toward": {
+      "q": 6,
+      "r": 10,
+    },
+    "type": "MoveBlocked",
+    "unit": 1,
+  },
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": 3,
+      "r": 10,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 2,
+    "owner": 0,
+    "tile": {
+      "q": 0,
+      "r": 3,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 3,
+    "owner": 1,
+    "tile": {
+      "q": 7,
+      "r": 15,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "idle": 1,
+    "player": 1,
+    "resource": "Iron",
+    "supplied": 0,
+    "type": "SupplyShortage",
+    "used": 1,
+  },
+]
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Crossbowman: a India mover is shut out of Mongols land at Peace, and let in once a Hall stands there 2`] = `
+{
+  "q": 7,
+  "r": 10,
+}
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Crossbowman: a India mover is shut out of Mongols land at Peace, and let in once a Hall stands there 3`] = `
+[
+  {
+    "from": {
+      "q": 7,
+      "r": 10,
+    },
+    "owner": 1,
+    "to": {
+      "q": 6,
+      "r": 10,
+    },
+    "type": "UnitMoved",
+    "unit": 1,
+  },
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": 3,
+      "r": 10,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 2,
+    "owner": 0,
+    "tile": {
+      "q": 0,
+      "r": 3,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 3,
+    "owner": 1,
+    "tile": {
+      "q": 7,
+      "r": 15,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "at": {
+      "q": 5,
+      "r": 10,
+    },
+    "city": 1,
+    "linked": 2,
+    "owner": 0,
+    "type": "RoadsLaid",
+  },
+  {
+    "idle": 1,
+    "player": 1,
+    "resource": "Iron",
+    "supplied": 0,
+    "type": "SupplyShortage",
+    "used": 1,
+  },
+  {
+    "faction": "Mongols",
+    "player": 0,
+    "type": "FactionGoalCompleted",
+    "vp": 2,
+  },
+]
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Crossbowman: a India mover is shut out of Mongols land at Peace, and let in once a Hall stands there 4`] = `
+{
+  "q": 6,
+  "r": 10,
+}
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Crossbowman: a Mongols mover enters an India holder’s land with the Hall but is shut out without it 1`] = `
+[
+  {
+    "at": {
+      "q": 7,
+      "r": 10,
+    },
+    "owner": 1,
+    "reason": "no route to the destination",
+    "toward": {
+      "q": 6,
+      "r": 10,
+    },
+    "type": "MoveBlocked",
+    "unit": 1,
+  },
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": 3,
+      "r": 10,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 2,
+    "owner": 0,
+    "tile": {
+      "q": 0,
+      "r": 3,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 3,
+    "owner": 1,
+    "tile": {
+      "q": 7,
+      "r": 15,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "idle": 1,
+    "player": 1,
+    "resource": "Iron",
+    "supplied": 0,
+    "type": "SupplyShortage",
+    "used": 1,
+  },
+]
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Crossbowman: a Mongols mover enters an India holder’s land with the Hall but is shut out without it 2`] = `
+{
+  "q": 7,
+  "r": 10,
+}
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Crossbowman: a Mongols mover enters an India holder’s land with the Hall but is shut out without it 3`] = `
+[
+  {
+    "from": {
+      "q": 7,
+      "r": 10,
+    },
+    "owner": 1,
+    "to": {
+      "q": 6,
+      "r": 10,
+    },
+    "type": "UnitMoved",
+    "unit": 1,
+  },
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": 3,
+      "r": 10,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 2,
+    "owner": 0,
+    "tile": {
+      "q": 0,
+      "r": 3,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 3,
+    "owner": 1,
+    "tile": {
+      "q": 7,
+      "r": 15,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "at": {
+      "q": 5,
+      "r": 10,
+    },
+    "city": 1,
+    "linked": 2,
+    "owner": 1,
+    "type": "RoadsLaid",
+  },
+  {
+    "idle": 1,
+    "player": 1,
+    "resource": "Iron",
+    "supplied": 0,
+    "type": "SupplyShortage",
+    "used": 1,
+  },
+  {
+    "faction": "Mongols",
+    "player": 0,
+    "type": "FactionGoalCompleted",
+    "vp": 2,
+  },
+]
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Crossbowman: a Mongols mover enters an India holder’s land with the Hall but is shut out without it 4`] = `
 {
   "q": 6,
   "r": 10,
@@ -9053,6 +9747,280 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: 
 `;
 
 exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Drone: a Mongols mover enters an India holder’s land with the Hall but is shut out without it 4`] = `
+{
+  "q": 6,
+  "r": 10,
+}
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > EarlyTank: a India mover is shut out of Mongols land at Peace, and let in once a Hall stands there 1`] = `
+[
+  {
+    "at": {
+      "q": 7,
+      "r": 10,
+    },
+    "owner": 1,
+    "reason": "no route to the destination",
+    "toward": {
+      "q": 6,
+      "r": 10,
+    },
+    "type": "MoveBlocked",
+    "unit": 1,
+  },
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": 3,
+      "r": 10,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 2,
+    "owner": 0,
+    "tile": {
+      "q": 0,
+      "r": 3,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 3,
+    "owner": 1,
+    "tile": {
+      "q": 7,
+      "r": 15,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "idle": 1,
+    "player": 1,
+    "resource": "Oil",
+    "supplied": 0,
+    "type": "SupplyShortage",
+    "used": 1,
+  },
+]
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > EarlyTank: a India mover is shut out of Mongols land at Peace, and let in once a Hall stands there 2`] = `
+{
+  "q": 7,
+  "r": 10,
+}
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > EarlyTank: a India mover is shut out of Mongols land at Peace, and let in once a Hall stands there 3`] = `
+[
+  {
+    "from": {
+      "q": 7,
+      "r": 10,
+    },
+    "owner": 1,
+    "to": {
+      "q": 6,
+      "r": 10,
+    },
+    "type": "UnitMoved",
+    "unit": 1,
+  },
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": 3,
+      "r": 10,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 2,
+    "owner": 0,
+    "tile": {
+      "q": 0,
+      "r": 3,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 3,
+    "owner": 1,
+    "tile": {
+      "q": 7,
+      "r": 15,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "at": {
+      "q": 5,
+      "r": 10,
+    },
+    "city": 1,
+    "linked": 2,
+    "owner": 0,
+    "type": "RoadsLaid",
+  },
+  {
+    "idle": 1,
+    "player": 1,
+    "resource": "Oil",
+    "supplied": 0,
+    "type": "SupplyShortage",
+    "used": 1,
+  },
+  {
+    "faction": "Mongols",
+    "player": 0,
+    "type": "FactionGoalCompleted",
+    "vp": 2,
+  },
+]
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > EarlyTank: a India mover is shut out of Mongols land at Peace, and let in once a Hall stands there 4`] = `
+{
+  "q": 6,
+  "r": 10,
+}
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > EarlyTank: a Mongols mover enters an India holder’s land with the Hall but is shut out without it 1`] = `
+[
+  {
+    "at": {
+      "q": 7,
+      "r": 10,
+    },
+    "owner": 1,
+    "reason": "no route to the destination",
+    "toward": {
+      "q": 6,
+      "r": 10,
+    },
+    "type": "MoveBlocked",
+    "unit": 1,
+  },
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": 3,
+      "r": 10,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 2,
+    "owner": 0,
+    "tile": {
+      "q": 0,
+      "r": 3,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 3,
+    "owner": 1,
+    "tile": {
+      "q": 7,
+      "r": 15,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "idle": 1,
+    "player": 1,
+    "resource": "Oil",
+    "supplied": 0,
+    "type": "SupplyShortage",
+    "used": 1,
+  },
+]
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > EarlyTank: a Mongols mover enters an India holder’s land with the Hall but is shut out without it 2`] = `
+{
+  "q": 7,
+  "r": 10,
+}
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > EarlyTank: a Mongols mover enters an India holder’s land with the Hall but is shut out without it 3`] = `
+[
+  {
+    "from": {
+      "q": 7,
+      "r": 10,
+    },
+    "owner": 1,
+    "to": {
+      "q": 6,
+      "r": 10,
+    },
+    "type": "UnitMoved",
+    "unit": 1,
+  },
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": 3,
+      "r": 10,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 2,
+    "owner": 0,
+    "tile": {
+      "q": 0,
+      "r": 3,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 3,
+    "owner": 1,
+    "tile": {
+      "q": 7,
+      "r": 15,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "at": {
+      "q": 5,
+      "r": 10,
+    },
+    "city": 1,
+    "linked": 2,
+    "owner": 1,
+    "type": "RoadsLaid",
+  },
+  {
+    "idle": 1,
+    "player": 1,
+    "resource": "Oil",
+    "supplied": 0,
+    "type": "SupplyShortage",
+    "used": 1,
+  },
+  {
+    "faction": "Mongols",
+    "player": 0,
+    "type": "FactionGoalCompleted",
+    "vp": 2,
+  },
+]
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > EarlyTank: a Mongols mover enters an India holder’s land with the Hall but is shut out without it 4`] = `
 {
   "q": 6,
   "r": 10,
@@ -11493,280 +12461,6 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: 
 }
 `;
 
-exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Landship: a India mover is shut out of Mongols land at Peace, and let in once a Hall stands there 1`] = `
-[
-  {
-    "at": {
-      "q": 7,
-      "r": 10,
-    },
-    "owner": 1,
-    "reason": "no route to the destination",
-    "toward": {
-      "q": 6,
-      "r": 10,
-    },
-    "type": "MoveBlocked",
-    "unit": 1,
-  },
-  {
-    "city": 1,
-    "owner": 0,
-    "tile": {
-      "q": 3,
-      "r": 10,
-    },
-    "type": "TileClaimed",
-  },
-  {
-    "city": 2,
-    "owner": 0,
-    "tile": {
-      "q": 0,
-      "r": 3,
-    },
-    "type": "TileClaimed",
-  },
-  {
-    "city": 3,
-    "owner": 1,
-    "tile": {
-      "q": 7,
-      "r": 15,
-    },
-    "type": "TileClaimed",
-  },
-  {
-    "idle": 1,
-    "player": 1,
-    "resource": "Oil",
-    "supplied": 0,
-    "type": "SupplyShortage",
-    "used": 1,
-  },
-]
-`;
-
-exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Landship: a India mover is shut out of Mongols land at Peace, and let in once a Hall stands there 2`] = `
-{
-  "q": 7,
-  "r": 10,
-}
-`;
-
-exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Landship: a India mover is shut out of Mongols land at Peace, and let in once a Hall stands there 3`] = `
-[
-  {
-    "from": {
-      "q": 7,
-      "r": 10,
-    },
-    "owner": 1,
-    "to": {
-      "q": 6,
-      "r": 10,
-    },
-    "type": "UnitMoved",
-    "unit": 1,
-  },
-  {
-    "city": 1,
-    "owner": 0,
-    "tile": {
-      "q": 3,
-      "r": 10,
-    },
-    "type": "TileClaimed",
-  },
-  {
-    "city": 2,
-    "owner": 0,
-    "tile": {
-      "q": 0,
-      "r": 3,
-    },
-    "type": "TileClaimed",
-  },
-  {
-    "city": 3,
-    "owner": 1,
-    "tile": {
-      "q": 7,
-      "r": 15,
-    },
-    "type": "TileClaimed",
-  },
-  {
-    "at": {
-      "q": 5,
-      "r": 10,
-    },
-    "city": 1,
-    "linked": 2,
-    "owner": 0,
-    "type": "RoadsLaid",
-  },
-  {
-    "idle": 1,
-    "player": 1,
-    "resource": "Oil",
-    "supplied": 0,
-    "type": "SupplyShortage",
-    "used": 1,
-  },
-  {
-    "faction": "Mongols",
-    "player": 0,
-    "type": "FactionGoalCompleted",
-    "vp": 2,
-  },
-]
-`;
-
-exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Landship: a India mover is shut out of Mongols land at Peace, and let in once a Hall stands there 4`] = `
-{
-  "q": 6,
-  "r": 10,
-}
-`;
-
-exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Landship: a Mongols mover enters an India holder’s land with the Hall but is shut out without it 1`] = `
-[
-  {
-    "at": {
-      "q": 7,
-      "r": 10,
-    },
-    "owner": 1,
-    "reason": "no route to the destination",
-    "toward": {
-      "q": 6,
-      "r": 10,
-    },
-    "type": "MoveBlocked",
-    "unit": 1,
-  },
-  {
-    "city": 1,
-    "owner": 0,
-    "tile": {
-      "q": 3,
-      "r": 10,
-    },
-    "type": "TileClaimed",
-  },
-  {
-    "city": 2,
-    "owner": 0,
-    "tile": {
-      "q": 0,
-      "r": 3,
-    },
-    "type": "TileClaimed",
-  },
-  {
-    "city": 3,
-    "owner": 1,
-    "tile": {
-      "q": 7,
-      "r": 15,
-    },
-    "type": "TileClaimed",
-  },
-  {
-    "idle": 1,
-    "player": 1,
-    "resource": "Oil",
-    "supplied": 0,
-    "type": "SupplyShortage",
-    "used": 1,
-  },
-]
-`;
-
-exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Landship: a Mongols mover enters an India holder’s land with the Hall but is shut out without it 2`] = `
-{
-  "q": 7,
-  "r": 10,
-}
-`;
-
-exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Landship: a Mongols mover enters an India holder’s land with the Hall but is shut out without it 3`] = `
-[
-  {
-    "from": {
-      "q": 7,
-      "r": 10,
-    },
-    "owner": 1,
-    "to": {
-      "q": 6,
-      "r": 10,
-    },
-    "type": "UnitMoved",
-    "unit": 1,
-  },
-  {
-    "city": 1,
-    "owner": 0,
-    "tile": {
-      "q": 3,
-      "r": 10,
-    },
-    "type": "TileClaimed",
-  },
-  {
-    "city": 2,
-    "owner": 0,
-    "tile": {
-      "q": 0,
-      "r": 3,
-    },
-    "type": "TileClaimed",
-  },
-  {
-    "city": 3,
-    "owner": 1,
-    "tile": {
-      "q": 7,
-      "r": 15,
-    },
-    "type": "TileClaimed",
-  },
-  {
-    "at": {
-      "q": 5,
-      "r": 10,
-    },
-    "city": 1,
-    "linked": 2,
-    "owner": 1,
-    "type": "RoadsLaid",
-  },
-  {
-    "idle": 1,
-    "player": 1,
-    "resource": "Oil",
-    "supplied": 0,
-    "type": "SupplyShortage",
-    "used": 1,
-  },
-  {
-    "faction": "Mongols",
-    "player": 0,
-    "type": "FactionGoalCompleted",
-    "vp": 2,
-  },
-]
-`;
-
-exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Landship: a Mongols mover enters an India holder’s land with the Hall but is shut out without it 4`] = `
-{
-  "q": 6,
-  "r": 10,
-}
-`;
-
 exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > MainBattleTank: a India mover is shut out of Mongols land at Peace, and let in once a Hall stands there 1`] = `
 [
   {
@@ -12589,6 +13283,280 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: 
 }
 `;
 
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Musketman: a India mover is shut out of Mongols land at Peace, and let in once a Hall stands there 1`] = `
+[
+  {
+    "at": {
+      "q": 7,
+      "r": 10,
+    },
+    "owner": 1,
+    "reason": "no route to the destination",
+    "toward": {
+      "q": 6,
+      "r": 10,
+    },
+    "type": "MoveBlocked",
+    "unit": 1,
+  },
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": 3,
+      "r": 10,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 2,
+    "owner": 0,
+    "tile": {
+      "q": 0,
+      "r": 3,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 3,
+    "owner": 1,
+    "tile": {
+      "q": 7,
+      "r": 15,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "idle": 1,
+    "player": 1,
+    "resource": "Niter",
+    "supplied": 0,
+    "type": "SupplyShortage",
+    "used": 1,
+  },
+]
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Musketman: a India mover is shut out of Mongols land at Peace, and let in once a Hall stands there 2`] = `
+{
+  "q": 7,
+  "r": 10,
+}
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Musketman: a India mover is shut out of Mongols land at Peace, and let in once a Hall stands there 3`] = `
+[
+  {
+    "from": {
+      "q": 7,
+      "r": 10,
+    },
+    "owner": 1,
+    "to": {
+      "q": 6,
+      "r": 10,
+    },
+    "type": "UnitMoved",
+    "unit": 1,
+  },
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": 3,
+      "r": 10,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 2,
+    "owner": 0,
+    "tile": {
+      "q": 0,
+      "r": 3,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 3,
+    "owner": 1,
+    "tile": {
+      "q": 7,
+      "r": 15,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "at": {
+      "q": 5,
+      "r": 10,
+    },
+    "city": 1,
+    "linked": 2,
+    "owner": 0,
+    "type": "RoadsLaid",
+  },
+  {
+    "idle": 1,
+    "player": 1,
+    "resource": "Niter",
+    "supplied": 0,
+    "type": "SupplyShortage",
+    "used": 1,
+  },
+  {
+    "faction": "Mongols",
+    "player": 0,
+    "type": "FactionGoalCompleted",
+    "vp": 2,
+  },
+]
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Musketman: a India mover is shut out of Mongols land at Peace, and let in once a Hall stands there 4`] = `
+{
+  "q": 6,
+  "r": 10,
+}
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Musketman: a Mongols mover enters an India holder’s land with the Hall but is shut out without it 1`] = `
+[
+  {
+    "at": {
+      "q": 7,
+      "r": 10,
+    },
+    "owner": 1,
+    "reason": "no route to the destination",
+    "toward": {
+      "q": 6,
+      "r": 10,
+    },
+    "type": "MoveBlocked",
+    "unit": 1,
+  },
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": 3,
+      "r": 10,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 2,
+    "owner": 0,
+    "tile": {
+      "q": 0,
+      "r": 3,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 3,
+    "owner": 1,
+    "tile": {
+      "q": 7,
+      "r": 15,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "idle": 1,
+    "player": 1,
+    "resource": "Niter",
+    "supplied": 0,
+    "type": "SupplyShortage",
+    "used": 1,
+  },
+]
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Musketman: a Mongols mover enters an India holder’s land with the Hall but is shut out without it 2`] = `
+{
+  "q": 7,
+  "r": 10,
+}
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Musketman: a Mongols mover enters an India holder’s land with the Hall but is shut out without it 3`] = `
+[
+  {
+    "from": {
+      "q": 7,
+      "r": 10,
+    },
+    "owner": 1,
+    "to": {
+      "q": 6,
+      "r": 10,
+    },
+    "type": "UnitMoved",
+    "unit": 1,
+  },
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": 3,
+      "r": 10,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 2,
+    "owner": 0,
+    "tile": {
+      "q": 0,
+      "r": 3,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 3,
+    "owner": 1,
+    "tile": {
+      "q": 7,
+      "r": 15,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "at": {
+      "q": 5,
+      "r": 10,
+    },
+    "city": 1,
+    "linked": 2,
+    "owner": 1,
+    "type": "RoadsLaid",
+  },
+  {
+    "idle": 1,
+    "player": 1,
+    "resource": "Niter",
+    "supplied": 0,
+    "type": "SupplyShortage",
+    "used": 1,
+  },
+  {
+    "faction": "Mongols",
+    "player": 0,
+    "type": "FactionGoalCompleted",
+    "vp": 2,
+  },
+]
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Musketman: a Mongols mover enters an India holder’s land with the Hall but is shut out without it 4`] = `
+{
+  "q": 6,
+  "r": 10,
+}
+`;
+
 exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Phalangite: a India mover is shut out of Mongols land at Peace, and let in once a Hall stands there 1`] = `
 [
   {
@@ -12857,6 +13825,280 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: 
 `;
 
 exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Phalangite: a Mongols mover enters an India holder’s land with the Hall but is shut out without it 4`] = `
+{
+  "q": 6,
+  "r": 10,
+}
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Pikeman: a India mover is shut out of Mongols land at Peace, and let in once a Hall stands there 1`] = `
+[
+  {
+    "at": {
+      "q": 7,
+      "r": 10,
+    },
+    "owner": 1,
+    "reason": "no route to the destination",
+    "toward": {
+      "q": 6,
+      "r": 10,
+    },
+    "type": "MoveBlocked",
+    "unit": 1,
+  },
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": 3,
+      "r": 10,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 2,
+    "owner": 0,
+    "tile": {
+      "q": 0,
+      "r": 3,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 3,
+    "owner": 1,
+    "tile": {
+      "q": 7,
+      "r": 15,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "idle": 1,
+    "player": 1,
+    "resource": "Iron",
+    "supplied": 0,
+    "type": "SupplyShortage",
+    "used": 1,
+  },
+]
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Pikeman: a India mover is shut out of Mongols land at Peace, and let in once a Hall stands there 2`] = `
+{
+  "q": 7,
+  "r": 10,
+}
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Pikeman: a India mover is shut out of Mongols land at Peace, and let in once a Hall stands there 3`] = `
+[
+  {
+    "from": {
+      "q": 7,
+      "r": 10,
+    },
+    "owner": 1,
+    "to": {
+      "q": 6,
+      "r": 10,
+    },
+    "type": "UnitMoved",
+    "unit": 1,
+  },
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": 3,
+      "r": 10,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 2,
+    "owner": 0,
+    "tile": {
+      "q": 0,
+      "r": 3,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 3,
+    "owner": 1,
+    "tile": {
+      "q": 7,
+      "r": 15,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "at": {
+      "q": 5,
+      "r": 10,
+    },
+    "city": 1,
+    "linked": 2,
+    "owner": 0,
+    "type": "RoadsLaid",
+  },
+  {
+    "idle": 1,
+    "player": 1,
+    "resource": "Iron",
+    "supplied": 0,
+    "type": "SupplyShortage",
+    "used": 1,
+  },
+  {
+    "faction": "Mongols",
+    "player": 0,
+    "type": "FactionGoalCompleted",
+    "vp": 2,
+  },
+]
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Pikeman: a India mover is shut out of Mongols land at Peace, and let in once a Hall stands there 4`] = `
+{
+  "q": 6,
+  "r": 10,
+}
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Pikeman: a Mongols mover enters an India holder’s land with the Hall but is shut out without it 1`] = `
+[
+  {
+    "at": {
+      "q": 7,
+      "r": 10,
+    },
+    "owner": 1,
+    "reason": "no route to the destination",
+    "toward": {
+      "q": 6,
+      "r": 10,
+    },
+    "type": "MoveBlocked",
+    "unit": 1,
+  },
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": 3,
+      "r": 10,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 2,
+    "owner": 0,
+    "tile": {
+      "q": 0,
+      "r": 3,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 3,
+    "owner": 1,
+    "tile": {
+      "q": 7,
+      "r": 15,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "idle": 1,
+    "player": 1,
+    "resource": "Iron",
+    "supplied": 0,
+    "type": "SupplyShortage",
+    "used": 1,
+  },
+]
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Pikeman: a Mongols mover enters an India holder’s land with the Hall but is shut out without it 2`] = `
+{
+  "q": 7,
+  "r": 10,
+}
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Pikeman: a Mongols mover enters an India holder’s land with the Hall but is shut out without it 3`] = `
+[
+  {
+    "from": {
+      "q": 7,
+      "r": 10,
+    },
+    "owner": 1,
+    "to": {
+      "q": 6,
+      "r": 10,
+    },
+    "type": "UnitMoved",
+    "unit": 1,
+  },
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": 3,
+      "r": 10,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 2,
+    "owner": 0,
+    "tile": {
+      "q": 0,
+      "r": 3,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 3,
+    "owner": 1,
+    "tile": {
+      "q": 7,
+      "r": 15,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "at": {
+      "q": 5,
+      "r": 10,
+    },
+    "city": 1,
+    "linked": 2,
+    "owner": 1,
+    "type": "RoadsLaid",
+  },
+  {
+    "idle": 1,
+    "player": 1,
+    "resource": "Iron",
+    "supplied": 0,
+    "type": "SupplyShortage",
+    "used": 1,
+  },
+  {
+    "faction": "Mongols",
+    "player": 0,
+    "type": "FactionGoalCompleted",
+    "vp": 2,
+  },
+]
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Pikeman: a Mongols mover enters an India holder’s land with the Hall but is shut out without it 4`] = `
 {
   "q": 6,
   "r": 10,
@@ -14373,6 +15615,248 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: 
 `;
 
 exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Soldier: a Mongols mover enters an India holder’s land with the Hall but is shut out without it 4`] = `
+{
+  "q": 6,
+  "r": 10,
+}
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Spearman: a India mover is shut out of Mongols land at Peace, and let in once a Hall stands there 1`] = `
+[
+  {
+    "at": {
+      "q": 7,
+      "r": 10,
+    },
+    "owner": 1,
+    "reason": "no route to the destination",
+    "toward": {
+      "q": 6,
+      "r": 10,
+    },
+    "type": "MoveBlocked",
+    "unit": 1,
+  },
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": 3,
+      "r": 10,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 2,
+    "owner": 0,
+    "tile": {
+      "q": 0,
+      "r": 3,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 3,
+    "owner": 1,
+    "tile": {
+      "q": 7,
+      "r": 15,
+    },
+    "type": "TileClaimed",
+  },
+]
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Spearman: a India mover is shut out of Mongols land at Peace, and let in once a Hall stands there 2`] = `
+{
+  "q": 7,
+  "r": 10,
+}
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Spearman: a India mover is shut out of Mongols land at Peace, and let in once a Hall stands there 3`] = `
+[
+  {
+    "from": {
+      "q": 7,
+      "r": 10,
+    },
+    "owner": 1,
+    "to": {
+      "q": 6,
+      "r": 10,
+    },
+    "type": "UnitMoved",
+    "unit": 1,
+  },
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": 3,
+      "r": 10,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 2,
+    "owner": 0,
+    "tile": {
+      "q": 0,
+      "r": 3,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 3,
+    "owner": 1,
+    "tile": {
+      "q": 7,
+      "r": 15,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "at": {
+      "q": 5,
+      "r": 10,
+    },
+    "city": 1,
+    "linked": 2,
+    "owner": 0,
+    "type": "RoadsLaid",
+  },
+  {
+    "faction": "Mongols",
+    "player": 0,
+    "type": "FactionGoalCompleted",
+    "vp": 2,
+  },
+]
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Spearman: a India mover is shut out of Mongols land at Peace, and let in once a Hall stands there 4`] = `
+{
+  "q": 6,
+  "r": 10,
+}
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Spearman: a Mongols mover enters an India holder’s land with the Hall but is shut out without it 1`] = `
+[
+  {
+    "at": {
+      "q": 7,
+      "r": 10,
+    },
+    "owner": 1,
+    "reason": "no route to the destination",
+    "toward": {
+      "q": 6,
+      "r": 10,
+    },
+    "type": "MoveBlocked",
+    "unit": 1,
+  },
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": 3,
+      "r": 10,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 2,
+    "owner": 0,
+    "tile": {
+      "q": 0,
+      "r": 3,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 3,
+    "owner": 1,
+    "tile": {
+      "q": 7,
+      "r": 15,
+    },
+    "type": "TileClaimed",
+  },
+]
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Spearman: a Mongols mover enters an India holder’s land with the Hall but is shut out without it 2`] = `
+{
+  "q": 7,
+  "r": 10,
+}
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Spearman: a Mongols mover enters an India holder’s land with the Hall but is shut out without it 3`] = `
+[
+  {
+    "from": {
+      "q": 7,
+      "r": 10,
+    },
+    "owner": 1,
+    "to": {
+      "q": 6,
+      "r": 10,
+    },
+    "type": "UnitMoved",
+    "unit": 1,
+  },
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": 3,
+      "r": 10,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 2,
+    "owner": 0,
+    "tile": {
+      "q": 0,
+      "r": 3,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 3,
+    "owner": 1,
+    "tile": {
+      "q": 7,
+      "r": 15,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "at": {
+      "q": 5,
+      "r": 10,
+    },
+    "city": 1,
+    "linked": 2,
+    "owner": 1,
+    "type": "RoadsLaid",
+  },
+  {
+    "faction": "Mongols",
+    "player": 0,
+    "type": "FactionGoalCompleted",
+    "vp": 2,
+  },
+]
+`;
+
+exports[`Yam Relay Station and the Mongols goal: WASM behavior > the open road: passage through the holder’s land > Spearman: a Mongols mover enters an India holder’s land with the Hall but is shut out without it 4`] = `
 {
   "q": 6,
   "r": 10,

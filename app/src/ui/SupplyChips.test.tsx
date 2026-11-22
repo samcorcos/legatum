@@ -175,7 +175,7 @@ it('an Industrial empire gives Iron, Niter, Coal and Oil separate chips with spa
 });
 
 it('the era resource is missing when none is supplied and something waits on it', () => {
-  const view = eraView(3, [], [], [{ id: 1, owner: 0, kind: 'Trooper', upgrade_need: 'Niter', upgrade_supply_blocker: 'No Niter to spare' }]);
+  const view = eraView(3, [], [], [{ id: 1, owner: 0, kind: 'Pikeman', upgrade_need: 'Niter', upgrade_supply_blocker: 'No Niter to spare' }]);
   view.research.known.push('Gunpowder');
   expect(isMissing(view, supplyOf('Niter'))).toBe(true);
   expect(isMissing(eraView(3, []), supplyOf('Niter'))).toBe(false);
@@ -187,7 +187,7 @@ it('the era resource is missing when none is supplied and something waits on it'
 
 it('keeps a revealed 0/0 supply neutral when only future upgrades could use it', () => {
   const view = eraView(4, [supplyOf('Niter'), supplyOf('Oil')], [], [
-    { id: 1, owner: 0, kind: 'Trooper', upgrade_need: 'Niter', upgrade_supply_blocker: 'No Niter to spare' },
+    { id: 1, owner: 0, kind: 'Pikeman', upgrade_need: 'Niter', upgrade_supply_blocker: 'No Niter to spare' },
     { id: 2, owner: 0, kind: 'Cavalry', upgrade_need: 'Oil', upgrade_supply_blocker: 'No Oil to spare' },
   ]);
   const container = document.createElement('div');

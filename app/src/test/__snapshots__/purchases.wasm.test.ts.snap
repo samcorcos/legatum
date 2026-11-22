@@ -17,42 +17,42 @@ exports[`WASM purchase behavior > Athens unit strengths and health-weighted Army
     "upgrade": null,
   },
   {
-    "kind": "Soldier",
+    "kind": "Spearman",
     "moves": 2,
     "ranged": 0,
     "strength": 20,
     "upgrade": null,
   },
   {
-    "kind": "Ranger",
+    "kind": "Archer",
     "moves": 2,
     "ranged": 15,
     "strength": 8,
     "upgrade": null,
   },
   {
-    "kind": "Trooper",
+    "kind": "Pikeman",
     "moves": 2,
     "ranged": 0,
     "strength": 32,
     "upgrade": null,
   },
   {
-    "kind": "Marksman",
+    "kind": "Crossbowman",
     "moves": 2,
     "ranged": 31,
     "strength": 22,
     "upgrade": null,
   },
   {
-    "kind": "AssaultTrooper",
+    "kind": "Musketman",
     "moves": 2,
     "ranged": 0,
     "strength": 44,
     "upgrade": null,
   },
   {
-    "kind": "Heir",
+    "kind": "HeirToTheThrone",
     "moves": 2,
     "ranged": 0,
     "strength": 0,
@@ -129,7 +129,7 @@ exports[`WASM purchase behavior > Athens unit strengths and health-weighted Army
     "upgrade": null,
   },
   {
-    "kind": "Drone",
+    "kind": "CombatDrone",
     "moves": 3,
     "ranged": 181,
     "strength": 144,
@@ -213,7 +213,7 @@ exports[`WASM purchase behavior > Athens unit strengths and health-weighted Army
     "upgrade": null,
   },
   {
-    "kind": "Landship",
+    "kind": "EarlyTank",
     "moves": 3,
     "ranged": 0,
     "strength": 86,
@@ -284,35 +284,35 @@ exports[`WASM purchase behavior > Athens unit strengths and health-weighted Army
     "cost": 72,
     "item": {
       "kind": "Unit",
-      "unit": "Soldier",
+      "unit": "Spearman",
     },
   },
   {
     "cost": 118,
     "item": {
       "kind": "Unit",
-      "unit": "Ranger",
+      "unit": "Archer",
     },
   },
   {
     "cost": 136,
     "item": {
       "kind": "Unit",
-      "unit": "Trooper",
+      "unit": "Pikeman",
     },
   },
   {
     "cost": 192,
     "item": {
       "kind": "Unit",
-      "unit": "Marksman",
+      "unit": "Crossbowman",
     },
   },
   {
     "cost": 189,
     "item": {
       "kind": "Unit",
-      "unit": "AssaultTrooper",
+      "unit": "Musketman",
     },
   },
   {
@@ -389,7 +389,7 @@ exports[`WASM purchase behavior > Athens unit strengths and health-weighted Army
     "cost": 504,
     "item": {
       "kind": "Unit",
-      "unit": "Drone",
+      "unit": "CombatDrone",
     },
   },
   {
@@ -459,7 +459,7 @@ exports[`WASM purchase behavior > Athens unit strengths and health-weighted Army
     "cost": 396,
     "item": {
       "kind": "Unit",
-      "unit": "Landship",
+      "unit": "EarlyTank",
     },
   },
   {
@@ -526,42 +526,42 @@ exports[`WASM purchase behavior > Aztecs unit strengths and health-weighted Army
     "upgrade": null,
   },
   {
-    "kind": "Soldier",
+    "kind": "Spearman",
     "moves": 2,
     "ranged": 0,
     "strength": 24,
     "upgrade": null,
   },
   {
-    "kind": "Ranger",
+    "kind": "Archer",
     "moves": 2,
     "ranged": 15,
     "strength": 8,
     "upgrade": null,
   },
   {
-    "kind": "Trooper",
+    "kind": "Pikeman",
     "moves": 2,
     "ranged": 0,
     "strength": 32,
     "upgrade": null,
   },
   {
-    "kind": "Marksman",
+    "kind": "Crossbowman",
     "moves": 2,
     "ranged": 31,
     "strength": 22,
     "upgrade": null,
   },
   {
-    "kind": "AssaultTrooper",
+    "kind": "Musketman",
     "moves": 2,
     "ranged": 0,
     "strength": 44,
     "upgrade": null,
   },
   {
-    "kind": "Heir",
+    "kind": "HeirToTheThrone",
     "moves": 2,
     "ranged": 0,
     "strength": 0,
@@ -638,7 +638,7 @@ exports[`WASM purchase behavior > Aztecs unit strengths and health-weighted Army
     "upgrade": null,
   },
   {
-    "kind": "Drone",
+    "kind": "CombatDrone",
     "moves": 3,
     "ranged": 181,
     "strength": 144,
@@ -722,7 +722,7 @@ exports[`WASM purchase behavior > Aztecs unit strengths and health-weighted Army
     "upgrade": null,
   },
   {
-    "kind": "Landship",
+    "kind": "EarlyTank",
     "moves": 3,
     "ranged": 0,
     "strength": 86,
@@ -793,35 +793,35 @@ exports[`WASM purchase behavior > Aztecs unit strengths and health-weighted Army
     "cost": 81,
     "item": {
       "kind": "Unit",
-      "unit": "Soldier",
+      "unit": "Spearman",
     },
   },
   {
     "cost": 118,
     "item": {
       "kind": "Unit",
-      "unit": "Ranger",
+      "unit": "Archer",
     },
   },
   {
     "cost": 136,
     "item": {
       "kind": "Unit",
-      "unit": "Trooper",
+      "unit": "Pikeman",
     },
   },
   {
     "cost": 192,
     "item": {
       "kind": "Unit",
-      "unit": "Marksman",
+      "unit": "Crossbowman",
     },
   },
   {
     "cost": 189,
     "item": {
       "kind": "Unit",
-      "unit": "AssaultTrooper",
+      "unit": "Musketman",
     },
   },
   {
@@ -877,7 +877,7 @@ exports[`WASM purchase behavior > Aztecs unit strengths and health-weighted Army
     "cost": 504,
     "item": {
       "kind": "Unit",
-      "unit": "Drone",
+      "unit": "CombatDrone",
     },
   },
   {
@@ -933,7 +933,7 @@ exports[`WASM purchase behavior > Aztecs unit strengths and health-weighted Army
     "cost": 396,
     "item": {
       "kind": "Unit",
-      "unit": "Landship",
+      "unit": "EarlyTank",
     },
   },
   {
@@ -1000,42 +1000,42 @@ exports[`WASM purchase behavior > Byzantium unit strengths and health-weighted A
     "upgrade": null,
   },
   {
-    "kind": "Soldier",
+    "kind": "Spearman",
     "moves": 2,
     "ranged": 0,
     "strength": 20,
     "upgrade": null,
   },
   {
-    "kind": "Ranger",
+    "kind": "Archer",
     "moves": 2,
     "ranged": 15,
     "strength": 8,
     "upgrade": null,
   },
   {
-    "kind": "Trooper",
+    "kind": "Pikeman",
     "moves": 2,
     "ranged": 0,
     "strength": 36,
     "upgrade": null,
   },
   {
-    "kind": "Marksman",
+    "kind": "Crossbowman",
     "moves": 2,
     "ranged": 31,
     "strength": 22,
     "upgrade": null,
   },
   {
-    "kind": "AssaultTrooper",
+    "kind": "Musketman",
     "moves": 2,
     "ranged": 0,
     "strength": 49,
     "upgrade": null,
   },
   {
-    "kind": "Heir",
+    "kind": "HeirToTheThrone",
     "moves": 2,
     "ranged": 0,
     "strength": 0,
@@ -1112,7 +1112,7 @@ exports[`WASM purchase behavior > Byzantium unit strengths and health-weighted A
     "upgrade": null,
   },
   {
-    "kind": "Drone",
+    "kind": "CombatDrone",
     "moves": 3,
     "ranged": 181,
     "strength": 144,
@@ -1196,7 +1196,7 @@ exports[`WASM purchase behavior > Byzantium unit strengths and health-weighted A
     "upgrade": null,
   },
   {
-    "kind": "Landship",
+    "kind": "EarlyTank",
     "moves": 3,
     "ranged": 0,
     "strength": 86,
@@ -1267,7 +1267,7 @@ exports[`WASM purchase behavior > Byzantium unit strengths and health-weighted A
     "cost": 720,
     "item": {
       "kind": "Unit",
-      "unit": "Heir",
+      "unit": "HeirToTheThrone",
     },
   },
   {
@@ -1327,42 +1327,42 @@ exports[`WASM purchase behavior > Celts unit strengths and health-weighted Army 
     "upgrade": null,
   },
   {
-    "kind": "Soldier",
+    "kind": "Spearman",
     "moves": 2,
     "ranged": 0,
     "strength": 20,
     "upgrade": null,
   },
   {
-    "kind": "Ranger",
+    "kind": "Archer",
     "moves": 2,
     "ranged": 15,
     "strength": 8,
     "upgrade": null,
   },
   {
-    "kind": "Trooper",
+    "kind": "Pikeman",
     "moves": 2,
     "ranged": 0,
     "strength": 32,
     "upgrade": null,
   },
   {
-    "kind": "Marksman",
+    "kind": "Crossbowman",
     "moves": 2,
     "ranged": 31,
     "strength": 22,
     "upgrade": null,
   },
   {
-    "kind": "AssaultTrooper",
+    "kind": "Musketman",
     "moves": 2,
     "ranged": 0,
     "strength": 44,
     "upgrade": null,
   },
   {
-    "kind": "Heir",
+    "kind": "HeirToTheThrone",
     "moves": 2,
     "ranged": 0,
     "strength": 0,
@@ -1439,7 +1439,7 @@ exports[`WASM purchase behavior > Celts unit strengths and health-weighted Army 
     "upgrade": null,
   },
   {
-    "kind": "Drone",
+    "kind": "CombatDrone",
     "moves": 3,
     "ranged": 181,
     "strength": 144,
@@ -1523,7 +1523,7 @@ exports[`WASM purchase behavior > Celts unit strengths and health-weighted Army 
     "upgrade": null,
   },
   {
-    "kind": "Landship",
+    "kind": "EarlyTank",
     "moves": 3,
     "ranged": 0,
     "strength": 86,
@@ -1594,35 +1594,35 @@ exports[`WASM purchase behavior > Celts unit strengths and health-weighted Army 
     "cost": 72,
     "item": {
       "kind": "Unit",
-      "unit": "Soldier",
+      "unit": "Spearman",
     },
   },
   {
     "cost": 118,
     "item": {
       "kind": "Unit",
-      "unit": "Ranger",
+      "unit": "Archer",
     },
   },
   {
     "cost": 136,
     "item": {
       "kind": "Unit",
-      "unit": "Trooper",
+      "unit": "Pikeman",
     },
   },
   {
     "cost": 192,
     "item": {
       "kind": "Unit",
-      "unit": "Marksman",
+      "unit": "Crossbowman",
     },
   },
   {
     "cost": 189,
     "item": {
       "kind": "Unit",
-      "unit": "AssaultTrooper",
+      "unit": "Musketman",
     },
   },
   {
@@ -1699,7 +1699,7 @@ exports[`WASM purchase behavior > Celts unit strengths and health-weighted Army 
     "cost": 504,
     "item": {
       "kind": "Unit",
-      "unit": "Drone",
+      "unit": "CombatDrone",
     },
   },
   {
@@ -1769,7 +1769,7 @@ exports[`WASM purchase behavior > Celts unit strengths and health-weighted Army 
     "cost": 396,
     "item": {
       "kind": "Unit",
-      "unit": "Landship",
+      "unit": "EarlyTank",
     },
   },
   {
@@ -12586,42 +12586,42 @@ exports[`WASM purchase behavior > Germany unit strengths and health-weighted Arm
     "upgrade": null,
   },
   {
-    "kind": "Soldier",
+    "kind": "Spearman",
     "moves": 2,
     "ranged": 0,
     "strength": 20,
     "upgrade": null,
   },
   {
-    "kind": "Ranger",
+    "kind": "Archer",
     "moves": 2,
     "ranged": 15,
     "strength": 8,
     "upgrade": null,
   },
   {
-    "kind": "Trooper",
+    "kind": "Pikeman",
     "moves": 2,
     "ranged": 0,
     "strength": 32,
     "upgrade": null,
   },
   {
-    "kind": "Marksman",
+    "kind": "Crossbowman",
     "moves": 2,
     "ranged": 31,
     "strength": 22,
     "upgrade": null,
   },
   {
-    "kind": "AssaultTrooper",
+    "kind": "Musketman",
     "moves": 2,
     "ranged": 0,
     "strength": 44,
     "upgrade": null,
   },
   {
-    "kind": "Heir",
+    "kind": "HeirToTheThrone",
     "moves": 2,
     "ranged": 0,
     "strength": 0,
@@ -12698,7 +12698,7 @@ exports[`WASM purchase behavior > Germany unit strengths and health-weighted Arm
     "upgrade": null,
   },
   {
-    "kind": "Drone",
+    "kind": "CombatDrone",
     "moves": 3,
     "ranged": 181,
     "strength": 144,
@@ -12782,7 +12782,7 @@ exports[`WASM purchase behavior > Germany unit strengths and health-weighted Arm
     "upgrade": null,
   },
   {
-    "kind": "Landship",
+    "kind": "EarlyTank",
     "moves": 3,
     "ranged": 0,
     "strength": 86,
@@ -12853,35 +12853,35 @@ exports[`WASM purchase behavior > Germany unit strengths and health-weighted Arm
     "cost": 72,
     "item": {
       "kind": "Unit",
-      "unit": "Soldier",
+      "unit": "Spearman",
     },
   },
   {
     "cost": 118,
     "item": {
       "kind": "Unit",
-      "unit": "Ranger",
+      "unit": "Archer",
     },
   },
   {
     "cost": 136,
     "item": {
       "kind": "Unit",
-      "unit": "Trooper",
+      "unit": "Pikeman",
     },
   },
   {
     "cost": 192,
     "item": {
       "kind": "Unit",
-      "unit": "Marksman",
+      "unit": "Crossbowman",
     },
   },
   {
     "cost": 189,
     "item": {
       "kind": "Unit",
-      "unit": "AssaultTrooper",
+      "unit": "Musketman",
     },
   },
   {
@@ -12958,7 +12958,7 @@ exports[`WASM purchase behavior > Germany unit strengths and health-weighted Arm
     "cost": 504,
     "item": {
       "kind": "Unit",
-      "unit": "Drone",
+      "unit": "CombatDrone",
     },
   },
   {
@@ -13028,7 +13028,7 @@ exports[`WASM purchase behavior > Germany unit strengths and health-weighted Arm
     "cost": 396,
     "item": {
       "kind": "Unit",
-      "unit": "Landship",
+      "unit": "EarlyTank",
     },
   },
   {
@@ -13633,42 +13633,42 @@ exports[`WASM purchase behavior > India unit strengths and health-weighted Army 
     "upgrade": null,
   },
   {
-    "kind": "Soldier",
+    "kind": "Spearman",
     "moves": 2,
     "ranged": 0,
     "strength": 20,
     "upgrade": null,
   },
   {
-    "kind": "Ranger",
+    "kind": "Archer",
     "moves": 2,
     "ranged": 15,
     "strength": 8,
     "upgrade": null,
   },
   {
-    "kind": "Trooper",
+    "kind": "Pikeman",
     "moves": 2,
     "ranged": 0,
     "strength": 32,
     "upgrade": null,
   },
   {
-    "kind": "Marksman",
+    "kind": "Crossbowman",
     "moves": 2,
     "ranged": 31,
     "strength": 22,
     "upgrade": null,
   },
   {
-    "kind": "AssaultTrooper",
+    "kind": "Musketman",
     "moves": 2,
     "ranged": 0,
     "strength": 44,
     "upgrade": null,
   },
   {
-    "kind": "Heir",
+    "kind": "HeirToTheThrone",
     "moves": 2,
     "ranged": 0,
     "strength": 0,
@@ -13745,7 +13745,7 @@ exports[`WASM purchase behavior > India unit strengths and health-weighted Army 
     "upgrade": null,
   },
   {
-    "kind": "Drone",
+    "kind": "CombatDrone",
     "moves": 3,
     "ranged": 181,
     "strength": 144,
@@ -13829,7 +13829,7 @@ exports[`WASM purchase behavior > India unit strengths and health-weighted Army 
     "upgrade": null,
   },
   {
-    "kind": "Landship",
+    "kind": "EarlyTank",
     "moves": 3,
     "ranged": 0,
     "strength": 86,
@@ -13900,35 +13900,35 @@ exports[`WASM purchase behavior > India unit strengths and health-weighted Army 
     "cost": 72,
     "item": {
       "kind": "Unit",
-      "unit": "Soldier",
+      "unit": "Spearman",
     },
   },
   {
     "cost": 118,
     "item": {
       "kind": "Unit",
-      "unit": "Ranger",
+      "unit": "Archer",
     },
   },
   {
     "cost": 136,
     "item": {
       "kind": "Unit",
-      "unit": "Trooper",
+      "unit": "Pikeman",
     },
   },
   {
     "cost": 192,
     "item": {
       "kind": "Unit",
-      "unit": "Marksman",
+      "unit": "Crossbowman",
     },
   },
   {
     "cost": 189,
     "item": {
       "kind": "Unit",
-      "unit": "AssaultTrooper",
+      "unit": "Musketman",
     },
   },
   {
@@ -14005,7 +14005,7 @@ exports[`WASM purchase behavior > India unit strengths and health-weighted Army 
     "cost": 504,
     "item": {
       "kind": "Unit",
-      "unit": "Drone",
+      "unit": "CombatDrone",
     },
   },
   {
@@ -14075,7 +14075,7 @@ exports[`WASM purchase behavior > India unit strengths and health-weighted Army 
     "cost": 396,
     "item": {
       "kind": "Unit",
-      "unit": "Landship",
+      "unit": "EarlyTank",
     },
   },
   {
@@ -14561,42 +14561,42 @@ exports[`WASM purchase behavior > Mongols unit strengths and health-weighted Arm
     "upgrade": null,
   },
   {
-    "kind": "Soldier",
+    "kind": "Spearman",
     "moves": 3,
     "ranged": 0,
     "strength": 20,
     "upgrade": null,
   },
   {
-    "kind": "Ranger",
+    "kind": "Archer",
     "moves": 3,
     "ranged": 15,
     "strength": 8,
     "upgrade": null,
   },
   {
-    "kind": "Trooper",
+    "kind": "Pikeman",
     "moves": 3,
     "ranged": 0,
     "strength": 32,
     "upgrade": null,
   },
   {
-    "kind": "Marksman",
+    "kind": "Crossbowman",
     "moves": 3,
     "ranged": 31,
     "strength": 22,
     "upgrade": null,
   },
   {
-    "kind": "AssaultTrooper",
+    "kind": "Musketman",
     "moves": 3,
     "ranged": 0,
     "strength": 44,
     "upgrade": null,
   },
   {
-    "kind": "Heir",
+    "kind": "HeirToTheThrone",
     "moves": 2,
     "ranged": 0,
     "strength": 0,
@@ -14673,7 +14673,7 @@ exports[`WASM purchase behavior > Mongols unit strengths and health-weighted Arm
     "upgrade": null,
   },
   {
-    "kind": "Drone",
+    "kind": "CombatDrone",
     "moves": 4,
     "ranged": 181,
     "strength": 144,
@@ -14757,7 +14757,7 @@ exports[`WASM purchase behavior > Mongols unit strengths and health-weighted Arm
     "upgrade": null,
   },
   {
-    "kind": "Landship",
+    "kind": "EarlyTank",
     "moves": 4,
     "ranged": 0,
     "strength": 86,
@@ -14828,35 +14828,35 @@ exports[`WASM purchase behavior > Mongols unit strengths and health-weighted Arm
     "cost": 72,
     "item": {
       "kind": "Unit",
-      "unit": "Soldier",
+      "unit": "Spearman",
     },
   },
   {
     "cost": 118,
     "item": {
       "kind": "Unit",
-      "unit": "Ranger",
+      "unit": "Archer",
     },
   },
   {
     "cost": 136,
     "item": {
       "kind": "Unit",
-      "unit": "Trooper",
+      "unit": "Pikeman",
     },
   },
   {
     "cost": 192,
     "item": {
       "kind": "Unit",
-      "unit": "Marksman",
+      "unit": "Crossbowman",
     },
   },
   {
     "cost": 189,
     "item": {
       "kind": "Unit",
-      "unit": "AssaultTrooper",
+      "unit": "Musketman",
     },
   },
   {
@@ -14933,7 +14933,7 @@ exports[`WASM purchase behavior > Mongols unit strengths and health-weighted Arm
     "cost": 504,
     "item": {
       "kind": "Unit",
-      "unit": "Drone",
+      "unit": "CombatDrone",
     },
   },
   {
@@ -15003,7 +15003,7 @@ exports[`WASM purchase behavior > Mongols unit strengths and health-weighted Arm
     "cost": 396,
     "item": {
       "kind": "Unit",
-      "unit": "Landship",
+      "unit": "EarlyTank",
     },
   },
   {
@@ -15070,42 +15070,42 @@ exports[`WASM purchase behavior > Rome unit strengths and health-weighted Army m
     "upgrade": null,
   },
   {
-    "kind": "Soldier",
+    "kind": "Spearman",
     "moves": 2,
     "ranged": 0,
     "strength": 20,
     "upgrade": null,
   },
   {
-    "kind": "Ranger",
+    "kind": "Archer",
     "moves": 2,
     "ranged": 15,
     "strength": 8,
     "upgrade": null,
   },
   {
-    "kind": "Trooper",
+    "kind": "Pikeman",
     "moves": 2,
     "ranged": 0,
     "strength": 32,
     "upgrade": null,
   },
   {
-    "kind": "Marksman",
+    "kind": "Crossbowman",
     "moves": 2,
     "ranged": 31,
     "strength": 22,
     "upgrade": null,
   },
   {
-    "kind": "AssaultTrooper",
+    "kind": "Musketman",
     "moves": 2,
     "ranged": 0,
     "strength": 44,
     "upgrade": null,
   },
   {
-    "kind": "Heir",
+    "kind": "HeirToTheThrone",
     "moves": 2,
     "ranged": 0,
     "strength": 0,
@@ -15182,7 +15182,7 @@ exports[`WASM purchase behavior > Rome unit strengths and health-weighted Army m
     "upgrade": null,
   },
   {
-    "kind": "Drone",
+    "kind": "CombatDrone",
     "moves": 3,
     "ranged": 181,
     "strength": 144,
@@ -15266,7 +15266,7 @@ exports[`WASM purchase behavior > Rome unit strengths and health-weighted Army m
     "upgrade": null,
   },
   {
-    "kind": "Landship",
+    "kind": "EarlyTank",
     "moves": 3,
     "ranged": 0,
     "strength": 86,
@@ -15330,35 +15330,35 @@ exports[`WASM purchase behavior > Rome unit strengths and health-weighted Army m
     "cost": 72,
     "item": {
       "kind": "Unit",
-      "unit": "Soldier",
+      "unit": "Spearman",
     },
   },
   {
     "cost": 118,
     "item": {
       "kind": "Unit",
-      "unit": "Ranger",
+      "unit": "Archer",
     },
   },
   {
     "cost": 136,
     "item": {
       "kind": "Unit",
-      "unit": "Trooper",
+      "unit": "Pikeman",
     },
   },
   {
     "cost": 192,
     "item": {
       "kind": "Unit",
-      "unit": "Marksman",
+      "unit": "Crossbowman",
     },
   },
   {
     "cost": 189,
     "item": {
       "kind": "Unit",
-      "unit": "AssaultTrooper",
+      "unit": "Musketman",
     },
   },
   {
@@ -15435,7 +15435,7 @@ exports[`WASM purchase behavior > Rome unit strengths and health-weighted Army m
     "cost": 504,
     "item": {
       "kind": "Unit",
-      "unit": "Drone",
+      "unit": "CombatDrone",
     },
   },
   {
@@ -15505,7 +15505,7 @@ exports[`WASM purchase behavior > Rome unit strengths and health-weighted Army m
     "cost": 396,
     "item": {
       "kind": "Unit",
-      "unit": "Landship",
+      "unit": "EarlyTank",
     },
   },
   {
@@ -15574,7 +15574,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "Soldier",
+      "unit": "Spearman",
     },
     "upkeep": {
       "free": true,
@@ -15586,7 +15586,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "Ranger",
+      "unit": "Archer",
     },
     "upkeep": {
       "free": true,
@@ -15598,7 +15598,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "Trooper",
+      "unit": "Pikeman",
     },
     "upkeep": {
       "free": true,
@@ -15610,7 +15610,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "Marksman",
+      "unit": "Crossbowman",
     },
     "upkeep": {
       "free": true,
@@ -15622,7 +15622,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "AssaultTrooper",
+      "unit": "Musketman",
     },
     "upkeep": {
       "free": true,
@@ -15778,7 +15778,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "Landship",
+      "unit": "EarlyTank",
     },
     "upkeep": {
       "free": true,
@@ -15827,7 +15827,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "Soldier",
+      "unit": "Spearman",
     },
     "upkeep": {
       "free": true,
@@ -15839,7 +15839,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "Ranger",
+      "unit": "Archer",
     },
     "upkeep": {
       "free": true,
@@ -15851,7 +15851,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "Trooper",
+      "unit": "Pikeman",
     },
     "upkeep": {
       "free": true,
@@ -15863,7 +15863,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "Marksman",
+      "unit": "Crossbowman",
     },
     "upkeep": {
       "free": true,
@@ -15875,7 +15875,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "AssaultTrooper",
+      "unit": "Musketman",
     },
     "upkeep": {
       "free": true,
@@ -16031,7 +16031,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "Landship",
+      "unit": "EarlyTank",
     },
     "upkeep": {
       "free": true,
@@ -16080,7 +16080,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "Soldier",
+      "unit": "Spearman",
     },
     "upkeep": {
       "free": false,
@@ -16092,7 +16092,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "Ranger",
+      "unit": "Archer",
     },
     "upkeep": {
       "free": false,
@@ -16104,7 +16104,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "Trooper",
+      "unit": "Pikeman",
     },
     "upkeep": {
       "free": false,
@@ -16116,7 +16116,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "Marksman",
+      "unit": "Crossbowman",
     },
     "upkeep": {
       "free": false,
@@ -16128,7 +16128,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "AssaultTrooper",
+      "unit": "Musketman",
     },
     "upkeep": {
       "free": false,
@@ -16284,7 +16284,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "Landship",
+      "unit": "EarlyTank",
     },
     "upkeep": {
       "free": false,
@@ -16333,7 +16333,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "Soldier",
+      "unit": "Spearman",
     },
     "upkeep": {
       "free": false,
@@ -16345,7 +16345,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "Ranger",
+      "unit": "Archer",
     },
     "upkeep": {
       "free": false,
@@ -16357,7 +16357,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "Trooper",
+      "unit": "Pikeman",
     },
     "upkeep": {
       "free": false,
@@ -16369,7 +16369,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "Marksman",
+      "unit": "Crossbowman",
     },
     "upkeep": {
       "free": false,
@@ -16381,7 +16381,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "AssaultTrooper",
+      "unit": "Musketman",
     },
     "upkeep": {
       "free": false,
@@ -16537,7 +16537,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "Landship",
+      "unit": "EarlyTank",
     },
     "upkeep": {
       "free": false,
@@ -16591,7 +16591,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "Soldier",
+      "unit": "Spearman",
     },
     "upkeep": {
       "free": true,
@@ -16603,7 +16603,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "Ranger",
+      "unit": "Archer",
     },
     "upkeep": {
       "free": true,
@@ -16615,7 +16615,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "Trooper",
+      "unit": "Pikeman",
     },
     "upkeep": {
       "free": true,
@@ -16627,7 +16627,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "Marksman",
+      "unit": "Crossbowman",
     },
     "upkeep": {
       "free": true,
@@ -16639,7 +16639,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "AssaultTrooper",
+      "unit": "Musketman",
     },
     "upkeep": {
       "free": true,
@@ -16795,7 +16795,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "Landship",
+      "unit": "EarlyTank",
     },
     "upkeep": {
       "free": true,
@@ -16844,7 +16844,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "Soldier",
+      "unit": "Spearman",
     },
     "upkeep": {
       "free": true,
@@ -16856,7 +16856,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "Ranger",
+      "unit": "Archer",
     },
     "upkeep": {
       "free": true,
@@ -16868,7 +16868,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "Trooper",
+      "unit": "Pikeman",
     },
     "upkeep": {
       "free": true,
@@ -16880,7 +16880,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "Marksman",
+      "unit": "Crossbowman",
     },
     "upkeep": {
       "free": true,
@@ -16892,7 +16892,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "AssaultTrooper",
+      "unit": "Musketman",
     },
     "upkeep": {
       "free": true,
@@ -17048,7 +17048,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "Landship",
+      "unit": "EarlyTank",
     },
     "upkeep": {
       "free": true,
@@ -17097,7 +17097,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "Soldier",
+      "unit": "Spearman",
     },
     "upkeep": {
       "free": false,
@@ -17109,7 +17109,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "Ranger",
+      "unit": "Archer",
     },
     "upkeep": {
       "free": false,
@@ -17121,7 +17121,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "Trooper",
+      "unit": "Pikeman",
     },
     "upkeep": {
       "free": false,
@@ -17133,7 +17133,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "Marksman",
+      "unit": "Crossbowman",
     },
     "upkeep": {
       "free": false,
@@ -17145,7 +17145,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "AssaultTrooper",
+      "unit": "Musketman",
     },
     "upkeep": {
       "free": false,
@@ -17301,7 +17301,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "Landship",
+      "unit": "EarlyTank",
     },
     "upkeep": {
       "free": false,
@@ -17350,7 +17350,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "Soldier",
+      "unit": "Spearman",
     },
     "upkeep": {
       "free": false,
@@ -17362,7 +17362,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "Ranger",
+      "unit": "Archer",
     },
     "upkeep": {
       "free": false,
@@ -17374,7 +17374,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "Trooper",
+      "unit": "Pikeman",
     },
     "upkeep": {
       "free": false,
@@ -17386,7 +17386,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "Marksman",
+      "unit": "Crossbowman",
     },
     "upkeep": {
       "free": false,
@@ -17398,7 +17398,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "AssaultTrooper",
+      "unit": "Musketman",
     },
     "upkeep": {
       "free": false,
@@ -17554,7 +17554,7 @@ exports[`WASM purchase behavior > Scouts are upkeep-free and use no free slot, m
   {
     "item": {
       "kind": "Unit",
-      "unit": "Landship",
+      "unit": "EarlyTank",
     },
     "upkeep": {
       "free": false,
@@ -17810,42 +17810,42 @@ exports[`WASM purchase behavior > Sparta unit strengths and health-weighted Army
     "upgrade": null,
   },
   {
-    "kind": "Soldier",
+    "kind": "Spearman",
     "moves": 2,
     "ranged": 0,
     "strength": 20,
     "upgrade": null,
   },
   {
-    "kind": "Ranger",
+    "kind": "Archer",
     "moves": 2,
     "ranged": 15,
     "strength": 8,
     "upgrade": null,
   },
   {
-    "kind": "Trooper",
+    "kind": "Pikeman",
     "moves": 2,
     "ranged": 0,
     "strength": 32,
     "upgrade": null,
   },
   {
-    "kind": "Marksman",
+    "kind": "Crossbowman",
     "moves": 2,
     "ranged": 31,
     "strength": 22,
     "upgrade": null,
   },
   {
-    "kind": "AssaultTrooper",
+    "kind": "Musketman",
     "moves": 2,
     "ranged": 0,
     "strength": 44,
     "upgrade": null,
   },
   {
-    "kind": "Heir",
+    "kind": "HeirToTheThrone",
     "moves": 2,
     "ranged": 0,
     "strength": 0,
@@ -17922,7 +17922,7 @@ exports[`WASM purchase behavior > Sparta unit strengths and health-weighted Army
     "upgrade": null,
   },
   {
-    "kind": "Drone",
+    "kind": "CombatDrone",
     "moves": 3,
     "ranged": 181,
     "strength": 144,
@@ -18006,7 +18006,7 @@ exports[`WASM purchase behavior > Sparta unit strengths and health-weighted Army
     "upgrade": null,
   },
   {
-    "kind": "Landship",
+    "kind": "EarlyTank",
     "moves": 3,
     "ranged": 0,
     "strength": 86,
@@ -18077,35 +18077,35 @@ exports[`WASM purchase behavior > Sparta unit strengths and health-weighted Army
     "cost": 72,
     "item": {
       "kind": "Unit",
-      "unit": "Soldier",
+      "unit": "Spearman",
     },
   },
   {
     "cost": 118,
     "item": {
       "kind": "Unit",
-      "unit": "Ranger",
+      "unit": "Archer",
     },
   },
   {
     "cost": 136,
     "item": {
       "kind": "Unit",
-      "unit": "Trooper",
+      "unit": "Pikeman",
     },
   },
   {
     "cost": 192,
     "item": {
       "kind": "Unit",
-      "unit": "Marksman",
+      "unit": "Crossbowman",
     },
   },
   {
     "cost": 189,
     "item": {
       "kind": "Unit",
-      "unit": "AssaultTrooper",
+      "unit": "Musketman",
     },
   },
   {
@@ -18182,7 +18182,7 @@ exports[`WASM purchase behavior > Sparta unit strengths and health-weighted Army
     "cost": 504,
     "item": {
       "kind": "Unit",
-      "unit": "Drone",
+      "unit": "CombatDrone",
     },
   },
   {
@@ -18252,7 +18252,7 @@ exports[`WASM purchase behavior > Sparta unit strengths and health-weighted Army
     "cost": 396,
     "item": {
       "kind": "Unit",
-      "unit": "Landship",
+      "unit": "EarlyTank",
     },
   },
   {
@@ -18584,42 +18584,42 @@ exports[`WASM purchase behavior > Switzerland unit strengths and health-weighted
     "upgrade": null,
   },
   {
-    "kind": "Soldier",
+    "kind": "Spearman",
     "moves": 2,
     "ranged": 0,
     "strength": 20,
     "upgrade": null,
   },
   {
-    "kind": "Ranger",
+    "kind": "Archer",
     "moves": 2,
     "ranged": 15,
     "strength": 8,
     "upgrade": null,
   },
   {
-    "kind": "Trooper",
+    "kind": "Pikeman",
     "moves": 2,
     "ranged": 0,
     "strength": 32,
     "upgrade": null,
   },
   {
-    "kind": "Marksman",
+    "kind": "Crossbowman",
     "moves": 2,
     "ranged": 31,
     "strength": 22,
     "upgrade": null,
   },
   {
-    "kind": "AssaultTrooper",
+    "kind": "Musketman",
     "moves": 2,
     "ranged": 0,
     "strength": 44,
     "upgrade": null,
   },
   {
-    "kind": "Heir",
+    "kind": "HeirToTheThrone",
     "moves": 2,
     "ranged": 0,
     "strength": 0,
@@ -18696,7 +18696,7 @@ exports[`WASM purchase behavior > Switzerland unit strengths and health-weighted
     "upgrade": null,
   },
   {
-    "kind": "Drone",
+    "kind": "CombatDrone",
     "moves": 3,
     "ranged": 181,
     "strength": 144,
@@ -18780,7 +18780,7 @@ exports[`WASM purchase behavior > Switzerland unit strengths and health-weighted
     "upgrade": null,
   },
   {
-    "kind": "Landship",
+    "kind": "EarlyTank",
     "moves": 3,
     "ranged": 0,
     "strength": 86,
@@ -18851,35 +18851,35 @@ exports[`WASM purchase behavior > Switzerland unit strengths and health-weighted
     "cost": 72,
     "item": {
       "kind": "Unit",
-      "unit": "Soldier",
+      "unit": "Spearman",
     },
   },
   {
     "cost": 118,
     "item": {
       "kind": "Unit",
-      "unit": "Ranger",
+      "unit": "Archer",
     },
   },
   {
     "cost": 136,
     "item": {
       "kind": "Unit",
-      "unit": "Trooper",
+      "unit": "Pikeman",
     },
   },
   {
     "cost": 192,
     "item": {
       "kind": "Unit",
-      "unit": "Marksman",
+      "unit": "Crossbowman",
     },
   },
   {
     "cost": 189,
     "item": {
       "kind": "Unit",
-      "unit": "AssaultTrooper",
+      "unit": "Musketman",
     },
   },
   {
@@ -18956,7 +18956,7 @@ exports[`WASM purchase behavior > Switzerland unit strengths and health-weighted
     "cost": 504,
     "item": {
       "kind": "Unit",
-      "unit": "Drone",
+      "unit": "CombatDrone",
     },
   },
   {
@@ -19026,7 +19026,7 @@ exports[`WASM purchase behavior > Switzerland unit strengths and health-weighted
     "cost": 396,
     "item": {
       "kind": "Unit",
-      "unit": "Landship",
+      "unit": "EarlyTank",
     },
   },
   {
@@ -19501,7 +19501,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for India
   {
     "item": {
       "kind": "Unit",
-      "unit": "Soldier",
+      "unit": "Spearman",
     },
     "upkeep": {
       "free": true,
@@ -19513,7 +19513,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for India
   {
     "item": {
       "kind": "Unit",
-      "unit": "Ranger",
+      "unit": "Archer",
     },
     "upkeep": {
       "free": true,
@@ -19525,7 +19525,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for India
   {
     "item": {
       "kind": "Unit",
-      "unit": "Trooper",
+      "unit": "Pikeman",
     },
     "upkeep": {
       "free": true,
@@ -19537,7 +19537,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for India
   {
     "item": {
       "kind": "Unit",
-      "unit": "Marksman",
+      "unit": "Crossbowman",
     },
     "upkeep": {
       "free": true,
@@ -19549,7 +19549,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for India
   {
     "item": {
       "kind": "Unit",
-      "unit": "AssaultTrooper",
+      "unit": "Musketman",
     },
     "upkeep": {
       "free": true,
@@ -19705,7 +19705,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for India
   {
     "item": {
       "kind": "Unit",
-      "unit": "Landship",
+      "unit": "EarlyTank",
     },
     "upkeep": {
       "free": true,
@@ -19745,7 +19745,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for India
   {
     "item": {
       "kind": "Unit",
-      "unit": "Soldier",
+      "unit": "Spearman",
     },
     "upkeep": {
       "free": true,
@@ -19757,7 +19757,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for India
   {
     "item": {
       "kind": "Unit",
-      "unit": "Ranger",
+      "unit": "Archer",
     },
     "upkeep": {
       "free": true,
@@ -19769,7 +19769,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for India
   {
     "item": {
       "kind": "Unit",
-      "unit": "Trooper",
+      "unit": "Pikeman",
     },
     "upkeep": {
       "free": true,
@@ -19781,7 +19781,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for India
   {
     "item": {
       "kind": "Unit",
-      "unit": "Marksman",
+      "unit": "Crossbowman",
     },
     "upkeep": {
       "free": true,
@@ -19793,7 +19793,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for India
   {
     "item": {
       "kind": "Unit",
-      "unit": "AssaultTrooper",
+      "unit": "Musketman",
     },
     "upkeep": {
       "free": true,
@@ -19949,7 +19949,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for India
   {
     "item": {
       "kind": "Unit",
-      "unit": "Landship",
+      "unit": "EarlyTank",
     },
     "upkeep": {
       "free": true,
@@ -19989,7 +19989,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for India
   {
     "item": {
       "kind": "Unit",
-      "unit": "Soldier",
+      "unit": "Spearman",
     },
     "upkeep": {
       "free": false,
@@ -20001,7 +20001,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for India
   {
     "item": {
       "kind": "Unit",
-      "unit": "Ranger",
+      "unit": "Archer",
     },
     "upkeep": {
       "free": false,
@@ -20013,7 +20013,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for India
   {
     "item": {
       "kind": "Unit",
-      "unit": "Trooper",
+      "unit": "Pikeman",
     },
     "upkeep": {
       "free": false,
@@ -20025,7 +20025,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for India
   {
     "item": {
       "kind": "Unit",
-      "unit": "Marksman",
+      "unit": "Crossbowman",
     },
     "upkeep": {
       "free": false,
@@ -20037,7 +20037,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for India
   {
     "item": {
       "kind": "Unit",
-      "unit": "AssaultTrooper",
+      "unit": "Musketman",
     },
     "upkeep": {
       "free": false,
@@ -20193,7 +20193,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for India
   {
     "item": {
       "kind": "Unit",
-      "unit": "Landship",
+      "unit": "EarlyTank",
     },
     "upkeep": {
       "free": false,
@@ -20233,7 +20233,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for India
   {
     "item": {
       "kind": "Unit",
-      "unit": "Soldier",
+      "unit": "Spearman",
     },
     "upkeep": {
       "free": false,
@@ -20245,7 +20245,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for India
   {
     "item": {
       "kind": "Unit",
-      "unit": "Ranger",
+      "unit": "Archer",
     },
     "upkeep": {
       "free": false,
@@ -20257,7 +20257,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for India
   {
     "item": {
       "kind": "Unit",
-      "unit": "Trooper",
+      "unit": "Pikeman",
     },
     "upkeep": {
       "free": false,
@@ -20269,7 +20269,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for India
   {
     "item": {
       "kind": "Unit",
-      "unit": "Marksman",
+      "unit": "Crossbowman",
     },
     "upkeep": {
       "free": false,
@@ -20281,7 +20281,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for India
   {
     "item": {
       "kind": "Unit",
-      "unit": "AssaultTrooper",
+      "unit": "Musketman",
     },
     "upkeep": {
       "free": false,
@@ -20437,7 +20437,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for India
   {
     "item": {
       "kind": "Unit",
-      "unit": "Landship",
+      "unit": "EarlyTank",
     },
     "upkeep": {
       "free": false,
@@ -20477,7 +20477,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for Switz
   {
     "item": {
       "kind": "Unit",
-      "unit": "Soldier",
+      "unit": "Spearman",
     },
     "upkeep": {
       "free": true,
@@ -20489,7 +20489,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for Switz
   {
     "item": {
       "kind": "Unit",
-      "unit": "Ranger",
+      "unit": "Archer",
     },
     "upkeep": {
       "free": true,
@@ -20501,7 +20501,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for Switz
   {
     "item": {
       "kind": "Unit",
-      "unit": "Trooper",
+      "unit": "Pikeman",
     },
     "upkeep": {
       "free": true,
@@ -20513,7 +20513,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for Switz
   {
     "item": {
       "kind": "Unit",
-      "unit": "Marksman",
+      "unit": "Crossbowman",
     },
     "upkeep": {
       "free": true,
@@ -20525,7 +20525,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for Switz
   {
     "item": {
       "kind": "Unit",
-      "unit": "AssaultTrooper",
+      "unit": "Musketman",
     },
     "upkeep": {
       "free": true,
@@ -20681,7 +20681,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for Switz
   {
     "item": {
       "kind": "Unit",
-      "unit": "Landship",
+      "unit": "EarlyTank",
     },
     "upkeep": {
       "free": true,
@@ -20721,7 +20721,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for Switz
   {
     "item": {
       "kind": "Unit",
-      "unit": "Soldier",
+      "unit": "Spearman",
     },
     "upkeep": {
       "free": true,
@@ -20733,7 +20733,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for Switz
   {
     "item": {
       "kind": "Unit",
-      "unit": "Ranger",
+      "unit": "Archer",
     },
     "upkeep": {
       "free": true,
@@ -20745,7 +20745,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for Switz
   {
     "item": {
       "kind": "Unit",
-      "unit": "Trooper",
+      "unit": "Pikeman",
     },
     "upkeep": {
       "free": true,
@@ -20757,7 +20757,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for Switz
   {
     "item": {
       "kind": "Unit",
-      "unit": "Marksman",
+      "unit": "Crossbowman",
     },
     "upkeep": {
       "free": true,
@@ -20769,7 +20769,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for Switz
   {
     "item": {
       "kind": "Unit",
-      "unit": "AssaultTrooper",
+      "unit": "Musketman",
     },
     "upkeep": {
       "free": true,
@@ -20925,7 +20925,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for Switz
   {
     "item": {
       "kind": "Unit",
-      "unit": "Landship",
+      "unit": "EarlyTank",
     },
     "upkeep": {
       "free": true,
@@ -20965,7 +20965,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for Switz
   {
     "item": {
       "kind": "Unit",
-      "unit": "Soldier",
+      "unit": "Spearman",
     },
     "upkeep": {
       "free": false,
@@ -20977,7 +20977,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for Switz
   {
     "item": {
       "kind": "Unit",
-      "unit": "Ranger",
+      "unit": "Archer",
     },
     "upkeep": {
       "free": false,
@@ -20989,7 +20989,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for Switz
   {
     "item": {
       "kind": "Unit",
-      "unit": "Trooper",
+      "unit": "Pikeman",
     },
     "upkeep": {
       "free": false,
@@ -21001,7 +21001,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for Switz
   {
     "item": {
       "kind": "Unit",
-      "unit": "Marksman",
+      "unit": "Crossbowman",
     },
     "upkeep": {
       "free": false,
@@ -21013,7 +21013,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for Switz
   {
     "item": {
       "kind": "Unit",
-      "unit": "AssaultTrooper",
+      "unit": "Musketman",
     },
     "upkeep": {
       "free": false,
@@ -21169,7 +21169,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for Switz
   {
     "item": {
       "kind": "Unit",
-      "unit": "Landship",
+      "unit": "EarlyTank",
     },
     "upkeep": {
       "free": false,
@@ -21209,7 +21209,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for Switz
   {
     "item": {
       "kind": "Unit",
-      "unit": "Soldier",
+      "unit": "Spearman",
     },
     "upkeep": {
       "free": false,
@@ -21221,7 +21221,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for Switz
   {
     "item": {
       "kind": "Unit",
-      "unit": "Ranger",
+      "unit": "Archer",
     },
     "upkeep": {
       "free": false,
@@ -21233,7 +21233,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for Switz
   {
     "item": {
       "kind": "Unit",
-      "unit": "Trooper",
+      "unit": "Pikeman",
     },
     "upkeep": {
       "free": false,
@@ -21245,7 +21245,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for Switz
   {
     "item": {
       "kind": "Unit",
-      "unit": "Marksman",
+      "unit": "Crossbowman",
     },
     "upkeep": {
       "free": false,
@@ -21257,7 +21257,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for Switz
   {
     "item": {
       "kind": "Unit",
-      "unit": "AssaultTrooper",
+      "unit": "Musketman",
     },
     "upkeep": {
       "free": false,
@@ -21413,7 +21413,7 @@ exports[`WASM purchase behavior > unit card upkeep previews match WASM for Switz
   {
     "item": {
       "kind": "Unit",
-      "unit": "Landship",
+      "unit": "EarlyTank",
     },
     "upkeep": {
       "free": false,

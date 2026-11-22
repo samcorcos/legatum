@@ -197,7 +197,7 @@ struct Metrics {
     peace_turn: BTreeMap<(u8, u8), u32>,
     /// Turn -> every living empire's Iron and Coal supply, what uses it, and its units.
     strategic: BTreeMap<u32, Value>,
-    /// Per player: [Troopers completed, Military Engineers completed] over the whole game.
+    /// Per player: [Pikemen completed, Military Engineers completed] over the whole game.
     strategic_built: BTreeMap<u8, [i64; 2]>,
     /// Per AI: reached Flight, Fighters completed (including buys), Bomber strikes intercepted.
     air: BTreeMap<u8, AirMetrics>,
@@ -589,7 +589,7 @@ fn strategic_standings(state: &legatum_core::GameState) -> Value {
                 "iron_used": legatum_core::resources::in_use(state, p.id, Resource::Iron),
                 "coal": legatum_core::resources::supplied(state, p.id, Resource::Coal),
                 "coal_used": legatum_core::resources::in_use(state, p.id, Resource::Coal),
-                "troopers": count(&[UnitKind::Trooper]),
+                "troopers": count(&[UnitKind::Pikeman]),
                 "siege_units": state.units.values().filter(|u| u.owner == p.id && u.siege).count(),
                 "military": state.units.values().filter(|u| u.owner == p.id && class_key(u.kind).is_some()).count(),
             })
@@ -920,7 +920,7 @@ fn play(
                         d.options.iter().any(|o| {
                             o.item
                                 == legatum_core::ProductionItem::Building {
-                                    building: legatum_core::BuildingKind::InferenceCore,
+                                    building: legatum_core::BuildingKind::ResearchLab,
                                 }
                                 && o.supply_need == Some(oil)
                         })
@@ -1192,7 +1192,7 @@ fn play(
             } = event
             {
                 let row = metrics.strategic_built.entry(owner.0).or_default();
-                if *unit == legatum_core::UnitKind::Trooper {
+                if *unit == legatum_core::UnitKind::Pikeman {
                     row[0] += 1;
                 }
             }

@@ -35,10 +35,10 @@ export function lastBridgeFixture() {
   const [se, sw] = [neighbors(c).find((h) => h.r === c.r + 1 && h.q === c.q)!, neighbors(c).find((h) => h.r === c.r + 1 && h.q === c.q - 1)!];
   const e = neighbors(c).find((h) => h.r === c.r && h.q === c.q + 1)!;
   const right: Hex = { q: se.q + 1, r: se.r };
-  const units = [sw, se, right].map((h) => spawnUnit(f, 0, 'Soldier', h, false));
+  const units = [sw, se, right].map((h) => spawnUnit(f, 0, 'Spearman', h, false));
   // The pass: a parked Soldier at its mouth and another behind it.
-  const parked = spawnUnit(f, 0, 'Soldier', fromOffset(15, 10), false);
-  const behind = spawnUnit(f, 0, 'Soldier', fromOffset(14, 10), false);
+  const parked = spawnUnit(f, 0, 'Spearman', fromOffset(15, 10), false);
+  const behind = spawnUnit(f, 0, 'Spearman', fromOffset(14, 10), false);
   refreshVision(f);
   return {
     fixture: f, city: city.id, cityPos: c, free: e,

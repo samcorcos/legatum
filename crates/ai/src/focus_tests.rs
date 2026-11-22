@@ -29,15 +29,15 @@ fn shots(orders: &[Order]) -> Vec<Hex> {
         .collect()
 }
 
-/// Two Rangers within range of two wounded Soldiers: one shot wounds, two kill.
+/// Two Archers within range of two wounded Spearmen: one shot wounds, two kill.
 fn two_targets() -> PlayerView {
     ViewBuilder::new(20, 12)
         .city(1, ME, Hex::new(2, 6), 3)
         .city(2, ENEMY, Hex::new(18, 6), 3)
-        .unit(10, ME, UnitKind::Ranger, Hex::new(8, 5))
-        .unit(11, ME, UnitKind::Ranger, Hex::new(8, 7))
-        .unit_hp(20, ENEMY, UnitKind::Soldier, Hex::new(10, 5), 45)
-        .unit_hp(21, ENEMY, UnitKind::Soldier, Hex::new(10, 7), 45)
+        .unit(10, ME, UnitKind::Archer, Hex::new(8, 5))
+        .unit(11, ME, UnitKind::Archer, Hex::new(8, 7))
+        .unit_hp(20, ENEMY, UnitKind::Spearman, Hex::new(10, 5), 45)
+        .unit_hp(21, ENEMY, UnitKind::Spearman, Hex::new(10, 7), 45)
         .build()
 }
 
@@ -68,12 +68,12 @@ fn focus_fire_puts_both_shots_on_one_target_when_together_they_kill() {
 
 #[test]
 fn focus_fire_leaves_a_hopeless_target_to_the_ordinary_passes() {
-    // One Ranger against a full-HP Soldier: no kill is possible, so no plan pays.
+    // One Archer against a full-HP Spearman: no kill is possible, so no plan pays.
     let v = ViewBuilder::new(20, 12)
         .city(1, ME, Hex::new(2, 6), 3)
         .city(2, ENEMY, Hex::new(18, 6), 3)
-        .unit(10, ME, UnitKind::Ranger, Hex::new(8, 5))
-        .unit(20, ENEMY, UnitKind::Soldier, Hex::new(10, 5))
+        .unit(10, ME, UnitKind::Archer, Hex::new(8, 5))
+        .unit(20, ENEMY, UnitKind::Spearman, Hex::new(10, 5))
         .build();
     let a = army(&v);
     let mut p = planner(&v, 100, 0);
@@ -83,7 +83,7 @@ fn focus_fire_leaves_a_hopeless_target_to_the_ordinary_passes() {
 
 #[test]
 fn a_lone_straggler_stops_short_of_the_enemy_but_a_group_goes_on() {
-    // A wounded Soldier walking alone next to three enemy Soldiers stops; with two friends
+    // A wounded Spearman walking alone next to three enemy Spearmen stops; with two friends
     // ending beside it the fire is shared and it goes on.
     let enemies = [
         (Hex::new(12, 5), 30),
@@ -94,17 +94,17 @@ fn a_lone_straggler_stops_short_of_the_enemy_but_a_group_goes_on() {
         let mut b = ViewBuilder::new(20, 12)
             .city(1, ME, Hex::new(2, 6), 3)
             .city(2, ENEMY, Hex::new(18, 6), 3)
-            .unit_hp(10, ME, UnitKind::Soldier, Hex::new(8, 6), 70);
+            .unit_hp(10, ME, UnitKind::Spearman, Hex::new(8, 6), 70);
         if friends {
-            b = b.unit(11, ME, UnitKind::Soldier, Hex::new(10, 5)).unit(
+            b = b.unit(11, ME, UnitKind::Spearman, Hex::new(10, 5)).unit(
                 12,
                 ME,
-                UnitKind::Soldier,
+                UnitKind::Spearman,
                 Hex::new(10, 7),
             );
         }
         for (h, id) in enemies {
-            b = b.unit(id, ENEMY, UnitKind::Soldier, h);
+            b = b.unit(id, ENEMY, UnitKind::Spearman, h);
         }
         b.build()
     };

@@ -34,25 +34,25 @@ describe('constructed wonder landmarks', () => {
   it('draws each public wonder at its stored tile, including a rival holder', () => {
     const a = { q: 3, r: 4 }, b = { q: 6, r: 5 };
     const sites = [
-      { tile: a, building: 'RelayUplink' as const, owner: 1, of: 0 },
-      { tile: b, building: 'CourierHall' as const, owner: 2, of: 0 },
+      { tile: a, building: 'GreatLibrary' as const, owner: 1, of: 0 },
+      { tile: b, building: 'YamRelayStation' as const, owner: 2, of: 0 },
     ];
     expect(landmarksOf(view(sites))).toMatchObject([
-      { building: 'RelayUplink', owner: 1, tile: tileIndex(a, W, H) },
-      { building: 'CourierHall', owner: 2, tile: tileIndex(b, W, H) },
+      { building: 'GreatLibrary', owner: 1, tile: tileIndex(a, W, H) },
+      { building: 'YamRelayStation', owner: 2, tile: tileIndex(b, W, H) },
     ]);
     expect(landmarksOf(view([]))).toEqual([]);
   });
 
   it('uses the tile record under fog without relying on private city detail', () => {
     const tile = { q: 4, r: 4 };
-    const v = view([{ tile, building: 'RelayUplink', owner: 1, of: 0 }]);
+    const v = view([{ tile, building: 'GreatLibrary', owner: 1, of: 0 }]);
     expect(v.tiles[tileIndex(tile, W, H)].visible).toBe(false);
-    expect(landmarksOf(v)).toMatchObject([{ city: 3, owner: 1, building: 'RelayUplink', hex: tile }]);
+    expect(landmarksOf(v)).toMatchObject([{ city: 3, owner: 1, building: 'GreatLibrary', hex: tile }]);
   });
 
   it('has painted art for every world wonder and the Yam Relay Station, so no stand-in is drawn', () => {
-    for (const building of [...GREAT_WORKS, 'CourierHall'] as const) {
+    for (const building of [...GREAT_WORKS, 'YamRelayStation'] as const) {
       for (const size of [64, 128, 256] as const) {
         expect(String(itemArtUrl({ kind: 'Building', building }, undefined, size)), `${building} ${size}`).toContain(`building-${building.toLowerCase()}-${size}`);
       }
@@ -83,7 +83,7 @@ describe('constructed wonder landmarks', () => {
 describe('landmark map art and card art', () => {
   // The map keeps the palette-graded painting; cards use the ungraded copy (tools/art/card-grade.py, 2026-11-22).
   it('the map draws the graded copy, the cards the unlock copy', () => {
-    for (const building of ['Pyramids', 'HagiaSophia', 'EiffelTower', 'IterReactor', 'RelayUplink', 'WorldExchange', 'PlanetaryFoundry'] as BuildingKind[]) {
+    for (const building of ['Pyramids', 'HagiaSophia', 'EiffelTower', 'IterFusionReactor', 'GreatLibrary', 'GrandBazaar', 'RoyalArsenal'] as BuildingKind[]) {
       const map = landmarkArtUrl(building, undefined);
       const card = itemArtUrl({ kind: 'Building', building }, undefined, 256);
       expect(map, building).toMatch(/assets\/landmarks\//);
@@ -91,6 +91,6 @@ describe('landmark map art and card art', () => {
     }
   });
   it('a landmark with no graded copy falls back to its unlock art', () => {
-    expect(landmarkArtUrl('CourierHall' as BuildingKind, undefined)).toBe(itemArtUrl({ kind: 'Building', building: 'CourierHall' as BuildingKind }, undefined, 256));
+    expect(landmarkArtUrl('YamRelayStation' as BuildingKind, undefined)).toBe(itemArtUrl({ kind: 'Building', building: 'YamRelayStation' as BuildingKind }, undefined, 256));
   });
 });

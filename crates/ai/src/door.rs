@@ -829,14 +829,14 @@ mod siege_deadline_tests {
             matches!(
                 o.item,
                 ProductionItem::Unit {
-                    unit: UnitKind::Soldier | UnitKind::Ranger
+                    unit: UnitKind::Spearman | UnitKind::Archer
                 }
             )
         });
         for o in &mut detail.options {
             o.turns = if o.item
                 == (ProductionItem::Unit {
-                    unit: UnitKind::Soldier,
+                    unit: UnitKind::Spearman,
                 }) {
                 1
             } else {
@@ -868,7 +868,7 @@ mod siege_deadline_tests {
                 assert_eq!(
                     started,
                     vec![ProductionItem::Unit {
-                        unit: UnitKind::Soldier
+                        unit: UnitKind::Spearman
                     }]
                 );
             } else {

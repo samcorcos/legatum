@@ -33,11 +33,11 @@ export function heirState(viewer: 'rival' | 'own'): HeirState {
   for (let row = 2; row <= 13; row++) for (let col = 1; col <= 28; col++) s.terrain[row * s.width + col] = (col + row) % 5 === 0 ? 'Forest' : (col * row) % 7 === 0 ? 'Grassland' : 'Plains';
   for (const r of s.diplomacy?.relations ?? []) r.state = 'Peace';
   meetAll(s);
-  const heir = { kind: 'Unit' as const, unit: 'Heir' as const };
+  const heir = { kind: 'Unit' as const, unit: 'HeirToTheThrone' as const };
   const mine = city(s, 0, 5, 7, viewer === 'own' ? 'Constantinople' : 'Sparta', viewer === 'own' ? { producing: heir, prod: 1000 } : {});
   const byz = viewer === 'own' ? mine : city(s, 1, 24, 7, 'Constantinople', { producing: heir, prod: 1000 });
   const other = city(s, 2, 14, 12, 'Kyoto');
-  if (viewer === 'rival') spawnUnit(s, 0, 'Soldier', fromOffset(6, 7), false);
+  if (viewer === 'rival') spawnUnit(s, 0, 'Spearman', fromOffset(6, 7), false);
   // Only your own land is known: the rest stays fog or unexplored.
   for (const p of s.players) p.explored.fill(0);
   refreshVision(s);

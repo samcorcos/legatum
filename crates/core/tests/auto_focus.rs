@@ -61,7 +61,7 @@ fn switching_builds_changes_the_focus_label_not_the_worked_tiles_and_previews_wi
     let hill = pos.neighbor(0);
     s.map.get_mut(hill).unwrap().terrain = Terrain::Hills;
     let before = s.clone();
-    let preview = economy::city_yields_for(&s, &s.cities[&id], Some(unit(UnitKind::Soldier)));
+    let preview = economy::city_yields_for(&s, &s.cities[&id], Some(unit(UnitKind::Spearman)));
     assert_eq!(s, before, "preview is pure");
     // Population is territory: a city works every owned tile in range, whatever it builds.
     assert_eq!(preview.worked.len(), 6);
@@ -80,7 +80,7 @@ fn switching_builds_changes_the_focus_label_not_the_worked_tiles_and_previews_wi
     let option = detail
         .options
         .iter()
-        .find(|o| o.item == unit(UnitKind::Soldier))
+        .find(|o| o.item == unit(UnitKind::Spearman))
         .unwrap();
     assert_eq!(option.yields, preview);
     assert_eq!(
@@ -88,7 +88,7 @@ fn switching_builds_changes_the_focus_label_not_the_worked_tiles_and_previews_wi
         (option.cost + preview.total.production - 1) / preview.total.production
     );
     // A population-1 city can't choose a Settler (it needs population 2).
-    for kind in [UnitKind::Soldier, UnitKind::Scout] {
+    for kind in [UnitKind::Spearman, UnitKind::Scout] {
         cities::apply_city_orders(
             &mut s,
             P,
@@ -104,7 +104,7 @@ fn switching_builds_changes_the_focus_label_not_the_worked_tiles_and_previews_wi
             economy::city_yields_for(&s, &s.cities[&id], Some(unit(kind)))
         );
         assert_eq!(actual.worked, preview.worked);
-        if kind == UnitKind::Soldier {
+        if kind == UnitKind::Spearman {
             assert_eq!(actual, preview);
         } else {
             assert_eq!(actual.focus, CityFocus::Balanced);
@@ -120,7 +120,7 @@ fn growth_gate_and_completed_build_rederive_priorities() {
     assert_eq!(economy::auto_focus(c, c.producing), CityFocus::Growth);
     c.population = 2;
     assert_eq!(economy::auto_focus(c, c.producing), CityFocus::Balanced);
-    c.producing = Some(unit(UnitKind::Soldier));
+    c.producing = Some(unit(UnitKind::Spearman));
     c.production_stored = 1_000;
     cities::process_cities(&mut s, &mut vec![]);
     assert_eq!(s.cities[&id].producing, None);

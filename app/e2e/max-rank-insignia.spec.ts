@@ -37,7 +37,7 @@ function staged(faction: Faction, xp: number) {
   const scene = mapArtFixture();
   scene.fixture.players[0].faction = faction;
   scene.fixture.setup.players[0].faction = faction;
-  const veteran = scene.fixture.units.find((u) => u.owner === 0 && u.kind === 'Soldier' && u.pos.q === scene.parade[0].q && u.pos.r === scene.parade[0].r);
+  const veteran = scene.fixture.units.find((u) => u.owner === 0 && u.kind === 'Spearman' && u.pos.q === scene.parade[0].q && u.pos.r === scene.parade[0].r);
   if (!veteran) throw new Error('Art fixture has no own parade soldier');
   veteran.kind = 'FieldCannon';
   veteran.xp = xp;

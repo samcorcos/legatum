@@ -11,10 +11,10 @@ use crate::{resolve_turn, validate_orders};
 const P0: PlayerId = PlayerId(0);
 const P1: PlayerId = PlayerId(1);
 const TROOPER: ProductionItem = ProductionItem::Unit {
-    unit: UnitKind::Trooper,
+    unit: UnitKind::Pikeman,
 };
 const SOLDIER: ProductionItem = ProductionItem::Unit {
-    unit: UnitKind::Soldier,
+    unit: UnitKind::Spearman,
 };
 const WALLS: ProductionItem = ProductionItem::Building {
     building: BuildingKind::Walls,
@@ -71,8 +71,8 @@ fn give(s: &mut GameState, city: CityId, building: BuildingKind) {
 fn direct_supply_counts_match_the_deposit_and_user_lists() {
     let (mut state, city, iron) = iron_game();
     state.map.get_mut(iron).unwrap().improved = true;
-    give(&mut state, city, BuildingKind::MachineShop);
-    spawn_unit(&mut state, P0, UnitKind::Trooper, at(5, 4));
+    give(&mut state, city, BuildingKind::Forge);
+    spawn_unit(&mut state, P0, UnitKind::Pikeman, at(5, 4));
     for player in [P0, P1] {
         for resource in Resource::ALL {
             let from_deposits: i32 = deposits(&state, player)
@@ -90,8 +90,8 @@ fn direct_supply_counts_match_the_deposit_and_user_lists() {
     }
 }
 
-const FORGE: BuildingKind = BuildingKind::MachineShop;
-const FACTORY: BuildingKind = BuildingKind::Autoworks;
+const FORGE: BuildingKind = BuildingKind::Forge;
+const FACTORY: BuildingKind = BuildingKind::Factory;
 
 #[test]
 fn supply_needs_the_tech_and_the_border_and_a_mine_adds_one() {
@@ -126,8 +126,8 @@ fn supply_needs_the_tech_and_the_border_and_a_mine_adds_one() {
 #[test]
 fn a_pikeman_starts_only_with_spare_iron_and_says_why_not() {
     let (mut s, id, _) = swiss_iron_game();
-    spawn_unit(&mut s, P0, UnitKind::Trooper, at(5, 4));
-    spawn_unit(&mut s, P0, UnitKind::Trooper, at(4, 5));
+    spawn_unit(&mut s, P0, UnitKind::Pikeman, at(5, 4));
+    spawn_unit(&mut s, P0, UnitKind::Pikeman, at(4, 5));
     let reason = start_blocker(&s, &s.cities[&id], TROOPER).unwrap();
     assert_eq!(
         reason,
@@ -289,7 +289,7 @@ fn short_supply_idles_the_newest_users_until_it_returns() {
     );
     // A turn later b gets a Forge and a Pikeman stands: three users for 2 Iron.
     give(&mut s, b, FORGE);
-    let pike = spawn_unit(&mut s, P0, UnitKind::Trooper, at(12, 11));
+    let pike = spawn_unit(&mut s, P0, UnitKind::Pikeman, at(12, 11));
     let (s, events) = resolve_turn(&s, &BTreeMap::new());
     assert!(events.contains(&Event::SupplyShortage {
         player: P0,
@@ -390,7 +390,7 @@ fn an_idle_forge_does_not_count_toward_a_building_objective() {
 #[test]
 fn an_unsupplied_unit_fights_a_quarter_weaker() {
     let (mut s, _, iron) = iron_game();
-    let pike = spawn_unit(&mut s, P0, UnitKind::Trooper, at(5, 4));
+    let pike = spawn_unit(&mut s, P0, UnitKind::Pikeman, at(5, 4));
     s.map.get_mut(iron).unwrap().resource = None;
     let (s, _) = resolve_turn(&s, &BTreeMap::new());
     assert_eq!(unit_unsupplied(&s, &s.units[&pike]), Some(Resource::Iron));
@@ -398,19 +398,19 @@ fn an_unsupplied_unit_fights_a_quarter_weaker() {
     add_unsupplied(
         &mut b,
         Faction::Byzantium,
-        UnitKind::Trooper,
+        UnitKind::Pikeman,
         false,
         Some(Resource::Iron),
     );
-    let base = data::unit_stats_for(Faction::Byzantium, UnitKind::Trooper).strength;
+    let base = data::unit_stats_for(Faction::Byzantium, UnitKind::Pikeman).strength;
     assert_eq!(b.parts, vec![("No Iron supply".to_string(), -(base / 4))]);
 }
 
 #[test]
 fn a_queued_pikeman_waits_for_supply_and_starts_when_it_is_spare() {
     let (mut s, id, iron) = swiss_iron_game();
-    spawn_unit(&mut s, P0, UnitKind::Trooper, at(5, 4));
-    spawn_unit(&mut s, P0, UnitKind::Trooper, at(4, 5));
+    spawn_unit(&mut s, P0, UnitKind::Pikeman, at(5, 4));
+    spawn_unit(&mut s, P0, UnitKind::Pikeman, at(4, 5));
     // Queuing behind other work is allowed even with no Iron to spare yet.
     let os = orders(
         P0,
@@ -440,8 +440,8 @@ fn a_queued_pikeman_waits_for_supply_and_starts_when_it_is_spare() {
 #[test]
 fn buying_a_pikeman_needs_spare_iron() {
     let (mut s, id, _) = swiss_iron_game();
-    spawn_unit(&mut s, P0, UnitKind::Trooper, at(5, 4));
-    spawn_unit(&mut s, P0, UnitKind::Trooper, at(4, 5));
+    spawn_unit(&mut s, P0, UnitKind::Pikeman, at(5, 4));
+    spawn_unit(&mut s, P0, UnitKind::Pikeman, at(4, 5));
     let reason = crate::economy::buy_blocker(&s, &s.cities[&id], TROOPER).unwrap();
     assert!(reason.starts_with("No Iron to spare"), "{reason}");
     s.map.get_mut(at(6, 5)).unwrap().improved = true;
@@ -460,12 +460,12 @@ fn buying_a_pikeman_needs_spare_iron() {
 #[test]
 fn upgrades_into_classical_units_take_iron_supply_in_list_order() {
     let (mut s, id, _) = swiss_iron_game();
-    // Keep the line at its Classical form; Feudalism would make one order reach Trooper.
+    // Keep the line at its Classical form; Feudalism would make one order reach Pikeman.
     s.player_mut(P0).techs.remove(&TechId::Feudalism);
     s.player_mut(P0).techs.insert(TechId::Mathematics);
-    let a = spawn_unit(&mut s, P0, UnitKind::Soldier, at(5, 4));
-    let b = spawn_unit(&mut s, P0, UnitKind::Soldier, at(4, 5));
-    let c = spawn_unit(&mut s, P0, UnitKind::Soldier, at(5, 6));
+    let a = spawn_unit(&mut s, P0, UnitKind::Spearman, at(5, 4));
+    let b = spawn_unit(&mut s, P0, UnitKind::Spearman, at(4, 5));
+    let c = spawn_unit(&mut s, P0, UnitKind::Spearman, at(5, 6));
     let v = player_view(&s, P0);
     let unit = v.units.iter().find(|u| u.id == a).unwrap();
     assert_eq!(unit.upgrade_need, Some(Resource::Iron));
@@ -728,15 +728,15 @@ fn placement_is_deterministic() {
 fn each_era_uses_its_own_resource() {
     use UnitKind::*;
     // Turn-1 units and civilians are free; from the Classical era on a unit uses its era's.
-    for free in [Soldier, Ranger, Horseman, Scout, Settler] {
+    for free in [Spearman, Archer, Horseman, Scout, Settler] {
         assert_eq!(unit_need(free), None, "{free:?}");
     }
     for (kind, r) in [
         (Phalangite, Resource::Iron),
         (Cataphract, Resource::Iron),
-        (Trooper, Resource::Iron),
+        (Pikeman, Resource::Iron),
         (Knight, Resource::Iron),
-        (AssaultTrooper, Resource::Niter),
+        (Musketman, Resource::Niter),
         (Arquebusier, Resource::Niter),
         (Rifleman, Resource::Coal),
         (Infantry, Resource::Oil),
@@ -744,37 +744,29 @@ fn each_era_uses_its_own_resource() {
         (Fighter, Resource::Oil),
         (Bomber, Resource::Oil),
         (HunterKiller, Resource::Silicon),
-        (Drone, Resource::Silicon),
+        (CombatDrone, Resource::Silicon),
     ] {
         assert_eq!(unit_need(kind), Some(r), "{kind:?}");
     }
     use BuildingKind::*;
     for (b, r) in [
-        (MachineShop, Resource::Iron),
-        (College, Resource::Iron),
-        (Clearinghouse, Resource::Niter),
-        (Autoworks, Resource::Coal),
-        (InferenceCore, Resource::Oil),
+        (Forge, Resource::Iron),
+        (University, Resource::Iron),
+        (Bank, Resource::Niter),
+        (Factory, Resource::Coal),
+        (ResearchLab, Resource::Oil),
     ] {
         assert_eq!(building_need(b), Some(r), "{b:?}");
     }
     for free in [
-        Granary,
-        Market,
-        Workshop,
-        Laboratory,
-        Walls,
-        Castle,
-        StarFort,
-        Hydroponics,
-        Roadworks,
+        Granary, Market, Workshop, Library, Walls, Castle, StarFort, Mill, Roadworks,
     ] {
         assert_eq!(building_need(free), None, "{free:?}");
     }
     // An upgrade into another era's resource needs that one; within Iron it needs nothing new.
-    assert_eq!(upgrade_need(Soldier), Some(Resource::Iron));
+    assert_eq!(upgrade_need(Spearman), Some(Resource::Iron));
     assert_eq!(upgrade_need(Phalangite), None);
-    assert_eq!(upgrade_need(Trooper), Some(Resource::Niter));
+    assert_eq!(upgrade_need(Pikeman), Some(Resource::Niter));
     // Copper is a visible bonus tile with no supply users.
     assert!(known_to(Resource::Copper, &BTreeSet::new()));
     assert!(!is_strategic(Resource::Copper));
@@ -788,12 +780,12 @@ fn an_upgrade_frees_its_old_resource_and_is_the_newest_user_of_the_new_one() {
     s.player_mut(P0)
         .techs
         .extend([TechId::Education, TechId::Gunpowder]);
-    let a = spawn_unit(&mut s, P0, UnitKind::Trooper, at(5, 4));
+    let a = spawn_unit(&mut s, P0, UnitKind::Pikeman, at(5, 4));
     let (s, _) = resolve_turn(&s, &orders(P0, vec![]));
     assert_eq!(in_use(&s, P0, Resource::Iron), 1);
     let since = s.player(P0).supply[0].since;
     let (s, _) = resolve_turn(&s, &orders(P0, vec![Order::UpgradeUnit { unit: a }]));
-    assert_eq!(s.units[&a].kind, UnitKind::AssaultTrooper);
+    assert_eq!(s.units[&a].kind, UnitKind::Musketman);
     assert_eq!(in_use(&s, P0, Resource::Iron), 0);
     assert_eq!(in_use(&s, P0, Resource::Niter), 1);
     let record = s.player(P0).supply[0];
@@ -809,11 +801,11 @@ fn a_market_and_bank_do_not_need_copper() {
         .extend([TechId::Currency, TechId::Gunpowder, TechId::Banking]);
     let niter = at(4, 5);
     s.map.get_mut(niter).unwrap().resource = Some(Resource::Niter);
-    give(&mut s, id, BuildingKind::Clearinghouse);
+    give(&mut s, id, BuildingKind::Bank);
     // Copper has no supply role. Niter supplies the Bank; the Market needs nothing.
     let (s, _) = resolve_turn(&s, &orders(P0, vec![]));
     let player = s.player(P0);
-    assert_eq!(idle_tier(player, id, BuildingKind::Clearinghouse), None);
+    assert_eq!(idle_tier(player, id, BuildingKind::Bank), None);
     assert_eq!(idle_tiers(player, &s.cities[&id]), vec![]);
 }
 
@@ -874,8 +866,8 @@ fn siege_game() -> (GameState, UnitId, UnitId) {
     let (mut s, _, _) = iron_game();
     s.player_mut(P0).techs.insert(TechId::Mathematics);
     assert_eq!(supplied(&s, P0, Resource::Iron), 2);
-    let a = spawn_unit(&mut s, P0, UnitKind::Soldier, at(5, 4));
-    let b = spawn_unit(&mut s, P0, UnitKind::Soldier, at(4, 5));
+    let a = spawn_unit(&mut s, P0, UnitKind::Spearman, at(5, 4));
+    let b = spawn_unit(&mut s, P0, UnitKind::Spearman, at(4, 5));
     (s, a, b)
 }
 
@@ -886,7 +878,7 @@ fn siege(unit: UnitId) -> Order {
 #[test]
 fn siege_costs_gold_and_one_iron_and_the_unit_acts_next_turn() {
     let (s, a, _) = siege_game();
-    let price = crate::rules::siege::price(&s, P0, UnitKind::Soldier).total;
+    let price = crate::rules::siege::price(&s, P0, UnitKind::Spearman).total;
     assert_eq!(
         price,
         data::SIEGE_BASE_GOLD,
@@ -913,7 +905,7 @@ fn siege_costs_gold_and_one_iron_and_the_unit_acts_next_turn() {
 #[test]
 fn siege_takes_iron_supply_in_list_order_and_refuses_the_one_that_does_not_fit() {
     let (mut s, a, b) = siege_game();
-    let c = spawn_unit(&mut s, P0, UnitKind::Soldier, at(5, 6));
+    let c = spawn_unit(&mut s, P0, UnitKind::Spearman, at(5, 6));
     let errors = validate_orders(&s, P0, &[siege(a), siege(b), siege(c)]);
     assert_eq!(errors.iter().map(|e| e.index).collect::<Vec<_>>(), vec![2]);
     assert!(errors[0].message.contains("no Iron to spare"), "{errors:?}");
@@ -926,7 +918,7 @@ fn siege_takes_iron_supply_in_list_order_and_refuses_the_one_that_does_not_fit()
 #[test]
 fn newest_siege_units_beyond_the_supply_go_idle_and_fight_weaker() {
     let (mut s, a, b) = siege_game();
-    let c = spawn_unit(&mut s, P0, UnitKind::Soldier, at(5, 6));
+    let c = spawn_unit(&mut s, P0, UnitKind::Spearman, at(5, 6));
     let mut events = Vec::new();
     // Two units use the 2 Iron from turn 5; a third arrives on turn 9 and is the newest.
     s.turn = 5;
@@ -1004,7 +996,7 @@ fn siege_is_built_in_from_the_industrial_era_never_bought_and_dropped_on_upgrade
     // it the Iron it used.
     {
         let u = s.units.get_mut(&a).unwrap();
-        u.kind = UnitKind::AssaultTrooper;
+        u.kind = UnitKind::Musketman;
         u.siege = true;
     }
     let mut events = Vec::new();
@@ -1027,15 +1019,15 @@ fn siege_is_built_in_from_the_industrial_era_never_bought_and_dropped_on_upgrade
 #[test]
 fn military_engineering_halves_the_siege_price_and_later_units_pay_more() {
     let (mut s, _, _) = siege_game();
-    let ancient = crate::rules::siege::price(&s, P0, UnitKind::Soldier).total;
+    let ancient = crate::rules::siege::price(&s, P0, UnitKind::Spearman).total;
     s.player_mut(P0).techs.insert(TechId::MilitaryEngineering);
     assert_eq!(
-        crate::rules::siege::price(&s, P0, UnitKind::Soldier).total,
+        crate::rules::siege::price(&s, P0, UnitKind::Spearman).total,
         ancient / 2
     );
     // Era-scaled on the units' own curve: about flat to the Medieval era, dearer after.
-    assert!(data::siege_gold(UnitKind::AssaultTrooper) > data::siege_gold(UnitKind::Soldier));
-    assert!(data::siege_gold(UnitKind::Infantry) > data::siege_gold(UnitKind::AssaultTrooper));
+    assert!(data::siege_gold(UnitKind::Musketman) > data::siege_gold(UnitKind::Spearman));
+    assert!(data::siege_gold(UnitKind::Infantry) > data::siege_gold(UnitKind::Musketman));
 }
 
 #[test]

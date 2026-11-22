@@ -319,13 +319,13 @@ const CITIES_FROM_ERA: u8 = 4;
 /// entrants made (`docs/sim-results/era-objectives/step1.md`).
 fn peaceful_cards(era: u8) -> [Objective; 3] {
     let (building, cities, population, tiles) = match era {
-        2 => (BuildingKind::Laboratory, 4, 50, 80),
-        3 => (BuildingKind::Laboratory, 4, 42, 62),
-        4 => (BuildingKind::College, 4, 34, 49),
-        5 => (BuildingKind::College, 3, 25, 35),
-        6 => (BuildingKind::Clearinghouse, 3, 23, 31),
-        7 => (BuildingKind::Clearinghouse, 3, 23, 31),
-        _ => (BuildingKind::InferenceCore, 3, 25, 33),
+        2 => (BuildingKind::Library, 4, 50, 80),
+        3 => (BuildingKind::Library, 4, 42, 62),
+        4 => (BuildingKind::University, 4, 34, 49),
+        5 => (BuildingKind::University, 3, 25, 35),
+        6 => (BuildingKind::Bank, 3, 23, 31),
+        7 => (BuildingKind::Bank, 3, 23, 31),
+        _ => (BuildingKind::ResearchLab, 3, 25, 33),
     };
     [
         O::Buildings { building, cities },

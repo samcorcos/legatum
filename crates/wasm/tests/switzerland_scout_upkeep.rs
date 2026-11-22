@@ -1,6 +1,6 @@
-//! Playtest 2026-10-06, from the user's own game: on turn 7 the Switzerland had 0 Gold, a Ranger,
-//! a Soldier and two Scouts (one free from a ruin), and the top bar warned that the Ranger would
-//! be disbanded. Scouts now cost no upkeep and use no free slot, so the Ranger and Soldier are
+//! Playtest 2026-10-06, from the user's own game: on turn 7 the Switzerland had 0 Gold, an Archer,
+//! a Spearman and two Scouts (one free from a ruin), and the top bar warned that the Archer would
+//! be disbanded. Scouts now cost no upkeep and use no free slot, so the Archer and Spearman are
 //! the two free units and nothing is lost. The test uses a current-rules fixture derived
 //! from the user's archived save; the original fixture remains untouched.
 use legatum_core::{Event, GameState, PlayerId, UnitKind, economy, resolve_turn};
@@ -26,8 +26,8 @@ fn the_users_switzerland_are_not_bankrupt_with_two_scouts() {
     assert_eq!(state.turn, 7);
     assert_eq!(state.player(ME).gold, 0);
     assert_eq!(count(&state, UnitKind::Scout), 2);
-    assert_eq!(count(&state, UnitKind::Soldier), 1);
-    assert_eq!(count(&state, UnitKind::Ranger), 1);
+    assert_eq!(count(&state, UnitKind::Spearman), 1);
+    assert_eq!(count(&state, UnitKind::Archer), 1);
 
     assert_eq!(
         economy::upkeep_breakdown(&state, ME).total,

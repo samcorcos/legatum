@@ -419,7 +419,7 @@ mod tests {
             }
             json!([camp])
         };
-        let threat = |unit: Value, pos: Value| json!([{"unit": unit, "owner": 1, "kind": "Soldier", "pos": pos, "seen_turn": 1}]);
+        let threat = |unit: Value, pos: Value| json!([{"unit": unit, "owner": 1, "kind": "Spearman", "pos": pos, "seen_turn": 1}]);
         vec![
             (
                 true,
@@ -568,7 +568,7 @@ mod tests {
             (
                 true,
                 "tile landmark",
-                json!({"building": "CourierHall", "city": 1, "of": 200}),
+                json!({"building": "YamRelayStation", "city": 1, "of": 200}),
                 "map/tiles/0/landmark".to_string(),
             ),
             (

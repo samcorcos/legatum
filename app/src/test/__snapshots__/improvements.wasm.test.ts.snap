@@ -2450,7 +2450,7 @@ exports[`WASM improvement behavior > buys an improvement, banks progress on a sw
     [
       {
         "kind": "Unit",
-        "unit": "Soldier",
+        "unit": "Spearman",
       },
       [],
       [
@@ -2657,7 +2657,7 @@ exports[`WASM improvement behavior > buys an improvement, banks progress on a sw
     [
       {
         "kind": "Unit",
-        "unit": "Soldier",
+        "unit": "Spearman",
       },
       [],
       [
@@ -2895,7 +2895,7 @@ exports[`WASM improvement behavior > buys an improvement, banks progress on a sw
         {
           "item": {
             "kind": "Unit",
-            "unit": "Soldier",
+            "unit": "Spearman",
           },
           "progress": 5,
         },
@@ -3102,7 +3102,7 @@ exports[`WASM improvement behavior > buys an improvement, banks progress on a sw
         {
           "item": {
             "kind": "Unit",
-            "unit": "Soldier",
+            "unit": "Spearman",
           },
           "progress": 5,
         },

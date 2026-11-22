@@ -51,7 +51,7 @@ fn a_resource_yields_nothing_until_improved() {
     assert_eq!(food(&s, id), bare + 1, "a Farm adds the Wheat bonus");
     s.player_mut(P0).techs.insert(TechId::CropRotation);
     let upgraded = food(&s, id);
-    // Intensive Cultivation upgrades the Farm by itself (+1 more Food). Hydroponics isn't built.
+    // Intensive Cultivation upgrades the Farm by itself (+1 more Food). Mill isn't built.
     assert_eq!(upgraded, bare + 2);
 }
 
@@ -256,7 +256,7 @@ fn an_improvement_banks_its_progress_like_any_build() {
     let (mut s, id) = game();
     let tile = at(6, 5);
     let soldier = ProductionItem::Unit {
-        unit: UnitKind::Soldier,
+        unit: UnitKind::Spearman,
     };
     let c = s.cities.get_mut(&id).unwrap();
     c.production_stored = 0;

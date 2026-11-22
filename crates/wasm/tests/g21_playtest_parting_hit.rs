@@ -1,7 +1,7 @@
 //! Playtest G21, from the user's own game (playtest 3, engine 29a5b2a): on turn 106 their
-//! wounded Ranger (#62, 58 HP) was ordered north to (25,16) while AI 5's adjacent Soldier (#82)
-//! attacked it. The contact pin kept the Ranger on its tile ("pinned by an enemy attack") and
-//! it ended the turn at 14 HP beside the Soldier. The fixture is the recorded state at the
+//! wounded Archer (#62, 58 HP) was ordered north to (25,16) while AI 5's adjacent Spearman (#82)
+//! attacked it. The contact pin kept the Archer on its tile ("pinned by an enemy attack") and
+//! it ended the turn at 14 HP beside the Spearman. The fixture is the recorded state at the
 //! start of turn 106 (replayed from the save's tape with the playtest-3 engine) and the
 //! recorded orders of turn 106.
 use legatum_core::events::Defender;

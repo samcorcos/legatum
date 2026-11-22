@@ -322,7 +322,7 @@ impl Planner<'_> {
                 shooter_spots.push(to);
                 if matches!(
                     u.kind,
-                    UnitKind::Artillery | UnitKind::RocketArtillery | UnitKind::Drone
+                    UnitKind::Artillery | UnitKind::RocketArtillery | UnitKind::CombatDrone
                 ) {
                     gun_spots.push(to);
                 }
@@ -571,10 +571,10 @@ mod tests {
             .city(1, ME, Hex::new(3, 8), 3)
             .city(9, ENEMY, CITY, 2)
             .walled(9)
-            .unit(1, ME, UnitKind::Ranger, Hex::new(9, 8))
-            .unit(2, ME, UnitKind::Ranger, Hex::new(9, 9))
-            .unit(3, ME, UnitKind::Soldier, Hex::new(8, 8))
-            .unit(50, ENEMY, UnitKind::Soldier, CITY)
+            .unit(1, ME, UnitKind::Archer, Hex::new(9, 8))
+            .unit(2, ME, UnitKind::Archer, Hex::new(9, 9))
+            .unit(3, ME, UnitKind::Spearman, Hex::new(8, 8))
+            .unit(50, ENEMY, UnitKind::Spearman, CITY)
             .build();
         view.diplomacy.legacy = false;
         let enemy = view.team_of(ENEMY);
@@ -759,7 +759,7 @@ mod tests {
                         Hex::new(9, 9)
                     },
                 )
-                .unit(50, ENEMY, UnitKind::Ranger, CITY)
+                .unit(50, ENEMY, UnitKind::Archer, CITY)
                 .build();
             view.diplomacy = front().diplomacy;
             for weight in [1, 50, 100] {

@@ -130,12 +130,12 @@ fn at_war_a_visible_enemy_army_closes_sites_within_the_threat_radius() {
     spawn_unit(
         &mut state,
         ENEMY,
-        UnitKind::Soldier,
+        UnitKind::Spearman,
         Hex::new(SAFE_SITE.q + 3, SAFE_SITE.r),
     );
     update_explored(&mut state);
     assert!(player_view(&state, ME).units.iter().any(|u| {
-        u.owner == ENEMY && u.kind == UnitKind::Soldier && u.pos.distance(SAFE_SITE) == 3
+        u.owner == ENEMY && u.kind == UnitKind::Spearman && u.pos.distance(SAFE_SITE) == 3
     }));
     let order = settler_order(&state, settler);
     assert_ne!(destination(&order), Some(SAFE_SITE), "{order:?}");

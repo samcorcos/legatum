@@ -27,10 +27,10 @@ function scene(c: Case) {
   const city = s.cities[0];
   city.name = 'Ajmer';
   s.units = s.units.filter((u) => u.owner !== 0 || hexEq(u.pos, city.pos));
-  if (!s.units.some((u) => hexEq(u.pos, city.pos))) spawnUnit(s, 0, 'Soldier', city.pos, false);
+  if (!s.units.some((u) => hexEq(u.pos, city.pos))) spawnUnit(s, 0, 'Spearman', city.pos, false);
   const at = spot(city.pos, c);
   s.units = s.units.filter((u) => !at || hexEq(u.pos, city.pos) || !hexEq(u.pos, at));
-  const unit = at ? spawnUnit(s, 0, 'Soldier', at, false) : null;
+  const unit = at ? spawnUnit(s, 0, 'Spearman', at, false) : null;
   refreshVision(s);
   return { s, city, unit };
 }

@@ -89,7 +89,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     // hovers show where the number comes from").
     const byzantium = researchFixture('Byzantium');
     const byzantiumCapital = byzantium.cities.find((c) => c.owner === 0 && c.isCapital)!;
-    byzantiumCapital.buildings = ['College'];
+    byzantiumCapital.buildings = ['University'];
     byzantium.players[0].techs = [...byzantium.players[0].techs, 'Writing'];
     await loadFixture(page, coreFixture(byzantium), 2);
     const science = page.locator('.science-stat');
@@ -106,7 +106,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
       const p = await context.newPage();
       const normal = researchFixture('Athens');
       const normalCapital = normal.cities.find((c) => c.owner === 0 && c.isCapital)!;
-      normalCapital.buildings = ['Laboratory']; // Athens' Listening House, by its own rename.
+      normalCapital.buildings = ['Library']; // Athens' Listening House, by its own rename.
       await loadFixture(p, coreFixture(normal), 2);
       await p.locator('.science-stat').hover();
       const normalHover = p.locator('.science-hover');

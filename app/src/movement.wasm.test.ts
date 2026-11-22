@@ -27,8 +27,8 @@ async function fixture(city = false, holding = false) {
   s.players.forEach((p: { explored: { words: number[] }; tile_memory: unknown[] }) => { p.explored.words.fill(0); p.tile_memory.fill(null); });
   const unit = (id: number, owner: number, kind: string, pos: Hex, hp = 100) => ({ id, owner, kind, pos, hp, moves_left: 2, goto: null, fortify: 0, acted: false });
   s.units = {
-    1: unit(1, 0, city ? 'Trooper' : 'Ranger', { q: 5, r: 4 }),
-    2: unit(2, city ? 1 : 0, city ? 'Soldier' : 'Ranger', holding ? middle : { q: 4, r: 5 }, city ? 10 : 100),
+    1: unit(1, 0, city ? 'Pikeman' : 'Archer', { q: 5, r: 4 }),
+    2: unit(2, city ? 1 : 0, city ? 'Spearman' : 'Archer', holding ? middle : { q: 4, r: 5 }, city ? 10 : 100),
     3: unit(3, 0, 'Settler', { q: 1, r: 1 }),
     4: unit(4, 1, 'Settler', { q: 10, r: 10 }),
   };

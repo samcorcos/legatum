@@ -188,7 +188,7 @@ exports[`eras: core behavior > Railways, Code of Laws, Printing Press and the Ca
   [
     "Writing",
     {
-      "building": "Laboratory",
+      "building": "Library",
       "kind": "Building",
     },
     70,
@@ -218,7 +218,7 @@ exports[`eras: core behavior > Railways, Code of Laws, Printing Press and the Ca
   [
     "Philosophy",
     {
-      "building": "RelayUplink",
+      "building": "GreatLibrary",
       "kind": "Building",
     },
     400,
@@ -278,7 +278,7 @@ exports[`eras: core behavior > Railways, Code of Laws, Printing Press and the Ca
   [
     "FusionPower",
     {
-      "building": "IterReactor",
+      "building": "IterFusionReactor",
       "kind": "Building",
     },
     900,
@@ -293,7 +293,7 @@ exports[`eras: core behavior > Railways, Code of Laws, Printing Press and the Ca
   [
     "Feudalism",
     {
-      "building": "Hydroponics",
+      "building": "Mill",
       "kind": "Building",
     },
     200,
@@ -308,7 +308,7 @@ exports[`eras: core behavior > Railways, Code of Laws, Printing Press and the Ca
   [
     "IronWorking",
     {
-      "building": "MachineShop",
+      "building": "Forge",
       "kind": "Building",
     },
     320,
@@ -323,7 +323,7 @@ exports[`eras: core behavior > Railways, Code of Laws, Printing Press and the Ca
   [
     "Education",
     {
-      "building": "College",
+      "building": "University",
       "kind": "Building",
     },
     240,
@@ -338,7 +338,7 @@ exports[`eras: core behavior > Railways, Code of Laws, Printing Press and the Ca
   [
     "Banking",
     {
-      "building": "Clearinghouse",
+      "building": "Bank",
       "kind": "Building",
     },
     200,
@@ -353,7 +353,7 @@ exports[`eras: core behavior > Railways, Code of Laws, Printing Press and the Ca
   [
     "Industrialization",
     {
-      "building": "Autoworks",
+      "building": "Factory",
       "kind": "Building",
     },
     440,
@@ -398,7 +398,7 @@ exports[`eras: core behavior > Railways, Code of Laws, Printing Press and the Ca
   [
     "Cannonry",
     {
-      "building": "PlanetaryFoundry",
+      "building": "RoyalArsenal",
       "kind": "Building",
     },
     600,
@@ -413,7 +413,7 @@ exports[`eras: core behavior > Railways, Code of Laws, Printing Press and the Ca
   [
     "Banking",
     {
-      "building": "WorldExchange",
+      "building": "GrandBazaar",
       "kind": "Building",
     },
     600,
@@ -428,7 +428,7 @@ exports[`eras: core behavior > Railways, Code of Laws, Printing Press and the Ca
   [
     "Electronics",
     {
-      "building": "InferenceCore",
+      "building": "ResearchLab",
       "kind": "Building",
     },
     360,
@@ -504,7 +504,7 @@ exports[`eras: core behavior > Railways, Code of Laws, Printing Press and the Ca
     "Feudalism",
     {
       "kind": "Unit",
-      "unit": "Trooper",
+      "unit": "Pikeman",
     },
     152,
     {
@@ -519,7 +519,7 @@ exports[`eras: core behavior > Railways, Code of Laws, Printing Press and the Ca
     "Machinery",
     {
       "kind": "Unit",
-      "unit": "Marksman",
+      "unit": "Crossbowman",
     },
     214,
     {
@@ -534,7 +534,7 @@ exports[`eras: core behavior > Railways, Code of Laws, Printing Press and the Ca
     "Gunpowder",
     {
       "kind": "Unit",
-      "unit": "AssaultTrooper",
+      "unit": "Musketman",
     },
     210,
     {
@@ -684,7 +684,7 @@ exports[`eras: core behavior > Railways, Code of Laws, Printing Press and the Ca
     "AutonomousSystems",
     {
       "kind": "Unit",
-      "unit": "Drone",
+      "unit": "CombatDrone",
     },
     560,
     {
@@ -864,7 +864,7 @@ exports[`eras: core behavior > Railways, Code of Laws, Printing Press and the Ca
     "Combustion",
     {
       "kind": "Unit",
-      "unit": "Landship",
+      "unit": "EarlyTank",
     },
     440,
     {

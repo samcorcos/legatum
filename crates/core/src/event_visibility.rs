@@ -179,13 +179,13 @@ pub fn visible_events(
                     item:
                         crate::ProductionItem::Building {
                             building:
-                                crate::BuildingKind::RelayUplink
-                                | crate::BuildingKind::PlanetaryFoundry
-                                | crate::BuildingKind::WorldExchange
+                                crate::BuildingKind::GreatLibrary
+                                | crate::BuildingKind::RoyalArsenal
+                                | crate::BuildingKind::GrandBazaar
                                 | crate::BuildingKind::Pyramids
                                 | crate::BuildingKind::HagiaSophia
                                 | crate::BuildingKind::EiffelTower
-                                | crate::BuildingKind::IterReactor,
+                                | crate::BuildingKind::IterFusionReactor,
                         },
                     ..
                 }
@@ -317,7 +317,7 @@ mod tests {
         let mut state = blank_game(&setup, Map::new(48, 32, Terrain::Grassland));
         spawn_unit(&mut state, PlayerId(0), UnitKind::Settler, Hex::new(20, 20));
         spawn_unit(&mut state, PlayerId(2), UnitKind::Settler, Hex::new(30, 5));
-        spawn_unit(&mut state, PlayerId(0), UnitKind::Soldier, Hex::new(5, 5));
+        spawn_unit(&mut state, PlayerId(0), UnitKind::Spearman, Hex::new(5, 5));
         let enemy = spawn_unit(&mut state, PlayerId(2), UnitKind::Scout, Hex::new(7, 5));
         update_explored(&mut state);
         let before = player_view(&state, PlayerId(0));
@@ -375,7 +375,7 @@ mod tests {
         let setup = GameSetup::standard(7, [Faction::India, Faction::Celts]);
         let mut state = blank_game(&setup, Map::new(48, 32, Terrain::Grassland));
         let pos = Hex::new(5, 5);
-        spawn_unit(&mut state, PlayerId(0), UnitKind::Soldier, pos);
+        spawn_unit(&mut state, PlayerId(0), UnitKind::Spearman, pos);
         update_explored(&mut state);
         let view = player_view(&state, PlayerId(0));
         let sack = |from: u8, by: u8, ordered: bool| Event::CityRazed {
@@ -409,13 +409,13 @@ mod tests {
         let setup = GameSetup::standard(7, [Faction::India, Faction::Byzantium]);
         let mut state = blank_game(&setup, Map::new(48, 32, Terrain::Grassland));
         let pos = Hex::new(5, 5);
-        let sleeper = spawn_unit(&mut state, PlayerId(0), UnitKind::Soldier, pos);
+        let sleeper = spawn_unit(&mut state, PlayerId(0), UnitKind::Spearman, pos);
         spawn_unit(&mut state, PlayerId(2), UnitKind::Scout, Hex::new(6, 5));
         update_explored(&mut state);
         let events = vec![Event::UnitAwakened {
             unit: sleeper,
             owner: PlayerId(0),
-            unit_kind: UnitKind::Soldier,
+            unit_kind: UnitKind::Spearman,
             at: pos,
         }];
         for player in [PlayerId(0), PlayerId(1), PlayerId(2)] {
@@ -432,13 +432,13 @@ mod tests {
         let setup = GameSetup::standard(7, [Faction::India, Faction::Byzantium]);
         let mut state = blank_game(&setup, Map::new(48, 32, Terrain::Grassland));
         let pos = Hex::new(5, 5);
-        let healer = spawn_unit(&mut state, PlayerId(0), UnitKind::Soldier, pos);
+        let healer = spawn_unit(&mut state, PlayerId(0), UnitKind::Spearman, pos);
         spawn_unit(&mut state, PlayerId(2), UnitKind::Scout, Hex::new(6, 5));
         update_explored(&mut state);
         let events = vec![Event::UnitHealed {
             unit: healer,
             owner: PlayerId(0),
-            unit_kind: UnitKind::Soldier,
+            unit_kind: UnitKind::Spearman,
             at: pos,
         }];
         for player in [PlayerId(0), PlayerId(1), PlayerId(2)] {
@@ -455,7 +455,7 @@ mod tests {
     fn a_previously_seen_enemy_does_not_reveal_hidden_encounters() {
         let setup = GameSetup::standard(7, [Faction::India, Faction::Byzantium]);
         let mut state = blank_game(&setup, Map::new(48, 32, Terrain::Grassland));
-        spawn_unit(&mut state, PlayerId(0), UnitKind::Soldier, Hex::new(5, 5));
+        spawn_unit(&mut state, PlayerId(0), UnitKind::Spearman, Hex::new(5, 5));
         let enemy = spawn_unit(&mut state, PlayerId(2), UnitKind::Scout, Hex::new(7, 5));
         update_explored(&mut state);
         let before = player_view(&state, PlayerId(0));
@@ -530,7 +530,7 @@ mod tests {
         let origin = Hex::from_offset(5, 5);
         let destination = Hex::from_offset(25, 20);
         let own = spawn_unit(&mut state, PlayerId(0), UnitKind::Scout, origin);
-        let enemy = spawn_unit(&mut state, PlayerId(2), UnitKind::Soldier, origin);
+        let enemy = spawn_unit(&mut state, PlayerId(2), UnitKind::Spearman, origin);
         update_explored(&mut state);
         let before = player_view(&state, PlayerId(0));
         state.units.get_mut(&own).unwrap().pos = destination;
@@ -543,7 +543,7 @@ mod tests {
         let pre = Event::UnitDestroyed {
             unit: enemy,
             owner: PlayerId(2),
-            unit_kind: UnitKind::Soldier,
+            unit_kind: UnitKind::Spearman,
             at: origin,
         };
         let post = Event::CityFounded {
@@ -564,7 +564,7 @@ mod tests {
             defender: Defender::Unit {
                 unit: enemy,
                 owner: PlayerId(2),
-                unit_kind: UnitKind::Soldier,
+                unit_kind: UnitKind::Spearman,
             },
             at: origin,
             attacker_at: Some(destination),
@@ -584,7 +584,7 @@ mod tests {
         let global = Event::GreatWorkLost {
             player: PlayerId(7),
             of: PlayerId(6),
-            building: BuildingKind::RelayUplink,
+            building: BuildingKind::GreatLibrary,
             vp: 2,
         };
         let teammate = Event::TechResearched {
@@ -638,7 +638,7 @@ mod tests {
         let setup = GameSetup::standard(7, [Faction::India, Faction::Byzantium]);
         let mut state = blank_game(&setup, Map::new(48, 32, Terrain::Grassland));
         let target_at = Hex::from_offset(5, 5);
-        let own = spawn_unit(&mut state, PlayerId(0), UnitKind::Soldier, target_at);
+        let own = spawn_unit(&mut state, PlayerId(0), UnitKind::Spearman, target_at);
         update_explored(&mut state);
         let view = player_view(&state, PlayerId(0));
         let near = Hex::from_offset(6, 5);
@@ -651,7 +651,7 @@ mod tests {
             defender: Defender::Unit {
                 unit: own,
                 owner: PlayerId(0),
-                unit_kind: UnitKind::Soldier,
+                unit_kind: UnitKind::Spearman,
             },
             at: target_at,
             attacker_at: Some(from),

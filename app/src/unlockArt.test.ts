@@ -29,10 +29,10 @@ describe('unlock art lookup', () => {
     expect(buildingArtSlug('Walls', 'Switzerland')).toBe('building-walls-switzerland');
     expect(buildingArtSlug('Walls', 'India')).toBe('building-walls');
     expect(buildingArtSlug('Workshop', 'Germany')).toBe('building-workshop');
-    expect(buildingArtSlug('MachineShop', 'Germany')).toBe('building-machineshop-germany');
-    expect(buildingArtSlug('Laboratory', 'Byzantium')).toBe('building-laboratory');
+    expect(buildingArtSlug('Forge', 'Germany')).toBe('building-forge-germany');
+    expect(buildingArtSlug('Library', 'Byzantium')).toBe('building-library');
     expect(improvementArtSlug('Farm', true)).toBe('improvement-irrigated-farm');
-    expect(improvementArtSlug('SaltpeterWorks')).toBe('improvement-saltpetre-works');
+    expect(improvementArtSlug('SaltpetreWorks')).toBe('improvement-saltpetre-works');
     expect(improvementArtSlug('OilWell')).toBe('improvement-oil-well');
     expect(improvementArtSlug('QuartzMine')).toBe('improvement-quartz-mine');
   });
@@ -42,7 +42,7 @@ describe('unlock art lookup', () => {
       expect(effectArtSlugOrUnit(t, label), `${f} ${t}: ${label}`).not.toBeNull();
     }
     expect(effectArtSlugOrUnit('Mathematics', 'Spearmen can upgrade to Phalangites')).toEqual({ unit: 'Phalangite' });
-    expect(effectArtSlugOrUnit('Gunpowder', 'Pikemen can upgrade to Musketmen')).toEqual({ unit: 'AssaultTrooper' });
+    expect(effectArtSlugOrUnit('Gunpowder', 'Pikemen can upgrade to Musketmen')).toEqual({ unit: 'Musketman' });
     expect(effectArtSlugOrUnit('CodeOfLaws', 'Every city claims its best available ring-2 tile')).toEqual({ slug: 'effect-codeoflaws-claim' });
     expect(effectArtSlugOrUnit('IronWorking', 'Mines upgrade: Deep Mine (+1 Production)')).toEqual({ slug: 'improvement-deep-mine' });
     expect(effectArtSlugOrUnit('RecursiveAi', 'Reveal the whole map to your team; units still need sight')).toEqual({ slug: 'effect-recursiveai-map' });
@@ -51,7 +51,7 @@ describe('unlock art lookup', () => {
   });
 
   it('serves the approved samples at every size and falls back to the generic building', () => {
-    for (const slug of ['building-workshop', 'building-walls', 'building-market', 'building-laboratory', 'effect-irrigation']) {
+    for (const slug of ['building-workshop', 'building-walls', 'building-market', 'building-library', 'effect-irrigation']) {
       for (const size of [64, 128, 256] as const) expect(slugUrl(slug, size), `${slug} ${size}`).toMatch(new RegExp(`${slug}-${size}`));
     }
     expect(itemArtUrl({ kind: 'Building', building: 'Market' }, 'India', 128)).toMatch(/building-market-india-128/);
@@ -62,7 +62,7 @@ describe('unlock art lookup', () => {
   it('lists the full set it expects (about 44 pieces)', () => {
     const slugs = expectedSlugs();
     expect(slugs.length).toBeGreaterThanOrEqual(40);
-    expect(slugs).toContain('building-machineshop-germany');
+    expect(slugs).toContain('building-forge-germany');
     expect(slugs).toContain('effect-railways');
   });
 

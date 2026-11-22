@@ -52,7 +52,7 @@ fn legal(order: Order) -> legatum_core::diplomacy::DiplomaticAction {
 #[test]
 fn snipe_war_score_requires_legal_declaration_and_can_capture_on_the_same_turn() {
     let mut v = ViewBuilder { view: view() }
-        .unit(1, ME, UnitKind::Soldier, h(8, 5))
+        .unit(1, ME, UnitKind::Spearman, h(8, 5))
         .unit(2, ENEMY, UnitKind::Settler, h(9, 5))
         .build();
     v.diplomacy.legacy = false;
@@ -95,7 +95,7 @@ fn siege_persistence_rejects_both_incoming_peace_and_our_own_offer() {
     use legatum_core::diplomacy::{PeaceProposal, ProposalId, TreatyKind};
     let mut v = ViewBuilder { view: view() }
         .city(2, ENEMY, h(12, 5), 3)
-        .unit(1, ME, UnitKind::Ranger, h(10, 5))
+        .unit(1, ME, UnitKind::Archer, h(10, 5))
         .build();
     v.turn = 40;
     v.cities[1].hp = 50;
@@ -153,9 +153,9 @@ fn siege_persistence_rejects_both_incoming_peace_and_our_own_offer() {
 #[test]
 fn escort_civilians_trigger_reserves_before_garrison_and_wait_expires() {
     let mut v = ViewBuilder { view: view() }
-        .unit(1, ME, UnitKind::Soldier, h(5, 5))
+        .unit(1, ME, UnitKind::Spearman, h(5, 5))
         .unit(2, ME, UnitKind::Settler, h(5, 5))
-        .unit(3, ENEMY, UnitKind::Soldier, h(12, 7))
+        .unit(3, ENEMY, UnitKind::Spearman, h(12, 7))
         .build();
     let mut g = PrimitiveParams::default();
     let mut memory = PrimitiveMemory::default();
@@ -233,8 +233,8 @@ fn escort_civilians_trigger_reserves_before_garrison_and_wait_expires() {
 #[test]
 fn snipe_settlers_uses_nearest_free_unit_and_respects_escort_radius_and_peace() {
     let v = ViewBuilder { view: view() }
-        .unit(1, ME, UnitKind::Soldier, h(5, 5))
-        .unit(2, ME, UnitKind::Soldier, h(8, 5))
+        .unit(1, ME, UnitKind::Spearman, h(5, 5))
+        .unit(2, ME, UnitKind::Spearman, h(8, 5))
         .unit(3, ENEMY, UnitKind::Settler, h(9, 5))
         .build();
     let g = PrimitiveParams::default();
@@ -249,7 +249,7 @@ fn snipe_settlers_uses_nearest_free_unit_and_respects_escort_radius_and_peace() 
         }]
     );
     let mut guarded = ViewBuilder { view: v.clone() }
-        .unit(4, ENEMY, UnitKind::Soldier, h(9, 6))
+        .unit(4, ENEMY, UnitKind::Spearman, h(9, 6))
         .build();
     let mut p = plan(&guarded, &g, &memory);
     p.plan_primitive_snipes();
@@ -332,7 +332,7 @@ fn scout_upkeep_rebuilds_before_deadline_and_for_stale_intel_but_not_fresh_intel
 fn save_and_burst_reserves_until_trigger_then_buys_force_or_ready_settler() {
     let mut v = ViewBuilder { view: view() }
         .city(2, ME, h(5, 13), 3)
-        .unit(1, ME, UnitKind::Soldier, h(5, 5))
+        .unit(1, ME, UnitKind::Spearman, h(5, 5))
         .gold(1000)
         .build();
     for c in &mut v.cities {
@@ -352,7 +352,7 @@ fn save_and_burst_reserves_until_trigger_then_buys_force_or_ready_settler() {
     assert_eq!(
         p.orders
             .iter()
-            .filter(|o| matches!(o, Order::BuyItem { item, .. } if *item == unit(UnitKind::Ranger)))
+            .filter(|o| matches!(o, Order::BuyItem { item, .. } if *item == unit(UnitKind::Archer)))
             .count(),
         2
     );
@@ -378,10 +378,10 @@ fn weakest_target_compares_local_forces_and_city_strength_not_whole_empires() {
     let mut v = ViewBuilder { view: view() }
         .city(2, ENEMY, h(10, 5), 2)
         .city(3, PlayerId(3), h(20, 5), 2)
-        .unit(1, ME, UnitKind::Soldier, h(8, 5))
-        .unit(2, ME, UnitKind::Soldier, h(9, 5))
-        .unit(3, ME, UnitKind::Soldier, h(19, 5))
-        .unit(4, ENEMY, UnitKind::Trooper, h(27, 12))
+        .unit(1, ME, UnitKind::Spearman, h(8, 5))
+        .unit(2, ME, UnitKind::Spearman, h(9, 5))
+        .unit(3, ME, UnitKind::Spearman, h(19, 5))
+        .unit(4, ENEMY, UnitKind::Pikeman, h(27, 12))
         .build();
     let g = PrimitiveParams {
         weakest_target_distance: 3,
@@ -414,10 +414,10 @@ fn weakest_target_compares_local_forces_and_city_strength_not_whole_empires() {
 fn coalition_view() -> PlayerView {
     let mut v = ViewBuilder { view: view() }
         .city(2, ENEMY, h(15, 5), 3)
-        .unit(1, ME, UnitKind::Soldier, h(5, 5))
-        .unit(2, ME, UnitKind::Soldier, h(5, 7))
-        .unit(3, ME, UnitKind::Ranger, h(6, 7))
-        .unit(4, ME, UnitKind::Ranger, h(7, 7))
+        .unit(1, ME, UnitKind::Spearman, h(5, 5))
+        .unit(2, ME, UnitKind::Spearman, h(5, 7))
+        .unit(3, ME, UnitKind::Archer, h(6, 7))
+        .unit(4, ME, UnitKind::Archer, h(7, 7))
         .build();
     v.diplomacy.legacy = false;
     let mut ally = relation(TeamId(0), TeamId(3), RelationState::Alliance);
@@ -475,7 +475,7 @@ fn coalition_march_dispatches_quota_before_garrisons_and_never_dogpiles_a_tie() 
 fn siege_persistence_only_protects_low_hp_visible_city_with_an_actual_besieger() {
     let mut v = ViewBuilder { view: view() }
         .city(2, ENEMY, h(12, 5), 3)
-        .unit(1, ME, UnitKind::Ranger, h(10, 5))
+        .unit(1, ME, UnitKind::Archer, h(10, 5))
         .build();
     let g = PrimitiveParams::default();
     let memory = PrimitiveMemory::default();
@@ -494,9 +494,9 @@ fn siege_persistence_only_protects_low_hp_visible_city_with_an_actual_besieger()
 #[test]
 fn barbarian_settler_guard_preserves_progress_and_releases_garrison_when_raid_ends() {
     let mut v = ViewBuilder { view: view() }
-        .unit(1, ME, UnitKind::Soldier, h(6, 5))
-        .unit(2, PlayerId::BARBARIAN, UnitKind::Ranger, h(7, 5))
-        .unit(3, PlayerId::BARBARIAN, UnitKind::Soldier, h(7, 6))
+        .unit(1, ME, UnitKind::Spearman, h(6, 5))
+        .unit(2, PlayerId::BARBARIAN, UnitKind::Archer, h(7, 5))
+        .unit(3, PlayerId::BARBARIAN, UnitKind::Spearman, h(7, 6))
         .build();
     let d = v.cities[0].detail.as_mut().unwrap();
     d.producing = Some(unit(UnitKind::Settler));
@@ -578,7 +578,7 @@ fn a_clearinghouse_repays_its_cost_with_the_full_stacked_gold_tier() {
     let opt = d
         .options
         .iter_mut()
-        .find(|o| o.item == super::super::building(BuildingKind::Clearinghouse))
+        .find(|o| o.item == super::super::building(BuildingKind::Bank))
         .unwrap();
     opt.turns = 20;
     opt.buy_cost = Some(200);
@@ -594,7 +594,7 @@ fn a_clearinghouse_repays_its_cost_with_the_full_stacked_gold_tier() {
         .unwrap()
         .options
         .iter()
-        .find(|o| o.item == super::super::building(BuildingKind::Clearinghouse))
+        .find(|o| o.item == super::super::building(BuildingKind::Bank))
         .unwrap();
     // Four new gold for 80 turns repays 200. Subtracting the retained Market's
     // three gold would incorrectly reject this profitable upgrade.

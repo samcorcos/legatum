@@ -31,7 +31,7 @@ for (const size of SIZES) test.describe(`train 1101d ${size.name}`, () => {
     const s = improvementCity({ techs: ['Masonry', 'IronWorking'] });
     s.cities[0].producing = { kind: 'Building', building: 'Granary' };
     s.cities[0].prod = 12;
-    s.cities[0].productionQueue = [{ kind: 'Unit', unit: 'Soldier' }] as never;
+    s.cities[0].productionQueue = [{ kind: 'Unit', unit: 'Spearman' }] as never;
     await loadFixture(page, coreFixture(s), 12);
     await selectThing(page, 'city', s.cities[0].id);
     const panel = page.locator('.city-panel');
@@ -147,7 +147,7 @@ for (const size of SIZES) test.describe(`train 1101d ${size.name}`, () => {
     f.units.find((u) => u.id === 0)!.hp = 100;
     await loadFixture(page, coreFixture(f), 2);
     const at = await posOf(page, 'unit', 0);
-    const events: Event[] = [{ type: 'UnitHealed', unit: 0, owner: 0, unit_kind: 'Soldier', at } as Event];
+    const events: Event[] = [{ type: 'UnitHealed', unit: 0, owner: 0, unit_kind: 'Spearman', at } as Event];
     await stageHallReport(page, events);
     await dismissCelebrations(page);
     await park(page, size);

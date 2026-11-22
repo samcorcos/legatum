@@ -85,7 +85,7 @@ fn sparta_nonmilitary_costs_include_settler_escalation_and_great_works() {
     for (building, base) in [
         (BuildingKind::Walls, 100),
         (BuildingKind::Castle, 240),
-        (BuildingKind::WarShrine, 160),
+        (BuildingKind::Agoge, 160),
         (BuildingKind::Market, 90),
     ] {
         assert_eq!(
@@ -96,7 +96,7 @@ fn sparta_nonmilitary_costs_include_settler_escalation_and_great_works() {
     assert!(data::available_to_faction(
         Faction::Sparta,
         ProductionItem::Building {
-            building: BuildingKind::WarShrine
+            building: BuildingKind::Agoge
         }
     ));
     assert_eq!(
@@ -111,7 +111,7 @@ fn sparta_nonmilitary_costs_include_settler_escalation_and_great_works() {
             &s,
             P,
             ProductionItem::Unit {
-                unit: UnitKind::Soldier
+                unit: UnitKind::Spearman
             }
         ),
         80
@@ -121,7 +121,7 @@ fn sparta_nonmilitary_costs_include_settler_escalation_and_great_works() {
             &s,
             P,
             ProductionItem::Building {
-                building: BuildingKind::RelayUplink
+                building: BuildingKind::GreatLibrary
             }
         ),
         600
@@ -161,7 +161,7 @@ fn remote_commerce_payoff_resolves_only_with_active_remote_market_and_owned_capi
         .get_mut(&remote)
         .unwrap()
         .buildings
-        .insert(BuildingKind::Clearinghouse);
+        .insert(BuildingKind::Bank);
     assert_eq!(bonus(&s), 4);
     let income = economy::player_income(&s, P).gold.total;
     let (next, _) = resolve_turn(&s, &BTreeMap::new());

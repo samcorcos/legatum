@@ -12,12 +12,12 @@ export function cityShieldFixture() {
   const f = setup.fixture;
   const open = f.cities.find((c) => c.id === setup.open)!;
   const walled = f.cities.find((c) => c.id === setup.walled)!;
-  const garrison = spawnUnit(f, open.owner, 'Ranger', open.pos, false);
+  const garrison = spawnUnit(f, open.owner, 'Archer', open.pos, false);
   garrison.fortify = 6;
-  const walledGarrison = spawnUnit(f, walled.owner, 'Soldier', walled.pos, false);
+  const walledGarrison = spawnUnit(f, walled.owner, 'Spearman', walled.pos, false);
   walledGarrison.fortify = 6;
   // Your Ranger two tiles away can shoot the city; your Soldiers beside the cities attack in melee.
-  const ranger = spawnUnit(f, 0, 'Ranger', fromOffset(11, 7), false);
+  const ranger = spawnUnit(f, 0, 'Archer', fromOffset(11, 7), false);
   refreshVision(f);
   return { ...setup, garrison: garrison.id, walledGarrison: walledGarrison.id, ranger: ranger.id };
 }

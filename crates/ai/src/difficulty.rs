@@ -127,13 +127,13 @@ mod tests {
         let select = Order::SetProduction {
             city: CityId(1),
             item: ProductionItem::Unit {
-                unit: UnitKind::Soldier,
+                unit: UnitKind::Spearman,
             },
         };
         let buy = Order::BuyItem {
             city: CityId(1),
             item: ProductionItem::Unit {
-                unit: UnitKind::Soldier,
+                unit: UnitKind::Spearman,
             },
         };
         let mut purchases = 0;
@@ -161,8 +161,8 @@ mod tests {
         use crate::fixture::{ME, ViewBuilder};
         use legatum_core::{Hex, UnitKind};
         let view = ViewBuilder::new(24, 16)
-            .unit(1, ME, UnitKind::Soldier, Hex::new(5, 5))
-            .unit(2, ME, UnitKind::Soldier, Hex::new(5, 6))
+            .unit(1, ME, UnitKind::Spearman, Hex::new(5, 5))
+            .unit(2, ME, UnitKind::Spearman, Hex::new(5, 6))
             .goto(1, Hex::new(8, 5))
             .goto(2, Hex::new(8, 6))
             .build();

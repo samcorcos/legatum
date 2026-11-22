@@ -16,11 +16,11 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     const setup = wallsFixture();
     const f = setup.fixture;
     const far = spawnUnit(f, 1, 'Horseman', fromOffset(14, 9), false);
-    const lone = spawnUnit(f, 0, 'Soldier', fromOffset(14, 5), false);
+    const lone = spawnUnit(f, 0, 'Spearman', fromOffset(14, 5), false);
     const near = spawnUnit(f, 1, 'Horseman', fromOffset(15, 5), false);
     refreshVision(f);
     expect(distance(f.units.find((u) => u.id === lone.id)!.pos, f.units.find((u) => u.id === near.id)!.pos)).toBe(1);
-    const apart = spawnUnit(f, 0, 'Soldier', fromOffset(12, 9), false);
+    const apart = spawnUnit(f, 0, 'Spearman', fromOffset(12, 9), false);
     refreshVision(f);
     await loadFixture(page, coreFixture(f), 2);
     // Two tiles away: the fight is available, with its escape condition on the card.

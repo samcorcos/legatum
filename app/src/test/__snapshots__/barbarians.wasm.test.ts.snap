@@ -325,7 +325,7 @@ exports[`WASM barbarian behavior > a scout that sees a city and gets home launch
     {
       "hp": 100,
       "id": 6,
-      "kind": "Soldier",
+      "kind": "Spearman",
       "owner": 255,
       "pos": {
         "q": 5,
@@ -442,7 +442,7 @@ exports[`WASM barbarian behavior > a scout that sees a city and gets home launch
     {
       "hp": 100,
       "id": 6,
-      "kind": "Soldier",
+      "kind": "Spearman",
       "owner": 255,
       "pos": {
         "q": 4,
@@ -559,7 +559,7 @@ exports[`WASM barbarian behavior > a scout that sees a city and gets home launch
     {
       "hp": 100,
       "id": 6,
-      "kind": "Soldier",
+      "kind": "Spearman",
       "owner": 255,
       "pos": {
         "q": 4,
@@ -569,7 +569,7 @@ exports[`WASM barbarian behavior > a scout that sees a city and gets home launch
     {
       "hp": 100,
       "id": 7,
-      "kind": "Ranger",
+      "kind": "Archer",
       "owner": 255,
       "pos": {
         "q": 5,
@@ -699,7 +699,7 @@ exports[`WASM barbarian behavior > a scout that sees a city and gets home launch
     {
       "hp": 100,
       "id": 6,
-      "kind": "Soldier",
+      "kind": "Spearman",
       "owner": 255,
       "pos": {
         "q": 4,
@@ -709,7 +709,7 @@ exports[`WASM barbarian behavior > a scout that sees a city and gets home launch
     {
       "hp": 100,
       "id": 7,
-      "kind": "Ranger",
+      "kind": "Archer",
       "owner": 255,
       "pos": {
         "q": 3,
@@ -826,7 +826,7 @@ exports[`WASM barbarian behavior > a scout that sees a city and gets home launch
     {
       "hp": 100,
       "id": 6,
-      "kind": "Soldier",
+      "kind": "Spearman",
       "owner": 255,
       "pos": {
         "q": 4,
@@ -836,7 +836,7 @@ exports[`WASM barbarian behavior > a scout that sees a city and gets home launch
     {
       "hp": 100,
       "id": 7,
-      "kind": "Ranger",
+      "kind": "Archer",
       "owner": 255,
       "pos": {
         "q": 3,
@@ -846,7 +846,7 @@ exports[`WASM barbarian behavior > a scout that sees a city and gets home launch
     {
       "hp": 100,
       "id": 8,
-      "kind": "Soldier",
+      "kind": "Spearman",
       "owner": 255,
       "pos": {
         "q": 5,
@@ -976,7 +976,7 @@ exports[`WASM barbarian behavior > a scout that sees a city and gets home launch
     {
       "hp": 100,
       "id": 6,
-      "kind": "Soldier",
+      "kind": "Spearman",
       "owner": 255,
       "pos": {
         "q": 4,
@@ -986,7 +986,7 @@ exports[`WASM barbarian behavior > a scout that sees a city and gets home launch
     {
       "hp": 100,
       "id": 7,
-      "kind": "Ranger",
+      "kind": "Archer",
       "owner": 255,
       "pos": {
         "q": 3,
@@ -996,7 +996,7 @@ exports[`WASM barbarian behavior > a scout that sees a city and gets home launch
     {
       "hp": 100,
       "id": 8,
-      "kind": "Soldier",
+      "kind": "Spearman",
       "owner": 255,
       "pos": {
         "q": 4,
@@ -1186,7 +1186,7 @@ exports[`WASM barbarian behavior > barbarians are attackable at Peace with no De
     {
       "hp": 87,
       "id": 6,
-      "kind": "Soldier",
+      "kind": "Spearman",
       "owner": 0,
       "pos": {
         "q": 7,
@@ -2289,7 +2289,7 @@ exports[`WASM barbarian behavior > entering an undefended camp clears it for Gol
     {
       "hp": 100,
       "id": 6,
-      "kind": "Soldier",
+      "kind": "Spearman",
       "owner": 1,
       "pos": {
         "q": 9,
@@ -2364,7 +2364,7 @@ exports[`WASM barbarian behavior > entering an undefended camp clears it for Gol
     {
       "hp": 100,
       "id": 6,
-      "kind": "Soldier",
+      "kind": "Spearman",
       "owner": 1,
       "pos": {
         "q": 9,

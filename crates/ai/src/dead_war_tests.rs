@@ -39,8 +39,8 @@ fn dead_view() -> PlayerView {
         .city(12, ENEMY, off(32, 14), 3)
         .city(20, THIRD, off(14, 4), 3)
         .city(21, THIRD, off(14, 16), 3)
-        .unit(1, ME, UnitKind::Soldier, off(5, 8))
-        .unit(2, ME, UnitKind::Soldier, off(5, 12))
+        .unit(1, ME, UnitKind::Spearman, off(5, 8))
+        .unit(2, ME, UnitKind::Spearman, off(5, 12))
         .build();
     v.turn = 80;
     v.diplomacy.legacy = false;

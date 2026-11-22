@@ -456,7 +456,7 @@ impl Collector {
             } => {
                 let opening = self.openings.entry(owner.0).or_default();
                 match unit {
-                    UnitKind::Soldier => {
+                    UnitKind::Spearman => {
                         opening.first_soldier_turn.get_or_insert(resolved_turn);
                     }
                     UnitKind::Settler => {
@@ -1889,7 +1889,7 @@ mod tests {
     fn great_work_purchase_count_excludes_natural_completion() {
         use legatum_core::{BuildingKind, CityId};
         let item = ProductionItem::Building {
-            building: BuildingKind::RelayUplink,
+            building: BuildingKind::GreatLibrary,
         };
         let mut collector = Collector::default();
         collector.observe_event(
@@ -1924,7 +1924,7 @@ mod tests {
             defender: legatum_core::events::Defender::Unit {
                 unit: legatum_core::UnitId(unit),
                 owner: PlayerId(2),
-                unit_kind: UnitKind::Soldier,
+                unit_kind: UnitKind::Spearman,
             },
             at: legatum_core::Hex::new(0, 0),
             attacker_strength: Default::default(),
@@ -2004,7 +2004,7 @@ mod tests {
                 city: CityId(0),
                 owner: PlayerId(0),
                 item: ProductionItem::Unit {
-                    unit: UnitKind::Soldier,
+                    unit: UnitKind::Spearman,
                 },
                 gold: 100,
             },
@@ -2015,10 +2015,10 @@ mod tests {
         assert_eq!(early[&0].first_soldier_turn, None);
         assert_eq!(early[&0].first_settler_turn, None);
 
-        collector.observe_event(12, &completion(UnitKind::Soldier));
+        collector.observe_event(12, &completion(UnitKind::Spearman));
         collector.observe_event(21, &completion(UnitKind::Settler));
         collector.observe_event(23, &founding(1));
-        collector.observe_event(24, &completion(UnitKind::Soldier));
+        collector.observe_event(24, &completion(UnitKind::Spearman));
         collector.observe_event(30, &founding(2));
         collector.observe_event(33, &completion(UnitKind::Settler));
         state.players[0].alive = false;
@@ -2087,10 +2087,10 @@ mod tests {
     fn captured_great_work_points_reconcile_for_the_holder() {
         use legatum_core::{BuildingKind, CityId, landmarks::Landmark};
         let mut state = state();
-        state.players[0].great_work_completed = Some(BuildingKind::RelayUplink);
+        state.players[0].great_work_completed = Some(BuildingKind::GreatLibrary);
         state.map.tiles[0].owner = Some(PlayerId(1));
         state.map.tiles[0].landmark = Some(Landmark {
-            building: BuildingKind::RelayUplink,
+            building: BuildingKind::GreatLibrary,
             city: CityId(0),
             of: PlayerId(0),
         });

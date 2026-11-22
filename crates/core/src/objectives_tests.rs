@@ -104,7 +104,7 @@ fn every_age_offers_three_peaceful_cards_every_faction_can_reach() {
         assert!(
             matches!(
                 data::building_family(*building),
-                BuildingKind::Laboratory | BuildingKind::Clearinghouse | BuildingKind::Market
+                BuildingKind::Library | BuildingKind::Bank | BuildingKind::Market
             ),
             "Age {era}: {building:?}"
         );
@@ -214,8 +214,8 @@ fn veterans_count_levels_gained_in_battle_and_score_at_turn_end() {
         unreachable!()
     };
     assert_eq!(card.progress(&s, P1, 2), 0);
-    let a = crate::game::spawn_unit(&mut s, P1, UnitKind::Soldier, at(5, 7));
-    let b = crate::game::spawn_unit(&mut s, P1, UnitKind::Soldier, at(6, 7));
+    let a = crate::game::spawn_unit(&mut s, P1, UnitKind::Spearman, at(5, 7));
+    let b = crate::game::spawn_unit(&mut s, P1, UnitKind::Spearman, at(6, 7));
     promote_to(&mut s, a, 1);
     assert_eq!(card.progress(&s, P1, 2), 1);
     assert_eq!(
@@ -236,7 +236,7 @@ fn levels_a_unit_already_has_or_starts_with_count_nothing() {
     let mut s = veterans_age();
     let card = Objective::Veterans { n: 4 };
     // A unit that has the XP from before the reveal, or a bought unit that starts with it.
-    let a = crate::game::spawn_unit(&mut s, P1, UnitKind::Soldier, at(5, 7));
+    let a = crate::game::spawn_unit(&mut s, P1, UnitKind::Spearman, at(5, 7));
     s.units.get_mut(&a).unwrap().xp = crate::rules::promotion::threshold(3).unwrap();
     assert_eq!(card.progress(&s, P1, 2), 0);
     // Only the next level counts.
@@ -251,7 +251,7 @@ fn levels_a_unit_already_has_or_starts_with_count_nothing() {
 fn cards_do_not_expire() {
     let mut s = veterans_age();
     s.turn += 400;
-    let a = crate::game::spawn_unit(&mut s, P0, UnitKind::Soldier, at(5, 7));
+    let a = crate::game::spawn_unit(&mut s, P0, UnitKind::Spearman, at(5, 7));
     promote_to(&mut s, a, 4);
     run(&mut s);
     assert!(s.player(P0).eras[&2].scored.is_some());
@@ -316,7 +316,7 @@ fn an_occupied_city_refuses_with_the_occupied_text() {
     s.cities.get_mut(&city).unwrap().occupied_from = Some(P1);
     s.player_mut(P0).gold = 10_000;
     let item = ProductionItem::Unit {
-        unit: crate::types::UnitKind::Soldier,
+        unit: crate::types::UnitKind::Spearman,
     };
     let reason = economy::buy_blocker(&s, &s.cities[&city], item).expect("refused");
     assert!(reason.starts_with("Occupied: "), "{reason}");
@@ -454,17 +454,17 @@ fn great_works_score_directly() {
     // A built Great Work pays its holder directly.
     let city = s.cities_of(P0).next().unwrap().id;
     let ProductionItem::Wonder { tile, .. } =
-        crate::landmarks::candidates(&s, &s.cities[&city], BuildingKind::RelayUplink)[0]
+        crate::landmarks::candidates(&s, &s.cities[&city], BuildingKind::GreatLibrary)[0]
     else {
         unreachable!()
     };
-    crate::landmarks::complete(&mut s, city, BuildingKind::RelayUplink, tile);
+    crate::landmarks::complete(&mut s, city, BuildingKind::GreatLibrary, tile);
     s.cities
         .get_mut(&city)
         .unwrap()
         .buildings
-        .insert(BuildingKind::RelayUplink);
-    s.player_mut(P0).great_work_completed = Some(BuildingKind::RelayUplink);
+        .insert(BuildingKind::GreatLibrary);
+    s.player_mut(P0).great_work_completed = Some(BuildingKind::GreatLibrary);
     run(&mut s);
     assert_eq!(s.player(P0).great_work_holder, Some(P0));
     assert!(crate::scoring::vp(&s, P0).contains(&(VpSource::GreatWork { of: P0 }, 2)));
@@ -751,7 +751,7 @@ fn a_wonder_transfer_keeps_the_victims_pre_resolution_lead() {
     let plain = found(&mut s, P1, at(15, 10));
     give_era_points(&mut s, P0, 4);
     give_era_points(&mut s, P1, 3);
-    s.player_mut(P1).great_work_completed = Some(BuildingKind::RelayUplink);
+    s.player_mut(P1).great_work_completed = Some(BuildingKind::GreatLibrary);
     let site = s
         .map
         .tiles
@@ -759,7 +759,7 @@ fn a_wonder_transfer_keeps_the_victims_pre_resolution_lead() {
         .find(|t| t.city == Some(city))
         .unwrap();
     site.landmark = Some(crate::landmarks::Landmark {
-        building: BuildingKind::RelayUplink,
+        building: BuildingKind::GreatLibrary,
         city,
         of: P1,
     });
@@ -767,7 +767,7 @@ fn a_wonder_transfer_keeps_the_victims_pre_resolution_lead() {
         .get_mut(&city)
         .unwrap()
         .buildings
-        .insert(BuildingKind::RelayUplink);
+        .insert(BuildingKind::GreatLibrary);
     assert_eq!(scoring::team_vp(&s, s.team_of(P1)), 5);
     let vp = CaptureVpSnapshot::new(&s);
     let mut events = Vec::new();
@@ -823,7 +823,7 @@ fn three_with_power(powers: [i32; 3]) -> GameState {
     for c in s.cities.values_mut() {
         c.population = 6;
         c.buildings.insert(BuildingKind::Market);
-        c.buildings.insert(BuildingKind::Clearinghouse);
+        c.buildings.insert(BuildingKind::Bank);
     }
     s
 }
@@ -1045,7 +1045,7 @@ fn every_decadence_cut_is_a_labelled_line_with_its_plain_reason() {
     let mut s = three_with_power([160, 100, 100]);
     for c in s.cities.values_mut() {
         c.population = 12;
-        c.buildings.insert(BuildingKind::Laboratory);
+        c.buildings.insert(BuildingKind::Library);
         c.buildings.insert(BuildingKind::Workshop);
     }
     s.setup.rule_experiments.decadence_slope = Some(100);
@@ -1129,7 +1129,7 @@ fn a_treasury_that_decadence_cannot_pay_makes_a_unit_desert_through_the_normal_p
     scoring::refresh_decadence(&mut s);
     assert!(scoring::decadence_percent(&s, P0) >= 90);
     for x in 4..9 {
-        crate::game::spawn_unit(&mut s, P0, UnitKind::Soldier, at(x, 3));
+        crate::game::spawn_unit(&mut s, P0, UnitKind::Spearman, at(x, 3));
     }
     s.player_mut(P0).gold = 0;
     let income = economy::player_income(&s, P0);
@@ -1157,7 +1157,7 @@ fn a_treasury_that_decadence_cannot_pay_makes_a_unit_desert_through_the_normal_p
 fn the_view_publishes_opted_in_decadence() {
     let mut s = decadent([300, 100, 100]);
     for x in 4..9 {
-        crate::game::spawn_unit(&mut s, P0, UnitKind::Soldier, at(x, 3));
+        crate::game::spawn_unit(&mut s, P0, UnitKind::Spearman, at(x, 3));
     }
     s.player_mut(P0).gold = 3;
     let v = crate::player_view(&s, P0);
