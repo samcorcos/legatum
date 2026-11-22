@@ -2,7 +2,8 @@
 import { act, createElement } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, expect, it, vi } from 'vitest';
-import type { CityDetail, CityView, PlayerView } from '../types';
+import type { CityDetail, CityView, PlayerView, ProductionItem, ProductionOption } from '../types';
+import { useGame } from '../store';
 import { TileCard } from './TileCard';
 import { tileIndex } from '../hex';
 import { blockerText } from '../map/settleAdvice';
@@ -232,6 +233,21 @@ it('shows the idle "choose" state and a stall reason', async () => {
   expect(await render(idle)).toContain('No production chosen');
   const { view: stalled } = cardWithCity(0, { ...baseDetail, production_stall: { kind: 'SpawnBlocked' } });
   expect(await render(stalled)).toContain('Build stalled: no free spawn tile in or beside the city. Move a blocking unit to make room.');
+});
+
+it('shows a choice made this turn at once, as the banner beside it does', async () => {
+  const item = { kind: 'Unit', unit: 'Scout' } as ProductionItem;
+  const option = { item, cost: 60, production_stored: 0, production_banked: 0, buy_cost: null, turns: 6 } as unknown as ProductionOption;
+  const { view } = cardWithCity(0, { ...baseDetail, producing: null, production_queue: [], options: [option] });
+  const before = useGame.getState();
+  useGame.setState({ seat: 0, orders: [[{ type: 'SetProduction', city: 1, item }]] });
+  try {
+    const text = await render(view);
+    expect(text).toContain('Chosen this turn: Scout · 6 turns');
+    expect(text).not.toContain('No production chosen');
+  } finally {
+    useGame.setState({ seat: before.seat, orders: before.orders });
+  }
 });
 
 it('a dormant strategic resource says its fact once and names the city that builds it', async () => {

@@ -1343,7 +1343,8 @@ export function bannerMeters(c: CityView, faction?: Faction, focus: CityBuildFoc
     const option = c.detail?.options.find((o) => sameItem(o.item, chosen));
     out.push({
       kind: 'production', fraction: q24(option && option.cost > 0 ? option.production_stored / option.cost : 0),
-      text: option ? String(option.turns) : '–', icon: itemIcon(chosen, faction),
+      // No output (or a project with no turn count) has no forecast: a dash, as the build card prints no number.
+      text: option && option.turns > 0 ? String(option.turns) : '–', icon: itemIcon(chosen, faction),
     });
   } else if (production) {
     const auto = focus ? { label: 'Auto', icon: FOCUS_ICON[focus] } : undefined;
