@@ -2,6 +2,15 @@
 
 Newest first. One entry per non-obvious finding: what we learned, the evidence, and what we changed. Correct or delete entries that turn out to be wrong.
 
+## 2026-11-22: Web resilience: a crash card, a loading plate and a narrow-window plate (`claude/review-web-resilience`)
+
+- **A render error anywhere blanked the page.** The only error boundary was SeatBar's order list, so a throw in any panel unmounted the React root mid-game. `ui/CrashScreen.tsx` adds a root boundary (wired in `main.tsx`) and window `error`/`unhandledrejection` handlers. Window errors go to the card only from an allowlist (`isFatal`: a `WebAssembly.RuntimeError`, which means the engine trapped, and a failed download of a lazy chunk); everything else is only logged, so a stray background rejection never covers a working game.
+- **The crash card imports nothing from the game.** It reads `legatum.autosave.v1` straight from localStorage (a copy of `store.ts::AUTOSAVE_KEY`) and names the file like `platform/files.ts`. When autosaves move to IndexedDB, `readAutosaveText` must read there as well (keeping the localStorage fallback for older saves).
+- **The engine is ~7 MB and the page was empty until it arrived.** `index.html` now holds a static plate in `#root` (React replaces it on mount). The hosted CSP forbids inline scripts but allows inline styles, so the "Still loading?" line is revealed by a CSS animation delay, not a timer. A module that throws during import never reaches React, and the plate stays with that line, which is better than a blank page.
+- **An engine that is in the build but fails to download used to boot the app anyway** (`main.tsx` swallowed the rejection), and the failure only surfaced on New Game. Now it shows the crash card's engine form with Reload. A build without the engine keeps its own "missing from this build" screen.
+- **happy-dom's `navigator.webdriver` is always true, and Playwright's is too.** The narrow-window plate skips automation so the phone-layout e2e specs keep testing the layout behind it; its unit test mocks the getter to false.
+- **This container has no `wasm-pack`, so the WASM package could not be built here.** The new e2e checks ran against a hosted build made with a stub engine package (a 5 KB valid `.wasm` fetched like the real loader); the full hosted play-through was not run.
+
 ## 2026-11-22: Egypt's Settler counted Production; a worktree build gave a stale sim binary (`claude/project-thread-h0s4wd`)
 
 - **Site score.** `settlement.rs` scored Egypt's sites with plain terrain yields (Food ×4 + Production ×3), so its Settler chased Hills and Forest it gets nothing from. `site_tile_yields` now applies the Nile (double Food, no Production) in both `site_potential` and the memoised `SiteBasics::inputs`, which must agree, as the test checks. Over 400 Egypt seats the win rate held at 18.8% and eliminations fell from 9.0% to 5.8% (`docs/sim-results/egypt-settle-nile-2026-11-22.md`). This is view and AI only, so no `RULES_VERSION` bump.
