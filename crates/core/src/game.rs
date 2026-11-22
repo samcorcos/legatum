@@ -147,8 +147,13 @@ pub fn try_new_game(setup: &GameSetup) -> Result<GameState, String> {
         mapgen::try_generate_counted_with_options(setup, mapgen::StartOptions::default())?;
     let mut state = blank_game(setup, map);
     let start_gold = data::START_GOLD;
+    let rules = setup.rule_experiments;
     for player in &mut state.players {
         player.gold = start_gold;
+        // A technology that gives this faction nothing is skipped: known from the start.
+        player
+            .techs
+            .extend(data::skipped_techs(rules, player.faction));
     }
     for (i, &start) in starts.iter().enumerate() {
         let owner = PlayerId(i as u8);

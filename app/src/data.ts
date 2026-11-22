@@ -823,7 +823,7 @@ const factionEffectLabel = (faction: Faction, label: string): string => {
 export const techCardEffectsFor = (faction: Faction, tech: TechId): string[] =>
   (RULES.techCardEffects as Record<Faction, Record<TechId, string[]>>)[faction][tech].map((label) => factionEffectLabel(faction, label));
 
-/** Core `data::tech_has_benefit` at default rules: false means the tech is only a stepping stone. */
+/** Core `data::tech_has_benefit` at default rules: false means the faction skips the tech (known from the start, never researched). */
 export const techHasBenefit = (faction: Faction, tech: TechId): boolean =>
   (RULES.techBenefit as Record<Faction, Record<TechId, boolean>>)[faction][tech];
 

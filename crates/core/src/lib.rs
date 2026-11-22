@@ -45,7 +45,8 @@ pub mod rules;
 /// 46: Cities can buy a tile with Gold again (`Order::BuyTile`), sharing the city's one purchase a turn.
 /// 47: A shot at a fallen, empty hostile city waits for whoever moves in to defend it and hits them before that round's melee; an attack whose target dies before movement goes on against the next enemy on its tile (Sam, 2026-11-21).
 /// 48: Egypt's Nile: double Food, no Production, surplus Food builds everything and the Grow project grows.
-pub const RULES_VERSION: u32 = 48;
+/// 49: A faction skips every technology that gives it nothing (Egypt: Bronze Working), known from the start; Egypt's cards drop Production-only lines.
+pub const RULES_VERSION: u32 = 49;
 pub mod scenario;
 pub mod scoring;
 pub mod settlement;
