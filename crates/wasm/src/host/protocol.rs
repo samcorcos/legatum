@@ -1,4 +1,4 @@
-use crate::staging::{FactionChoice, StagingState};
+use super::staging::{FactionChoice, StagingState};
 use legatum_core::{
     AlongsideAttack, AttackMode, BattleForecast, CityAssaultForecast, Faction, Hex, Order,
     OrderError, PlayerId, PlayerView, TeamId, UnitId,
@@ -88,7 +88,6 @@ pub struct Status {
     pub has_game: bool,
     pub turn: u32,
     pub seats: Vec<SeatStatus>,
-    pub lan_urls: Vec<String>,
     pub is_local: bool,
     pub staging: Option<StagingState>,
 }
@@ -118,7 +117,7 @@ pub(crate) enum ServerMessage {
     Turn {
         /// The new planning turn, matching the following view and autosave.
         turn: u32,
-        events: Vec<crate::events::VisibleEvent>,
+        events: Vec<crate::host::events::VisibleEvent>,
         hash: String,
         finished: bool,
         winner: Option<TeamId>,

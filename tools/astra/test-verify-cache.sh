@@ -85,42 +85,39 @@ expect_states() { # <branch> <step regex> <state> <count>
 }
 RUST_STEPS='^(fmt|clippy|test|repin|sim-build-branch|smoke-branch|sim-build-master|smoke-master)$'
 RUST_BRANCH_STEPS='^(fmt|clippy|test|repin|sim-build-branch|smoke-branch)$'
-APP_STEPS='^(app-wasm|app-vitest|app-build|app-server|app-playwright)$'
+APP_STEPS='^(app-wasm|app-vitest|app-build|app-playwright)$'
 
 branch_with docsonly docs/note.md
 verify_branch docsonly --app >/dev/null
 expect_states docsonly "$RUST_STEPS" SKIPPED 8
-expect_states docsonly "$APP_STEPS" SKIPPED 5
+expect_states docsonly "$APP_STEPS" SKIPPED 4
 echo 'PASS: a docs-only branch skips every build step and still passes'
 
 branch_with apponly app/src/thing.ts
 verify_branch apponly >/dev/null
 expect_states apponly "$RUST_STEPS" SKIPPED 8
-expect_states apponly "$APP_STEPS" PASS 5
+expect_states apponly "$APP_STEPS" PASS 4
 app_timing="$(verify_branch apponly)"
 case "$app_timing" in *'-- app-build PASS ('*) ;; *) echo "FAIL: app build timing is missing: $app_timing" >&2; exit 1 ;; esac
-case "$app_timing" in *'== app-server (cached)'*) ;; *) echo "FAIL: release server cache hit is missing: $app_timing" >&2; exit 1 ;; esac
 case "$app_timing" in *app-tsc*) echo 'FAIL: standalone TypeScript step is still present' >&2; exit 1 ;; esac
-expect_states apponly '^app-server$' CACHED 1
-printf '%s\n' "$app_timing" | grep -E '^(-- app-(wasm|vitest|build|server|playwright)|== app-server \(cached\)|App:)'
+printf '%s\n' "$app_timing" | grep -E '^(-- app-(wasm|vitest|build|playwright)|App:)'
 echo 'PASS: an app-only branch skips the cargo steps and turns the app lane on without --app'
 
 branch_with ailogic crates/ai/src/thing.rs
 verify_branch ailogic --app >/dev/null
 expect_states ailogic "$RUST_BRANCH_STEPS" PASS 6
 expect_states ailogic '^(app-wasm|app-vitest)$' PASS 2
-expect_states ailogic '^(app-build|app-server|app-playwright)$' SKIPPED 3
-echo 'PASS: an ai-only crates branch keeps wasm and vitest but skips the app build, server and Playwright'
+expect_states ailogic '^(app-build|app-playwright)$' SKIPPED 2
+echo 'PASS: an ai-only crates branch keeps wasm and vitest but skips the app build and Playwright'
 
 branch_with coreview crates/core/src/thing.rs
 verify_branch coreview --app >/dev/null
-expect_states coreview "$APP_STEPS" PASS 5
+expect_states coreview "$APP_STEPS" PASS 4
 echo 'PASS: a core change runs the full app lane including Playwright'
 
 verify_branch docsonly --app --full >/dev/null
 expect_states docsonly "$RUST_BRANCH_STEPS" PASS 6
 expect_states docsonly '^(app-wasm|app-vitest|app-build|app-playwright)$' PASS 4
-expect_states docsonly '^app-server$' CACHED 1
 echo 'PASS: --full skips nothing'
 
 plan="$(verify_branch docsonly --dry-run)"
@@ -129,21 +126,9 @@ echo 'PASS: --dry-run prints the selection'
 
 verify_branch coreview --app --serial >/dev/null
 expect_states coreview '^(app-vitest|app-playwright)$' CACHED 2
-# WASM and app/dist are worktree files; the release server restores from its gate-cache artifact and is hash checked.
+# WASM and app/dist are worktree files: they are rebuilt, never restored from the gate cache.
 expect_states coreview '^(app-wasm|app-build)$' PASS 2
-expect_states coreview '^app-server$' CACHED 1
-echo 'PASS: --serial runs the same steps; WASM and app build run, while the server artifact restores from gate cache'
-
-# A corrupted cached executable must fail its hash check before Playwright starts.
-server_artifact="$(ls "$HOME"/LegatumRuns/gate-cache/artifacts/app-server-* | sed -n '1p')"
-[ -f "$server_artifact" ] || { echo 'FAIL: release server artifact was not cached' >&2; exit 1; }
-server_cache_key="${server_artifact##*app-server-}"
-printf 'tampered executable\n' > "$server_artifact"
-if verify_branch coreview --app --serial >/dev/null 2>&1; then echo 'FAIL: a tampered release server cache passed' >&2; exit 1; fi
-expect_states coreview '^app-server$' FAIL 1
-expect_states coreview '^app-playwright$' SKIPPED 1
-rm -f "$HOME/LegatumRuns/gate-cache/$server_cache_key.pass" "$server_artifact"
-echo 'PASS: a tampered release server cache is rejected before Playwright'
+echo 'PASS: --serial runs the same steps; WASM and the web build run'
 
 # Profiles (D13): the default follows what changed, --profile overrides it, and the plan says what runs.
 plan="$(verify_branch apponly --dry-run)"
@@ -169,7 +154,7 @@ shard_states="$(states coreview '.')"
 case "$shard_states" in *app-playwright=*) ;; *) echo "FAIL: a Playwright shard did not run Playwright: $shard_states" >&2; exit 1;; esac
 case "$shard_states" in *'test=SKIPPED'*'app-playwright='*|*'app-playwright='*'test=SKIPPED'*) ;; *) echo "FAIL: a Playwright shard ran the Rust tests: $shard_states" >&2; exit 1;; esac
 verify_branch coreview --app --skip-playwright >/dev/null
-expect_states coreview '^(app-build|app-server|app-playwright)$' SKIPPED 3
+expect_states coreview '^(app-build|app-playwright)$' SKIPPED 2
 expect_states coreview '^(app-wasm)$' PASS 1
 expect_states coreview '^app-vitest$' CACHED 1
 echo 'PASS: --pw-shard and --skip-playwright split one verify into complementary parts'

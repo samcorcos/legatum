@@ -69,9 +69,9 @@ export function GuideContent({ section }: { section: GuideSection }) {
       <div className="guide-modes">
         <section><h4>Single Player</h4><p>You against AI empires. The default is a free-for-all against five AI rivals on a Standard map; change seats and teams in the lobby.</p></section>
         <section><h4>Multiplayer · Hot Seat</h4><p>Share one computer. Each human plans for their own empire, then marks Ready and passes to the next seat.</p></section>
-        <section><h4>Multiplayer · Host Game</h4><p>With the network host running on this computer, set up the game and share its displayed invite address. Keep the host running while you play.</p></section>
-        <section><h4>Multiplayer · Join Game</h4><p>Open the host’s network address in your browser, choose Join Game and take an open human seat.</p></section>
-        <section><h4>Multiplayer · Online</h4><p>In the desktop app, Host Game lists your game so other players can find it. Anyone with the same version can see and join it, so keep the app open while you play. Join Game lists the open games: choose one and press Join.</p></section>
+        <section><h4>Multiplayer · Host Game</h4><p>Your browser tab runs the game and lists it so other players can find it. Anyone with the same version can join. Keep that tab open while you play: closing it ends the game for everyone.</p></section>
+        <section><h4>Multiplayer · Join Game</h4><p>See the games that are open now. Choose one, press Join and take an open human seat.</p></section>
+
       </div>
       <h3>Make the lobby yours</h3>
       <p>Set names, factions, human or AI seats, and team numbers; close unwanted seats. The same team means shared vision, shared victory and no friendly attacks. Other teams start at Peace, with closed borders. Open the Diplomacy inbox from the victory race to negotiate or declare War.</p>
@@ -359,7 +359,7 @@ export function GuideContent({ section }: { section: GuideSection }) {
       <p>Gameplay shortcuts work from the map or page background. Enter and Space activate the control that has keyboard focus, and Escape returns focus to the map. Panning also works from plain buttons. Dialogs and menus pause gameplay shortcuts. The turn report does not, though the first Return or Escape closes it. Numbered roundels identify players 1–8 on units and cities. The separate city square or diamond shows population. Territory borders also use distinct line patterns.</p>
       <h3>Save and resume</h3>
       <p>Local games autosave after resolution. Continue on the main menu loads that autosave; Resume returns to a game still open. Use Menu → Save to file for a portable copy, and Load Game to open one. Unresolved plans are not part of that save.</p>
-      <p>In network play, the host saves the game each turn. Rejoin using the host’s address and your seat. The guide keeps your screen and pending plans in place, but other players can still finish a network turn while you read.</p>
+      <p>In an online game, the host’s tab keeps the game: a reload carries on, and closing the tab ends it. To rejoin, open the game list, choose the game and take your seat. The Guide keeps your screen and pending plans in place, but other players can still finish the turn while you read.</p>
       <h3>Help when you need it</h3>
       <p>Open How to Play from the main menu, Menu in a game, or <kbd>?</kbd>. Small first-game tips appear once in this browser. In Settings, switch First-game hints off or choose Reset hints to see them again.</p>
     </>;

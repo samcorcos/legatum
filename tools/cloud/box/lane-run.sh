@@ -4,10 +4,10 @@
 #   lane-run.sh <rel-dir> <prep> -- <command...>
 #
 #   <rel-dir>  directory inside the checkout to run in ("." for the root, "app" for app/)
-#   <prep>     none | wasm | dist | server
+#   <prep>     none | wasm | dist | web
 #                wasm    rebuild app/src/wasm-pkg when crates/ or Cargo files changed since the slot's last build
 #                dist    wasm + `npm run build` in app/
-#                server  dist + a release legatum-server linked at target/debug/legatum-server (Playwright's fixture)
+#                web     wasm + the static e2e web dist (relay at 127.0.0.1:8787) that Playwright's fixture serves
 #
 # After the command it writes every file the command added, changed or deleted (git-tracked or untracked,
 # not ignored) to .offload-out/changes.tar and .offload-out/deleted.nul, so the Mac can apply them: repin
@@ -28,7 +28,7 @@ before="$(snapshot)"
 src_key() { find crates Cargo.toml Cargo.lock -type f -not -path '*/target/*' 2>/dev/null | LC_ALL=C sort | xargs sha256sum | sha256sum | cut -c1-16; }
 case "$prep" in
   none) ;;
-  wasm|dist|server)
+  wasm|dist|web)
     key="$(src_key)"
     if [ "$(cat app/src/wasm-pkg/.src-key 2>/dev/null)" != "$key" ]; then
       echo "lane-run: building the WASM package"
@@ -37,17 +37,17 @@ case "$prep" in
       echo "$key" > app/src/wasm-pkg/.src-key
     fi
     if [ "$prep" != wasm ]; then
-      akey="$(find app -type f -not -path 'app/node_modules/*' -not -path 'app/dist/*' -not -path 'app/test-results/*' -not -path 'app/src-tauri/*' \
+      akey="$prep-$(find app -type f -not -path 'app/node_modules/*' -not -path 'app/dist/*' -not -path 'app/test-results/*' -not -path 'app/src-tauri/*' \
         -not -path 'app/src/wasm-pkg/*' -not -path 'app/playwright-report/*' | LC_ALL=C sort | xargs sha256sum | sha256sum | cut -c1-16)-$key"
       if [ "$(cat app/dist/.src-key 2>/dev/null)" != "$akey" ]; then
-        echo "lane-run: building app/dist"
-        ( cd app && npm run build ) || { echo "lane-run: app build failed" >&2; exit 1; }
+        echo "lane-run: building app/dist ($prep)"
+        if [ "$prep" = web ]; then
+          LEGATUM_RELAY_URL=http://127.0.0.1:8787 scripts/build-web.sh --skip-wasm || { echo "lane-run: web build failed" >&2; exit 1; }
+        else
+          ( cd app && npm run build ) || { echo "lane-run: app build failed" >&2; exit 1; }
+        fi
         echo "$akey" > app/dist/.src-key
       fi
-    fi
-    if [ "$prep" = server ]; then
-      cargo build --release -p legatum-server || { echo "lane-run: server build failed" >&2; exit 1; }
-      mkdir -p target/debug && ln -sf "$PWD/target/release/legatum-server" target/debug/legatum-server
     fi
     ;;
   *) echo "lane-run: unknown prep $prep" >&2; exit 2;;

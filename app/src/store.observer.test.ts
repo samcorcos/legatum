@@ -167,7 +167,7 @@ async function joinObserver(humans = 2, dead = [0], localSeat = 0) {
     seat, player: p.id, name: p.name, faction: p.faction, connected: true, ready: false, orders: 0,
   }));
   useGame.setState({ lastHash: 'previous-game-hash', lan: {
-    status: { mode: 'server', has_game: true, turn: view.turn, seats, lan_urls: [], is_local: false },
+    status: { mode: 'server', has_game: true, turn: view.turn, seats, is_local: false },
     mySeat: null, seats, conn: 'closed',
   } });
   useGame.getState().joinSeat(localSeat, seats[localSeat].name);
