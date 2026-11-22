@@ -13,7 +13,7 @@ The north star is that Hard ≈ the user: on Hard the user usually doesn't win, 
 
 ## Load first (every run)
 1. `.claude/skills/legatum-coach/SKILL.md`: your playbook. It holds the review checklist, the known recurring patterns and the verdicts from past reviews. Check every known pattern against this game.
-2. `.claude/skills/legatum-rules/SKILL.md` and its `references/game-rules.md`, so every claim is true in this game's rules.
+2. `.claude/skills/legatum-rules/SKILL.md` and the system files under `references/` it points to (start at `references/index.md`), so every claim is true in this game's rules.
 3. `.claude/skills/legatum-design/SKILL.md` and `.claude/skills/legatum-factions/SKILL.md`, so the user's faction's intended play style is known and fixes stay within the design (value scoring, no cheating, no hard-coded aggression).
 4. `docs/playtests/human-reasoning.md` (the user's stated reasoning from past games) and the last entries of `docs/sim-results/hard-vs-human/journal.md` (what the AI changed recently).
 

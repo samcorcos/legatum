@@ -2,7 +2,7 @@
 
 | Read | For |
 | --- | --- |
-| [../.claude/skills/legatum-rules/references/game-rules.md](../.claude/skills/legatum-rules/references/game-rules.md) | How the game works, verified against the code: orders, turn resolution, what is available when, and the systems that do not exist. Start here before proposing a mechanic. |
+| [../.claude/skills/legatum-rules/references/index.md](../.claude/skills/legatum-rules/references/index.md) | How the game works, verified against the code: orders, turn resolution, what is available when, and the systems that do not exist. Start here before proposing a mechanic. |
 | [../ARCHITECTURE.md](../ARCHITECTURE.md) | Crate graph, turn pipeline, determinism, clients, saves, AI layers. |
 | [engineering-notes.md](engineering-notes.md) | Dated engine, determinism, AI measurement, testing, and UI boundary lessons from development. |
 | [game-archive.md](game-archive.md) | The game-recording format used for analysis. |

@@ -3,7 +3,7 @@
 The full project instructions for AI agents are in [CLAUDE.md](CLAUDE.md) and `.claude/skills/`; this is the short version.
 
 A historical 4X on a hex map. Rust engine, React/TypeScript UI. Read [CONTRIBUTING.md](CONTRIBUTING.md) for
-setup and the rules, [ARCHITECTURE.md](ARCHITECTURE.md) for the design, and [the rules reference](.claude/skills/legatum-rules/references/game-rules.md) for how the
+setup and the rules, [ARCHITECTURE.md](ARCHITECTURE.md) for the design, and [the rules reference](.claude/skills/legatum-rules/references/index.md) for how the
 game actually works before proposing any mechanic.
 
 ## Layout
@@ -27,4 +27,4 @@ cargo test --workspace --release
 - One engine: rules live only in `crates/core`; never re-implement them elsewhere.
 - Deterministic: integer maths, seeded RNG streams, no hash-map iteration order. Rule changes that change
   outcomes re-pin tapes with `tools/sim/repin.sh`.
-- Keep saves loadable; update `.claude/skills/legatum-rules/references/game-rules.md` with any rule change; delete dead code instead of commenting it out.
+- Keep saves loadable; update the matching file under `.claude/skills/legatum-rules/references/` with any rule change; delete dead code instead of commenting it out.

@@ -13,7 +13,7 @@ You are the plain-language reviewer for Legatum, a Civ-6-like 4X (Rust core in `
 ## Load first
 1. `.claude/skills/legatum-ui/SKILL.md`, section "Game text: plain language", with its glossary. This is your rubric.
 2. `app/src/test/copyRules.ts`: phrases already banned (the lint catches these; you catch what it can't).
-3. `.claude/skills/legatum-rules/references/game-rules.md` only when you need to know whether a shorter line is still true.
+3. the relevant file under `.claude/skills/legatum-rules/references/` (start at `index.md`) only when you need to know whether a shorter line is still true.
 
 ## What to read
 Only the player-facing strings the diff adds or changes: string literals and JSX text in `app/src/` outside tests, and `title`/`briefing`/`tests`/`summary`/`question` in `scenarios/`. `git diff -U3 <range> -- app/src scenarios ':!*.test.ts' ':!*.test.tsx' ':!app/src/test'`. Skip code identifiers, class names, test fixtures and comments. Read the surrounding component to know where the text shows (a card, a hover, the Guide, a report line).

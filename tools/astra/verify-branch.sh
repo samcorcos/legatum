@@ -168,7 +168,7 @@ docs_drift_check() {
   local base files rule_files
   base="$(git merge-base "$MASTER_SHA" "$BRANCH_REF" 2>/dev/null)" || return 0
   files="$(git diff --name-only "$base" "$BRANCH_REF")"
-  printf '%s\n' "$files" | grep -qx '.claude/skills/legatum-rules/references/game-rules.md' && return 0
+  printf '%s\n' "$files" | grep -q '^.claude/skills/legatum-rules/references/' && return 0
   rule_files="$(printf '%s\n' "$files" | grep -E '^crates/core/src/((data|economy|combat|diplomacy|research|wonders|projects|objectives|goals|scoring|eras|settlement|improvements|resources|army|company|roads|landmarks|orders)(\.rs|/)|rules/)|^crates/core/src/.*faction' \
     | grep -vE '_tests\.rs$|/tests/|\.test\.tsx?$|^app/e2e/|^docs/|\.md$|\.(png|svg|txt)$' | head -3 | tr '\n' ' ' | sed 's/ $//')"
   if git diff "$base" "$BRANCH_REF" -- crates/core/src/lib.rs | grep -qE '^\+pub const RULES_VERSION'; then
@@ -176,7 +176,7 @@ docs_drift_check() {
   elif [ -n "$rule_files" ]; then
     DOCS_WARN="rule code changed ($rule_files)"
   fi
-  [ -z "$DOCS_WARN" ] || DOCS_WARN="WARNING docs: $DOCS_WARN but .claude/skills/legatum-rules/references/game-rules.md is untouched; run the legatum-docs-reviewer agent before merging"
+  [ -z "$DOCS_WARN" ] || DOCS_WARN="WARNING docs: $DOCS_WARN but nothing under .claude/skills/legatum-rules/references/ changed; run the legatum-docs-reviewer agent before merging"
 }
 docs_drift_check
 
