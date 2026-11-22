@@ -442,8 +442,11 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
         const sitedAt = after.tiles.find((t) => t.landmark?.building === e.building)?.landmark?.city;
         if (events.some((x) => x.type === 'CityCaptured' && x.city === sitedAt && (gain ? x.to === e.player : x.from === e.player))) break;
         const razed = events.find((x): x is Extract<Event, { type: 'CityRazed' }> => x.type === 'CityRazed' && x.from === e.player);
+        // The city the wonder stands in, as the built and race-lost cards name it: its tile, else the city that changed hands with it.
+        const moved = events.find((x): x is Extract<Event, { type: 'CityCaptured' }> => x.type === 'CityCaptured' && (gain ? x.to === e.player : x.from === e.player));
+        const site = sitedAt !== undefined && cities.has(sitedAt) ? sitedAt : moved && cities.has(moved.city) ? moved.city : undefined;
         push(i, e.player, { tier: gain ? 'legendary' : 'major', at: razed ? cities.get(razed.city)?.pos ?? razed.at : capital(e.player), title: BUILDING_NAME[e.building],
-          kicker: gain ? 'World wonder taken' : razed ? 'World wonder destroyed' : 'World wonder lost', place: razed ? cityName(razed.city) : sitedAt !== undefined && cities.has(sitedAt) ? cityName(sitedAt) : undefined,
+          kicker: gain ? 'World wonder taken' : razed ? 'World wonder destroyed' : 'World wonder lost', place: razed ? cityName(razed.city) : site !== undefined ? cityName(site) : undefined,
           effect: `${signedVp(gain ? e.vp : -e.vp)}${razed && !gain ? ' · destroyed with its city' : ''}`,
           lore: gain ? 'The wonder is yours again.' : 'What was built there is gone from your hands.',
           details: [WONDER_ONLY_ONE, ...(razed && !gain ? ['It can never be built again.'] : [])],

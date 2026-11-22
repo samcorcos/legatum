@@ -82,6 +82,8 @@
 
 .alarm-actions { grid-area: actions; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 14px 0 4px; }
 .alarm-primary { min-height: 46px; padding: 4px 26px 2px; font-size: 14px; letter-spacing: .14em; }
+/* An ink Continue keeps an ink focus ring: the red ring belongs to a hostile primary (Declare war) only. */
+.alarm-screen .alarm-primary:not(.hostile):focus-visible { outline-color: var(--ink); }
 /* The primary is ink like every routine Continue; red only for a hostile act (Declare war). */
 .alarm-screen .alarm-primary.hostile {
   color: var(--spend-ink); background: var(--bad); border-color: var(--bad);

@@ -539,6 +539,15 @@ describe('world wonder moments', () => {
     expect(moments[0].loss).toBeFalsy();
   });
 
+  it('a wonder taken with a city names that city even when its tile is out of sight', () => {
+    const c = city(), r = rival();
+    const [card] = momentsForTurn([
+      { type: 'CityCaptured', city: c.id, from: r.id, to: 0 },
+      { type: 'GreatWorkCompleted', player: 0, of: r.id, building: 'Pyramids', vp: 2, again: true },
+    ], 0, view, view);
+    expect(card).toMatchObject({ kicker: 'World wonder taken', title: 'Pyramids', place: c.name });
+  });
+
   it('losing a wonder city is one loss card with the signed VP', () => {
     const c = city(), r = rival();
     const moments = momentsForTurn([
