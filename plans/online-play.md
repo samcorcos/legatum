@@ -63,6 +63,26 @@ Since the relay hardening (2026-11-22) it also caps rooms and creations per clie
 message rates (close 4029), cleans room names and has a `LOBBY_OPEN` kill switch; `infra/relay/README.md` ("Limits and
 kill switch") holds the numbers.
 
+### Limits
+
+What the relay enforces (numbers from `infra/relay/src/shared.ts`; `infra/relay/README.md` has the tunables) and what
+the player sees in the app. Player text never says "relay", "socket" or an HTTP code.
+
+| Limit | Relay answer | The host or guest sees |
+| --- | --- | --- |
+| 6 room creations per 10 minutes per address | 429 with `Retry-After` | Host: "You have opened too many games lately. Try again in N minutes." (N from `Retry-After`, rounded up, at least 1) |
+| 2 live rooms per address | 429, no `Retry-After` | Host: "You already have games open. Close one before hosting another." |
+| 64 rooms in all | 503 | Host: "The game list is full right now. Try again in a few minutes." |
+| `LOBBY_OPEN=0` kill switch | 503 ("paused") | Host: "Hosting new games is paused. Try again later." |
+| Relay unreachable | no answer | Host: "Could not open your game. Check your internet connection and try again." |
+| 4 guest sockets per address per room | WebSocket close 1013, reason "too many connections from one address" | Guest: "Too many windows from your connection are in this game. Close one, then join again." The app stops retrying. Close 1013 for "host not connected" or "room is full" reconnects as usual. |
+| Per-socket message and byte budgets | WebSocket close 4029 | Guest: "Too much was sent too quickly. Pausing for 30 seconds, then reconnecting." One retry; a second 4029 before any game state arrives stops it with "Still too much sent too quickly. Wait a minute, then join the game again." The host's own tunnel just reconnects. |
+| Room names cut to 40 visible characters, symbols and emoji dropped | name cleaned, "Game XXXX" when empty | Host: the name box holds 40 characters and says "Shown in the game list as “X”." when the list will show something else, or "Shown in the game list as “Game” with a number." (`app/src/net/roomName.ts` mirrors the Worker's rule, minus its word blocklist) |
+| 60 s host heartbeat | room leaves the list | The app's tunnel sends a ping every 20 s, so nothing shows; a host whose tab sleeps drops off the list |
+
+When the relay forgets a room while the host's tunnel is down, the host announces a new room; if that is refused, the
+refusal above replaces the plain "Reconnecting…" note and the host keeps trying.
+
 ### Tunnel frames (host <-> relay), binary
 
 `[conn: u32 big-endian][kind: u8][payload: bytes]`
