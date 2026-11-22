@@ -7,7 +7,7 @@ This README is a placeholder; the full one is coming. For now:
 
 - Build and run: [CONTRIBUTING.md](CONTRIBUTING.md)
 - How it fits together: [ARCHITECTURE.md](ARCHITECTURE.md)
-- How the game works: [the rules reference](.claude/skills/legatum-rules/references/game-rules.md)
+- How the game works: [the rules reference](.claude/skills/legatum-rules/references/index.md)
 - Licences: MIT for code ([LICENSE](LICENSE)), CC BY 4.0 for art ([LICENSE-ART](LICENSE-ART)).
   Third-party audio is credited in `app/public/audio/CREDITS.md`.
 

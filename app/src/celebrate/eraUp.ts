@@ -1,6 +1,5 @@
 import { TECH_NAME, itemIcon, itemKey } from '../data';
 import { eraName, eraNumeral, researchCatalog } from '../ui/eraResearch';
-import { eraObjectivesFor, type ObjectiveLine } from '../eraObjectives';
 import type { Faction, PlayerView, ProductionItem, TechId } from '../types';
 
 /** One thing the era puts in your hands: a unit, building, improvement or project its technologies unlock (this empire's own version). */
@@ -27,8 +26,6 @@ export interface EraUpCard {
   first: boolean;
   /** The era's technologies, as the strict gate now offers them (known ones are listed too, marked). */
   techs: { tech: TechId; name: string; cost: number; known: boolean }[];
-  /** Every Age with a card you have not scored, oldest first (the one you just entered included), with your progress. */
-  openAges: { era: number; name: string; lines: ObjectiveLine[] }[];
   /** Units, buildings and improvements the era's technologies open for this empire. */
   brings: EraBring[];
   cities: EraCities;
@@ -64,10 +61,8 @@ export function eraUpCardFor(view: PlayerView, era: number, first: boolean): Era
   const biggest = Math.max(0, ...view.cities.filter((c) => c.owner === view.me).map((c) => c.population));
   const tier = tierOf(biggest || 4);
   const researchSet = (r.queue?.length ?? 0) > 0;
-  const openAges = [...(view.eras ?? [])].sort((a, b) => a.era - b.era).filter((e) => !e.scored_by.some((x) => x.player === view.me))
-    .flatMap((e) => { const o = eraObjectivesFor(view, e.era); return o ? [{ era: e.era, name: o.name, lines: o.lines }] : []; });
   return {
-    era, eraName: eraName(era), numeral: eraNumeral(era), first, techs, openAges, brings,
+    era, eraName: eraName(era), numeral: eraNumeral(era), first, techs, brings,
     cities: { tier, from: era > 0 ? { era: era - 1, name: eraName(era - 1) } : null, to: { era, name: eraName(era) } },
     researchSet, primary: researchSet ? 'continue' : 'research',
   };

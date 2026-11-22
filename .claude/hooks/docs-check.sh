@@ -4,7 +4,18 @@
 # block once so Claude records it (CLAUDE.md "Recording what we learn"). Fires at most once per
 # user message; the design doc decisions log can't be fingerprinted here, so a one-line
 # "recorded in the design doc" or "nothing to record" answer is enough to finish.
-set -euo pipefail
+# It must never fail a session: without jq, python3 or a hash tool (shasum or sha256sum) it exits 0 silently.
+trap 'exit 0' ERR
+set -uo pipefail
+command -v jq >/dev/null 2>&1 || exit 0
+command -v python3 >/dev/null 2>&1 || exit 0
+if command -v shasum >/dev/null 2>&1; then
+  digest() { shasum "$@" 2>/dev/null; }
+elif command -v sha256sum >/dev/null 2>&1; then
+  digest() { sha256sum "$@" 2>/dev/null; }
+else
+  exit 0
+fi
 
 input=$(cat)
 if [ "$(printf '%s' "$input" | jq -r '.stop_hook_active // false')" = "true" ]; then
@@ -57,9 +68,9 @@ PY
 )
 
 fp=$( {
-  find .claude/skills CLAUDE.md docs/playtests/human-reasoning.md docs/learnings.md "$memory_dir" \
-    -type f \( -name '*.md' -o -name '*.json' \) 2>/dev/null | sort | xargs shasum 2>/dev/null
-} | shasum | cut -d' ' -f1)
+  find .claude/skills CLAUDE.md docs/playtests/human-reasoning.md docs/learnings.md docs/learnings "$memory_dir" \
+    -type f \( -name '*.md' -o -name '*.json' \) 2>/dev/null | sort | while IFS= read -r f; do digest "$f"; done
+} | digest | cut -d' ' -f1)
 
 last_msg=""; last_fp=""
 [ -f "$state_file" ] && read -r last_msg last_fp < "$state_file" || true

@@ -70,7 +70,7 @@ export interface ReportLine {
   /** Your own finished technology: clicking the line shows its unlock card again. */
   reopenTech?: TechId;
   /** Your own era-up: clicking the line shows the takeover again (`era` is the 1-based `EraEntered.era`). */
-  reopenEra?: { era: number; first: boolean };
+  reopenEra?: { era: number; first: boolean; age?: PlayerId };
   /** A World Age began: the line opens the score ledger, where its card is. */
   openLedger?: boolean;
   /** A team that reached its VP target: clicking the line shows the alarm card again. */
@@ -1230,7 +1230,8 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
       const mineFirst = e.first === ctx.me;
       return line('victory', `The ${era} Age began: ${mineFirst ? 'You' : who(ctx, e.first)} entered the ${era} era first. Its card is open to every empire.`, {
         players: [], weight: 2, tone: toneFor(e.first), openLedger: true,
-        ...(mineFirst ? { reopenEra: { era: e.era, first: true } } : {}),
+        // Every player can see the Age's score check again (the opener its own era-up first).
+        reopenEra: { era: e.era, first: mineFirst, age: e.first },
       });
     }
     case 'EraObjectiveScored': {

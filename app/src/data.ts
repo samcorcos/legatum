@@ -576,6 +576,8 @@ export interface FactionGoal {
   detail: () => string;
   /** One sentence for the faction sheet; the fine print (`detail`) lives in the Guide. Falls back to `detail`. */
   sheet?: () => string;
+  /** The goal as one sentence of what to do, for the Age score check, where `rule` runs longer; defaults to `rule`. */
+  ask?: () => string;
   /** A live goal is held, not earned: it scores only while the condition stands and can be lost. */
   live: boolean;
   /** A held goal belongs to a capturable item (Byzantium's Heir): whoever holds the item scores it, so it can change hands. Not `live` (its condition is not the owner's own). */
@@ -621,12 +623,14 @@ export const FACTION_GOAL: Record<Faction, FactionGoal> = {
   India: {
     name: 'The Imperial Diwan', live: goalLive('India'), held: goalHeld('India'), heldItem: 'the Imperial Diwan', icon: 'building-imperialdiwan',
     rule: () => `Build a Revenue Office in every owned city, then build the Imperial Diwan. Whoever holds its city scores ${goalVp('India')} VP`,
+    ask: () => 'Build a Revenue Office in each of your cities, then the Imperial Diwan',
     detail: () => `Every city you own needs a Revenue Office before you can build the Imperial Diwan. Whoever holds its city scores ${goalVp('India')} VP; capture transfers the points`,
     sheet: () => `Build a Revenue Office in every city, then the Imperial Diwan: whoever holds its city scores ${goalVp('India')} VP`,
   },
   Byzantium: {
     name: 'The Heir to the Throne', live: goalLive('Byzantium'), held: goalHeld('Byzantium'), heldItem: 'the Heir', icon: 'unit-heir',
     rule: () => `Train the Heir and keep him: whoever holds him scores ${goalVp('Byzantium')} VP`,
+    ask: () => 'Train the Heir and keep him',
     detail: () => `Train the Heir and keep him. Whoever holds him scores ${goalVp('Byzantium')} VP; if a rival captures him, be at War and retake him to get the points back. Costs ${UNIT_STATS.Heir.cost} Production · cannot be bought`,
     sheet: () => `Train the Heir and keep him: whoever holds him scores ${goalVp('Byzantium')} VP`,
   },
@@ -640,6 +644,7 @@ export const FACTION_GOAL: Record<Faction, FactionGoal> = {
   Celts: {
     name: 'Raise the Warbands', live: goalLive('Celts'), icon: 'ui-camp', action: 'Raise the Warbands',
     rule: () => 'Raise the Warbands to keep a warband camp in the territory of every city you own',
+    ask: () => 'Keep a warband camp in the territory of each of your cities',
     detail: () => `Once per turn you may raise a warband camp in the territory of each Celtic city. Barbarians don't attack the Celts, so the camps raid your rivals only. You hold the VP while every city has one`,
     sheet: () => `Keep a warband camp in the territory of every city you own to hold ${goalVp('Celts')} VP`,
     liveNote: 'You lose the VP in any turn a city has no warband camp, and regain it when every city has one again',
@@ -647,6 +652,7 @@ export const FACTION_GOAL: Record<Faction, FactionGoal> = {
   Mongols: {
     name: 'The Yam Network', live: goalLive('Mongols'), held: goalHeld('Mongols'), heldItem: 'the Yam Relay Station', icon: 'building-courierhall',
     rule: () => `Build the Yam Relay Station: whoever holds its tile scores ${goalVp('Mongols')} VP`,
+    ask: () => 'Build the Yam Relay Station on a tile you choose',
     detail: () => `Build the Yam Relay Station on a chosen tile, one per empire. It replaces that tile's yield and improvement, and lays roads to every city on the map. Whoever holds its tile scores the VP, and every empire's units may cross that holder's land at Peace. Capture the city and both follow you. If the station is destroyed, it can be rebuilt`,
     sheet: () => `Build the Yam Relay Station: whoever holds its tile scores ${goalVp('Mongols')} VP`,
   },

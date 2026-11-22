@@ -52,7 +52,7 @@ jobs:
 
   gates:
     # The static pre-merge gates (tools/gates/check.py): secrets, personal data, saves, large binaries,
-    # engine invariants. Reviewer markers and the art check stay with the lead before merging.
+    # engine invariants. Reviewer verdicts (PR comments naming the head SHA) and the art check stay with the lead before merging.
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
@@ -202,6 +202,8 @@ jobs:
       - name: Build app
         run: npm run build
         working-directory: app
+      - name: Every file the build points to is in it
+        run: node tools/release/check-dist-refs.mjs app/dist
 
   ci-ok:
     # One check to require in branch protection: green when every job passed or was skipped for a docs-only change.
