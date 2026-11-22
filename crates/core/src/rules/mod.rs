@@ -203,27 +203,30 @@ pub fn validate_orders(state: &GameState, player: PlayerId, orders: &[Order]) ->
         })
         .collect();
     let supply_unchanged = taken.is_empty() && sieged.is_empty();
-    let city_errors = if gold == start_gold && disbanded.is_empty() && supply_unchanged {
-        cities::validate_city_orders(state, player, orders)
-    } else {
-        let mut after = state.clone();
-        after.player_mut(player).gold = gold;
-        for (unit, to) in &upgraded {
-            if let Some(u) = after.units.get_mut(unit) {
-                u.kind = *to;
-                u.siege &= !crate::data::built_in_siege(*to);
+    // The city check also projects the state after the valid unit and city orders, which aircraft
+    // upgrades (paid later, in the ranged phase) spend from.
+    let (city_errors, after_cities) =
+        if gold == start_gold && disbanded.is_empty() && supply_unchanged {
+            cities::validate_city_orders_projected(state, player, orders)
+        } else {
+            let mut after = state.clone();
+            after.player_mut(player).gold = gold;
+            for (unit, to) in &upgraded {
+                if let Some(u) = after.units.get_mut(unit) {
+                    u.kind = *to;
+                    u.siege &= !crate::data::built_in_siege(*to);
+                }
             }
-        }
-        for unit in sieged {
-            if let Some(u) = after.units.get_mut(&unit) {
-                u.siege = true;
+            for unit in sieged {
+                if let Some(u) = after.units.get_mut(&unit) {
+                    u.siege = true;
+                }
             }
-        }
-        for unit in disbanded {
-            after.units.remove(&unit);
-        }
-        cities::validate_city_orders(&after, player, orders)
-    };
+            for unit in disbanded {
+                after.units.remove(&unit);
+            }
+            cities::validate_city_orders_projected(&after, player, orders)
+        };
     errors.extend(city_errors);
     errors.extend(actions::validate_actions(state, player, orders));
     // An air strike resolves in the same ranged phase, so it sees the same surprise wars.
@@ -231,6 +234,7 @@ pub fn validate_orders(state: &GameState, player: PlayerId, orders: &[Order]) ->
         ranged_state.as_ref().unwrap_or(state),
         player,
         orders,
+        after_cities,
     ));
     errors.extend(diplomacy_errors);
     errors.sort_by_key(|e| e.index);
