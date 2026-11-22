@@ -37,6 +37,7 @@ interface WasmGame {
   hash(): string;
   turn(): number;
   archive(): string;
+  public_archive?(): string;
   record_turn_time?(turn: number, endedAt: string, activeSeconds: number, era: number, sessionId: string): void;
   fork_archive(): void;
   attach_scenario(scenarioJson: string): void;
@@ -193,6 +194,7 @@ export class WasmClient implements GameClient, TrainingEngine {
   }
 
   archive(): string { return this.g.archive(); }
+  publicArchive(): string { return this.g.public_archive ? this.g.public_archive() : this.g.archive(); }
   recordTurnTime(turn: number, endedAt: string, activeSeconds: number, era: number, sessionId: string) {
     this.g.record_turn_time?.(turn, endedAt, activeSeconds, era, sessionId);
   }

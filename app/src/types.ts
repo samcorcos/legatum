@@ -651,6 +651,8 @@ export interface ResearchView {
   cost: number | null;
   turns_left: number | null;
   known: TechId[];
+  /** Techs this faction skips: known from the start because they give it nothing. Research screens leave them out; `era_total` and `era_known` exclude them. */
+  skipped?: TechId[];
   available: TechOption[];
   catalog: TechOption[];
   unlocks: TechUnlock[];

@@ -303,3 +303,47 @@ fn a_city_founded_on_an_improved_tile_replaces_the_improvement() {
     let y = economy::city_yields(&s, new);
     assert!(y.sources.iter().any(|x| x.label == "Resources: Wheat"));
 }
+
+#[test]
+fn egypt_is_not_offered_a_quarry_but_may_still_order_one() {
+    let (mut s, id) = game();
+    s.player_mut(P0).faction = Faction::Egypt;
+    s.map.get_mut(at(4, 5)).unwrap().resource = Some(Resource::Stone);
+    let quarry = ProductionItem::Improvement {
+        improvement: ImprovementKind::Quarry,
+        tile: at(4, 5),
+    };
+    let offered = |s: &GameState| {
+        player_view(s, P0)
+            .cities
+            .iter()
+            .find(|c| c.id == id)
+            .unwrap()
+            .detail
+            .as_ref()
+            .unwrap()
+            .options
+            .iter()
+            .any(|o| o.item == quarry)
+    };
+    // The Nile: Egypt has no Production, so a Quarry gives it nothing and the view leaves it out.
+    assert!(!offered(&s));
+    assert!(offered_farm(&s, id), "the Farm is still offered");
+    assert!(blocker(&s, &s.cities[&id], ImprovementKind::Quarry, at(4, 5)).is_none());
+    s.player_mut(P0).faction = Faction::Byzantium;
+    assert!(offered(&s), "other factions see the Quarry");
+}
+
+fn offered_farm(s: &GameState, id: CityId) -> bool {
+    player_view(s, P0)
+        .cities
+        .iter()
+        .find(|c| c.id == id)
+        .unwrap()
+        .detail
+        .as_ref()
+        .unwrap()
+        .options
+        .iter()
+        .any(|o| o.item == farm(at(6, 5)))
+}

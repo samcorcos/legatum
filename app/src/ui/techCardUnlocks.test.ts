@@ -3,7 +3,7 @@ import { FACTIONS, TECHS, UNIT_NAME, itemName, techHasBenefit, unitStatsFor } fr
 import { iconUrl, resourceArtUrl } from '../icons';
 import { eraResource } from '../resources';
 import type { Faction, ResearchView, TechUnlock, UnitKind } from '../types';
-import { steppingStoneText, techCardUnlocks } from './techCardUnlocks';
+import { techCardUnlocks } from './techCardUnlocks';
 import { parseUpgradeEffect } from './unlockCardModel';
 import RULES from '../rules.generated.json';
 
@@ -90,13 +90,20 @@ describe('faction-accurate tech cards', () => {
     expect(techCardUnlocks(research, 'PrintingPress', 'Athens').map((u) => u.label)).toEqual(['+1 Science for each Library, University and Research Lab', '+1 Gold for each Market and Bank']);
   });
 
-  it('label stepping stones: no benefit for the faction, still counting toward the era', () => {
+  it('every card a faction researches gives it something; a tech with nothing for it is skipped', () => {
     expect(techHasBenefit('Byzantium', 'PrintingPress')).toBe(true);
     // Since 2026-10-19 the Mongols raise Walls from the Medieval era, so Masonry helps them too.
     expect(techHasBenefit('Mongols', 'Masonry')).toBe(true);
-    expect(steppingStoneText('Masonry', 'Mongols')).toBe('No benefit for Mongols · counts toward the next era');
-    // The Nile: Egypt has no Production, so Bronze Working's Workshop does nothing for it.
+    // The Nile: Egypt has no Production, so Bronze Working's Workshop does nothing for it: Egypt skips it.
     const noBenefit = new Set<string>(['Egypt BronzeWorking']);
+    // Egypt's cards drop the lines that only add Production.
+    expect(techCardUnlocks(research, 'Masonry', 'Egypt')).toEqual([]);
+    // ...and its building and wonder tiles drop their Production yield (the Pyramids' +1 Production).
+    const pyramids = { unlocks: [{ tech: 'Masonry', item: { kind: 'Building', building: 'Pyramids' }, name: 'Pyramids', cost: 240, buy_cost: null,
+      yields: { food: 0, production: 1, gold: 0, science: 0 }, city_strength: 0, unit_strength: 0, upgrade_cost: null }] } as unknown as ResearchView;
+    expect(techCardUnlocks(pyramids, 'Masonry', 'Egypt')[0].yields).toEqual([]);
+    expect(techCardUnlocks(pyramids, 'Masonry', 'India')[0].yields).toEqual([['production', 1]]);
+    expect(techCardUnlocks(research, 'Machinery', 'Egypt').map((u) => u.label)).not.toContain('+1 Production for each Workshop, Forge and Factory');
     for (const faction of FACTIONS) for (const tech of TECHS) expect(techHasBenefit(faction, tech), `${faction} ${tech}`).toBe(!noBenefit.has(`${faction} ${tech}`));
   });
 });

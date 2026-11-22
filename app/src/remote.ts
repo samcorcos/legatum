@@ -1,8 +1,8 @@
-// LAN play (plans/lan-protocol.md): the game runs on the host's legatum-server; each browser is
-// bound to one human seat and talks to it over a WebSocket.
+// Online play (plans/game-protocol.md): the game runs in the host's browser tab (net/browserHost.ts);
+// each player is bound to one human seat and talks to it over a socket: guests through the relay,
+// the host through an in-tab connection.
 import type { GameClient } from './client';
 import { decodeOrders } from './orderDecoding';
-import { HOSTED } from './platform/hosted';
 import { wrapRelaySocket } from './relaySocket';
 import type { StagingState } from './staging';
 import type {
@@ -39,9 +39,9 @@ export interface ServerStatus {
   has_game: boolean;
   turn: number;
   seats: SeatStatus[];
-  lan_urls: string[];
+  /** The host's own connection (relayed guests always see false). */
   is_local: boolean;
-  /** Staging room (plans/lan-protocol.md); presence of the field advertises support. */
+  /** Staging room (plans/game-protocol.md); presence of the field advertises support. */
   staging?: StagingState | null;
 }
 
@@ -69,40 +69,57 @@ export type ServerMsg =
 
 // ---- HTTP ----
 
-type FetchLike = (input: string, init?: { method?: string; body?: string; headers?: Record<string, string>; signal?: AbortSignal }) => Promise<{
+export type FetchLike = (input: string, init?: { method?: string; body?: string; headers?: Record<string, string>; signal?: AbortSignal }) => Promise<{
   ok: boolean;
   status: number;
   text(): Promise<string>;
 }>;
 
-// ---- Server base ----
-// Same-origin by default (LAN play: the page is served by the host's legatum-server). Online play
-// points a guest at a room on the relay instead, e.g. `https://relay.example/rooms/abc`: status then
-// comes from `<base>/api/status` and the socket from `<base>/ws`.
+// ---- Where the game is ----
+// Hosting: the game runs in this tab, and the host's UI reaches it through a local endpoint (status and admin
+// calls, and an in-tab socket). Joining: a guest points at a room on the relay, e.g.
+// `https://relay.example/rooms/abc`; status then comes from `<base>/api/status` and the socket from `<base>/ws`.
+// Neither: there is no online game, and the UI runs locally via WASM.
+
+/** The in-tab host, seen from the host's own UI. */
+export interface LocalEndpoint {
+  fetch: FetchLike;
+  socket(): SocketLike;
+}
+
+let localEndpoint: LocalEndpoint | null = null;
+
+export function setLocalEndpoint(endpoint: LocalEndpoint | null) {
+  localEndpoint = endpoint;
+}
+
+/** This tab is hosting an online game. */
+export function hostingHere(): boolean {
+  return localEndpoint !== null;
+}
+
 let serverBaseUrl = '';
 
 export function setServerBase(base: string) {
   serverBaseUrl = base.replace(/\/+$/, '');
 }
 
-/** The room URL a guest is connected through; '' for the same-origin server. */
+/** The room URL a guest is connected through; '' when not a guest. */
 export function serverBase(): string {
   return serverBaseUrl;
 }
 
-/** The socket URL for a server base ('' = this page's own origin). https becomes wss. */
+/** The socket URL for a room base. https becomes wss. */
 export function wsUrlFor(base: string): string {
-  if (!base) {
-    const loc = globalThis.location;
-    if (!loc) return 'ws://localhost:7878/ws';
-    return `${loc.protocol === 'https:' ? 'wss' : 'ws'}://${loc.host}/ws`;
-  }
   return `${base.replace(/^http/i, 'ws')}/ws`;
 }
 
-/** GET /api/status. null when there is no legatum-server (the UI then runs locally via WASM). */
-export async function fetchStatus(base: string = serverBase(), fetchImpl: FetchLike = fetch, timeoutMs = 2000): Promise<ServerStatus | null> {
-  if (HOSTED) return null;
+/** Status and admin calls: the in-tab host's when hosting, else the network. */
+export const apiFetch: FetchLike = (input, init) => (localEndpoint ? localEndpoint.fetch(input, init) : fetch(input, init));
+
+/** GET /api/status of the online game; null when there is none (the UI then runs locally via WASM). */
+export async function fetchStatus(base: string = serverBase(), fetchImpl: FetchLike = apiFetch, timeoutMs = 2000): Promise<ServerStatus | null> {
+  if (!base && !localEndpoint) return null;
   const ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
   const timer = ctl ? setTimeout(() => ctl.abort(), timeoutMs) : null;
   try {
@@ -111,14 +128,14 @@ export async function fetchStatus(base: string = serverBase(), fetchImpl: FetchL
     const body = JSON.parse(await res.text());
     return body && body.mode === 'server' ? (body as ServerStatus) : null;
   } catch {
-    // Not JSON (e.g. a static host's index.html fallback) or unreachable: local mode.
+    // Unreachable or not a game: local mode.
     return null;
   } finally {
     if (timer) clearTimeout(timer);
   }
 }
 
-export async function hostGame(setup: GameSetup, base: string = serverBase(), fetchImpl: FetchLike = fetch): Promise<ServerStatus> {
+export async function hostGame(setup: GameSetup, base: string = serverBase(), fetchImpl: FetchLike = apiFetch): Promise<ServerStatus> {
   const res = await fetchImpl(`${base}/api/game`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -128,7 +145,6 @@ export async function hostGame(setup: GameSetup, base: string = serverBase(), fe
   if (!res.ok) throw new Error(text || `Server refused the new game (${res.status})`);
   return JSON.parse(text) as ServerStatus;
 }
-
 // ---- Socket ----
 
 /** The subset of WebSocket the client uses, so tests can pass a fake. */
@@ -189,20 +205,41 @@ export function rememberSeat(s: RememberedSeat | null) {
   }
 }
 
+const ROOM_KEY = 'legatum.online.room';
+
+/** The room a guest tab joined (per tab, like its seat), so a reload goes back to it. */
+export function rememberedRoom(): string | null {
+  try {
+    return globalThis.sessionStorage?.getItem(ROOM_KEY) || null;
+  } catch {
+    return null;
+  }
+}
+
+export function rememberRoom(base: string | null) {
+  try {
+    if (base) globalThis.sessionStorage?.setItem(ROOM_KEY, base);
+    else globalThis.sessionStorage?.removeItem(ROOM_KEY);
+  } catch {
+    // best effort: a reload then starts at the title
+  }
+}
+
 export function defaultWsUrl(): string {
+
   return wsUrlFor(serverBase());
 }
 
-/** A browser socket; through the relay (a base is set) it also reassembles large messages. */
+/** The host's in-tab connection when hosting; otherwise a relay socket that also reassembles large messages. */
 export function defaultSocketFactory(url: string): SocketLike {
-  const sock = new WebSocket(url) as unknown as SocketLike;
-  return serverBase() ? wrapRelaySocket(sock) : sock;
+  if (localEndpoint) return localEndpoint.socket();
+  return wrapRelaySocket(new WebSocket(url) as unknown as SocketLike);
 }
 
 const OPEN = 1;
 
 /**
- * GameClient over the LAN protocol. Views are cached from `view` messages; validation and
+ * GameClient over the online game protocol. Views are cached from `view` messages; validation and
  * forecasts arrive asynchronously (validate() returns the latest known errors, forecast()
  * returns a cached reply and requests missing ones). Turns resolve on the server when every
  * human seat is Ready, so endTurn() is replaced by setReady().
@@ -479,7 +516,7 @@ export class RemoteClient implements GameClient {
     }
   }
 
-  // ---- LAN-specific API ----
+  // ---- Online-specific API ----
 
   hasView(): boolean {
     return this.cachedView !== null;
@@ -529,11 +566,11 @@ export class RemoteClient implements GameClient {
   // ---- GameClient ----
 
   async newGame(): Promise<void> {
-    throw new Error('In LAN mode the host creates games through /api/game');
+    throw new Error('In an online game the host creates games');
   }
 
   async standardSetup(): Promise<GameSetup> {
-    throw new Error('In LAN mode, build the setup locally and POST it to /api/game');
+    throw new Error('In an online game, the host builds the setup locally');
   }
 
   /** This seat's view (the server never sends another seat's). */
@@ -570,14 +607,14 @@ export class RemoteClient implements GameClient {
   }
 
   endTurn(): TurnResult {
-    throw new Error('In LAN mode turns resolve on the server when every seat is Ready');
+    throw new Error('In an online game turns resolve on the host when every seat is Ready');
   }
 
   save(): string {
-    throw new Error('In LAN mode the server saves the game');
+    throw new Error('In an online game the host saves the game');
   }
 
   load(): void {
-    throw new Error('In LAN mode the server loads games');
+    throw new Error('In an online game the host loads games');
   }
 }

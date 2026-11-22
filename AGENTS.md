@@ -10,7 +10,7 @@ game actually works before proposing any mechanic.
 
 - `crates/core`: game state, orders, turn resolution. Deterministic, integer maths, no I/O.
 - `crates/ai`: scripted AI brains. `crates/sim`: headless runner and tests. `crates/wasm`: browser bindings.
-- `crates/server`: LAN host. `crates/archive`, `crates/analysis`: game recordings and analysis.
+- `crates/archive`, `crates/analysis`: game recordings and analysis.
 - `app/`: the React web UI. `scenarios/`: hand-built test positions.
 - `docs/`: rules reference, design notes, methodology and engineering notes.
 

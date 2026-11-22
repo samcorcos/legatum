@@ -115,10 +115,19 @@ These clips are recorded from the running game.
 
 ## Play it
 
-**[Play in your browser](https://legatum-game.pages.dev).** Nothing to install. Single player against the AI, hot seat on one computer and the scenarios all work there; a network game needs the host program, built from source below. It is made for a laptop or desktop with a keyboard and mouse and a current browser (it is tested in Chrome); the phone is not a target. The first load is about 7 MB. Your game is autosaved in that browser, and Menu → Save to file gives you a copy to keep.
+**[Play in your browser](https://legatum-game.pages.dev).** Nothing to install. Single player against the AI, hot seat on one computer and the scenarios all work there; a network game needs the host program, built from source below. It is made for a laptop or desktop with a keyboard and mouse and a current browser (it is tested in Chrome); the phone is not a target. The first load is about 7 MB. Your game is autosaved in that browser, and Menu → Save to file gives you a copy to keep. The game's record is also uploaded to the project, without player names; see [Privacy](#privacy).
 
 **Mac app.** [Download the latest release](https://github.com/samcorcos/legatum/releases/latest) (macOS 11 or later, Apple silicon and Intel). It is signed and notarized with Apple. Open the disk image and drag Legatum to Applications.
 <!-- mac-download -->
+
+### Privacy
+
+Every game played in the browser version is uploaded to us, so we can measure how well the AI plays and find bugs.
+
+- **What is sent:** the game's record: the setup, every turn's orders, the score each turn and how long turns took. Player names are replaced with "Player 1", "AI 2" and so on before anything leaves your browser, and the server refuses a record with any other name.
+- **What is not sent:** no account, no email, no cookies and no tracking. Legatum keeps no IP addresses or request logs.
+- **Who can read it:** the records are stored privately and only the maintainer can read them. They may be used to train and test the game's AI.
+- **Turning it off:** uploads cannot be turned off in the browser version. The Mac app and builds from source upload nothing.
 
 ### Build it from source
 

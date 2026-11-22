@@ -81,8 +81,7 @@ join_steps() {
 }
 rm -f "$L.failed"
 [ -e app/node_modules ] || ln -s "$(git rev-parse --path-format=absolute --git-common-dir)/../app/node_modules" app/node_modules
-step build-sim cargo build -q --release -p legatum-sim -p legatum-server
-step build-server-debug cargo build -q -p legatum-server
+step build-sim cargo build -q --release -p legatum-sim
 for f in scenarios/*.json; do
   s="$(basename "$f" .json)"
   step "baseline-$s" ./target/release/legatum-sim scenario "$f" --runs 50 --difficulty hard --threads 6 --record --out docs/sim-results/scenarios

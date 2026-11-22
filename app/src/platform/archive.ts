@@ -1,8 +1,9 @@
+import { uploadGameHistory, uploadsGames } from './gameUpload';
 
 interface History {
   metadata: { game_id: string; turn_count: number; finished_at: string | null; outcome: string };
 }
-interface Stored { id: string; bytes: ArrayBuffer; gzip: boolean }
+interface Pending { id: string; revision: string; bytes: ArrayBuffer; gzip: boolean }
 const DB = 'legatum-game-archive-v1';
 let tail = Promise.resolve();
 
@@ -15,7 +16,7 @@ export function abandonGameHistory(json: string): Promise<void> {
   return recordGameHistory(JSON.stringify(recording));
 }
 
-/** Lockdown Mode and some in-app browsers expose no IndexedDB. */
+/** Lockdown Mode and some in-app browsers expose no IndexedDB: histories then go straight to the host. */
 const hasDatabase = () => typeof indexedDB !== 'undefined';
 
 async function database(): Promise<IDBDatabase> {
@@ -38,34 +39,78 @@ async function transaction<T>(mode: IDBTransactionMode, run: (store: IDBObjectSt
   });
 }
 
-async function pack(id: string, json: string): Promise<Stored> {
+async function deliver(json: string): Promise<boolean> {
+  // A build with an upload address sends each game to it (gameUpload.ts); otherwise histories stay on this
+  // device (Export game history).
+  return uploadsGames() ? uploadGameHistory(json) : false;
+}
+
+async function flush(): Promise<void> {
+  if (!hasDatabase()) return;
+  const pending = await transaction<Pending[]>('readonly', (s) => s.getAll());
+  const errors: unknown[] = [];
+  for (const item of pending) {
+    try {
+      if (!await deliver(await unpack(item))) break;
+      await acknowledge(item);
+    } catch (error) { errors.push(error); }
+  }
+  if (errors.length) throw errors[0];
+}
+
+/** Another tab can checkpoint this game while its earlier upload is in flight. */
+async function acknowledge(item: Pending): Promise<void> {
+  const db = await database();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('games', 'readwrite');
+    const store = tx.objectStore('games');
+    const request = store.get(item.id);
+    request.onsuccess = () => {
+      if ((request.result as Pending | undefined)?.revision === item.revision) store.delete(item.id);
+    };
+    tx.oncomplete = () => { db.close(); resolve(); };
+    tx.onerror = tx.onabort = () => { db.close(); reject(tx.error ?? request.error); };
+  });
+}
+
+async function pack(id: string, json: string): Promise<Pending> {
   const blob = new Blob([json], { type: 'application/json' });
   const gzip = typeof CompressionStream !== 'undefined';
   const bytes = gzip ? await new Response(blob.stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer() : await blob.arrayBuffer();
-  return { id, bytes, gzip };
+  const revision = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
+  return { id, revision, bytes, gzip };
 }
 
-async function unpack(item: Stored): Promise<string> {
+async function unpack(item: Pending): Promise<string> {
   const blob = new Blob([item.bytes]);
   return item.gzip ? new Response(blob.stream().pipeThrough(new DecompressionStream('gzip'))).text() : blob.text();
 }
 
-/** Keep a game's history in this browser's database, in turn order. A newer checkpoint replaces the older one. */
+/** Capture JSON before queueing, retain failures across reloads, retry in turn order. */
 export function recordGameHistory(json: string): Promise<void> {
   const recording = JSON.parse(json) as History;
   const operation = tail.then(async () => {
-    const stored = await pack(recording.metadata.game_id, json);
+    const pending = await pack(recording.metadata.game_id, json);
     try {
-      await transaction('readwrite', (s) => s.put(stored));
+      await transaction('readwrite', (s) => s.put(pending));
     } catch (error) {
+      // A denied/full browser database must not prevent the upload.
+      if (await deliver(json)) return;
       throw new Error(`Could not keep game history: ${String(error)}. Export game history before leaving.`);
     }
+    await flush();
   });
   tail = operation.catch(() => {});
   return operation;
 }
 
-/** Download one history: gzip when available, plain portable JSON on older browsers. */
+export function retryGameHistory(): Promise<void> {
+  const operation = tail.then(flush);
+  tail = operation.catch(() => {});
+  return operation;
+}
+
+/** Static-host fallback: gzip when available, plain portable JSON on older browsers. */
 export async function exportGameHistory(json: string): Promise<void> {
   const recording = JSON.parse(json) as History;
   let blob = new Blob([json], { type: 'application/json' });
@@ -84,8 +129,8 @@ export async function exportGameHistory(json: string): Promise<void> {
 /** Export retained histories, including games played before the current session. */
 export async function exportRetainedHistories(current?: string): Promise<void> {
   await tail;
-  const stored = await transaction<Stored[]>('readonly', (s) => s.getAll()).catch(() => []);
-  const games = new Map(await Promise.all(stored.map(async (p) => [p.id, await unpack(p)] as const)));
+  const pending = await transaction<Pending[]>('readonly', (s) => s.getAll()).catch(() => []);
+  const games = new Map(await Promise.all(pending.map(async (p) => [p.id, await unpack(p)] as const)));
   if (current) games.set((JSON.parse(current) as History).metadata.game_id, current);
   for (const json of games.values()) await exportGameHistory(json);
 }

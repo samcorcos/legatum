@@ -102,7 +102,6 @@ The app saves each run as one JSON file after every turn and again when it ends,
 | Build | Folder |
 | --- | --- |
 | Desktop app | `~/LegatumData/scenarios/` (dropped-in scenario files go in its `lab/` subfolder) |
-| Web build behind `legatum-server` | `<saves directory>/scenarios/` |
 | Static web host | a download |
 
 File name: `<id>-<UTC start time>.json` (one file per run; each save replaces the last), format `legatum-scenario-run`. It holds the player's orders for every

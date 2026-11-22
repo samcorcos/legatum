@@ -41,16 +41,22 @@ import {
   serverBase,
   setServerBase,
   hostGame,
+  hostingHere,
+  rememberSeat,
   rememberedSeat,
+  rememberRoom,
+  rememberedRoom,
   type ConnState,
   type SeatStatus,
   type ServerStatus,
 } from './remote';
 import { StagingClient, type StagingState } from './staging';
-import { rememberPlayerName, arrivedAsHost, inHostedWindow, markHostedWindow, online, returnToBundledApp, type OnlineInfo } from './platform/online';
-import { HOST_AWAY, connectionFirst, roomBase } from './platform/relayLobby';
+import { rememberPlayerName, online, type OnlineInfo } from './platform/online';
+import { hostingRecord, startHosting, stopHosting } from './net/hosting';
+import { HOST_AWAY, HOST_OFFLINE, connectionFirst, roomBase } from './platform/relayLobby';
 import { checkSaveText } from './platform/saveLimits';
 import { abandonGameHistory, recordGameHistory } from './platform/archive';
+import { historyToRecord } from './platform/gameUpload';
 import { currentActivePlaySeconds, currentPlaySessionId, resetActivePlayTurn } from './activePlayTime';
 import { cancelTurnFeedback, feel, feedbackForTurn, playTurnFeedback } from './feel';
 import { newRun, saveRecord, type ScenarioEntry, type ScenarioFeedback, type ScenarioRun, type ScenarioStatus } from './scenarios/scenarios';
@@ -69,10 +75,10 @@ type OrderFeedback = 'commit' | 'commitAttack' | 'queue' | 'purchase';
 export type Seat = number;
 type Selection = { kind: 'unit' | 'air'; id: number } | { kind: 'city'; id: number } | null;
 type Screen = 'title' | 'setup' | 'join' | 'staging' | 'game' | 'scenarios' | 'online';
-/** What the setup screen is for: a single-player game, several humans on this screen, or hosting on the LAN. */
+/** What the setup screen is for: a single-player game, several humans on this screen, or hosting an online game. */
 type SetupMode = 'solo' | 'hotseat' | 'host';
 
-/** LAN play state (plans/lan-protocol.md). Null when playing locally (WASM hot-seat). */
+/** Online play state (plans/game-protocol.md), hosting or joined. Null when playing locally (WASM hot-seat). */
 export interface Lan {
   status: ServerStatus;
   /** Set once this browser has joined a seat. */
@@ -270,11 +276,11 @@ interface State {
   /** Hot seat: the local seat whose player must take the device before its view is shown. */
   handoff: Seat | null;
   lastHash: string | null;
-  /** Server mode: detected via GET /api/status at boot. */
+  /** The online game this tab hosts or has joined. */
   lan: Lan | null;
-  /** Desktop app with online play: the relay and version to match; null elsewhere. */
+  /** A build with online play: the relay and version to match; null otherwise. */
   online: OnlineInfo | null;
-  /** LAN staging room: the room as last broadcast, and this browser's seat in it. */
+  /** The online staging room: the room as last broadcast, and this browser's seat in it. */
   staging: StagingState | null;
   stagingSeat: number | null;
   stagingConnected: boolean;
@@ -288,8 +294,10 @@ interface State {
   openSetup(mode: SetupMode): void;
   boot(): Promise<void>;
   refreshStatus(): Promise<ServerStatus | null>;
-  /** LAN: create the game on the server (humans first; the host takes seat 0). */
+  /** Hosting: create the game directly (humans first; the host takes seat 0). */
   hostNewGame(setup: GameSetup): Promise<void>;
+  /** Open an online game in this tab and go to its game room. Resolves to an error message, or null. */
+  hostOnline(name: string): Promise<string | null>;
   joinSeat(seat: Seat, name: string): void;
   /** Online play: join a hosted game from the lobby list as a guest. Resolves to an error message, or null. */
   joinOnline(relay: string, room: string): Promise<string | null>;
@@ -414,7 +422,7 @@ export function readAutosave(): SaveFile | null {
 function writeAutosave(client: GameClient, views: PlayerView[]) {
   if (client.archive && (views[0].finished || (views[0].turn - 1) % 5 === 0)) {
     try {
-      void recordGameHistory(client.archive()).catch((error) => useGame.getState().set({ error: String(error) }));
+      void recordGameHistory(historyToRecord(client as { archive(): string })).catch((error) => useGame.getState().set({ error: String(error) }));
     } catch (error) { useGame.getState().set({ error: `Could not record game history: ${String(error)}` }); }
   }
   try {
@@ -492,7 +500,7 @@ export const useGame = create<State>((set, get) => {
     // A scenario's history is saved with its run, never in the game archive.
     if (previous !== client && previous?.archive && !get().scenario) {
       try {
-        const history = previous.archive();
+        const history = historyToRecord(previous as { archive(): string });
         const replacingSameGame = client.archive && JSON.parse(client.archive()).metadata.game_id === JSON.parse(history).metadata.game_id;
         if (!replacingSameGame) void abandonGameHistory(history).catch((error) => set({ error: String(error) }));
       }
@@ -739,7 +747,26 @@ export const useGame = create<State>((set, get) => {
     }, 4000);
   };
 
-  /** A guest's room on the relay is over: forget it and go back to the app's own (same-origin) state. */
+  /** The host learns when guests cannot reach its game, and when a game history could not be kept. */
+  const hostingEvents = () => ({
+    tunnel: (state: string) => {
+      if (state === 'reconnecting') set({ error: HOST_OFFLINE });
+      else if (get().error === HOST_OFFLINE) set({ error: null });
+    },
+    error: (message: string) => set({ error: message }),
+  });
+
+  /** This tab hosts a game: close it for everyone and forget it. */
+  const endHosting = () => {
+    if (!hostingHere()) return;
+    staging?.disconnect();
+    staging = null;
+    dropRemote();
+    stopHosting();
+    set({ lan: null, staging: null, stagingSeat: null, stagingConnected: false, stagingLeaving: false });
+  };
+
+  /** A guest's room on the relay is over: forget it and go back to the app's own state. */
   const endRelaySession = () => {
     stopRelayWatch();
     if (!serverBase()) return;
@@ -747,6 +774,7 @@ export const useGame = create<State>((set, get) => {
     staging = null;
     dropRemote();
     setServerBase('');
+    rememberRoom(null);
     set({ lan: null, staging: null, stagingSeat: null, stagingConnected: false, stagingLeaving: false });
   };
 
@@ -1062,8 +1090,7 @@ export const useGame = create<State>((set, get) => {
     goto: (screen) => {
       if (screen !== 'game') stopResolving();
       if (screen === 'title') {
-        // The host's window is the app's game server: its title screen is the bundled app's.
-        if (inHostedWindow()) return returnToBundledApp();
+        endHosting();
         endRelaySession();
       }
       set({ screen });
@@ -1072,14 +1099,29 @@ export const useGame = create<State>((set, get) => {
 
     boot: async () => {
       if (get().booted) return;
-      const status = await fetchStatus();
-      // The desktop app's own page has no server; it may still offer online play.
-      const onlineInfo = status ? null : await online().info();
+      const onlineInfo = await online().info().catch(() => null);
+      // A reload of a tab that hosts a game resumes it, in the same room when the relay still has it.
+      const resume = hostingRecord();
+      let resumed = false;
+      if (resume && onlineInfo?.relay) {
+        try {
+          await startHosting(onlineInfo.relay, resume.announce, resume, hostingEvents());
+          resumed = true;
+        } catch {
+          stopHosting();
+        }
+      } else if (resume) stopHosting();
+      // A reloaded guest tab goes back to the room it joined, if the game is still there.
+      const room = resumed ? null : rememberedRoom();
+      if (room) setServerBase(room);
+      const status = resumed || room ? await fetchStatus(undefined, undefined, 6000) : null;
+      if (room && !status) {
+        setServerBase('');
+        rememberRoom(null);
+      } else if (room) startRelayWatch();
       set({ booted: true, online: onlineInfo, lan: status ? { status, mySeat: null, seats: status.seats, conn: 'closed' } : null });
-      // The host's window, opened by the app: go straight to the game room (unless a reload
-      // resumes one below).
-      const arrival = !!status?.is_local && arrivedAsHost();
-      if (arrival) markHostedWindow();
+      // The host goes back to its game room (unless the remembered seat below resumes the game).
+      const arrival = !!status?.is_local;
       // A reloaded tab proves ownership with its session credential, even if status still
       // sees the old socket. Never bootstrap a released/replaced seat automatically.
       const remembered = rememberedSeat();
@@ -1115,7 +1157,9 @@ export const useGame = create<State>((set, get) => {
         return code === 404 ? 'This game has ended.' : code === 503 ? HOST_AWAY : 'Could not reach that game. Try again.';
       }
       startRelayWatch();
+      rememberRoom(serverBase());
       set({ error: null, lan: { status, mySeat: null, seats: status.seats, conn: 'closed' }, screen: status.staging ? 'staging' : 'join' });
+
       return null;
     },
 
@@ -1126,6 +1170,26 @@ export const useGame = create<State>((set, get) => {
       return status;
     },
 
+    hostOnline: async (name) => {
+      const relay = get().online?.relay;
+      if (!relay) return 'This version has no online play.';
+      const info = get().online!;
+      set({ error: null });
+      try {
+        await startHosting(relay, { name, build: info.build, rules_version: info.rules_version, protocol: info.protocol }, null, hostingEvents());
+      } catch {
+        return 'Could not open your game. Check your internet connection and try again.';
+      }
+      rememberSeat(null);
+      const status = await fetchStatus();
+      if (!status) {
+        stopHosting();
+        return 'Could not open your game. Try again.';
+      }
+      set({ lan: { status, mySeat: null, seats: status.seats, conn: 'closed' }, screen: 'setup', setupMode: 'host' });
+      return null;
+    },
+
     hostNewGame: async (setup) => {
       set({ busy: 'Surveying the map…', error: null });
       try {
@@ -1133,7 +1197,8 @@ export const useGame = create<State>((set, get) => {
         set({ busy: null, lan: { status, mySeat: null, seats: status.seats, conn: 'closed' } });
         get().joinSeat(0, setup.players[0].name);
       } catch (e) {
-        set({ busy: null, error: `Could not host the game: ${String(e)}` });
+        console.warn('host game', e);
+        set({ busy: null, error: 'Could not start the game. Try again.' });
       }
     },
 
@@ -1165,8 +1230,9 @@ export const useGame = create<State>((set, get) => {
     leaveLan: () => {
       stopResolving();
       dropRemote();
-      if (inHostedWindow()) return returnToBundledApp();
+      endHosting();
       endRelaySession();
+
       set({ client: null, views: null, screen: 'title', busy: null });
     },
 

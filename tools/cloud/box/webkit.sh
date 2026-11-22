@@ -3,7 +3,7 @@
 # spec, as tools/release/webkit-docker.sh runs them. Runs in a slot at the ref being tested. Results: app/test-results.
 #
 #   LEGATUM_WEBKIT_WORKERS    Playwright workers (default 8; the measured table is in the legatum-workflow skill)
-#   LEGATUM_WEBKIT_PREBUILT=1 skip the WASM, app and server builds (the caller has just built this tree: the release check)
+#   LEGATUM_WEBKIT_PREBUILT=1 skip the WASM and web dist builds (the caller has just built this tree: the release check)
 #   LEGATUM_WEBKIT_OUTPUT     Playwright output directory under app/ (default test-results); the screen-tour shots go to
 #                             <output>/screen-tour via LEGATUM_TOUR_OUT, so a Chromium run beside it cannot wipe them
 #   LEGATUM_WEBKIT_SPECS      spec list (default: the screen tour, e2e/tour, and e2e/exit-to-title.spec.ts)
@@ -16,10 +16,8 @@ output="${LEGATUM_WEBKIT_OUTPUT:-test-results}"
 set -e
 if [ "${LEGATUM_WEBKIT_PREBUILT:-0}" != 1 ]; then
   scripts/build-wasm.sh
-  ( cd app && npm run build )
-  cargo build --release -p legatum-server
+  LEGATUM_RELAY_URL=http://127.0.0.1:8787 scripts/build-web.sh --skip-wasm
 fi
-mkdir -p target/debug && ln -sf "$PWD/target/release/legatum-server" target/debug/legatum-server
 cd app
 set +e
 LEGATUM_TOUR_OUT="$PWD/$output/screen-tour" LEGATUM_E2E_BROWSER="${LEGATUM_E2E_BROWSER:-webkit}" CI=1 \

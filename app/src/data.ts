@@ -823,7 +823,7 @@ const factionEffectLabel = (faction: Faction, label: string): string => {
 export const techCardEffectsFor = (faction: Faction, tech: TechId): string[] =>
   (RULES.techCardEffects as Record<Faction, Record<TechId, string[]>>)[faction][tech].map((label) => factionEffectLabel(faction, label));
 
-/** Core `data::tech_has_benefit` at default rules: false means the tech is only a stepping stone. */
+/** Core `data::tech_has_benefit` at default rules: false means the faction skips the tech (known from the start, never researched). */
 export const techHasBenefit = (faction: Faction, tech: TechId): boolean =>
   (RULES.techBenefit as Record<Faction, Record<TechId, boolean>>)[faction][tech];
 
@@ -864,7 +864,8 @@ export function itemSummary(item: ProductionItem, faction?: Faction): string {
   if (override) return override;
   if (item.kind === 'Unit') return UNIT_STATS[item.unit].summary;
   if (item.kind === 'Building' || item.kind === 'Wonder') return BUILDING_STATS[item.building].summary;
-  if (item.kind === 'Improvement') return IMPROVEMENT_SUMMARY[item.improvement];
+  // The Nile: Egypt has no Production, so its Mine is for Copper's Gold and the supply.
+  if (item.kind === 'Improvement') return faction === 'Egypt' && item.improvement === 'Mine' ? 'Gives Gold on Copper, and supply on Iron or Coal' : IMPROVEMENT_SUMMARY[item.improvement];
   return PROJECT_COPY[item.project].summary;
 }
 

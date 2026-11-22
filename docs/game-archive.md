@@ -6,12 +6,14 @@ overrides the default, and `--archive-dir <directory>` overrides the environment
 The archive is private local data, outside the repository. Games played in the browser stay in that
 browser (below) until they are exported. Histories from the Mac app, before it was dropped on
 2026-11-22, are in the same `~/LegatumData/archive` on that Mac.
+The one upload is the hosted web build's: with `LEGATUM_GAMES_URL` set it sends each game's recording, every
+seat renamed to its default (`Recording::anonymized`, replayed so the hashes still match), to the R2 bucket behind
+`infra/games` (see `infra/games/README.md` and the README's Privacy section).
 
 ```sh
 export PATH="$HOME/.cargo/bin:/opt/homebrew/bin:$PATH"
 cargo run --release -p legatum-sim -- --games 100 --archive
 cargo run --release -p legatum-sim -- --games 100 --archive --archive-dir /path/to/archive
-cargo run --release -p legatum-server -- --archive-checkpoint-turns 5
 scripts/archive-stats
 scripts/archive-stats --csv /tmp/legatum-analysis
 cargo run --release -p legatum-sim -- --replay ~/LegatumData/archive/2026/09/<game_id>.tape.json.zst
@@ -58,7 +60,7 @@ Metadata fields:
 | --- | --- |
 | `schema_version`, `game_id` | Envelope version and collision-resistant, path-safe identity |
 | `created_at`, `finished_at` | RFC3339 UTC timestamps; finish is null while in progress |
-| `source` | `human-local`, `human-hotseat`, `lan`, or `sim`; server Host games use `lan` |
+| `source` | `human-local`, `human-hotseat`, `lan`, or `sim`; online Host games use `lan` (`history::Source::Lan`, a historical name) |
 | `speed`, `map`, `seed` | Economic speed, generator plus width/height, decimal-string u64 seed |
 | `seats` | Player id, entered name, faction, team, difficulty, human flag, final/current VP and held titles |
 | `winner`, `outcome` | Winning **team id**, or null; `vp`, `elimination`, `turn-limit`, `draw`, `stalled`, `panic`, `abandoned`, or `in-progress` |
@@ -68,7 +70,7 @@ Metadata fields:
 | `first_turn`, `complete_history` | Where recording starts, and whether orders cover the game from setup |
 | `parent_game_id` | Original identity when an explicitly loaded save forks another play |
 
-Names stay as entered, including LAN join names, independently of hashed engine state.
+Names stay as entered, including LAN join names, independently of hashed engine state (they are in the state hash, which is why an anonymized recording replays its orders to recompute every hash). The only exception is the recording the hosted web build uploads and queues: seat names are "Player N" / "AI N".
 No seat credentials, authorization headers, tokens, pending socket messages or connection
 addresses enter the recording. Archives intentionally contain full game information for the
 owner's analysis, including information hidden by fog in the player UI. The server does not
@@ -102,13 +104,18 @@ records subsequent turns. The replay command verifies from that anchor. Earlier 
 invented.
 
 In the browser, the app captures each game's history at setup, every five turns, and at the finish,
-and keeps it in IndexedDB (gzip-compressed where browser compression is available); a newer
-checkpoint of a game replaces the older one. The complete tape is also in the ordinary per-turn
-autosave. **Export game history** in the game menu (Advanced) downloads the current game and every
-retained one, one gzip file per game (plain JSON if CompressionStream is unavailable); the browser
-may ask to allow multiple downloads. Exported files can be analyzed and replayed without the
-original browser. The current game can be exported even if browser storage is denied or full;
-failures surface in the existing error UI. Do not clear browser storage before exporting.
+and keeps it in IndexedDB (gzip-compressed where browser compression is available) until it is
+delivered; a newer checkpoint of a game replaces the older one. The complete tape is also in the
+ordinary per-turn autosave. With an upload address, uploads retry after a reload, when the browser
+comes online, and at the next checkpoint; without one, histories stay in the browser.
+**Export game history** in the game menu (Advanced) downloads the current game and every retained
+one, one gzip file per game (plain JSON if CompressionStream is unavailable); the browser may ask to
+allow multiple downloads. The current game can be exported even if browser storage is denied or
+full. Do not clear browser storage before exporting.
+
+An online game's host is the engine in the host's browser tab (`crates/wasm/src/host`); it hands its
+checkpoints and final history to that tab, which files them like a local game (`app/src/net/hosting.ts`,
+`recordGameHistory`). There is no archive server (the native `legatum-server` is gone, 2026-11-22).
 
 ## Analysis, replay and recovery
 

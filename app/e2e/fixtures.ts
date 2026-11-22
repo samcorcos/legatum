@@ -1,81 +1,91 @@
 import { spawn } from 'node:child_process';
-import { access, mkdtemp, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { access, readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test as base, expect, type BrowserContext, type Page } from '@playwright/test';
+// @ts-expect-error plain .mjs helper without types
+import { startStaticServer } from '../e2e-hosted/serve.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 
-/** The release server binary: LEGATUM_SERVER_BIN, else <CARGO_TARGET_DIR or target>/release/legatum-server. */
-export function serverBinary(): string {
-  if (process.env.LEGATUM_SERVER_BIN) return process.env.LEGATUM_SERVER_BIN;
-  return join(resolve(root, process.env.CARGO_TARGET_DIR ?? 'target'), 'release/legatum-server');
-}
+/**
+ * The relay the e2e build talks to: the real one (infra/relay) under `wrangler dev`, started by the
+ * `relay` fixture for the tests that play online. Build the app for it with
+ *   LEGATUM_RELAY_URL=http://127.0.0.1:8787 scripts/build-web.sh
+ */
+// LEGATUM_E2E_RELAY points the online tests at a deployed relay instead (a live check before a release):
+//   LEGATUM_E2E_RELAY=https://legatum-relay.sam-1e7.workers.dev, with app/dist built for that relay.
+export const E2E_RELAY = process.env.LEGATUM_E2E_RELAY ?? 'http://127.0.0.1:8787';
+const BUILD_HINT = `Build first: LEGATUM_RELAY_URL=${E2E_RELAY} scripts/build-web.sh (needs the WASM engine; add --skip-wasm to reuse it).`;
 
 type Fixtures = {
   watchErrors: (context: BrowserContext) => void;
   guestPage: Page;
 };
 
-export const test = base.extend<Fixtures, { serverURL: string }>({
-  // Use the real release server for static files too: /api/status is real, and no
-  // request interception or fake server can accidentally make the LAN test pass.
+/** The app and the relay, without the console-error watch: for tests that make the relay fail on purpose. */
+export const testWithFailingRequests = base.extend<{}, { serverURL: string; relay: string }>({
+  // app/dist on a plain static server with the build's own response headers (its CSP included), the way
+  // Cloudflare Pages serves it. There is no game server: online games run in the host's tab.
   serverURL: [async ({}, use) => {
-    const binary = serverBinary();
-    const staticDir = join(root, 'app/dist');
+    const dist = join(root, 'app/dist');
     try {
-      await access(binary);
-      await access(join(staticDir, 'index.html'));
+      await access(join(dist, 'index.html'));
     } catch {
-      throw new Error('Build first: scripts/build-wasm.sh, (cd app && npm run build), cargo build --release -p legatum-server. See app/README.md.');
+      throw new Error(BUILD_HINT);
     }
-    const saves = await mkdtemp(join(tmpdir(), 'legatum-e2e-'));
-    // Port 0 lets the OS reserve a free port without a probe/bind race.
-    const server = spawn(binary, ['--port', '0', '--static', staticDir, '--saves', saves, '--archive-dir', join(saves, 'archive')], {
-      cwd: root,
+    const headers = await readFile(join(dist, '_headers'), 'utf8').catch(() => '');
+    if (!headers.includes(E2E_RELAY)) throw new Error(`app/dist was not built for the e2e relay. ${BUILD_HINT}`);
+    const server = await startStaticServer(0, dist);
+    try {
+      await use(server.url);
+    } finally {
+      await server.close();
+    }
+  }, { scope: 'worker' }],
+
+  // The real relay (infra/relay) under wrangler dev, on the port the e2e build expects.
+  relay: [async ({}, use) => {
+    if (process.env.LEGATUM_E2E_RELAY) return use(E2E_RELAY);
+    const dir = join(root, 'infra/relay');
+    try {
+      await access(join(dir, 'node_modules/.bin/wrangler'));
+    } catch {
+      throw new Error('The relay needs its packages: (cd infra/relay && npm ci).');
+    }
+    const port = new URL(E2E_RELAY).port;
+    const proc = spawn(join(dir, 'node_modules/.bin/wrangler'), ['dev', '--port', port, '--ip', '127.0.0.1'], {
+      cwd: dir,
+      env: { ...process.env, WRANGLER_SEND_METRICS: 'false', CI: '1' },
       stdio: ['ignore', 'pipe', 'pipe'],
+      detached: true,
     });
     let log = '';
-    const closed = new Promise<void>((resolve) => server.once('close', () => resolve()));
+    proc.stdout.on('data', (c) => { log += c; });
+    proc.stderr.on('data', (c) => { log += c; });
+    const closed = new Promise<void>((done) => proc.once('close', () => done()));
     try {
-      const url = await new Promise<string>((resolve, reject) => {
-        const timer = setTimeout(() => reject(new Error(`Server did not start:\n${log}`)), 30_000);
-        const fail = (reason: unknown) => {
-          clearTimeout(timer);
-          reject(new Error(`Server failed (${String(reason)}):\n${log}`));
-        };
-        server.once('error', fail);
-        server.once('exit', (code, signal) => fail(signal ?? code));
-        server.stderr.on('data', (chunk) => { log += chunk.toString(); });
-        server.stdout.on('data', (chunk) => {
-          log += chunk.toString();
-          const match = log.match(/Host: (http:\/\/localhost:\d+)/);
-          if (match) {
-            clearTimeout(timer);
-            resolve(match[1]);
-          }
-        });
-      });
-      // The listener is bound before the startup line, but check HTTP readiness
-      // as well so the first navigation doesn't depend on process timing.
       await expect.poll(async () => {
-        try { return (await fetch(`${url}/api/status`)).status; }
-        catch { return 0; }
-      }).toBe(200);
-      await use(url);
+        if (proc.exitCode !== null) throw new Error(`wrangler dev exited:
+${log}`);
+        try { return (await fetch(`${E2E_RELAY}/lobby`)).status; } catch { return 0; }
+      }, { timeout: 60_000, message: 'the relay starts' }).toBe(200);
+      await use(E2E_RELAY);
     } finally {
-      server.kill('SIGTERM');
-      const force = setTimeout(() => server.kill('SIGKILL'), 5_000);
+      // wrangler runs workerd as a child: end the whole process group.
+      try { process.kill(-proc.pid!, 'SIGTERM'); } catch { /* gone */ }
+      const force = setTimeout(() => { try { process.kill(-proc.pid!, 'SIGKILL'); } catch { /* gone */ } }, 5_000);
       await closed;
       clearTimeout(force);
-      await rm(saves, { recursive: true, force: true });
     }
   }, { scope: 'worker' }],
 
   baseURL: async ({ serverURL }, use) => { await use(serverURL); },
+});
 
-  // Installed before navigation, including on the second LAN context. No error
+export const test = testWithFailingRequests.extend<Fixtures>({
+
+  // Installed before navigation, including on a second (guest) context. No error
   // allowlist: resource errors, console.error and uncaught exceptions all fail.
   watchErrors: [async ({ context }, use) => {
     const errors: string[] = [];

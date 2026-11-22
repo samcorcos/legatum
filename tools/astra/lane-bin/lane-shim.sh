@@ -42,7 +42,7 @@ case "$tool" in
   npx)
     case "$(first_word "$@")" in
       vitest|tsc) exec "$offload" --prep wasm -- npx "$@" ;;
-      playwright) exec "$offload" --prep server --artifact app/test-results -- npx "$@" ;;
+      playwright) exec "$offload" --prep web --artifact app/test-results -- npx "$@" ;;
       *) run_local "$@" ;;
     esac ;;
   npm)
@@ -56,7 +56,7 @@ case "$tool" in
         done
         case "$script" in
           build|test) exec "$offload" --prep wasm -- npm "$@" ;;
-          e2e|test:e2e) exec "$offload" --prep server --artifact app/test-results -- npm "$@" ;;
+          e2e|test:e2e) exec "$offload" --prep web --artifact app/test-results -- npm "$@" ;;
           *) run_local "$@" ;;
         esac ;;
       *) run_local "$@" ;;

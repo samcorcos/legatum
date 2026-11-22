@@ -5,6 +5,7 @@
 //! the `#[wasm_bindgen]` methods only convert errors to `JsError`.
 
 pub mod history;
+pub mod host;
 pub mod json;
 pub mod rusher;
 pub mod scenario;
@@ -1029,6 +1030,14 @@ impl Game {
     pub fn archive(&self) -> Result<String, JsError> {
         js(guard(|| {
             to_json(self.session.history.as_ref().ok_or("No recorded history")?)
+        }))
+    }
+
+    /// The archive with every seat under its default name ("Player 1", "AI 2"), safe to upload.
+    pub fn public_archive(&self) -> Result<String, JsError> {
+        js(guard(|| {
+            let history = self.session.history.as_ref().ok_or("No recorded history")?;
+            to_json(&history.anonymized()?)
         }))
     }
 
