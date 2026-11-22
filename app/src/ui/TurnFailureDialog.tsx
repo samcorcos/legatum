@@ -1,5 +1,6 @@
-import { useId, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { useGame } from '../store';
+import { Icon } from './bits';
 import { exportRetainedHistories } from '../platform/archive';
 import { saveGameToFile } from './GameMenu';
 import './EndTurnConfirmation.css';
@@ -44,6 +45,8 @@ export function TurnFailureDialog() {
     el.showModal();
     return () => el.close();
   }, [open]);
+  // A note from an earlier state (Saved.) must not carry into the next failure.
+  useEffect(() => setNote(null), [failure]);
   if (!failure) return null;
   const onSave = async () => {
     const ok = await saveAndReport();
@@ -51,6 +54,7 @@ export function TurnFailureDialog() {
   };
   return <dialog ref={dialog} className="modal end-turn-confirmation replace-game" data-testid="turn-failure" aria-labelledby={title} aria-describedby={description}
     onCancel={(e) => { e.preventDefault(); set({ turnFailure: null }); }}>
+    <button className="icon-btn end-turn-close" onClick={() => set({ turnFailure: null })} aria-label="Close" title="Close (Esc)"><Icon name="ui-cross" size={14} /></button>
     <h2 id={title}>This turn will not finish</h2>
     <p id={description}>
       {failure.cleared
@@ -65,6 +69,6 @@ export function TurnFailureDialog() {
       <button className="btn primary" autoFocus onClick={() => void onSave()}>Save and report</button>
       {!failure.cleared && <button className="btn" onClick={() => endWithoutOrders()}>{shared ? 'End the turn with all orders cleared' : 'End the turn with my orders cleared'}</button>}
     </div>
-    <div role="status">{note && <p>{note}</p>}</div>
+    <div role="status" style={{ marginTop: 12 }}>{note && <p>{note}</p>}</div>
   </dialog>;
 }

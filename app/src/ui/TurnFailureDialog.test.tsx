@@ -70,7 +70,7 @@ it('Save and report downloads the save and the history', async () => {
 it('once the try without orders failed too, Save and report is the only action', () => {
   useGame.setState({ turnFailure: { cleared: true } });
   act(() => root.render(<TurnFailureDialog />));
-  expect(buttons().map((b) => b.textContent)).toEqual(['Save and report']);
+  expect(buttons().filter((b) => !b.classList.contains('end-turn-close')).map((b) => b.textContent)).toEqual(['Save and report']);
   expect(host.textContent).toContain('even without your orders');
 });
 
