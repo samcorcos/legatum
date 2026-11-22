@@ -1,0 +1,17 @@
+# Rust tests the FAST gate profile skips; the EXTENDED and RELEASE profiles run everything (nothing is deleted).
+# One nextest filterset predicate per line (https://nexte.st/docs/filtersets/); '#' starts a comment. gate-tests.sh joins
+# the lines with '|' and runs `not (...)` under LEGATUM_GATE_SCOPE=fast.
+# Selected from per-test durations of six box verifies, 2026-10-18 (tools/ops/rust-test-durations.py on steps/test.log):
+# every test that ran 8 s or longer, and the long property, metrics and head-to-head suites by binary. With these out,
+# the fast run's longest test is about 7 s and its summed time falls from about 570 s to about 130 s.
+# Re-measure with: python3 tools/ops/rust-test-durations.py .progress/verify-remote/*/steps/test.log --top 40
+test(opening_league_twenty_standard_games_finish_without_panics_or_stalls)   # 270-290 s (now 20 games side by side)
+test(same_orders_have_identical_rules_and_views_at_every_difficulty)         # 29-31 s
+test(heartbeat_traffic_cannot_extend_a_watchers_pre_join_deadline)           # 30 s, bound by a real 30 s deadline
+test(standard_hard_duel_holds_are_consistent_and_never_stall)                # 15-21 s
+test(proxy_plays_complete_games_without_panics_or_stalls_and_repeats_hashes) # 10-13 s
+test(teams_stay_together_across_presets_and_player_counts)                   # 10-12 s
+test(every_preset_generates_fair_starts_for_two_to_eight_players)            # 10 s
+binary_id(legatum-core::property_fuzz)                                       # property suite, 13 tests, 10 s
+binary_id(legatum-sim::sim_metrics)                                          # 7 tests, 17 s
+binary_id(legatum-ai::ai_v2_head_to_head)                                    # 5 tests, 5 s of full AI games

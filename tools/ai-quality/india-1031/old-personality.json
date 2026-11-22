@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "old-personality",
+  "faction_overrides": {
+    "India": {
+      "india_last_office_value": 0,
+      "india_diwan_commit": 0
+    }
+  },
+  "difficulty": {
+    "Hard": {
+      "India": {
+        "expansion": 80,
+        "military": 65,
+        "science": 40,
+        "economy": 50,
+        "aggression": 70
+      }
+    }
+  }
+}

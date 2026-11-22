@@ -1,0 +1,12 @@
+box: job 20261117T021536Z-0a81be (lane:lane-2:npx vitest) commit a6ae2f29b1ad + uncommitted
+box: shipping a patch untracked files
+box: uploading job 20261117T021536Z-0a81be failed or hung past 300s (box state: running); nothing was started
+offload: running locally, niced (the box could not run it (exit 3)): npx vitest run src/unlockArt.test.ts src/portraits.test.ts src/factionSheets.test.ts src/ui/factionSheetCards.test.tsx
+
+ RUN  v5.0.2 ~/code/legatum/.claude/worktrees/lane-2/app
+
+
+ Test Files  4 passed (4)
+      Tests  16 passed (16)
+   Start at  21:22:15
+   Duration  1.56s (transform 69%, import 15%, environment 8%, tests 4%, setup 3%)

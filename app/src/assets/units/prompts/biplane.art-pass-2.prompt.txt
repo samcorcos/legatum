@@ -1,0 +1,4 @@
+2026-11-16 — Codex built-in image generation. Provisional author review; lead review pending.
+Reference images and requested edits: see docs/design/art-pass-2/generation-*.json.
+
+Edit this existing painted WWI biplane miniature. Keep the entire plane, engine, wooden two-bladed propeller, wings, struts, seat, camera and colors. Fix both landing wheels: fill the empty spaces between each tyre and hub with taut warm-grey fabric-covered wheel discs, coherent oval perspective, hubs centered in each disc. No empty wheel rims, no floating hubs. Keep visible axle connecting the two hubs. Simplify circular base to a single smooth plain cream disc while preserving curved display support. Genuine transparent background; no text, no halo. Focused repair only.

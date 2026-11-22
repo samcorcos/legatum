@@ -1,0 +1,815 @@
+{
+ "schema": 1,
+ "maps": [
+  {
+   "id": "sparta-894-small4",
+   "source": "p894-sparta-win-t40-1308.legatum",
+   "role": "train",
+   "horizon": 40,
+   "seat": 0,
+   "faction": "Sparta",
+   "why": "8.9.4 Sparta, 4-player Small: a Hoplite rush took Athens T20, AI Sparta T29 and both Mongol cities by T40 (all rivals eliminated)",
+   "engine_commit": "eeccf4800d3931b01f2f72dc45c15877576234ef",
+   "human_result": {
+    "outcome": "elimination",
+    "turns": 40,
+    "won": true
+   },
+   "setup": {
+    "barbarians": true,
+    "height": 26,
+    "players": [
+     {
+      "faction": "Sparta",
+      "is_human": true,
+      "name": "Player 1",
+      "team": 0
+     },
+     {
+      "difficulty": "Hard",
+      "faction": "Mongols",
+      "is_human": false,
+      "name": "AI 2",
+      "team": 1
+     },
+     {
+      "difficulty": "Hard",
+      "faction": "Sparta",
+      "is_human": false,
+      "name": "AI 3",
+      "team": 2
+     },
+     {
+      "difficulty": "Hard",
+      "faction": "Athens",
+      "is_human": false,
+      "name": "AI 4",
+      "team": 3
+     }
+    ],
+    "seed": 6571181857414340,
+    "speed": "Standard",
+    "turn_limit": null,
+    "width": 40
+   },
+   "targets": [
+    {
+     "metric": "cities",
+     "turn": 20,
+     "value": 2
+    },
+    {
+     "metric": "cities",
+     "turn": 30,
+     "value": 3
+    },
+    {
+     "metric": "cities",
+     "turn": 40,
+     "value": 5
+    },
+    {
+     "metric": "eliminated",
+     "turn": 20,
+     "value": 1
+    },
+    {
+     "metric": "eliminated",
+     "turn": 30,
+     "value": 2
+    },
+    {
+     "metric": "eliminated",
+     "turn": 40,
+     "value": 3
+    }
+   ],
+   "human": {
+    "10": {
+     "cities": 1,
+     "eliminated": 0,
+     "vp": 1,
+     "gold": 227,
+     "army": 70,
+     "techs": 0,
+     "population": 3
+    },
+    "20": {
+     "cities": 2,
+     "eliminated": 1,
+     "vp": 3,
+     "gold": 280,
+     "army": 108,
+     "techs": 4,
+     "population": 7
+    },
+    "22": {
+     "cities": 2,
+     "eliminated": 1,
+     "vp": 2,
+     "gold": 274,
+     "army": 129,
+     "techs": 4,
+     "population": 7
+    },
+    "25": {
+     "cities": 2,
+     "eliminated": 1,
+     "vp": 3,
+     "gold": 303,
+     "army": 150,
+     "techs": 5,
+     "population": 7
+    },
+    "30": {
+     "cities": 3,
+     "eliminated": 2,
+     "vp": 3,
+     "gold": 428,
+     "army": 170,
+     "techs": 6,
+     "population": 11
+    },
+    "35": {
+     "cities": 4,
+     "eliminated": 2,
+     "vp": 3,
+     "gold": 484,
+     "army": 170,
+     "techs": 6,
+     "population": 17
+    },
+    "40": {
+     "cities": 5,
+     "eliminated": 3,
+     "vp": 3,
+     "gold": 518,
+     "army": 191,
+     "techs": 7,
+     "population": 20
+    }
+   }
+  },
+  {
+   "id": "sparta-892-large8",
+   "source": "p892-sparta-crush-t87.legatum",
+   "role": "holdout",
+   "horizon": 60,
+   "seat": 0,
+   "faction": "Sparta",
+   "why": "8.9.2 Sparta, 8 players: Nicaea (Byzantium) taken T22, 4 cities T30, 6 T40, 7 T60, two empires gone by T35",
+   "engine_commit": "28be168b1869c05b8bb793ad3a53a0cdea582d48",
+   "human_result": {
+    "outcome": "in-progress",
+    "turns": 86,
+    "won": false
+   },
+   "setup": {
+    "barbarians": true,
+    "height": 32,
+    "players": [
+     {
+      "faction": "Sparta",
+      "is_human": true,
+      "name": "Player 1",
+      "team": 0
+     },
+     {
+      "difficulty": "Hard",
+      "faction": "Athens",
+      "is_human": false,
+      "name": "AI 2",
+      "team": 1
+     },
+     {
+      "difficulty": "Hard",
+      "faction": "Switzerland",
+      "is_human": false,
+      "name": "AI 3",
+      "team": 2
+     },
+     {
+      "difficulty": "Hard",
+      "faction": "India",
+      "is_human": false,
+      "name": "AI 4",
+      "team": 3
+     },
+     {
+      "difficulty": "Hard",
+      "faction": "Byzantium",
+      "is_human": false,
+      "name": "AI 5",
+      "team": 4
+     },
+     {
+      "difficulty": "Hard",
+      "faction": "Germany",
+      "is_human": false,
+      "name": "AI 6",
+      "team": 5
+     },
+     {
+      "difficulty": "Hard",
+      "faction": "Celts",
+      "is_human": false,
+      "name": "AI 7",
+      "team": 6
+     },
+     {
+      "difficulty": "Hard",
+      "faction": "Mongols",
+      "is_human": false,
+      "name": "AI 8",
+      "team": 7
+     }
+    ],
+    "seed": 5498811444162614,
+    "speed": "Standard",
+    "turn_limit": null,
+    "width": 48
+   },
+   "targets": [
+    {
+     "metric": "cities",
+     "turn": 22,
+     "value": 2
+    },
+    {
+     "metric": "cities",
+     "turn": 30,
+     "value": 4
+    },
+    {
+     "metric": "cities",
+     "turn": 40,
+     "value": 6
+    },
+    {
+     "metric": "cities",
+     "turn": 60,
+     "value": 7
+    },
+    {
+     "metric": "eliminated",
+     "turn": 22,
+     "value": 1
+    },
+    {
+     "metric": "eliminated",
+     "turn": 35,
+     "value": 2
+    },
+    {
+     "metric": "eliminated",
+     "turn": 60,
+     "value": 2
+    }
+   ],
+   "human": {
+    "10": {
+     "cities": 1,
+     "eliminated": 0,
+     "vp": 0,
+     "gold": 190,
+     "army": 45,
+     "techs": 0,
+     "population": 2
+    },
+    "20": {
+     "cities": 1,
+     "eliminated": 0,
+     "vp": 1,
+     "gold": 205,
+     "army": 77,
+     "techs": 4,
+     "population": 4
+    },
+    "22": {
+     "cities": 2,
+     "eliminated": 1,
+     "vp": 1,
+     "gold": 257,
+     "army": 102,
+     "techs": 4,
+     "population": 6
+    },
+    "25": {
+     "cities": 3,
+     "eliminated": 1,
+     "vp": 2,
+     "gold": 252,
+     "army": 122,
+     "techs": 5,
+     "population": 7
+    },
+    "30": {
+     "cities": 4,
+     "eliminated": 1,
+     "vp": 2,
+     "gold": 348,
+     "army": 122,
+     "techs": 5,
+     "population": 9
+    },
+    "35": {
+     "cities": 5,
+     "eliminated": 2,
+     "vp": 3,
+     "gold": 521,
+     "army": 145,
+     "techs": 6,
+     "population": 14
+    },
+    "40": {
+     "cities": 6,
+     "eliminated": 2,
+     "vp": 3,
+     "gold": 459,
+     "army": 158,
+     "techs": 6,
+     "population": 21
+    },
+    "50": {
+     "cities": 7,
+     "eliminated": 2,
+     "vp": 3,
+     "gold": 616,
+     "army": 115,
+     "techs": 7,
+     "population": 29
+    },
+    "60": {
+     "cities": 7,
+     "eliminated": 2,
+     "vp": 4,
+     "gold": 505,
+     "army": 123,
+     "techs": 10,
+     "population": 33
+    },
+    "75": {
+     "cities": 9,
+     "eliminated": 3,
+     "vp": 5,
+     "gold": 40,
+     "army": 143,
+     "techs": 11,
+     "population": 42
+    }
+   }
+  },
+  {
+   "id": "swiss-892-large8",
+   "source": "p892-swiss-win-t203.legatum",
+   "role": "train",
+   "horizon": 100,
+   "seat": 0,
+   "faction": "Switzerland",
+   "why": "8.9.2 Switzerland, 8 players: 3 cities T30, 4 T50, 6 T100 (10 at T150), 919 Gold T75, 1,706 T100, 4 VP T100; won T202",
+   "engine_commit": "28be168b1869c05b8bb793ad3a53a0cdea582d48",
+   "human_result": {
+    "outcome": "vp",
+    "turns": 202,
+    "won": true
+   },
+   "setup": {
+    "barbarians": true,
+    "height": 32,
+    "players": [
+     {
+      "faction": "Switzerland",
+      "is_human": true,
+      "name": "Player 1",
+      "team": 0
+     },
+     {
+      "difficulty": "Hard",
+      "faction": "Mongols",
+      "is_human": false,
+      "name": "AI 2",
+      "team": 1
+     },
+     {
+      "difficulty": "Hard",
+      "faction": "Sparta",
+      "is_human": false,
+      "name": "AI 3",
+      "team": 2
+     },
+     {
+      "difficulty": "Hard",
+      "faction": "Athens",
+      "is_human": false,
+      "name": "AI 4",
+      "team": 3
+     },
+     {
+      "difficulty": "Hard",
+      "faction": "Switzerland",
+      "is_human": false,
+      "name": "AI 5",
+      "team": 4
+     },
+     {
+      "difficulty": "Hard",
+      "faction": "India",
+      "is_human": false,
+      "name": "AI 6",
+      "team": 5
+     },
+     {
+      "difficulty": "Hard",
+      "faction": "Byzantium",
+      "is_human": false,
+      "name": "AI 7",
+      "team": 6
+     },
+     {
+      "difficulty": "Hard",
+      "faction": "Germany",
+      "is_human": false,
+      "name": "AI 8",
+      "team": 7
+     }
+    ],
+    "seed": 183543760505468,
+    "speed": "Standard",
+    "turn_limit": null,
+    "width": 48
+   },
+   "targets": [
+    {
+     "metric": "cities",
+     "turn": 30,
+     "value": 3
+    },
+    {
+     "metric": "cities",
+     "turn": 50,
+     "value": 4
+    },
+    {
+     "metric": "cities",
+     "turn": 75,
+     "value": 5
+    },
+    {
+     "metric": "cities",
+     "turn": 100,
+     "value": 6
+    },
+    {
+     "metric": "gold",
+     "turn": 75,
+     "value": 919
+    },
+    {
+     "metric": "gold",
+     "turn": 100,
+     "value": 1706
+    },
+    {
+     "metric": "vp",
+     "turn": 100,
+     "value": 4
+    }
+   ],
+   "human": {
+    "10": {
+     "cities": 1,
+     "eliminated": 0,
+     "vp": 0,
+     "gold": 117,
+     "army": 30,
+     "techs": 0,
+     "population": 2
+    },
+    "20": {
+     "cities": 1,
+     "eliminated": 0,
+     "vp": 0,
+     "gold": 147,
+     "army": 30,
+     "techs": 2,
+     "population": 3
+    },
+    "22": {
+     "cities": 1,
+     "eliminated": 0,
+     "vp": 0,
+     "gold": 153,
+     "army": 30,
+     "techs": 2,
+     "population": 3
+    },
+    "25": {
+     "cities": 2,
+     "eliminated": 0,
+     "vp": 1,
+     "gold": 167,
+     "army": 40,
+     "techs": 4,
+     "population": 5
+    },
+    "30": {
+     "cities": 3,
+     "eliminated": 1,
+     "vp": 1,
+     "gold": 196,
+     "army": 42,
+     "techs": 5,
+     "population": 6
+    },
+    "35": {
+     "cities": 3,
+     "eliminated": 1,
+     "vp": 1,
+     "gold": 234,
+     "army": 45,
+     "techs": 5,
+     "population": 7
+    },
+    "40": {
+     "cities": 4,
+     "eliminated": 1,
+     "vp": 1,
+     "gold": 279,
+     "army": 45,
+     "techs": 6,
+     "population": 10
+    },
+    "50": {
+     "cities": 4,
+     "eliminated": 1,
+     "vp": 1,
+     "gold": 395,
+     "army": 45,
+     "techs": 7,
+     "population": 11
+    },
+    "60": {
+     "cities": 5,
+     "eliminated": 1,
+     "vp": 1,
+     "gold": 574,
+     "army": 40,
+     "techs": 9,
+     "population": 15
+    },
+    "75": {
+     "cities": 5,
+     "eliminated": 1,
+     "vp": 2,
+     "gold": 919,
+     "army": 40,
+     "techs": 10,
+     "population": 18
+    },
+    "100": {
+     "cities": 6,
+     "eliminated": 1,
+     "vp": 4,
+     "gold": 1706,
+     "army": 69,
+     "techs": 13,
+     "population": 24
+    },
+    "125": {
+     "cities": 7,
+     "eliminated": 1,
+     "vp": 4,
+     "gold": 1313,
+     "army": 133,
+     "techs": 17,
+     "population": 30
+    },
+    "150": {
+     "cities": 10,
+     "eliminated": 1,
+     "vp": 5,
+     "gold": 733,
+     "army": 167,
+     "techs": 20,
+     "population": 44
+    }
+   }
+  },
+  {
+   "id": "swiss-894-large8",
+   "source": "p894-swiss-win-1621.legatum",
+   "role": "holdout",
+   "horizon": 100,
+   "seat": 0,
+   "faction": "Switzerland",
+   "why": "8.9.4 Switzerland, 8 players: 3 cities T60, 4 T100 (6 T150, 9 T175); won T246",
+   "engine_commit": "eeccf4800d3931b01f2f72dc45c15877576234ef",
+   "human_result": {
+    "outcome": "vp",
+    "turns": 246,
+    "won": true
+   },
+   "setup": {
+    "barbarians": true,
+    "height": 32,
+    "players": [
+     {
+      "faction": "Switzerland",
+      "is_human": true,
+      "name": "Player 1",
+      "team": 0
+     },
+     {
+      "difficulty": "Hard",
+      "faction": "Celts",
+      "is_human": false,
+      "name": "AI 2",
+      "team": 1
+     },
+     {
+      "difficulty": "Hard",
+      "faction": "Mongols",
+      "is_human": false,
+      "name": "AI 3",
+      "team": 2
+     },
+     {
+      "difficulty": "Hard",
+      "faction": "Sparta",
+      "is_human": false,
+      "name": "AI 4",
+      "team": 3
+     },
+     {
+      "difficulty": "Hard",
+      "faction": "Athens",
+      "is_human": false,
+      "name": "AI 5",
+      "team": 4
+     },
+     {
+      "difficulty": "Hard",
+      "faction": "Switzerland",
+      "is_human": false,
+      "name": "AI 6",
+      "team": 5
+     },
+     {
+      "difficulty": "Hard",
+      "faction": "India",
+      "is_human": false,
+      "name": "AI 7",
+      "team": 6
+     },
+     {
+      "difficulty": "Hard",
+      "faction": "Byzantium",
+      "is_human": false,
+      "name": "AI 8",
+      "team": 7
+     }
+    ],
+    "seed": 6135497475989443,
+    "speed": "Standard",
+    "turn_limit": null,
+    "width": 48
+   },
+   "targets": [
+    {
+     "metric": "cities",
+     "turn": 60,
+     "value": 3
+    },
+    {
+     "metric": "cities",
+     "turn": 100,
+     "value": 4
+    },
+    {
+     "metric": "gold",
+     "turn": 75,
+     "value": 533
+    }
+   ],
+   "human": {
+    "10": {
+     "cities": 1,
+     "eliminated": 0,
+     "vp": 0,
+     "gold": 199,
+     "army": 40,
+     "techs": 0,
+     "population": 3
+    },
+    "20": {
+     "cities": 1,
+     "eliminated": 0,
+     "vp": 0,
+     "gold": 330,
+     "army": 40,
+     "techs": 3,
+     "population": 5
+    },
+    "22": {
+     "cities": 1,
+     "eliminated": 0,
+     "vp": 0,
+     "gold": 342,
+     "army": 40,
+     "techs": 4,
+     "population": 5
+    },
+    "25": {
+     "cities": 1,
+     "eliminated": 0,
+     "vp": 0,
+     "gold": 360,
+     "army": 40,
+     "techs": 4,
+     "population": 5
+    },
+    "30": {
+     "cities": 1,
+     "eliminated": 0,
+     "vp": 0,
+     "gold": 390,
+     "army": 40,
+     "techs": 5,
+     "population": 5
+    },
+    "35": {
+     "cities": 2,
+     "eliminated": 0,
+     "vp": 0,
+     "gold": 441,
+     "army": 39,
+     "techs": 5,
+     "population": 7
+    },
+    "40": {
+     "cities": 2,
+     "eliminated": 0,
+     "vp": 0,
+     "gold": 498,
+     "army": 40,
+     "techs": 6,
+     "population": 9
+    },
+    "50": {
+     "cities": 2,
+     "eliminated": 0,
+     "vp": 0,
+     "gold": 245,
+     "army": 81,
+     "techs": 7,
+     "population": 12
+    },
+    "60": {
+     "cities": 3,
+     "eliminated": 0,
+     "vp": 0,
+     "gold": 336,
+     "army": 81,
+     "techs": 9,
+     "population": 14
+    },
+    "75": {
+     "cities": 3,
+     "eliminated": 0,
+     "vp": 0,
+     "gold": 533,
+     "army": 75,
+     "techs": 11,
+     "population": 19
+    },
+    "100": {
+     "cities": 4,
+     "eliminated": 0,
+     "vp": 0,
+     "gold": 276,
+     "army": 81,
+     "techs": 13,
+     "population": 25
+    },
+    "125": {
+     "cities": 5,
+     "eliminated": 0,
+     "vp": 0,
+     "gold": 737,
+     "army": 90,
+     "techs": 15,
+     "population": 32
+    },
+    "150": {
+     "cities": 6,
+     "eliminated": 0,
+     "vp": 2,
+     "gold": 184,
+     "army": 154,
+     "techs": 18,
+     "population": 38
+    }
+   }
+  }
+ ]
+}

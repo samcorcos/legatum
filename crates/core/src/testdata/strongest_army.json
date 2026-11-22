@@ -1,0 +1,1889 @@
+[
+  {
+    "turn": 185,
+    "old": [
+      456,
+      444
+    ],
+    "armies": [
+      [
+        {
+          "id": 126,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 31
+        },
+        {
+          "id": 138,
+          "kind": "Artillery",
+          "hp": 100,
+          "xp": 71
+        },
+        {
+          "id": 139,
+          "kind": "Artillery",
+          "hp": 100,
+          "xp": 109
+        },
+        {
+          "id": 14,
+          "kind": "Trooper",
+          "hp": 100,
+          "xp": 68
+        },
+        {
+          "id": 150,
+          "kind": "Settler",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 20,
+          "kind": "Rifleman",
+          "hp": 14,
+          "xp": 93
+        },
+        {
+          "id": 31,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 37
+        },
+        {
+          "id": 40,
+          "kind": "Artillery",
+          "hp": 100,
+          "xp": 453
+        }
+      ],
+      [
+        {
+          "id": 142,
+          "kind": "Infantry",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 149,
+          "kind": "Soldier",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 159,
+          "kind": "Soldier",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 42,
+          "kind": "Infantry",
+          "hp": 100,
+          "xp": 13
+        },
+        {
+          "id": 43,
+          "kind": "Ranger",
+          "hp": 100,
+          "xp": 37
+        },
+        {
+          "id": 60,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 9
+        },
+        {
+          "id": 72,
+          "kind": "FieldCannon",
+          "hp": 100,
+          "xp": 15
+        },
+        {
+          "id": 74,
+          "kind": "Settler",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 79,
+          "kind": "Rifleman",
+          "hp": 90,
+          "xp": 4
+        },
+        {
+          "id": 95,
+          "kind": "Marksman",
+          "hp": 100,
+          "xp": 7
+        }
+      ]
+    ]
+  },
+  {
+    "turn": 186,
+    "old": [
+      454,
+      444
+    ],
+    "armies": [
+      [
+        {
+          "id": 126,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 31
+        },
+        {
+          "id": 138,
+          "kind": "Artillery",
+          "hp": 100,
+          "xp": 71
+        },
+        {
+          "id": 139,
+          "kind": "Artillery",
+          "hp": 100,
+          "xp": 109
+        },
+        {
+          "id": 14,
+          "kind": "Trooper",
+          "hp": 100,
+          "xp": 68
+        },
+        {
+          "id": 20,
+          "kind": "Rifleman",
+          "hp": 16,
+          "xp": 93
+        },
+        {
+          "id": 31,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 37
+        },
+        {
+          "id": 40,
+          "kind": "Artillery",
+          "hp": 97,
+          "xp": 468
+        }
+      ],
+      [
+        {
+          "id": 142,
+          "kind": "Infantry",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 149,
+          "kind": "Soldier",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 159,
+          "kind": "Soldier",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 42,
+          "kind": "Infantry",
+          "hp": 100,
+          "xp": 13
+        },
+        {
+          "id": 43,
+          "kind": "Ranger",
+          "hp": 100,
+          "xp": 37
+        },
+        {
+          "id": 60,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 9
+        },
+        {
+          "id": 72,
+          "kind": "FieldCannon",
+          "hp": 100,
+          "xp": 15
+        },
+        {
+          "id": 74,
+          "kind": "Settler",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 79,
+          "kind": "Rifleman",
+          "hp": 90,
+          "xp": 4
+        },
+        {
+          "id": 95,
+          "kind": "Marksman",
+          "hp": 100,
+          "xp": 7
+        }
+      ]
+    ]
+  },
+  {
+    "turn": 187,
+    "old": [
+      458,
+      451
+    ],
+    "armies": [
+      [
+        {
+          "id": 126,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 31
+        },
+        {
+          "id": 138,
+          "kind": "Artillery",
+          "hp": 100,
+          "xp": 71
+        },
+        {
+          "id": 139,
+          "kind": "Artillery",
+          "hp": 100,
+          "xp": 109
+        },
+        {
+          "id": 14,
+          "kind": "Trooper",
+          "hp": 100,
+          "xp": 68
+        },
+        {
+          "id": 20,
+          "kind": "Rifleman",
+          "hp": 18,
+          "xp": 93
+        },
+        {
+          "id": 31,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 37
+        },
+        {
+          "id": 40,
+          "kind": "Artillery",
+          "hp": 100,
+          "xp": 468
+        }
+      ],
+      [
+        {
+          "id": 142,
+          "kind": "Infantry",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 149,
+          "kind": "Soldier",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 159,
+          "kind": "Soldier",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 42,
+          "kind": "Infantry",
+          "hp": 100,
+          "xp": 13
+        },
+        {
+          "id": 43,
+          "kind": "Ranger",
+          "hp": 100,
+          "xp": 37
+        },
+        {
+          "id": 60,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 9
+        },
+        {
+          "id": 72,
+          "kind": "FieldCannon",
+          "hp": 100,
+          "xp": 15
+        },
+        {
+          "id": 74,
+          "kind": "Settler",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 79,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 4
+        },
+        {
+          "id": 95,
+          "kind": "Marksman",
+          "hp": 100,
+          "xp": 7
+        }
+      ]
+    ]
+  },
+  {
+    "turn": 188,
+    "old": [
+      460,
+      456
+    ],
+    "armies": [
+      [
+        {
+          "id": 126,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 31
+        },
+        {
+          "id": 138,
+          "kind": "Artillery",
+          "hp": 100,
+          "xp": 86
+        },
+        {
+          "id": 139,
+          "kind": "Artillery",
+          "hp": 100,
+          "xp": 112
+        },
+        {
+          "id": 14,
+          "kind": "Trooper",
+          "hp": 100,
+          "xp": 68
+        },
+        {
+          "id": 20,
+          "kind": "Rifleman",
+          "hp": 20,
+          "xp": 93
+        },
+        {
+          "id": 31,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 37
+        },
+        {
+          "id": 40,
+          "kind": "Artillery",
+          "hp": 100,
+          "xp": 468
+        }
+      ],
+      [
+        {
+          "id": 142,
+          "kind": "Infantry",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 149,
+          "kind": "Soldier",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 159,
+          "kind": "Soldier",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 163,
+          "kind": "Scout",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 42,
+          "kind": "Infantry",
+          "hp": 100,
+          "xp": 13
+        },
+        {
+          "id": 43,
+          "kind": "Ranger",
+          "hp": 100,
+          "xp": 37
+        },
+        {
+          "id": 60,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 9
+        },
+        {
+          "id": 72,
+          "kind": "FieldCannon",
+          "hp": 100,
+          "xp": 15
+        },
+        {
+          "id": 74,
+          "kind": "Settler",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 79,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 4
+        },
+        {
+          "id": 95,
+          "kind": "Marksman",
+          "hp": 100,
+          "xp": 7
+        }
+      ]
+    ]
+  },
+  {
+    "turn": 189,
+    "old": [
+      451,
+      456
+    ],
+    "armies": [
+      [
+        {
+          "id": 126,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 31
+        },
+        {
+          "id": 138,
+          "kind": "Artillery",
+          "hp": 100,
+          "xp": 86
+        },
+        {
+          "id": 139,
+          "kind": "Artillery",
+          "hp": 90,
+          "xp": 117
+        },
+        {
+          "id": 14,
+          "kind": "Trooper",
+          "hp": 100,
+          "xp": 68
+        },
+        {
+          "id": 20,
+          "kind": "Rifleman",
+          "hp": 22,
+          "xp": 93
+        },
+        {
+          "id": 31,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 37
+        },
+        {
+          "id": 40,
+          "kind": "Artillery",
+          "hp": 100,
+          "xp": 483
+        }
+      ],
+      [
+        {
+          "id": 142,
+          "kind": "Infantry",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 149,
+          "kind": "Soldier",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 159,
+          "kind": "Soldier",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 163,
+          "kind": "Scout",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 42,
+          "kind": "Infantry",
+          "hp": 100,
+          "xp": 13
+        },
+        {
+          "id": 43,
+          "kind": "Ranger",
+          "hp": 100,
+          "xp": 37
+        },
+        {
+          "id": 60,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 9
+        },
+        {
+          "id": 72,
+          "kind": "FieldCannon",
+          "hp": 100,
+          "xp": 15
+        },
+        {
+          "id": 74,
+          "kind": "Settler",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 79,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 4
+        },
+        {
+          "id": 95,
+          "kind": "Marksman",
+          "hp": 100,
+          "xp": 7
+        }
+      ]
+    ]
+  },
+  {
+    "turn": 190,
+    "old": [
+      462,
+      456
+    ],
+    "armies": [
+      [
+        {
+          "id": 126,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 31
+        },
+        {
+          "id": 138,
+          "kind": "Artillery",
+          "hp": 100,
+          "xp": 86
+        },
+        {
+          "id": 139,
+          "kind": "Artillery",
+          "hp": 100,
+          "xp": 132
+        },
+        {
+          "id": 14,
+          "kind": "Trooper",
+          "hp": 100,
+          "xp": 68
+        },
+        {
+          "id": 20,
+          "kind": "Rifleman",
+          "hp": 24,
+          "xp": 93
+        },
+        {
+          "id": 31,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 37
+        },
+        {
+          "id": 40,
+          "kind": "Artillery",
+          "hp": 100,
+          "xp": 483
+        }
+      ],
+      [
+        {
+          "id": 142,
+          "kind": "Infantry",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 149,
+          "kind": "Soldier",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 159,
+          "kind": "Soldier",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 163,
+          "kind": "Scout",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 42,
+          "kind": "Infantry",
+          "hp": 100,
+          "xp": 13
+        },
+        {
+          "id": 43,
+          "kind": "Ranger",
+          "hp": 100,
+          "xp": 37
+        },
+        {
+          "id": 60,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 9
+        },
+        {
+          "id": 72,
+          "kind": "FieldCannon",
+          "hp": 100,
+          "xp": 15
+        },
+        {
+          "id": 74,
+          "kind": "Settler",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 79,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 4
+        },
+        {
+          "id": 95,
+          "kind": "Marksman",
+          "hp": 100,
+          "xp": 7
+        }
+      ]
+    ]
+  },
+  {
+    "turn": 191,
+    "old": [
+      463,
+      456
+    ],
+    "armies": [
+      [
+        {
+          "id": 126,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 31
+        },
+        {
+          "id": 138,
+          "kind": "Artillery",
+          "hp": 100,
+          "xp": 86
+        },
+        {
+          "id": 139,
+          "kind": "Artillery",
+          "hp": 100,
+          "xp": 132
+        },
+        {
+          "id": 14,
+          "kind": "Trooper",
+          "hp": 100,
+          "xp": 68
+        },
+        {
+          "id": 20,
+          "kind": "Rifleman",
+          "hp": 26,
+          "xp": 93
+        },
+        {
+          "id": 31,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 37
+        },
+        {
+          "id": 40,
+          "kind": "Artillery",
+          "hp": 100,
+          "xp": 483
+        }
+      ],
+      [
+        {
+          "id": 142,
+          "kind": "Infantry",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 149,
+          "kind": "Soldier",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 159,
+          "kind": "Soldier",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 163,
+          "kind": "Scout",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 42,
+          "kind": "Infantry",
+          "hp": 100,
+          "xp": 13
+        },
+        {
+          "id": 43,
+          "kind": "Ranger",
+          "hp": 100,
+          "xp": 37
+        },
+        {
+          "id": 60,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 9
+        },
+        {
+          "id": 72,
+          "kind": "FieldCannon",
+          "hp": 100,
+          "xp": 15
+        },
+        {
+          "id": 74,
+          "kind": "Settler",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 79,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 4
+        },
+        {
+          "id": 95,
+          "kind": "Marksman",
+          "hp": 100,
+          "xp": 7
+        }
+      ]
+    ]
+  },
+  {
+    "turn": 192,
+    "old": [
+      465,
+      456
+    ],
+    "armies": [
+      [
+        {
+          "id": 126,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 31
+        },
+        {
+          "id": 138,
+          "kind": "Artillery",
+          "hp": 100,
+          "xp": 86
+        },
+        {
+          "id": 139,
+          "kind": "Artillery",
+          "hp": 100,
+          "xp": 147
+        },
+        {
+          "id": 14,
+          "kind": "Trooper",
+          "hp": 100,
+          "xp": 68
+        },
+        {
+          "id": 20,
+          "kind": "Rifleman",
+          "hp": 28,
+          "xp": 93
+        },
+        {
+          "id": 31,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 37
+        },
+        {
+          "id": 40,
+          "kind": "Artillery",
+          "hp": 100,
+          "xp": 483
+        }
+      ],
+      [
+        {
+          "id": 142,
+          "kind": "Infantry",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 149,
+          "kind": "Soldier",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 159,
+          "kind": "Soldier",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 163,
+          "kind": "Scout",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 42,
+          "kind": "Infantry",
+          "hp": 100,
+          "xp": 13
+        },
+        {
+          "id": 43,
+          "kind": "Ranger",
+          "hp": 100,
+          "xp": 37
+        },
+        {
+          "id": 60,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 9
+        },
+        {
+          "id": 72,
+          "kind": "FieldCannon",
+          "hp": 100,
+          "xp": 15
+        },
+        {
+          "id": 74,
+          "kind": "Settler",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 79,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 4
+        },
+        {
+          "id": 95,
+          "kind": "Marksman",
+          "hp": 100,
+          "xp": 7
+        }
+      ]
+    ]
+  },
+  {
+    "turn": 193,
+    "old": [
+      466,
+      476
+    ],
+    "armies": [
+      [
+        {
+          "id": 126,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 31
+        },
+        {
+          "id": 138,
+          "kind": "Artillery",
+          "hp": 100,
+          "xp": 86
+        },
+        {
+          "id": 139,
+          "kind": "Artillery",
+          "hp": 100,
+          "xp": 147
+        },
+        {
+          "id": 14,
+          "kind": "Trooper",
+          "hp": 100,
+          "xp": 68
+        },
+        {
+          "id": 20,
+          "kind": "Rifleman",
+          "hp": 30,
+          "xp": 93
+        },
+        {
+          "id": 31,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 37
+        },
+        {
+          "id": 40,
+          "kind": "Artillery",
+          "hp": 100,
+          "xp": 483
+        }
+      ],
+      [
+        {
+          "id": 142,
+          "kind": "Infantry",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 149,
+          "kind": "Soldier",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 159,
+          "kind": "Soldier",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 163,
+          "kind": "Scout",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 164,
+          "kind": "Soldier",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 42,
+          "kind": "Infantry",
+          "hp": 100,
+          "xp": 13
+        },
+        {
+          "id": 43,
+          "kind": "Ranger",
+          "hp": 100,
+          "xp": 37
+        },
+        {
+          "id": 60,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 9
+        },
+        {
+          "id": 72,
+          "kind": "FieldCannon",
+          "hp": 100,
+          "xp": 15
+        },
+        {
+          "id": 74,
+          "kind": "Settler",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 79,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 4
+        },
+        {
+          "id": 95,
+          "kind": "Marksman",
+          "hp": 100,
+          "xp": 7
+        }
+      ]
+    ]
+  },
+  {
+    "turn": 194,
+    "old": [
+      489,
+      456
+    ],
+    "armies": [
+      [
+        {
+          "id": 126,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 31
+        },
+        {
+          "id": 138,
+          "kind": "Artillery",
+          "hp": 100,
+          "xp": 89
+        },
+        {
+          "id": 139,
+          "kind": "Artillery",
+          "hp": 100,
+          "xp": 147
+        },
+        {
+          "id": 14,
+          "kind": "Trooper",
+          "hp": 100,
+          "xp": 68
+        },
+        {
+          "id": 20,
+          "kind": "Rifleman",
+          "hp": 32,
+          "xp": 93
+        },
+        {
+          "id": 31,
+          "kind": "Infantry",
+          "hp": 94,
+          "xp": 40
+        },
+        {
+          "id": 40,
+          "kind": "Artillery",
+          "hp": 100,
+          "xp": 483
+        }
+      ],
+      [
+        {
+          "id": 142,
+          "kind": "Infantry",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 159,
+          "kind": "Soldier",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 163,
+          "kind": "Scout",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 164,
+          "kind": "Soldier",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 42,
+          "kind": "Infantry",
+          "hp": 100,
+          "xp": 13
+        },
+        {
+          "id": 43,
+          "kind": "Ranger",
+          "hp": 100,
+          "xp": 37
+        },
+        {
+          "id": 60,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 9
+        },
+        {
+          "id": 72,
+          "kind": "FieldCannon",
+          "hp": 100,
+          "xp": 18
+        },
+        {
+          "id": 74,
+          "kind": "Settler",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 79,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 4
+        },
+        {
+          "id": 95,
+          "kind": "Marksman",
+          "hp": 100,
+          "xp": 7
+        }
+      ]
+    ]
+  },
+  {
+    "turn": 195,
+    "old": [
+      479,
+      545
+    ],
+    "armies": [
+      [
+        {
+          "id": 126,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 31
+        },
+        {
+          "id": 138,
+          "kind": "Artillery",
+          "hp": 100,
+          "xp": 89
+        },
+        {
+          "id": 139,
+          "kind": "Artillery",
+          "hp": 92,
+          "xp": 150
+        },
+        {
+          "id": 14,
+          "kind": "Trooper",
+          "hp": 100,
+          "xp": 68
+        },
+        {
+          "id": 20,
+          "kind": "Rifleman",
+          "hp": 34,
+          "xp": 93
+        },
+        {
+          "id": 31,
+          "kind": "Infantry",
+          "hp": 91,
+          "xp": 42
+        },
+        {
+          "id": 40,
+          "kind": "Artillery",
+          "hp": 100,
+          "xp": 483
+        }
+      ],
+      [
+        {
+          "id": 142,
+          "kind": "Infantry",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 159,
+          "kind": "Soldier",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 163,
+          "kind": "Scout",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 164,
+          "kind": "Soldier",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 165,
+          "kind": "Infantry",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 42,
+          "kind": "Infantry",
+          "hp": 100,
+          "xp": 13
+        },
+        {
+          "id": 43,
+          "kind": "Ranger",
+          "hp": 100,
+          "xp": 45
+        },
+        {
+          "id": 60,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 9
+        },
+        {
+          "id": 72,
+          "kind": "FieldCannon",
+          "hp": 100,
+          "xp": 21
+        },
+        {
+          "id": 74,
+          "kind": "Settler",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 79,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 4
+        },
+        {
+          "id": 95,
+          "kind": "Marksman",
+          "hp": 100,
+          "xp": 7
+        }
+      ]
+    ]
+  },
+  {
+    "turn": 196,
+    "old": [
+      484,
+      545
+    ],
+    "armies": [
+      [
+        {
+          "id": 126,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 31
+        },
+        {
+          "id": 138,
+          "kind": "Artillery",
+          "hp": 100,
+          "xp": 89
+        },
+        {
+          "id": 139,
+          "kind": "Artillery",
+          "hp": 94,
+          "xp": 150
+        },
+        {
+          "id": 14,
+          "kind": "Trooper",
+          "hp": 100,
+          "xp": 68
+        },
+        {
+          "id": 20,
+          "kind": "Rifleman",
+          "hp": 36,
+          "xp": 93
+        },
+        {
+          "id": 31,
+          "kind": "Infantry",
+          "hp": 93,
+          "xp": 42
+        },
+        {
+          "id": 40,
+          "kind": "Artillery",
+          "hp": 100,
+          "xp": 483
+        }
+      ],
+      [
+        {
+          "id": 142,
+          "kind": "Infantry",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 159,
+          "kind": "Soldier",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 163,
+          "kind": "Scout",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 164,
+          "kind": "Soldier",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 165,
+          "kind": "Infantry",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 42,
+          "kind": "Infantry",
+          "hp": 100,
+          "xp": 13
+        },
+        {
+          "id": 43,
+          "kind": "Ranger",
+          "hp": 100,
+          "xp": 45
+        },
+        {
+          "id": 60,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 9
+        },
+        {
+          "id": 72,
+          "kind": "FieldCannon",
+          "hp": 100,
+          "xp": 21
+        },
+        {
+          "id": 74,
+          "kind": "Settler",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 79,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 4
+        },
+        {
+          "id": 95,
+          "kind": "Marksman",
+          "hp": 100,
+          "xp": 7
+        }
+      ]
+    ]
+  },
+  {
+    "turn": 197,
+    "old": [
+      490,
+      545
+    ],
+    "armies": [
+      [
+        {
+          "id": 126,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 31
+        },
+        {
+          "id": 138,
+          "kind": "Artillery",
+          "hp": 100,
+          "xp": 89
+        },
+        {
+          "id": 139,
+          "kind": "Artillery",
+          "hp": 96,
+          "xp": 150
+        },
+        {
+          "id": 14,
+          "kind": "Trooper",
+          "hp": 100,
+          "xp": 68
+        },
+        {
+          "id": 20,
+          "kind": "Rifleman",
+          "hp": 38,
+          "xp": 93
+        },
+        {
+          "id": 31,
+          "kind": "Infantry",
+          "hp": 95,
+          "xp": 42
+        },
+        {
+          "id": 40,
+          "kind": "Artillery",
+          "hp": 100,
+          "xp": 483
+        }
+      ],
+      [
+        {
+          "id": 142,
+          "kind": "Infantry",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 159,
+          "kind": "Soldier",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 163,
+          "kind": "Scout",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 164,
+          "kind": "Soldier",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 165,
+          "kind": "Infantry",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 42,
+          "kind": "Infantry",
+          "hp": 100,
+          "xp": 13
+        },
+        {
+          "id": 43,
+          "kind": "Ranger",
+          "hp": 100,
+          "xp": 45
+        },
+        {
+          "id": 60,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 9
+        },
+        {
+          "id": 72,
+          "kind": "FieldCannon",
+          "hp": 100,
+          "xp": 21
+        },
+        {
+          "id": 74,
+          "kind": "Settler",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 79,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 4
+        },
+        {
+          "id": 95,
+          "kind": "Marksman",
+          "hp": 100,
+          "xp": 7
+        }
+      ]
+    ]
+  },
+  {
+    "turn": 198,
+    "old": [
+      910,
+      545
+    ],
+    "armies": [
+      [
+        {
+          "id": 126,
+          "kind": "Infantry",
+          "hp": 100,
+          "xp": 31
+        },
+        {
+          "id": 138,
+          "kind": "Artillery",
+          "hp": 100,
+          "xp": 89
+        },
+        {
+          "id": 139,
+          "kind": "Artillery",
+          "hp": 98,
+          "xp": 150
+        },
+        {
+          "id": 14,
+          "kind": "Trooper",
+          "hp": 100,
+          "xp": 68
+        },
+        {
+          "id": 166,
+          "kind": "Tank",
+          "hp": 100,
+          "xp": 16
+        },
+        {
+          "id": 167,
+          "kind": "Tank",
+          "hp": 100,
+          "xp": 16
+        },
+        {
+          "id": 168,
+          "kind": "Tank",
+          "hp": 100,
+          "xp": 16
+        },
+        {
+          "id": 169,
+          "kind": "Tank",
+          "hp": 100,
+          "xp": 16
+        },
+        {
+          "id": 20,
+          "kind": "Infantry",
+          "hp": 40,
+          "xp": 93
+        },
+        {
+          "id": 31,
+          "kind": "Infantry",
+          "hp": 97,
+          "xp": 42
+        },
+        {
+          "id": 40,
+          "kind": "Artillery",
+          "hp": 100,
+          "xp": 483
+        }
+      ],
+      [
+        {
+          "id": 142,
+          "kind": "Infantry",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 159,
+          "kind": "Soldier",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 163,
+          "kind": "Scout",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 164,
+          "kind": "Soldier",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 165,
+          "kind": "Infantry",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 42,
+          "kind": "Infantry",
+          "hp": 100,
+          "xp": 13
+        },
+        {
+          "id": 43,
+          "kind": "Ranger",
+          "hp": 100,
+          "xp": 45
+        },
+        {
+          "id": 60,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 9
+        },
+        {
+          "id": 72,
+          "kind": "FieldCannon",
+          "hp": 100,
+          "xp": 21
+        },
+        {
+          "id": 74,
+          "kind": "Settler",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 79,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 4
+        },
+        {
+          "id": 95,
+          "kind": "Marksman",
+          "hp": 100,
+          "xp": 7
+        }
+      ]
+    ]
+  },
+  {
+    "turn": 199,
+    "old": [
+      916,
+      560
+    ],
+    "armies": [
+      [
+        {
+          "id": 126,
+          "kind": "Infantry",
+          "hp": 100,
+          "xp": 31
+        },
+        {
+          "id": 138,
+          "kind": "Artillery",
+          "hp": 100,
+          "xp": 89
+        },
+        {
+          "id": 139,
+          "kind": "Artillery",
+          "hp": 100,
+          "xp": 150
+        },
+        {
+          "id": 14,
+          "kind": "Trooper",
+          "hp": 100,
+          "xp": 68
+        },
+        {
+          "id": 166,
+          "kind": "Tank",
+          "hp": 100,
+          "xp": 16
+        },
+        {
+          "id": 167,
+          "kind": "Tank",
+          "hp": 100,
+          "xp": 16
+        },
+        {
+          "id": 168,
+          "kind": "Tank",
+          "hp": 100,
+          "xp": 16
+        },
+        {
+          "id": 169,
+          "kind": "Tank",
+          "hp": 100,
+          "xp": 16
+        },
+        {
+          "id": 20,
+          "kind": "Infantry",
+          "hp": 42,
+          "xp": 93
+        },
+        {
+          "id": 31,
+          "kind": "Infantry",
+          "hp": 99,
+          "xp": 42
+        },
+        {
+          "id": 40,
+          "kind": "Artillery",
+          "hp": 100,
+          "xp": 483
+        }
+      ],
+      [
+        {
+          "id": 142,
+          "kind": "Infantry",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 159,
+          "kind": "Soldier",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 164,
+          "kind": "Soldier",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 165,
+          "kind": "Infantry",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 170,
+          "kind": "Soldier",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 42,
+          "kind": "Infantry",
+          "hp": 100,
+          "xp": 13
+        },
+        {
+          "id": 43,
+          "kind": "Ranger",
+          "hp": 100,
+          "xp": 45
+        },
+        {
+          "id": 60,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 9
+        },
+        {
+          "id": 72,
+          "kind": "FieldCannon",
+          "hp": 100,
+          "xp": 21
+        },
+        {
+          "id": 74,
+          "kind": "Settler",
+          "hp": 100,
+          "xp": 0
+        },
+        {
+          "id": 79,
+          "kind": "Rifleman",
+          "hp": 100,
+          "xp": 4
+        },
+        {
+          "id": 95,
+          "kind": "Marksman",
+          "hp": 100,
+          "xp": 7
+        }
+      ]
+    ]
+  }
+]

@@ -1,0 +1,58 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Legatum",
+  "version": "0.1.0",
+  "identifier": "com.legatum.game",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:5173",
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "Legatum",
+        "width": 1440,
+        "height": 900,
+        "minWidth": 1000,
+        "minHeight": 600,
+        "center": true,
+        "resizable": true,
+        "backgroundColor": "#e6dcc4"
+      }
+    ],
+    "security": {
+      "csp": {
+        "default-src": "'self'",
+        "script-src": "'self' 'wasm-unsafe-eval'",
+        "style-src": "'self' 'unsafe-inline'",
+        "img-src": "'self' data: blob:",
+        "font-src": "'self' data:",
+        "connect-src": "'self' ipc: http://ipc.localhost"
+      },
+      "dangerousDisableAssetCspModification": ["style-src"]
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["app"],
+    "category": "StrategyGame",
+    "shortDescription": "A historical 4X on a hex map",
+    "copyright": "Copyright © 2026 Sam Corcos and contributors",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.png"
+    ],
+    "macOS": {
+      "minimumSystemVersion": "11.0",
+      "hardenedRuntime": true,
+      "entitlements": "Entitlements.plist",
+      "infoPlist": "Info.macos.plist"
+    }
+  }
+}

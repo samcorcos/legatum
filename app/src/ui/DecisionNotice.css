@@ -1,0 +1,21 @@
+/* G17: the confirmation after a decision, over the top of the map (clear of the unit bar and the
+   bottom sheet), with Undo as its one action. */
+.toast.decision-notice {
+  top: 76px;
+  bottom: auto;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 4px 14px;
+  padding: 6px 8px 6px 16px;
+  /* Centred over the map between the side panels, so it never covers the race title. */
+  left: calc(var(--story-left, 16px) + (100% - var(--story-left, 16px) - var(--story-right, 16px)) / 2);
+  max-width: min(560px, calc(100% - var(--story-left, 16px) - var(--story-right, 16px) - 16px));
+  width: max-content;
+  border-left-color: var(--good);
+  cursor: default;
+  font-size: 14px;
+}
+.toast.decision-notice > span { flex: 1 1 220px; }
+.toast.decision-notice .btn { min-height: 32px; padding: 4px 12px; }

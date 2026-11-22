@@ -1,0 +1,90 @@
+[
+  {
+    "set": "units-miniature",
+    "size": 45,
+    "a": "barbarian-pikeman",
+    "b": "pikeman",
+    "score": 0.71,
+    "gist": 0.84
+  },
+  {
+    "set": "units-miniature",
+    "size": 45,
+    "a": "infantry",
+    "b": "reislaufer",
+    "score": 0.62,
+    "gist": 0.72
+  },
+  {
+    "set": "units-miniature",
+    "size": 45,
+    "a": "barbarian-archer",
+    "b": "pikeman",
+    "score": 0.61,
+    "gist": 0.73
+  },
+  {
+    "set": "units-miniature",
+    "size": 45,
+    "a": "barbarian-crossbowman",
+    "b": "reislaufer",
+    "score": 0.58,
+    "gist": 0.81
+  },
+  {
+    "set": "units-miniature",
+    "size": 45,
+    "a": "barbarian-archer",
+    "b": "barbarian-pikeman",
+    "score": 0.56,
+    "gist": 0.79
+  },
+  {
+    "set": "units-miniature",
+    "size": 45,
+    "a": "barbarian-pikeman",
+    "b": "phalangite",
+    "score": 0.5,
+    "gist": 0.8
+  },
+  {
+    "set": "units-miniature",
+    "size": 45,
+    "a": "archer",
+    "b": "rifleman",
+    "score": 0.49,
+    "gist": 0.81
+  },
+  {
+    "set": "units-miniature",
+    "size": 45,
+    "a": "phalangite",
+    "b": "pikeman",
+    "score": 0.46,
+    "gist": 0.79
+  },
+  {
+    "set": "units-miniature",
+    "size": 45,
+    "a": "barbarian-archer",
+    "b": "rifleman",
+    "score": 0.46,
+    "gist": 0.8
+  },
+  {
+    "set": "units-miniature",
+    "size": 45,
+    "a": "rifleman",
+    "b": "tagmatic-soldier",
+    "score": 0.31,
+    "gist": 0.83
+  },
+  {
+    "set": "units-miniature",
+    "size": 45,
+    "a": "peltast",
+    "b": "pikeman",
+    "score": 0.26,
+    "gist": 0.78
+  }
+]

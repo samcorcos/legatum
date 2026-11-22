@@ -1,0 +1,10 @@
+[
+  {
+    "slug": "crest-aztecs",
+    "prompt": "Edit only the background outside this circular gold and navy crest. Remove every ghost image, dark patch, city silhouette and mottled square behind the circle. Outside the circular gold edge must be completely transparent clean alpha. Keep all of the circular gold frame and navy field and the five-tongued gold flame torch exactly unchanged. No square backdrop, no text, no new objects. Crisp circle silhouette."
+  },
+  {
+    "slug": "legionary",
+    "prompt": "Historical prop correction to this same standing Roman miniature. Keep face, body, all hands, shield, sword, clothing, sandals, plain cream base, camera and light exactly. The pilum in his right hand currently has too much wood and too little iron. Keep its tip at the same top position and its foot at the same bottom position. Move the square wooden mounting block DOWN to waist level immediately BELOW his right fist. Replace the entire shaft from that block to the small pyramidal tip with a long narrow straight dark iron shank: the right fist now wraps the narrow iron shank just above its wooden mounting block. Iron section should be about 40 percent of total pilum length, wooden shaft 60 percent. No leaf spearhead; retain small pyramidal point. No other changes. Transparent background."
+  }
+]

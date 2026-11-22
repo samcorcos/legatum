@@ -1,0 +1,57 @@
+import { useId, useLayoutEffect, useRef } from 'react';
+import { useGame } from '../store';
+import { pendingDecisions } from '../turnFlow';
+import { closeTips } from './Tip';
+import { Icon } from './bits';
+import './EndTurnConfirmation.css';
+
+export function EndTurnConfirmation({ onConfirm }: { onConfirm: () => void }) {
+  const review = useGame((s) => s.endTurnConfirmation);
+  const views = useGame((s) => s.views);
+  const orders = useGame((s) => s.orders);
+  const errors = useGame((s) => s.errors);
+  const humans = useGame((s) => s.humans);
+  const siegeSeen = useGame((s) => s.siegeSeen);
+  const airHeld = useGame((s) => s.airHeld);
+  const report = useGame((s) => s.report);
+  const blocked = useGame((s) => !!s.busy || (s.client?.kind === 'remote' && s.lan?.conn !== 'open'));
+  const dialog = useRef<HTMLDialogElement>(null);
+  const firstButton = useRef<HTMLButtonElement>(null);
+  const title = useId();
+  const description = useId();
+  const current = review && views?.[review.seat] === review.view && orders[review.seat] === review.orders && !review.view.finished;
+  const close = () => useGame.getState().set({ endTurnConfirmation: null });
+  useLayoutEffect(() => {
+    const el = dialog.current;
+    if (!current || !el) return;
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    closeTips();
+    el.showModal();
+    // Repeated Return lands on navigation, never on the consequential confirmation.
+    firstButton.current?.focus({ preventScroll: true });
+    return () => { el.close(); if (opener?.isConnected) opener.focus({ preventScroll: true }); };
+  }, [current, review]);
+  if (!current || !review) return null;
+  const pending = pendingDecisions(review.view, review.orders, errors[review.seat], { humans, orders, errors, siegeSeen, airHeld, seat: review.seat, report, goalDecisionSeen: useGame.getState().goalDecisionSeen });
+  const name = review.view.players.find((p) => p.id === review.view.me)?.name;
+  const first = pending[0];
+  // Name the decision the primary button leads to (pillar 9), not just "the first one".
+  const go = !first ? 'Keep planning' : first.kind === 'diplomacy' ? 'Respond to the offer' : first.kind === 'siege' ? 'Go to the city' : first.kind === 'treasury' ? 'Fix the treasury' : first.kind === 'air' ? 'Review the aircraft'
+    : first.kind === 'unit' ? `Give the ${first.label.split(':')[0].replace(/ #\d+$/, '')} orders` : first.kind === 'city' ? 'Choose production' : 'Choose research';
+  return <dialog ref={dialog} className="modal end-turn-confirmation" aria-labelledby={title} aria-describedby={description}
+    onCancel={(e) => { e.preventDefault(); close(); }}>
+    <button className="icon-btn end-turn-close" onClick={close} aria-label="Keep planning" title="Keep planning (Esc)"><Icon name="ui-cross" size={14} /></button>
+    <h2 id={title}>End turn with decisions pending?</h2>
+    <p id={description}>{humans.length > 1 && `${name}: `}{pending.length === 1 ? 'This still needs you.' : `These ${pending.length} still need you.`} Units without orders stay put and come back next turn.</p>
+    <ul>{pending.map((d) => <li key={`${d.kind}-${'id' in d ? d.id : ''}`}>{d.label}</li>)}</ul>
+    <div className="end-turn-actions">
+      <button ref={firstButton} className="btn primary" disabled={blocked} onClick={() => {
+        close();
+        const s = useGame.getState();
+        if (s.seat !== review.seat) s.setSeat(review.seat);
+        s.nextDecision(true);
+      }}>{go}</button>
+      <button className="btn" disabled={blocked} onClick={onConfirm}>End turn anyway</button>
+    </div>
+  </dialog>;
+}

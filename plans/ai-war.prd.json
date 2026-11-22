@@ -1,0 +1,507 @@
+{
+  "name": "Hard AI that can beat the designer at war",
+  "spec": "plans/ai-war.md",
+  "goal": "Hard wins 50%+ in the designer's seat on the eight benchmark maps, matches his result in half the war-suite attacker scenarios, and beats him in at least two of four fresh games, without cheating.",
+  "stories": [
+    {
+      "id": "SIEGE-1103",
+      "title": "Price a winning siege before accepting Peace",
+      "acceptance": [
+        "A visible favorable siege or near-fallen original capital is priced against an offered Peace using only PlayerView",
+        "Swiss 8.9.24 T147 Hard refuses; a constructed capital under threat still accepts relief",
+        "Default-on is conditional on rivals not becoming weaker in the human-seat benchmark"
+      ],
+      "verification": [
+        "Cherry-picked playtest-8.9.24 decision audit has zero state hash mismatches and refuses T147",
+        "Focused dangerous-war test accepts relief",
+        "Seed 310001, 256 salts on eight maps: rivals-only with explicit seat override and seat-only, analyzed by quality_gate.py"
+      ],
+      "passes": false
+    },
+    {
+      "id": "GERMANY-1101",
+      "title": "Make Five Ruhr Foundries a fixed live goal and value it in Hard AI",
+      "acceptance": [
+        "Germany holds 2 VP while it owns at least five cities with a Ruhr Foundry; an unbuilt city does not suspend the goal",
+        "The Ruhr Foundry retains its Production yield and Iron and Coal needs; progress and faction copy say N of 5 Ruhr Foundries",
+        "Hard AI scores the fifth city, Foundry chain and rival denial without a forced build or founding veto"
+      ],
+      "verification": [
+        "Extended --app verification, including current-save and scenario tests, passes",
+        "Seed 8320000 paired 64-game all-faction Hard smokes have zero panics and stalls, with Germany goal awards, wins and mean VP reported",
+        "Seed 310001 paired human-seat benchmark uses 256 reseeded salts on all eight maps and a quality-gate receipt; ledger row recorded"
+      ],
+      "passes": true
+    },
+    {
+      "id": "COALITION-1101",
+      "title": "Price a leader push as a reachable coalition and a future race opportunity",
+      "acceptance": [
+        "A zero solo win chance does not erase the value of stopping a near-certain leader",
+        "Only public War participants with visible reach add coalition force; separate city fronts matter",
+        "Known capital and VP-holding cities gain target value without bypassing siege forecasts",
+        "The T167 and T170 Aztec save branches report capital reach and hold breaks, including the fog limit"
+      ],
+      "verification": [
+        "Focused zero-solo-chance AI test and extended remote verification",
+        "32 reseeded Hard-seat continuations from each save branch",
+        "Paired eight-map, 256-salt human-seat benchmark against master, including cap games and median length"
+      ],
+      "passes": true
+    },
+    {
+      "id": "RULES-1031",
+      "title": "Remove Mongol slip-past and Sparta Gold rewards without retaining AI dependencies",
+      "acceptance": [
+        "Mongol units use the ordinary occupied-tile and civilian capture-pin rules; +1 military move and Scout/civilian Peace passage remain",
+        "Sparta military kills and city captures give healing but no faction Gold; Hoplite phalanx and peace desertion remain",
+        "Remove the obsolete anti-Mongol garrison gene and related AI assumptions"
+      ],
+      "verification": [
+        "Moving Mongol Settler capture regression, movement and Sparta tests, WASM tests and repinned tapes pass",
+        "Extended verification passes and a 64-game eight-empire Hard smoke is compared with master by faction"
+      ],
+      "passes": true
+    },
+    {
+      "id": "W0.1",
+      "title": "Land and install 8.9.13 as the frozen baseline",
+      "acceptance": [
+        "astra/finish-land-8913 reviewed and fast-forwarded to master",
+        "Tagged playtest-8.9.13 before building; app title reads Playtest 8.9.13",
+        "Installed after backing up both App Support dirs; Legatum not running during install",
+        "Baseline commit recorded in plans/ai-war-progress.txt"
+      ],
+      "verification": [
+        "git log -1 master matches the verified commit in .reviews/astra-finish-land-8913.md",
+        "defaults read /Applications/Legatum.app/Contents/Info.plist CFBundleShortVersionString and the in-app title show 8.9.13"
+      ],
+      "passes": true
+    },
+    {
+      "id": "W0.2",
+      "title": "Seven war fixtures from the designer's saves",
+      "acceptance": [
+        "Swiss T180/T210/T220 (athens-win-swiss-tepid-20261025), German T214/T219 (japan-win-bombers-20261026), Japan T142 (sparta-crushing-japan-20261025), Chur T143 at Hard (staging-ring-chur-20261026) in scenarios/war/",
+        "Each has a goal, a deadline, the designer's own result and a written prediction made before its first run",
+        "Listed in docs/sim-results/hard-vs-human/war-scenarios/README.md"
+      ],
+      "verification": [
+        "tools/sim/war-scenarios.sh runs every new scenario 64 times on the baseline and writes results",
+        "cargo test -p legatum-sim passes"
+      ],
+      "passes": true
+    },
+    {
+      "id": "W0.3",
+      "title": "Live speed budget measured",
+      "acceptance": [
+        "Per-seat turn time at T50/T150/T250, native and WASM, for Hard and Hard+Search",
+        "Whole-lobby p95 on the designer's laptop size recorded in perf/turn-latency.md"
+      ],
+      "verification": [
+        "Measurement script output pasted into docs/sim-results/ai-war/baseline.md"
+      ],
+      "passes": true
+    },
+    {
+      "id": "W0.4",
+      "title": "Rank the fixes already on branches",
+      "acceptance": [
+        "fix-staging-ring-r2, ai-local-opportunism, ai-air-defense-r2, search-air-execution, gold-usage-diagnosis each run as an arm on the new fixtures and the frozen-control gate (2,048 games)",
+        "Winners named as the planner's starting point; losing branches deleted with a learnings entry"
+      ],
+      "verification": [
+        "Gate decision JSON per arm saved under ~/LegatumRuns/ai-war-w0/",
+        "War-suite results per arm in docs/sim-results/ai-war/baseline.md"
+      ],
+      "passes": true
+    },
+    {
+      "id": "W0.5",
+      "title": "Baseline report sent",
+      "acceptance": [
+        "docs/sim-results/ai-war/baseline.md with fixtures, benchmark, speed and arm ranking",
+        "Portrait chart PNG sent to the designer"
+      ],
+      "verification": [
+        "File committed; SendUserFile done"
+      ],
+      "passes": true
+    },
+    {
+      "id": "W1",
+      "title": "Campaign planner skateboard: one operation record, commit / gather / withdraw",
+      "acceptance": [
+        "An operation owns its roster (ground and air), rendezvous tile and turn, required force, purchases and home defence",
+        "Each turn it commits, gathers or withdraws by rolling 3-6 alternatives forward on the engine; tactical refusals return reasons",
+        "Behind a gene, off by default until it passes",
+        "Playtest build installed with notes on what to watch"
+      ],
+      "verification": [
+        "War suite: >= +15 pp capture-by-deadline on the W0.2 fixtures; war-golden-horde >= 40/64",
+        "Frozen-control gate: seat-only >= +3 pp, opponents-only >= -3 pp",
+        "tools/release/check.sh passes"
+      ],
+      "passes": false
+    },
+    {
+      "id": "LATE-1101",
+      "title": "Price late capture campaigns by VP hold, denial, and duel elimination value",
+      "acceptance": [
+        "Hard values a feasible capture that starts its VP hold or removes a rival's held VP, including a Celtic sack",
+        "Seeds 310146 and 310190 finish with a winner before the 1,200-turn harness cap",
+        "No engine victory rule, VP source, or target changes"
+      ],
+      "verification": [
+        "Focused capture-value tests pass",
+        "The 256-salt eight-map paired human-seat gate is above its -1.5 percentage-point floor",
+        "Extended app verification and merged-code pin/determinism checks pass"
+      ],
+      "passes": true
+    },
+    {
+      "id": "W2",
+      "title": "Battle search: focus fire, kill the shooter, screen, wait for stragglers",
+      "acceptance": [
+        "Portfolio of tactics scored by short lookahead with a danger map; capped engagements per turn",
+        "Behind a gene; playtest build installed"
+      ],
+      "verification": [
+        "Exchange ratio improves on held-out engagements; the 53:3 fixture improves",
+        "Whole-lobby p95 turn < 1 s in WASM on the laptop",
+        "No war-suite drop; release check passes"
+      ],
+      "passes": false
+    },
+    {
+      "id": "W3",
+      "title": "Learned evaluator and strategy bundles",
+      "acceptance": [
+        "PyTorch training offline on box games; int8 weights loaded in Rust/WASM; one engine only",
+        "Strategy bundles extracted from the designer's games with a selector that commits and switches on failure",
+        "Playtest build installed"
+      ],
+      "verification": [
+        "Lower regret than the hand formula on held-out continuations",
+        "Seat-only >= +3 pp; no war-suite drop; release check passes"
+      ],
+      "passes": false
+    },
+    {
+      "id": "CHECK",
+      "title": "Checkpoint with the designer",
+      "acceptance": [
+        "Two to four fresh Hard games by the designer, recorded difficulty checked in the save",
+        "Decision recorded: done, go to W4, or stop and diagnose"
+      ],
+      "verification": [
+        "Human-seat benchmark >= 50% on the eight maps",
+        "War-suite attacker parity in at least half the cases",
+        "Designer loses at least two of four games"
+      ],
+      "passes": false
+    },
+    {
+      "id": "W4",
+      "title": "RL controllers and exploiter league (only if CHECK calls for it)",
+      "acceptance": [
+        "Bridge from the Rust engine to training; two bounded controllers",
+        "Exploiters trained from the designer's seat, then Hard trained against them"
+      ],
+      "verification": [
+        "Exploiters beat Hard from his seat, then Hard beats the exploiters; diversity measured"
+      ],
+      "passes": false
+    },
+    {
+      "id": "R1",
+      "title": "Strategy reset increment 1: offline operation search (the teacher) on the designer's tapes",
+      "acceptance": [
+        "operation_search enumerates whole operations at Hard's review points in his decisive windows, executes them with the scripted executors on 16 determinized states with common random numbers, and logs per window Hard's plan, every operation's score and interval, the best operation, its regret and the value-net features as JSON lines"
+      ],
+      "verification": [
+        "Kill check: the best operation beats Hard's plan by 10 pp or more, confirmed with the interval clear of zero, in at least 30% of windows (2026-11-07: 9% generator 1, 23% generator 2: FAIL twice; widen the generator before increment 2; 2026-11-07 round 4 with the committed executor: strikes took 96.6%, kill check 3 of 38 windows, 8%: FAIL a third time)"
+      ],
+      "passes": false
+    },
+    {
+      "id": "BREACH-1108",
+      "title": "Teach plain Hard the round-2 battle moves (breach, siege and storm stances)",
+      "acceptance": [
+        "Genes breach and siege_stance in Hard, valuation-based, default 0 until gated (2026-11-08: breach stays 0; siege_stance later shipped at 6 with forecast_garrison_holds 1, stance_home_guard 6 and stance_plan_war 1 on claude/siege-forecast-calibration)",
+        "Combat lab capture at least 38% (from 29.8%)",
+        "War suite mean up with no scenario significantly worse; designer seat and human-seat gate improve"
+      ],
+      "verification": [
+        "combat_lab --params-compare, war_suite 34 x 32 seat-only, designer_seat.py on the box, hard_vs_human 8 maps x 256 salts seat-only and rivals-only, breach_agreement on the round-2 lab log",
+        "Result 2026-11-08: lab 34.5%, war +5.0, designer seat -0.1, human seat +2.05 / -1.51; defaults stay 0 (docs/sim-results/ai-quality/hard-breach-1108/)"
+      ],
+      "passes": false
+    },
+    {
+      "id": "R1c",
+      "title": "Coalition against a runaway leader through operations (gene runaway_coalition): Alliances with anyone fighting it, no Peace with it, a second-front strike when its army is away",
+      "acceptance": [
+        "Hard reads a runaway from public signs only; bit 1 prices Alliances and calls to arms against it and refuses Peace with it; bit 2 commits an executor strike on its nearest weakly held city when half its public army is visibly 8+ tiles from that city; default 55 since 2026-11-08 (adds bit 4 standing bloc from hidden wariness, bit 16 all-in coalition wars, bit 32 wary guard; bit 8 hollow-runaway strike off)"
+      ],
+      "verification": [
+        "Rivals arm of the human-seat gate harder with the census best/worst at most 2.7 (2026-11-07: Horde scenario Byzantine cities held 0.50 -> 3.12 and Sparta's second front in 41/64 runs, but gate rivals +0.54 pp [-0.88, +1.90], designer-seat flat: gate FAIL; turned on for Hard by the lead's judgment (the gate's Hard seat is rarely the runaway); 2026-11-08 default raised from 3 to 55 by main after the 55 arm: seat +0.39 pp, designer seat held out 57.4 to 58.5; next: a human-runaway scenario and a re-measure after claude/training-round2)"
+      ],
+      "passes": false
+    },
+    {
+      "id": "CITY-DEFENSE-1108",
+      "title": "Hard defends a threatened city: damage-to-city weighted fire, favourable sorties, last garrison held, garrison rotation, counter-class purchases",
+      "acceptance": [
+        "Fair Hold Biel (scenarios/war/war-swiss-hold-biel.json) holds more than master's 0/50",
+        "Designer seat all-tapes lower bound >= -2.0 and held-out >= -3.0 at 200 salts",
+        "Human seat not significantly worse"
+      ],
+      "verification": [
+        "Hold Biel 21/50, 40% over 64 war-suite runs",
+        "Designer seat all-tapes +0.24 [-1.41], held-out -0.13 [-2.62]; human seat +0.93 [-0.84, +2.69] (256 salts, all seats)",
+        "Extended verify green; landed 2026-11-08"
+      ],
+      "passes": true
+    },
+    {
+      "id": "WALLED-CHAIN-1108",
+      "title": "Field armies follow a captured city into walled targets (astra/walled-chain-push)",
+      "acceptance": [
+        "Sparta walled Nicomedia improves from master's 0/50",
+        "Must improve the designer seat"
+      ],
+      "verification": [
+        "Nicomedia 20/50 and war suite +0.4, but designer seat 38.1% training / 58.9% held out vs master 39.6% / 59.2%: does not improve the designer seat; held, not landed (2026-11-08)"
+      ],
+      "passes": false
+    },
+    {
+      "id": "SCENARIO-GATE-1109",
+      "title": "Short-scenario paired gate with held-out cards and an imitation seat (claude/scenario-gate)",
+      "acceptance": [
+        "A/A reads zero within its interval",
+        "A known-bad gene (siege off) fails"
+      ],
+      "verification": [
+        "Landed on master 2f4647fdf (2026-11-10): A/A -0.37 pp [-1.10, +0.36]; siege-off -2.50 [-3.01, -1.99]"
+      ],
+      "passes": true
+    },
+    {
+      "id": "OBJECTIVE-ASSIGNMENT-1109",
+      "title": "Wartime objective assignment replaces the reflex cascade (astra/objective-assignment, review F1)",
+      "acceptance": [
+        "At least twice the war-suite goals met",
+        "No loss on designer-seat held out"
+      ],
+      "verification": [
+        "War suite 23% -> 12% (-10.8 [-12.8, -8.9]); designer seat held out 58.1 -> 48.9 (-9.2 [-12.4, -5.9]); gene off, code not merged (2026-11-09)"
+      ],
+      "passes": false
+    },
+    {
+      "id": "WAR-SEQUENCE-1109",
+      "title": "War priced as a sequence of cities (claude/war-sequence-value, review F2/F3)",
+      "acceptance": [
+        "More captures or eliminations per game",
+        "No loss on designer-seat held out"
+      ],
+      "verification": [
+        "Captures +0.04 [-0.16, +0.24]; war suite -0.7; held out +2.2 [-0.9, +5.3]; gene off, code not merged (2026-11-09)"
+      ],
+      "passes": false
+    },
+    {
+      "id": "MARCH-REFIT-1109",
+      "title": "Parked armies upgrade or retarget before marching (claude/modernize-before-march)",
+      "acceptance": [
+        "Parked-Celts card improves",
+        "No loss on designer-seat held out"
+      ],
+      "verification": [
+        "Card 3/100 -> 0/100; held out 58.1 -> 55.8 [-5.4, +1.0]; gene off, code not merged (2026-11-09)"
+      ],
+      "passes": false
+    },
+    {
+      "id": "EARLY-ALARM-1109",
+      "title": "Early conqueror alarm and Settler escort (claude/early-alarm)",
+      "acceptance": [
+        "Fewer early cities or Settlers lost to a rush",
+        "Expansion not stunted"
+      ],
+      "verification": [
+        "Victim cities lost before T60 -0.030 [-0.064, +0.004]; 71% of rush wars give no sight of the army before the declaration; gene off, code not merged (2026-11-09)"
+      ],
+      "passes": false
+    },
+    {
+      "id": "CARD-LOOP-1109",
+      "title": "Nightly card loop on failing training cards (claude/card-loop-queue)",
+      "acceptance": [
+        "Searches training cards only, on the scenario gate's split",
+        "Held-out and unlisted cards are refused",
+        "Tasks go to lead triage"
+      ],
+      "verification": [
+        "Merged 2026-11-10 at 9337a2b13; sim crate tests and 4 nightly tests pass; first nightly's eight held-out searches marked contaminated; full search nightly not rerun after the split change"
+      ],
+      "passes": true
+    },
+    {
+      "id": "AI-OBJECTIVE-1110",
+      "title": "Short-horizon objective: told-objective split on three Lab cards, capture_horizon gene (claude/ai-objective)",
+      "acceptance": [
+        "Baseline of Hold Biel, Ride to Dyrrachium and Two Cities re-measured on rules 26 (50 runs each)",
+        "A sim-only --tell-objective arm, off by default and unreachable in a normal game, splits not knowing the goal from not executing it",
+        "Dyrrachium target choice fixed in the campaign valuation behind a default-off gene, measured off/on in both arms without regressing the other two cards"
+      ],
+      "verification": [
+        "Baseline 34 / 2 / 0 of 50; told 49 / 50 / 0; gene capture_horizon 200 seat-only 34 / 48 / 0; told + gene 49 / 50 / 0 (docs/sim-results/ai-quality/ai-objective-1110/)",
+        "Not yet measured on the designer seat, war suite or censuses; gene stays 0; not merged"
+      ],
+      "passes": false
+    },
+    {
+      "id": "SHORT-OBJECTIVE-1110",
+      "title": "Short-horizon objective step behind gene short_objective; strike_upgrade_wait; execute_hold swap fix (claude/ai-objective)",
+      "acceptance": [
+        "Nominates captures and home losses within 5 turns from the seat's view only, priced by valuation, committed through a pinned operation, dropped after two turns under the odds floor",
+        "Untold arm measured against the told ceiling on the three cards, all Lab cards off/on, and a local full-game-ish sanity check"
+      ],
+      "verification": [
+        "Untold short_objective 45 / 50 / 0 against told 49 / 50 / 0 (baseline 34 / 2 / 0); Lab: only wide India +4 and Nicomedia -1 elsewhere; war suite 128 runs +0.5 pp mean, Athens two pikemen -7.0 [-11.7, -2.3]",
+        "Pinned Hold on Biel 6 -> 50/50 after the execute_hold fix",
+        "Not measured on the designer seat or censuses; genes stay 0; not merged"
+      ],
+      "passes": false
+    },
+    {
+      "id": "SHORT-OBJECTIVE-R3-1110",
+      "title": "short_objective round 3: Athens loss and Biel gap traced and fixed, supply term measured, designer seat paired (claude/ai-objective)",
+      "acceptance": [
+        "Athens two pikemen T112 traced and fixed in the valuation; it and the two gains rerun at 128 runs",
+        "Biel gap traced to its cause and fixed without card-specific rules; Biel untold rerun at 50 runs",
+        "Supply term collection measured across the war suite and Lab runs, correction proposed",
+        "designer_seat.py takes gene parameters for the seat; paired run gene off/on"
+      ],
+      "verification": [
+        "Athens 12% -> 12% (was 5%), Biel war cut 65% -> 98%, Mongol bombers 16% -> 32%; war suite mean +2.5 pp, no significant loss",
+        "Biel untold 50/50 (told 49): the forecast was right (falls in 3 turns, 50/50 runs); the win-chance currency saturated (c0 99.3-99.99%); step now prices in Production",
+        "Supply: 2,678 priced switches, of 1,437 with full horizon at most 23% captured and 12% collected; 7.8% of the priced term collected",
+        "Designer seat 48 salts: training 36.1 -> 36.2, held out 58.8 -> 59.7 (flat within ~3 pp)",
+        "cargo test --release -p legatum-ai -p legatum-sim green at 114972075 (50 suites)"
+      ],
+      "passes": false
+    },
+    {
+      "id": "STALE-NOMINEE-1115",
+      "title": "Hard refreshes a stale conquest nominee before it blocks a war",
+      "acceptance": [
+        "No empty-force siege forecast panics",
+        "A fresh conquest city is nominated ahead of stale candidates; the best stale target receives a safe scouting order from the PlayerView",
+        "The Celtic T61 Eleusis position obtains a fresh campaign candidate or sighting within ten turns",
+        "A 50-game smoke reports stale campaign drops and first-war timing; pins and branch verification pass"
+      ],
+      "verification": [
+        "Original rules-39 Athens tape replay: 160 turns, zero hash mismatches; T61 Celtic memory last saw Eleusis T44",
+        "Focused tests and smoke measurements recorded in docs/sim-results/ai-quality/hard-stale-nominee-1115/README.md",
+        "Repin and determinism checks, Clippy, and 2450 release-checked workspace tests passed; app branch verification is the final gate"
+      ],
+      "passes": true
+    },
+    {
+      "id": "HARD-PURCHASE-1115",
+      "title": "Hard buys defenders for the fights in view and saves for near upgrades",
+      "acceptance": [
+        "One Hard purchase scorer ranks every military Gold-buy pass using visible opponents, survival, movement and researched refit cost; gene 0 preserves the merged baseline",
+        "Athens T101 and T131 and Celts T115 purchase orders change in rules-40 replay without committing a save",
+        "In a paired 50-game smoke the after-T90 two-era-obsolete purchase share falls, and the war suite defender cards do not regress"
+      ],
+      "verification": [
+        "Seven focused scorer tests passed; rules-39 tape extracted with zero hash mismatches, then three rules-40 fresh-brain one-turn probes changed military purchase orders",
+        "50-game paired census: obsolete late buys 1636/2113 (77.43%) to 1339/1923 (69.63%)",
+        "19-card war suite, 64 seeds/card: mean 33% to 33%; no card lost goal successes, Germany early air 64/64 in both arms, India veteran 27/64 to 29/64",
+        "Repin passed: 1 repin, 2 pin, 12 determinism tests; main-checkout verify-branch --app remains the final gate",
+        "Fixed-map rival-search benchmark: four cities at T62 in both versions, but T100 VP 2 to 0; outcome risk recorded in report"
+      ],
+      "passes": false
+    },
+    {
+      "id": "HARD-BEST-UNIT-1115",
+      "title": "Hard buys the latest trainable generation and routes funded units",
+      "acceptance": [
+        "Every military Gold-buy pass obeys the generation floor; gene 0 restores prior orders",
+        "Funded recruits and upgraded units receive the destination of their named plan",
+        "Rival-fund T40 seat gate, every war card, and paired 50-game late-obsolete share must pass before named_fund defaults on"
+      ],
+      "verification": [
+        "Sparta 8.9.57 tape and purchase-pass trace in docs/sim-results/ai-quality/hard-best-unit-1115/trace.md",
+        "Fund-on rivals: seat wins 47/48 versus 41/48 with fund off, paired exact p 0.03125; named_fund remains 0",
+        "19 war cards: Swiss hollow-Mongols 31/64 to 0/64; suite 412/1216 to 395/1216",
+        "50 paired eight-Hard games: two-generation late share 801/1343 to 124/787, still above near zero; all 124 exceptions were forecast-proven empty-city rescues and zero non-rescue buys violated the floor",
+        "Final repin, full source checks and app branch verification pending"
+      ],
+      "passes": false
+    },
+    {
+      "id": "SURVIVE-HIM-1120",
+      "title": "Survive-him program: Hard survives the designer's early conquest (victim seat, five failure streams, climb round 2)",
+      "acceptance": [
+        "On his Sparta 8.9.57, Athens 8.9.47 and Rome 8.9.71 games with fixed Hard in the AI seats, his first conquest lands later and he holds fewer cities at T100, with neutral controls",
+        "Every kept fix is a valuation gene confirmed by replay, merged to the playtest line and shipped in a build",
+        "Claude weekly usage stays under 80%"
+      ],
+      "verification": [],
+      "passes": false
+    },
+    {
+      "id": "SH-LEADER-FRONT-1121",
+      "title": "Survive-him line 7: a serial conqueror turns on the leader (idea #58, from the Swiss 8.9.72 review)",
+      "acceptance": [
+        "Behind a gene, the Mongols declare on him at T134 to T140 of the Swiss 8.9.72 tape",
+        "Scenario mongols-turn-on-the-banker rises from Hard 0/50",
+        "The dead-war count from the Germany 8.9.43 review does not rise; rivals-only paired benchmark shows no loss"
+      ],
+      "verification": [],
+      "passes": false
+    },
+    {
+      "id": "SH-EXPLORE-SITES-1121",
+      "title": "Explore before sentry: a small Hard empire with no known site keeps its Scout exploring (Mongols 8.9.73.1 review)",
+      "acceptance": [
+        "Gene sentry_needs_sites: the Swiss settle in his Mongol game (Hard in his seat from T2)",
+        "AI-only census neutral on cities and captures",
+        "Unit test intel_tests::a_scout_explores_for_sites_before_standing_sentry"
+      ],
+      "verification": [
+        "Hard seat T2-T150, 16 reseeded runs: Swiss cities 1.06 -> 2.19, eliminated 4 -> 1",
+        "AI-only 256 Hard games to T120: cities T50 3.08/3.07, T100 4.10/4.11"
+      ],
+      "passes": true
+    },
+    {
+      "id": "SH-CONTEST-VP-CITY-1121",
+      "title": "Survive-him line 8: a coalition contests a hold by capturing a VP city (Mongols 8.9.73.1 review)",
+      "acceptance": [
+        "From T96 of the Mongols 8.9.73.1 tape his recorded orders win by T110 in fewer than 8 of 8",
+        "Rivals-only paired benchmark shows no loss"
+      ],
+      "verification": ["2026-11-21: blocked on army modernization. A joint-assault pass (gene contest_vp_city, parked off, patch in project files mongol-8.9.73.1/) and an all-out probe both leave his win at 4 of 4 from T96, because era-2 Soldiers cannot take his walled era-4 cities. Only Egypt's modern units at Bukhara stopped him (1 run). The hill-climb thread owns modernization."],
+      "passes": false
+    }
+  ],
+  "latest_decision_audit": {
+    "date": "2026-10-31",
+    "report": "docs/sim-results/ai-war/audit-round6.md",
+    "decision": "Keep capture_alarm off; neither the audit nor quarter gates supports a full gate. No capability milestone advanced."
+  },
+  "rules_freeze": {
+    "status": "lifted",
+    "date": "2026-11-11",
+    "by": "designer",
+    "note": "Rule changes land in batches, one RULES_VERSION per batch (27: relief chain, tie-breaker, aircraft XP, occupation lock default off); re-baseline designer-seat score and fixtures once per batch."
+  }
+}

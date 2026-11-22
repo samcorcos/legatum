@@ -1,0 +1,427 @@
+[
+  {
+    "kind": "portrait",
+    "slug": "people-byzantium",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-71e61ccd-a331-4f10-b808-b5775b8dc99e.png",
+    "target": "app/src/assets/art/people-byzantium.png"
+  },
+  {
+    "kind": "portrait",
+    "slug": "people-sparta",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-07a8691f-83ec-4563-8719-c76a628b3ccc.png",
+    "target": "app/src/assets/art/people-sparta.png"
+  },
+  {
+    "kind": "portrait",
+    "slug": "people-egypt",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-b666a06b-4a12-4db6-b9b9-9e72a22e3e8e.png",
+    "target": "app/src/assets/art/people-egypt.png"
+  },
+  {
+    "kind": "unit",
+    "slug": "medjay",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-267b1e11-b9cb-48a6-87a4-330ca47d08c1.png",
+    "target": "app/src/assets/units/medjay-256.png"
+  },
+  {
+    "kind": "unit",
+    "slug": "biplane",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-19958f62-2f64-4820-8d2a-cd86dd76a630.png",
+    "target": "app/src/assets/units/biplane-256.png"
+  },
+  {
+    "kind": "unit",
+    "slug": "jet-fighter",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-c805ddfa-034e-4918-a99e-02ba31bc6d8e.png",
+    "target": "app/src/assets/units/jet-fighter-256.png"
+  },
+  {
+    "kind": "unit",
+    "slug": "barbarian-spearman",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-94af2489-b58d-46fd-a588-afe39d49ebda.png",
+    "target": "app/src/assets/units/barbarian-spearman-256.png"
+  },
+  {
+    "kind": "unit",
+    "slug": "horseman",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-afd666b1-bda2-4df2-977e-cb9cd2a5625c.png",
+    "target": "app/src/assets/units/horseman-256.png"
+  },
+  {
+    "kind": "unit",
+    "slug": "cataphract",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-27e911c6-0ebb-4479-be11-179e9e0357cf.png",
+    "target": "app/src/assets/units/cataphract-256.png"
+  },
+  {
+    "kind": "unit",
+    "slug": "trench-infantry",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-a41ca866-7888-435e-a878-bd43af820169.png",
+    "target": "app/src/assets/units/trench-infantry-256.png"
+  },
+  {
+    "kind": "unit",
+    "slug": "arquebusier",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-13c824fa-74fd-4c4c-938c-8191c7137700.png",
+    "target": "app/src/assets/units/arquebusier-256.png"
+  },
+  {
+    "kind": "unit",
+    "slug": "crossbowman",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-912fcd89-05ee-4792-8eb0-364db1357f42.png",
+    "target": "app/src/assets/units/crossbowman-256.png"
+  },
+  {
+    "kind": "unit",
+    "slug": "barbarian-pikeman",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-d29d20de-1710-4b74-b4dc-e4d5cc5aba97.png",
+    "target": "app/src/assets/units/barbarian-pikeman-256.png"
+  },
+  {
+    "kind": "unit",
+    "slug": "barbarian-crossbowman",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-cdebee53-e2c1-4966-a686-4db68067efb1.png",
+    "target": "app/src/assets/units/barbarian-crossbowman-256.png"
+  },
+  {
+    "kind": "unlock",
+    "slug": "building-stockexchange",
+    "target": "app/src/assets/unlocks/building-stockexchange-256.png"
+  },
+  {
+    "kind": "unit",
+    "slug": "panzer",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-778a566c-f973-46e0-b119-8c4d25fa53a5.png",
+    "target": "app/src/assets/units/panzer-256.png"
+  },
+  {
+    "kind": "unit",
+    "slug": "mechanised-infantry",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-a6a96087-b33a-41e5-bbb8-ac1933aae87c.png",
+    "target": "app/src/assets/units/mechanised-infantry-256.png"
+  },
+  {
+    "kind": "city",
+    "slug": "machine-hamlet",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-d0abc9f1-81c5-4031-8af0-4a84379c4ffe.png",
+    "target": "app/src/assets/cities/machine-hamlet.png",
+    "fit512": [
+      0.400336417157275,
+      5.189234650967194,
+      -0.9831791421362368
+    ]
+  },
+  {
+    "kind": "city",
+    "slug": "machine-town",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-71b7736d-1106-48d5-bc44-4b4d69339037.png",
+    "target": "app/src/assets/cities/machine-town.png",
+    "fit512": [
+      0.3973288814691152,
+      6.874791318864766,
+      -7.093489148581
+    ]
+  },
+  {
+    "kind": "city",
+    "slug": "machine-city",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-d0534540-cb74-4984-8f09-8cf2e263af9a.png",
+    "target": "app/src/assets/cities/machine-city.png",
+    "fit512": [
+      0.39080459770114945,
+      11.356321839080437,
+      -6.149425287356337
+    ]
+  },
+  {
+    "kind": "city",
+    "slug": "machine-metropolis",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-0cb8114a-6714-4d8e-8fea-9d77be46bd5d.png",
+    "target": "app/src/assets/cities/machine-metropolis.png",
+    "fit512": [
+      0.39112571898110104,
+      10.959737058340181,
+      -7.701725554642508
+    ]
+  },
+  {
+    "kind": "city",
+    "slug": "contemporary-hamlet",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-ed5cb55e-645c-4f49-b466-7b12f995e48f.png",
+    "target": "app/src/assets/cities/contemporary-hamlet.png",
+    "fit512": [
+      0.4057971014492754,
+      1.3623188405796895,
+      2.1304347826086882
+    ]
+  },
+  {
+    "kind": "city",
+    "slug": "contemporary-town",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-229c1760-21cf-4c51-bbfe-503c3790260b.png",
+    "target": "app/src/assets/cities/contemporary-town.png",
+    "fit512": [
+      0.40236686390532544,
+      3.5147928994082918,
+      36.53846153846155
+    ]
+  },
+  {
+    "kind": "city",
+    "slug": "contemporary-city",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-29be8230-8a5f-472a-b73c-fc241fd7e830.png",
+    "target": "app/src/assets/cities/contemporary-city.png",
+    "fit512": [
+      0.40304826418289585,
+      3.087214225232856,
+      4.392040643522421
+    ]
+  },
+  {
+    "kind": "city",
+    "slug": "contemporary-metropolis",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-5cb312e5-8323-4598-8b58-b59634e9ae67.png",
+    "target": "app/src/assets/cities/contemporary-metropolis.png",
+    "fit512": [
+      0.40202702702702703,
+      3.125,
+      7.1418918918918735
+    ]
+  },
+  {
+    "kind": "unit",
+    "slug": "legionary",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-4baea2e9-7bd4-400a-a5e2-485d0c7859d7.png",
+    "target": "app/src/assets/units/legionary-256.png"
+  },
+  {
+    "kind": "unit",
+    "slug": "hunter-killer",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-c907440e-7113-4d1c-8872-6ed82f5918d2.png",
+    "target": "app/src/assets/units/hunter-killer-256.png"
+  },
+  {
+    "kind": "era",
+    "slug": "machine",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-b93dfce2-49c5-43e3-b54d-0ee23e413ef2.png",
+    "target": "app/src/assets/eras/machine.png",
+    "before": "previous industrial fallback"
+  },
+  {
+    "kind": "era",
+    "slug": "contemporary",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-8b633248-141b-47ce-bc5f-63be1f838ca6.png",
+    "target": "app/src/assets/eras/contemporary.png",
+    "before": "previous modern fallback"
+  },
+  {
+    "kind": "crest",
+    "slug": "crest-aztecs",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-df65ff7f-6627-4833-b998-9dbea7b4be24.png",
+    "target": "app/src/assets/heraldry/raster/crest-aztecs.png",
+    "before": "previous vector seal fallback"
+  },
+  {
+    "kind": "unlock",
+    "slug": "improvement-oil-well",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-b9ad63e7-fa2d-4ae6-8518-f25df34fb7f5.png",
+    "target": "app/src/assets/unlocks/improvement-oil-well-256.png"
+  },
+  {
+    "kind": "unlock",
+    "slug": "improvement-saltpetre-works",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-8edcbf5a-fc36-4a26-8fd6-e29495db6152.png",
+    "target": "app/src/assets/unlocks/improvement-saltpetre-works-256.png"
+  },
+  {
+    "kind": "unlock",
+    "slug": "improvement-quartz-mine",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-c1eb7e7d-0d18-48d6-ae20-c2ff05236262.png",
+    "target": "app/src/assets/unlocks/improvement-quartz-mine-256.png"
+  },
+  {
+    "kind": "icon",
+    "slug": "building-stockexchange-icon",
+    "target": "app/src/assets/icons/building-stockexchange.svg",
+    "before": "docs/design/art-pass-2/before/building-stockexchange.svg"
+  },
+  {
+    "kind": "icon",
+    "slug": "unit-panzer-icon",
+    "target": "app/src/assets/icons/unit-panzer.svg",
+    "before": "docs/design/art-pass-2/before/unit-panzer.svg"
+  },
+  {
+    "kind": "icon",
+    "slug": "unit-fighter-icon",
+    "target": "app/src/assets/icons/unit-fighter.svg",
+    "before": "docs/design/art-pass-2/before/unit-fighter.svg"
+  },
+  {
+    "kind": "icon",
+    "slug": "improvement-oilwell-icon",
+    "target": "app/src/assets/icons/improvement-oilwell.svg",
+    "before": "docs/design/art-pass-2/before/improvement-oilwell.svg"
+  },
+  {
+    "kind": "icon",
+    "slug": "improvement-saltpeterworks-icon",
+    "target": "app/src/assets/icons/improvement-saltpeterworks.svg",
+    "before": "docs/design/art-pass-2/before/improvement-saltpeterworks.svg"
+  },
+  {
+    "kind": "icon",
+    "slug": "improvement-quartzmine-icon",
+    "target": "app/src/assets/icons/improvement-quartzmine.svg",
+    "before": "docs/design/art-pass-2/before/improvement-quartzmine.svg"
+  },
+  {
+    "kind": "city",
+    "slug": "modern-hamlet",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-d8f63563-4b53-4d24-8298-eafe1c19ebd0.png",
+    "target": "app/src/assets/cities/modern-hamlet.png",
+    "fit512": [
+      0.37988826815642457,
+      18.0,
+      18.8882681564246
+    ]
+  },
+  {
+    "kind": "city",
+    "slug": "modern-town",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-84947b94-6914-4344-b88f-0ab46fd16544.png",
+    "target": "app/src/assets/cities/modern-town.png",
+    "fit512": [
+      0.3105022831050228,
+      17.37899543378998,
+      150.08675799086762
+    ]
+  },
+  {
+    "kind": "city",
+    "slug": "modern-city",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-3bdcd5a1-e9cf-4aa2-b983-9fcde9d88563.png",
+    "target": "app/src/assets/cities/modern-city.png",
+    "fit512": [
+      0.38049560351718625,
+      16.858513189448445,
+      27.322941646682636
+    ]
+  },
+  {
+    "kind": "city",
+    "slug": "modern-metropolis",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-a7d74f1c-cc5f-4361-b718-5076a1a43fa9.png",
+    "target": "app/src/assets/cities/modern-metropolis.png",
+    "fit512": [
+      0.37988826815642457,
+      18.0,
+      8.631284916201139
+    ]
+  },
+  {
+    "kind": "construction",
+    "slug": "modern-hamlet-stage1",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-4099dbc3-96b4-4f9a-8146-d8fcb4cd3d60.png",
+    "target": "app/src/assets/construction/modern-hamlet-stage1.png",
+    "fit512": [
+      0.37988826815642457,
+      18.0,
+      18.8882681564246
+    ]
+  },
+  {
+    "kind": "construction",
+    "slug": "modern-hamlet-stage2",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-c41d2709-dd57-4dcc-90eb-1b431dc3286d.png",
+    "target": "app/src/assets/construction/modern-hamlet-stage2.png",
+    "fit512": [
+      0.37988826815642457,
+      18.0,
+      18.8882681564246
+    ]
+  },
+  {
+    "kind": "construction",
+    "slug": "modern-hamlet-stage3",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-e5dba32b-c351-41c5-848e-1f1c26011bbf.png",
+    "target": "app/src/assets/construction/modern-hamlet-stage3.png",
+    "fit512": [
+      0.37988826815642457,
+      18.0,
+      18.8882681564246
+    ]
+  },
+  {
+    "kind": "construction",
+    "slug": "machine-hamlet-stage1",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-b9b60697-a43c-4507-b293-1aef7cf1c95e.png",
+    "target": "app/src/assets/construction/machine-hamlet-stage1.png",
+    "fit512": [
+      0.400336417157275,
+      5.189234650967194,
+      -0.9831791421362368
+    ],
+    "before": "previous industrial fallback"
+  },
+  {
+    "kind": "construction",
+    "slug": "machine-hamlet-stage2",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-fff8e389-8f20-499e-bdcb-4208563d7755.png",
+    "target": "app/src/assets/construction/machine-hamlet-stage2.png",
+    "fit512": [
+      0.400336417157275,
+      5.189234650967194,
+      -0.9831791421362368
+    ],
+    "before": "previous industrial fallback"
+  },
+  {
+    "kind": "construction",
+    "slug": "machine-hamlet-stage3",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-0a8e66ce-53dd-4d0e-8483-6ec8a87dea1a.png",
+    "target": "app/src/assets/construction/machine-hamlet-stage3.png",
+    "fit512": [
+      0.400336417157275,
+      5.189234650967194,
+      -0.9831791421362368
+    ],
+    "before": "previous industrial fallback"
+  },
+  {
+    "kind": "construction",
+    "slug": "contemporary-hamlet-stage1",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-58dc1b71-e825-4997-9c2f-8a3fd2edceee.png",
+    "target": "app/src/assets/construction/contemporary-hamlet-stage1.png",
+    "fit512": [
+      0.4057971014492754,
+      1.3623188405796895,
+      2.1304347826086882
+    ],
+    "before": "previous modern fallback"
+  },
+  {
+    "kind": "construction",
+    "slug": "contemporary-hamlet-stage2",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-895aea43-ae76-431b-bba7-b0b61bfe710a.png",
+    "target": "app/src/assets/construction/contemporary-hamlet-stage2.png",
+    "fit512": [
+      0.4057971014492754,
+      1.3623188405796895,
+      2.1304347826086882
+    ],
+    "before": "previous modern fallback"
+  },
+  {
+    "kind": "construction",
+    "slug": "contemporary-hamlet-stage3",
+    "source": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-7c3d739b-cfdf-4f33-a8ff-870ac18c9eed.png",
+    "target": "app/src/assets/construction/contemporary-hamlet-stage3.png",
+    "fit512": [
+      0.4057971014492754,
+      1.3623188405796895,
+      2.1304347826086882
+    ],
+    "before": "previous modern fallback"
+  }
+]

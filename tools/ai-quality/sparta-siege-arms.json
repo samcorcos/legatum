@@ -1,0 +1,54 @@
+{
+  "arms": [
+    {
+      "label": "ctl",
+      "brain": "params",
+      "mode": "all",
+      "params": {
+        "schema": 1,
+        "name": "sparta-siege-and-rush",
+        "decisions": {}
+      }
+    },
+    {
+      "label": "old_seat",
+      "brain": "params",
+      "mode": "seat",
+      "params": {
+        "schema": 1,
+        "name": "old-sparta-exemption",
+        "decisions": {},
+        "faction_overrides": {
+          "Sparta": {
+            "early_walled_skip": 1,
+            "siege_exempt": 1,
+            "plan_persist_skip": 1,
+            "early_campaign_value": 0,
+            "target_wall_cost": 0,
+            "campaign_wall_cost": 0
+          }
+        }
+      }
+    },
+    {
+      "label": "old_rivals",
+      "brain": "params",
+      "mode": "opponents",
+      "params": {
+        "schema": 1,
+        "name": "old-sparta-exemption",
+        "decisions": {},
+        "faction_overrides": {
+          "Sparta": {
+            "early_walled_skip": 1,
+            "siege_exempt": 1,
+            "plan_persist_skip": 1,
+            "early_campaign_value": 0,
+            "target_wall_cost": 0,
+            "campaign_wall_cost": 0
+          }
+        }
+      }
+    }
+  ]
+}

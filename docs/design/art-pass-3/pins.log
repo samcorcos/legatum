@@ -1,0 +1,582 @@
+   Compiling legatum-core v0.1.0 (/data/slots/s1/crates/core)
+   Compiling legatum-wasm v0.1.0 (/data/slots/s1/crates/wasm)
+   Compiling legatum-ai v0.1.0 (/data/slots/s1/crates/ai)
+   Compiling legatum-archive v0.1.0 (/data/slots/s1/crates/archive)
+   Compiling legatum-analysis v0.1.0 (/data/slots/s1/crates/analysis)
+   Compiling legatum-sim v0.1.0 (/data/slots/s1/crates/sim)
+   Compiling legatum-server v0.1.0 (/data/slots/s1/crates/server)
+    Finished `release-checked` profile [optimized] target(s) in 3m 32s
+     Running unittests src/lib.rs (target/release-checked/deps/legatum_ai-d24eb87f78308253)
+
+running 2 tests
+test short_objective::tests::an_open_city_the_army_takes_within_the_window_is_pinned_only_with_the_gene ... ok
+test operation::tests::a_pinned_economy_outranks_spartas_campaign_rule ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 887 filtered out; finished in 0.00s
+
+     Running tests/ai_v2_head_to_head.rs (target/release-checked/deps/ai_v2_head_to_head-60e0ed32779abbe2)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 6 filtered out; finished in 0.00s
+
+     Running tests/archived_retreat.rs (target/release-checked/deps/archived_retreat-f4f0dc36cdfa4ba0)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/attack_opportunism.rs (target/release-checked/deps/attack_opportunism-5392411ebe4323ac)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
+
+     Running tests/campaign_memory.rs (target/release-checked/deps/campaign_memory-d392036a58d44f4d)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+     Running tests/defense_retreat.rs (target/release-checked/deps/defense_retreat-30d1eb89d9616994)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
+
+     Running tests/diplomacy.rs (target/release-checked/deps/diplomacy-e94f242f624ebf74)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 26 filtered out; finished in 0.00s
+
+     Running tests/era_research.rs (target/release-checked/deps/era_research-cf552f968d283255)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/full_game.rs (target/release-checked/deps/full_game-76ffd4fb4a8a2168)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+     Running tests/human_playbook.rs (target/release-checked/deps/human_playbook-96bde20210acc925)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.00s
+
+     Running tests/human_playbook_v6.rs (target/release-checked/deps/human_playbook_v6-be346369ebbfb98e)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 14 filtered out; finished in 0.00s
+
+     Running tests/macro_economy.rs (target/release-checked/deps/macro_economy-68c666c614301e31)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.00s
+
+     Running tests/offer_pacing.rs (target/release-checked/deps/offer_pacing-7771cda2a090ce8b)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+     Running tests/order_trace.rs (target/release-checked/deps/order_trace-3629138d7abd3d94)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/proxy_alliances.rs (target/release-checked/deps/proxy_alliances-a012d0a5a8d0d61b)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
+
+     Running tests/proxy_combat.rs (target/release-checked/deps/proxy_combat-79bec52a33f6709e)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 10 filtered out; finished in 0.00s
+
+     Running tests/ranged_garrison.rs (target/release-checked/deps/ranged_garrison-98b7f04dccfcb949)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 6 filtered out; finished in 0.00s
+
+     Running tests/scout_threats.rs (target/release-checked/deps/scout_threats-0ed65b17f981ffa2)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 6 filtered out; finished in 0.00s
+
+     Running tests/settler_borders.rs (target/release-checked/deps/settler_borders-8481723f17356764)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+     Running tests/settler_escorts.rs (target/release-checked/deps/settler_escorts-18f8325610a463f1)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
+
+     Running tests/settler_recon.rs (target/release-checked/deps/settler_recon-ff1c42545f48f866)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+     Running tests/settler_routes.rs (target/release-checked/deps/settler_routes-1615e5292fa44459)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 6 filtered out; finished in 0.00s
+
+     Running tests/settler_threats.rs (target/release-checked/deps/settler_threats-7a76547dd0610f4a)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
+
+     Running tests/settler_war_safety.rs (target/release-checked/deps/settler_war_safety-720e8d76eecb6220)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+     Running tests/siege_ring.rs (target/release-checked/deps/siege_ring-332dc3ccf0681717)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+     Running tests/tactical_combat.rs (target/release-checked/deps/tactical_combat-7e156cfc3a83084b)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 23 filtered out; finished in 0.00s
+
+     Running tests/threat_response.rs (target/release-checked/deps/threat_response-4e70ddbf70f2bc8f)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.00s
+
+     Running tests/ui_rules.rs (target/release-checked/deps/ui_rules-3c9a9b233446aedc)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/wounded_recovery.rs (target/release-checked/deps/wounded_recovery-02ef88106deebaed)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+     Running unittests examples/perf_profile.rs (target/release-checked/examples/perf_profile-6652528400c70ed7)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/release-checked/deps/legatum_analysis-ebf8c3d35ad6b556)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (target/release-checked/deps/legatum_analyze-c494e8718cf0b360)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/cli.rs (target/release-checked/deps/cli-a61ea90feb9f245c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/rules.rs (target/release-checked/deps/rules-21bc4e974e4c044b)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/release-checked/deps/legatum_archive-e59635bcc302592a)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/archive.rs (target/release-checked/deps/archive-f8a3f6df861bec61)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/release-checked/deps/legatum_core-46ad8ae489a48dcb)
+
+running 1 test
+test rules::units::ruins_tests::pinned_ruin_rolls_match_state_and_serialize_structurally ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 945 filtered out; finished in 0.00s
+
+     Running tests/auto_focus.rs (target/release-checked/deps/auto_focus-696935745ecd8758)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.00s
+
+     Running tests/balance_experiments.rs (target/release-checked/deps/balance_experiments-2bae2eae70926b8e)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+     Running tests/company.rs (target/release-checked/deps/company-183c07225380d351)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.00s
+
+     Running tests/diplomacy.rs (target/release-checked/deps/diplomacy-364910da89f54cb4)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 53 filtered out; finished in 0.00s
+
+     Running tests/faction_balance.rs (target/release-checked/deps/faction_balance-f8eb5cbfa875877c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 18 filtered out; finished in 0.00s
+
+     Running tests/factions.rs (target/release-checked/deps/factions-8d438bcc669de93a)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 25 filtered out; finished in 0.00s
+
+     Running tests/levy.rs (target/release-checked/deps/levy-01ba2a17fe1a475c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.00s
+
+     Running tests/map_sizes.rs (target/release-checked/deps/map_sizes-b5ef104466230218)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
+
+     Running tests/opening_pacing.rs (target/release-checked/deps/opening_pacing-081c149177536ef4)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+     Running tests/order_privacy.rs (target/release-checked/deps/order_privacy-b7ee418eea69aab2)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+     Running tests/peace_borders.rs (target/release-checked/deps/peace_borders-1d69f9dbd83048a2)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.00s
+
+     Running tests/property_fuzz.rs (target/release-checked/deps/property_fuzz-b5c0888116d4b892)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.00s
+
+     Running tests/special_units.rs (target/release-checked/deps/special_units-d2d05aca1049926d)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s
+
+     Running tests/threat_memory.rs (target/release-checked/deps/threat_memory-ebec3a59f97f6196)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
+
+     Running tests/unit_age.rs (target/release-checked/deps/unit_age-b6061ffb29bc924d)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/visibility_equivalence.rs (target/release-checked/deps/visibility_equivalence-a4166936f439f0cb)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 11 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/release-checked/deps/legatum_server-ffc1e51547a4c9bb)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 33 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (target/release-checked/deps/legatum_server-b978d82a284fe86c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/protocol.rs (target/release-checked/deps/protocol-cfcdc1f2e98ebbbe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 36 filtered out; finished in 0.00s
+
+     Running tests/scenario_runs.rs (target/release-checked/deps/scenario_runs-11eea3cb6ad23fb8)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/release-checked/deps/legatum_sim-9c3088ed2d6f5162)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (target/release-checked/deps/legatum_sim-500d8f4e91b6b05a)
+
+running 2 tests
+test runner::tests::default_ai_tapes_are_pinned ... ok
+test runner::tests::scripted_hard_city_fire_tape_is_pinned ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 110 filtered out; finished in 4.21s
+
+     Running tests/ai_analysis.rs (target/release-checked/deps/ai_analysis-4f10a57fb55ff477)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/coalition_stall.rs (target/release-checked/deps/coalition_stall-de90f01906c5a7c8)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/decisive_turns.rs (target/release-checked/deps/decisive_turns-ed600898b5aa3078)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.00s
+
+     Running tests/determinism.rs (target/release-checked/deps/determinism-5fa85b1503487680)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s
+
+     Running tests/hold_metrics.rs (target/release-checked/deps/hold_metrics-52755737dd0fd36a)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/path_detour_archive.rs (target/release-checked/deps/path_detour_archive-f6c686b219c6c6e7)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/proxy.rs (target/release-checked/deps/proxy-ea31078fb313ef7a)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+     Running tests/replay_export.rs (target/release-checked/deps/replay_export-c1c8fb55a4ddaab6)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+     Running tests/settler_scenarios_parity.rs (target/release-checked/deps/settler_scenarios_parity-629874bb033edce1)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/sim_metrics.rs (target/release-checked/deps/sim_metrics-7848dccc22d03cc5)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
+
+     Running tests/strategy_diversity.rs (target/release-checked/deps/strategy_diversity-113b843ce7041370)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.00s
+
+     Running unittests examples/blunder_audit.rs (target/release-checked/examples/blunder_audit-551c521ffe811e33)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.00s
+
+     Running unittests examples/climb_arena.rs (target/release-checked/examples/climb_arena-b40d1014f8a80973)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running unittests examples/combat_scenarios.rs (target/release-checked/examples/combat_scenarios-41a120347c0dd800)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+     Running unittests examples/hard_vs_human.rs (target/release-checked/examples/hard_vs_human-94298760f177ddab)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
+
+     Running unittests examples/settler_scenarios.rs (target/release-checked/examples/settler_scenarios-6d287527f30286be)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+     Running unittests examples/teacher_render.rs (target/release-checked/examples/teacher_render-3b481ae3bf788e61)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/release-checked/deps/legatum_wasm-71a153d72240651c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 55 filtered out; finished in 0.00s
+
+     Running tests/current_browser_fixtures.rs (target/release-checked/deps/current_browser_fixtures-50d26312bf802969)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/difficulty_fairness.rs (target/release-checked/deps/difficulty_fairness-81df5e44c63c445b)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/g18_playtest_camp.rs (target/release-checked/deps/g18_playtest_camp-b2d35766d841b10f)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/g20_playtest_surprise_war.rs (target/release-checked/deps/g20_playtest_surprise_war-8478edfe716575f5)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/g21_playtest_parting_hit.rs (target/release-checked/deps/g21_playtest_parting_hit-bc68c88ea1e7279d)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/g2_playtest_bounce.rs (target/release-checked/deps/g2_playtest_bounce-7036d19315119c22)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+     Running tests/legacy_factions.rs (target/release-checked/deps/legacy_factions-e48a53d2a57767e0)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/p892_alliance_loop.rs (target/release-checked/deps/p892_alliance_loop-510d2db2376795f2)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
+
+     Running tests/scenarios.rs (target/release-checked/deps/scenarios-7af046da1e636f98)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+     Running tests/switzerland_scout_upkeep.rs (target/release-checked/deps/switzerland_scout_upkeep-e758fe52f62236b6)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/unseen_attacker.rs (target/release-checked/deps/unseen_attacker-b2977278073e0973)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+   Doc-tests legatum_ai
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests legatum_analysis
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests legatum_archive
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests legatum_core
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests legatum_server
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests legatum_sim
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests legatum_wasm
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s

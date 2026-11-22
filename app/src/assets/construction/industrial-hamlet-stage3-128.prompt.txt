@@ -1,0 +1,1 @@
+Lanczos 128 px derivative of industrial-hamlet-stage3.png. See industrial-hamlet-stage3.prompt.txt for the image edit prompt.

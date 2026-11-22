@@ -1,0 +1,19 @@
+[package]
+name = "legatum-archive"
+description = "Legatum local game archive: compressed game recordings and their index"
+edition.workspace = true
+version.workspace = true
+publish.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+legatum-wasm = { path = "../wasm" }
+serde_json.workspace = true
+zstd = "0.13"
+flate2 = "1"
+fs2 = "0.4"
+
+[dev-dependencies]
+legatum-core.workspace = true
+tempfile = "3"

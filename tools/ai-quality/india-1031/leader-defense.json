@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "name": "leader-defense",
+  "faction_overrides": {
+    "India": {
+      "leader_commit": 2,
+      "defend_margin_percent": 250,
+      "door_defense": 150
+    }
+  }
+}

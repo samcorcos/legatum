@@ -1,0 +1,233 @@
+#!/usr/bin/env bash
+# Runs ON the build box. The idle filler: pure-CPU batches (AI optimisation arms, combat-lab sweeps, benchmark arms)
+# that soak up whatever cores the real jobs leave, so a 64-core box does not sit at 5% between verifies.
+#
+#   box-filler ensure     start the daemon unless it is running (idempotent; the Mac calls this after queueing work)
+#   box-filler run        the daemon: drain the queue one batch at a time, exit after ~1 min with nothing to do
+#   box-filler status     queue and running batch
+#
+# The filler never adds load while the job slots are full: it starts a batch only when jobs are not queued for a slot and at
+# least two slots are free, and it pauses (SIGSTOP) a running batch when a job is queued or every slot is taken, resuming
+# when two are free again. Idle cores are what it exists for; a queue means they are not idle.
+# Real jobs always win: every batch runs in a systemd scope under legatum-filler.slice with CPUWeight=1 (about 1% of a
+# contended core against a normal job's 100), nice 19, idle I/O and a MemoryMax, so verifies and lane jobs see the box
+# as if the filler were not there, and nothing is ever killed to make room. The box's idle auto-stop sees the filler's
+# load as busy, so the box stays up exactly while there is queued filler work (and stops 20 minutes after the last).
+#
+# The queue is the S3 prefix s3://<sims bucket>/box/filler/ (the box role may touch only box/*):
+#   pending/<id>.json   the batch spec (see tools/cloud/filler.sh for the format); lower "priority" runs first
+#   running/<id>        claim marker written by the daemon (its instance id); the box role can write but NOT delete
+#   results/<id>/       the declared outputs, output.log and DONE (rc= start= end= wall_s= cores=)
+#   cancel/<id>         present = stop that batch (rc=cancelled in DONE)
+#   bundles/<sha>.bundle  git objects for a spec with "commit"
+# The box role cannot delete S3 objects, so nothing is ever removed from here: a spec is finished when results/<id>/DONE
+# exists. A claim marker from an earlier daemon instance without a DONE is an abandoned batch (reboot, crash) and runs
+# again. filler.sh clears an id's old markers when it is resubmitted or fetched.
+set -uo pipefail
+
+DATA="${DATA:-/data}"
+# shellcheck disable=SC1091
+. "$DATA/bin/config" 2>/dev/null || true
+: "${BUCKET:=}" "${REGION:=us-east-1}" "${SLOTS:=12}"
+SLOTDIR="${FILLER_SLOTDIR:-$DATA/slots}"
+F="${FILLER_DIR:-$DATA/filler}"
+REPO="${FILLER_REPO:-$DATA/repo.git}"
+STORE="${FILLER_LOCAL_STORE:-}"      # tests: a directory standing in for the S3 prefix
+mkdir -p "$F/pending" "$F/run"
+
+log() { echo "[filler $(date +%T)] $*"; }
+ncores() { nproc 2>/dev/null || sysctl -n hw.ncpu; }
+
+# ---- the store: S3, or a directory in tests ------------------------------------------------------------------------
+s3_url() { echo "s3://$BUCKET/box/filler/$1"; }
+st_get()  { if [ -n "$STORE" ]; then cp "$STORE/$1" "$2" 2>/dev/null; else aws s3 cp --no-progress --only-show-errors "$(s3_url "$1")" "$2" >/dev/null 2>&1; fi; }
+st_put()  { if [ -n "$STORE" ]; then mkdir -p "$(dirname "$STORE/$2")" && cp "$1" "$STORE/$2"; else aws s3 cp --no-progress --only-show-errors "$1" "$(s3_url "$2")" >/dev/null; fi; }
+st_has()  { if [ -n "$STORE" ]; then [ -e "$STORE/$1" ]; else aws s3 ls "$(s3_url "$1")" 2>/dev/null | grep -q .; fi; }
+st_list() { # st_list <prefix/>: file names directly under it
+  if [ -n "$STORE" ]; then ls "$STORE/$1" 2>/dev/null; else aws s3 ls "$(s3_url "$1")" 2>/dev/null | awk '{print $4}'; fi
+}
+
+toolchain_env() {
+  export CARGO_HOME="$DATA/cargo" RUSTUP_HOME="$DATA/rustup"
+  export PATH="$DATA/bin/shim:$CARGO_HOME/bin:$DATA/node/bin:$DATA/bin:$PATH"
+  export AWS_DEFAULT_REGION="$REGION"
+}
+
+INSTANCE="$$-$(date +%s)"
+
+# "<slots held> <jobs queued for a slot>", from the slot locks and the queue counters (see slot-queue.sh).
+slots_state() {
+  local n=0 k q
+  for k in $(seq 1 "$SLOTS"); do
+    [ -e "$SLOTDIR/s$k.lock" ] || continue
+    ( flock -n 8 ) 8>"$SLOTDIR/s$k.lock" || n=$((n + 1))
+  done
+  q=$(( $(cat "$SLOTDIR/next-ticket" 2>/dev/null || echo 1) - $(cat "$SLOTDIR/serving" 2>/dev/null || echo 1) ))
+  [ "$q" -ge 0 ] || q=0
+  echo "$n $q"
+}
+# room_for_filler start|keep: start needs two free slots and no queue; a running batch only stops for a queue or a full box.
+room_for_filler() {
+  local held q
+  read -r held q < <(slots_state)
+  if [ "$1" = start ]; then [ "$q" -eq 0 ] && [ "$held" -le $((SLOTS - 2)) ]; else [ "$q" -eq 0 ] && [ "$held" -lt "$SLOTS" ]; fi
+}
+signal_unit() { # signal_unit <sig> <pid> <unit>
+  if [ -n "${FILLER_NO_SCOPE:-}" ]; then pkill "-$1" -P "$2" 2>/dev/null; else sudo systemctl kill --signal="SIG$1" "$3.scope" 2>/dev/null; fi
+  # The scope's `sudo systemd-run` parent sits outside the scope and stops itself when its child is stopped (job
+  # control); continue it too, or it never reaps the finished batch and the filler waits on it forever (2026-10-23).
+  [ "$1" != CONT ] || [ -n "${FILLER_NO_SCOPE:-}" ] || sudo pkill -CONT -P "$2" 2>/dev/null || true
+}
+
+daemon_running() { ( flock -n 200 || exit 0; exit 1 ) 200>"$F/daemon.lock"; }
+
+cmd_ensure() {
+  if daemon_running; then echo "filler daemon already running"; return 0; fi
+  setsid nohup "$0" run </dev/null >>"$F/daemon.log" 2>&1 &
+  echo "filler daemon started"
+}
+
+# Lowest priority number first; the oldest queued first among equals. Skips finished batches (DONE present) and the
+# batch this daemon instance is running; a claim from another instance is abandoned work and is picked up again.
+pick_pending() {
+  local k id best="" bp=999999 p claim
+  while read -r k; do
+    case "$k" in *.json) ;; *) continue;; esac
+    id="${k%.json}"
+    st_has "results/$id/DONE" && continue
+    if st_get "running/$id" "$F/claim.tmp" 2>/dev/null && [ "$(cat "$F/claim.tmp")" = "$INSTANCE" ]; then continue; fi
+    st_get "pending/$k" "$F/pending/$k" || continue
+    p="$(jq -r '.priority // 50' "$F/pending/$k" 2>/dev/null)" || continue
+    case "$p" in ''|*[!0-9]*) p=50;; esac
+    if [ "$p" -lt "$bp" ]; then bp="$p"; best="$k"; fi
+  done < <(st_list pending/)
+  printf '%s' "$best"
+}
+
+# run_scoped <unit> <dir> <envfile> <cmd...>: lowest CPU weight, nice 19, idle I/O, memory cap.
+run_scoped() {
+  local unit="$1" dir="$2" envfile="$3"; shift 3
+  local envs=()
+  while IFS= read -r l; do [ -z "$l" ] || envs+=("$l"); done < "$envfile"
+  if [ -n "${FILLER_NO_SCOPE:-}" ]; then
+    env "${envs[@]}" bash -c 'cd "$0" && exec "$@"' "$dir" "$@"
+  else
+    sudo systemd-run --scope --quiet --unit="$unit" --uid="$(id -un)" --slice=legatum-filler \
+      -p CPUWeight=1 -p IOWeight=1 -p "MemoryMax=${FILLER_MEM_GB:-40}G" -- \
+      env "${envs[@]}" nice -n 19 ionice -c3 bash -c 'cd "$0" && exec "$@"' "$dir" "$@"
+  fi
+}
+
+stop_unit() { # cancel the running batch
+  if [ -n "${FILLER_NO_SCOPE:-}" ]; then pkill -P "$1" 2>/dev/null; kill "$1" 2>/dev/null; else sudo systemctl stop "$2.scope" 2>/dev/null; fi
+}
+
+run_one() { # run_one <spec file name>
+  local k="$1" id spec dir start end rc=0 unit src sha n name val l bargs aargs
+  spec="$F/pending/$k"; id="$(jq -r '.id // empty' "$spec")"; [ -n "$id" ] || id="${k%.json}"
+  dir="$F/run/$id"; rm -rf "$dir"; mkdir -p "$dir"
+  cp "$spec" "$dir/spec.json"
+  printf '%s' "$INSTANCE" > "$F/claim.tmp" && st_put "$F/claim.tmp" "running/${k%.json}"
+  rm -f "$spec"
+  start="$(date +%s)"; unit="legatum-filler-$$-$id"
+  : > "$dir/output.log"
+  log "start $id" | tee -a "$dir/output.log"
+
+  # inputs: a string that is an S3 key under box/filler/ is fetched, anything else is written verbatim.
+  jq -r '(.inputs // {}) | keys[]' "$dir/spec.json" | while read -r name; do
+    val="$(jq -r --arg n "$name" '.inputs[$n] | if type == "string" then . else tojson end' "$dir/spec.json")"
+    mkdir -p "$dir/$(dirname "$name")"
+    case "$val" in inputs/*) st_get "$val" "$dir/$name" || printf '%s' "$val" > "$dir/$name";; *) printf '%s' "$val" > "$dir/$name";; esac
+  done
+
+  # environment for the batch
+  {
+    printf '%s\n' "HOME=$HOME" "PATH=$PATH" "CARGO_HOME=${CARGO_HOME:-$DATA/cargo}" "RUSTUP_HOME=${RUSTUP_HOME:-$DATA/rustup}" "CARGO_INCREMENTAL=0" "RAYON_NUM_THREADS=$(ncores)"
+    jq -r '(.env // {}) | to_entries[] | "\(.key)=\(.value)"' "$dir/spec.json"
+  } > "$dir/env.list"
+
+  # build (once per commit: the checkout and its target/ persist, so the same commit is a no-op)
+  sha="$(jq -r '.commit // empty' "$dir/spec.json")"
+  if [ -n "$sha" ] && [ -z "${FILLER_SKIP_BUILD:-}" ]; then
+    src="$F/src"
+    {
+      if [ "$(jq -r '.bundle_key // empty' "$dir/spec.json")" != "" ]; then
+        st_get "$(jq -r '.bundle_key' "$dir/spec.json")" "$dir/in.bundle" && git --git-dir="$REPO" fetch -q "$dir/in.bundle" "+refs/filler/*:refs/filler/*"
+      fi
+      git --git-dir="$REPO" update-ref "refs/filler/$sha" "$sha" 2>/dev/null
+      [ -d "$src/.git" ] || git clone -q --no-checkout "$REPO" "$src"
+      git -C "$src" fetch -q "$REPO" "+refs/filler/*:refs/filler/*" && git -C "$src" checkout -q -f --detach "$sha"
+    } >>"$dir/output.log" 2>&1 || rc=95
+    if [ "$rc" = 0 ] && [ "$(jq -r '.build | length' "$dir/spec.json" 2>/dev/null)" -gt 0 ] 2>/dev/null; then
+      bargs=(); while IFS= read -r l; do bargs+=("$l"); done < <(jq -r '.build[]' "$dir/spec.json")
+      run_scoped "$unit-build" "$src" "$dir/env.list" "${bargs[@]}" >>"$dir/output.log" 2>&1 || rc=$?
+    fi
+  fi
+
+  if [ "$rc" = 0 ]; then
+    aargs=(); while IFS= read -r l; do aargs+=("$l"); done < <(jq -r '.argv[]' "$dir/spec.json")
+    case "${aargs[0]:-}" in target/*) aargs[0]="$F/src/${aargs[0]}";; esac
+    run_scoped "$unit" "$dir" "$dir/env.list" "${aargs[@]}" >>"$dir/output.log" 2>&1 &
+    local pid=$! paused=0
+    while kill -0 "$pid" 2>/dev/null; do
+      if st_has "cancel/$id"; then
+        [ "$paused" = 0 ] || signal_unit CONT "$pid" "$unit"
+        stop_unit "$pid" "$unit"; touch "$dir/cancelled"
+      elif [ "$paused" = 0 ] && ! room_for_filler keep; then
+        signal_unit STOP "$pid" "$unit"; paused=1; log "paused $id: the box is full"
+      elif [ "$paused" = 1 ] && room_for_filler start; then
+        signal_unit CONT "$pid" "$unit"; paused=0; log "resumed $id"
+      fi
+      sleep "${FILLER_WATCH_SECONDS:-5}"
+    done
+    wait "$pid"; rc=$?
+    [ ! -e "$dir/cancelled" ] || rc=cancelled
+  fi
+
+  end="$(date +%s)"
+  for n in $(jq -r '(.outputs // [])[]' "$dir/spec.json"); do
+    [ -e "$dir/$n" ] && st_put "$dir/$n" "results/$id/$n"
+  done
+  st_put "$dir/output.log" "results/$id/output.log"
+  printf 'rc=%s start=%s end=%s wall_s=%s cores=%s\n' "$rc" "$start" "$end" "$((end - start))" "$(ncores)" > "$dir/DONE"
+  st_put "$dir/DONE" "results/$id/DONE"
+  log "done $id rc=$rc in $((end - start))s"
+  rm -rf "$dir"
+}
+
+cmd_run() {
+  exec 200>"$F/daemon.lock"
+  flock -n 200 || { echo "filler daemon already running"; exit 0; }
+  toolchain_env
+  local idle=0 k
+  log "daemon up (pid $$)"
+  while :; do
+    k="$(pick_pending)"
+    if [ -n "$k" ]; then
+      idle=0
+      room_for_filler start || { sleep "${FILLER_POLL_SECONDS:-10}"; continue; }
+      run_one "$k"; continue
+    fi
+    idle=$((idle + 1))
+    [ "$idle" -lt "${FILLER_IDLE_ROUNDS:-6}" ] || { log "queue empty: daemon exits"; exit 0; }
+    sleep "${FILLER_POLL_SECONDS:-10}"
+  done
+}
+
+cmd_status() {
+  echo "daemon: $(daemon_running && echo running || echo stopped)"
+  local k id q=0 d=0
+  while read -r k; do
+    case "$k" in *.json) ;; *) continue;; esac
+    id="${k%.json}"; if st_has "results/$id/DONE"; then d=$((d + 1)); else q=$((q + 1)); fi
+  done < <(st_list pending/)
+  echo "queued or running: $q; finished: $d"
+}
+
+sub="${1:-}"; [ $# -eq 0 ] || shift
+case "$sub" in
+  ensure) cmd_ensure ;;
+  run) cmd_run ;;
+  status) cmd_status ;;
+  *) sed -n '2,/^set -uo/p' "$0" | sed '$d;s/^# \{0,1\}//'; exit 2 ;;
+esac

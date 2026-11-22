@@ -1,0 +1,4 @@
+Use case: stylized-concept
+Asset: Legatum unit figure and portrait crop
+Subject: 19th-century field cannon with two wooden wheels, shown with one crew member.
+Style/composition/constraints: Refined hand-painted miniature, painterly realism, historically plausible tactile materials, muted parchment-compatible pigments, soft diffuse studio lighting. One complete centered subject with bold silhouette on a small round neutral pale stone base; square transparent background, generous transparent margins. No owner color on the stone base, so the renderer can tint it. No text, watermark, border, scenery or extra figures.

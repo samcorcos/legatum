@@ -1,0 +1,429 @@
+{
+ "note": [
+  "Thresholds, calibrated 2026-10-11 against pairs the user and the lead judged by eye (score: 0 = nothing alike, 1 = the same picture; see distinctness.py for how it is computed).",
+  "colour sets (resources, miniatures, roundels, cities, wonders, portraits): score = 1 - gap/40, gap = mean CIE Lab Delta E over the content in the worst of normal, protan, deutan, tritan and greyscale sight. Threshold 0.60 = a mean difference under 16 Delta E. Calibration: the old Coal and Iron medallions (the user's complaint) scored 0.70 at 14 px, 0.69 at 24 and 0.67 at 32, and the lookalike unit pairs the user and the UI review named (Cuirassier/Horseman 0.75, Cataphract/Horseman 0.69, Archer/Composite Archer 0.71) all score above 0.60, while pairs that read apart at a glance (Wheat/Stone 0.54, Spearman/Tank 0.14) sit below 0.45. The sets of whole-scene paintings (cities, wonders, portraits, era art) have no safe automatic bar, so they are report-only ('advisory').",
+  "mono sets (single-colour icons, seals, emblems): score = 0.6 * SSIM + 0.4 * silhouette IoU. Threshold 0.70. Calibration: Cataphract/Horseman icons (0.85 at 16 px) and the old Composite Archer/Ranger bows scored above it; the pairs that sit just under (Castle/Roadworks 0.66, Inference Core/Star Fort 0.66, Capital/City 0.63) read apart at 24 px by eye.",
+  "units-roundel: roundels are class symbols, so roundels of one class may match ('groups'); across classes the threshold is 0.80 (it is higher because the owner disc and plate are shared and dilute the score).",
+  "A pair listed in 'accepted' is a judged exception with its reason. Add one only after looking at the pair on the map at the size it is drawn; otherwise repaint the newcomer.",
+  "gist: for painted figures the silhouette alone is also compared (cropped to its bounding box, 12 x 12 coverage grid times aspect agreement), because two upright figures with a vertical spear share a silhouette at play size even when colour and detail differ (Phalangite beside Spartan Hoplite, which the user could not tell apart in play, scores 0.67 and Phalangite beside Pikeman 0.78, while mean Delta E alone scored them 0.38 and 0.66; Cuirassier/Horseman and Cataphract/Horseman score 0.88). units-miniature flags at gist 0.77. About 80 of the 528 figure pairs reach 0.67, so no silhouette bar can separate the Hoplite and Phalangite without also flagging most upright foot soldiers: that pair needs a non-silhouette cue (an era badge, a pose or a strength mark), which the unit-distinct work owns.",
+  "unlock-art: the painted diorama set shares one ground oval, so every pair starts near 0.5 and the closest retained pairs read apart at a glance; the bar is 0.66. 'watch' lists name sibling groups (libraries, forts, works) whose pairs are printed in the report whether or not they are flagged."
+ ],
+ "threshold": {
+  "mono": 0.7,
+  "colour": 0.6
+ },
+ "sets": {
+  "units-roundel": {
+   "threshold": 0.8
+  },
+  "units-miniature": {
+   "gist_threshold": 0.77
+  },
+  "city-art": {
+   "threshold": 0.74,
+   "advisory": true
+  },
+  "city-marks": {
+   "threshold": 0.8,
+   "advisory": true
+  },
+  "era-art": {
+   "threshold": 0.62,
+   "advisory": true
+  },
+  "natural-wonders": {
+   "threshold": 0.62,
+   "advisory": true
+  },
+  "portraits-people": {
+   "threshold": 0.6,
+   "advisory": true
+  },
+  "unlock-art": {
+   "threshold": 0.66
+  }
+ },
+ "groups": {
+  "units-roundel": [
+   {
+    "why": "Mounted",
+    "members": [
+     "cataphract",
+     "cavalry",
+     "cuirassier",
+     "horseman",
+     "keshig",
+     "knight"
+    ]
+   },
+   {
+    "why": "Guns",
+    "members": [
+     "artillery",
+     "field-cannon",
+     "howitzer"
+    ]
+   },
+   {
+    "why": "Ranged",
+    "members": [
+     "archer",
+     "crossbowman",
+     "composite-archer",
+     "arquebusier"
+    ]
+   },
+   {
+    "why": "Melee line",
+    "members": [
+     "spearman",
+     "pikeman",
+     "spartan-hoplite",
+     "infantry",
+     "musketman",
+     "rifleman",
+     "phalangite",
+     "tagmatic-soldier",
+     "trench-infantry",
+     "medjay",
+     "legionary"
+    ]
+   },
+   {
+    "why": "Armour",
+    "members": [
+     "tank",
+     "autonomous-armour",
+     "landship"
+    ]
+   },
+   {
+    "why": "Air",
+    "members": [
+     "bomber",
+     "fighter",
+     "drone-swarm",
+     "biplane"
+    ]
+   },
+   {
+    "why": "Civilians",
+    "members": [
+     "scout",
+     "settler",
+     "byzantine-heir"
+    ]
+   }
+  ]
+ },
+ "accepted": [
+  {
+   "set": "resources",
+   "a": "cattle",
+   "b": "wheat",
+   "why": "two different subjects (a gold sheaf of vertical stalks against two orange animals) that read apart at 24 px and above; only the 14 px tone gap is small"
+  },
+  {
+   "set": "resources",
+   "a": "copper",
+   "b": "iron",
+   "why": "different hue family (orange and verdigris against rust red and steel blue) and different subject (an ore nugget against ingots); only the greyscale lightness gap is small (about 9 to 12 Delta E at 14 to 24 px), and protan, deutan and tritan sight all keep them apart. Revisit with a copper repaint if a playtest confuses them"
+  },
+  {
+   "set": "units-miniature",
+   "a": "bomber",
+   "b": "fighter",
+   "why": "aircraft never stand on the map (hangar only); in the hangar list each sits beside its name"
+  },
+  {
+   "set": "units-miniature",
+   "a": "bomber",
+   "b": "stealth-bomber",
+   "why": "aircraft never stand on the map (hangar only). Both sit on the same display stand, which is most of what the metric compares; the aircraft differ by a wide charcoal flying wing against an olive twin-engine propeller bomber (silhouette and colour), and the hangar list puts a name beside each"
+  },
+  {
+   "set": "units-miniature",
+   "a": "fighter",
+   "b": "stealth-bomber",
+   "why": "aircraft never stand on the map (hangar only). Same display stand; a charcoal flying wing against an olive single-engine propeller fighter, and the hangar list puts a name beside each"
+  },
+  {
+   "set": "units-miniature",
+   "a": "spartan-hoplite",
+   "b": "spearman",
+   "why": "the same unit: the Spartan Hoplite replaces the Spearman, same era, same role and strength, so a Hoplite reading as a Spearman is correct; the era plaque on the base also says I on both"
+  },
+  {
+   "set": "units-miniature",
+   "a": "archer",
+   "b": "barbarian-archer",
+   "why": "the same unit: a barbarian Archer is the Archer (same era, role and strength), so reading as one is correct; the barbarian's charred base in a blood-red ring and missing owner roundel say whose it is"
+  },
+  {
+   "set": "units-miniature",
+   "a": "barbarian-crossbowman",
+   "b": "infantry",
+   "why": "only at the gist bar (0.77) with colour far apart (0.53): a hooded outlaw bent over spanning a crossbow at the ground against an upright soldier throwing a grenade, read apart at 45 px on the map; the barbarian also stands on the charred blood-ringed base with no owner roundel"
+  },
+  {
+   "set": "units-miniature",
+   "a": "barbarian-musketman",
+   "b": "cataphract",
+   "why": "silhouette only (gist 0.79; colour score 0.28, the widest gap in the set's flags): both are low and wide with a horizontal weapon, but one is a kneeling gunman with a smoke puff and the other a grey horse and rider, which read apart at 45 px; the kneeling pose is what separates the Musketman from the upright Rifleman and Arquebusier"
+  },
+  {
+   "set": "units-miniature",
+   "a": "landship",
+   "b": "tank",
+   "why": "Two separate paintings (a WWI rhomboid Early Tank and a WWII Tank) whose silhouettes sit close at map size; accepted by the user 2026-11-15; the unit's name sits beside it on every card"
+  },
+  {
+   "set": "units-miniature",
+   "a": "legionary",
+   "b": "medjay",
+   "why": "silhouette only (gist 0.78, score 0.58): two separate paintings in the set's common standing pose, shield on the left arm and spear in the right hand, as the Spearman and Hoplite also stand; a red curved scutum and banded armour against a cowhide shield and a bare chest; accepted by the lead 2026-11-15 rather than mirror or re-pose either figure"
+  },
+  {
+   "set": "units-miniature",
+   "a": "barbarian-pikeman",
+   "b": "pikeman",
+   "why": "Separate paintings of the same pike class: patched beige gambeson and red armband versus fitted steel plate and grey cloth. The shared sloping pike and braced stance improve legibility. This is the strongest colour/shape resemblance; confirm ownerless map treatment before accepting. Accepted by the lead 2026-11-16 (different paintings; all figures now share one base, which raises the outline score)."
+  },
+  {
+   "set": "units-miniature",
+   "a": "infantry",
+   "b": "reislaufer",
+   "why": "WWII olive uniform, steel helmet, raised grenade and rifle versus feathered Renaissance cap, slashed red/yellow clothing and upright pike. Different equipment and era despite a narrow standing box. Confirm at map size; Infantry legibility remains an unresolved repaint. Accepted by the lead 2026-11-16 (different paintings; all figures now share one base, which raises the outline score)."
+  },
+  {
+   "set": "units-miniature",
+   "a": "barbarian-archer",
+   "b": "pikeman",
+   "why": "Fur-hooded drawn-bow figure versus steel-armoured two-handed pike carrier. Independently painted equipment and bodies; the shared cream disc and diagonal composition increase similarity. Confirm at map size; acceptance would not excuse the Archer's wrong string. Accepted by the lead 2026-11-16 (different paintings; all figures now share one base, which raises the outline score)."
+  },
+  {
+   "set": "units-miniature",
+   "a": "barbarian-crossbowman",
+   "b": "reislaufer",
+   "why": "Brown hood and quilted tunic with a grounded crossbow and low horizontal prod versus feathered cap, slashed clothes and upright pike. Gist-only overlap of two independently painted upright figures. Accepted by the lead 2026-11-16 (different paintings; all figures now share one base, which raises the outline score)."
+  },
+  {
+   "set": "units-miniature",
+   "a": "barbarian-archer",
+   "b": "barbarian-pikeman",
+   "why": "Fur hood, drawn bow and quiver versus iron helmet, padded gambeson and sloping pike. Gist-only overlap; both remain separate subjects. Archer string correctness is a separate unresolved fault. Accepted by the lead 2026-11-16 (different paintings; all figures now share one base, which raises the outline score)."
+  },
+  {
+   "set": "units-miniature",
+   "a": "barbarian-pikeman",
+   "b": "phalangite",
+   "why": "Quilted gambeson, trousers and boots versus bronze helmet/greaves, linen cuirass, red tunic, sandals and a small left-arm shield. Shared long-polearm composition; distinct people, kit and anatomy. Accepted by the lead 2026-11-16 (different paintings; all figures now share one base, which raises the outline score)."
+  },
+  {
+   "set": "units-miniature",
+   "a": "archer",
+   "b": "rifleman",
+   "why": "Crested bronze helmet, short tunic and drawn bow versus blue coat, kepi and shoulder-held rifle. Gist-only resemblance of arms and occupied frame; different subjects and weapons. Accepted by the lead 2026-11-16 (different paintings; all figures now share one base, which raises the outline score)."
+  },
+  {
+   "set": "units-miniature",
+   "a": "phalangite",
+   "b": "pikeman",
+   "why": "Classical bronze/linen equipment, bare knees and small shield versus fitted steel armour with no shield. Both carry a sloping long polearm; gist-only resemblance does not require changing a correct pose. Accepted by the lead 2026-11-16 (different paintings; all figures now share one base, which raises the outline score)."
+  },
+  {
+   "set": "units-miniature",
+   "a": "barbarian-archer",
+   "b": "rifleman",
+   "why": "Animal hood, fur clothing and drawn bow versus blue-coated kepi-wearing rifleman. Their equipment and garment masses differ; coarse silhouette alone flags them. The Archer's string remains independently unresolved. Accepted by the lead 2026-11-16 (different paintings; all figures now share one base, which raises the outline score)."
+  },
+  {
+   "set": "units-miniature",
+   "a": "rifleman",
+   "b": "tagmatic-soldier",
+   "why": "Blue-coated rifle carrier with kepi versus conical-helmet Byzantine soldier with a long red kite shield and overhead spear. Very different held objects and garment masses despite coarse gist overlap. Accepted by the lead 2026-11-16 (different paintings; all figures now share one base, which raises the outline score)."
+  },
+  {
+   "set": "units-miniature",
+   "a": "peltast",
+   "b": "pikeman",
+   "why": "Approved javelin-throwing figure with blue cloak and crescent shield versus steel-armoured two-handed pike carrier. Different anatomy, props and colour masses; a low appearance score with a borderline coarse gist. Accepted by the lead 2026-11-16 (different paintings; all figures now share one base, which raises the outline score)."
+  },
+  {
+   "set": "unlock-art",
+   "a": "building-pyramids",
+   "b": "building-stockexchange",
+   "why": "Independent paintings: stepped pyramid masses and sandy complex versus a broad classical exchange facade with a curved glass trading-hall roof. Shared light stone and ground oval drive the 64 px colour metric; shape and subject remain different. No recolour. Accepted by the lead 2026-11-16 (two different paintings; a shared standing outline is not a copied figure)."
+  },
+  {
+   "set": "unlock-art",
+   "a": "building-walls-rome",
+   "b": "improvement-saltpetre-works",
+   "why": "Independent subjects: low rectangular Roman palisade/tent grid versus a dark pitched nitrary shed with tubs and furnace. Shared earth oval is deliberate; no copied architecture. Accepted by the lead 2026-11-16 (two different paintings; a shared standing outline is not a copied figure)."
+  },
+  {
+   "set": "units-miniature",
+   "a": "arquebusier",
+   "b": "trench-infantry",
+   "why": "Red slashed Renaissance doublet/morion and matchlock versus long blue WWI coat/Adrian helmet and bayoneted rifle. Gist alone flags their upright silhouettes; do not restore action poses. Accepted by the lead 2026-11-16 (two different paintings; a shared standing outline is not a copied figure)."
+  },
+  {
+   "set": "units-miniature",
+   "a": "barbarian-crossbowman",
+   "b": "trench-infantry",
+   "why": "Upright hooded medieval crossbow carrier with low horizontal prod versus blue-coated WWI rifleman with tall bayonet. Own bodies and equipment; common standing silhouette is intentional. Accepted by the lead 2026-11-16 (two different paintings; a shared standing outline is not a copied figure)."
+  },
+  {
+   "set": "units-miniature",
+   "a": "settler",
+   "b": "trench-infantry",
+   "why": "Woman with shawl, travel pack and staff versus helmeted blue-coated WWI rifleman. Gist flags vertical staff/rifle and upright body; no copied painting. Accepted by the lead 2026-11-16 (two different paintings; a shared standing outline is not a copied figure)."
+  },
+  {
+   "set": "units-miniature",
+   "a": "arquebusier",
+   "b": "reislaufer",
+   "why": "Morion and slashed doublet with complete gun/stock versus feathered beret and pike. Same historical standing-figure convention, independently painted. This is the closest red-clothed pair: confirm at map size before adding. Accepted by the lead 2026-11-16 (two different paintings; a shared standing outline is not a copied figure)."
+  },
+  {
+   "set": "units-miniature",
+   "a": "reislaufer",
+   "b": "trench-infantry",
+   "why": "Renaissance feathered cap, slashed clothes and pike versus WWI helmet, long coat and rifle. Upright silhouette overlap is expected; no pose workaround. Accepted by the lead 2026-11-16 (two different paintings; a shared standing outline is not a copied figure)."
+  },
+  {
+   "set": "units-miniature",
+   "a": "arquebusier",
+   "b": "barbarian-crossbowman",
+   "why": "Morion and red slashed doublet with upright firearm versus plain brown hooded brigand and low horizontal crossbow prod. Gist-only resemblance. Accepted by the lead 2026-11-16 (two different paintings; a shared standing outline is not a copied figure)."
+  },
+  {
+   "set": "units-miniature",
+   "a": "barbarian-crossbowman",
+   "b": "settler",
+   "why": "Hooded brigand holding a crossbow with horizontal prod near feet versus shawled traveller with tall staff and pack. Both brown standing figures; confirm the small prod/pack cues in map context before adding. Accepted by the lead 2026-11-16 (two different paintings; a shared standing outline is not a copied figure)."
+  },
+  {
+   "set": "units-miniature",
+   "a": "legionary",
+   "b": "settler",
+   "why": "Rectangular red scutum, segmentata and Roman helmet versus layered shawl/pack and staff. Both upright, but independent and visibly different subject masses. Accepted by the lead 2026-11-16 (two different paintings; a shared standing outline is not a copied figure)."
+  },
+  {
+   "set": "units-miniature",
+   "a": "crossbowman",
+   "b": "gaesatae",
+   "why": "Grounded tall rectangular pavise and low crossbow versus forward oval shield and thrusting spear. Independent equipment and poses; similar overall occupied box is not a copied silhouette. Accepted by the lead 2026-11-16 (two different paintings; a shared standing outline is not a copied figure)."
+  },
+  {
+   "set": "units-miniature",
+   "a": "arquebusier",
+   "b": "settler",
+   "why": "Red slashed doublet/morion and grounded firearm versus shawled traveller with staff/pack. Shared upright stance; different headgear, garment masses and held object. Accepted by the lead 2026-11-16 (two different paintings; a shared standing outline is not a copied figure)."
+  },
+  {
+   "set": "units-miniature",
+   "a": "arquebusier",
+   "b": "byzantine-heir",
+   "why": "Short red slashed clothes and morion versus long purple mantle, circlet and banner staff. Gist alone overweights the upright shaft and standing body. Accepted by the lead 2026-11-16 (two different paintings; a shared standing outline is not a copied figure)."
+  },
+  {
+   "set": "units-miniature",
+   "a": "autonomous-armour",
+   "b": "mechanised-infantry",
+   "why": "Low unmanned olive tracked vehicle with sensor turret versus tan multi-person mechanised group and vehicle. Shared broad base footprint; distinctly different contents. Group readability is separately still a poor-art finding. Accepted by the lead 2026-11-16 (two different paintings; a shared standing outline is not a copied figure)."
+  },
+  {
+   "set": "units-miniature",
+   "a": "cataphract",
+   "b": "peltast",
+   "why": "Standing armoured horse/rider with vertical lance versus approved on-foot javelin thrower with crescent shield. Very different subject and colours; coarse gist is a false resemblance. No mirroring or pose evasion. Accepted by the lead 2026-11-16 (two different paintings; a shared standing outline is not a copied figure)."
+  },
+  {
+   "set": "building-icons",
+   "a": "building-clearinghouse",
+   "b": "building-stockexchange",
+   "why": "Machine Age placeholder (increment 1, 2026-11-14): a sepia-tinted copy of the neighbouring era's art, replaced by its own in increment 2; the unit's name sits beside it on every card"
+  },
+  {
+   "set": "unlock-art",
+   "a": "building-clearinghouse",
+   "b": "building-stockexchange",
+   "why": "Machine Age placeholder (increment 1, 2026-11-14): a sepia-tinted copy of the neighbouring era's art, replaced by its own in increment 2; the unit's name sits beside it on every card"
+  },
+  {
+   "set": "units-miniature",
+   "a": "panzer",
+   "b": "tank",
+   "why": "both are WWII tanks since the Tank repaint; Germany builds the Panzer instead of the Tank, so one army never holds both; Panzer repaint queued; accepted on the user's delegation (\"use your judgment\", 2026-11-14)"
+  },
+  {
+   "set": "unit-icons",
+   "a": "unit-panzer",
+   "b": "unit-tank",
+   "why": "as the miniatures: the Panzer replaces the Tank for Germany; Panzer repaint queued; accepted on the user's delegation (\"use your judgment\", 2026-11-14)"
+  },
+  {
+   "set": "unit-icons",
+   "a": "unit-stealthbomber",
+   "b": "unit-warelephant",
+   "why": "dark masses at 16 px, eras apart and never offered together; accepted on the user's delegation (\"use your judgment\", 2026-11-14)"
+  },
+  {
+   "set": "units-miniature",
+   "a": "autonomous-armour",
+   "b": "panzer",
+   "why": "armour family two eras apart, just over the line; accepted on the user's delegation (\"use your judgment\", 2026-11-14)"
+  },
+  {
+   "set": "units-miniature",
+   "a": "autonomous-armour",
+   "b": "tank",
+   "why": "armour family two eras apart, just over the line; accepted on the user's delegation (\"use your judgment\", 2026-11-14)"
+  },
+  {
+   "set": "units-miniature",
+   "a": "barbarian-spearman",
+   "b": "war-elephant",
+   "why": "different subjects (a man on foot, an elephant) sharing an earth palette, just over the line; accepted on the user's delegation (\"use your judgment\", 2026-11-14)"
+  },
+  {
+   "set": "units-miniature",
+   "a": "reislaufer",
+   "b": "spartan-hoplite",
+   "why": "spearmen of two different factions and eras, just over the line; accepted on the user's delegation (\"use your judgment\", 2026-11-14)"
+  }
+ ],
+ "watch": {
+  "unlock-art": [
+   {
+    "why": "works",
+    "members": [
+     "building-autoworks-germany",
+     "building-machineshop",
+     "building-engine",
+     "building-autoworks",
+     "building-planetaryfoundry"
+    ]
+   },
+   {
+    "why": "forts",
+    "members": [
+     "building-walls-switzerland",
+     "building-castle",
+     "building-starfort",
+     "building-warshrine"
+    ]
+   },
+   {
+    "why": "libraries and archives",
+    "members": [
+     "building-archive",
+     "building-college",
+     "building-laboratory-athens",
+     "building-embassy"
+    ]
+   }
+  ]
+ }
+}

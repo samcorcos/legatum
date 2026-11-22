@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# ubuntu joins the docker group during bootstrap, but already-open ssh connections do not see it yet.
+exec sudo /usr/bin/docker "$@"

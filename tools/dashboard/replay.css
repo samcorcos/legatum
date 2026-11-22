@@ -1,0 +1,51 @@
+/* Replay styles are scoped so existing dashboard sections retain their layout. */
+#replays { grid-column: 1 / -1; scroll-margin-top: 16px; }
+#replays:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+#replays [hidden] { display: none !important; }
+#replays select { min-width: 0; border: 1px solid var(--line); background: var(--field); color: var(--text); border-radius: 0; padding: 8px; font: inherit; }
+#replays button:disabled { opacity: .4; cursor: default; }
+#replays button:focus-visible, #replays select:focus-visible, #replays input:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+#replays .replay-picker { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+#replay-game { flex: 1; max-width: 100%; }
+#replay-status { margin: 10px 0 0; color: var(--muted); }
+#replays .replay-summary { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 20px; }
+#replay-title { font: 500 24px var(--display); color: var(--gold); margin: 0; }
+#replay-result { color: var(--gold); font-size: 13px; }
+#replay-why { margin: 6px 0 18px; color: var(--muted); }
+#replays .replay-layout { display: grid; grid-template-columns: minmax(0, 2.4fr) minmax(270px, 1fr); gap: 16px; align-items: start; }
+#replays .replay-world { min-width: 0; }
+#replay-map { width: 100%; display: block; border: 1px solid var(--line); border-radius: 0; background: var(--bg); }
+#replays .replay-map-note { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; color: var(--muted); font-size: 11px; margin-top: 8px; }
+#replays input { accent-color: var(--gold); }
+#replay-inspect { min-height: 38px; padding: 6px 0; font-size: 12px; color: var(--blue); }
+#replays .replay-controls { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+#replays .replay-controls button { min-width: 34px; min-height: 34px; }
+#replay-play { min-width: 72px !important; }
+#replays .replay-controls label { color: var(--muted); margin-left: 6px; font-size: 12px; }
+#replay-turn { margin-left: auto; font: 12px var(--sans); color: var(--gold); }
+#replay-timeline { width: 100%; margin: 14px 0 0; cursor: pointer; }
+#replays .replay-hint { margin: 3px 0 0; color: var(--muted); font-size: 11px; }
+#replays .replay-panel { padding: 14px; background: #0f1721; border: 1px solid var(--line); border-radius: 0; min-width: 0; }
+#replays h4 { font: 600 11px var(--sans); text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin: 0 0 12px; display: flex; justify-content: space-between; gap: 10px; }
+#replay-standings { margin: 0 0 20px; padding: 0; list-style: none; }
+#replay-standings li { border-bottom: 1px solid var(--line); padding: 7px 0; }
+#replay-standings .replay-score-row { display: flex; align-items: center; gap: 8px; }
+#replay-standings .replay-score-row b { margin-left: auto; font: 500 18px var(--sans); }
+#replay-standings .replay-faction { display: block; font-size: 10px; color: var(--muted); }
+#replay-standings details { margin-left: 21px; font-size: 11px; color: var(--muted); }
+#replay-standings summary { cursor: pointer; }
+#replay-standings .replay-eliminated { opacity: .55; }
+#replays .replay-swatch { display: inline-block; width: 11px; height: 11px; border-radius: 50%; border: 1px solid #ffffff70; flex: none; }
+#replay-titles > div { display: flex; justify-content: space-between; gap: 8px; font-size: 11px; margin: 7px 0; }
+#replay-titles span:first-child { color: var(--muted); }
+#replay-vp { width: 100%; display: block; font-family: var(--sans); }
+#replay-legend { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 11px; margin-top: 10px; }
+#replay-legend span { display: inline-flex; gap: 6px; align-items: center; }
+#replay-events { max-height: 310px; overflow: auto; scrollbar-color: var(--line) transparent; }
+#replay-events button { display: flex; gap: 10px; text-align: left; width: 100%; background: transparent; border: 0; border-left: 2px solid transparent; border-radius: 0; padding: 7px 8px; font-size: 11px; line-height: 1.5; }
+#replay-events button:hover { background: var(--panel-2); }
+#replay-events button[aria-current="true"] { background: #d6b25e15; border-left-color: var(--gold); color: var(--gold); }
+#replay-events .replay-event-turn { min-width: 35px; font-family: var(--sans); color: var(--muted); }
+#replays .replay-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+@media (max-width: 1000px) { #replays .replay-layout { grid-template-columns: 1fr; } #replay-events { max-height: 260px; } }
+@media (max-width: 600px) { #replays .replay-picker { align-items: stretch; } #replay-game { flex-basis: 100%; } #replay-title { font-size: 20px; } #replay-turn { flex-basis: 100%; margin-top: 4px; } }

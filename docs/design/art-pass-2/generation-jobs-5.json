@@ -1,0 +1,16 @@
+[
+  {
+    "slug": "panzer",
+    "kind": "unit",
+    "attempt": 2,
+    "input": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-536ee2eb-f821-4fd2-91af-ed5925745a10.png",
+    "prompt": "Precision historical correction to this Panzer IV miniature: the visible near-side suspension currently has SIX small road wheels and THREE bogies, which is incorrect. Replace only this suspension with EIGHT small circular rubber-rimmed road wheels in FOUR PAIRS, each pair on its own leaf-spring bogie. Count eight distinct circular wheel centres along the bottom run between the large rear idler at left and large toothed front sprocket at right; the idler and sprocket are NOT among the eight. Make the small wheels smaller as needed to fit existing track length. FOUR small return rollers above. Maintain connected tracks, same tank body/turret/barrel, camera, base, colors and transparent background. No text or numbers anywhere. Do not change orientation."
+  },
+  {
+    "slug": "mechanised-infantry",
+    "kind": "unit",
+    "attempt": 2,
+    "input": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-2433ac7d-2d8b-4614-8645-387ec8f6e0a8.png",
+    "prompt": "Preserve this miniature group exactly, including all three figures, every hand, every weapon, vehicle and the new thin cream disc. Expand the framing slightly with a transparent margin on ALL sides. The entire rear flared end of the left soldier's shoulder launcher must be fully visible with transparent space before the canvas edge; also full rifle muzzle on right and every edge of the base. No cropped parts. No new objects, poses, color changes or words. Same refined miniature painting, genuine transparent background."
+  }
+]

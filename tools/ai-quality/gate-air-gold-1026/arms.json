@@ -1,0 +1,134 @@
+{
+  "arms": [
+    {
+      "label": "master_control",
+      "brain": "hard"
+    },
+    {
+      "label": "air_defense_all",
+      "brain": "params",
+      "mode": "all",
+      "params": {
+        "schema": 1,
+        "name": "air_defense_all",
+        "decisions": {
+          "air_defense": 100
+        }
+      }
+    },
+    {
+      "label": "air_commitment_all",
+      "brain": "params",
+      "mode": "all",
+      "params": {
+        "schema": 1,
+        "name": "air_commitment_all",
+        "decisions": {
+          "air_commitment": 1
+        }
+      }
+    },
+    {
+      "label": "air_rebase_all",
+      "brain": "params",
+      "mode": "all",
+      "params": {
+        "schema": 1,
+        "name": "air_rebase_all",
+        "decisions": {
+          "air_rebase": 1
+        }
+      }
+    },
+    {
+      "label": "purchase_savings_turns_all",
+      "brain": "params",
+      "mode": "all",
+      "params": {
+        "schema": 1,
+        "name": "purchase_savings_turns_all",
+        "decisions": {
+          "purchase_savings_turns": 6
+        }
+      }
+    },
+    {
+      "label": "bundle_all",
+      "brain": "params",
+      "mode": "all",
+      "params": {
+        "schema": 1,
+        "name": "bundle_all",
+        "decisions": {
+          "air_defense": 100,
+          "air_commitment": 1,
+          "air_rebase": 1,
+          "purchase_savings_turns": 6
+        }
+      }
+    },
+    {
+      "label": "air_defense_seat",
+      "brain": "params",
+      "mode": "seat",
+      "params": {
+        "schema": 1,
+        "name": "air_defense_seat",
+        "decisions": {
+          "air_defense": 100
+        }
+      }
+    },
+    {
+      "label": "air_commitment_seat",
+      "brain": "params",
+      "mode": "seat",
+      "params": {
+        "schema": 1,
+        "name": "air_commitment_seat",
+        "decisions": {
+          "air_commitment": 1
+        }
+      }
+    },
+    {
+      "label": "air_rebase_seat",
+      "brain": "params",
+      "mode": "seat",
+      "params": {
+        "schema": 1,
+        "name": "air_rebase_seat",
+        "decisions": {
+          "air_rebase": 1
+        }
+      }
+    },
+    {
+      "label": "purchase_savings_turns_seat",
+      "brain": "params",
+      "mode": "seat",
+      "params": {
+        "schema": 1,
+        "name": "purchase_savings_turns_seat",
+        "decisions": {
+          "purchase_savings_turns": 6
+        }
+      }
+    },
+    {
+      "label": "bundle_seat",
+      "brain": "params",
+      "mode": "seat",
+      "params": {
+        "schema": 1,
+        "name": "bundle_seat",
+        "decisions": {
+          "air_defense": 100,
+          "air_commitment": 1,
+          "air_rebase": 1,
+          "purchase_savings_turns": 6
+        }
+      }
+    }
+  ]
+}

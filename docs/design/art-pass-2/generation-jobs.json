@@ -1,0 +1,49 @@
+[
+  {
+    "slug": "people-egypt",
+    "prompt": "Edit only the two small sailing boats at the distant right edge of this existing refined oil painting of New Kingdom Egypt, c.1300 BCE. Their triangular lateen sails are anachronistic. Replace each with a single broad rectangular linen square sail on a horizontal yard at the top of one mast, seen obliquely with coherent ropes and period papyrus/wood boat hull. Keep boats small in their exact locations. Preserve everything else precisely: both adults, faces, all hands, the corrected wooden scribal palette with exactly two pigment cakes and reed-pen slot, clothing, jewelry, grain, river, buildings, oil brushwork, color and lighting. No text, watermark, modern objects or other people. One small background correction only.",
+    "kind": "portrait",
+    "attempt": 1
+  },
+  {
+    "slug": "people-sparta",
+    "prompt": "Edit only the BACKGROUND of this existing refined oil portrait, intended to show Sparta in the fifth century BCE. The enormous stone city fortification and hanging lambda banner are historically wrong for unwalled Classical Sparta. Replace that wall and banner with an unwalled Laconian settlement of low plastered mudbrick houses with simple terracotta pitched roofs, sparse olive trees and cypresses, against the rugged Taygetus mountains at golden evening light. No defensive city wall, no towers, no banners. Preserve both adults EXACTLY: faces, helmet crest, bronze cuirass, cloak, peplos, spear, shield and all visible fingers, foreground scale, pigments and rich oil technique. Background only, do not shift either person. No words or watermark.",
+    "kind": "portrait",
+    "attempt": 1
+  },
+  {
+    "slug": "people-egypt",
+    "kind": "portrait",
+    "input": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-0af46ef6-42a0-496e-bb10-449292e5bacb.png",
+    "prompt": "Precise small background correction to this painting: REMOVE the tiny triangular-sailed boat in the river near the centre, just LEFT of the woman's hair below the temple and palm tree. Replace that tiny triangle and its hull with plain blue river. Keep the TWO rectangular square-sailed boats on the FAR RIGHT unchanged. No other sailing boats anywhere. Preserve all people, hands, scribal palette, buildings, colors and brushwork exactly. No new objects.",
+    "attempt": 2
+  },
+  {
+    "slug": "medjay",
+    "kind": "unit",
+    "prompt": "Edit this exact museum-quality painted New Kingdom Medjay miniature. Preserve the man, head, feather headband, realistic anatomy, bronze leaf-head spear and right-hand grip, linen kilt, bare feet, standing stance, camera and lighting. Correct ONLY his LEFT shield arm: remove the leather wrist bracer, bend his bare left elbow naturally, extend the forearm inward BEHIND the shield centre, with hand entirely concealed gripping its rear central leather handle. No fingers anywhere around the rim. Keep the tall arched hide-covered wooden shield in its current position. Simplify the base to one plain smooth warm cream circular disc, no veins or step. Output exact same figure cut out with genuine transparent background, no background scene, no text, no black or colored halo.",
+    "input": "~/code/legatum/.claude/worktrees/lane-5/app/src/assets/units/medjay-source.png",
+    "attempt": 1
+  },
+  {
+    "slug": "biplane",
+    "kind": "unit",
+    "prompt": "Edit this existing painted WWI biplane miniature. Keep the entire plane, engine, wooden two-bladed propeller, wings, struts, seat, camera and colors. Fix both landing wheels: fill the empty spaces between each tyre and hub with taut warm-grey fabric-covered wheel discs, coherent oval perspective, hubs centered in each disc. No empty wheel rims, no floating hubs. Keep visible axle connecting the two hubs. Simplify circular base to a single smooth plain cream disc while preserving curved display support. Genuine transparent background; no text, no halo. Focused repair only.",
+    "input": "~/code/legatum/.claude/worktrees/lane-5/app/src/assets/units/biplane-source.png",
+    "attempt": 1
+  },
+  {
+    "slug": "jet-fighter",
+    "kind": "unit",
+    "prompt": "Edit this existing painted early Cold-War swept-wing jet miniature, same orientation, exact wings, tail, fuselage, nose intake, colors and lighting. Add the missing closed clear bubble canopy over the exposed cockpit seat. It must be physically attached to the cockpit rim, with metal frame and glazed windscreen, transparent glass subtle highlights, seat visible through glass. No open cockpit. Preserve curved display support but make its circular base ONE plain warm cream disc, without tiered steps or ornate texture. Genuine transparent background; no words or watermark.",
+    "input": "~/code/legatum/.claude/worktrees/lane-5/app/src/assets/units/jet-fighter-source.png",
+    "attempt": 1
+  },
+  {
+    "slug": "barbarian-archer",
+    "kind": "unit",
+    "prompt": "Repair only the bowstring on this painted miniature, preserving the same archer, face, hands, self bow shape, arrow, costume, pose, feet and base. Draw ONE continuous clearly visible thin twisted linen bowstring, from the UPPER bow tip down diagonally to the arrow nock at his drawing fingers beside his cheek, and from that same nock diagonally down to the LOWER bow tip. Both string segments taut and unbroken, triangle geometry, attached at the tips, no other strings. Preserve full figure and plain cream base. Genuine transparent background, no colored halo, no text.",
+    "input": "~/code/legatum/.claude/worktrees/lane-5/app/src/assets/units/barbarian-archer-source.png",
+    "attempt": 1
+  }
+]

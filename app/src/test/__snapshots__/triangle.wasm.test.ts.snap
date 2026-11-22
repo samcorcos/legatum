@@ -1,0 +1,219 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`triangle core behavior > a class bonus needs both units from before the Modern era, in the forecast of both engines 1`] = `
+{
+  "attacker_hp": 100,
+  "attacker_strength": {
+    "parts": [
+      [
+        "Rifleman",
+        61,
+      ],
+      [
+        "Melee line against mounted (+40%)",
+        24,
+      ],
+    ],
+    "total": 85,
+  },
+  "defender_hp": 100,
+  "defender_strength": {
+    "parts": [
+      [
+        "Cavalry",
+        79,
+      ],
+    ],
+    "total": 79,
+  },
+  "expected_damage_to_attacker": 23,
+  "expected_damage_to_defender": 37,
+  "loss_chance": 0,
+  "ranged": false,
+  "win_chance": 0,
+}
+`;
+
+exports[`triangle core behavior > a class bonus needs both units from before the Modern era, in the forecast of both engines 2`] = `
+{
+  "attacker_hp": 100,
+  "attacker_strength": {
+    "parts": [
+      [
+        "Rifleman",
+        61,
+      ],
+    ],
+    "total": 61,
+  },
+  "defender_hp": 100,
+  "defender_strength": {
+    "parts": [
+      [
+        "Tank",
+        94,
+      ],
+    ],
+    "total": 94,
+  },
+  "expected_damage_to_attacker": 98,
+  "expected_damage_to_defender": 7,
+  "loss_chance": 75,
+  "ranged": false,
+  "win_chance": 0,
+}
+`;
+
+exports[`triangle core behavior > a class bonus needs both units from before the Modern era, in the forecast of both engines 3`] = `
+{
+  "attacker_hp": 100,
+  "attacker_strength": {
+    "parts": [
+      [
+        "Infantry",
+        89,
+      ],
+    ],
+    "total": 89,
+  },
+  "defender_hp": 100,
+  "defender_strength": {
+    "parts": [
+      [
+        "Cavalry",
+        79,
+      ],
+    ],
+    "total": 79,
+  },
+  "expected_damage_to_attacker": 19,
+  "expected_damage_to_defender": 44,
+  "loss_chance": 0,
+  "ranged": false,
+  "win_chance": 0,
+}
+`;
+
+exports[`triangle core behavior > a class bonus needs both units from before the Modern era, in the forecast of both engines 4`] = `
+{
+  "attacker_hp": 100,
+  "attacker_strength": {
+    "parts": [
+      [
+        "Infantry",
+        89,
+      ],
+    ],
+    "total": 89,
+  },
+  "defender_hp": 100,
+  "defender_strength": {
+    "parts": [
+      [
+        "Tank",
+        94,
+      ],
+    ],
+    "total": 94,
+  },
+  "expected_damage_to_attacker": 36,
+  "expected_damage_to_defender": 24,
+  "loss_chance": 0,
+  "ranged": false,
+  "win_chance": 0,
+}
+`;
+
+exports[`triangle core behavior > a class bonus needs both units from before the Modern era, in the forecast of both engines 5`] = `
+{
+  "attacker_hp": 100,
+  "attacker_strength": {
+    "parts": [
+      [
+        "Cavalry",
+        79,
+      ],
+      [
+        "Mounted against ranged (+40%)",
+        31,
+      ],
+    ],
+    "total": 110,
+  },
+  "defender_hp": 100,
+  "defender_strength": {
+    "parts": [
+      [
+        "Field Cannon",
+        50,
+      ],
+    ],
+    "total": 50,
+  },
+  "expected_damage_to_attacker": 3,
+  "expected_damage_to_defender": 100,
+  "loss_chance": 0,
+  "ranged": false,
+  "win_chance": 100,
+}
+`;
+
+exports[`triangle core behavior > a class bonus needs both units from before the Modern era, in the forecast of both engines 6`] = `
+{
+  "attacker_hp": 100,
+  "attacker_strength": {
+    "parts": [
+      [
+        "Cavalry",
+        79,
+      ],
+    ],
+    "total": 79,
+  },
+  "defender_hp": 100,
+  "defender_strength": {
+    "parts": [
+      [
+        "Artillery",
+        77,
+      ],
+    ],
+    "total": 77,
+  },
+  "expected_damage_to_attacker": 27,
+  "expected_damage_to_defender": 31,
+  "loss_chance": 0,
+  "ranged": false,
+  "win_chance": 0,
+}
+`;
+
+exports[`triangle core behavior > a class bonus needs both units from before the Modern era, in the forecast of both engines 7`] = `
+{
+  "attacker_hp": 100,
+  "attacker_strength": {
+    "parts": [
+      [
+        "Tank",
+        94,
+      ],
+    ],
+    "total": 94,
+  },
+  "defender_hp": 100,
+  "defender_strength": {
+    "parts": [
+      [
+        "Field Cannon",
+        50,
+      ],
+    ],
+    "total": 50,
+  },
+  "expected_damage_to_attacker": 4,
+  "expected_damage_to_defender": 100,
+  "loss_chance": 0,
+  "ranged": false,
+  "win_chance": 100,
+}
+`;

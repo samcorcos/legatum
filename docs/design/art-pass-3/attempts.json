@@ -1,0 +1,69 @@
+[
+  {
+    "slug": "pikeman",
+    "prompt": "Improve this miniature's map-size legibility by repainting its same adult figure in an alert advancing stance, head near the top of frame and full body much larger. Retain fitted steel plate armour, helmet, neutral cloth and the same plain warm-cream single-step disc. Carry ONE historically long pike in BOTH HANDS at a shallow upward slope, foreshortened into depth so the complete slim wooden shaft and small steel point fit the square without shrinking the body. Pike remains a long pike, not a short spear; realistic grip, continuous straight shaft, no extra weapons. Adult anatomy, full feet planted on the same disc. Head should sit around y150 on1254 canvas. Refined painted miniature, same style and lighting. Preserve square canvas with pure magenta background, entire miniature visible, no lettering, badges or symbols. This is a collectible tabletop miniature.",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-5ce863b8-6cbf-47b1-b526-c6cb433382bc.png",
+    "attempt": 1,
+    "selected": false
+  },
+  {
+    "slug": "pikeman",
+    "prompt": "Correct the polearm in this tabletop miniature while preserving the adult figure, costume, stance and plain cream disc. It currently reads as a short spear. It must read as a very long infantry PIKE foreshortened away from viewer: grip both hands closer together around the lower third of the shaft; long forward shaft projects steeply into depth towards upper right, visibly tapering with distance. Very SMALL narrow leaf point at far end, no broad spearhead; tip no wider than the hand's little finger. Butt extends substantially behind rear hand to lower left. Hands and shaft must connect naturally with no floating pieces. Preserve large full-body figure and same overall square framing, head height, lighting, magenta field. No crop or mirror. Complete painting.",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-001f2a77-58d4-4262-9992-7c6ad0ef267d.png",
+    "previous": {
+      "slug": "pikeman",
+      "prompt": "Improve this miniature's map-size legibility by repainting its same adult figure in an alert advancing stance, head near the top of frame and full body much larger. Retain fitted steel plate armour, helmet, neutral cloth and the same plain warm-cream single-step disc. Carry ONE historically long pike in BOTH HANDS at a shallow upward slope, foreshortened into depth so the complete slim wooden shaft and small steel point fit the square without shrinking the body. Pike remains a long pike, not a short spear; realistic grip, continuous straight shaft, no extra weapons. Adult anatomy, full feet planted on the same disc. Head should sit around y150 on1254 canvas. Refined painted miniature, same style and lighting. Preserve square canvas with pure magenta background, entire miniature visible, no lettering, badges or symbols. This is a collectible tabletop miniature.",
+      "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-5ce863b8-6cbf-47b1-b526-c6cb433382bc.png"
+    },
+    "attempt": 2,
+    "selected": false
+  },
+  {
+    "slug": "pikeman",
+    "prompt": "Revise this historical miniature for physically credible pike length. Keep same adult person, costume, two-handed braced stance and cream disc. Widen the composition around him, REDUCE figure to occupy roughly seventy percent of canvas height: helmet top at y300, boot soles y1120 on a1254 square. Body must retain slender realistic adult anatomy. The long pike runs diagonally from near x40 y1210 to x1210 y40, held in both hands around middle-left; its straight round wooden shaft has SLENDER UNIFORM DIAMETER about10 pixels, not a tapered cone or thick staff. Tiny narrow iron point at upper tip about35 pixels long, plain wooden butt. Thus weapon is visibly about twice man's height in projection and longer into depth, unmistakably a pike. Both grips wrap shaft. Whole base fits, one low warm cream disc, no rubble. No other changes; magenta background. Full miniature, no cropped shaft.",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-df82f406-362d-4e03-ad9f-64bbaadf665f.png",
+    "attempt": 3,
+    "selected": true
+  },
+  {
+    "slug": "barbarian-pikeman",
+    "prompt": "Improve this miniature's map-size legibility by repainting its same adult figure taking a measured step, head near the top and full body much larger. Retain simple iron helmet, weathered beige gambeson, brown boots and trousers, small dark red cloth accent, no plate armour. Same plain warm-cream single-step disc. Carry ONE historically long pike in BOTH HANDS at a shallow upward slope, foreshortened into depth so complete slim wooden shaft and small steel point fit square without shrinking body. Pike stays long, not a short spear; realistic two-hand grip and continuous straight shaft, no extra weapons. Full feet grounded on disc. Head near y150 on1254 canvas. Refined painted miniature same lighting. Preserve square canvas with pure magenta background, entire miniature visible, no lettering, badges or symbols. This is a collectible tabletop miniature.",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-fbb744cd-0353-4ea0-ac48-aaec42dd85c8.png",
+    "attempt": 1,
+    "selected": false
+  },
+  {
+    "slug": "barbarian-pikeman",
+    "prompt": "Correct the polearm in this tabletop miniature while preserving the adult figure, costume, stance and plain cream disc. It currently reads as a short spear. It must read as a very long infantry PIKE foreshortened away from viewer: grip both hands closer together around the lower third of the shaft; long forward shaft projects steeply into depth towards upper right, visibly tapering with distance. Very SMALL narrow leaf point at far end, no broad spearhead; tip no wider than the hand's little finger. Butt extends substantially behind rear hand to lower left. Hands and shaft must connect naturally with no floating pieces. Preserve large full-body figure and same overall square framing, head height, lighting, magenta field. No crop or mirror. Complete painting.",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-291ef038-7549-407e-a1c2-74296440c54c.png",
+    "previous": {
+      "slug": "barbarian-pikeman",
+      "prompt": "Improve this miniature's map-size legibility by repainting its same adult figure taking a measured step, head near the top and full body much larger. Retain simple iron helmet, weathered beige gambeson, brown boots and trousers, small dark red cloth accent, no plate armour. Same plain warm-cream single-step disc. Carry ONE historically long pike in BOTH HANDS at a shallow upward slope, foreshortened into depth so complete slim wooden shaft and small steel point fit square without shrinking body. Pike stays long, not a short spear; realistic two-hand grip and continuous straight shaft, no extra weapons. Full feet grounded on disc. Head near y150 on1254 canvas. Refined painted miniature same lighting. Preserve square canvas with pure magenta background, entire miniature visible, no lettering, badges or symbols. This is a collectible tabletop miniature.",
+      "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-fbb744cd-0353-4ea0-ac48-aaec42dd85c8.png"
+    },
+    "attempt": 2,
+    "selected": false
+  },
+  {
+    "slug": "barbarian-pikeman",
+    "prompt": "Revise this historical miniature for physically credible pike length. Keep same adult person, costume, two-handed braced stance and cream disc. Widen the composition around him, REDUCE figure to occupy roughly seventy percent of canvas height: helmet top at y300, boot soles y1120 on a1254 square. Body must retain slender realistic adult anatomy. The long pike runs diagonally from near x40 y1210 to x1210 y40, held in both hands around middle-left; its straight round wooden shaft has SLENDER UNIFORM DIAMETER about10 pixels, not a tapered cone or thick staff. Tiny narrow iron point at upper tip about35 pixels long, plain wooden butt. Thus weapon is visibly about twice man's height in projection and longer into depth, unmistakably a pike. Both grips wrap shaft. Whole base fits, one low warm cream disc, no rubble. No other changes; magenta background. Full miniature, no cropped shaft.",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-bb78efb1-1c8c-4f4a-acb6-865b3b6c3cf2.png",
+    "attempt": 3,
+    "selected": true
+  },
+  {
+    "slug": "infantry",
+    "prompt": "Improve map-size legibility of this adult WWII American infantry miniature. Repaint him advancing with a measured step, head near top of frame, realistic lean adult proportions. M1 steel helmet with net cover, olive field jacket, khaki webbing, canvas leggings and brown boots. Hold one correctly proportioned M1 Garand rifle low across the body in both hands: continuous wood buttstock, receiver, barrel, muzzle angled down to the right, trigger hand at wrist of stock and support hand under fore-end. No grenade in raised hand, no bayonet, no extra weapon. Same plain round warm cream stone disc one low step and soft contact shadows, both boots grounded. Refined painted miniature, upper-left light. Head near y130 on1254 canvas, body fills frame. Preserve square canvas with pure magenta background, entire miniature visible, no lettering, badges or symbols. This is a collectible tabletop miniature.",
+    "error": "image generation failed: http 400 Bad Request: Some(\"{\\n  \\\"error\\\": {\\n    \\\"message\\\": \\\"Your request was rejected by the safety system. If you believe this is an error, contact us at help.openai.com and include the request ID <removed>. safety_violations=[violence].\\\",\\n    \\\"type\\\": \\\"image_generation_user_error\\\",\\n    \\\"param\\\": null,\\n    \\\"code\\\": \\\"moderation_blocked\\\",\\n    \\\"moderation_details\\\": {\\n      \\\"moderation_stage\\\": \\\"input\\\",\\n      \\\"categories\\\": [\\n        \\\"violence\\\"\\n      ]\\n    }\\n  }\\n}\")"
+  },
+  {
+    "slug": "phalangite",
+    "prompt": "Replace this three-person tabletop miniature with ONE full-size adult Macedonian phalangite, in the same refined painted miniature style. One soldier only: restrained bronze helmet with cheek pieces, off-white linen cuirass with short leather pteruges, muted red tunic, bronze greaves and simple sandals. Small plain round bronze shield strapped securely to LEFT forearm at left side of torso, not centred on his chest; both hands hold a single continuous long sarissa at the slope. Slender wooden shaft with tiny iron point, not a broad spearhead; weapon projects diagonally into depth, at least twice man's visible body length. Natural two-handed grip, no fingers passing through shield. Calm ready stance with a measured forward step. Figure fills about70percent canvas height, plain round warm cream stone single-step disc with soft contact shadows, no rubble. Magenta background, full square canvas and complete figure, no text, no extra people or objects.",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-1417018e-28c1-4021-840c-955ea80d7a6a.png"
+  },
+  {
+    "slug": "panzer",
+    "prompt": "Precise miniature detail edit ONLY: add correctly proportioned Panzer IV hull Schuerzen side-skirt plates to the visible hull flank. Thin overlapping rectangular metal plates on external support rails, hanging outside upper track and road-wheel tops, leaving lower wheels and track visible. Preserve existing eight small road wheels on four bogies underneath, front sprocket and rear idler, existing turret side skirts, long barrel and its two-chamber muzzle brake, cupola, proportions, orientation, paint and plain warm cream disc. No mirroring, no new pose, no changed camera, no insignia or text. This is a collectible scale model. Return same complete miniature on flat magenta background.",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-de208321-a185-48db-81a6-15b7f5b7667f.png"
+  }
+]

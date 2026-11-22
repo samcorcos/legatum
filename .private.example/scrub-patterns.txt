@@ -1,0 +1,17 @@
+# Owner-specific scrub patterns: the exact values that must never reach the public tree.
+#
+# Copy this file to .private/scrub-patterns.txt (git-ignored) in your main checkout and replace the placeholder
+# lines with your own. tools/release/scrub.py loads it, when it exists, on top of the generic patterns in
+# tools/release/scrub-patterns.txt, for the public export, the hygiene merge gate and `scrub.py scan --tracked`.
+# Lookup order: $LEGATUM_SCRUB_PATTERNS, then .private/scrub-patterns.txt in this checkout, then in the main checkout
+# (so git worktrees share one file).
+#
+# Format: one Python regular expression per line, case-sensitive unless it uses (?i:...). Blank lines and lines that
+# start with # are ignored. Escape dots in addresses. Never copy a real value back into a tracked file, a test, a
+# comment or a commit message: the generic patterns exist so the repository can check itself without naming anything.
+#
+# What belongs here (placeholders, not real values):
+#   your cloud account id            <twelve digits>
+#   your machine's LAN address       <a\.b\.c\.d>
+#   a personal email or its domain   <name>@<domain>
+#   names of people or private projects that docs must not mention

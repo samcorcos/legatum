@@ -1,0 +1,4 @@
+2026-11-16 — Codex built-in image generation. Provisional author review; lead review pending.
+Reference images and requested edits: see docs/design/art-pass-2/generation-*.json.
+
+Repaint this quartz mine miniature for clearer64px readability, maintaining a real rock quarry rather than fantasy crystals. Compact rocky hill with exposed pale milky quartz veins in darker grey host rock, two broad stepped benches, a timber-supported dark mine entrance, short connected narrow-gauge cart track and one loaded ore cart. Clear dark entrance contrasts with white quartz face. Small tool shelter and restrained scrub. Same three-quarter isometric view and warm upper-left light, neutral EARTH OVAL patch similar footprint to the Deep Mine set, refined detailed muted oil miniature. No towering crystal spikes, glitter or gems. Full hill and footprint in frame, genuine transparent background, no text or watermark.

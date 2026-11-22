@@ -1,0 +1,44 @@
+# Generic personal-data patterns: what must not appear in the public tree. Read by tools/release/scrub.py, which the
+# public export (export-public.sh), the hygiene gate (tools/gates/hygiene.py) and test-scrub.sh all use.
+#
+# RULE: this file holds only generic shapes (any home path, any account id, any private address, any relationship
+# word). A specific value to hide (your account id, your address, a name) must never be written here or anywhere else
+# in the tracked tree: a scrub list that spells out what it scrubs publishes it. Put those in the untracked file
+# .private/scrub-patterns.txt (format in .private.example/scrub-patterns.txt); scrub.py loads it when it exists.
+#
+# Format:
+#   [class]              starts a class; its name is printed with each hit
+#   <regex>              a Python regular expression, one per line, case-sensitive unless it uses (?i:...)
+#   allow-path: <regex>  hits of this class are ignored in paths that match (test fixtures, period art prompts)
+#   sample: <text>       a line that must match the class; `{}` is removed first, so the sample does not match the
+#                        patterns as written here. test-scrub.sh checks every sample, and the merge-gate tests build
+#                        their probe lines from them.
+# Email addresses are checked in code (scrub.py: EMAIL, with the EMAIL_OK allow-list), not here.
+
+[home-path]
+/Users/[A-Za-z]
+-Users-[a-z]
+sample: runs land in /Users/{}someone/LegatumRuns
+
+[aws]
+arn:aws[a-z-]*:[a-z0-9-]*:[a-z0-9-]*:[0-9]{12}:
+# An account id inside a bucket or resource name (not the tail of a UUID), and one written next to its label.
+(?:s3://|\b)[a-z][a-z0-9.-]*(?<!-[0-9a-f]{4})-[0-9]{12}\b(?![-.][0-9])
+(?i:\baccount[ _-]?(?:id|number)?\W{1,4}[0-9]{12}\b)
+\bi-[0-9a-f]{17}\b
+\b(?:AKIA|ASIA)[0-9A-Z]{16}\b
+BEGIN (?:RSA |OPENSSH |EC |DSA |PGP )?PRIVATE KEY
+sample: s3://example-sims-{}123456789012/box/jobs
+
+[private-ip]
+# RFC 1918 addresses. Made-up ones are fine in tests; prose and examples use <lan-ip> or an RFC 5737 address.
+(?<![0-9.])(?:10\.[0-9]{1,3}|192\.168|172\.(?:1[6-9]|2[0-9]|3[01]))\.[0-9]{1,3}\.[0-9]{1,3}(?![0-9.])
+allow-path: (^|/)tests?/|\.test\.tsx?$|^app/e2e/|^crates/server/src/auth\.rs$|^app/src-tauri/src/online\.rs$
+sample: the host is at 192.168{}.1.77
+
+[family]
+# Relationship words. People in docs are named by role: "the designer", "the second player", "a co-op partner".
+# gate-allow: the generic word list itself
+(?i:\b(?:wife|wives|husband|spouse|girlfriend|boyfriend|fianc[a-z]+|(?:my|his|her) (?:son|daughter|kids?|child(?:ren)?|mom|mum|dad|mother|father|brother|sister|family|partner)|family (?:member|mention|detail)s?)\b)
+allow-path: ^app/src/assets/art/.*\.prompt\.txt$
+sample: show it to someone's spo{}use first

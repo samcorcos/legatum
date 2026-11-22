@@ -1,0 +1,178 @@
+/* The alarm screen: a war declared on you (red ink, full drama) and lighter big moments.
+   Above every game panel and the hot-seat hand-off; below dialogs in the top layer (game over). */
+.alarm-screen {
+  --alarm-ink: var(--bad);
+  position: absolute; inset: 0; z-index: 70;
+  display: grid; place-items: center; padding: 12px;
+  background: var(--scrim);
+  animation: alarm-fade 260ms ease-out both;
+}
+.alarm-art { position: absolute; inset: 0; overflow: hidden; opacity: .34; pointer-events: none; animation: alarm-fade 850ms ease-out both; }
+.alarm-art img { width: 100%; height: 100%; object-fit: cover; filter: saturate(.58) sepia(.18); animation: gr-drift 9000ms ease-out both; }
+.alarm-screen.war .alarm-art { opacity: .19; }
+.alarm-ribbon { display: inline-flex; animation: gr-unfurl 550ms 100ms ease-out backwards; }
+.alarm-ribbon .rb-text { font-size: 11px; letter-spacing: .14em; }
+.alarm-screen.war {
+  background:
+    radial-gradient(ellipse at 50% 42%, color-mix(in srgb, var(--bad) 42%, transparent), transparent 70%),
+    radial-gradient(ellipse at 50% 50%, rgba(40, 10, 5, 0.62), rgba(14, 5, 2, 0.9) 78%);
+}
+.alarm-screen.ally { --alarm-ink: var(--ink); }
+
+.alarm-sheet {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas: 'crest title' 'crest actions' 'body body';
+  column-gap: 28px;
+  width: min(980px, 100%);
+  max-height: calc(100dvh - 24px);
+  padding: 22px 30px 16px;
+  color: var(--ink);
+  background: radial-gradient(ellipse at 14% 0%, color-mix(in srgb, var(--alarm-ink) 14%, transparent), transparent 58%), var(--panel);
+  border: 6px solid transparent;
+  border-image: var(--frame-image);
+  box-shadow: 0 18px 60px #000a;
+  animation: alarm-arrive 420ms cubic-bezier(.2, .9, .25, 1.15) both;
+}
+/* A red ink rule inside the frame, doubled at the top like a sealed proclamation. */
+.alarm-sheet::before {
+  content: ''; position: absolute; inset: 4px; pointer-events: none;
+  border: 1px solid color-mix(in srgb, var(--alarm-ink) 70%, transparent);
+  border-top: 4px double var(--alarm-ink);
+}
+.alarm-screen.loss .alarm-sheet, .alarm-screen.ally .alarm-sheet { width: min(760px, 100%); }
+
+.alarm-crests {
+  grid-area: crest; position: relative; align-self: start;
+  display: flex; justify-content: center; align-items: center; gap: 10px; padding: 14px;
+}
+.alarm-banner {
+  position: absolute; z-index: 0; left: 8px; right: 8px; top: -28px; bottom: -6px;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 18px, #0000000f 18px 19px),
+    linear-gradient(180deg, color-mix(in srgb, var(--pc) 88%, #000), color-mix(in srgb, var(--pc) 55%, #1a0d08));
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 88%, 0 100%);
+  box-shadow: inset 0 0 0 2px #0003;
+  animation: alarm-unfurl 520ms cubic-bezier(.2, .9, .3, 1) both;
+}
+.alarm-crest { position: relative; z-index: 1; display: grid; animation: alarm-slam 520ms 120ms cubic-bezier(.3, 1.4, .5, 1) both; }
+.alarm-crest:not(.alarm-leader) .crest { box-shadow: 0 0 0 2px var(--frame), 0 0 0 5px var(--panel), 0 0 0 9px var(--pc), 0 8px 26px #0007; }
+.alarm-crest .player-badge { position: absolute; right: 2px; bottom: 2px; width: 26px; height: 26px; font-size: 14px; }
+.alarm-rays {
+  position: absolute; z-index: 0; inset: -10px; border-radius: 50%; pointer-events: none;
+  background: repeating-conic-gradient(from 6deg, color-mix(in srgb, var(--panel) 70%, transparent) 0deg 4deg, transparent 4deg 18deg);
+  mask-image: radial-gradient(circle, #000 34%, transparent 70%);
+  animation: alarm-rays 900ms ease-out both;
+}
+.alarm-crests.portraits { --pw: 150px; --ph: 188px; gap: 22px; padding: 16px 22px 20px; }
+.alarm-crests.portraits.pair { --pw: 112px; --ph: 140px; }
+.alarm-leader .pf { margin: 0; }
+.alarm-leader .player-badge { position: absolute; z-index: 3; left: 6px; bottom: 6px; width: 24px; height: 24px; font-size: 13px; }
+.alarm-screen.ally .alarm-rays { background: repeating-conic-gradient(from 6deg, #d9ac4055 0deg 5deg, transparent 5deg 20deg); }
+
+.alarm-title { grid-area: title; align-self: end; min-width: 0; padding-top: 6px; }
+.alarm-kicker { font: 700 11px/1.4 var(--sans); letter-spacing: .2em; text-transform: uppercase; color: var(--alarm-ink); }
+.alarm-title h1 {
+  margin: 4px 0 2px; font: var(--display-weight) clamp(30px, 4.4vw, 58px)/1.02 var(--display);
+  color: var(--alarm-ink); letter-spacing: .005em; text-wrap: balance; overflow-wrap: anywhere;
+}
+.alarm-empire { margin: 0; font: 600 13px/1.4 var(--sans); color: var(--ink-2); }
+.alarm-motto { margin: 6px 0 0; font: italic 500 21px/1.25 var(--display); color: var(--ink-2); }
+
+.alarm-actions { grid-area: actions; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 14px 0 4px; }
+.alarm-primary { min-height: 46px; padding: 4px 26px 2px; font-size: 14px; letter-spacing: .14em; }
+.alarm-screen:not(.ally) .alarm-primary {
+  color: var(--spend-ink); background: var(--alarm-ink); border-color: var(--alarm-ink);
+  box-shadow: inset 0 0 0 2px var(--alarm-ink), inset 0 0 0 3px color-mix(in srgb, var(--spend-ink) 55%, transparent);
+}
+.alarm-screen:not(.ally) .alarm-primary .kbd { color: var(--spend-ink); border-color: color-mix(in srgb, var(--spend-ink) 55%, transparent); }
+.alarm-diplomacy { min-height: 46px; }
+.alarm-esc { font: 500 11px var(--sans); color: var(--ink-2); }
+.alarm-esc .kbd { margin: 0 4px 0 0; }
+
+.alarm-body {
+  grid-area: body; min-height: 0; overflow: auto; margin-top: 10px; padding-top: 12px;
+  border-top: 1px solid var(--rule-2);
+}
+.alarm-block + .alarm-block { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--rule-2); }
+.alarm-block-head { margin: 0 0 6px; padding-left: 10px; border-left: 5px solid var(--pc); font: 600 20px/1.1 var(--display); }
+.alarm-cols { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 8px 28px; }
+.alarm-cols.single { grid-template-columns: minmax(0, 1fr); }
+.alarm-cols h3, .alarm-also h2 {
+  margin: 0 0 6px; font: 700 10px/1.4 var(--sans); letter-spacing: .16em; text-transform: uppercase; color: var(--ink-2);
+}
+.alarm-facts, .alarm-also ul { margin: 0; padding: 0; list-style: none; }
+.alarm-fact { display: flex; gap: 8px; align-items: baseline; margin: 0 0 5px; font: 13px/1.4 var(--sans); }
+.alarm-fact-text { min-width: 0; }
+.alarm-fact.strong { font-weight: 700; font-size: 15px; color: var(--alarm-ink); }
+.alarm-mark { flex: none; width: 12px; text-align: center; font-size: 11px; color: var(--ink-2); }
+.alarm-fact.bad .alarm-mark { color: var(--bad); }
+.alarm-fact.good .alarm-mark { color: var(--good); }
+.alarm-where { margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 12px; font: 13px/1.4 var(--sans); }
+.alarm-where dt { font-weight: 700; color: var(--ink-2); }
+.alarm-where dd { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
+.alarm-where dd > span { display: grid; }
+.alarm-where small { font-size: 12px; color: var(--ink-2); }
+.alarm-show { display: inline-flex; align-items: center; min-height: 24px; font-size: 15px; white-space: nowrap; cursor: pointer; background: none; border-top: 0; border-left: 0; border-right: 0; color: var(--alarm-ink); }
+.alarm-also { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--rule-2); }
+.alarm-also .alarm-show { margin-left: 8px; }
+
+/* Laptop-height windows: the crest shrinks before anything scrolls. */
+@media (max-height: 680px) and (min-width: 701px) {
+  .alarm-sheet { padding: 16px 26px 12px; }
+  .alarm-crest:not(.alarm-leader) .crest { width: 120px !important; height: 120px !important; }
+  .alarm-crests.portraits { --pw: 108px; --ph: 135px; padding: 14px 20px 18px; }
+  .alarm-crests.portraits.pair { --pw: 84px; --ph: 105px; }
+  .alarm-title h1 { font-size: clamp(30px, 4.2vw, 42px); }
+  .alarm-motto { font-size: 19px; margin-top: 4px; }
+  .alarm-actions { margin-top: 10px; }
+}
+
+/* Phone and narrow windows: a full-screen sheet; content first, the actions pinned at the bottom. */
+@media (max-width: 700px) {
+  .alarm-screen { padding: 0; place-items: stretch; }
+  .alarm-sheet {
+    width: 100%; height: 100dvh; max-height: none; padding: 14px 16px 0; column-gap: 0;
+    grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto minmax(0, 1fr) auto;
+    grid-template-areas: 'crest' 'title' 'body' 'actions';
+    border-width: 4px; text-align: center;
+  }
+  .alarm-crests { justify-self: center; padding: 14px 22px 22px; }
+  .alarm-crests.portraits { --pw: 96px; --ph: 120px; }
+  .alarm-crests.portraits.pair { --pw: 72px; --ph: 90px; }
+  .alarm-banner { top: -18px; bottom: 0; }
+  .alarm-kicker { margin-top: 10px; }
+  .alarm-crest .player-badge { width: 22px; height: 22px; font-size: 12px; }
+  .alarm-title { align-self: start; padding: 0; }
+  .alarm-title h1 { font-size: 32px; }
+  .alarm-motto { font-size: 18px; }
+  .alarm-body { text-align: left; margin-top: 10px; padding-bottom: 8px; }
+  .alarm-cols { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .alarm-actions {
+    position: sticky; bottom: 0; margin: 0 -16px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+    display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px;
+    background: var(--panel); border-top: 1px solid var(--rule-2);
+  }
+  .alarm-primary, .alarm-diplomacy { width: 100%; min-height: 48px; }
+  .alarm-esc { display: none; }
+  .alarm-where dd { align-items: center; }
+  .alarm-show { display: inline-flex; align-items: center; min-height: 44px; padding: 0; border-bottom: 0; text-decoration: underline; text-underline-offset: 3px; }
+}
+
+@keyframes alarm-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes alarm-arrive { from { opacity: 0; transform: translateY(10px) scale(.97); } to { opacity: 1; transform: none; } }
+@keyframes alarm-slam { from { opacity: 0; transform: scale(1.35); } 60% { opacity: 1; } to { transform: none; } }
+@keyframes alarm-unfurl { from { clip-path: polygon(0 0, 100% 0, 100% 0, 50% 0, 0 0); } }
+@keyframes alarm-rays { from { opacity: 0; transform: scale(.5) rotate(-14deg); } to { opacity: 1; transform: none; } }
+.alarm-screen.reduced, .alarm-screen.reduced *, .alarm-screen.reduced *::before, .alarm-screen.reduced *::after { animation: none !important; transition: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .alarm-screen, .alarm-screen * { animation: none !important; }
+}
+
+/* The race panel's relation badge for an empire that declared war on you this turn. */
+.relation-badge.war.new { font-weight: 700; color: var(--spend-ink); background: var(--bad); border-color: var(--bad); animation: alarm-badge 1.2s ease-in-out 4; }
+/* In a race row the badge's top and bottom border is transparent padding (a bigger click target), so the red fill must not extend into it. */
+.vp-row .relation-badge.war.new { border-color: transparent; box-shadow: inset 0 0 0 1px var(--bad); }
+@keyframes alarm-badge { 50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--bad) 35%, transparent); } }
+@media (prefers-reduced-motion: reduce) { .relation-badge.war.new { animation: none; } }

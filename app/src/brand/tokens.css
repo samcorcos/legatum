@@ -1,0 +1,86 @@
+/*
+ * Design tokens for Atlas.
+ * Atlas of Heirs: paper, ink double rules, Cormorant + Libre Franklin.
+ * Panel frames are 9-slice SVGs in --frame-image. Spacing is the 4/8 grid: 4, 8, 12, 16, 24, 32, 48.
+ */
+:root {
+  /* Surfaces */
+  --bg: #e6dcc4;
+  --panel: #f2ead8; /* paper */
+  --panel-2: #e9dfc8; /* active row */
+  --panel-3: #dfd2b5; /* tracks */
+  --tip-bg: #f7f1e3; /* vellum */
+  --field: #f7f1e3;
+  --scrim: rgba(60, 45, 25, 0.38);
+  /* Ink */
+  --ink: #2b2419;
+  --ink-2: #5b503f;
+  --muted: #655844;
+  --on-player: #08101f;
+  --control-border: #8a7759;
+  --rule: #bcac8e;
+  --rule-2: #9d8c6c;
+  --frame: #2b2419;
+  --accent: #9a3322; /* the one accent: kicker, selection, route */
+  --accent-hi: #9a3322;
+  --good: #3d6427;
+  --bad: #a3392a;
+  /* G16 spend chips and For-you marks: ink on --spend is 6.4:1, on --gain 6.6:1; --spend on paper 5.5:1. */
+  --spend: #a3392a;
+  --spend-ink: #fffaf0;
+  --gain: #3d6427;
+  /* Settlement washes, shared by the canvas and its legend: one emerald hue, from a faint tint to nearly opaque. The -a token is how much of the colour covers the ground. */
+  --settle-poor: #17a05e;
+  --settle-poor-a: 26%;
+  --settle-fair: #0e8a4c;
+  --settle-fair-a: 50%;
+  --settle-good: #097238;
+  --settle-good-a: 66%;
+  --settle-great: #06552c;
+  --settle-great-a: 77%;
+  --settle-exceptional: #033820;
+  --settle-exceptional-a: 84%;
+  --wordmark: #2b2419;
+  /* Primary action */
+  --primary-bg: #2b2419;
+  --primary-ink: #f2ead8;
+  --primary-rule: rgba(242, 234, 216, 0.45);
+  --primary-sub: #dfd2b5;
+  --btn-bg: #f7f1e3;
+  --btn-border: #2b2419;
+  --btn-ink: #2b2419;
+  --btn-track: 0.1em;
+  --notch: 0px;
+  --btn-notch: 0px;
+  /* Yields, deepened for paper */
+  --y-food: #4e762e;
+  --y-production: #965020;
+  --y-gold: #80620d;
+  --y-science: #236b92;
+  /* Border growth (city panel bar, banner meter): territory teal, apart from the four yields. */
+  --border-growth: #2e7a70;
+  /* Type */
+  --display: 'Cormorant', 'Cormorant Garamond', Garamond, serif;
+  --sans: 'Libre Franklin', 'Franklin Gothic Book', system-ui, sans-serif;
+  --display-weight: 600;
+  --num-font: var(--sans); /* Cormorant's figures are old-style: data numerals stay in the sans */
+  --label-color: var(--ink-2);
+  --label-track: 0.14em;
+  --label-size: 10px;
+  --head-font: 600 20px/1.1 var(--display);
+  --head-track: 0.02em;
+  --head-transform: none;
+  --head-color: var(--ink);
+  --kicker-color: var(--accent);
+  --caps-font: 700 15px/1 var(--display);
+  /* Frames: outer ink rule, 3 px paper, inner rule (the double rule). Slice 5. */
+  --frame-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12'%3E%3Crect width='12' height='12' fill='%232b2419'/%3E%3Crect x='1' y='1' width='10' height='10' fill='%23f2ead8'/%3E%3Crect x='4' y='4' width='4' height='4' fill='%239d8c6c'/%3E%3Crect x='5' y='5' width='2' height='2' fill='%23f2ead8'/%3E%3C/svg%3E")
+    5 fill / 5px / 0 stretch;
+  --frame-pad: 5px;
+  /* Single-rule slip (tooltips, cards). Slice 1. */
+  --slip-border: 1px solid #2b2419;
+  --topbar-bg: #f2ead8;
+  --topbar-rule: 0 1px 0 #2b2419, 0 4px 0 -2px #f2ead8, 0 4px 0 -1px #9d8c6c;
+  --paper-grain: 0.5;
+  color-scheme: light;
+}

@@ -1,0 +1,929 @@
+{
+  "first": 76,
+  "last": 95,
+  "seat": 0,
+  "turns": {
+    "76": [
+      {
+        "type": "SleepUnit",
+        "unit": 2
+      },
+      {
+        "to": {
+          "q": 33,
+          "r": 11
+        },
+        "type": "MoveUnit",
+        "unit": 72
+      },
+      {
+        "path": [
+          {
+            "q": 25,
+            "r": 20
+          },
+          {
+            "q": 24,
+            "r": 20
+          },
+          {
+            "q": 23,
+            "r": 21
+          },
+          {
+            "q": 22,
+            "r": 22
+          },
+          {
+            "q": 21,
+            "r": 23
+          },
+          {
+            "q": 20,
+            "r": 24
+          },
+          {
+            "q": 19,
+            "r": 25
+          },
+          {
+            "q": 19,
+            "r": 26
+          }
+        ],
+        "to": {
+          "q": 19,
+          "r": 26
+        },
+        "type": "MoveUnitPath",
+        "unit": 84
+      },
+      {
+        "automation": "Explore",
+        "path": [
+          {
+            "q": 21,
+            "r": 5
+          },
+          {
+            "q": 22,
+            "r": 5
+          }
+        ],
+        "type": "SetAutomation",
+        "unit": 33
+      }
+    ],
+    "77": [
+      {
+        "accept": false,
+        "proposal": 17,
+        "type": "RespondToProposal"
+      },
+      {
+        "path": [
+          {
+            "q": 31,
+            "r": 12
+          },
+          {
+            "q": 31,
+            "r": 13
+          }
+        ],
+        "to": {
+          "q": 31,
+          "r": 13
+        },
+        "type": "MoveUnitPath",
+        "unit": 72
+      },
+      {
+        "automation": "Explore",
+        "path": [
+          {
+            "q": 23,
+            "r": 5
+          },
+          {
+            "q": 24,
+            "r": 5
+          },
+          {
+            "q": 25,
+            "r": 5
+          },
+          {
+            "q": 26,
+            "r": 5
+          }
+        ],
+        "type": "SetAutomation",
+        "unit": 33
+      }
+    ],
+    "78": [
+      {
+        "path": [
+          {
+            "q": 26,
+            "r": 14
+          },
+          {
+            "q": 27,
+            "r": 13
+          },
+          {
+            "q": 28,
+            "r": 12
+          },
+          {
+            "q": 29,
+            "r": 11
+          },
+          {
+            "q": 30,
+            "r": 10
+          },
+          {
+            "q": 31,
+            "r": 10
+          },
+          {
+            "q": 32,
+            "r": 10
+          }
+        ],
+        "to": {
+          "q": 32,
+          "r": 10
+        },
+        "type": "MoveUnitPath",
+        "unit": 3
+      },
+      {
+        "type": "SkipUnit",
+        "unit": 72
+      },
+      {
+        "city": 19,
+        "queue": [
+          {
+            "improvement": "SaltpeterWorks",
+            "kind": "Improvement",
+            "tile": {
+              "q": 23,
+              "r": 17
+            }
+          }
+        ],
+        "type": "SetProductionQueue"
+      },
+      {
+        "automation": "Explore",
+        "path": [
+          {
+            "q": 27,
+            "r": 4
+          },
+          {
+            "q": 28,
+            "r": 4
+          }
+        ],
+        "type": "SetAutomation",
+        "unit": 33
+      }
+    ],
+    "79": [
+      {
+        "accept": true,
+        "proposal": 18,
+        "type": "RespondToProposal"
+      },
+      {
+        "type": "SkipUnit",
+        "unit": 72
+      },
+      {
+        "automation": "Explore",
+        "path": [
+          {
+            "q": 29,
+            "r": 4
+          },
+          {
+            "q": 30,
+            "r": 4
+          }
+        ],
+        "type": "SetAutomation",
+        "unit": 33
+      }
+    ],
+    "80": [
+      {
+        "path": [
+          {
+            "q": 32,
+            "r": 12
+          },
+          {
+            "q": 33,
+            "r": 11
+          }
+        ],
+        "to": {
+          "q": 33,
+          "r": 11
+        },
+        "type": "MoveUnitPath",
+        "unit": 72
+      },
+      {
+        "type": "FoundCity",
+        "unit": 84
+      },
+      {
+        "automation": null,
+        "path": [
+          {
+            "q": 29,
+            "r": 4
+          },
+          {
+            "q": 28,
+            "r": 5
+          },
+          {
+            "q": 27,
+            "r": 6
+          }
+        ],
+        "stop_reason": "Threatened",
+        "type": "SetAutomation",
+        "unit": 33
+      }
+    ],
+    "81": [
+      {
+        "to": {
+          "q": 33,
+          "r": 11
+        },
+        "type": "MoveUnit",
+        "unit": 72
+      },
+      {
+        "to": {
+          "q": 32,
+          "r": 11
+        },
+        "type": "MoveUnit",
+        "unit": 3
+      },
+      {
+        "city": 28,
+        "queue": [
+          {
+            "building": "Walls",
+            "kind": "Building"
+          },
+          {
+            "building": "Market",
+            "kind": "Building"
+          },
+          {
+            "building": "Granary",
+            "kind": "Building"
+          }
+        ],
+        "type": "SetProductionQueue"
+      },
+      {
+        "automation": "Explore",
+        "path": [
+          {
+            "q": 28,
+            "r": 5
+          },
+          {
+            "q": 29,
+            "r": 4
+          },
+          {
+            "q": 30,
+            "r": 4
+          }
+        ],
+        "type": "SetAutomation",
+        "unit": 33
+      }
+    ],
+    "82": [
+      {
+        "to": {
+          "q": 32,
+          "r": 11
+        },
+        "type": "MoveUnit",
+        "unit": 3
+      },
+      {
+        "to": {
+          "q": 33,
+          "r": 11
+        },
+        "type": "MoveUnit",
+        "unit": 72
+      },
+      {
+        "automation": "Explore",
+        "path": [
+          {
+            "q": 29,
+            "r": 4
+          },
+          {
+            "q": 28,
+            "r": 4
+          },
+          {
+            "q": 27,
+            "r": 4
+          },
+          {
+            "q": 26,
+            "r": 5
+          }
+        ],
+        "type": "SetAutomation",
+        "unit": 33
+      }
+    ],
+    "83": [
+      {
+        "city": 19,
+        "queue": [
+          {
+            "building": "Granary",
+            "kind": "Building"
+          },
+          {
+            "building": "Workshop",
+            "kind": "Building"
+          },
+          {
+            "building": "Laboratory",
+            "kind": "Building"
+          }
+        ],
+        "type": "SetProductionQueue"
+      },
+      {
+        "automation": "Explore",
+        "path": [
+          {
+            "q": 27,
+            "r": 4
+          },
+          {
+            "q": 28,
+            "r": 4
+          },
+          {
+            "q": 29,
+            "r": 4
+          }
+        ],
+        "type": "SetAutomation",
+        "unit": 33
+      }
+    ],
+    "84": [
+      {
+        "automation": "Explore",
+        "path": [
+          {
+            "q": 30,
+            "r": 4
+          },
+          {
+            "q": 30,
+            "r": 5
+          },
+          {
+            "q": 31,
+            "r": 5
+          }
+        ],
+        "type": "SetAutomation",
+        "unit": 33
+      }
+    ],
+    "85": [
+      {
+        "path": [
+          {
+            "q": 31,
+            "r": 16
+          },
+          {
+            "q": 32,
+            "r": 15
+          },
+          {
+            "q": 33,
+            "r": 15
+          },
+          {
+            "q": 34,
+            "r": 15
+          }
+        ],
+        "to": {
+          "q": 34,
+          "r": 15
+        },
+        "type": "MoveUnitPath",
+        "unit": 93
+      },
+      {
+        "path": [
+          {
+            "q": 27,
+            "r": 19
+          },
+          {
+            "q": 28,
+            "r": 18
+          },
+          {
+            "q": 29,
+            "r": 17
+          },
+          {
+            "q": 29,
+            "r": 16
+          },
+          {
+            "q": 29,
+            "r": 15
+          },
+          {
+            "q": 30,
+            "r": 14
+          },
+          {
+            "q": 31,
+            "r": 13
+          }
+        ],
+        "to": {
+          "q": 31,
+          "r": 13
+        },
+        "type": "MoveUnitPath",
+        "unit": 95
+      },
+      {
+        "city": 1,
+        "queue": [
+          {
+            "building": "Hydroponics",
+            "kind": "Building"
+          }
+        ],
+        "type": "SetProductionQueue"
+      },
+      {
+        "city": 7,
+        "queue": [
+          {
+            "improvement": "Farm",
+            "kind": "Improvement",
+            "tile": {
+              "q": 24,
+              "r": 22
+            }
+          }
+        ],
+        "type": "SetProductionQueue"
+      },
+      {
+        "automation": null,
+        "path": [
+          {
+            "q": 30,
+            "r": 5
+          },
+          {
+            "q": 30,
+            "r": 4
+          },
+          {
+            "q": 29,
+            "r": 4
+          }
+        ],
+        "stop_reason": "Threatened",
+        "type": "SetAutomation",
+        "unit": 33
+      }
+    ],
+    "86": [
+      {
+        "automation": "Explore",
+        "path": [
+          {
+            "q": 30,
+            "r": 4
+          },
+          {
+            "q": 30,
+            "r": 5
+          },
+          {
+            "q": 31,
+            "r": 5
+          }
+        ],
+        "type": "SetAutomation",
+        "unit": 33
+      }
+    ],
+    "87": [
+      {
+        "path": [
+          {
+            "q": 30,
+            "r": 6
+          },
+          {
+            "q": 30,
+            "r": 7
+          },
+          {
+            "q": 30,
+            "r": 8
+          },
+          {
+            "q": 30,
+            "r": 9
+          },
+          {
+            "q": 29,
+            "r": 10
+          },
+          {
+            "q": 28,
+            "r": 10
+          },
+          {
+            "q": 27,
+            "r": 11
+          },
+          {
+            "q": 26,
+            "r": 12
+          }
+        ],
+        "to": {
+          "q": 26,
+          "r": 12
+        },
+        "type": "MoveUnitPath",
+        "unit": 33
+      },
+      {
+        "type": "FoundCity",
+        "unit": 93
+      },
+      {
+        "path": [
+          {
+            "q": 31,
+            "r": 12
+          },
+          {
+            "q": 31,
+            "r": 11
+          },
+          {
+            "q": 32,
+            "r": 10
+          },
+          {
+            "q": 33,
+            "r": 9
+          },
+          {
+            "q": 34,
+            "r": 8
+          }
+        ],
+        "to": {
+          "q": 34,
+          "r": 8
+        },
+        "type": "MoveUnitPath",
+        "unit": 95
+      },
+      {
+        "city": 7,
+        "queue": [
+          {
+            "building": "Market",
+            "kind": "Building"
+          },
+          {
+            "building": "Walls",
+            "kind": "Building"
+          },
+          {
+            "building": "Laboratory",
+            "kind": "Building"
+          },
+          {
+            "building": "Workshop",
+            "kind": "Building"
+          },
+          {
+            "building": "Hydroponics",
+            "kind": "Building"
+          }
+        ],
+        "type": "SetProductionQueue"
+      }
+    ],
+    "88": [
+      {
+        "path": [
+          {
+            "q": 34,
+            "r": 9
+          },
+          {
+            "q": 33,
+            "r": 10
+          },
+          {
+            "q": 32,
+            "r": 11
+          },
+          {
+            "q": 31,
+            "r": 12
+          },
+          {
+            "q": 31,
+            "r": 13
+          }
+        ],
+        "to": {
+          "q": 31,
+          "r": 13
+        },
+        "type": "MoveUnitPath",
+        "unit": 95
+      },
+      {
+        "city": 30,
+        "queue": [
+          {
+            "building": "Market",
+            "kind": "Building"
+          },
+          {
+            "building": "Walls",
+            "kind": "Building"
+          },
+          {
+            "building": "Laboratory",
+            "kind": "Building"
+          },
+          {
+            "building": "Workshop",
+            "kind": "Building"
+          },
+          {
+            "building": "Granary",
+            "kind": "Building"
+          }
+        ],
+        "type": "SetProductionQueue"
+      }
+    ],
+    "89": [
+      {
+        "type": "SleepUnit",
+        "unit": 33
+      },
+      {
+        "techs": [
+          "Gunpowder",
+          "Banking",
+          "PrintingPress",
+          "MilitaryEngineering",
+          "Metallurgy"
+        ],
+        "type": "SetResearchQueue"
+      }
+    ],
+    "90": [
+      {
+        "type": "SleepUnit",
+        "unit": 33
+      },
+      {
+        "type": "SkipUnit",
+        "unit": 95
+      }
+    ],
+    "91": [
+      {
+        "type": "SkipUnit",
+        "unit": 95
+      },
+      {
+        "path": [
+          {
+            "q": 21,
+            "r": 17
+          },
+          {
+            "q": 22,
+            "r": 17
+          },
+          {
+            "q": 23,
+            "r": 17
+          },
+          {
+            "q": 24,
+            "r": 16
+          },
+          {
+            "q": 25,
+            "r": 15
+          },
+          {
+            "q": 25,
+            "r": 14
+          }
+        ],
+        "to": {
+          "q": 25,
+          "r": 14
+        },
+        "type": "MoveUnitPath",
+        "unit": 2
+      },
+      {
+        "path": [
+          {
+            "q": 26,
+            "r": 16
+          },
+          {
+            "q": 25,
+            "r": 16
+          }
+        ],
+        "to": {
+          "q": 25,
+          "r": 16
+        },
+        "type": "MoveUnitPath",
+        "unit": 102
+      }
+    ],
+    "92": [
+      {
+        "path": [
+          {
+            "q": 25,
+            "r": 15
+          },
+          {
+            "q": 25,
+            "r": 14
+          }
+        ],
+        "to": {
+          "q": 25,
+          "r": 14
+        },
+        "type": "MoveUnitPath",
+        "unit": 2
+      },
+      {
+        "type": "SkipUnit",
+        "unit": 95
+      },
+      {
+        "path": [
+          {
+            "q": 25,
+            "r": 15
+          },
+          {
+            "q": 25,
+            "r": 14
+          }
+        ],
+        "to": {
+          "q": 25,
+          "r": 14
+        },
+        "type": "MoveUnitPath",
+        "unit": 102
+      },
+      {
+        "type": "SleepUnit",
+        "unit": 105
+      },
+      {
+        "city": 11,
+        "queue": [
+          {
+            "building": "Walls",
+            "kind": "Building"
+          },
+          {
+            "building": "Laboratory",
+            "kind": "Building"
+          },
+          {
+            "building": "Hydroponics",
+            "kind": "Building"
+          }
+        ],
+        "type": "SetProductionQueue"
+      }
+    ],
+    "93": [
+      {
+        "type": "SkipUnit",
+        "unit": 2
+      },
+      {
+        "type": "SleepUnit",
+        "unit": 95
+      },
+      {
+        "type": "SleepUnit",
+        "unit": 105
+      }
+    ],
+    "94": [
+      {
+        "to": {
+          "q": 26,
+          "r": 13
+        },
+        "type": "MoveUnit",
+        "unit": 102
+      },
+      {
+        "type": "SleepUnit",
+        "unit": 105
+      },
+      {
+        "to": {
+          "q": 26,
+          "r": 13
+        },
+        "type": "MoveUnit",
+        "unit": 2
+      },
+      {
+        "type": "SkipUnit",
+        "unit": 95
+      }
+    ],
+    "95": [
+      {
+        "to": {
+          "q": 31,
+          "r": 14
+        },
+        "type": "MoveUnit",
+        "unit": 95
+      },
+      {
+        "type": "FoundCity",
+        "unit": 102
+      },
+      {
+        "accept": false,
+        "proposal": 28,
+        "type": "RespondToProposal"
+      },
+      {
+        "type": "SleepUnit",
+        "unit": 2
+      }
+    ]
+  }
+}

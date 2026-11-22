@@ -1,0 +1,4 @@
+2026-11-16 — Codex built-in image generation. Provisional author review; lead review pending.
+Reference images and requested edits: see docs/design/art-pass-2/generation-*.json.
+
+Repair cut-out damage on this existing approved quadruped robot miniature. Preserve the exact four-legged robot, sensors, machinery, all joints, feet, mounted equipment, shape and camera. Restore small missing opaque metal areas: tiny square transparent holes around the knee bolt flanges and near the head upper-left corner should be solid adjoining olive metal or dark joint housing. Keep intentional large openings between limbs and pistons, do not fill real air gaps. Ensure every leg has a continuous structural connection to its joint. Change grey mottled platform to one plain smooth warm cream disc. No redesign, no humanoid, no new equipment, no pose change, no text. Genuine transparent background with clean edges.

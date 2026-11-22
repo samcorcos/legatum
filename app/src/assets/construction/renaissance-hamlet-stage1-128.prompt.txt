@@ -1,0 +1,1 @@
+Lanczos 128 px derivative of renaissance-hamlet-stage1.png. See renaissance-hamlet-stage1.prompt.txt for the image edit prompt.

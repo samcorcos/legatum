@@ -1,0 +1,360 @@
+{
+  "updated": "2026-11-15",
+  "title": "Making Hard AI good at war",
+  "goal": "Hard is good enough that the designer usually loses to it, without cheating.",
+  "started": "2026-10-27",
+  "checkpoint": {
+    "earliest": "2026-11-13",
+    "latest": "2026-11-18",
+    "note": "The designer plays 2-4 fresh Hard games"
+  },
+  "finish_line": [
+    {
+      "name": "Hard in the designer's seat (benchmark)",
+      "unit": "% wins",
+      "baseline": 16.2,
+      "current": 16.2,
+      "target": 50,
+      "note": "Re-measured 10-28 with rival AIs that play the app's real Hard (they bomb): 16.2% (331 of 2,048), below the 28.1% equal-seat reference (the benchmark is one 2-player map and seven 4-player maps: (0.5 + 7 x 0.25) / 8; factions and starts are asymmetric, so this is a reference, not a prediction). The old 39.8% was against the experimental Search level, which never bombed. Target stays 50% (designer, 10-28: 16% matches his experience)."
+    },
+    {
+      "name": "War suite: AI matches the designer's result",
+      "unit": "cases",
+      "baseline": 13,
+      "current": 13,
+      "target": 17,
+      "of": 33,
+      "note": "33 cases (the suite grew from 21 to 28 on 10-27 and to 33 on 10-30). Parity on master: 13 of 33 (docs/sim-results/ai-war/baseline.md, W2.4 control). Target is at least half, 17 of 33. Counts on the older 28-case suite (12, then 14) are not comparable."
+    },
+    {
+      "name": "Designer's games on the newest AI",
+      "unit": "losses",
+      "baseline": 0,
+      "current": 0,
+      "target": 2,
+      "of": 4,
+      "note": "8.9.13: won both games on 10-27 (Athens, Sparta), both 'easy'. 8.9.15: won as Switzerland 'pretty easily' (10-28). 8.9.17: won as the Mongols on T172 by VP hold, 'ran away with it easily' (10-30): 18 cities, 7 units, 2,165 Gold, never lost a city."
+    }
+  ],
+  "steps": [
+    {
+      "id": "0",
+      "name": "Baseline and test positions",
+      "planned": "10-27 to 10-28",
+      "summary": "8.9.13 frozen as the baseline; 22 war test positions from the designer's saves (with AI memory and replayed orders); speed budget measured; stranded-unit bug found and fixed. The 2,048-game test ranked every candidate: only army modernization helps in both roles.",
+      "left": "Done. Report and chart: docs/sim-results/ai-war/baseline.md, w04-chart.png.",
+      "evidence": {
+        "implemented": {
+          "state": "yes",
+          "commit": "747c7f42a",
+          "file": "plans/ai-war-progress.txt"
+        },
+        "validated": {
+          "state": "yes",
+          "commit": "77e1a44f0",
+          "file": "docs/sim-results/ai-war/baseline.md"
+        },
+        "shipped": {
+          "state": "unknown",
+          "commit": "unknown",
+          "file": "plans/ai-war-progress.txt"
+        },
+        "played": {
+          "state": "yes",
+          "commit": "a58e80856",
+          "file": "plans/ai-war-progress.txt"
+        }
+      }
+    },
+    {
+      "id": "1",
+      "name": "Campaign planner",
+      "planned": "10-27 to 11-02",
+      "summary": "Built and measured (branch claude/ai-operation-planner, off by default): war suite +3.5 pts, Swiss T220 23% to 65%, no regressions, 10-120 ms per decision. Just misses its pass mark.",
+      "left": "Implemented, off by default, and missed its mark: 8.9.14 ships army modernization (the winner); the planner stays off and continues inside step 2.",
+      "evidence": {
+        "implemented": {
+          "state": "yes",
+          "commit": "6b33c8896",
+          "file": "plans/ai-war-progress.txt"
+        },
+        "validated": {
+          "state": "yes",
+          "commit": "6b33c8896",
+          "file": "plans/ai-war-progress.txt"
+        },
+        "shipped": {
+          "state": "no",
+          "commit": "6b33c8896",
+          "file": "plans/ai-war-progress.txt"
+        },
+        "played": {
+          "state": "no",
+          "commit": "6b33c8896",
+          "file": "plans/ai-war-progress.txt"
+        }
+      }
+    },
+    {
+      "id": "2",
+      "name": "Army quality, defence and battle tactics",
+      "planned": "11-02 to 11-06",
+      "summary": "Unit upgrades on (landing in 8.9.14); defend where the enemy army is; the strongest neighbour commits to the leader's softest city; allies against the leader accept alliances; contest the air (Fighters); fix the test so its rival AIs drop bombs; focus fire and wait for stragglers.",
+      "left": "Done 10-28: defend where the enemy army is, Fighters (8.9.15); Siege built in from Industrial (8.9.16, neutral). Done 10-29: the AI reads a rich, hollow leader (8.9.17). 10-30: focus fire and stragglers (neutral in full games, better trades; on for 8.9.18). War chest tried twice and dropped: Hard earns ~13 Gold a turn, too little to buy defenders. Left: why AIs at war with a rich, empty leader never attack (being traced).",
+      "evidence": {
+        "implemented": {
+          "state": "yes",
+          "commit": "460eaaf03",
+          "file": "plans/ai-war-progress.txt"
+        },
+        "validated": {
+          "state": "yes",
+          "commit": "460eaaf03",
+          "file": "docs/sim-results/ai-war/swiss-gold.md"
+        },
+        "shipped": {
+          "state": "yes",
+          "commit": "460eaaf03",
+          "file": "plans/ai-war-progress.txt"
+        },
+        "played": {
+          "state": "unknown",
+          "commit": "unknown",
+          "file": "plans/ai-war-progress.txt"
+        }
+      }
+    },
+    {
+      "id": "3",
+      "name": "Committed strategies, then the learned evaluator",
+      "planned": "10-30 to 11-06 (moved up from 11-09)",
+      "summary": "One saved strategy per game that owns its army and Gold (Conquer vs Economy-then-buy first, then a science spike and a hoard), picked from faction, map and neighbours; then a small network trained on box games picks among them.",
+      "left": "10-30: pipeline being built locally; training games on the box from the Nov 1 budget reset. Rules frozen from Nov 1 to the checkpoint (designer, 10-30).",
+      "evidence": {
+        "implemented": {
+          "state": "yes",
+          "commit": "1924f062d",
+          "file": "plans/ai-war-progress.txt"
+        },
+        "validated": {
+          "state": "yes",
+          "commit": "1924f062d",
+          "file": "docs/learnings.md"
+        },
+        "shipped": {
+          "state": "no",
+          "commit": "1924f062d",
+          "file": "plans/ai-war-progress.txt"
+        },
+        "played": {
+          "state": "unknown",
+          "commit": "unknown",
+          "file": "plans/ai-war-progress.txt"
+        }
+      }
+    },
+    {
+      "id": "C",
+      "name": "Checkpoint: designer playtests",
+      "planned": "11-13 to 11-18",
+      "summary": "2-4 fresh Hard games. Target: the designer loses at least half.",
+      "left": "Not started.",
+      "evidence": {
+        "implemented": {
+          "state": "no",
+          "commit": "unknown",
+          "file": "plans/ai-war.md"
+        },
+        "validated": {
+          "state": "no",
+          "commit": "unknown",
+          "file": "plans/ai-war.md"
+        },
+        "shipped": {
+          "state": "no",
+          "commit": "unknown",
+          "file": "plans/ai-war.md"
+        },
+        "played": {
+          "state": "no",
+          "commit": "unknown",
+          "file": "plans/ai-war.md"
+        }
+      }
+    },
+    {
+      "id": "4",
+      "name": "Self-play league (only if needed)",
+      "planned": "about 1-2 weeks after the checkpoint",
+      "summary": "RL-trained controllers and exploiter AIs that learn to beat the designer's own plans.",
+      "left": "Only if the checkpoint calls for it.",
+      "evidence": {
+        "implemented": {
+          "state": "no",
+          "commit": "unknown",
+          "file": "plans/ai-war.md"
+        },
+        "validated": {
+          "state": "no",
+          "commit": "unknown",
+          "file": "plans/ai-war.md"
+        },
+        "shipped": {
+          "state": "no",
+          "commit": "unknown",
+          "file": "plans/ai-war.md"
+        },
+        "played": {
+          "state": "no",
+          "commit": "unknown",
+          "file": "plans/ai-war.md"
+        }
+      }
+    }
+  ],
+  "budget": {
+    "aws": {
+      "note": "Plan spend is an estimate: verifies, repins and the 2,048-game test. Account spend and subscription usage are tracked outside the repository."
+    },
+    "designer_time": {
+      "playtests_done": 2,
+      "playtests_planned": 8
+    }
+  },
+  "running_now": [
+    {
+      "name": "Hard purchase generation floor",
+      "detail": "On astra/hard-buys-best-unit, Hard's Gold purchases now require the latest trainable upgrade generation (one step back for missing supply), with a forecast-proven empty-city rescue exception. Funded units keep a front destination. The fund gate failed: designer T40 seat 41/48 wins against fund-off rivals versus 47/48 against fund-on rivals; Swiss hollow-Mongols war card 31/64 to 0/64. named_fund remains off. Full verification is pending.",
+      "model": "gpt-6-sol"
+    },
+    {
+      "name": "Integration train",
+      "detail": "claude/train-1103b is built and verified (start-lean, Celts rework, rebase anywhere, tech-card fold, plus the strike-escort and declare AI branches); extended --app verify passed. Benchmark against master: 453 vs 449 wins in 2,048 games (+0.2 points, interval -2.1 to +2.5); the UI re-review found no blockers. Not merged to master and not installed: waiting for the lead's merge and the Playtest 8.9.25 build.",
+      "model": "Opus"
+    },
+    {
+      "name": "Tokugawa Japan and India AI",
+      "detail": "India is on master (243ae750e). Codex is building Tokugawa Japan and teaching Hard to play India.",
+      "model": "gpt-6-sol"
+    },
+    {
+      "name": "Audit round 6 review",
+      "detail": "Complete on astra/audit-round6-remerge: capture_alarm fixes 57 false production alarms, but the audit is flat and both quarter gates are inconclusive. Gene stays off; no full gate. Report: docs/sim-results/ai-war/audit-round6.md.",
+      "model": "gpt-6-astra"
+    },
+    {
+      "name": "Codex backlog",
+      "detail": "Germany/Mongols, city automation, Aztecs, three revived rules, Sparta sieges, art landings, agreed items, OSS hardening: 6 lanes.",
+      "model": "gpt-6-sol"
+    }
+  ],
+  "learnings": [
+    {
+      "date": "2026-11-15",
+      "text": "Sparta 8.9.57: eight late Swiss Gold military buys were six Spearmen, one Pikeman and one Archer; several circled or sat near Zug instead of joining the war plan. A generation floor cut late buys at least two upgrade steps old from 801/1343 to 124/787 in 50 paired games, still above the near-zero target; all 124 were forecast-proven empty-city rescue exceptions, with zero non-rescue floor leaks. Re-enabling the named Gold fund made rivals weaker from the designer's T40 seat (41/48 to 47/48 seat wins, paired p .03125) and lost the Swiss hollow-Mongols card (31/64 to 0/64)."
+    },
+    {
+      "date": "2026-10-31",
+      "text": "Audit round 6: resistance in safe captures triggered 57 unnecessary production alarms. Removing them did not establish stronger Hard play: pooled seat-only -0.49 points, rivals-only +1.07, both uncertain. The gene stays off. After a combat rebalance, audits must use verified original positions: replaying old orders on new rules drifts away from the designer's game."
+    },
+    {
+      "date": "2026-10-31",
+      "text": "Audit round 4: Hard sent its Settlers far away because a neighbour's known city's own border looked like a hidden city, and far sites were never checked for danger while near ones were. Fixing both (off for now) lets Hard found where you would: in three separate 512-game tests Hard in your seat won about 6 points more, and its rivals were about 2 points tougher for you. Ready for the full 2,048-game test."
+    },
+    {
+      "date": "2026-10-28",
+      "text": "\"Defend where the enemy army is\" is neutral in full games (your-seat AI -1.1 pts, rivals -0.3, all inside noise) but wins wars: war tests +6.5 pts, adaptive Sparta's wins halved, Japan T142 holds. Shipping in 8.9.15. A full 2,048-game test now costs about $0.10."
+    },
+    {
+      "date": "2026-10-28",
+      "text": "Fighters help once rivals bomb: Hard in the designer's seat +3.2 pts; as rivals, -1.3 for the designer (not yet significant). They change nothing in the war tests. The campaign planner is neutral in full games (+1.2 / +1.0); its gains stay in the war tests."
+    },
+    {
+      "date": "2026-10-28",
+      "text": "Defending where the enemy army is (buying or upgrading the era's best unit at the threatened city, striking wounded attackers) lifted the war tests from 48% to 53% and cut an adaptive Hard Sparta from 19 to 12 wins of 32, at no speed cost. Risk found: with every AI using it, AI attackers fail against AI defenders."
+    },
+    {
+      "date": "2026-10-28",
+      "text": "Against the app's real Hard rivals (which bomb), Hard in the designer's seat wins only 16%, not 40%: the old test used the experimental Search level as rivals, and it never dropped bombs. Re-measured that way, Fighters help (+3.2 pts, was -4.7) and 8.9.14's modernization gain holds (+3.7)."
+    },
+    {
+      "date": "2026-10-27",
+      "text": "The 8.9.13 Germany-map drop comes from the unit-valuation switch on that one map, not engine drift (turning it off recovers +16 pts there but costs Switzerland 8.3)."
+    },
+    {
+      "date": "2026-10-27",
+      "text": "Of every AI change we had, only army modernization (unit upgrades and sending units home to upgrade) helped in both roles: +2.4 pts as the designer's seat, -6.5 for him as rivals, war suite 41% to 47%."
+    },
+    {
+      "date": "2026-10-27",
+      "text": "The 2,048-game test's rival AIs (Hard+Search) never dropped bombs, unlike the app's Hard. Air genes must be judged again after that test fix; Fighters looked bad (-4.7) only because the rivals never bombed."
+    },
+    {
+      "date": "2026-10-27",
+      "text": "Army quality matters more than tactics: replaying the designer's own Athens defence, the Swiss army (Spearmen, Archers) could never take a walled city, whatever the plan."
+    },
+    {
+      "date": "2026-10-27",
+      "text": "Unit upgrades are the one switch that measurably helped in both 10-27 games (Athens from T150: 31 to 26 of 32 wins; Hard Sparta from T1: 7 to 2 of 32)."
+    },
+    {
+      "date": "2026-10-27",
+      "text": "Wars on the leader are valued but never fought: Sparta was at war with Athens for 55 turns and never attacked a city; no AI attacked or retook one of the designer's empty cities in either game."
+    },
+    {
+      "date": "2026-10-27",
+      "text": "No AI ever built a Fighter. Bombers stay as strong as they are (designer's decision); the AI must contest the air."
+    },
+    {
+      "date": "2026-10-27",
+      "text": "Bigger armies don't help: a higher unit quota made the AIs worse against an adaptive Sparta (they wrecked their economies)."
+    },
+    {
+      "date": "2026-10-27",
+      "text": "The Sparta game was decided by T40-60 (pillar 11 says nobody should know the winner by T100)."
+    },
+    {
+      "date": "2026-10-27",
+      "text": "A passing overall test can hide a big single-map drop: 8.9.13 passed (+1.0 pts) but the Germany map fell from 360 to 281 of 512."
+    },
+    {
+      "date": "2026-10-27",
+      "text": "Plain Hard is fast (31 ms per turn for all 8 AIs), leaving about 950 ms for smarter play; the experimental search mode is far too slow late (2-5 s)."
+    },
+    {
+      "date": "2026-11-07",
+      "text": "Training mode landed as a lobby level: battle search while he plans changes Hard's orders in 80% of real battles, but 90% of those changes lean on units the seat can't see, and it doesn't beat Hard yet (war suite -2 points). It's a source of lessons, not a harder level."
+    }
+  ],
+  "playtests": [
+    {
+      "date": "next",
+      "build": "8.9.16",
+      "faction": "any",
+      "result": "installed 10-29",
+      "takeaway": "Siege built in from the Industrial era (no gear on modern units; gear matches each unit's era); denser city build cards; copy fixes. AI unchanged from 8.9.15 apart from the Siege rule (war-persistence genes stay off: +2.1 pp worse in full games)."
+    },
+    {
+      "date": "2026-10-28",
+      "build": "8.9.15",
+      "faction": "Switzerland",
+      "result": "Won T180, 10 VP to 2, 'pretty easily'",
+      "takeaway": "AI was the problem, not Switzerland (designer wins with any faction). The Mongols' wars collapsed after one bought defender (T139, T160), Peace offers contradicted their own plan, and nobody saw an empty, rich leader. Door defense fired but had no Gold; Fighters untested. Fix under way: war persistence."
+    },
+    {
+      "date": "2026-10-27",
+      "build": "8.9.13",
+      "faction": "Athens",
+      "result": "Won T177, 'easy'",
+      "takeaway": "One Bomber took 6 cities; no AI built a Fighter; Sparta never attacked."
+    },
+    {
+      "date": "2026-10-27",
+      "build": "8.9.13",
+      "faction": "Sparta",
+      "result": "Winning at T126 (20 cities), 'really easy'",
+      "takeaway": "14 cities taken with 2-6 units; defenders tiny and obsolete; no city ever retaken."
+    }
+  ],
+  "open_decisions": []
+}

@@ -1,0 +1,39 @@
+[package]
+name = "legatum-wasm"
+description = "Legatum shared game session, saves and tapes, with WebAssembly bindings for the UI"
+edition.workspace = true
+version.workspace = true
+publish.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+legatum-core.workspace = true
+legatum-ai.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+wasm-bindgen.workspace = true
+time = { version = "0.3", features = ["formatting", "parsing"] }
+flate2 = "1"
+base64 = "0.22"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+js-sys = "0.3"
+
+# Native sessions plan AI seats in parallel (`Session::ai_orders`); WASM stays single-threaded.
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+rayon.workspace = true
+
+[features]
+# Measurement builds: time each AI seat's planning in `Session::ai_orders` (docs/sim-results/perf).
+seat-timing = []
+
+[build-dependencies]
+sha2 = "0.10"
+
+# wasm-pack's custom-profile default is -O; the replayed turn benchmark favors -O3.
+[package.metadata.wasm-pack.profile.custom]
+wasm-opt = ["-O3"]

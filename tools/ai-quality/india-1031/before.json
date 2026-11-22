@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "name": "india-before",
+  "faction_overrides": {
+    "India": {
+      "india_remittance_value": 70,
+      "india_office_goal_value": 0,
+      "india_emergency_defense": 0,
+      "india_early_office": 0,
+      "india_last_office_value": 0,
+      "india_diwan_commit": 0,
+      "campaign_contain_only": 0,
+      "second_front_temperament": 0,
+      "india_prewar_guard": 0,
+      "leader_commit": 0,
+      "defend_margin_percent": 200,
+      "door_defense": 100
+    }
+  },
+  "difficulty": {
+    "Hard": {
+      "India": {
+        "expansion": 80,
+        "military": 65,
+        "science": 40,
+        "economy": 50,
+        "aggression": 70
+      }
+    }
+  }
+}

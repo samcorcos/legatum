@@ -1,0 +1,4 @@
+2026-11-16 — Codex built-in image generation. Provisional author review; lead review pending.
+Reference images and requested edits: see docs/design/art-pass-2/generation-*.json.
+
+Edit this exact museum-quality painted New Kingdom Medjay miniature. Preserve the man, head, feather headband, realistic anatomy, bronze leaf-head spear and right-hand grip, linen kilt, bare feet, standing stance, camera and lighting. Correct ONLY his LEFT shield arm: remove the leather wrist bracer, bend his bare left elbow naturally, extend the forearm inward BEHIND the shield centre, with hand entirely concealed gripping its rear central leather handle. No fingers anywhere around the rim. Keep the tall arched hide-covered wooden shield in its current position. Simplify the base to one plain smooth warm cream circular disc, no veins or step. Output exact same figure cut out with genuine transparent background, no background scene, no text, no black or colored halo.

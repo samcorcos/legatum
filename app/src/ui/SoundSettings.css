@@ -1,0 +1,8 @@
+.sound-settings { display: grid; gap: 6px; }
+.sound-settings .sound-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.sound-settings .sound-row label { flex: 1 1 auto; }
+.sound-settings input[type='range'] { width: 110px; margin: 0; accent-color: var(--accent); }
+.sound-settings input[type='range']:disabled { opacity: 0.4; }
+.sound-settings input[type='range']:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+/* The settings dialog sizes its checkboxes at 18px; keep the sliders usable there. */
+.settings-body .sound-settings input[type='range'] { width: 140px; height: 24px; }

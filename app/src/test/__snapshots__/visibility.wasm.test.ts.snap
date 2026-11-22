@@ -1,0 +1,1640 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Celtic archers in plain sight, core behavior > a melee attack on a city a Celtic archer garrisons hits the city while it has HP 1`] = `
+[
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 1,
+    "needs": false,
+    "owner": 0,
+    "pos": {
+      "q": -3,
+      "r": 11,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 3,
+    "needs": false,
+    "owner": 0,
+    "pos": {
+      "q": 4,
+      "r": 5,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 4,
+    "needs": false,
+    "owner": 1,
+    "pos": {
+      "q": 3,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`Celtic archers in plain sight, core behavior > a melee attack on a city a Celtic archer garrisons hits the city while it has HP 2`] = `
+[
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 2,
+    "needs": false,
+    "owner": 1,
+    "pos": {
+      "q": 3,
+      "r": 11,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 3,
+    "needs": false,
+    "owner": 0,
+    "pos": {
+      "q": 4,
+      "r": 5,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 4,
+    "needs": false,
+    "owner": 1,
+    "pos": {
+      "q": 3,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`Celtic archers in plain sight, core behavior > a melee attack on a city a Celtic archer garrisons hits the city while it has HP 3`] = `[]`;
+
+exports[`Celtic archers in plain sight, core behavior > a melee attack on a city a Celtic archer garrisons hits the city while it has HP 4`] = `[]`;
+
+exports[`Celtic archers in plain sight, core behavior > a melee attack on a city a Celtic archer garrisons hits the city while it has HP 5`] = `
+[
+  {
+    "at": {
+      "q": 4,
+      "r": 5,
+    },
+    "attacker": 4,
+    "attacker_at": {
+      "q": 3,
+      "r": 5,
+    },
+    "attacker_hp_after": 74,
+    "attacker_owner": 1,
+    "attacker_roll": 114,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "damage_to_attacker": 26,
+    "damage_to_defender": 39,
+    "defender": {
+      "city": 1,
+      "kind": "City",
+      "owner": 0,
+    },
+    "defender_hp_after": 161,
+    "defender_roll": 101,
+    "defender_strength": {
+      "parts": [
+        [
+          "City",
+          10,
+        ],
+        [
+          "Population",
+          6,
+        ],
+      ],
+      "total": 16,
+    },
+    "meeting": false,
+    "ranged": false,
+    "type": "Battle",
+  },
+]
+`;
+
+exports[`Celtic archers in plain sight, core behavior > a melee attack on a city a Celtic archer garrisons hits the city while it has HP 6`] = `
+[
+  {
+    "at": {
+      "q": 4,
+      "r": 5,
+    },
+    "attacker": 4,
+    "attacker_at": {
+      "q": 3,
+      "r": 5,
+    },
+    "attacker_hp_after": 74,
+    "attacker_owner": 1,
+    "attacker_roll": 114,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "damage_to_attacker": 26,
+    "damage_to_defender": 39,
+    "defender": {
+      "city": 1,
+      "kind": "City",
+      "owner": 0,
+    },
+    "defender_hp_after": 161,
+    "defender_roll": 101,
+    "defender_strength": {
+      "parts": [
+        [
+          "City",
+          10,
+        ],
+        [
+          "Population",
+          6,
+        ],
+      ],
+      "total": 16,
+    },
+    "meeting": false,
+    "ranged": false,
+    "type": "Battle",
+  },
+]
+`;
+
+exports[`Celtic archers in plain sight, core behavior > a melee attack on a city a Celtic archer garrisons hits the city while it has HP 7`] = `
+[
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 1,
+    "needs": false,
+    "owner": 0,
+    "pos": {
+      "q": -3,
+      "r": 11,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 3,
+    "needs": false,
+    "owner": 0,
+    "pos": {
+      "q": 4,
+      "r": 5,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 74,
+    "id": 4,
+    "needs": false,
+    "owner": 1,
+    "pos": {
+      "q": 3,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`Celtic archers in plain sight, core behavior > a melee attack on a city a Celtic archer garrisons hits the city while it has HP 8`] = `
+[
+  {
+    "at": {
+      "q": 4,
+      "r": 5,
+    },
+    "attacker": 4,
+    "attacker_at": {
+      "q": 3,
+      "r": 5,
+    },
+    "attacker_hp_after": 74,
+    "attacker_owner": 1,
+    "attacker_roll": 114,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "damage_to_attacker": 26,
+    "damage_to_defender": 39,
+    "defender": {
+      "city": 1,
+      "kind": "City",
+      "owner": 0,
+    },
+    "defender_hp_after": 161,
+    "defender_roll": 101,
+    "defender_strength": {
+      "parts": [
+        [
+          "City",
+          10,
+        ],
+        [
+          "Population",
+          6,
+        ],
+      ],
+      "total": 16,
+    },
+    "meeting": false,
+    "ranged": false,
+    "type": "Battle",
+  },
+]
+`;
+
+exports[`Celtic archers in plain sight, core behavior > a melee attack on a city a Celtic archer garrisons hits the city while it has HP 9`] = `
+[
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 2,
+    "needs": false,
+    "owner": 1,
+    "pos": {
+      "q": 3,
+      "r": 11,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 3,
+    "needs": false,
+    "owner": 0,
+    "pos": {
+      "q": 4,
+      "r": 5,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 74,
+    "id": 4,
+    "needs": false,
+    "owner": 1,
+    "pos": {
+      "q": 3,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`Celtic archers in plain sight, core behavior > a melee attack on a fallen city fights its Celtic archer garrison 1`] = `
+[
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 1,
+    "needs": false,
+    "owner": 0,
+    "pos": {
+      "q": -3,
+      "r": 11,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 3,
+    "needs": false,
+    "owner": 0,
+    "pos": {
+      "q": 4,
+      "r": 5,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 4,
+    "needs": false,
+    "owner": 1,
+    "pos": {
+      "q": 3,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`Celtic archers in plain sight, core behavior > a melee attack on a fallen city fights its Celtic archer garrison 2`] = `
+[
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 2,
+    "needs": false,
+    "owner": 1,
+    "pos": {
+      "q": 3,
+      "r": 11,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 3,
+    "needs": false,
+    "owner": 0,
+    "pos": {
+      "q": 4,
+      "r": 5,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 4,
+    "needs": false,
+    "owner": 1,
+    "pos": {
+      "q": 3,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`Celtic archers in plain sight, core behavior > a melee attack on a fallen city fights its Celtic archer garrison 3`] = `[]`;
+
+exports[`Celtic archers in plain sight, core behavior > a melee attack on a fallen city fights its Celtic archer garrison 4`] = `[]`;
+
+exports[`Celtic archers in plain sight, core behavior > a melee attack on a fallen city fights its Celtic archer garrison 5`] = `
+[
+  {
+    "at": {
+      "q": 4,
+      "r": 5,
+    },
+    "attacker": 4,
+    "attacker_at": {
+      "q": 3,
+      "r": 5,
+    },
+    "attacker_hp_after": 85,
+    "attacker_owner": 1,
+    "attacker_roll": 87,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "damage_to_attacker": 15,
+    "damage_to_defender": 41,
+    "defender": {
+      "kind": "Unit",
+      "owner": 0,
+      "unit": 3,
+      "unit_kind": "Ranger",
+    },
+    "defender_hp_after": 59,
+    "defender_roll": 82,
+    "defender_strength": {
+      "parts": [
+        [
+          "Archer",
+          8,
+        ],
+      ],
+      "total": 8,
+    },
+    "meeting": false,
+    "ranged": false,
+    "type": "Battle",
+  },
+]
+`;
+
+exports[`Celtic archers in plain sight, core behavior > a melee attack on a fallen city fights its Celtic archer garrison 6`] = `
+[
+  {
+    "at": {
+      "q": 4,
+      "r": 5,
+    },
+    "attacker": 4,
+    "attacker_at": {
+      "q": 3,
+      "r": 5,
+    },
+    "attacker_hp_after": 85,
+    "attacker_owner": 1,
+    "attacker_roll": 87,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "damage_to_attacker": 15,
+    "damage_to_defender": 41,
+    "defender": {
+      "kind": "Unit",
+      "owner": 0,
+      "unit": 3,
+      "unit_kind": "Ranger",
+    },
+    "defender_hp_after": 59,
+    "defender_roll": 82,
+    "defender_strength": {
+      "parts": [
+        [
+          "Archer",
+          8,
+        ],
+      ],
+      "total": 8,
+    },
+    "meeting": false,
+    "ranged": false,
+    "type": "Battle",
+  },
+]
+`;
+
+exports[`Celtic archers in plain sight, core behavior > a melee attack on a fallen city fights its Celtic archer garrison 7`] = `
+[
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 1,
+    "needs": false,
+    "owner": 0,
+    "pos": {
+      "q": -3,
+      "r": 11,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 59,
+    "id": 3,
+    "needs": false,
+    "owner": 0,
+    "pos": {
+      "q": 4,
+      "r": 5,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 85,
+    "id": 4,
+    "needs": false,
+    "owner": 1,
+    "pos": {
+      "q": 3,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`Celtic archers in plain sight, core behavior > a melee attack on a fallen city fights its Celtic archer garrison 8`] = `
+[
+  {
+    "at": {
+      "q": 4,
+      "r": 5,
+    },
+    "attacker": 4,
+    "attacker_at": {
+      "q": 3,
+      "r": 5,
+    },
+    "attacker_hp_after": 85,
+    "attacker_owner": 1,
+    "attacker_roll": 87,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "damage_to_attacker": 15,
+    "damage_to_defender": 41,
+    "defender": {
+      "kind": "Unit",
+      "owner": 0,
+      "unit": 3,
+      "unit_kind": "Ranger",
+    },
+    "defender_hp_after": 59,
+    "defender_roll": 82,
+    "defender_strength": {
+      "parts": [
+        [
+          "Archer",
+          8,
+        ],
+      ],
+      "total": 8,
+    },
+    "meeting": false,
+    "ranged": false,
+    "type": "Battle",
+  },
+]
+`;
+
+exports[`Celtic archers in plain sight, core behavior > a melee attack on a fallen city fights its Celtic archer garrison 9`] = `
+[
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 2,
+    "needs": false,
+    "owner": 1,
+    "pos": {
+      "q": 3,
+      "r": 11,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 59,
+    "id": 3,
+    "needs": false,
+    "owner": 0,
+    "pos": {
+      "q": 4,
+      "r": 5,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 85,
+    "id": 4,
+    "needs": false,
+    "owner": 1,
+    "pos": {
+      "q": 3,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`Celtic archers in plain sight, core behavior > accepts a ranged order on a visible Celtic archer exactly like one on any enemy unit 1`] = `
+[
+  0,
+]
+`;
+
+exports[`Celtic archers in plain sight, core behavior > fights a unit that walks into a Celtic archer: a battle, no halt 1`] = `
+[
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 1,
+    "needs": false,
+    "owner": 0,
+    "pos": {
+      "q": -3,
+      "r": 11,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 3,
+    "needs": false,
+    "owner": 0,
+    "pos": {
+      "q": 3,
+      "r": 5,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 4,
+    "needs": false,
+    "owner": 1,
+    "pos": {
+      "q": 2,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`Celtic archers in plain sight, core behavior > fights a unit that walks into a Celtic archer: a battle, no halt 2`] = `
+[
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 2,
+    "needs": false,
+    "owner": 1,
+    "pos": {
+      "q": 3,
+      "r": 11,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 3,
+    "needs": false,
+    "owner": 0,
+    "pos": {
+      "q": 3,
+      "r": 5,
+    },
+  },
+  {
+    "goto": {
+      "q": 3,
+      "r": 5,
+    },
+    "hp": 100,
+    "id": 4,
+    "needs": false,
+    "owner": 1,
+    "pos": {
+      "q": 2,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`Celtic archers in plain sight, core behavior > fights a unit that walks into a Celtic archer: a battle, no halt 3`] = `[]`;
+
+exports[`Celtic archers in plain sight, core behavior > fights a unit that walks into a Celtic archer: a battle, no halt 4`] = `[]`;
+
+exports[`Celtic archers in plain sight, core behavior > fights a unit that walks into a Celtic archer: a battle, no halt 5`] = `
+[
+  {
+    "at": {
+      "q": 3,
+      "r": 5,
+    },
+    "attacker": 4,
+    "attacker_at": {
+      "q": 2,
+      "r": 5,
+    },
+    "attacker_hp_after": 85,
+    "attacker_owner": 1,
+    "attacker_roll": 87,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "damage_to_attacker": 15,
+    "damage_to_defender": 41,
+    "defender": {
+      "kind": "Unit",
+      "owner": 0,
+      "unit": 3,
+      "unit_kind": "Ranger",
+    },
+    "defender_hp_after": 59,
+    "defender_roll": 82,
+    "defender_strength": {
+      "parts": [
+        [
+          "Archer",
+          8,
+        ],
+      ],
+      "total": 8,
+    },
+    "meeting": false,
+    "ranged": false,
+    "type": "Battle",
+  },
+]
+`;
+
+exports[`Celtic archers in plain sight, core behavior > fights a unit that walks into a Celtic archer: a battle, no halt 6`] = `
+[
+  {
+    "at": {
+      "q": 3,
+      "r": 5,
+    },
+    "attacker": 4,
+    "attacker_at": {
+      "q": 2,
+      "r": 5,
+    },
+    "attacker_hp_after": 85,
+    "attacker_owner": 1,
+    "attacker_roll": 87,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "damage_to_attacker": 15,
+    "damage_to_defender": 41,
+    "defender": {
+      "kind": "Unit",
+      "owner": 0,
+      "unit": 3,
+      "unit_kind": "Ranger",
+    },
+    "defender_hp_after": 59,
+    "defender_roll": 82,
+    "defender_strength": {
+      "parts": [
+        [
+          "Archer",
+          8,
+        ],
+      ],
+      "total": 8,
+    },
+    "meeting": false,
+    "ranged": false,
+    "type": "Battle",
+  },
+]
+`;
+
+exports[`Celtic archers in plain sight, core behavior > fights a unit that walks into a Celtic archer: a battle, no halt 7`] = `
+[
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 1,
+    "needs": false,
+    "owner": 0,
+    "pos": {
+      "q": -3,
+      "r": 11,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 59,
+    "id": 3,
+    "needs": false,
+    "owner": 0,
+    "pos": {
+      "q": 3,
+      "r": 5,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 85,
+    "id": 4,
+    "needs": false,
+    "owner": 1,
+    "pos": {
+      "q": 2,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`Celtic archers in plain sight, core behavior > fights a unit that walks into a Celtic archer: a battle, no halt 8`] = `
+[
+  {
+    "at": {
+      "q": 3,
+      "r": 5,
+    },
+    "attacker": 4,
+    "attacker_at": {
+      "q": 2,
+      "r": 5,
+    },
+    "attacker_hp_after": 85,
+    "attacker_owner": 1,
+    "attacker_roll": 87,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "damage_to_attacker": 15,
+    "damage_to_defender": 41,
+    "defender": {
+      "kind": "Unit",
+      "owner": 0,
+      "unit": 3,
+      "unit_kind": "Ranger",
+    },
+    "defender_hp_after": 59,
+    "defender_roll": 82,
+    "defender_strength": {
+      "parts": [
+        [
+          "Archer",
+          8,
+        ],
+      ],
+      "total": 8,
+    },
+    "meeting": false,
+    "ranged": false,
+    "type": "Battle",
+  },
+]
+`;
+
+exports[`Celtic archers in plain sight, core behavior > fights a unit that walks into a Celtic archer: a battle, no halt 9`] = `
+[
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 2,
+    "needs": false,
+    "owner": 1,
+    "pos": {
+      "q": 3,
+      "r": 11,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 59,
+    "id": 3,
+    "needs": false,
+    "owner": 0,
+    "pos": {
+      "q": 3,
+      "r": 5,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 85,
+    "id": 4,
+    "needs": false,
+    "owner": 1,
+    "pos": {
+      "q": 2,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`Celtic archers in plain sight, core behavior > shows a Celtic archer on a visible tile to a rival, like any unit 1`] = `
+[
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 1,
+    "needs": false,
+    "owner": 0,
+    "pos": {
+      "q": -3,
+      "r": 11,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 3,
+    "needs": false,
+    "owner": 0,
+    "pos": {
+      "q": 3,
+      "r": 5,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 4,
+    "needs": false,
+    "owner": 1,
+    "pos": {
+      "q": 2,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`Celtic archers in plain sight, core behavior > shows a Celtic archer on a visible tile to a rival, like any unit 2`] = `
+[
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 2,
+    "needs": false,
+    "owner": 1,
+    "pos": {
+      "q": 3,
+      "r": 11,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 3,
+    "needs": false,
+    "owner": 0,
+    "pos": {
+      "q": 3,
+      "r": 5,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 4,
+    "needs": false,
+    "owner": 1,
+    "pos": {
+      "q": 2,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`Celtic archers in plain sight, core behavior > shows a Celtic archer on a visible tile to a rival, like any unit 3`] = `[]`;
+
+exports[`Celtic archers in plain sight, core behavior > shows a Celtic archer on a visible tile to a rival, like any unit 4`] = `[]`;
+
+exports[`Celtic archers in plain sight, core behavior > shows a Celtic archer on a visible tile to a rival, like any unit 5`] = `[]`;
+
+exports[`Celtic archers in plain sight, core behavior > shows a Celtic archer on a visible tile to a rival, like any unit 6`] = `[]`;
+
+exports[`Celtic archers in plain sight, core behavior > shows a Celtic archer on a visible tile to a rival, like any unit 7`] = `
+[
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 1,
+    "needs": false,
+    "owner": 0,
+    "pos": {
+      "q": -3,
+      "r": 11,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 3,
+    "needs": false,
+    "owner": 0,
+    "pos": {
+      "q": 3,
+      "r": 5,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 4,
+    "needs": false,
+    "owner": 1,
+    "pos": {
+      "q": 2,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`Celtic archers in plain sight, core behavior > shows a Celtic archer on a visible tile to a rival, like any unit 8`] = `[]`;
+
+exports[`Celtic archers in plain sight, core behavior > shows a Celtic archer on a visible tile to a rival, like any unit 9`] = `
+[
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 2,
+    "needs": false,
+    "owner": 1,
+    "pos": {
+      "q": 3,
+      "r": 11,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 3,
+    "needs": false,
+    "owner": 0,
+    "pos": {
+      "q": 3,
+      "r": 5,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 4,
+    "needs": false,
+    "owner": 1,
+    "pos": {
+      "q": 2,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`Celtic archers in plain sight, core behavior > turns a swap or a shared destination into a meeting engagement 1`] = `
+[
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 1,
+    "needs": false,
+    "owner": 0,
+    "pos": {
+      "q": -3,
+      "r": 11,
+    },
+  },
+  {
+    "goto": {
+      "q": 2,
+      "r": 5,
+    },
+    "hp": 100,
+    "id": 3,
+    "needs": false,
+    "owner": 0,
+    "pos": {
+      "q": 3,
+      "r": 5,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 4,
+    "needs": false,
+    "owner": 1,
+    "pos": {
+      "q": 2,
+      "r": 5,
+    },
+  },
+  {
+    "goto": {
+      "q": 11,
+      "r": 5,
+    },
+    "hp": 100,
+    "id": 5,
+    "needs": false,
+    "owner": 0,
+    "pos": {
+      "q": 10,
+      "r": 5,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 6,
+    "needs": false,
+    "owner": 1,
+    "pos": {
+      "q": 12,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`Celtic archers in plain sight, core behavior > turns a swap or a shared destination into a meeting engagement 2`] = `
+[
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 2,
+    "needs": false,
+    "owner": 1,
+    "pos": {
+      "q": 3,
+      "r": 11,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 3,
+    "needs": false,
+    "owner": 0,
+    "pos": {
+      "q": 3,
+      "r": 5,
+    },
+  },
+  {
+    "goto": {
+      "q": 3,
+      "r": 5,
+    },
+    "hp": 100,
+    "id": 4,
+    "needs": false,
+    "owner": 1,
+    "pos": {
+      "q": 2,
+      "r": 5,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 5,
+    "needs": false,
+    "owner": 0,
+    "pos": {
+      "q": 10,
+      "r": 5,
+    },
+  },
+  {
+    "goto": {
+      "q": 11,
+      "r": 5,
+    },
+    "hp": 100,
+    "id": 6,
+    "needs": false,
+    "owner": 1,
+    "pos": {
+      "q": 12,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`Celtic archers in plain sight, core behavior > turns a swap or a shared destination into a meeting engagement 3`] = `[]`;
+
+exports[`Celtic archers in plain sight, core behavior > turns a swap or a shared destination into a meeting engagement 4`] = `[]`;
+
+exports[`Celtic archers in plain sight, core behavior > turns a swap or a shared destination into a meeting engagement 5`] = `
+[
+  {
+    "at": {
+      "q": 2,
+      "r": 5,
+    },
+    "attacker": 3,
+    "attacker_at": {
+      "q": 3,
+      "r": 5,
+    },
+    "attacker_hp_after": 50,
+    "attacker_owner": 0,
+    "attacker_roll": 118,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Archer",
+          8,
+        ],
+      ],
+      "total": 8,
+    },
+    "damage_to_attacker": 50,
+    "damage_to_defender": 22,
+    "defender": {
+      "kind": "Unit",
+      "owner": 1,
+      "unit": 4,
+      "unit_kind": "Soldier",
+    },
+    "defender_hp_after": 78,
+    "defender_roll": 105,
+    "defender_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "meeting": true,
+    "ranged": false,
+    "type": "Battle",
+  },
+  {
+    "at": {
+      "q": 11,
+      "r": 5,
+    },
+    "attacker": 5,
+    "attacker_at": {
+      "q": 10,
+      "r": 5,
+    },
+    "attacker_hp_after": 58,
+    "attacker_owner": 0,
+    "attacker_roll": 89,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Archer",
+          8,
+        ],
+      ],
+      "total": 8,
+    },
+    "damage_to_attacker": 42,
+    "damage_to_defender": 16,
+    "defender": {
+      "kind": "Unit",
+      "owner": 1,
+      "unit": 6,
+      "unit_kind": "Soldier",
+    },
+    "defender_hp_after": 84,
+    "defender_roll": 89,
+    "defender_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "meeting": true,
+    "ranged": false,
+    "type": "Battle",
+  },
+]
+`;
+
+exports[`Celtic archers in plain sight, core behavior > turns a swap or a shared destination into a meeting engagement 6`] = `
+[
+  {
+    "at": {
+      "q": 2,
+      "r": 5,
+    },
+    "attacker": 3,
+    "attacker_at": {
+      "q": 3,
+      "r": 5,
+    },
+    "attacker_hp_after": 50,
+    "attacker_owner": 0,
+    "attacker_roll": 118,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Archer",
+          8,
+        ],
+      ],
+      "total": 8,
+    },
+    "damage_to_attacker": 50,
+    "damage_to_defender": 22,
+    "defender": {
+      "kind": "Unit",
+      "owner": 1,
+      "unit": 4,
+      "unit_kind": "Soldier",
+    },
+    "defender_hp_after": 78,
+    "defender_roll": 105,
+    "defender_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "meeting": true,
+    "ranged": false,
+    "type": "Battle",
+  },
+  {
+    "at": {
+      "q": 11,
+      "r": 5,
+    },
+    "attacker": 5,
+    "attacker_at": {
+      "q": 10,
+      "r": 5,
+    },
+    "attacker_hp_after": 58,
+    "attacker_owner": 0,
+    "attacker_roll": 89,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Archer",
+          8,
+        ],
+      ],
+      "total": 8,
+    },
+    "damage_to_attacker": 42,
+    "damage_to_defender": 16,
+    "defender": {
+      "kind": "Unit",
+      "owner": 1,
+      "unit": 6,
+      "unit_kind": "Soldier",
+    },
+    "defender_hp_after": 84,
+    "defender_roll": 89,
+    "defender_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "meeting": true,
+    "ranged": false,
+    "type": "Battle",
+  },
+]
+`;
+
+exports[`Celtic archers in plain sight, core behavior > turns a swap or a shared destination into a meeting engagement 7`] = `
+[
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 1,
+    "needs": false,
+    "owner": 0,
+    "pos": {
+      "q": -3,
+      "r": 11,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 50,
+    "id": 3,
+    "needs": false,
+    "owner": 0,
+    "pos": {
+      "q": 3,
+      "r": 5,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 78,
+    "id": 4,
+    "needs": false,
+    "owner": 1,
+    "pos": {
+      "q": 2,
+      "r": 5,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 58,
+    "id": 5,
+    "needs": false,
+    "owner": 0,
+    "pos": {
+      "q": 10,
+      "r": 5,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 84,
+    "id": 6,
+    "needs": false,
+    "owner": 1,
+    "pos": {
+      "q": 12,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`Celtic archers in plain sight, core behavior > turns a swap or a shared destination into a meeting engagement 8`] = `
+[
+  {
+    "at": {
+      "q": 2,
+      "r": 5,
+    },
+    "attacker": 3,
+    "attacker_at": {
+      "q": 3,
+      "r": 5,
+    },
+    "attacker_hp_after": 50,
+    "attacker_owner": 0,
+    "attacker_roll": 118,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Archer",
+          8,
+        ],
+      ],
+      "total": 8,
+    },
+    "damage_to_attacker": 50,
+    "damage_to_defender": 22,
+    "defender": {
+      "kind": "Unit",
+      "owner": 1,
+      "unit": 4,
+      "unit_kind": "Soldier",
+    },
+    "defender_hp_after": 78,
+    "defender_roll": 105,
+    "defender_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "meeting": true,
+    "ranged": false,
+    "type": "Battle",
+  },
+  {
+    "at": {
+      "q": 11,
+      "r": 5,
+    },
+    "attacker": 5,
+    "attacker_at": {
+      "q": 10,
+      "r": 5,
+    },
+    "attacker_hp_after": 58,
+    "attacker_owner": 0,
+    "attacker_roll": 89,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Archer",
+          8,
+        ],
+      ],
+      "total": 8,
+    },
+    "damage_to_attacker": 42,
+    "damage_to_defender": 16,
+    "defender": {
+      "kind": "Unit",
+      "owner": 1,
+      "unit": 6,
+      "unit_kind": "Soldier",
+    },
+    "defender_hp_after": 84,
+    "defender_roll": 89,
+    "defender_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "meeting": true,
+    "ranged": false,
+    "type": "Battle",
+  },
+]
+`;
+
+exports[`Celtic archers in plain sight, core behavior > turns a swap or a shared destination into a meeting engagement 9`] = `
+[
+  {
+    "goto": null,
+    "hp": 100,
+    "id": 2,
+    "needs": false,
+    "owner": 1,
+    "pos": {
+      "q": 3,
+      "r": 11,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 50,
+    "id": 3,
+    "needs": false,
+    "owner": 0,
+    "pos": {
+      "q": 3,
+      "r": 5,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 78,
+    "id": 4,
+    "needs": false,
+    "owner": 1,
+    "pos": {
+      "q": 2,
+      "r": 5,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 58,
+    "id": 5,
+    "needs": false,
+    "owner": 0,
+    "pos": {
+      "q": 10,
+      "r": 5,
+    },
+  },
+  {
+    "goto": null,
+    "hp": 84,
+    "id": 6,
+    "needs": false,
+    "owner": 1,
+    "pos": {
+      "q": 12,
+      "r": 5,
+    },
+  },
+]
+`;

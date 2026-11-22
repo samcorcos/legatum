@@ -1,0 +1,58 @@
+/* G16: what an action spends, on or beside its button, in the spend color. */
+.cost-chip {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 1px 7px;
+  padding: 2px 7px;
+  border-radius: 3px;
+  background: var(--spend);
+  color: var(--spend-ink);
+  box-shadow: 0 0 0 1px var(--spend-ink);
+  font: 600 12px/1.25 var(--num-font);
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.cost-part { display: inline-flex; align-items: center; gap: 6px; }
+.cost-amount { display: inline-flex; align-items: center; gap: 2px; font-weight: 700; font-size: 13px; }
+.cost-after, .cost-when { font-weight: 500; }
+.cost-lead-chip { display: inline-flex; align-items: center; margin-right: 6px; padding: 2px 7px; border-radius: 3px; background: var(--good); color: var(--panel); box-shadow: 0 0 0 1px var(--good); font: 700 12px/1.25 var(--num-font); letter-spacing: 0; text-transform: none; white-space: nowrap; vertical-align: middle; }
+:disabled .cost-lead-chip { background: transparent; color: var(--muted); box-shadow: inset 0 0 0 1px var(--rule-2); }
+.cost-chip.debt .cost-after { font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+.cost-chip .sr-only,
+.for-you-line .sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+
+/* A disabled action spends nothing now: its chip keeps the price but drops the fill. */
+:disabled .cost-chip { background: transparent; color: var(--muted); box-shadow: inset 0 0 0 1px var(--rule-2); }
+/* Buy buttons and production rows are small: a tighter chip. */
+.btn-buy .cost-chip, .prod-cost .cost-chip, .purchase-status .cost-chip { padding: 1px 5px; gap: 1px 5px; font-size: 11px; }
+.btn-buy .cost-chip .cost-amount, .prod-cost .cost-chip .cost-amount, .purchase-status .cost-chip .cost-amount { font-size: 11px; }
+.btn-buy .cost-chip { padding: 1px 4px; }
+/* The Buy column is about 76 px wide: a four-digit price drops under BUY instead of spilling out. */
+.production-secondary .btn-buy { flex-wrap: nowrap; gap: 2px 3px; letter-spacing: 0.04em; }
+
+/* A button that spends: its label, then the chip. */
+.btn.spends, .act.spends { display: inline-flex; align-items: center; justify-content: center; gap: 10px; }
+/* On a narrow screen the chip drops under the label rather than pushing it out of the button. */
+.btn.spends { flex-wrap: wrap; row-gap: 4px; max-width: 100%; }
+.btn.spends .cost-chip { margin-right: -4px; }
+
+/* "For you": − what you give up (red), + what you gain (green). WebKit ignores ::marker content,
+   so the marks are real elements. */
+.offer-for-you ul.for-you-list, .war-prompt-for-you ul.for-you-list, ul.for-you-list { list-style: none; padding-left: 0; }
+.for-you-line { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 8px; align-items: start; }
+.for-you-mark {
+  display: inline-grid; place-items: center; width: 17px; height: 17px; margin-top: 1px;
+  border-radius: 50%; font: 700 13px/1 var(--num-font);
+  background: var(--spend); color: var(--spend-ink);
+}
+.for-you-line.gain .for-you-mark { background: var(--gain); }
+.for-you-line.note .for-you-mark { background: none; color: var(--ink-2); }
+/* Costs are loud: the words of a cost line are red too, not only its mark. */
+.for-you-line.cost > span:last-child { color: var(--bad); font-weight: 600; }

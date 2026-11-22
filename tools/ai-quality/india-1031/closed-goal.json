@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "name": "closed-goal",
+  "faction_overrides": {
+    "India": {
+      "campaign_contain_only": 1,
+      "second_front_temperament": -60
+    }
+  }
+}

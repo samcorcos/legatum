@@ -1,0 +1,500 @@
+[
+  {
+    "file": "stings/discovery.m4a",
+    "events": [
+      "discovery"
+    ],
+    "title": "Music Jingles: jingles_PIZZI03.ogg",
+    "author": "Kenney",
+    "source": "https://kenney.nl/assets/music-jingles",
+    "attribution": "Kenney (kenney.nl), CC0",
+    "license": "CC0-1.0",
+    "modified": "trimmed silence, loudness-normalised to -20 LUFS / -1 dBTP, transcoded to AAC 96k",
+    "rationale": "A short pizzicato phrase replaces the synthetic confirmation chime for a discovery without a tier hook."
+  },
+  {
+    "file": "stings/minor.m4a",
+    "events": [
+      "sting.minor"
+    ],
+    "title": "Music Jingles: jingles_PIZZI02.ogg",
+    "author": "Kenney",
+    "source": "https://kenney.nl/assets/music-jingles",
+    "attribution": "Kenney (kenney.nl), CC0",
+    "license": "CC0-1.0",
+    "modified": "trimmed silence, loudness-normalised to -20 LUFS / -1 dBTP, transcoded to AAC 96k",
+    "rationale": "A short pizzicato note for a routine gain; the celebration ladder now stays in the musical palette."
+  },
+  {
+    "file": "stings/notable.m4a",
+    "events": [
+      "sting.notable"
+    ],
+    "title": "Music Jingles: jingles_PIZZI04.ogg",
+    "author": "Kenney",
+    "source": "https://kenney.nl/assets/music-jingles",
+    "attribution": "Kenney (kenney.nl), CC0",
+    "license": "CC0-1.0",
+    "modified": "trimmed silence, loudness-normalised to -20 LUFS / -1 dBTP, transcoded to AAC 96k",
+    "rationale": "Short pizzicato phrase (0.56 s): a little discovery flourish, distinct from a routine pluck."
+  },
+  {
+    "file": "stings/major.m4a",
+    "events": [
+      "sting.major"
+    ],
+    "title": "Music Jingles: jingles_PIZZI12.ogg",
+    "author": "Kenney",
+    "source": "https://kenney.nl/assets/music-jingles",
+    "attribution": "Kenney (kenney.nl), CC0",
+    "license": "CC0-1.0",
+    "modified": "trimmed silence, loudness-normalised to -20 LUFS / -1 dBTP, transcoded to AAC 96k",
+    "rationale": "Longer, fuller pizzicato phrase (0.99 s): gives a pivotal discovery more breadth than notable."
+  },
+  {
+    "file": "stings/legendary.m4a",
+    "events": [
+      "fanfare.legendary"
+    ],
+    "title": "Short Choir",
+    "author": "Breviceps",
+    "source": "https://freesound.org/people/Breviceps/sounds/444491/",
+    "retrieved": "https://raw.githubusercontent.com/yairm210/Unciv/master/android/assets/sounds/japan.mp3",
+    "attribution": "\"Short Choir\" by Breviceps (freesound.org/s/444491), CC0",
+    "license": "CC0-1.0",
+    "modified": "trimmed silence, loudness-normalised to -20 LUFS / -1 dBTP, transcoded to AAC 96k",
+    "rationale": "Sustained Short Choir (about 2 s), restoring the original Great Work voice: broader and longer than the notable and major pizzicato phrases. Same loudness target and peak ceiling."
+  },
+  {
+    "file": "ui/select.m4a",
+    "events": [
+      "select"
+    ],
+    "title": "RPG Audio: handleSmallLeather.ogg",
+    "author": "Kenney",
+    "source": "https://kenney.nl/assets/rpg-audio",
+    "attribution": "Kenney (kenney.nl), CC0",
+    "license": "CC0-1.0",
+    "modified": "trimmed silence, gain +10.1 dB toward -20 LUFS, capped for -1.5 dBTP before AAC, transcoded to AAC 96k",
+    "rationale": "A soft leather-and-cloth handling sound for selecting a unit, city or control."
+  },
+  {
+    "file": "ui/snap.m4a",
+    "events": [
+      "snap"
+    ],
+    "title": "Impact Sounds: impactWood_light_001.ogg",
+    "author": "Kenney",
+    "source": "https://kenney.nl/assets/impact-sounds",
+    "attribution": "Kenney (kenney.nl), CC0",
+    "license": "CC0-1.0",
+    "modified": "trimmed silence, gain -0.6 dB toward -20 LUFS, capped for -1.5 dBTP before AAC, transcoded to AAC 96k",
+    "rationale": "A faint wooden tick for snapping between map zoom levels."
+  },
+  {
+    "file": "ui/preview.m4a",
+    "events": [
+      "preview"
+    ],
+    "title": "RPG Audio: bookFlip1.ogg",
+    "author": "Kenney",
+    "source": "https://kenney.nl/assets/rpg-audio",
+    "attribution": "Kenney (kenney.nl), CC0",
+    "license": "CC0-1.0",
+    "modified": "trimmed silence, gain -2.3 dB toward -20 LUFS, capped for -1.5 dBTP before AAC, transcoded to AAC 96k",
+    "rationale": "A very soft page movement for a path preview; the light paper sound does not imply a committed order."
+  },
+  {
+    "file": "ui/invalid.m4a",
+    "events": [
+      "invalid"
+    ],
+    "title": "RPG Audio: dropLeather.ogg",
+    "author": "Kenney",
+    "source": "https://kenney.nl/assets/rpg-audio",
+    "attribution": "Kenney (kenney.nl), CC0",
+    "license": "CC0-1.0",
+    "modified": "trimmed silence, loudness-normalised to -20 LUFS / -1 dBTP, transcoded to AAC 96k",
+    "rationale": "A muted leather drop marks an invalid action without a buzzer or error tone."
+  },
+  {
+    "file": "ui/long-press.m4a",
+    "events": [
+      "longPress"
+    ],
+    "title": "RPG Audio: creak1.ogg",
+    "author": "Kenney",
+    "source": "https://kenney.nl/assets/rpg-audio",
+    "attribution": "Kenney (kenney.nl), CC0",
+    "license": "CC0-1.0",
+    "modified": "trimmed silence, loudness-normalised to -20 LUFS / -1 dBTP, transcoded to AAC 96k",
+    "rationale": "A short leather creak marks the hold gesture."
+  },
+  {
+    "file": "ui/sheet.m4a",
+    "events": [
+      "sheet"
+    ],
+    "title": "RPG Audio: bookOpen.ogg",
+    "author": "Kenney",
+    "source": "https://kenney.nl/assets/rpg-audio",
+    "attribution": "Kenney (kenney.nl), CC0",
+    "license": "CC0-1.0",
+    "modified": "trimmed silence, gain +10.0 dB toward -20 LUFS, capped for -1.5 dBTP before AAC, transcoded to AAC 96k",
+    "rationale": "A book opening accompanies a sheet opening."
+  },
+  {
+    "file": "orders/commit.m4a",
+    "events": [
+      "commit"
+    ],
+    "title": "RPG Audio: cloth3.ogg",
+    "author": "Kenney",
+    "source": "https://kenney.nl/assets/rpg-audio",
+    "attribution": "Kenney (kenney.nl), CC0",
+    "license": "CC0-1.0",
+    "modified": "trimmed silence, loudness-normalised to -24 LUFS / -3 dBTP, cut to 0.30 s with a short fade, transcoded to AAC 64k",
+    "rationale": "A cloak moving (0.30 s): a unit order is heard dozens of times a turn, so it is short and quiet. Chosen by ear by a target player (2026-11-20) over three footsteps (0.77 s)."
+  },
+  {
+    "file": "orders/queue.m4a",
+    "events": [
+      "queue"
+    ],
+    "title": "RPG Audio: bookFlip3.ogg",
+    "author": "Kenney",
+    "source": "https://kenney.nl/assets/rpg-audio",
+    "attribution": "Kenney (kenney.nl), CC0",
+    "license": "CC0-1.0",
+    "modified": "trimmed silence, loudness-normalised to -24 LUFS / -3 dBTP, cut to 0.20 s with a short fade, transcoded to AAC 64k",
+    "rationale": "One page turn (0.20 s) for a production or research choice: a ledger entry, not a unit setting out. Chosen by ear by a target player (2026-11-20)."
+  },
+  {
+    "file": "orders/commit-attack.m4a",
+    "events": [
+      "commitAttack"
+    ],
+    "title": "Impact Sounds: impactMetal_heavy_000.ogg",
+    "author": "Kenney",
+    "source": "https://kenney.nl/assets/impact-sounds",
+    "attribution": "Kenney (kenney.nl), CC0",
+    "license": "CC0-1.0",
+    "modified": "trimmed silence, gain -0.6 dB toward -20 LUFS, capped for -1.5 dBTP before AAC, transcoded to AAC 96k",
+    "rationale": "Heavy metal impact (0.17 s): a blade-on-armour clank distinguishes an attack from a move."
+  },
+  {
+    "file": "orders/purchase.m4a",
+    "events": [
+      "purchase"
+    ],
+    "title": "RPG Audio: handleCoins2.ogg",
+    "author": "Kenney",
+    "source": "https://kenney.nl/assets/rpg-audio",
+    "attribution": "Kenney (kenney.nl), CC0",
+    "license": "CC0-1.0",
+    "modified": "trimmed silence, gain +9.0 dB toward -20 LUFS, capped for -1.5 dBTP before AAC, transcoded to AAC 96k",
+    "rationale": "RPG Audio coin handling, the short variant (0.34 s) so Buy is recognisable without a cash-register flourish."
+  },
+  {
+    "file": "orders/ready.m4a",
+    "events": [
+      "ready"
+    ],
+    "title": "RPG Audio: bookClose.ogg",
+    "author": "Kenney",
+    "source": "https://kenney.nl/assets/rpg-audio",
+    "attribution": "Kenney (kenney.nl), CC0",
+    "license": "CC0-1.0",
+    "modified": "trimmed silence, gain -3.4 dB toward -20 LUFS, capped for -1 dBTP after AAC, transcoded to AAC 96k",
+    "rationale": "A firm ledger or book closing accompanies Return and ending the turn."
+  },
+  {
+    "file": "orders/unready.m4a",
+    "events": [
+      "unready"
+    ],
+    "title": "RPG Audio: bookPlace1.ogg",
+    "author": "Kenney",
+    "source": "https://kenney.nl/assets/rpg-audio",
+    "attribution": "Kenney (kenney.nl), CC0",
+    "license": "CC0-1.0",
+    "modified": "trimmed silence, gain -4.8 dB toward -20 LUFS, capped for -1 dBTP after AAC, transcoded to AAC 96k",
+    "rationale": "A lighter book placement accompanies withdrawing Ready."
+  },
+  {
+    "file": "turn/turn-resolved.m4a",
+    "events": [
+      "turnResolved"
+    ],
+    "title": "RPG Audio: bookFlip2.ogg",
+    "author": "Kenney",
+    "source": "https://kenney.nl/assets/rpg-audio",
+    "attribution": "Kenney (kenney.nl), CC0",
+    "license": "CC0-1.0",
+    "modified": "trimmed silence, gain +6.6 dB toward -20 LUFS, capped for -1.5 dBTP before AAC, transcoded to AAC 96k",
+    "rationale": "A single page turn marks the turn resolving, keeping the routine sound quiet and in-world."
+  },
+  {
+    "file": "turn/battle-won.m4a",
+    "events": [
+      "battleWon"
+    ],
+    "title": "Impact Sounds: impactMetal_light_000.ogg",
+    "author": "Kenney",
+    "source": "https://kenney.nl/assets/impact-sounds",
+    "attribution": "Kenney (kenney.nl), CC0",
+    "license": "CC0-1.0",
+    "modified": "trimmed silence, loudness-normalised to -20 LUFS / -1 dBTP, transcoded to AAC 96k",
+    "rationale": "A light, brighter (centroid ~570 Hz) metal ring: the victorious counterpart of the lost-battle thud."
+  },
+  {
+    "file": "turn/battle-lost.m4a",
+    "events": [
+      "battleLost"
+    ],
+    "title": "Impact Sounds: impactPunch_heavy_002.ogg",
+    "author": "Kenney",
+    "source": "https://kenney.nl/assets/impact-sounds",
+    "attribution": "Kenney (kenney.nl), CC0",
+    "license": "CC0-1.0",
+    "modified": "trimmed silence, loudness-normalised to -20 LUFS / -1 dBTP, transcoded to AAC 96k",
+    "rationale": "The darkest heavy punch (centroid ~110 Hz): a dull body-blow for a destroyed unit."
+  },
+  {
+    "file": "turn/building-complete.m4a",
+    "events": [
+      "buildingComplete"
+    ],
+    "title": "Impact Sounds: impactPlank_medium_000.ogg",
+    "author": "Kenney",
+    "source": "https://kenney.nl/assets/impact-sounds",
+    "attribution": "Kenney (kenney.nl), CC0",
+    "license": "CC0-1.0",
+    "modified": "trimmed silence, loudness-normalised to -20 LUFS / -1 dBTP, transcoded to AAC 96k",
+    "rationale": "Plank impact (0.78 s): carpentry reads as construction finished; medium weight for a routine event."
+  },
+  {
+    "file": "turn/vp-gained.m4a",
+    "events": [
+      "vpGained"
+    ],
+    "title": "Music Jingles: jingles_PIZZI16.ogg",
+    "author": "Kenney",
+    "source": "https://kenney.nl/assets/music-jingles",
+    "attribution": "Kenney (kenney.nl), CC0",
+    "license": "CC0-1.0",
+    "modified": "trimmed silence, loudness-normalised to -20 LUFS / -1 dBTP, transcoded to AAC 96k",
+    "rationale": "Shortest pizzicato jingle (0.46 s), estimated major and rising: a small lift. Strings sit with the orchestral score."
+  },
+  {
+    "file": "turn/vp-lost.m4a",
+    "events": [
+      "vpLost"
+    ],
+    "title": "Music Jingles: jingles_PIZZI05.ogg",
+    "author": "Kenney",
+    "source": "https://kenney.nl/assets/music-jingles",
+    "attribution": "Kenney (kenney.nl), CC0",
+    "license": "CC0-1.0",
+    "modified": "trimmed silence, loudness-normalised to -20 LUFS / -1 dBTP, transcoded to AAC 96k",
+    "rationale": "Short pizzicato (0.54 s), estimated minor and falling: the mirror image of vpGained."
+  },
+  {
+    "file": "turn/warning.m4a",
+    "events": [
+      "warning"
+    ],
+    "title": "Impact Sounds: impactWood_heavy_002.ogg",
+    "author": "Kenney",
+    "source": "https://kenney.nl/assets/impact-sounds",
+    "attribution": "Kenney (kenney.nl), CC0",
+    "license": "CC0-1.0",
+    "modified": "trimmed silence, gain -0.5 dB toward -20 LUFS, capped for -1.5 dBTP before AAC, transcoded to AAC 96k",
+    "rationale": "A low wooden knock calls attention to a warning without an electronic alarm."
+  },
+  {
+    "file": "stings/city-founded.m4a",
+    "events": [
+      "cityFounded"
+    ],
+    "title": "Music Jingles: jingles_PIZZI10.ogg",
+    "author": "Kenney",
+    "source": "https://kenney.nl/assets/music-jingles",
+    "attribution": "Kenney (kenney.nl), CC0",
+    "license": "CC0-1.0",
+    "modified": "trimmed silence, loudness-normalised to -20 LUFS / -1 dBTP, transcoded to AAC 96k",
+    "rationale": "Pizzicato jingle, estimated D major with a rising contour (0.8 s): a hopeful beginning."
+  },
+  {
+    "file": "stings/city-captured.m4a",
+    "events": [
+      "cityCaptured"
+    ],
+    "title": "Music Jingles: jingles_HIT10.ogg",
+    "author": "Kenney",
+    "source": "https://kenney.nl/assets/music-jingles",
+    "attribution": "Kenney (kenney.nl), CC0",
+    "license": "CC0-1.0",
+    "modified": "trimmed silence, loudness-normalised to -20 LUFS / -1 dBTP, transcoded to AAC 96k",
+    "rationale": "Orchestral \"Hit\" jingle (0.75 s, low register, estimated major): conquest should land heavier than a founding."
+  },
+  {
+    "file": "stings/city-lost.m4a",
+    "events": [
+      "cityLost"
+    ],
+    "title": "Music Jingles: jingles_HIT03.ogg",
+    "author": "Kenney",
+    "source": "https://kenney.nl/assets/music-jingles",
+    "attribution": "Kenney (kenney.nl), CC0",
+    "license": "CC0-1.0",
+    "modified": "trimmed silence, loudness-normalised to -20 LUFS / -1 dBTP, transcoded to AAC 96k",
+    "rationale": "Low \"Hit\" jingle, estimated A minor (0.75 s): as heavy as a capture, but in a minor key."
+  },
+  {
+    "file": "stings/tech-complete.m4a",
+    "events": [
+      "techComplete"
+    ],
+    "title": "Music Jingles: jingles_PIZZI06.ogg",
+    "author": "Kenney",
+    "source": "https://kenney.nl/assets/music-jingles",
+    "attribution": "Kenney (kenney.nl), CC0",
+    "license": "CC0-1.0",
+    "modified": "trimmed silence, loudness-normalised to -20 LUFS / -1 dBTP, transcoded to AAC 96k",
+    "rationale": "Pizzicato jingle, estimated major and rising (0.69 s): a bright \"eureka\" that stays brief."
+  },
+  {
+    "file": "stings/great-work.m4a",
+    "events": [
+      "greatWork"
+    ],
+    "title": "Short Choir",
+    "author": "Breviceps",
+    "source": "https://freesound.org/people/Breviceps/sounds/444491/",
+    "retrieved": "https://raw.githubusercontent.com/yairm210/Unciv/master/android/assets/sounds/japan.mp3",
+    "attribution": "\"Short Choir\" by Breviceps (freesound.org/s/444491), CC0",
+    "license": "CC0-1.0",
+    "modified": "trimmed silence, loudness-normalised to -20 LUFS / -1 dBTP, transcoded to AAC 96k",
+    "rationale": "The Short Choir (2 s): a rare, monumental moment deserves the one choral sound in the batch."
+  },
+  {
+    "file": "stings/eliminated.m4a",
+    "events": [
+      "eliminated"
+    ],
+    "title": "Music Jingles: jingles_HIT15.ogg",
+    "author": "Kenney",
+    "source": "https://kenney.nl/assets/music-jingles",
+    "attribution": "Kenney (kenney.nl), CC0",
+    "license": "CC0-1.0",
+    "modified": "trimmed silence, loudness-normalised to -20 LUFS / -1 dBTP, transcoded to AAC 96k",
+    "rationale": "The longest \"Hit\" jingle (1.16 s), estimated D minor: the heaviest non-final sting."
+  },
+  {
+    "file": "stings/war-declared.m4a",
+    "events": [
+      "warDeclared"
+    ],
+    "title": "Music Jingles: jingles_HIT11.ogg",
+    "author": "Kenney",
+    "source": "https://kenney.nl/assets/music-jingles",
+    "attribution": "Kenney (kenney.nl), CC0",
+    "license": "CC0-1.0",
+    "modified": "trimmed silence, loudness-normalised to -20 LUFS / -1 dBTP, transcoded to AAC 96k",
+    "rationale": "The unused orchestral \"Hit\" jingle (0.96 s): a war declared on you lands between a lost city (0.75 s) and elimination (1.16 s). Plays with the full-screen declaration."
+  },
+  {
+    "file": "stings/victory.m4a",
+    "events": [
+      "victory"
+    ],
+    "title": "Music Jingles: jingles_PIZZI15.ogg",
+    "author": "Kenney",
+    "source": "https://kenney.nl/assets/music-jingles",
+    "attribution": "Kenney (kenney.nl), CC0",
+    "license": "CC0-1.0",
+    "modified": "trimmed silence, loudness-normalised to -20 LUFS / -1 dBTP, transcoded to AAC 96k",
+    "rationale": "The pizzicato jingle with the clearest major key estimate (r=0.73) and a rising contour (0.81 s)."
+  },
+  {
+    "file": "stings/defeat.m4a",
+    "events": [
+      "defeat"
+    ],
+    "title": "Music Jingles: jingles_PIZZI07.ogg",
+    "author": "Kenney",
+    "source": "https://kenney.nl/assets/music-jingles",
+    "attribution": "Kenney (kenney.nl), CC0",
+    "license": "CC0-1.0",
+    "modified": "trimmed silence, loudness-normalised to -20 LUFS / -1 dBTP, transcoded to AAC 96k",
+    "rationale": "The longest pizzicato jingle (1.32 s), estimated minor and falling: a slow, bittersweet close."
+  },
+  {
+    "file": "multiplayer/partner-ready.m4a",
+    "events": [
+      "partnerReady"
+    ],
+    "title": "RPG Audio: metalLatch.ogg",
+    "author": "Kenney",
+    "source": "https://kenney.nl/assets/rpg-audio",
+    "attribution": "Kenney (kenney.nl), CC0",
+    "license": "CC0-1.0",
+    "modified": "trimmed silence, gain -6.8 dB toward -20 LUFS, capped for -1 dBTP after AAC, transcoded to AAC 96k",
+    "rationale": "A small metal latch signals that a partner has readied."
+  },
+  {
+    "file": "multiplayer/all-ready.m4a",
+    "events": [
+      "allReady"
+    ],
+    "title": "Music Jingles: jingles_PIZZI16.ogg",
+    "author": "Kenney",
+    "source": "https://kenney.nl/assets/music-jingles",
+    "attribution": "Kenney (kenney.nl), CC0",
+    "license": "CC0-1.0",
+    "modified": "trimmed silence, loudness-normalised to -20 LUFS / -1 dBTP, transcoded to AAC 96k",
+    "rationale": "A short pizzicato phrase marks the group becoming ready together."
+  },
+  {
+    "file": "multiplayer/seat-taken.m4a",
+    "events": [
+      "seatTaken"
+    ],
+    "title": "Impact Sounds: impactWood_medium_001.ogg",
+    "author": "Kenney",
+    "source": "https://kenney.nl/assets/impact-sounds",
+    "attribution": "Kenney (kenney.nl), CC0",
+    "license": "CC0-1.0",
+    "modified": "trimmed silence, gain -0.5 dB toward -20 LUFS, capped for -1.5 dBTP before AAC, transcoded to AAC 96k",
+    "rationale": "A muted wooden knock marks a seat moving to another device."
+  },
+  {
+    "file": "music/atlas.m4a",
+    "events": [
+      "music:atlas"
+    ],
+    "title": "Eclipse Legion",
+    "author": "vitalezzz",
+    "source": "https://opengameart.org/content/eclipse-legion",
+    "retrieved": "https://opengameart.org/sites/default/files/eclipse_legion.flac",
+    "license": "CC0-1.0",
+    "attribution": "\"Eclipse Legion\" by vitalezzz (https://opengameart.org/content/eclipse-legion), CC0 1.0",
+    "modified": "trimmed silence, loudness-normalised toward -18 LUFS (reached -18.1 LUFS), 6 s equal-power loop crossfade (the end blends into the opening), transcoded to AAC 96k",
+    "rationale": "The complete piece for the opening and peaceful play; its quiet opening and ending make a natural loop."
+  },
+  {
+    "file": "music/war.m4a",
+    "events": [
+      "music:war"
+    ],
+    "title": "Eclipse Legion",
+    "author": "vitalezzz",
+    "source": "https://opengameart.org/content/eclipse-legion",
+    "retrieved": "https://opengameart.org/sites/default/files/eclipse_legion.flac",
+    "license": "CC0-1.0",
+    "attribution": "\"Eclipse Legion\" by vitalezzz (https://opengameart.org/content/eclipse-legion), CC0 1.0",
+    "modified": "cut from 110.35 to 208.7 s, trimmed silence, loudness-normalised toward -18 LUFS (reached -18.1 LUFS), 6 s equal-power loop crossfade (the end blends into the opening), transcoded to AAC 96k",
+    "rationale": "The sustained climax for an empire war, after the quiet break and before the outro fade."
+  }
+]

@@ -1,0 +1,7 @@
+Use case: historical-scene
+Asset type: Legatum 4X game unit miniature, square transparent PNG source.
+Primary request: Repaint the 17th-century Renaissance melee-line musketman as one musketeer ADVANCING in a clear stride, body leaning forward. He holds a musket fitted with a plug bayonet LEVEL at the hip, pointing forward to the right; make the long musket and bayonet a strong horizontal line at waist height.
+Style/medium: Refined hand-painted miniature, painterly realism, historically plausible tactile materials, muted parchment-compatible pigments, soft diffuse studio lighting. Match the established Legatum hand-painted unit miniatures.
+Composition/framing: One complete centered subject on a small round neutral pale stone base. Slight three-quarter camera, eye a little above the base; match the Legatum spearman miniature's base size/thickness, canvas position and scale. Bold readable silhouette with generous transparent margins.
+Materials/textures: Broad-brimmed felt hat with a modest plume; buff coat; sash; bandolier of powder charges. Warm brown, buff and deep red.
+Constraints: Genuine transparent square background. Base is neutral pale stone, no owner colour. Historical 17th-century musketeer. No helmet. No upright weapon; no upright pose; no firing; no match cord, no forked rest, no shield, no scenery, no extra people, no text, watermark, border or fragments. The weapon must stay horizontal and point right so it reads differently from upright spears, diagonal pikes, and walking civilians.

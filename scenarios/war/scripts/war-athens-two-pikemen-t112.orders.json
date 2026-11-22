@@ -1,0 +1,687 @@
+{
+  "first": 112,
+  "last": 125,
+  "seat": 0,
+  "turns": {
+    "112": [
+      {
+        "to": {
+          "q": 10,
+          "r": 4
+        },
+        "type": "MoveUnit",
+        "unit": 25
+      },
+      {
+        "to": {
+          "q": 11,
+          "r": 4
+        },
+        "type": "MoveUnit",
+        "unit": 33
+      },
+      {
+        "accept": false,
+        "proposal": 17,
+        "type": "RespondToProposal"
+      },
+      {
+        "city": 19,
+        "queue": [
+          {
+            "kind": "Unit",
+            "unit": "Cuirassier"
+          },
+          {
+            "kind": "Unit",
+            "unit": "Cuirassier"
+          },
+          {
+            "kind": "Unit",
+            "unit": "Cuirassier"
+          },
+          {
+            "kind": "Unit",
+            "unit": "Cuirassier"
+          }
+        ],
+        "type": "SetProductionQueue"
+      }
+    ],
+    "113": [
+      {
+        "to": {
+          "q": 10,
+          "r": 4
+        },
+        "type": "MoveUnit",
+        "unit": 25
+      },
+      {
+        "to": {
+          "q": 10,
+          "r": 5
+        },
+        "type": "MoveUnit",
+        "unit": 33
+      }
+    ],
+    "114": [
+      {
+        "to": {
+          "q": 9,
+          "r": 5
+        },
+        "type": "MoveUnit",
+        "unit": 25
+      },
+      {
+        "to": {
+          "q": 10,
+          "r": 6
+        },
+        "type": "MoveUnit",
+        "unit": 33
+      },
+      {
+        "path": [
+          {
+            "q": -1,
+            "r": 21
+          },
+          {
+            "q": -1,
+            "r": 20
+          },
+          {
+            "q": -1,
+            "r": 19
+          },
+          {
+            "q": -1,
+            "r": 18
+          },
+          {
+            "q": -1,
+            "r": 17
+          },
+          {
+            "q": -1,
+            "r": 16
+          }
+        ],
+        "to": {
+          "q": -1,
+          "r": 16
+        },
+        "type": "MoveUnitPath",
+        "unit": 76
+      },
+      {
+        "city": 1,
+        "queue": [
+          {
+            "building": "Clearinghouse",
+            "kind": "Building"
+          }
+        ],
+        "type": "SetProductionQueue"
+      },
+      {
+        "city": 4,
+        "queue": [
+          {
+            "building": "Clearinghouse",
+            "kind": "Building"
+          }
+        ],
+        "type": "SetProductionQueue"
+      },
+      {
+        "techs": [
+          "Rifling",
+          "Cannonry",
+          "MilitaryScience",
+          "Industrialization",
+          "Railways"
+        ],
+        "type": "SetResearchQueue"
+      }
+    ],
+    "115": [
+      {
+        "to": {
+          "q": 8,
+          "r": 6
+        },
+        "type": "MoveUnit",
+        "unit": 25
+      },
+      {
+        "to": {
+          "q": 9,
+          "r": 7
+        },
+        "type": "MoveUnit",
+        "unit": 33
+      }
+    ],
+    "116": [
+      {
+        "to": {
+          "q": 8,
+          "r": 7
+        },
+        "type": "MoveUnit",
+        "unit": 25
+      },
+      {
+        "to": {
+          "q": 9,
+          "r": 7
+        },
+        "type": "MoveUnit",
+        "unit": 33
+      }
+    ],
+    "117": [
+      {
+        "to": {
+          "q": 9,
+          "r": 7
+        },
+        "type": "MoveUnit",
+        "unit": 25
+      },
+      {
+        "to": {
+          "q": 9,
+          "r": 7
+        },
+        "type": "MoveUnit",
+        "unit": 33
+      },
+      {
+        "path": [
+          {
+            "q": 19,
+            "r": 18
+          },
+          {
+            "q": 18,
+            "r": 18
+          },
+          {
+            "q": 17,
+            "r": 18
+          },
+          {
+            "q": 16,
+            "r": 18
+          },
+          {
+            "q": 15,
+            "r": 18
+          },
+          {
+            "q": 14,
+            "r": 18
+          },
+          {
+            "q": 13,
+            "r": 18
+          },
+          {
+            "q": 12,
+            "r": 18
+          },
+          {
+            "q": 11,
+            "r": 18
+          },
+          {
+            "q": 11,
+            "r": 17
+          },
+          {
+            "q": 11,
+            "r": 16
+          },
+          {
+            "q": 12,
+            "r": 15
+          }
+        ],
+        "to": {
+          "q": 12,
+          "r": 15
+        },
+        "type": "MoveUnitPath",
+        "unit": 79
+      }
+    ],
+    "118": [
+      {
+        "to": {
+          "q": 9,
+          "r": 7
+        },
+        "type": "MoveUnit",
+        "unit": 25
+      },
+      {
+        "to": {
+          "q": 9,
+          "r": 7
+        },
+        "type": "MoveUnit",
+        "unit": 33
+      }
+    ],
+    "119": [
+      {
+        "type": "UpgradeUnit",
+        "unit": 25
+      },
+      {
+        "type": "UpgradeUnit",
+        "unit": 33
+      },
+      {
+        "accept": false,
+        "proposal": 18,
+        "type": "RespondToProposal"
+      },
+      {
+        "city": 9,
+        "queue": [
+          {
+            "kind": "Unit",
+            "unit": "Cuirassier"
+          },
+          {
+            "kind": "Unit",
+            "unit": "Cuirassier"
+          },
+          {
+            "kind": "Unit",
+            "unit": "Cuirassier"
+          },
+          {
+            "kind": "Unit",
+            "unit": "Cuirassier"
+          },
+          {
+            "kind": "Unit",
+            "unit": "Cuirassier"
+          }
+        ],
+        "type": "SetProductionQueue"
+      }
+    ],
+    "120": [
+      {
+        "type": "UpgradeUnit",
+        "unit": 25
+      },
+      {
+        "type": "UpgradeUnit",
+        "unit": 33
+      },
+      {
+        "type": "FoundCity",
+        "unit": 76
+      },
+      {
+        "to": {
+          "q": 12,
+          "r": 14
+        },
+        "type": "MoveUnit",
+        "unit": 79
+      }
+    ],
+    "121": [
+      {
+        "to": {
+          "q": 12,
+          "r": 14
+        },
+        "type": "MoveUnit",
+        "unit": 79
+      },
+      {
+        "to": {
+          "q": 8,
+          "r": 8
+        },
+        "type": "MoveUnit",
+        "unit": 25
+      },
+      {
+        "to": {
+          "q": 9,
+          "r": 7
+        },
+        "type": "MoveUnit",
+        "unit": 33
+      },
+      {
+        "type": "SleepUnit",
+        "unit": 73
+      },
+      {
+        "city": 23,
+        "queue": [
+          {
+            "kind": "Unit",
+            "unit": "Cuirassier"
+          },
+          {
+            "kind": "Unit",
+            "unit": "Cuirassier"
+          },
+          {
+            "kind": "Unit",
+            "unit": "Cuirassier"
+          },
+          {
+            "kind": "Unit",
+            "unit": "Cuirassier"
+          }
+        ],
+        "type": "SetProductionQueue"
+      }
+    ],
+    "122": [
+      {
+        "path": [
+          {
+            "q": 11,
+            "r": 14
+          },
+          {
+            "q": 10,
+            "r": 14
+          },
+          {
+            "q": 9,
+            "r": 14
+          }
+        ],
+        "to": {
+          "q": 9,
+          "r": 14
+        },
+        "type": "MoveUnitPath",
+        "unit": 79
+      },
+      {
+        "to": {
+          "q": 8,
+          "r": 7
+        },
+        "type": "MoveUnit",
+        "unit": 33
+      },
+      {
+        "type": "SkipUnit",
+        "unit": 73
+      },
+      {
+        "type": "SkipUnit",
+        "unit": 25
+      },
+      {
+        "city": 22,
+        "queue": [
+          {
+            "building": "Granary",
+            "kind": "Building"
+          },
+          {
+            "building": "Workshop",
+            "kind": "Building"
+          },
+          {
+            "building": "Market",
+            "kind": "Building"
+          },
+          {
+            "building": "Laboratory",
+            "kind": "Building"
+          }
+        ],
+        "type": "SetProductionQueue"
+      }
+    ],
+    "123": [
+      {
+        "path": [
+          {
+            "q": 9,
+            "r": 13
+          },
+          {
+            "q": 8,
+            "r": 13
+          },
+          {
+            "q": 7,
+            "r": 14
+          }
+        ],
+        "to": {
+          "q": 7,
+          "r": 14
+        },
+        "type": "MoveUnitPath",
+        "unit": 79
+      },
+      {
+        "path": [
+          {
+            "q": 3,
+            "r": 17
+          },
+          {
+            "q": 4,
+            "r": 16
+          },
+          {
+            "q": 5,
+            "r": 15
+          },
+          {
+            "q": 6,
+            "r": 14
+          }
+        ],
+        "to": {
+          "q": 6,
+          "r": 14
+        },
+        "type": "MoveUnitPath",
+        "unit": 85
+      },
+      {
+        "to": {
+          "q": 7,
+          "r": 7
+        },
+        "type": "MoveUnit",
+        "unit": 33
+      },
+      {
+        "to": {
+          "q": 7,
+          "r": 9
+        },
+        "type": "MoveUnit",
+        "unit": 25
+      },
+      {
+        "type": "SleepUnit",
+        "unit": 73
+      }
+    ],
+    "124": [
+      {
+        "path": [
+          {
+            "q": 6,
+            "r": 14
+          },
+          {
+            "q": 5,
+            "r": 14
+          },
+          {
+            "q": 4,
+            "r": 14
+          },
+          {
+            "q": 3,
+            "r": 14
+          }
+        ],
+        "to": {
+          "q": 3,
+          "r": 14
+        },
+        "type": "MoveUnitPath",
+        "unit": 79
+      },
+      {
+        "path": [
+          {
+            "q": 5,
+            "r": 15
+          },
+          {
+            "q": 4,
+            "r": 15
+          },
+          {
+            "q": 3,
+            "r": 15
+          }
+        ],
+        "to": {
+          "q": 3,
+          "r": 15
+        },
+        "type": "MoveUnitPath",
+        "unit": 85
+      },
+      {
+        "to": {
+          "q": 6,
+          "r": 9
+        },
+        "type": "MoveUnit",
+        "unit": 25
+      },
+      {
+        "to": {
+          "q": 6,
+          "r": 8
+        },
+        "type": "MoveUnit",
+        "unit": 33
+      }
+    ],
+    "125": [
+      {
+        "to": {
+          "q": 5,
+          "r": 9
+        },
+        "type": "MoveUnit",
+        "unit": 33
+      },
+      {
+        "path": [
+          {
+            "q": 4,
+            "r": 13
+          },
+          {
+            "q": 5,
+            "r": 12
+          },
+          {
+            "q": 5,
+            "r": 11
+          }
+        ],
+        "to": {
+          "q": 5,
+          "r": 11
+        },
+        "type": "MoveUnitPath",
+        "unit": 79
+      },
+      {
+        "path": [
+          {
+            "q": 4,
+            "r": 14
+          },
+          {
+            "q": 4,
+            "r": 13
+          },
+          {
+            "q": 5,
+            "r": 12
+          },
+          {
+            "q": 5,
+            "r": 11
+          }
+        ],
+        "to": {
+          "q": 5,
+          "r": 11
+        },
+        "type": "MoveUnitPath",
+        "unit": 85
+      },
+      {
+        "path": [
+          {
+            "q": 20,
+            "r": 14
+          },
+          {
+            "q": 21,
+            "r": 14
+          },
+          {
+            "q": 22,
+            "r": 14
+          },
+          {
+            "q": 23,
+            "r": 14
+          }
+        ],
+        "to": {
+          "q": 23,
+          "r": 14
+        },
+        "type": "MoveUnitPath",
+        "unit": 86
+      },
+      {
+        "to": {
+          "q": 5,
+          "r": 9
+        },
+        "type": "MoveUnit",
+        "unit": 25
+      }
+    ]
+  }
+}

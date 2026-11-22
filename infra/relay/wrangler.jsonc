@@ -1,0 +1,18 @@
+{
+  // Legatum relay: a public lobby and a dumb pipe. No account id or secrets live here.
+  // Set CLOUDFLARE_API_TOKEN (and CLOUDFLARE_ACCOUNT_ID if the token sees several accounts) when deploying.
+  "name": "legatum-relay",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "durable_objects": {
+    "bindings": [
+      { "name": "LOBBY", "class_name": "Lobby" },
+      { "name": "ROOM", "class_name": "Room" }
+    ]
+  },
+  "migrations": [
+    // new_sqlite_classes: SQLite-backed Durable Objects, the only kind the Workers Free plan allows.
+    { "tag": "v1", "new_sqlite_classes": ["Lobby", "Room"] }
+  ],
+  "observability": { "enabled": false }
+}

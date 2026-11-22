@@ -1,0 +1,68 @@
+[
+  {
+    "set": "units-miniature",
+    "a": "barbarian-pikeman",
+    "b": "pikeman",
+    "why": "Separate paintings of the same pike class: patched beige gambeson and red armband versus fitted steel plate and grey cloth. The shared sloping pike and braced stance improve legibility. This is the strongest colour/shape resemblance; confirm ownerless map treatment before accepting."
+  },
+  {
+    "set": "units-miniature",
+    "a": "infantry",
+    "b": "reislaufer",
+    "why": "WWII olive uniform, steel helmet, raised grenade and rifle versus feathered Renaissance cap, slashed red/yellow clothing and upright pike. Different equipment and era despite a narrow standing box. Confirm at map size; Infantry legibility remains an unresolved repaint."
+  },
+  {
+    "set": "units-miniature",
+    "a": "barbarian-archer",
+    "b": "pikeman",
+    "why": "Fur-hooded drawn-bow figure versus steel-armoured two-handed pike carrier. Independently painted equipment and bodies; the shared cream disc and diagonal composition increase similarity. Confirm at map size; acceptance would not excuse the Archer's wrong string."
+  },
+  {
+    "set": "units-miniature",
+    "a": "barbarian-crossbowman",
+    "b": "reislaufer",
+    "why": "Brown hood and quilted tunic with a grounded crossbow and low horizontal prod versus feathered cap, slashed clothes and upright pike. Gist-only overlap of two independently painted upright figures."
+  },
+  {
+    "set": "units-miniature",
+    "a": "barbarian-archer",
+    "b": "barbarian-pikeman",
+    "why": "Fur hood, drawn bow and quiver versus iron helmet, padded gambeson and sloping pike. Gist-only overlap; both remain separate subjects. Archer string correctness is a separate unresolved fault."
+  },
+  {
+    "set": "units-miniature",
+    "a": "barbarian-pikeman",
+    "b": "phalangite",
+    "why": "Quilted gambeson, trousers and boots versus bronze helmet/greaves, linen cuirass, red tunic, sandals and a small left-arm shield. Shared long-polearm composition; distinct people, kit and anatomy."
+  },
+  {
+    "set": "units-miniature",
+    "a": "archer",
+    "b": "rifleman",
+    "why": "Crested bronze helmet, short tunic and drawn bow versus blue coat, kepi and shoulder-held rifle. Gist-only resemblance of arms and occupied frame; different subjects and weapons."
+  },
+  {
+    "set": "units-miniature",
+    "a": "phalangite",
+    "b": "pikeman",
+    "why": "Classical bronze/linen equipment, bare knees and small shield versus fitted steel armour with no shield. Both carry a sloping long polearm; gist-only resemblance does not require changing a correct pose."
+  },
+  {
+    "set": "units-miniature",
+    "a": "barbarian-archer",
+    "b": "rifleman",
+    "why": "Animal hood, fur clothing and drawn bow versus blue-coated kepi-wearing rifleman. Their equipment and garment masses differ; coarse silhouette alone flags them. The Archer's string remains independently unresolved."
+  },
+  {
+    "set": "units-miniature",
+    "a": "rifleman",
+    "b": "tagmatic-soldier",
+    "why": "Blue-coated rifle carrier with kepi versus conical-helmet Byzantine soldier with a long red kite shield and overhead spear. Very different held objects and garment masses despite coarse gist overlap."
+  },
+  {
+    "set": "units-miniature",
+    "a": "peltast",
+    "b": "pikeman",
+    "why": "Approved javelin-throwing figure with blue cloak and crescent shield versus steel-armoured two-handed pike carrier. Different anatomy, props and colour masses; a low appearance score with a borderline coarse gist."
+  }
+]

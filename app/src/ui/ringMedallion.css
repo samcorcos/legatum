@@ -1,0 +1,95 @@
+/* Ringed medallions beyond the faction sheet (see ringMedallion.tsx). */
+.rm {
+  --tone: var(--good);
+  --gilt: #8f6f1c;
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: var(--rm, 26px);
+  height: var(--rm, 26px);
+  border-radius: 50%;
+  color: var(--tone);
+  background: color-mix(in srgb, var(--tone) 11%, var(--panel));
+  box-shadow: inset 0 0 0 1.5px var(--tone), inset 0 0 0 3px var(--panel), inset 0 0 0 3.5px color-mix(in srgb, var(--tone) 45%, transparent);
+}
+.rm.bad { --tone: var(--bad); }
+.rm.neutral { --tone: var(--ink-2); background: var(--panel); }
+.rm.gilt { --tone: var(--gilt); color: var(--ink); background: color-mix(in srgb, var(--gilt) 16%, var(--panel)); }
+.rm.hollow {
+  --tone: var(--muted);
+  color: var(--muted);
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--rule-2), inset 0 0 0 3px var(--panel), inset 0 0 0 3.5px var(--rule);
+}
+.rm.hollow > .icon { opacity: 0.7; }
+.rm-star { color: var(--accent); }
+.rm.good .rm-star, .rm.bad .rm-star { color: var(--tone); }
+.rm-sign {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  display: grid;
+  place-items: center;
+  width: calc(var(--rm, 26px) * 0.46);
+  height: calc(var(--rm, 26px) * 0.46);
+  min-width: 11px;
+  min-height: 11px;
+  border-radius: 50%;
+  color: var(--panel);
+  background: var(--tone);
+  box-shadow: 0 0 0 1px var(--panel);
+}
+.rm-badge {
+  position: absolute;
+  right: -5px;
+  bottom: -5px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--panel);
+  box-shadow: 0 0 0 1px var(--frame);
+}
+
+/* Treaty emblem: the house star in a ring (two for an Alliance), a sign pinned lower right. */
+.te {
+  --tone: var(--ink);
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: var(--te, 40px);
+  height: var(--te, 40px);
+  /* Ink, not red: red marks are for war and loss, and a red cross on an Alliance reads as War. */
+  color: var(--ink);
+}
+.te.bad { --tone: var(--bad); color: var(--bad); }
+.te-ring {
+  position: absolute;
+  top: 12%;
+  bottom: 12%;
+  left: 12%;
+  right: 12%;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--panel) 85%, var(--tone));
+  box-shadow: inset 0 0 0 1.5px var(--tone), inset 0 0 0 3.5px var(--panel), inset 0 0 0 4.5px color-mix(in srgb, var(--tone) 45%, transparent);
+}
+.te.alliance .te-ring.a { right: 30%; left: 2%; }
+.te.alliance .te-ring.b { left: 30%; right: 2%; background: transparent; }
+.te-star { position: relative; }
+/* The star carries its own red (.star); Peace and Alliance wear ink. */
+.te:not(.bad) .te-star { color: var(--ink); }
+.te-sign {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  place-items: center;
+  width: 38%;
+  height: 38%;
+  border-radius: 50%;
+  color: var(--panel);
+  background: var(--good);
+  box-shadow: 0 0 0 1px var(--panel);
+}
+.te.bad .te-sign { background: var(--bad); }

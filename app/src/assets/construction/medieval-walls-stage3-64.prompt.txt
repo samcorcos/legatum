@@ -1,0 +1,1 @@
+Lanczos 64 px derivative of medieval-walls-stage3.png. See medieval-walls-stage3.prompt.txt for the image edit prompt.

@@ -1,0 +1,324 @@
+#!/usr/bin/env bash
+# Runs ON the build box (Ubuntu, bash 5). Installed to /data/bin by `tools/cloud/box.sh` (always re-synced).
+#
+#   box-job known                 shas the repo mirror already has (the Mac bundles only what is missing)
+#   box-job start <id>            run job <id> detached (setsid); output to /data/jobs/<id>/output.log
+#   box-job follow <id> <offset>  stream the log from byte <offset> until the job is done; last line is __BOX_RC=<n>
+#   box-job run <id>              the detached runner (do not call by hand)
+#   box-job list [--all]          running (and recent) jobs
+#   box-job kill <id>             stop a running job (whole process group)
+#   box-job gc [--force]          drop old jobs and refs; if the disk is over 75% drop the coldest idle slot caches
+#   box-job sweep                 trim every IDLE slot (flock -n): incremental dirs, then over-budget debug targets
+#   box-job util [hours]          mean CPU utilisation per hour from /data/util/cpu.tsv (sampled once a minute)
+#
+# A job directory /data/jobs/<id>/ arrives from the Mac with: spec.env (variables), cmd.sh (the command), and
+# optionally untracked.tgz and uncommitted.patch; the git bundle and the artifacts travel through S3.
+set -uo pipefail
+
+DATA=/data
+. "$DATA/bin/config" 2>/dev/null || true
+. "$DATA/bin/slot-checkout.sh"
+. "$DATA/bin/budget.sh"
+. "$(dirname "$0")/slot-queue.sh"
+: "${SLOTS:=12}" "${BUCKET:=}" "${REGION:=us-east-1}" "${KEEP_JOB_DAYS:=3}" "${KEEP_REF_DAYS:=14}"
+# Disk policy (600 GB /data, 12 slots): above DISK_HIGH_PCT the coldest idle slots lose target/; a slot's target/ is
+# trimmed to SLOT_BUDGET_GB after its job; a job waits (up to 30 min) until MIN_FREE_GB are free instead of dying mid-build.
+: "${DISK_HIGH_PCT:=75}" "${DISK_LOW_PCT:=65}" "${SLOT_BUDGET_GB:=34}" "${MIN_FREE_GB:=40}"
+JOBS="$DATA/jobs"; SLOTDIR="$DATA/slots"; REPO="$DATA/repo.git"
+
+toolchain_env() {
+  export CARGO_HOME="$DATA/cargo" RUSTUP_HOME="$DATA/rustup" PLAYWRIGHT_BROWSERS_PATH="$DATA/ms-playwright"
+  export npm_config_cache="$DATA/npm-cache" RUSTC_WRAPPER=
+  export PATH="$DATA/bin/shim:$CARGO_HOME/bin:$DATA/node/bin:$DATA/bin:$PATH"
+  export AWS_DEFAULT_REGION="$REGION"
+}
+
+log() { echo "[box $(date +%T)] $*"; }
+
+cmd_known() { git --git-dir="$REPO" for-each-ref 'refs/jobs' --format='%(objectname)' 2>/dev/null | sort -u; }
+
+cmd_start() {
+  local id="$1"
+  [ -f "$JOBS/$id/spec.env" ] || { echo "no such job $id" >&2; exit 2; }
+  mkdir -p "$JOBS/running"
+  setsid nohup "$0" run "$id" </dev/null >/dev/null 2>&1 &
+  echo started
+}
+
+cmd_follow() {
+  local id="$1" off="${2:-0}" dir="$JOBS/$1" log size quiet=0
+  log="$dir/output.log"
+  while :; do
+    size="$(stat -c%s "$log" 2>/dev/null || echo 0)"
+    if [ "$size" -gt "$off" ]; then
+      tail -c +$((off + 1)) "$log" | head -c $((size - off))
+      off="$size"; quiet=0
+    elif [ -f "$dir/rc" ]; then
+      size="$(stat -c%s "$log" 2>/dev/null || echo 0)"
+      [ "$size" -gt "$off" ] && continue
+      echo "__BOX_RC=$(cat "$dir/rc")"
+      return 0
+    else
+      quiet=$((quiet + 1))
+      # Runner gone without writing rc (box was rebooted, or the runner was killed).
+      if [ "$quiet" -gt 20 ] && ! { [ -f "$JOBS/running/$id.pid" ] && kill -0 "$(cat "$JOBS/running/$id.pid")" 2>/dev/null; }; then
+        echo "__BOX_RC=97"; return 0
+      fi
+    fi
+    sleep 0.5
+  done
+}
+
+pick_golden() { mkdir -p "$SLOTDIR"; exec 9>"$SLOTDIR/golden.lock"; flock 9; SLOT=golden; }
+
+ensure_toolchain() {
+  local v="${RUST_VERSION:-}"
+  if [ -n "$v" ]; then
+    if ! rustup toolchain list | grep -q "^$v"; then
+      log "installing rust $v"
+      rustup toolchain install "$v" --profile minimal -c rustfmt -c clippy -t wasm32-unknown-unknown || return 1
+    fi
+    export RUSTUP_TOOLCHAIN="$v"
+  fi
+}
+
+ensure_npm() {
+  local dir="$1" key
+  [ -f "$dir/app/package-lock.json" ] || return 0
+  key="$(cat "$dir/app/package-lock.json" "$dir/app/package.json" | sha256sum | cut -c1-16)"
+  if [ "$(cat "$dir/app/node_modules/.box-key" 2>/dev/null)" != "$key" ]; then
+    log "npm ci (lock $key)"
+    ( cd "$dir/app" && npm ci --no-audit --no-fund ) || return 1
+    echo "$key" > "$dir/app/node_modules/.box-key"
+  fi
+  ( cd "$dir/app" && npx playwright install chromium webkit ) || return 1
+}
+
+cmd_run() {
+  local id="$1" dir="$JOBS/$1" rc=0 started
+  started="$(date +%s)"
+  mkdir -p "$dir/timings" "$JOBS/running"
+  exec >>"$dir/output.log" 2>&1
+  echo $$ > "$JOBS/running/$id.pid"
+  finish() {
+    local code=$?
+    if [ ! -f "$dir/rc" ]; then echo "$code" > "$dir/rc.tmp" && mv -f "$dir/rc.tmp" "$dir/rc"; fi
+    rm -f "$JOBS/running/$id.pid"
+    # Still holding the slot lock (fd 9): the client already has its result, the trim runs after.
+    if [ -n "${SLOT:-}" ] && [ "$SLOT" != golden ]; then slot_trim "$SLOTDIR/$SLOT" >> "$dir/output.log" 2>&1; fi
+  }
+  trap finish EXIT
+  trap 'exit 143' TERM INT HUP
+  # shellcheck disable=SC1091
+  . "$dir/spec.env"
+  toolchain_env
+  # Variables from spec.env: SHA REFS LABEL TIMEOUT ARTIFACTS PREFER_PATH WANT_NPM GOLDEN HAS_BUNDLE HAS_PATCH HAS_UNTRACKED RUST_VERSION EXTRA_ENV
+
+  log "job $id (${LABEL:-}) sha ${SHA:0:12}"
+  ( flock 7; [ -d "$REPO/objects" ] || git init -q --bare "$REPO" ) 7>"$DATA/repo.lock"
+  if [ "${HAS_BUNDLE:-0}" = 1 ]; then
+    aws s3 cp --no-progress "s3://$BUCKET/box/jobs/$id/in.bundle" "$dir/in.bundle" >/dev/null || { log "cannot fetch the bundle"; rc=96; exit 96; }
+    git --git-dir="$REPO" fetch -q "$dir/in.bundle" "+refs/boxsync/*:refs/jobs/$id/bundle/*" || { log "bundle fetch failed"; rc=96; exit 96; }
+  fi
+  if [ "${HAS_BUNDLE:-0}" != 1 ]; then
+    # Nothing new to ship (the box already has this commit): still give the job its own ref, because slot_fetch_checkout
+    # fetches refs/jobs/<id>/* and a slot that never saw the commit has no other way to get it.
+    git --git-dir="$REPO" update-ref "refs/jobs/$id/bundle/head" "$SHA" || { log "missing object for $SHA"; rc=96; exit 96; }
+  fi
+  for pair in ${REFS:-}; do   # name=sha
+    git --git-dir="$REPO" update-ref "refs/jobs/$id/ref/${pair%%=*}" "${pair#*=}" || { log "missing object for ${pair%%=*}"; exit 96; }
+  done
+
+  if [ "${GOLDEN:-0}" = 1 ]; then pick_golden; else pick_slot; fi
+  local slot="$SLOTDIR/$SLOT"
+  log "slot $SLOT"
+  echo "$SLOT" > "$dir/slot"
+  wait_for_disk
+  if [ ! -d "$slot/.git" ]; then
+    git clone -q --no-checkout "$REPO" "$slot" || { log "slot clone failed"; exit 95; }
+  fi
+  cd "$slot" || exit 95
+  slot_fetch_checkout "$REPO" "$id" "$SHA" "$slot" || { log "slot fetch/checkout failed for $SHA after three attempts"; exit 95; }
+  git clean -fdq
+  for pair in ${REFS:-}; do git update-ref "refs/heads/${pair%%=*}" "${pair#*=}"; done
+  if [ "${HAS_PATCH:-0}" = 1 ]; then git apply --whitespace=nowarn "$dir/uncommitted.patch" || { log "patch failed"; exit 95; }; fi
+  if [ "${HAS_UNTRACKED:-0}" = 1 ]; then tar --warning=no-unknown-keyword -xzf "$dir/untracked.tgz" -C "$slot" || exit 95; fi
+  touch "$slot/.last-used"
+  # Seed the cargo cache from the golden slot the first time a slot is used (reflink: instant, no extra disk).
+  if [ "$SLOT" != golden ] && [ ! -d "$slot/target" ] && [ -d "$SLOTDIR/golden/target" ]; then
+    log "seeding target/ from the golden slot"
+    cp -a --reflink=auto "$SLOTDIR/golden/target" "$slot/target" || rm -rf "$slot/target"
+  fi
+  ensure_toolchain || { log "toolchain install failed"; exit 94; }
+  if [ "${WANT_NPM:-0}" = 1 ]; then ensure_npm "$slot" || { log "npm/playwright setup failed"; exit 94; }; fi
+
+  export TZ=America/New_York   # timing-ledger timestamps match the Mac
+  export LEGATUM_BOX=1 LEGATUM_BOX_JOB="$id" LEGATUM_BOX_SLOT="$SLOT" LEGATUM_BOX_SLOT_DIR="$slot" LEGATUM_BOX_JOB_DIR="$dir"
+  export LEGATUM_TIMINGS_DIR="$dir/timings" LEGATUM_WASM_CACHE_DIR="${LEGATUM_WASM_CACHE_DIR:-$DATA/wasm-cache}"
+  scale_parallelism
+  export LEGATUM_BUILD_CAP="${LEGATUM_BUILD_CAP:-6}" LEGATUM_SIM_THREAD_CAP="${LEGATUM_SIM_THREAD_CAP:-48}"
+  export CARGO_BUILD_JOBS="$BOX_CARGO_JOBS" CI=1
+  # Debug-profile builds: incremental caches (18 GB in one slot) and full debuginfo (26 GB of deps) filled the disk
+  # and are never reused across the branches a slot sees. Line tables keep panic backtraces readable.
+  export CARGO_INCREMENTAL=0 CARGO_PROFILE_DEV_DEBUG=line-tables-only
+  for kv in ${EXTRA_ENV:-}; do export "$kv"; done
+
+  log "running (timeout ${TIMEOUT:-21600}s): $(grep -v '^#' "$dir/cmd.sh" | tail -n +2 | tr '\n' ' ' | cut -c1-300)"
+  timeout --signal=TERM --kill-after=30 "${TIMEOUT:-21600}" bash "$dir/cmd.sh"
+  rc=$?
+  [ "$rc" -ne 124 ] || log "TIMED OUT after ${TIMEOUT:-21600}s"
+  log "command exited $rc after $(( $(date +%s) - started ))s"
+
+  # Artifacts: paths relative to the slot, plus the job's own timing rows (.box-timings).
+  local present="" p
+  for p in ${ARTIFACTS:-}; do if [ -e "$slot/$p" ]; then present="$present $p"; else log "artifact missing: $p"; fi; done
+  if [ -n "$present" ] || [ -n "$(ls -A "$dir/timings" 2>/dev/null)" ]; then
+    # shellcheck disable=SC2086
+    tar czf "$dir/artifacts.tgz" -C "$slot" $present -C "$dir" --transform 's#^timings#.box-timings#' timings 2>/dev/null || tar czf "$dir/artifacts.tgz" -C "$slot" $present
+    aws s3 cp --no-progress "$dir/artifacts.tgz" "s3://$BUCKET/box/jobs/$id/artifacts.tgz" >/dev/null && echo "artifacts uploaded"
+  fi
+  exit "$rc"
+}
+
+disk_used_pct() { df --output=pcent "$DATA" | tail -1 | tr -dc 0-9; }
+disk_free_gb() { df -BG --output=avail "$DATA" | tail -1 | tr -dc 0-9; }
+
+# Core budget for this job (budget.sh explains the numbers); old-version jobs get it from the command they run.
+scale_parallelism() { box_core_budget_apply; }
+
+# Free disk when /data is over DISK_HIGH_PCT: remove target/ of the least recently used unlocked slots (the next job
+# there re-seeds from the golden slot), until under DISK_LOW_PCT. Busy slots are skipped (flock -n).
+gc_disk() {
+  local used s name
+  used="$(disk_used_pct)"
+  [ "${used:-0}" -ge "$DISK_HIGH_PCT" ] || return 0
+  log "disk at ${used}%: dropping the coldest idle slot caches"
+  for s in $(ls -tr "$SLOTDIR"/*/.last-used 2>/dev/null | sed 's#/.last-used##'); do
+    name="$(basename "$s")"; [ "$name" != golden ] || continue
+    [ "$name" != "${SLOT:-}" ] || continue
+    ( flock -n 8 || exit 1; rm -rf "$s/target" "$s"/.claude/worktrees/*/target ) 8>"$SLOTDIR/$name.lock" || continue
+    used="$(disk_used_pct)"
+    [ "${used:-0}" -ge "$DISK_LOW_PCT" ] || break
+  done
+}
+
+# A job needs room for its build: wait for MIN_FREE_GB free (gc_disk each round) instead of failing with ENOSPC an hour in.
+wait_for_disk() {
+  local waited=0
+  gc_disk
+  while [ "$(disk_free_gb)" -lt "$MIN_FREE_GB" ]; do
+    [ "$waited" -lt 1800 ] || { log "disk still short of ${MIN_FREE_GB} GB free after 30 minutes: starting anyway"; return 0; }
+    log "waiting for disk: $(disk_free_gb) GB free, need $MIN_FREE_GB"
+    sleep 60; waited=$((waited + 60)); gc_disk
+  done
+}
+
+# After a job, in its slot (lock held): drop incremental dirs (never worth keeping), then target/debug if the slot is
+# still over SLOT_BUDGET_GB (the lanes' debug-profile tests are what grows: 57 GB in one slot).
+slot_trim() {
+  local slot="$1" t kb
+  for t in "$slot/target" "$slot"/.claude/worktrees/*/target; do
+    [ -d "$t" ] || continue
+    find "$t" -type d -name incremental -prune -exec rm -rf {} + 2>/dev/null
+  done
+  kb="$(du -sk "$slot/target" "$slot"/.claude/worktrees/*/target 2>/dev/null | awk '{s+=$1} END{print s+0}')"
+  if [ "$kb" -gt $((SLOT_BUDGET_GB * 1048576)) ]; then
+    log "slot $(basename "$slot") target/ is $((kb / 1048576)) GB (budget $SLOT_BUDGET_GB): dropping target/debug"
+    rm -rf "$slot/target/debug"
+  fi
+}
+
+# Trim every slot nobody holds. Never touches a busy slot.
+cmd_sweep() {
+  local s name before after
+  before="$(disk_used_pct)"
+  for s in "$SLOTDIR"/s[0-9]*; do
+    [ -d "$s" ] || continue
+    name="$(basename "$s")"
+    ( flock -n 8 || { echo "$name busy: skipped"; exit 0; }; slot_trim "$s"; echo "$name swept" ) 8>"$SLOTDIR/$name.lock"
+  done
+  find "$JOBS" -mindepth 1 -maxdepth 1 -type d -name '2*' -mtime "+$KEEP_JOB_DAYS" -exec rm -rf {} + 2>/dev/null
+  after="$(disk_used_pct)"
+  echo "disk $before% -> $after%"; df -h "$DATA" | tail -1
+}
+
+cmd_util() {
+  python3 - "${1:-24}" <<'PY'
+import sys, time, collections
+hours = float(sys.argv[1]); since = time.time() - hours * 3600
+rows = collections.OrderedDict(); allb = []; allf = []
+try:
+    for line in open('/data/util/cpu.tsv'):
+        t, b, f = (int(x) for x in line.split())
+        if t < since: continue
+        h = time.strftime('%m-%d %H:00', time.localtime(t))
+        rows.setdefault(h, []).append((b, f)); allb.append(b); allf.append(f)
+except OSError:
+    pass
+if not allb:
+    print('no utilisation samples yet (/data/util/cpu.tsv)'); sys.exit(0)
+for h, v in rows.items():
+    print('%s  %3d%% busy (filler %d%%), %d samples' % (h, sum(b for b, _ in v) / len(v), sum(f for _, f in v) / len(v), len(v)))
+print('mean over the last %g h: %d%% busy, %d%% of it filler' % (hours, sum(allb) / len(allb), sum(allf) / len(allf)))
+PY
+}
+
+cmd_gc() {
+  find "$JOBS" -mindepth 1 -maxdepth 1 -type d -name '2*' -mtime "+$KEEP_JOB_DAYS" -exec rm -rf {} + 2>/dev/null
+  local cutoff r
+  cutoff="$(date -d "-$KEEP_REF_DAYS days" +%s)"
+  git --git-dir="$REPO" for-each-ref 'refs/jobs' --format='%(refname) %(committerdate:unix)' 2>/dev/null | while read -r ref ts; do
+    [ "${ts:-0}" -lt "$cutoff" ] && git --git-dir="$REPO" update-ref -d "$ref"
+  done
+  git --git-dir="$REPO" gc -q --prune=1.day.ago 2>/dev/null || true
+  [ "${1:-}" != --force ] || { SLOT=""; gc_disk; }
+  docker image prune -f >/dev/null 2>&1 || true
+  df -h "$DATA" | tail -1
+}
+
+descendants() { local c; for c in $(pgrep -P "$1" 2>/dev/null); do echo "$c"; descendants "$c"; done; }
+
+cmd_kill() {
+  local id="$1" pid kids
+  pid="$(cat "$JOBS/running/$id.pid" 2>/dev/null)" || { echo "job $id is not running"; return 0; }
+  # `timeout` moves its command into a new process group, so a group kill misses it: walk the process tree.
+  kids="$(descendants "$pid")"
+  # shellcheck disable=SC2086
+  kill -TERM $kids "$pid" 2>/dev/null
+  sleep 15   # let traps run: verify-branch.sh removes its lock directories on TERM
+  # shellcheck disable=SC2086
+  kill -KILL $kids 2>/dev/null
+  echo "stopped job $id"
+}
+
+cmd_list() {
+  local f id any=0
+  for f in "$JOBS"/running/*.pid; do
+    [ -f "$f" ] || continue
+    id="$(basename "$f" .pid)"
+    kill -0 "$(cat "$f")" 2>/dev/null || continue
+    any=1
+    echo "running $id $(grep -h '^LABEL=' "$JOBS/$id/spec.env" 2>/dev/null | head -1 | cut -d= -f2-) $(grep -h 'slot ' "$JOBS/$id/output.log" 2>/dev/null | head -1 | grep -o 'slot [a-z0-9]*')"
+  done
+  [ "$any" = 1 ] || echo "no jobs running"
+  if [ "${1:-}" = --all ]; then
+    for id in $(ls -t "$JOBS" 2>/dev/null | grep '^2' | head -10); do
+      [ -f "$JOBS/$id/rc" ] && echo "done    $id rc=$(cat "$JOBS/$id/rc") $(grep -h '^LABEL=' "$JOBS/$id/spec.env" 2>/dev/null | head -1 | cut -d= -f2-)"
+    done
+  fi
+  return 0
+}
+
+sub="${1:-}"; [ $# -eq 0 ] || shift
+case "$sub" in
+  known) cmd_known ;;
+  start) cmd_start "$@" ;;
+  follow) cmd_follow "$@" ;;
+  run) cmd_run "$@" ;;
+  list) toolchain_env; cmd_list "$@" ;;
+  gc) cmd_gc "$@" ;;
+  sweep) cmd_sweep ;;
+  util) cmd_util "$@" ;;
+  kill) cmd_kill "$@" ;;
+  *) sed -n '2,/^set -uo/p' "$0" | sed '$d;s/^# \{0,1\}//'; exit 2 ;;
+esac

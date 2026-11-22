@@ -1,0 +1,213 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Hoplite phalanx: core agree > the forecast carries the same phalanx line on both sides of the attack 1`] = `
+{
+  "attacker_hp": 100,
+  "attacker_strength": {
+    "parts": [
+      [
+        "Spartan Hoplite",
+        20,
+      ],
+      [
+        "Level 1: +10%",
+        2,
+      ],
+    ],
+    "total": 22,
+  },
+  "defender_hp": 100,
+  "defender_strength": {
+    "parts": [
+      [
+        "Spearman",
+        20,
+      ],
+    ],
+    "total": 20,
+  },
+  "expected_damage_to_attacker": 27,
+  "expected_damage_to_defender": 31,
+  "loss_chance": 0,
+  "ranged": false,
+  "win_chance": 0,
+}
+`;
+
+exports[`Hoplite phalanx: core agree > the forecast carries the same phalanx line on both sides of the attack 2`] = `
+{
+  "attacker_hp": 100,
+  "attacker_strength": {
+    "parts": [
+      [
+        "Spearman",
+        20,
+      ],
+    ],
+    "total": 20,
+  },
+  "defender_hp": 100,
+  "defender_strength": {
+    "parts": [
+      [
+        "Spartan Hoplite",
+        20,
+      ],
+      [
+        "Level 1: +10%",
+        2,
+      ],
+    ],
+    "total": 22,
+  },
+  "expected_damage_to_attacker": 31,
+  "expected_damage_to_defender": 27,
+  "loss_chance": 0,
+  "ranged": false,
+  "win_chance": 0,
+}
+`;
+
+exports[`Hoplite phalanx: core agree > the forecast carries the same phalanx line on both sides of the attack 3`] = `
+{
+  "attacker_hp": 100,
+  "attacker_strength": {
+    "parts": [
+      [
+        "Spartan Hoplite",
+        20,
+      ],
+      [
+        "Level 1: +10%",
+        2,
+      ],
+      [
+        "Phalanx: next to another Hoplite",
+        5,
+      ],
+    ],
+    "total": 27,
+  },
+  "defender_hp": 100,
+  "defender_strength": {
+    "parts": [
+      [
+        "Spearman",
+        20,
+      ],
+    ],
+    "total": 20,
+  },
+  "expected_damage_to_attacker": 22,
+  "expected_damage_to_defender": 39,
+  "loss_chance": 0,
+  "ranged": false,
+  "win_chance": 0,
+}
+`;
+
+exports[`Hoplite phalanx: core agree > the forecast carries the same phalanx line on both sides of the attack 4`] = `
+{
+  "attacker_hp": 100,
+  "attacker_strength": {
+    "parts": [
+      [
+        "Spearman",
+        20,
+      ],
+    ],
+    "total": 20,
+  },
+  "defender_hp": 100,
+  "defender_strength": {
+    "parts": [
+      [
+        "Spartan Hoplite",
+        20,
+      ],
+      [
+        "Level 1: +10%",
+        2,
+      ],
+      [
+        "Phalanx: next to another Hoplite",
+        5,
+      ],
+    ],
+    "total": 27,
+  },
+  "expected_damage_to_attacker": 39,
+  "expected_damage_to_defender": 22,
+  "loss_chance": 0,
+  "ranged": false,
+  "win_chance": 0,
+}
+`;
+
+exports[`Hoplite phalanx: core agree > the forecast carries the same phalanx line on both sides of the attack 5`] = `
+{
+  "attacker_hp": 100,
+  "attacker_strength": {
+    "parts": [
+      [
+        "Spartan Hoplite",
+        20,
+      ],
+      [
+        "Level 1: +10%",
+        2,
+      ],
+    ],
+    "total": 22,
+  },
+  "defender_hp": 100,
+  "defender_strength": {
+    "parts": [
+      [
+        "Spearman",
+        20,
+      ],
+    ],
+    "total": 20,
+  },
+  "expected_damage_to_attacker": 27,
+  "expected_damage_to_defender": 31,
+  "loss_chance": 0,
+  "ranged": false,
+  "win_chance": 0,
+}
+`;
+
+exports[`Hoplite phalanx: core agree > the forecast carries the same phalanx line on both sides of the attack 6`] = `
+{
+  "attacker_hp": 100,
+  "attacker_strength": {
+    "parts": [
+      [
+        "Spearman",
+        20,
+      ],
+    ],
+    "total": 20,
+  },
+  "defender_hp": 100,
+  "defender_strength": {
+    "parts": [
+      [
+        "Spartan Hoplite",
+        20,
+      ],
+      [
+        "Level 1: +10%",
+        2,
+      ],
+    ],
+    "total": 22,
+  },
+  "expected_damage_to_attacker": 31,
+  "expected_damage_to_defender": 27,
+  "loss_chance": 0,
+  "ranged": false,
+  "win_chance": 0,
+}
+`;

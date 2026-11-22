@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "name": "early2-open",
+  "faction_overrides": {
+    "India": {
+      "india_early_office_min_gold": 2,
+      "campaign_contain_only": 0,
+      "second_front_temperament": 0
+    }
+  }
+}

@@ -1,0 +1,735 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`matches WASM reward events and consequences (city false): Athens 1`] = `
+[
+  {
+    "at": {
+      "q": 2,
+      "r": 4,
+    },
+    "owner": 0,
+    "reward": {
+      "amount": 25,
+      "kind": "Science",
+      "research": null,
+    },
+    "type": "RuinExplored",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`matches WASM reward events and consequences (city false): Athens 2`] = `
+[
+  {
+    "at": {
+      "q": 2,
+      "r": 4,
+    },
+    "owner": 0,
+    "reward": {
+      "affordable": null,
+      "amount": 40,
+      "balance": 10040,
+      "kind": "Gold",
+    },
+    "type": "RuinExplored",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`matches WASM reward events and consequences (city false): Athens 3`] = `
+[
+  {
+    "at": {
+      "q": 2,
+      "r": 4,
+    },
+    "owner": 0,
+    "reward": {
+      "amount": 25,
+      "kind": "Science",
+      "research": null,
+    },
+    "type": "RuinExplored",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`matches WASM reward events and consequences (city false): Athens 4`] = `
+[
+  {
+    "at": {
+      "q": 2,
+      "r": 4,
+    },
+    "owner": 0,
+    "reward": {
+      "kind": "FreeScout",
+      "unit": 4,
+    },
+    "type": "RuinExplored",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`matches WASM reward events and consequences (city false): Athens 5`] = `
+[
+  {
+    "at": {
+      "q": 2,
+      "r": 4,
+    },
+    "owner": 0,
+    "reward": {
+      "kind": "FreeScout",
+      "unit": 4,
+    },
+    "type": "RuinExplored",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`matches WASM reward events and consequences (city false): Athens 6`] = `
+[
+  {
+    "at": {
+      "q": 2,
+      "r": 4,
+    },
+    "owner": 0,
+    "reward": {
+      "kind": "FreeScout",
+      "unit": 4,
+    },
+    "type": "RuinExplored",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`matches WASM reward events and consequences (city false): Byzantium 1`] = `
+[
+  {
+    "at": {
+      "q": 2,
+      "r": 4,
+    },
+    "owner": 0,
+    "reward": {
+      "amount": 25,
+      "kind": "Science",
+      "research": null,
+    },
+    "type": "RuinExplored",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`matches WASM reward events and consequences (city false): Byzantium 2`] = `
+[
+  {
+    "at": {
+      "q": 2,
+      "r": 4,
+    },
+    "owner": 0,
+    "reward": {
+      "affordable": null,
+      "amount": 40,
+      "balance": 10040,
+      "kind": "Gold",
+    },
+    "type": "RuinExplored",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`matches WASM reward events and consequences (city false): Byzantium 3`] = `
+[
+  {
+    "at": {
+      "q": 2,
+      "r": 4,
+    },
+    "owner": 0,
+    "reward": {
+      "amount": 25,
+      "kind": "Science",
+      "research": null,
+    },
+    "type": "RuinExplored",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`matches WASM reward events and consequences (city false): Byzantium 4`] = `
+[
+  {
+    "at": {
+      "q": 2,
+      "r": 4,
+    },
+    "owner": 0,
+    "reward": {
+      "kind": "FreeScout",
+      "unit": 4,
+    },
+    "type": "RuinExplored",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`matches WASM reward events and consequences (city false): Byzantium 5`] = `
+[
+  {
+    "at": {
+      "q": 2,
+      "r": 4,
+    },
+    "owner": 0,
+    "reward": {
+      "kind": "FreeScout",
+      "unit": 4,
+    },
+    "type": "RuinExplored",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`matches WASM reward events and consequences (city false): Byzantium 6`] = `
+[
+  {
+    "at": {
+      "q": 2,
+      "r": 4,
+    },
+    "owner": 0,
+    "reward": {
+      "kind": "FreeScout",
+      "unit": 4,
+    },
+    "type": "RuinExplored",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`matches WASM reward events and consequences (city false): India 1`] = `
+[
+  {
+    "at": {
+      "q": 2,
+      "r": 4,
+    },
+    "owner": 0,
+    "reward": {
+      "amount": 25,
+      "kind": "Science",
+      "research": null,
+    },
+    "type": "RuinExplored",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`matches WASM reward events and consequences (city false): India 2`] = `
+[
+  {
+    "at": {
+      "q": 2,
+      "r": 4,
+    },
+    "owner": 0,
+    "reward": {
+      "affordable": null,
+      "amount": 40,
+      "balance": 10040,
+      "kind": "Gold",
+    },
+    "type": "RuinExplored",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`matches WASM reward events and consequences (city false): India 3`] = `
+[
+  {
+    "at": {
+      "q": 2,
+      "r": 4,
+    },
+    "owner": 0,
+    "reward": {
+      "amount": 25,
+      "kind": "Science",
+      "research": null,
+    },
+    "type": "RuinExplored",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`matches WASM reward events and consequences (city false): India 4`] = `
+[
+  {
+    "at": {
+      "q": 2,
+      "r": 4,
+    },
+    "owner": 0,
+    "reward": {
+      "kind": "FreeScout",
+      "unit": 4,
+    },
+    "type": "RuinExplored",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`matches WASM reward events and consequences (city false): India 5`] = `
+[
+  {
+    "at": {
+      "q": 2,
+      "r": 4,
+    },
+    "owner": 0,
+    "reward": {
+      "kind": "FreeScout",
+      "unit": 4,
+    },
+    "type": "RuinExplored",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`matches WASM reward events and consequences (city false): India 6`] = `
+[
+  {
+    "at": {
+      "q": 2,
+      "r": 4,
+    },
+    "owner": 0,
+    "reward": {
+      "kind": "FreeScout",
+      "unit": 4,
+    },
+    "type": "RuinExplored",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`matches WASM reward events and consequences (city true): Athens 1`] = `
+[
+  {
+    "at": {
+      "q": 2,
+      "r": 4,
+    },
+    "owner": 0,
+    "reward": {
+      "amount": 25,
+      "kind": "Science",
+      "research": {
+        "completes": false,
+        "cost": 26,
+        "income": 3,
+        "progress_before": 43,
+        "tech": "BronzeWorking",
+        "turns_saved": 0,
+      },
+    },
+    "type": "RuinExplored",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`matches WASM reward events and consequences (city true): Athens 2`] = `
+[
+  {
+    "at": {
+      "q": 2,
+      "r": 4,
+    },
+    "owner": 0,
+    "reward": {
+      "affordable": null,
+      "amount": 40,
+      "balance": 60,
+      "kind": "Gold",
+    },
+    "type": "RuinExplored",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`matches WASM reward events and consequences (city true): Athens 3`] = `
+[
+  {
+    "at": {
+      "q": 2,
+      "r": 4,
+    },
+    "owner": 0,
+    "reward": {
+      "amount": 25,
+      "kind": "Science",
+      "research": {
+        "completes": false,
+        "cost": 26,
+        "income": 3,
+        "progress_before": 43,
+        "tech": "BronzeWorking",
+        "turns_saved": 0,
+      },
+    },
+    "type": "RuinExplored",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`matches WASM reward events and consequences (city true): Athens 4`] = `
+[
+  {
+    "at": {
+      "q": 2,
+      "r": 4,
+    },
+    "owner": 0,
+    "reward": {
+      "kind": "FreeScout",
+      "unit": 4,
+    },
+    "type": "RuinExplored",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`matches WASM reward events and consequences (city true): Athens 5`] = `
+[
+  {
+    "at": {
+      "q": 2,
+      "r": 4,
+    },
+    "owner": 0,
+    "reward": {
+      "kind": "FreeScout",
+      "unit": 4,
+    },
+    "type": "RuinExplored",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`matches WASM reward events and consequences (city true): Athens 6`] = `
+[
+  {
+    "at": {
+      "q": 2,
+      "r": 4,
+    },
+    "owner": 0,
+    "reward": {
+      "kind": "FreeScout",
+      "unit": 4,
+    },
+    "type": "RuinExplored",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`matches WASM reward events and consequences (city true): Byzantium 1`] = `
+[
+  {
+    "at": {
+      "q": 2,
+      "r": 4,
+    },
+    "owner": 0,
+    "reward": {
+      "amount": 25,
+      "kind": "Science",
+      "research": {
+        "completes": true,
+        "cost": 26,
+        "income": 3,
+        "progress_before": 23,
+        "tech": "BronzeWorking",
+        "turns_saved": 1,
+      },
+    },
+    "type": "RuinExplored",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`matches WASM reward events and consequences (city true): Byzantium 2`] = `
+[
+  {
+    "at": {
+      "q": 2,
+      "r": 4,
+    },
+    "owner": 0,
+    "reward": {
+      "affordable": null,
+      "amount": 40,
+      "balance": 60,
+      "kind": "Gold",
+    },
+    "type": "RuinExplored",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`matches WASM reward events and consequences (city true): Byzantium 3`] = `
+[
+  {
+    "at": {
+      "q": 2,
+      "r": 4,
+    },
+    "owner": 0,
+    "reward": {
+      "amount": 25,
+      "kind": "Science",
+      "research": {
+        "completes": true,
+        "cost": 26,
+        "income": 3,
+        "progress_before": 23,
+        "tech": "BronzeWorking",
+        "turns_saved": 1,
+      },
+    },
+    "type": "RuinExplored",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`matches WASM reward events and consequences (city true): Byzantium 4`] = `
+[
+  {
+    "at": {
+      "q": 2,
+      "r": 4,
+    },
+    "owner": 0,
+    "reward": {
+      "kind": "FreeScout",
+      "unit": 4,
+    },
+    "type": "RuinExplored",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`matches WASM reward events and consequences (city true): Byzantium 5`] = `
+[
+  {
+    "at": {
+      "q": 2,
+      "r": 4,
+    },
+    "owner": 0,
+    "reward": {
+      "kind": "FreeScout",
+      "unit": 4,
+    },
+    "type": "RuinExplored",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`matches WASM reward events and consequences (city true): Byzantium 6`] = `
+[
+  {
+    "at": {
+      "q": 2,
+      "r": 4,
+    },
+    "owner": 0,
+    "reward": {
+      "kind": "FreeScout",
+      "unit": 4,
+    },
+    "type": "RuinExplored",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`matches WASM reward events and consequences (city true): India 1`] = `
+[
+  {
+    "at": {
+      "q": 2,
+      "r": 4,
+    },
+    "owner": 0,
+    "reward": {
+      "amount": 25,
+      "kind": "Science",
+      "research": {
+        "completes": true,
+        "cost": 26,
+        "income": 3,
+        "progress_before": 23,
+        "tech": "BronzeWorking",
+        "turns_saved": 1,
+      },
+    },
+    "type": "RuinExplored",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`matches WASM reward events and consequences (city true): India 2`] = `
+[
+  {
+    "at": {
+      "q": 2,
+      "r": 4,
+    },
+    "owner": 0,
+    "reward": {
+      "affordable": null,
+      "amount": 40,
+      "balance": 60,
+      "kind": "Gold",
+    },
+    "type": "RuinExplored",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`matches WASM reward events and consequences (city true): India 3`] = `
+[
+  {
+    "at": {
+      "q": 2,
+      "r": 4,
+    },
+    "owner": 0,
+    "reward": {
+      "amount": 25,
+      "kind": "Science",
+      "research": {
+        "completes": true,
+        "cost": 26,
+        "income": 3,
+        "progress_before": 23,
+        "tech": "BronzeWorking",
+        "turns_saved": 1,
+      },
+    },
+    "type": "RuinExplored",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`matches WASM reward events and consequences (city true): India 4`] = `
+[
+  {
+    "at": {
+      "q": 2,
+      "r": 4,
+    },
+    "owner": 0,
+    "reward": {
+      "kind": "FreeScout",
+      "unit": 4,
+    },
+    "type": "RuinExplored",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`matches WASM reward events and consequences (city true): India 5`] = `
+[
+  {
+    "at": {
+      "q": 2,
+      "r": 4,
+    },
+    "owner": 0,
+    "reward": {
+      "kind": "FreeScout",
+      "unit": 4,
+    },
+    "type": "RuinExplored",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`matches WASM reward events and consequences (city true): India 6`] = `
+[
+  {
+    "at": {
+      "q": 2,
+      "r": 4,
+    },
+    "owner": 0,
+    "reward": {
+      "kind": "FreeScout",
+      "unit": 4,
+    },
+    "type": "RuinExplored",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`matches WASM when Peace borders block every Scout gift tile 1`] = `
+[
+  {
+    "at": {
+      "q": 2,
+      "r": 4,
+    },
+    "owner": 0,
+    "reward": {
+      "affordable": null,
+      "amount": 40,
+      "balance": 10040,
+      "kind": "Gold",
+    },
+    "type": "RuinExplored",
+    "unit": 0,
+  },
+]
+`;

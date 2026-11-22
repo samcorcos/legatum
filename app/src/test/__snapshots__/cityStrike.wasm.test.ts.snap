@@ -1,0 +1,5046 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`city strike core behavior > a Settler escapes a pursuing Scout through the city firing ring, but is captured if held 1`] = `[]`;
+
+exports[`city strike core behavior > a Settler escapes a pursuing Scout through the city firing ring, but is captured if held 2`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 1,
+    "pos": {
+      "q": -4,
+      "r": 11,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 3,
+    "pos": {
+      "q": 9,
+      "r": 8,
+    },
+    "xp": null,
+  },
+]
+`;
+
+exports[`city strike core behavior > a Settler escapes a pursuing Scout through the city firing ring, but is captured if held 3`] = `
+[
+  {
+    "hp": 200,
+    "id": 0,
+    "owner": 1,
+  },
+]
+`;
+
+exports[`city strike core behavior > a Settler escapes a pursuing Scout through the city firing ring, but is captured if held 4`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 2,
+    "pos": {
+      "q": 2,
+      "r": 11,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 4,
+    "pos": {
+      "q": 8,
+      "r": 8,
+    },
+    "xp": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > a Settler escapes a pursuing Scout through the city firing ring, but is captured if held 5`] = `
+[
+  {
+    "hp": 200,
+    "id": 0,
+    "owner": 1,
+  },
+]
+`;
+
+exports[`city strike core behavior > a Settler escapes a pursuing Scout through the city firing ring, but is captured if held 6`] = `[]`;
+
+exports[`city strike core behavior > a Settler escapes a pursuing Scout through the city firing ring, but is captured if held 7`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 1,
+    "pos": {
+      "q": -4,
+      "r": 11,
+    },
+    "xp": null,
+  },
+]
+`;
+
+exports[`city strike core behavior > a Settler escapes a pursuing Scout through the city firing ring, but is captured if held 8`] = `
+[
+  {
+    "hp": 200,
+    "id": 0,
+    "owner": 1,
+  },
+]
+`;
+
+exports[`city strike core behavior > a Settler escapes a pursuing Scout through the city firing ring, but is captured if held 9`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 2,
+    "pos": {
+      "q": 2,
+      "r": 11,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 3,
+    "pos": {
+      "q": 7,
+      "r": 8,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 4,
+    "pos": {
+      "q": 7,
+      "r": 8,
+    },
+    "xp": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > a Settler escapes a pursuing Scout through the city firing ring, but is captured if held 10`] = `
+[
+  {
+    "hp": 200,
+    "id": 0,
+    "owner": 1,
+  },
+]
+`;
+
+exports[`city strike core behavior > a Soldier arriving one movement round later can capture after the garrison dies 1`] = `
+[
+  {
+    "at": {
+      "q": 10,
+      "r": 8,
+    },
+    "attacker": 3,
+    "attacker_at": {
+      "q": 9,
+      "r": 8,
+    },
+    "attacker_hp_after": 0,
+    "attacker_owner": 0,
+    "attacker_roll": 115,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+        [
+          "Wounded",
+          -6,
+        ],
+      ],
+      "total": 14,
+    },
+    "damage_to_attacker": 60,
+    "damage_to_defender": 18,
+    "defender": {
+      "kind": "Unit",
+      "owner": 1,
+      "unit": 5,
+      "unit_kind": "Trooper",
+    },
+    "defender_hp_after": 0,
+    "defender_roll": 110,
+    "defender_strength": {
+      "parts": [
+        [
+          "Reisläufer",
+          32,
+        ],
+        [
+          "Fortified",
+          6,
+        ],
+        [
+          "Wounded",
+          -9,
+        ],
+      ],
+      "total": 29,
+    },
+    "meeting": false,
+    "ranged": false,
+    "type": "Battle",
+  },
+  {
+    "at": {
+      "q": 9,
+      "r": 8,
+    },
+    "owner": 0,
+    "type": "UnitDestroyed",
+    "unit": 3,
+    "unit_kind": "Soldier",
+  },
+  {
+    "at": {
+      "q": 10,
+      "r": 8,
+    },
+    "owner": 1,
+    "type": "UnitDestroyed",
+    "unit": 5,
+    "unit_kind": "Trooper",
+  },
+]
+`;
+
+exports[`city strike core behavior > a Soldier arriving one movement round later can capture after the garrison dies 2`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 1,
+    "pos": {
+      "q": -4,
+      "r": 11,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 0,
+    "hp": 40,
+    "id": 4,
+    "pos": {
+      "q": 10,
+      "r": 8,
+    },
+    "xp": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > a Soldier arriving one movement round later can capture after the garrison dies 3`] = `
+[
+  {
+    "hp": 20,
+    "id": 0,
+    "owner": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > a Soldier arriving one movement round later can capture after the garrison dies 4`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 2,
+    "pos": {
+      "q": 2,
+      "r": 11,
+    },
+    "xp": null,
+  },
+]
+`;
+
+exports[`city strike core behavior > a Soldier arriving one movement round later can capture after the garrison dies 5`] = `
+[
+  {
+    "hp": 0,
+    "id": 0,
+    "owner": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > a city at 0 HP fires 0 times 1`] = `[]`;
+
+exports[`city strike core behavior > a city at 0 HP fires 0 times 2`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 1,
+    "pos": {
+      "q": -4,
+      "r": 11,
+    },
+    "xp": null,
+  },
+]
+`;
+
+exports[`city strike core behavior > a city at 0 HP fires 0 times 3`] = `
+[
+  {
+    "hp": 0,
+    "id": 0,
+    "owner": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > a city at 0 HP fires 0 times 4`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 2,
+    "pos": {
+      "q": 2,
+      "r": 11,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 3,
+    "hp": 100,
+    "id": 3,
+    "pos": {
+      "q": 7,
+      "r": 5,
+    },
+    "xp": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > a city at 0 HP fires 0 times 5`] = `
+[
+  {
+    "hp": 0,
+    "id": 0,
+    "owner": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > a city at 1 HP fires 1 times 1`] = `
+[
+  {
+    "at": {
+      "q": 7,
+      "r": 5,
+    },
+    "attacker": {
+      "city": 0,
+    },
+    "attacker_at": {
+      "q": 6,
+      "r": 5,
+    },
+    "attacker_hp_after": 1,
+    "attacker_owner": 0,
+    "attacker_roll": 111,
+    "attacker_strength": {
+      "parts": [
+        [
+          "City",
+          10,
+        ],
+        [
+          "Population",
+          6,
+        ],
+        [
+          "Alpine Redoubt",
+          15,
+        ],
+        [
+          "Wounded",
+          -9,
+        ],
+      ],
+      "total": 22,
+    },
+    "damage_to_attacker": 0,
+    "damage_to_defender": 35,
+    "defender": {
+      "kind": "Unit",
+      "owner": 1,
+      "unit": 3,
+      "unit_kind": "Soldier",
+    },
+    "defender_hp_after": 65,
+    "defender_roll": 0,
+    "defender_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "meeting": false,
+    "ranged": true,
+    "type": "Battle",
+  },
+]
+`;
+
+exports[`city strike core behavior > a city at 1 HP fires 1 times 2`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 1,
+    "pos": {
+      "q": -4,
+      "r": 11,
+    },
+    "xp": null,
+  },
+]
+`;
+
+exports[`city strike core behavior > a city at 1 HP fires 1 times 3`] = `
+[
+  {
+    "hp": 1,
+    "id": 0,
+    "owner": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > a city at 1 HP fires 1 times 4`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 2,
+    "pos": {
+      "q": 2,
+      "r": 11,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 0,
+    "hp": 65,
+    "id": 3,
+    "pos": {
+      "q": 7,
+      "r": 5,
+    },
+    "xp": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > a city at 1 HP fires 1 times 5`] = `
+[
+  {
+    "hp": 1,
+    "id": 0,
+    "owner": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > a city with HP takes melee and ranged attacks; its garrison is safe and forecast as safe 1`] = `
+{
+  "attacker_hp": 100,
+  "attacker_strength": {
+    "parts": [
+      [
+        "Spearman",
+        20,
+      ],
+    ],
+    "total": 20,
+  },
+  "defender_hp": 200,
+  "defender_strength": {
+    "parts": [
+      [
+        "City",
+        10,
+      ],
+      [
+        "Population",
+        6,
+      ],
+    ],
+    "total": 16,
+  },
+  "expected_damage_to_attacker": 25,
+  "expected_damage_to_defender": 34,
+  "garrison": {
+    "hp": 100,
+    "kind": "Ranger",
+    "owner": 1,
+    "shielded": true,
+    "unit": 3,
+  },
+  "loss_chance": 0,
+  "ranged": false,
+  "win_chance": 0,
+}
+`;
+
+exports[`city strike core behavior > a city with HP takes melee and ranged attacks; its garrison is safe and forecast as safe 2`] = `
+{
+  "attacker_hp": 100,
+  "attacker_strength": {
+    "parts": [
+      [
+        "Archer (ranged)",
+        15,
+      ],
+    ],
+    "total": 15,
+  },
+  "defender_hp": 200,
+  "defender_strength": {
+    "parts": [
+      [
+        "City",
+        10,
+      ],
+      [
+        "Population",
+        6,
+      ],
+    ],
+    "total": 16,
+  },
+  "expected_damage_to_attacker": 0,
+  "expected_damage_to_defender": 28,
+  "garrison": {
+    "hp": 100,
+    "kind": "Ranger",
+    "owner": 1,
+    "shielded": true,
+    "unit": 3,
+  },
+  "loss_chance": 0,
+  "ranged": true,
+  "win_chance": 0,
+}
+`;
+
+exports[`city strike core behavior > a city with HP takes melee and ranged attacks; its garrison is safe and forecast as safe 3`] = `
+[
+  {
+    "at": {
+      "q": 10,
+      "r": 8,
+    },
+    "attacker": 5,
+    "attacker_at": {
+      "q": 8,
+      "r": 8,
+    },
+    "attacker_hp_after": 100,
+    "attacker_owner": 0,
+    "attacker_roll": 113,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Archer (ranged)",
+          15,
+        ],
+      ],
+      "total": 15,
+    },
+    "damage_to_attacker": 0,
+    "damage_to_defender": 32,
+    "defender": {
+      "city": 0,
+      "kind": "City",
+      "owner": 1,
+    },
+    "defender_hp_after": 168,
+    "defender_roll": 0,
+    "defender_strength": {
+      "parts": [
+        [
+          "City",
+          10,
+        ],
+        [
+          "Population",
+          6,
+        ],
+      ],
+      "total": 16,
+    },
+    "meeting": false,
+    "ranged": true,
+    "type": "Battle",
+  },
+  {
+    "at": {
+      "q": 10,
+      "r": 8,
+    },
+    "attacker": 4,
+    "attacker_at": {
+      "q": 9,
+      "r": 8,
+    },
+    "attacker_hp_after": 71,
+    "attacker_owner": 0,
+    "attacker_roll": 86,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "damage_to_attacker": 29,
+    "damage_to_defender": 31,
+    "defender": {
+      "city": 0,
+      "kind": "City",
+      "owner": 1,
+    },
+    "defender_hp_after": 137,
+    "defender_roll": 118,
+    "defender_strength": {
+      "parts": [
+        [
+          "City",
+          10,
+        ],
+        [
+          "Population",
+          6,
+        ],
+        [
+          "Wounded",
+          -1,
+        ],
+      ],
+      "total": 15,
+    },
+    "meeting": false,
+    "ranged": false,
+    "type": "Battle",
+  },
+]
+`;
+
+exports[`city strike core behavior > a city with HP takes melee and ranged attacks; its garrison is safe and forecast as safe 4`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 1,
+    "pos": {
+      "q": -4,
+      "r": 11,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 0,
+    "hp": 71,
+    "id": 4,
+    "pos": {
+      "q": 9,
+      "r": 8,
+    },
+    "xp": 3,
+  },
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 5,
+    "pos": {
+      "q": 8,
+      "r": 8,
+    },
+    "xp": 3,
+  },
+]
+`;
+
+exports[`city strike core behavior > a city with HP takes melee and ranged attacks; its garrison is safe and forecast as safe 5`] = `
+[
+  {
+    "hp": 137,
+    "id": 0,
+    "owner": 1,
+  },
+]
+`;
+
+exports[`city strike core behavior > a city with HP takes melee and ranged attacks; its garrison is safe and forecast as safe 6`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 2,
+    "pos": {
+      "q": 2,
+      "r": 11,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 6,
+    "hp": 100,
+    "id": 3,
+    "pos": {
+      "q": 10,
+      "r": 8,
+    },
+    "xp": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > a city with HP takes melee and ranged attacks; its garrison is safe and forecast as safe 7`] = `
+[
+  {
+    "hp": 137,
+    "id": 0,
+    "owner": 1,
+  },
+]
+`;
+
+exports[`city strike core behavior > a combined melee round breaks the city, kills the garrison by overflow and captures 1`] = `
+[
+  {
+    "at": {
+      "q": 10,
+      "r": 8,
+    },
+    "attacker": 4,
+    "attacker_at": {
+      "q": 9,
+      "r": 8,
+    },
+    "attacker_hp_after": 93,
+    "attacker_owner": 0,
+    "attacker_roll": 86,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "damage_to_attacker": 7,
+    "damage_to_defender": 43,
+    "defender": {
+      "city": 0,
+      "kind": "City",
+      "owner": 1,
+    },
+    "defender_hp_after": 0,
+    "defender_roll": 118,
+    "defender_strength": {
+      "parts": [
+        [
+          "City",
+          10,
+        ],
+        [
+          "Population",
+          6,
+        ],
+        [
+          "Wounded",
+          -9,
+        ],
+      ],
+      "total": 7,
+    },
+    "meeting": false,
+    "ranged": false,
+    "type": "Battle",
+  },
+  {
+    "at": {
+      "q": 10,
+      "r": 8,
+    },
+    "attacker": 5,
+    "attacker_at": {
+      "q": 10,
+      "r": 7,
+    },
+    "attacker_hp_after": 93,
+    "attacker_owner": 0,
+    "attacker_roll": 103,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "damage_to_attacker": 7,
+    "damage_to_defender": 51,
+    "defender": {
+      "city": 0,
+      "kind": "City",
+      "owner": 1,
+    },
+    "defender_hp_after": 0,
+    "defender_roll": 87,
+    "defender_strength": {
+      "parts": [
+        [
+          "City",
+          10,
+        ],
+        [
+          "Population",
+          6,
+        ],
+        [
+          "Wounded",
+          -9,
+        ],
+      ],
+      "total": 7,
+    },
+    "meeting": false,
+    "ranged": false,
+    "type": "Battle",
+  },
+  {
+    "at": {
+      "q": 10,
+      "r": 8,
+    },
+    "attacker": 6,
+    "attacker_at": {
+      "q": 11,
+      "r": 8,
+    },
+    "attacker_hp_after": 93,
+    "attacker_owner": 0,
+    "attacker_roll": 119,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "damage_to_attacker": 7,
+    "damage_to_defender": 59,
+    "defender": {
+      "city": 0,
+      "kind": "City",
+      "owner": 1,
+    },
+    "defender_hp_after": 0,
+    "defender_roll": 109,
+    "defender_strength": {
+      "parts": [
+        [
+          "City",
+          10,
+        ],
+        [
+          "Population",
+          6,
+        ],
+        [
+          "Wounded",
+          -9,
+        ],
+      ],
+      "total": 7,
+    },
+    "meeting": false,
+    "ranged": false,
+    "type": "Battle",
+  },
+  {
+    "at": {
+      "q": 10,
+      "r": 8,
+    },
+    "owner": 1,
+    "type": "UnitDestroyed",
+    "unit": 3,
+    "unit_kind": "Soldier",
+  },
+]
+`;
+
+exports[`city strike core behavior > a combined melee round breaks the city, kills the garrison by overflow and captures 2`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 1,
+    "pos": {
+      "q": -4,
+      "r": 11,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 0,
+    "hp": 93,
+    "id": 4,
+    "pos": {
+      "q": 10,
+      "r": 8,
+    },
+    "xp": 10,
+  },
+  {
+    "fortify": 0,
+    "hp": 93,
+    "id": 5,
+    "pos": {
+      "q": 10,
+      "r": 7,
+    },
+    "xp": 10,
+  },
+  {
+    "fortify": 0,
+    "hp": 93,
+    "id": 6,
+    "pos": {
+      "q": 11,
+      "r": 8,
+    },
+    "xp": 10,
+  },
+]
+`;
+
+exports[`city strike core behavior > a combined melee round breaks the city, kills the garrison by overflow and captures 3`] = `
+[
+  {
+    "hp": 0,
+    "id": 0,
+    "owner": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > a combined melee round breaks the city, kills the garrison by overflow and captures 4`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 2,
+    "pos": {
+      "q": 2,
+      "r": 11,
+    },
+    "xp": null,
+  },
+]
+`;
+
+exports[`city strike core behavior > a combined melee round breaks the city, kills the garrison by overflow and captures 5`] = `
+[
+  {
+    "hp": 200,
+    "id": 0,
+    "owner": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > a fallen city's 1-HP garrison splits one retaliation between both Soldiers 1`] = `
+[
+  {
+    "at": {
+      "q": 10,
+      "r": 8,
+    },
+    "attacker": 3,
+    "attacker_at": {
+      "q": 9,
+      "r": 8,
+    },
+    "attacker_hp_after": 10,
+    "attacker_owner": 0,
+    "attacker_roll": 115,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+        [
+          "Wounded",
+          -6,
+        ],
+      ],
+      "total": 14,
+    },
+    "damage_to_attacker": 30,
+    "damage_to_defender": 18,
+    "defender": {
+      "kind": "Unit",
+      "owner": 1,
+      "unit": 5,
+      "unit_kind": "Trooper",
+    },
+    "defender_hp_after": 0,
+    "defender_roll": 110,
+    "defender_strength": {
+      "parts": [
+        [
+          "Reisläufer",
+          32,
+        ],
+        [
+          "Fortified",
+          6,
+        ],
+        [
+          "Wounded",
+          -9,
+        ],
+      ],
+      "total": 29,
+    },
+    "meeting": false,
+    "ranged": false,
+    "type": "Battle",
+  },
+  {
+    "at": {
+      "q": 10,
+      "r": 8,
+    },
+    "attacker": 4,
+    "attacker_at": {
+      "q": 10,
+      "r": 7,
+    },
+    "attacker_hp_after": 10,
+    "attacker_owner": 0,
+    "attacker_roll": 116,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+        [
+          "Wounded",
+          -6,
+        ],
+      ],
+      "total": 14,
+    },
+    "damage_to_attacker": 30,
+    "damage_to_defender": 18,
+    "defender": {
+      "kind": "Unit",
+      "owner": 1,
+      "unit": 5,
+      "unit_kind": "Trooper",
+    },
+    "defender_hp_after": 0,
+    "defender_roll": 97,
+    "defender_strength": {
+      "parts": [
+        [
+          "Reisläufer",
+          32,
+        ],
+        [
+          "Fortified",
+          6,
+        ],
+        [
+          "Wounded",
+          -9,
+        ],
+      ],
+      "total": 29,
+    },
+    "meeting": false,
+    "ranged": false,
+    "type": "Battle",
+  },
+  {
+    "at": {
+      "q": 10,
+      "r": 8,
+    },
+    "owner": 1,
+    "type": "UnitDestroyed",
+    "unit": 5,
+    "unit_kind": "Trooper",
+  },
+]
+`;
+
+exports[`city strike core behavior > a fallen city's 1-HP garrison splits one retaliation between both Soldiers 2`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 1,
+    "pos": {
+      "q": -4,
+      "r": 11,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 0,
+    "hp": 10,
+    "id": 3,
+    "pos": {
+      "q": 9,
+      "r": 8,
+    },
+    "xp": 6,
+  },
+  {
+    "fortify": 0,
+    "hp": 10,
+    "id": 4,
+    "pos": {
+      "q": 10,
+      "r": 8,
+    },
+    "xp": 6,
+  },
+]
+`;
+
+exports[`city strike core behavior > a fallen city's 1-HP garrison splits one retaliation between both Soldiers 3`] = `
+[
+  {
+    "hp": 20,
+    "id": 0,
+    "owner": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > a fallen city's 1-HP garrison splits one retaliation between both Soldiers 4`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 2,
+    "pos": {
+      "q": 2,
+      "r": 11,
+    },
+    "xp": null,
+  },
+]
+`;
+
+exports[`city strike core behavior > a fallen city's 1-HP garrison splits one retaliation between both Soldiers 5`] = `
+[
+  {
+    "hp": 200,
+    "id": 0,
+    "owner": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > a garrison stepping out of a breaking city takes no overflow 1`] = `
+[
+  {
+    "at": {
+      "q": 10,
+      "r": 8,
+    },
+    "attacker": 4,
+    "attacker_at": {
+      "q": 9,
+      "r": 8,
+    },
+    "attacker_hp_after": 79,
+    "attacker_owner": 0,
+    "attacker_roll": 86,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "damage_to_attacker": 21,
+    "damage_to_defender": 43,
+    "defender": {
+      "city": 0,
+      "kind": "City",
+      "owner": 1,
+    },
+    "defender_hp_after": 0,
+    "defender_roll": 118,
+    "defender_strength": {
+      "parts": [
+        [
+          "City",
+          10,
+        ],
+        [
+          "Population",
+          6,
+        ],
+        [
+          "Wounded",
+          -9,
+        ],
+      ],
+      "total": 7,
+    },
+    "meeting": false,
+    "ranged": false,
+    "type": "Battle",
+  },
+]
+`;
+
+exports[`city strike core behavior > a garrison stepping out of a breaking city takes no overflow 2`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 1,
+    "pos": {
+      "q": -4,
+      "r": 11,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 0,
+    "hp": 79,
+    "id": 4,
+    "pos": {
+      "q": 10,
+      "r": 8,
+    },
+    "xp": 10,
+  },
+]
+`;
+
+exports[`city strike core behavior > a garrison stepping out of a breaking city takes no overflow 3`] = `
+[
+  {
+    "hp": 0,
+    "id": 0,
+    "owner": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > a garrison stepping out of a breaking city takes no overflow 4`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 2,
+    "pos": {
+      "q": 2,
+      "r": 11,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 3,
+    "pos": {
+      "q": 11,
+      "r": 8,
+    },
+    "xp": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > a garrison stepping out of a breaking city takes no overflow 5`] = `
+[
+  {
+    "hp": 0,
+    "id": 0,
+    "owner": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > a unit shot by a Ranger and the city together dies once; the kill XP goes to the Ranger 1`] = `
+[
+  {
+    "at": {
+      "q": 7,
+      "r": 5,
+    },
+    "attacker": 4,
+    "attacker_at": {
+      "q": 9,
+      "r": 5,
+    },
+    "attacker_hp_after": 100,
+    "attacker_owner": 0,
+    "attacker_roll": 102,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Archer (ranged)",
+          15,
+        ],
+      ],
+      "total": 15,
+    },
+    "damage_to_attacker": 0,
+    "damage_to_defender": 30,
+    "defender": {
+      "kind": "Unit",
+      "owner": 1,
+      "unit": 3,
+      "unit_kind": "Soldier",
+    },
+    "defender_hp_after": 0,
+    "defender_roll": 0,
+    "defender_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+        [
+          "Wounded",
+          -5,
+        ],
+      ],
+      "total": 15,
+    },
+    "meeting": false,
+    "ranged": true,
+    "type": "Battle",
+  },
+  {
+    "at": {
+      "q": 7,
+      "r": 5,
+    },
+    "attacker": {
+      "city": 0,
+    },
+    "attacker_at": {
+      "q": 6,
+      "r": 5,
+    },
+    "attacker_hp_after": 20,
+    "attacker_owner": 0,
+    "attacker_roll": 111,
+    "attacker_strength": {
+      "parts": [
+        [
+          "City",
+          10,
+        ],
+        [
+          "Population",
+          2,
+        ],
+        [
+          "Alpine Redoubt",
+          15,
+        ],
+        [
+          "Wounded",
+          -9,
+        ],
+      ],
+      "total": 18,
+    },
+    "damage_to_attacker": 0,
+    "damage_to_defender": 37,
+    "defender": {
+      "kind": "Unit",
+      "owner": 1,
+      "unit": 3,
+      "unit_kind": "Soldier",
+    },
+    "defender_hp_after": 0,
+    "defender_roll": 0,
+    "defender_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+        [
+          "Wounded",
+          -5,
+        ],
+      ],
+      "total": 15,
+    },
+    "meeting": false,
+    "ranged": true,
+    "type": "Battle",
+  },
+  {
+    "at": {
+      "q": 7,
+      "r": 5,
+    },
+    "owner": 1,
+    "type": "UnitDestroyed",
+    "unit": 3,
+    "unit_kind": "Soldier",
+  },
+]
+`;
+
+exports[`city strike core behavior > a unit shot by a Ranger and the city together dies once; the kill XP goes to the Ranger 2`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 1,
+    "pos": {
+      "q": -4,
+      "r": 11,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 4,
+    "pos": {
+      "q": 9,
+      "r": 5,
+    },
+    "xp": 5,
+  },
+]
+`;
+
+exports[`city strike core behavior > a unit shot by a Ranger and the city together dies once; the kill XP goes to the Ranger 3`] = `
+[
+  {
+    "hp": 40,
+    "id": 0,
+    "owner": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > a unit shot by a Ranger and the city together dies once; the kill XP goes to the Ranger 4`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 2,
+    "pos": {
+      "q": 2,
+      "r": 11,
+    },
+    "xp": null,
+  },
+]
+`;
+
+exports[`city strike core behavior > a unit shot by a Ranger and the city together dies once; the kill XP goes to the Ranger 5`] = `
+[
+  {
+    "hp": 200,
+    "id": 0,
+    "owner": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > a volley that breaks the city spills into the garrison; melee captures it the same turn 1`] = `
+[
+  {
+    "at": {
+      "q": 10,
+      "r": 8,
+    },
+    "attacker": 4,
+    "attacker_at": {
+      "q": 8,
+      "r": 8,
+    },
+    "attacker_hp_after": 100,
+    "attacker_owner": 0,
+    "attacker_roll": 111,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Archer (ranged)",
+          15,
+        ],
+      ],
+      "total": 15,
+    },
+    "damage_to_attacker": 0,
+    "damage_to_defender": 45,
+    "defender": {
+      "city": 0,
+      "kind": "City",
+      "owner": 1,
+    },
+    "defender_hp_after": 0,
+    "defender_roll": 0,
+    "defender_strength": {
+      "parts": [
+        [
+          "City",
+          10,
+        ],
+        [
+          "Population",
+          6,
+        ],
+        [
+          "Wounded",
+          -9,
+        ],
+      ],
+      "total": 7,
+    },
+    "meeting": false,
+    "ranged": true,
+    "type": "Battle",
+  },
+  {
+    "at": {
+      "q": 10,
+      "r": 8,
+    },
+    "attacker": 5,
+    "attacker_at": {
+      "q": 10,
+      "r": 6,
+    },
+    "attacker_hp_after": 100,
+    "attacker_owner": 0,
+    "attacker_roll": 113,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Archer (ranged)",
+          15,
+        ],
+      ],
+      "total": 15,
+    },
+    "damage_to_attacker": 0,
+    "damage_to_defender": 46,
+    "defender": {
+      "city": 0,
+      "kind": "City",
+      "owner": 1,
+    },
+    "defender_hp_after": 0,
+    "defender_roll": 0,
+    "defender_strength": {
+      "parts": [
+        [
+          "City",
+          10,
+        ],
+        [
+          "Population",
+          6,
+        ],
+        [
+          "Wounded",
+          -9,
+        ],
+      ],
+      "total": 7,
+    },
+    "meeting": false,
+    "ranged": true,
+    "type": "Battle",
+  },
+  {
+    "at": {
+      "q": 10,
+      "r": 8,
+    },
+    "owner": 1,
+    "type": "UnitDestroyed",
+    "unit": 3,
+    "unit_kind": "Soldier",
+  },
+]
+`;
+
+exports[`city strike core behavior > a volley that breaks the city spills into the garrison; melee captures it the same turn 2`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 1,
+    "pos": {
+      "q": -4,
+      "r": 11,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 4,
+    "pos": {
+      "q": 8,
+      "r": 8,
+    },
+    "xp": 10,
+  },
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 5,
+    "pos": {
+      "q": 10,
+      "r": 6,
+    },
+    "xp": 10,
+  },
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 6,
+    "pos": {
+      "q": 10,
+      "r": 8,
+    },
+    "xp": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > a volley that breaks the city spills into the garrison; melee captures it the same turn 3`] = `
+[
+  {
+    "hp": 0,
+    "id": 0,
+    "owner": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > a volley that breaks the city spills into the garrison; melee captures it the same turn 4`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 2,
+    "pos": {
+      "q": 2,
+      "r": 11,
+    },
+    "xp": null,
+  },
+]
+`;
+
+exports[`city strike core behavior > a volley that breaks the city spills into the garrison; melee captures it the same turn 5`] = `
+[
+  {
+    "hp": 200,
+    "id": 0,
+    "owner": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > an unwalled city never fires, and its attack forecast has no city shot 1`] = `[]`;
+
+exports[`city strike core behavior > an unwalled city never fires, and its attack forecast has no city shot 2`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 1,
+    "pos": {
+      "q": -4,
+      "r": 11,
+    },
+    "xp": null,
+  },
+]
+`;
+
+exports[`city strike core behavior > an unwalled city never fires, and its attack forecast has no city shot 3`] = `
+[
+  {
+    "hp": 200,
+    "id": 0,
+    "owner": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > an unwalled city never fires, and its attack forecast has no city shot 4`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 2,
+    "pos": {
+      "q": 2,
+      "r": 11,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 3,
+    "hp": 40,
+    "id": 3,
+    "pos": {
+      "q": 7,
+      "r": 5,
+    },
+    "xp": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > an unwalled city never fires, and its attack forecast has no city shot 5`] = `
+[
+  {
+    "hp": 200,
+    "id": 0,
+    "owner": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > an unwalled city never fires, and its attack forecast has no city shot 6`] = `
+{
+  "attacker_hp": 30,
+  "attacker_strength": {
+    "parts": [
+      [
+        "Spearman",
+        20,
+      ],
+      [
+        "Wounded",
+        -7,
+      ],
+    ],
+    "total": 13,
+  },
+  "defender_hp": 200,
+  "defender_strength": {
+    "parts": [
+      [
+        "City",
+        10,
+      ],
+      [
+        "Population",
+        6,
+      ],
+    ],
+    "total": 16,
+  },
+  "expected_damage_to_attacker": 29,
+  "expected_damage_to_defender": 26,
+  "loss_chance": 78,
+  "ranged": false,
+  "win_chance": 0,
+}
+`;
+
+exports[`city strike core behavior > at 0 HP the garrison is the forecast defender and the ranged target 1`] = `
+{
+  "attacker_hp": 100,
+  "attacker_strength": {
+    "parts": [
+      [
+        "Spearman",
+        20,
+      ],
+    ],
+    "total": 20,
+  },
+  "defender_hp": 100,
+  "defender_strength": {
+    "parts": [
+      [
+        "Spearman",
+        20,
+      ],
+    ],
+    "total": 20,
+  },
+  "expected_damage_to_attacker": 29,
+  "expected_damage_to_defender": 29,
+  "garrison": {
+    "hp": 100,
+    "kind": "Soldier",
+    "owner": 1,
+    "shielded": false,
+    "unit": 3,
+  },
+  "loss_chance": 0,
+  "ranged": false,
+  "win_chance": 0,
+}
+`;
+
+exports[`city strike core behavior > at 0 HP the garrison is the forecast defender and the ranged target 2`] = `
+{
+  "attacker_hp": 100,
+  "attacker_strength": {
+    "parts": [
+      [
+        "Archer (ranged)",
+        15,
+      ],
+    ],
+    "total": 15,
+  },
+  "defender_hp": 100,
+  "defender_strength": {
+    "parts": [
+      [
+        "Spearman",
+        20,
+      ],
+    ],
+    "total": 20,
+  },
+  "expected_damage_to_attacker": 0,
+  "expected_damage_to_defender": 24,
+  "garrison": {
+    "hp": 100,
+    "kind": "Soldier",
+    "owner": 1,
+    "shielded": false,
+    "unit": 3,
+  },
+  "loss_chance": 0,
+  "ranged": true,
+  "win_chance": 0,
+}
+`;
+
+exports[`city strike core behavior > at 0 HP the garrison is the forecast defender and the ranged target 3`] = `
+[
+  {
+    "at": {
+      "q": 10,
+      "r": 8,
+    },
+    "attacker": 4,
+    "attacker_at": {
+      "q": 8,
+      "r": 8,
+    },
+    "attacker_hp_after": 100,
+    "attacker_owner": 0,
+    "attacker_roll": 102,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Archer (ranged)",
+          15,
+        ],
+      ],
+      "total": 15,
+    },
+    "damage_to_attacker": 0,
+    "damage_to_defender": 25,
+    "defender": {
+      "kind": "Unit",
+      "owner": 1,
+      "unit": 3,
+      "unit_kind": "Soldier",
+    },
+    "defender_hp_after": 75,
+    "defender_roll": 0,
+    "defender_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "meeting": false,
+    "ranged": true,
+    "type": "Battle",
+  },
+]
+`;
+
+exports[`city strike core behavior > at 0 HP the garrison is the forecast defender and the ranged target 4`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 1,
+    "pos": {
+      "q": -4,
+      "r": 11,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 4,
+    "pos": {
+      "q": 8,
+      "r": 8,
+    },
+    "xp": 3,
+  },
+  {
+    "fortify": 3,
+    "hp": 100,
+    "id": 5,
+    "pos": {
+      "q": 9,
+      "r": 8,
+    },
+    "xp": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > at 0 HP the garrison is the forecast defender and the ranged target 5`] = `
+[
+  {
+    "hp": 0,
+    "id": 0,
+    "owner": 1,
+  },
+]
+`;
+
+exports[`city strike core behavior > at 0 HP the garrison is the forecast defender and the ranged target 6`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 2,
+    "pos": {
+      "q": 2,
+      "r": 11,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 0,
+    "hp": 75,
+    "id": 3,
+    "pos": {
+      "q": 10,
+      "r": 8,
+    },
+    "xp": 2,
+  },
+]
+`;
+
+exports[`city strike core behavior > at 0 HP the garrison is the forecast defender and the ranged target 7`] = `
+[
+  {
+    "hp": 0,
+    "id": 0,
+    "owner": 1,
+  },
+]
+`;
+
+exports[`city strike core behavior > breaks an HP tie by the lowest unit id 1`] = `
+[
+  {
+    "at": {
+      "q": 6,
+      "r": 3,
+    },
+    "attacker": {
+      "city": 0,
+    },
+    "attacker_at": {
+      "q": 6,
+      "r": 5,
+    },
+    "attacker_hp_after": 200,
+    "attacker_owner": 0,
+    "attacker_roll": 111,
+    "attacker_strength": {
+      "parts": [
+        [
+          "City",
+          10,
+        ],
+        [
+          "Population",
+          6,
+        ],
+        [
+          "Alpine Redoubt",
+          15,
+        ],
+      ],
+      "total": 31,
+    },
+    "damage_to_attacker": 0,
+    "damage_to_defender": 58,
+    "defender": {
+      "kind": "Unit",
+      "owner": 1,
+      "unit": 3,
+      "unit_kind": "Soldier",
+    },
+    "defender_hp_after": 12,
+    "defender_roll": 0,
+    "defender_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+        [
+          "Wounded",
+          -3,
+        ],
+      ],
+      "total": 17,
+    },
+    "meeting": false,
+    "ranged": true,
+    "type": "Battle",
+  },
+]
+`;
+
+exports[`city strike core behavior > breaks an HP tie by the lowest unit id 2`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 1,
+    "pos": {
+      "q": -4,
+      "r": 11,
+    },
+    "xp": null,
+  },
+]
+`;
+
+exports[`city strike core behavior > breaks an HP tie by the lowest unit id 3`] = `
+[
+  {
+    "hp": 200,
+    "id": 0,
+    "owner": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > breaks an HP tie by the lowest unit id 4`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 2,
+    "pos": {
+      "q": 2,
+      "r": 11,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 0,
+    "hp": 12,
+    "id": 3,
+    "pos": {
+      "q": 6,
+      "r": 3,
+    },
+    "xp": 0,
+  },
+  {
+    "fortify": 3,
+    "hp": 80,
+    "id": 4,
+    "pos": {
+      "q": 6,
+      "r": 6,
+    },
+    "xp": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > breaks an HP tie by the lowest unit id 5`] = `
+[
+  {
+    "hp": 200,
+    "id": 0,
+    "owner": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > fires once at the lowest-HP unit in range, with the city and terrain breakdowns 1`] = `
+[
+  {
+    "at": {
+      "q": 8,
+      "r": 3,
+    },
+    "attacker": {
+      "city": 0,
+    },
+    "attacker_at": {
+      "q": 6,
+      "r": 5,
+    },
+    "attacker_hp_after": 200,
+    "attacker_owner": 0,
+    "attacker_roll": 85,
+    "attacker_strength": {
+      "parts": [
+        [
+          "City",
+          10,
+        ],
+        [
+          "Population",
+          6,
+        ],
+        [
+          "Alpine Redoubt",
+          15,
+        ],
+      ],
+      "total": 31,
+    },
+    "damage_to_attacker": 0,
+    "damage_to_defender": 34,
+    "defender": {
+      "kind": "Unit",
+      "owner": 1,
+      "unit": 4,
+      "unit_kind": "Soldier",
+    },
+    "defender_hp_after": 26,
+    "defender_roll": 0,
+    "defender_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+        [
+          "Hills terrain",
+          5,
+        ],
+        [
+          "Fortified",
+          3,
+        ],
+        [
+          "Wounded",
+          -4,
+        ],
+      ],
+      "total": 24,
+    },
+    "meeting": false,
+    "ranged": true,
+    "type": "Battle",
+  },
+]
+`;
+
+exports[`city strike core behavior > fires once at the lowest-HP unit in range, with the city and terrain breakdowns 2`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 1,
+    "pos": {
+      "q": -4,
+      "r": 11,
+    },
+    "xp": null,
+  },
+]
+`;
+
+exports[`city strike core behavior > fires once at the lowest-HP unit in range, with the city and terrain breakdowns 3`] = `
+[
+  {
+    "hp": 200,
+    "id": 0,
+    "owner": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > fires once at the lowest-HP unit in range, with the city and terrain breakdowns 4`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 2,
+    "pos": {
+      "q": 2,
+      "r": 11,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 3,
+    "hp": 100,
+    "id": 3,
+    "pos": {
+      "q": 7,
+      "r": 5,
+    },
+    "xp": 0,
+  },
+  {
+    "fortify": 3,
+    "hp": 26,
+    "id": 4,
+    "pos": {
+      "q": 8,
+      "r": 3,
+    },
+    "xp": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > fires once at the lowest-HP unit in range, with the city and terrain breakdowns 5`] = `
+[
+  {
+    "hp": 200,
+    "id": 0,
+    "owner": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > forecasts the city firing back when attacking it from within two tiles 1`] = `
+{
+  "attacker_hp": 80,
+  "attacker_strength": {
+    "parts": [
+      [
+        "Spearman",
+        20,
+      ],
+      [
+        "Wounded",
+        -2,
+      ],
+    ],
+    "total": 18,
+  },
+  "city_strike": {
+    "attacker_defense": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+        [
+          "Wounded",
+          -2,
+        ],
+      ],
+      "total": 18,
+    },
+    "city": 0,
+    "city_strength": {
+      "parts": [
+        [
+          "City",
+          10,
+        ],
+        [
+          "Population",
+          6,
+        ],
+        [
+          "Alpine Redoubt",
+          15,
+        ],
+      ],
+      "total": 31,
+    },
+    "damage": 50,
+  },
+  "defender_hp": 200,
+  "defender_strength": {
+    "parts": [
+      [
+        "City",
+        10,
+      ],
+      [
+        "Population",
+        6,
+      ],
+      [
+        "Alpine Redoubt",
+        15,
+      ],
+    ],
+    "total": 31,
+  },
+  "expected_damage_to_attacker": 49,
+  "expected_damage_to_defender": 8,
+  "loss_chance": 0,
+  "ranged": false,
+  "walls": {
+    "covered": 0,
+    "percent": 50,
+    "tier": 1,
+  },
+  "win_chance": 0,
+}
+`;
+
+exports[`city strike core behavior > forecasts the city firing back when attacking it from within two tiles 2`] = `
+{
+  "attacker_hp": 80,
+  "attacker_strength": {
+    "parts": [
+      [
+        "Spearman",
+        20,
+      ],
+      [
+        "Wounded",
+        -2,
+      ],
+    ],
+    "total": 18,
+  },
+  "defender_hp": 0,
+  "defender_strength": {
+    "parts": [
+      [
+        "City",
+        10,
+      ],
+      [
+        "Population",
+        6,
+      ],
+      [
+        "Alpine Redoubt",
+        15,
+      ],
+      [
+        "Wounded",
+        -10,
+      ],
+    ],
+    "total": 21,
+  },
+  "expected_damage_to_attacker": 0,
+  "expected_damage_to_defender": 0,
+  "loss_chance": 0,
+  "ranged": false,
+  "walls": {
+    "covered": 0,
+    "percent": 50,
+    "tier": 1,
+  },
+  "win_chance": 100,
+}
+`;
+
+exports[`city strike core behavior > forecasts the city firing back when attacking it from within two tiles 3`] = `
+{
+  "attacker_hp": 100,
+  "attacker_strength": {
+    "parts": [
+      [
+        "Spearman",
+        20,
+      ],
+    ],
+    "total": 20,
+  },
+  "defender_hp": 0,
+  "defender_strength": {
+    "parts": [
+      [
+        "City",
+        10,
+      ],
+      [
+        "Population",
+        6,
+      ],
+      [
+        "Alpine Redoubt",
+        15,
+      ],
+      [
+        "Wounded",
+        -10,
+      ],
+    ],
+    "total": 21,
+  },
+  "expected_damage_to_attacker": 0,
+  "expected_damage_to_defender": 0,
+  "loss_chance": 0,
+  "ranged": false,
+  "walls": {
+    "covered": 0,
+    "percent": 50,
+    "tier": 1,
+  },
+  "win_chance": 100,
+}
+`;
+
+exports[`city strike core behavior > ignores civilians, units out of range and empires at Peace 1`] = `[]`;
+
+exports[`city strike core behavior > ignores civilians, units out of range and empires at Peace 2`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 1,
+    "pos": {
+      "q": -4,
+      "r": 11,
+    },
+    "xp": null,
+  },
+]
+`;
+
+exports[`city strike core behavior > ignores civilians, units out of range and empires at Peace 3`] = `
+[
+  {
+    "hp": 200,
+    "id": 0,
+    "owner": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > ignores civilians, units out of range and empires at Peace 4`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 2,
+    "pos": {
+      "q": 2,
+      "r": 11,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 0,
+    "hp": 20,
+    "id": 4,
+    "pos": {
+      "q": 7,
+      "r": 5,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 3,
+    "hp": 20,
+    "id": 5,
+    "pos": {
+      "q": 3,
+      "r": 5,
+    },
+    "xp": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > ignores civilians, units out of range and empires at Peace 5`] = `
+[
+  {
+    "hp": 200,
+    "id": 0,
+    "owner": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > ignores civilians, units out of range and empires at Peace 6`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 3,
+    "pos": {
+      "q": 8,
+      "r": 11,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 3,
+    "hp": 20,
+    "id": 6,
+    "pos": {
+      "q": 7,
+      "r": 4,
+    },
+    "xp": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > ignores civilians, units out of range and empires at Peace 7`] = `
+[
+  {
+    "hp": 200,
+    "id": 0,
+    "owner": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > several cities hit one unit, and a unit killed by a city still gets its shot 1`] = `
+[
+  {
+    "at": {
+      "q": 6,
+      "r": 5,
+    },
+    "attacker": 4,
+    "attacker_at": {
+      "q": 5,
+      "r": 5,
+    },
+    "attacker_hp_after": 0,
+    "attacker_owner": 1,
+    "attacker_roll": 111,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Archer (ranged)",
+          15,
+        ],
+        [
+          "Wounded",
+          -9,
+        ],
+      ],
+      "total": 6,
+    },
+    "damage_to_attacker": 0,
+    "damage_to_defender": 6,
+    "defender": {
+      "city": 0,
+      "kind": "City",
+      "owner": 0,
+    },
+    "defender_hp_after": 194,
+    "defender_roll": 0,
+    "defender_strength": {
+      "parts": [
+        [
+          "City",
+          10,
+        ],
+        [
+          "Population",
+          6,
+        ],
+        [
+          "Alpine Redoubt",
+          15,
+        ],
+      ],
+      "total": 31,
+    },
+    "meeting": false,
+    "ranged": true,
+    "type": "Battle",
+  },
+  {
+    "at": {
+      "q": 5,
+      "r": 5,
+    },
+    "attacker": {
+      "city": 0,
+    },
+    "attacker_at": {
+      "q": 6,
+      "r": 5,
+    },
+    "attacker_hp_after": 194,
+    "attacker_owner": 0,
+    "attacker_roll": 85,
+    "attacker_strength": {
+      "parts": [
+        [
+          "City",
+          10,
+        ],
+        [
+          "Population",
+          6,
+        ],
+        [
+          "Alpine Redoubt",
+          15,
+        ],
+      ],
+      "total": 31,
+    },
+    "damage_to_attacker": 0,
+    "damage_to_defender": 91,
+    "defender": {
+      "kind": "Unit",
+      "owner": 1,
+      "unit": 4,
+      "unit_kind": "Ranger",
+    },
+    "defender_hp_after": 0,
+    "defender_roll": 0,
+    "defender_strength": {
+      "parts": [
+        [
+          "Archer",
+          8,
+        ],
+        [
+          "Wounded",
+          -9,
+        ],
+      ],
+      "total": -1,
+    },
+    "meeting": false,
+    "ranged": true,
+    "type": "Battle",
+  },
+  {
+    "at": {
+      "q": 7,
+      "r": 5,
+    },
+    "attacker": {
+      "city": 1,
+    },
+    "attacker_at": {
+      "q": 9,
+      "r": 5,
+    },
+    "attacker_hp_after": 200,
+    "attacker_owner": 0,
+    "attacker_roll": 101,
+    "attacker_strength": {
+      "parts": [
+        [
+          "City",
+          10,
+        ],
+        [
+          "Population",
+          6,
+        ],
+        [
+          "Alpine Redoubt",
+          15,
+        ],
+      ],
+      "total": 31,
+    },
+    "damage_to_attacker": 0,
+    "damage_to_defender": 47,
+    "defender": {
+      "kind": "Unit",
+      "owner": 1,
+      "unit": 3,
+      "unit_kind": "Soldier",
+    },
+    "defender_hp_after": 53,
+    "defender_roll": 0,
+    "defender_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "meeting": false,
+    "ranged": true,
+    "type": "Battle",
+  },
+  {
+    "at": {
+      "q": 5,
+      "r": 5,
+    },
+    "owner": 1,
+    "type": "UnitDestroyed",
+    "unit": 4,
+    "unit_kind": "Ranger",
+  },
+]
+`;
+
+exports[`city strike core behavior > several cities hit one unit, and a unit killed by a city still gets its shot 2`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 1,
+    "pos": {
+      "q": -4,
+      "r": 11,
+    },
+    "xp": null,
+  },
+]
+`;
+
+exports[`city strike core behavior > several cities hit one unit, and a unit killed by a city still gets its shot 3`] = `
+[
+  {
+    "hp": 194,
+    "id": 0,
+    "owner": 0,
+  },
+  {
+    "hp": 200,
+    "id": 1,
+    "owner": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > several cities hit one unit, and a unit killed by a city still gets its shot 4`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 2,
+    "pos": {
+      "q": 2,
+      "r": 11,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 0,
+    "hp": 53,
+    "id": 3,
+    "pos": {
+      "q": 7,
+      "r": 5,
+    },
+    "xp": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > several cities hit one unit, and a unit killed by a city still gets its shot 5`] = `
+[
+  {
+    "hp": 194,
+    "id": 0,
+    "owner": 0,
+  },
+  {
+    "hp": 200,
+    "id": 1,
+    "owner": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > several cities hit one unit, and a unit killed by a city still gets its shot 6`] = `
+[
+  [
+    0,
+    4,
+  ],
+  [
+    1,
+    3,
+  ],
+]
+`;
+
+exports[`city strike core behavior > several cities hit one unit, and a unit killed by a city still gets its shot 7`] = `
+[
+  {
+    "at": {
+      "q": 7,
+      "r": 5,
+    },
+    "attacker": {
+      "city": 0,
+    },
+    "attacker_at": {
+      "q": 6,
+      "r": 5,
+    },
+    "attacker_hp_after": 200,
+    "attacker_owner": 0,
+    "attacker_roll": 111,
+    "attacker_strength": {
+      "parts": [
+        [
+          "City",
+          10,
+        ],
+        [
+          "Population",
+          6,
+        ],
+        [
+          "Alpine Redoubt",
+          15,
+        ],
+      ],
+      "total": 31,
+    },
+    "damage_to_attacker": 0,
+    "damage_to_defender": 52,
+    "defender": {
+      "kind": "Unit",
+      "owner": 1,
+      "unit": 3,
+      "unit_kind": "Soldier",
+    },
+    "defender_hp_after": 1,
+    "defender_roll": 0,
+    "defender_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "meeting": false,
+    "ranged": true,
+    "type": "Battle",
+  },
+  {
+    "at": {
+      "q": 7,
+      "r": 5,
+    },
+    "attacker": {
+      "city": 1,
+    },
+    "attacker_at": {
+      "q": 9,
+      "r": 5,
+    },
+    "attacker_hp_after": 200,
+    "attacker_owner": 0,
+    "attacker_roll": 101,
+    "attacker_strength": {
+      "parts": [
+        [
+          "City",
+          10,
+        ],
+        [
+          "Population",
+          6,
+        ],
+        [
+          "Alpine Redoubt",
+          15,
+        ],
+      ],
+      "total": 31,
+    },
+    "damage_to_attacker": 0,
+    "damage_to_defender": 47,
+    "defender": {
+      "kind": "Unit",
+      "owner": 1,
+      "unit": 3,
+      "unit_kind": "Soldier",
+    },
+    "defender_hp_after": 1,
+    "defender_roll": 0,
+    "defender_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "meeting": false,
+    "ranged": true,
+    "type": "Battle",
+  },
+]
+`;
+
+exports[`city strike core behavior > several cities hit one unit, and a unit killed by a city still gets its shot 8`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 1,
+    "pos": {
+      "q": -4,
+      "r": 11,
+    },
+    "xp": null,
+  },
+]
+`;
+
+exports[`city strike core behavior > several cities hit one unit, and a unit killed by a city still gets its shot 9`] = `
+[
+  {
+    "hp": 200,
+    "id": 0,
+    "owner": 0,
+  },
+  {
+    "hp": 200,
+    "id": 1,
+    "owner": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > several cities hit one unit, and a unit killed by a city still gets its shot 10`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 2,
+    "pos": {
+      "q": 2,
+      "r": 11,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 0,
+    "hp": 1,
+    "id": 3,
+    "pos": {
+      "q": 7,
+      "r": 5,
+    },
+    "xp": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > several cities hit one unit, and a unit killed by a city still gets its shot 11`] = `
+[
+  {
+    "hp": 200,
+    "id": 0,
+    "owner": 0,
+  },
+  {
+    "hp": 200,
+    "id": 1,
+    "owner": 0,
+  },
+]
+`;
+
+exports[`city strike core behavior > supporting melee attacks take retaliation and do not preempt simultaneous city attacks 1`] = `
+[
+  {
+    "at": {
+      "q": 10,
+      "r": 8,
+    },
+    "attacker": 5,
+    "attacker_at": {
+      "q": 9,
+      "r": 7,
+    },
+    "attacker_hp_after": 100,
+    "attacker_owner": 0,
+    "attacker_roll": 113,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Archer (ranged)",
+          15,
+        ],
+      ],
+      "total": 15,
+    },
+    "damage_to_attacker": 0,
+    "damage_to_defender": 9,
+    "defender": {
+      "city": 0,
+      "kind": "City",
+      "owner": 1,
+    },
+    "defender_hp_after": 185,
+    "defender_roll": 0,
+    "defender_strength": {
+      "parts": [
+        [
+          "City",
+          10,
+        ],
+        [
+          "Population",
+          6,
+        ],
+        [
+          "Alpine Redoubt",
+          15,
+        ],
+      ],
+      "total": 31,
+    },
+    "meeting": false,
+    "ranged": true,
+    "type": "Battle",
+  },
+  {
+    "at": {
+      "q": 10,
+      "r": 8,
+    },
+    "attacker": 6,
+    "attacker_at": {
+      "q": 10,
+      "r": 6,
+    },
+    "attacker_hp_after": 100,
+    "attacker_owner": 0,
+    "attacker_roll": 82,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Archer (ranged)",
+          15,
+        ],
+      ],
+      "total": 15,
+    },
+    "damage_to_attacker": 0,
+    "damage_to_defender": 6,
+    "defender": {
+      "city": 0,
+      "kind": "City",
+      "owner": 1,
+    },
+    "defender_hp_after": 185,
+    "defender_roll": 0,
+    "defender_strength": {
+      "parts": [
+        [
+          "City",
+          10,
+        ],
+        [
+          "Population",
+          6,
+        ],
+        [
+          "Alpine Redoubt",
+          15,
+        ],
+      ],
+      "total": 31,
+    },
+    "meeting": false,
+    "ranged": true,
+    "type": "Battle",
+  },
+  {
+    "at": {
+      "q": 9,
+      "r": 8,
+    },
+    "attacker": {
+      "city": 0,
+    },
+    "attacker_at": {
+      "q": 10,
+      "r": 8,
+    },
+    "attacker_hp_after": 185,
+    "attacker_owner": 1,
+    "attacker_roll": 111,
+    "attacker_strength": {
+      "parts": [
+        [
+          "City",
+          10,
+        ],
+        [
+          "Population",
+          6,
+        ],
+        [
+          "Alpine Redoubt",
+          15,
+        ],
+      ],
+      "total": 31,
+    },
+    "damage_to_attacker": 0,
+    "damage_to_defender": 52,
+    "defender": {
+      "kind": "Unit",
+      "owner": 0,
+      "unit": 3,
+      "unit_kind": "Soldier",
+    },
+    "defender_hp_after": 48,
+    "defender_roll": 0,
+    "defender_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "meeting": false,
+    "ranged": true,
+    "type": "Battle",
+  },
+  {
+    "at": {
+      "q": 10,
+      "r": 8,
+    },
+    "attacker": 3,
+    "attacker_at": {
+      "q": 9,
+      "r": 8,
+    },
+    "attacker_hp_after": 0,
+    "attacker_owner": 0,
+    "attacker_roll": 82,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+        [
+          "Wounded",
+          -5,
+        ],
+      ],
+      "total": 15,
+    },
+    "damage_to_attacker": 27,
+    "damage_to_defender": 6,
+    "defender": {
+      "city": 0,
+      "kind": "City",
+      "owner": 1,
+    },
+    "defender_hp_after": 171,
+    "defender_roll": 91,
+    "defender_strength": {
+      "parts": [
+        [
+          "City",
+          10,
+        ],
+        [
+          "Population",
+          6,
+        ],
+        [
+          "Alpine Redoubt",
+          15,
+        ],
+      ],
+      "total": 31,
+    },
+    "meeting": false,
+    "ranged": false,
+    "type": "Battle",
+  },
+  {
+    "at": {
+      "q": 10,
+      "r": 8,
+    },
+    "attacker": 4,
+    "attacker_at": {
+      "q": 10,
+      "r": 7,
+    },
+    "attacker_hp_after": 72,
+    "attacker_owner": 0,
+    "attacker_roll": 86,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "damage_to_attacker": 28,
+    "damage_to_defender": 8,
+    "defender": {
+      "city": 0,
+      "kind": "City",
+      "owner": 1,
+    },
+    "defender_hp_after": 171,
+    "defender_roll": 118,
+    "defender_strength": {
+      "parts": [
+        [
+          "City",
+          10,
+        ],
+        [
+          "Population",
+          6,
+        ],
+        [
+          "Alpine Redoubt",
+          15,
+        ],
+      ],
+      "total": 31,
+    },
+    "meeting": false,
+    "ranged": false,
+    "type": "Battle",
+  },
+  {
+    "at": {
+      "q": 9,
+      "r": 8,
+    },
+    "attacker": 7,
+    "attacker_at": {
+      "q": 8,
+      "r": 8,
+    },
+    "attacker_hp_after": 0,
+    "attacker_owner": 1,
+    "attacker_roll": 120,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Reisläufer",
+          32,
+        ],
+        [
+          "Wounded",
+          -9,
+        ],
+      ],
+      "total": 23,
+    },
+    "damage_to_attacker": 20,
+    "damage_to_defender": 49,
+    "defender": {
+      "kind": "Unit",
+      "owner": 0,
+      "unit": 3,
+      "unit_kind": "Soldier",
+    },
+    "defender_hp_after": 0,
+    "defender_roll": 92,
+    "defender_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+        [
+          "Wounded",
+          -5,
+        ],
+      ],
+      "total": 15,
+    },
+    "meeting": false,
+    "ranged": false,
+    "type": "Battle",
+  },
+  {
+    "at": {
+      "q": 9,
+      "r": 8,
+    },
+    "owner": 0,
+    "type": "UnitDestroyed",
+    "unit": 3,
+    "unit_kind": "Soldier",
+  },
+  {
+    "at": {
+      "q": 8,
+      "r": 8,
+    },
+    "owner": 1,
+    "type": "UnitDestroyed",
+    "unit": 7,
+    "unit_kind": "Trooper",
+  },
+]
+`;
+
+exports[`city strike core behavior > supporting melee attacks take retaliation and do not preempt simultaneous city attacks 2`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 1,
+    "pos": {
+      "q": -4,
+      "r": 11,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 0,
+    "hp": 72,
+    "id": 4,
+    "pos": {
+      "q": 10,
+      "r": 7,
+    },
+    "xp": 3,
+  },
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 5,
+    "pos": {
+      "q": 9,
+      "r": 7,
+    },
+    "xp": 3,
+  },
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 6,
+    "pos": {
+      "q": 10,
+      "r": 6,
+    },
+    "xp": 3,
+  },
+]
+`;
+
+exports[`city strike core behavior > supporting melee attacks take retaliation and do not preempt simultaneous city attacks 3`] = `
+[
+  {
+    "hp": 171,
+    "id": 0,
+    "owner": 1,
+  },
+]
+`;
+
+exports[`city strike core behavior > supporting melee attacks take retaliation and do not preempt simultaneous city attacks 4`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 2,
+    "pos": {
+      "q": 2,
+      "r": 11,
+    },
+    "xp": null,
+  },
+]
+`;
+
+exports[`city strike core behavior > supporting melee attacks take retaliation and do not preempt simultaneous city attacks 5`] = `
+[
+  {
+    "hp": 171,
+    "id": 0,
+    "owner": 1,
+  },
+]
+`;
+
+exports[`city strike core behavior > three Soldiers split one counterattack from a field unit (split counterattack) 1`] = `
+[
+  {
+    "at": {
+      "q": 10,
+      "r": 8,
+    },
+    "attacker": 4,
+    "attacker_at": {
+      "q": 9,
+      "r": 8,
+    },
+    "attacker_hp_after": 93,
+    "attacker_owner": 0,
+    "attacker_roll": 87,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "damage_to_attacker": 7,
+    "damage_to_defender": 37,
+    "defender": {
+      "kind": "Unit",
+      "owner": 1,
+      "unit": 3,
+      "unit_kind": "Soldier",
+    },
+    "defender_hp_after": 0,
+    "defender_roll": 82,
+    "defender_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+        [
+          "Wounded",
+          -9,
+        ],
+      ],
+      "total": 11,
+    },
+    "meeting": false,
+    "ranged": false,
+    "type": "Battle",
+  },
+  {
+    "at": {
+      "q": 10,
+      "r": 8,
+    },
+    "attacker": 5,
+    "attacker_at": {
+      "q": 10,
+      "r": 7,
+    },
+    "attacker_hp_after": 95,
+    "attacker_owner": 0,
+    "attacker_roll": 99,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "damage_to_attacker": 5,
+    "damage_to_defender": 42,
+    "defender": {
+      "kind": "Unit",
+      "owner": 1,
+      "unit": 3,
+      "unit_kind": "Soldier",
+    },
+    "defender_hp_after": 0,
+    "defender_roll": 84,
+    "defender_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+        [
+          "Wounded",
+          -9,
+        ],
+      ],
+      "total": 11,
+    },
+    "meeting": false,
+    "ranged": false,
+    "type": "Battle",
+  },
+  {
+    "at": {
+      "q": 10,
+      "r": 8,
+    },
+    "attacker": 6,
+    "attacker_at": {
+      "q": 11,
+      "r": 8,
+    },
+    "attacker_hp_after": 95,
+    "attacker_owner": 0,
+    "attacker_roll": 98,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "damage_to_attacker": 5,
+    "damage_to_defender": 42,
+    "defender": {
+      "kind": "Unit",
+      "owner": 1,
+      "unit": 3,
+      "unit_kind": "Soldier",
+    },
+    "defender_hp_after": 0,
+    "defender_roll": 101,
+    "defender_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+        [
+          "Wounded",
+          -9,
+        ],
+      ],
+      "total": 11,
+    },
+    "meeting": false,
+    "ranged": false,
+    "type": "Battle",
+  },
+  {
+    "at": {
+      "q": 10,
+      "r": 8,
+    },
+    "owner": 1,
+    "type": "UnitDestroyed",
+    "unit": 3,
+    "unit_kind": "Soldier",
+  },
+]
+`;
+
+exports[`city strike core behavior > three Soldiers split one counterattack from a field unit (split counterattack) 2`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 1,
+    "pos": {
+      "q": -4,
+      "r": 11,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 0,
+    "hp": 93,
+    "id": 4,
+    "pos": {
+      "q": 10,
+      "r": 8,
+    },
+    "xp": 5,
+  },
+  {
+    "fortify": 0,
+    "hp": 95,
+    "id": 5,
+    "pos": {
+      "q": 10,
+      "r": 7,
+    },
+    "xp": 5,
+  },
+  {
+    "fortify": 0,
+    "hp": 95,
+    "id": 6,
+    "pos": {
+      "q": 11,
+      "r": 8,
+    },
+    "xp": 5,
+  },
+]
+`;
+
+exports[`city strike core behavior > three Soldiers split one counterattack from a field unit (split counterattack) 3`] = `[]`;
+
+exports[`city strike core behavior > three Soldiers split one counterattack from a field unit (split counterattack) 4`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 2,
+    "pos": {
+      "q": 2,
+      "r": 11,
+    },
+    "xp": null,
+  },
+]
+`;
+
+exports[`city strike core behavior > three Soldiers split one counterattack from a field unit (split counterattack) 5`] = `[]`;
+
+exports[`reinforcement core behavior > a city with HP absorbs first and overflow wounds the new garrison 1`] = `
+[
+  {
+    "from": {
+      "q": 11,
+      "r": 8,
+    },
+    "owner": 1,
+    "to": {
+      "q": 10,
+      "r": 8,
+    },
+    "type": "UnitMoved",
+    "unit": 4,
+  },
+  {
+    "at": {
+      "q": 10,
+      "r": 8,
+    },
+    "city": 0,
+    "owner": 1,
+    "type": "CityReinforced",
+    "unit": 4,
+    "unit_kind": "Soldier",
+  },
+  {
+    "at": {
+      "q": 10,
+      "r": 8,
+    },
+    "attacker": 3,
+    "attacker_at": {
+      "q": 9,
+      "r": 8,
+    },
+    "attacker_hp_after": 84,
+    "attacker_owner": 0,
+    "attacker_roll": 82,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "damage_to_attacker": 16,
+    "damage_to_defender": 41,
+    "defender": {
+      "city": 0,
+      "kind": "City",
+      "owner": 1,
+    },
+    "defender_hp_after": 0,
+    "defender_roll": 91,
+    "defender_strength": {
+      "parts": [
+        [
+          "City",
+          10,
+        ],
+        [
+          "Population",
+          6,
+        ],
+        [
+          "Wounded",
+          -9,
+        ],
+      ],
+      "total": 7,
+    },
+    "meeting": false,
+    "ranged": false,
+    "type": "Battle",
+  },
+]
+`;
+
+exports[`reinforcement core behavior > a city with HP absorbs first and overflow wounds the new garrison 2`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 1,
+    "pos": {
+      "q": -4,
+      "r": 11,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 0,
+    "hp": 84,
+    "id": 3,
+    "pos": {
+      "q": 9,
+      "r": 8,
+    },
+    "xp": 10,
+  },
+]
+`;
+
+exports[`reinforcement core behavior > a city with HP absorbs first and overflow wounds the new garrison 3`] = `
+[
+  {
+    "hp": 0,
+    "id": 0,
+    "owner": 1,
+  },
+]
+`;
+
+exports[`reinforcement core behavior > a city with HP absorbs first and overflow wounds the new garrison 4`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 2,
+    "pos": {
+      "q": 2,
+      "r": 11,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 0,
+    "hp": 79,
+    "id": 4,
+    "pos": {
+      "q": 10,
+      "r": 8,
+    },
+    "xp": 0,
+  },
+]
+`;
+
+exports[`reinforcement core behavior > a city with HP absorbs first and overflow wounds the new garrison 5`] = `
+[
+  {
+    "hp": 0,
+    "id": 0,
+    "owner": 1,
+  },
+]
+`;
+
+exports[`reinforcement core behavior > a garrison killed by overflow is a Spartan kill: everyone who hit the city tile shares the heal 1`] = `
+[
+  {
+    "at": {
+      "q": 10,
+      "r": 8,
+    },
+    "attacker": 4,
+    "attacker_at": {
+      "q": 9,
+      "r": 8,
+    },
+    "attacker_hp_after": 32,
+    "attacker_owner": 0,
+    "attacker_roll": 86,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Spartan Hoplite",
+          20,
+        ],
+        [
+          "Level 1: +10%",
+          2,
+        ],
+        [
+          "Phalanx: next to another Hoplite",
+          5,
+        ],
+      ],
+      "total": 27,
+    },
+    "damage_to_attacker": 8,
+    "damage_to_defender": 57,
+    "defender": {
+      "city": 0,
+      "kind": "City",
+      "owner": 1,
+    },
+    "defender_hp_after": 0,
+    "defender_roll": 118,
+    "defender_strength": {
+      "parts": [
+        [
+          "City",
+          10,
+        ],
+        [
+          "Population",
+          6,
+        ],
+        [
+          "Wounded",
+          -9,
+        ],
+      ],
+      "total": 7,
+    },
+    "meeting": false,
+    "ranged": false,
+    "type": "Battle",
+  },
+  {
+    "at": {
+      "q": 10,
+      "r": 8,
+    },
+    "attacker": 5,
+    "attacker_at": {
+      "q": 10,
+      "r": 7,
+    },
+    "attacker_hp_after": 33,
+    "attacker_owner": 0,
+    "attacker_roll": 103,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Spartan Hoplite",
+          20,
+        ],
+        [
+          "Level 1: +10%",
+          2,
+        ],
+        [
+          "Phalanx: next to another Hoplite",
+          5,
+        ],
+      ],
+      "total": 27,
+    },
+    "damage_to_attacker": 7,
+    "damage_to_defender": 69,
+    "defender": {
+      "city": 0,
+      "kind": "City",
+      "owner": 1,
+    },
+    "defender_hp_after": 0,
+    "defender_roll": 87,
+    "defender_strength": {
+      "parts": [
+        [
+          "City",
+          10,
+        ],
+        [
+          "Population",
+          6,
+        ],
+        [
+          "Wounded",
+          -9,
+        ],
+      ],
+      "total": 7,
+    },
+    "meeting": false,
+    "ranged": false,
+    "type": "Battle",
+  },
+  {
+    "at": {
+      "q": 10,
+      "r": 8,
+    },
+    "owner": 1,
+    "type": "UnitDestroyed",
+    "unit": 3,
+    "unit_kind": "Soldier",
+  },
+  {
+    "hp_healed": 100,
+    "player": 0,
+    "type": "SpartaKillHeal",
+    "unit": 3,
+    "unit_kind": "Soldier",
+    "victim_owner": 1,
+  },
+  {
+    "from": {
+      "q": 9,
+      "r": 8,
+    },
+    "owner": 0,
+    "to": {
+      "q": 10,
+      "r": 8,
+    },
+    "type": "UnitMoved",
+    "unit": 4,
+  },
+  {
+    "bounty": 10000,
+    "city": 0,
+    "from": 1,
+    "to": 0,
+    "type": "CityCaptured",
+  },
+]
+`;
+
+exports[`reinforcement core behavior > a garrison killed by overflow is a Spartan kill: everyone who hit the city tile shares the heal 2`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 1,
+    "pos": {
+      "q": -4,
+      "r": 11,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 4,
+    "pos": {
+      "q": 10,
+      "r": 8,
+    },
+    "xp": 31,
+  },
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 5,
+    "pos": {
+      "q": 10,
+      "r": 7,
+    },
+    "xp": 31,
+  },
+]
+`;
+
+exports[`reinforcement core behavior > a garrison killed by overflow is a Spartan kill: everyone who hit the city tile shares the heal 3`] = `
+[
+  {
+    "hp": 0,
+    "id": 0,
+    "owner": 0,
+  },
+]
+`;
+
+exports[`reinforcement core behavior > a garrison killed by overflow is a Spartan kill: everyone who hit the city tile shares the heal 4`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 2,
+    "pos": {
+      "q": 2,
+      "r": 11,
+    },
+    "xp": null,
+  },
+]
+`;
+
+exports[`reinforcement core behavior > a garrison killed by overflow is a Spartan kill: everyone who hit the city tile shares the heal 5`] = `
+[
+  {
+    "hp": 200,
+    "id": 0,
+    "owner": 0,
+  },
+]
+`;
+
+exports[`reinforcement core behavior > a unit beats a same-round capture of its ruined city and the enemy fights it as the garrison 1`] = `
+[
+  {
+    "from": {
+      "q": 11,
+      "r": 8,
+    },
+    "owner": 1,
+    "to": {
+      "q": 10,
+      "r": 8,
+    },
+    "type": "UnitMoved",
+    "unit": 4,
+  },
+  {
+    "at": {
+      "q": 10,
+      "r": 8,
+    },
+    "city": 0,
+    "owner": 1,
+    "type": "CityReinforced",
+    "unit": 4,
+    "unit_kind": "Soldier",
+  },
+  {
+    "at": {
+      "q": 10,
+      "r": 8,
+    },
+    "attacker": 3,
+    "attacker_at": {
+      "q": 9,
+      "r": 8,
+    },
+    "attacker_hp_after": 69,
+    "attacker_owner": 0,
+    "attacker_roll": 118,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "damage_to_attacker": 31,
+    "damage_to_defender": 35,
+    "defender": {
+      "kind": "Unit",
+      "owner": 1,
+      "unit": 4,
+      "unit_kind": "Soldier",
+    },
+    "defender_hp_after": 65,
+    "defender_roll": 105,
+    "defender_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "meeting": false,
+    "ranged": false,
+    "type": "Battle",
+  },
+]
+`;
+
+exports[`reinforcement core behavior > a unit beats a same-round capture of its ruined city and the enemy fights it as the garrison 2`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 1,
+    "pos": {
+      "q": -4,
+      "r": 11,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 0,
+    "hp": 69,
+    "id": 3,
+    "pos": {
+      "q": 9,
+      "r": 8,
+    },
+    "xp": 4,
+  },
+]
+`;
+
+exports[`reinforcement core behavior > a unit beats a same-round capture of its ruined city and the enemy fights it as the garrison 3`] = `
+[
+  {
+    "hp": 0,
+    "id": 0,
+    "owner": 1,
+  },
+]
+`;
+
+exports[`reinforcement core behavior > a unit beats a same-round capture of its ruined city and the enemy fights it as the garrison 4`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 2,
+    "pos": {
+      "q": 2,
+      "r": 11,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 0,
+    "hp": 65,
+    "id": 4,
+    "pos": {
+      "q": 10,
+      "r": 8,
+    },
+    "xp": 3,
+  },
+]
+`;
+
+exports[`reinforcement core behavior > a unit beats a same-round capture of its ruined city and the enemy fights it as the garrison 5`] = `
+[
+  {
+    "hp": 0,
+    "id": 0,
+    "owner": 1,
+  },
+]
+`;
+
+exports[`reinforcement core behavior > allies and ranged units get no priority; with nobody attacking it is a plain move 1`] = `
+[
+  {
+    "at": {
+      "q": 10,
+      "r": 8,
+    },
+    "attacker": 4,
+    "attacker_at": {
+      "q": 9,
+      "r": 8,
+    },
+    "attacker_hp_after": 71,
+    "attacker_owner": 2,
+    "attacker_roll": 116,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "damage_to_attacker": 29,
+    "damage_to_defender": 34,
+    "defender": {
+      "kind": "Unit",
+      "owner": 1,
+      "unit": 5,
+      "unit_kind": "Soldier",
+    },
+    "defender_hp_after": 66,
+    "defender_roll": 97,
+    "defender_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "meeting": true,
+    "ranged": false,
+    "type": "Battle",
+  },
+]
+`;
+
+exports[`reinforcement core behavior > allies and ranged units get no priority; with nobody attacking it is a plain move 2`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 1,
+    "pos": {
+      "q": -4,
+      "r": 11,
+    },
+    "xp": null,
+  },
+]
+`;
+
+exports[`reinforcement core behavior > allies and ranged units get no priority; with nobody attacking it is a plain move 3`] = `
+[
+  {
+    "hp": 0,
+    "id": 0,
+    "owner": 0,
+  },
+]
+`;
+
+exports[`reinforcement core behavior > allies and ranged units get no priority; with nobody attacking it is a plain move 4`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 2,
+    "pos": {
+      "q": 2,
+      "r": 11,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 0,
+    "hp": 66,
+    "id": 5,
+    "pos": {
+      "q": 11,
+      "r": 8,
+    },
+    "xp": 4,
+  },
+]
+`;
+
+exports[`reinforcement core behavior > allies and ranged units get no priority; with nobody attacking it is a plain move 5`] = `
+[
+  {
+    "hp": 0,
+    "id": 0,
+    "owner": 0,
+  },
+]
+`;
+
+exports[`reinforcement core behavior > allies and ranged units get no priority; with nobody attacking it is a plain move 6`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 3,
+    "pos": {
+      "q": 8,
+      "r": 11,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 0,
+    "hp": 71,
+    "id": 4,
+    "pos": {
+      "q": 9,
+      "r": 8,
+    },
+    "xp": 4,
+  },
+]
+`;
+
+exports[`reinforcement core behavior > allies and ranged units get no priority; with nobody attacking it is a plain move 7`] = `
+[
+  {
+    "hp": 0,
+    "id": 0,
+    "owner": 0,
+  },
+]
+`;
+
+exports[`reinforcement core behavior > allies and ranged units get no priority; with nobody attacking it is a plain move 8`] = `
+[
+  {
+    "at": {
+      "q": 10,
+      "r": 8,
+    },
+    "attacker": 3,
+    "attacker_at": {
+      "q": 9,
+      "r": 8,
+    },
+    "attacker_hp_after": 81,
+    "attacker_owner": 0,
+    "attacker_roll": 118,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "damage_to_attacker": 19,
+    "damage_to_defender": 56,
+    "defender": {
+      "kind": "Unit",
+      "owner": 1,
+      "unit": 4,
+      "unit_kind": "Ranger",
+    },
+    "defender_hp_after": 44,
+    "defender_roll": 105,
+    "defender_strength": {
+      "parts": [
+        [
+          "Archer",
+          8,
+        ],
+      ],
+      "total": 8,
+    },
+    "meeting": true,
+    "ranged": false,
+    "type": "Battle",
+  },
+]
+`;
+
+exports[`reinforcement core behavior > allies and ranged units get no priority; with nobody attacking it is a plain move 9`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 1,
+    "pos": {
+      "q": -4,
+      "r": 11,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 0,
+    "hp": 81,
+    "id": 3,
+    "pos": {
+      "q": 9,
+      "r": 8,
+    },
+    "xp": 3,
+  },
+]
+`;
+
+exports[`reinforcement core behavior > allies and ranged units get no priority; with nobody attacking it is a plain move 10`] = `
+[
+  {
+    "hp": 0,
+    "id": 0,
+    "owner": 1,
+  },
+]
+`;
+
+exports[`reinforcement core behavior > allies and ranged units get no priority; with nobody attacking it is a plain move 11`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 2,
+    "pos": {
+      "q": 2,
+      "r": 11,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 0,
+    "hp": 44,
+    "id": 4,
+    "pos": {
+      "q": 11,
+      "r": 8,
+    },
+    "xp": 6,
+  },
+]
+`;
+
+exports[`reinforcement core behavior > allies and ranged units get no priority; with nobody attacking it is a plain move 12`] = `
+[
+  {
+    "hp": 0,
+    "id": 0,
+    "owner": 1,
+  },
+]
+`;
+
+exports[`reinforcement core behavior > allies and ranged units get no priority; with nobody attacking it is a plain move 13`] = `
+[
+  {
+    "from": {
+      "q": 11,
+      "r": 8,
+    },
+    "owner": 1,
+    "to": {
+      "q": 10,
+      "r": 8,
+    },
+    "type": "UnitMoved",
+    "unit": 4,
+  },
+]
+`;
+
+exports[`reinforcement core behavior > allies and ranged units get no priority; with nobody attacking it is a plain move 14`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 1,
+    "pos": {
+      "q": -4,
+      "r": 11,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 3,
+    "hp": 100,
+    "id": 3,
+    "pos": {
+      "q": 9,
+      "r": 8,
+    },
+    "xp": 0,
+  },
+]
+`;
+
+exports[`reinforcement core behavior > allies and ranged units get no priority; with nobody attacking it is a plain move 15`] = `
+[
+  {
+    "hp": 0,
+    "id": 0,
+    "owner": 1,
+  },
+]
+`;
+
+exports[`reinforcement core behavior > allies and ranged units get no priority; with nobody attacking it is a plain move 16`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 2,
+    "pos": {
+      "q": 2,
+      "r": 11,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 4,
+    "pos": {
+      "q": 10,
+      "r": 8,
+    },
+    "xp": 0,
+  },
+]
+`;
+
+exports[`reinforcement core behavior > allies and ranged units get no priority; with nobody attacking it is a plain move 17`] = `
+[
+  {
+    "hp": 0,
+    "id": 0,
+    "owner": 1,
+  },
+]
+`;
+
+exports[`reinforcement core behavior > an earlier-round capture means the reinforcement is too late 1`] = `
+[
+  {
+    "from": {
+      "q": 9,
+      "r": 8,
+    },
+    "owner": 0,
+    "to": {
+      "q": 10,
+      "r": 8,
+    },
+    "type": "UnitMoved",
+    "unit": 3,
+  },
+  {
+    "from": {
+      "q": 12,
+      "r": 8,
+    },
+    "owner": 1,
+    "to": {
+      "q": 11,
+      "r": 8,
+    },
+    "type": "UnitMoved",
+    "unit": 4,
+  },
+  {
+    "bounty": 10000,
+    "city": 0,
+    "from": 1,
+    "to": 0,
+    "type": "CityCaptured",
+  },
+  {
+    "at": {
+      "q": 10,
+      "r": 8,
+    },
+    "attacker": 4,
+    "attacker_at": {
+      "q": 11,
+      "r": 8,
+    },
+    "attacker_hp_after": 69,
+    "attacker_owner": 1,
+    "attacker_roll": 107,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "damage_to_attacker": 31,
+    "damage_to_defender": 32,
+    "defender": {
+      "kind": "Unit",
+      "owner": 0,
+      "unit": 3,
+      "unit_kind": "Soldier",
+    },
+    "defender_hp_after": 68,
+    "defender_roll": 106,
+    "defender_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "meeting": false,
+    "ranged": false,
+    "type": "Battle",
+  },
+]
+`;
+
+exports[`reinforcement core behavior > an earlier-round capture means the reinforcement is too late 2`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 1,
+    "pos": {
+      "q": -4,
+      "r": 11,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 0,
+    "hp": 68,
+    "id": 3,
+    "pos": {
+      "q": 10,
+      "r": 8,
+    },
+    "xp": 3,
+  },
+]
+`;
+
+exports[`reinforcement core behavior > an earlier-round capture means the reinforcement is too late 3`] = `
+[
+  {
+    "hp": 0,
+    "id": 0,
+    "owner": 0,
+  },
+]
+`;
+
+exports[`reinforcement core behavior > an earlier-round capture means the reinforcement is too late 4`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 2,
+    "pos": {
+      "q": 2,
+      "r": 11,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 0,
+    "hp": 69,
+    "id": 4,
+    "pos": {
+      "q": 11,
+      "r": 8,
+    },
+    "xp": 4,
+  },
+]
+`;
+
+exports[`reinforcement core behavior > an earlier-round capture means the reinforcement is too late 5`] = `
+[
+  {
+    "hp": 0,
+    "id": 0,
+    "owner": 0,
+  },
+]
+`;
+
+exports[`reinforcement core behavior > overflow can still kill the new garrison and capture the city 1`] = `
+[
+  {
+    "from": {
+      "q": 11,
+      "r": 8,
+    },
+    "owner": 1,
+    "to": {
+      "q": 10,
+      "r": 8,
+    },
+    "type": "UnitMoved",
+    "unit": 4,
+  },
+  {
+    "at": {
+      "q": 10,
+      "r": 8,
+    },
+    "city": 0,
+    "owner": 1,
+    "type": "CityReinforced",
+    "unit": 4,
+    "unit_kind": "Soldier",
+  },
+  {
+    "at": {
+      "q": 10,
+      "r": 8,
+    },
+    "attacker": 3,
+    "attacker_at": {
+      "q": 9,
+      "r": 8,
+    },
+    "attacker_hp_after": 84,
+    "attacker_owner": 0,
+    "attacker_roll": 82,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "damage_to_attacker": 16,
+    "damage_to_defender": 41,
+    "defender": {
+      "city": 0,
+      "kind": "City",
+      "owner": 1,
+    },
+    "defender_hp_after": 0,
+    "defender_roll": 91,
+    "defender_strength": {
+      "parts": [
+        [
+          "City",
+          10,
+        ],
+        [
+          "Population",
+          6,
+        ],
+        [
+          "Wounded",
+          -9,
+        ],
+      ],
+      "total": 7,
+    },
+    "meeting": false,
+    "ranged": false,
+    "type": "Battle",
+  },
+  {
+    "at": {
+      "q": 10,
+      "r": 8,
+    },
+    "owner": 1,
+    "type": "UnitDestroyed",
+    "unit": 4,
+    "unit_kind": "Soldier",
+  },
+  {
+    "from": {
+      "q": 9,
+      "r": 8,
+    },
+    "owner": 0,
+    "to": {
+      "q": 10,
+      "r": 8,
+    },
+    "type": "UnitMoved",
+    "unit": 3,
+  },
+  {
+    "bounty": 10000,
+    "city": 0,
+    "from": 1,
+    "to": 0,
+    "type": "CityCaptured",
+  },
+]
+`;
+
+exports[`reinforcement core behavior > overflow can still kill the new garrison and capture the city 2`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 1,
+    "pos": {
+      "q": -4,
+      "r": 11,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 0,
+    "hp": 84,
+    "id": 3,
+    "pos": {
+      "q": 10,
+      "r": 8,
+    },
+    "xp": 10,
+  },
+]
+`;
+
+exports[`reinforcement core behavior > overflow can still kill the new garrison and capture the city 3`] = `
+[
+  {
+    "hp": 0,
+    "id": 0,
+    "owner": 0,
+  },
+]
+`;
+
+exports[`reinforcement core behavior > overflow can still kill the new garrison and capture the city 4`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 2,
+    "pos": {
+      "q": 2,
+      "r": 11,
+    },
+    "xp": null,
+  },
+]
+`;
+
+exports[`reinforcement core behavior > overflow can still kill the new garrison and capture the city 5`] = `
+[
+  {
+    "hp": 200,
+    "id": 0,
+    "owner": 0,
+  },
+]
+`;
+
+exports[`reinforcement core behavior > two equal reinforcers: the lower unit id garrisons and the other does not stack 1`] = `
+[
+  {
+    "from": {
+      "q": 11,
+      "r": 8,
+    },
+    "owner": 1,
+    "to": {
+      "q": 10,
+      "r": 8,
+    },
+    "type": "UnitMoved",
+    "unit": 4,
+  },
+  {
+    "at": {
+      "q": 10,
+      "r": 8,
+    },
+    "city": 0,
+    "owner": 1,
+    "type": "CityReinforced",
+    "unit": 4,
+    "unit_kind": "Soldier",
+  },
+  {
+    "at": {
+      "q": 10,
+      "r": 8,
+    },
+    "attacker": 3,
+    "attacker_at": {
+      "q": 9,
+      "r": 8,
+    },
+    "attacker_hp_after": 38,
+    "attacker_owner": 0,
+    "attacker_roll": 118,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "damage_to_attacker": 62,
+    "damage_to_defender": 18,
+    "defender": {
+      "kind": "Unit",
+      "owner": 1,
+      "unit": 4,
+      "unit_kind": "Soldier",
+    },
+    "defender_hp_after": 82,
+    "defender_roll": 105,
+    "defender_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "meeting": false,
+    "ranged": false,
+    "type": "Battle",
+  },
+  {
+    "at": {
+      "q": 10,
+      "r": 9,
+    },
+    "owner": 1,
+    "reason": "another of your units holds the city",
+    "toward": {
+      "q": 10,
+      "r": 8,
+    },
+    "type": "MoveBlocked",
+    "unit": 5,
+  },
+]
+`;
+
+exports[`reinforcement core behavior > two equal reinforcers: the lower unit id garrisons and the other does not stack 2`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 1,
+    "pos": {
+      "q": -4,
+      "r": 11,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 0,
+    "hp": 38,
+    "id": 3,
+    "pos": {
+      "q": 9,
+      "r": 8,
+    },
+    "xp": 4,
+  },
+]
+`;
+
+exports[`reinforcement core behavior > two equal reinforcers: the lower unit id garrisons and the other does not stack 3`] = `
+[
+  {
+    "hp": 0,
+    "id": 0,
+    "owner": 1,
+  },
+]
+`;
+
+exports[`reinforcement core behavior > two equal reinforcers: the lower unit id garrisons and the other does not stack 4`] = `
+[
+  {
+    "fortify": 0,
+    "hp": 100,
+    "id": 2,
+    "pos": {
+      "q": 2,
+      "r": 11,
+    },
+    "xp": null,
+  },
+  {
+    "fortify": 0,
+    "hp": 82,
+    "id": 4,
+    "pos": {
+      "q": 10,
+      "r": 8,
+    },
+    "xp": 3,
+  },
+  {
+    "fortify": 0,
+    "hp": 83,
+    "id": 5,
+    "pos": {
+      "q": 10,
+      "r": 9,
+    },
+    "xp": 0,
+  },
+]
+`;
+
+exports[`reinforcement core behavior > two equal reinforcers: the lower unit id garrisons and the other does not stack 5`] = `
+[
+  {
+    "hp": 0,
+    "id": 0,
+    "owner": 1,
+  },
+]
+`;

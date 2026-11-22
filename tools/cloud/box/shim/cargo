@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# On the build box, scripts such as tools/astra/verify-branch.sh export CARGO_BUILD_JOBS=4 to be gentle on a
+# shared 16-core Mac. The box has 64 cores, so BOX_CARGO_JOBS (set per job) overrides it.
+[ -z "${BOX_CARGO_JOBS:-}" ] || export CARGO_BUILD_JOBS="$BOX_CARGO_JOBS"
+cargo="${CARGO_HOME:-/data/cargo}/bin/cargo"
+
+# `cargo test` runs one test binary after another, and most of our tests are single-threaded simulations: a lane's
+# debug-profile `cargo test` sat at about 130% CPU of 6400% for 30 to 60 minutes (2026-10-18). cargo-nextest runs every
+# test as its own process across all binaries at once (the gate already does, tools/astra/gate-tests.sh), so plain
+# `cargo test <simple flags>` becomes `cargo nextest run` plus the doctests nextest does not run. Anything it does not
+# recognise (`--`, --no-run, --doc, --bench, --nocapture, ...) runs as plain cargo test. LEGATUM_BOX_NO_NEXTEST=1 opts out.
+if [ "${1:-}" = test ] && [ "${LEGATUM_BOX_NO_NEXTEST:-0}" != 1 ] && "$cargo" nextest --version >/dev/null 2>&1; then
+  orig=("$@"); shift
+  sel=(); doc_args=(); target_sel=0; ok=1
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --workspace|--all|--release|-q|--quiet|-v|--verbose|--locked|--offline|--frozen|--all-features|--no-default-features) sel+=("$1"); doc_args+=("$1");;
+      --no-fail-fast) ;;
+      --lib|--bins|--tests) sel+=("$1"); target_sel=1;;
+      --profile)
+        [ $# -ge 2 ] || { ok=0; break; }
+        sel+=(--cargo-profile "$2"); doc_args+=(--profile "$2"); shift;;
+      -p|--package|--exclude|--features|-F|-j|--jobs|--target-dir|--manifest-path|--target)
+        [ $# -ge 2 ] || { ok=0; break; }
+        sel+=("$1" "$2"); doc_args+=("$1" "$2"); shift;;
+      --test) [ $# -ge 2 ] || { ok=0; break; }; sel+=("$1" "$2"); target_sel=1; shift;;
+      --profile=*) sel+=("--cargo-profile=${1#--profile=}"); doc_args+=("$1");;
+      --package=*|--exclude=*|--features=*|--jobs=*|--target-dir=*|--manifest-path=*|--target=*) sel+=("$1"); doc_args+=("$1");;
+      -*) ok=0; break;;
+      *) sel+=("$1"); doc_args+=("$1");;
+    esac
+    shift
+  done
+  if [ "$ok" = 1 ]; then
+    echo "box cargo: cargo test -> cargo nextest run (+ doctests); LEGATUM_BOX_NO_NEXTEST=1 for plain cargo test" >&2
+    "$cargo" nextest run --no-fail-fast --no-tests=pass "${sel[@]}"; rc=$?
+    if [ "$target_sel" = 0 ]; then "$cargo" test --doc "${doc_args[@]}" || rc=$?; fi
+    exit "$rc"
+  fi
+  exec "$cargo" "${orig[@]}"
+fi
+exec "$cargo" "$@"

@@ -1,0 +1,7933 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 1`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 2`] = `false`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 3`] = `null`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 4`] = `1`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 5`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 6`] = `false`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 7`] = `null`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 8`] = `1`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 9`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 10`] = `false`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 11`] = `null`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 12`] = `1`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 13`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 14`] = `false`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 15`] = `null`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 16`] = `1`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 17`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 18`] = `false`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 19`] = `null`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 20`] = `1`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 21`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 22`] = `false`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 23`] = `null`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 24`] = `1`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 25`] = `
+[
+  {
+    "target": 12,
+    "team": 0,
+    "turns_needed": 10,
+    "type": "VictoryHoldStarted",
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 26`] = `false`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 27`] = `null`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 28`] = `
+[
+  {
+    "target": 12,
+    "team": 0,
+    "turns_needed": 10,
+    "type": "VictoryHoldStarted",
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 29`] = `
+[
+  {
+    "target": 12,
+    "team": 0,
+    "turns_needed": 10,
+    "type": "VictoryHoldStarted",
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 30`] = `
+[
+  {
+    "target": 12,
+    "team": 0,
+    "turns_needed": 10,
+    "type": "VictoryHoldStarted",
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 31`] = `
+[
+  {
+    "target": 12,
+    "team": 0,
+    "turns_needed": 10,
+    "type": "VictoryHoldStarted",
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 32`] = `
+[
+  {
+    "target": 12,
+    "team": 0,
+    "turns_needed": 10,
+    "type": "VictoryHoldStarted",
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 33`] = `
+[
+  {
+    "target": 12,
+    "team": 0,
+    "turns_needed": 10,
+    "type": "VictoryHoldStarted",
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 34`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 1,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 35`] = `false`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 36`] = `null`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 37`] = `2`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 38`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 1,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 39`] = `false`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 40`] = `null`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 41`] = `2`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 42`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 1,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 43`] = `false`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 44`] = `null`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 45`] = `2`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 46`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 1,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 47`] = `false`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 48`] = `null`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 49`] = `2`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 50`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 1,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 51`] = `false`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 52`] = `null`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 53`] = `2`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 54`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 1,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 55`] = `false`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 56`] = `null`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 57`] = `2`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 58`] = `[]`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 59`] = `false`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 60`] = `null`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 61`] = `[]`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 62`] = `[]`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 63`] = `[]`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 64`] = `[]`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 65`] = `[]`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 66`] = `[]`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 67`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 2,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 68`] = `false`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 69`] = `null`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 70`] = `3`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 71`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 2,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 72`] = `false`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 73`] = `null`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 74`] = `3`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 75`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 2,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 76`] = `false`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 77`] = `null`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 78`] = `3`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 79`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 2,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 80`] = `false`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 81`] = `null`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 82`] = `3`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 83`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 2,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 84`] = `false`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 85`] = `null`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 86`] = `3`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 87`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 2,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 88`] = `false`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 89`] = `null`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 90`] = `3`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 91`] = `[]`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 92`] = `false`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 93`] = `null`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 94`] = `[]`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 95`] = `[]`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 96`] = `[]`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 97`] = `[]`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 98`] = `[]`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 99`] = `[]`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 100`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 3,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 101`] = `false`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 102`] = `null`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 103`] = `4`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 104`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 3,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 105`] = `false`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 106`] = `null`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 107`] = `4`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 108`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 3,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 109`] = `false`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 110`] = `null`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 111`] = `4`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 112`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 3,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 113`] = `false`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 114`] = `null`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 115`] = `4`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 116`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 3,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 117`] = `false`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 118`] = `null`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 119`] = `4`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 120`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 3,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 121`] = `false`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 122`] = `null`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 123`] = `4`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 124`] = `[]`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 125`] = `false`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 126`] = `null`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 127`] = `[]`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 128`] = `[]`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 129`] = `[]`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 130`] = `[]`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 131`] = `[]`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 132`] = `[]`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 133`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 4,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 134`] = `false`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 135`] = `null`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 136`] = `5`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 137`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 4,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 138`] = `false`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 139`] = `null`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 140`] = `5`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 141`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 4,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 142`] = `false`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 143`] = `null`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 144`] = `5`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 145`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 4,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 146`] = `false`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 147`] = `null`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 148`] = `5`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 149`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 4,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 150`] = `false`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 151`] = `null`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 152`] = `5`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 153`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 4,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 154`] = `false`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 155`] = `null`;
+
+exports[`WASM VP hold behavior > a hold carried through a save and load keeps counting on both 156`] = `5`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 1`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 3,
+      "turns_needed": 10,
+    },
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+  {
+    "members": [
+      6,
+    ],
+    "target": 4,
+    "team": 2,
+    "vp": 3,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 2`] = `false`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 3`] = `null`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 4`] = `1`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 5`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 3,
+      "turns_needed": 10,
+    },
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+  {
+    "members": [
+      6,
+    ],
+    "target": 4,
+    "team": 2,
+    "vp": 3,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 6`] = `false`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 7`] = `null`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 8`] = `1`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 9`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 3,
+      "turns_needed": 10,
+    },
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+  {
+    "members": [
+      6,
+    ],
+    "target": 4,
+    "team": 2,
+    "vp": 3,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 10`] = `false`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 11`] = `null`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 12`] = `1`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 13`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 3,
+      "turns_needed": 10,
+    },
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+  {
+    "members": [
+      6,
+    ],
+    "target": 4,
+    "team": 2,
+    "vp": 3,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 14`] = `false`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 15`] = `null`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 16`] = `1`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 17`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 3,
+      "turns_needed": 10,
+    },
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+  {
+    "members": [
+      6,
+    ],
+    "target": 4,
+    "team": 2,
+    "vp": 3,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 18`] = `false`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 19`] = `null`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 20`] = `1`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 21`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 3,
+      "turns_needed": 10,
+    },
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+  {
+    "members": [
+      6,
+    ],
+    "target": 4,
+    "team": 2,
+    "vp": 3,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 22`] = `false`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 23`] = `null`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 24`] = `1`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 25`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 3,
+      "turns_needed": 10,
+    },
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+  {
+    "members": [
+      6,
+    ],
+    "target": 4,
+    "team": 2,
+    "vp": 3,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 26`] = `false`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 27`] = `null`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 28`] = `1`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 29`] = `
+[
+  {
+    "player": 0,
+    "type": "PlayerEliminated",
+  },
+  {
+    "player": 1,
+    "type": "PlayerEliminated",
+  },
+  {
+    "player": 2,
+    "type": "PlayerEliminated",
+  },
+  {
+    "target": 12,
+    "team": 0,
+    "turns_held": 3,
+    "type": "VictoryHoldBroken",
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 30`] = `false`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 31`] = `null`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 32`] = `
+[
+  {
+    "player": 0,
+    "type": "PlayerEliminated",
+  },
+  {
+    "player": 1,
+    "type": "PlayerEliminated",
+  },
+  {
+    "player": 2,
+    "type": "PlayerEliminated",
+  },
+  {
+    "target": 12,
+    "team": 0,
+    "turns_held": 3,
+    "type": "VictoryHoldBroken",
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 33`] = `
+[
+  {
+    "player": 0,
+    "type": "PlayerEliminated",
+  },
+  {
+    "player": 1,
+    "type": "PlayerEliminated",
+  },
+  {
+    "player": 2,
+    "type": "PlayerEliminated",
+  },
+  {
+    "target": 12,
+    "team": 0,
+    "turns_held": 3,
+    "type": "VictoryHoldBroken",
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 34`] = `
+[
+  {
+    "player": 0,
+    "type": "PlayerEliminated",
+  },
+  {
+    "player": 1,
+    "type": "PlayerEliminated",
+  },
+  {
+    "player": 2,
+    "type": "PlayerEliminated",
+  },
+  {
+    "target": 12,
+    "team": 0,
+    "turns_held": 3,
+    "type": "VictoryHoldBroken",
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 35`] = `
+[
+  {
+    "player": 0,
+    "type": "PlayerEliminated",
+  },
+  {
+    "player": 1,
+    "type": "PlayerEliminated",
+  },
+  {
+    "player": 2,
+    "type": "PlayerEliminated",
+  },
+  {
+    "target": 12,
+    "team": 0,
+    "turns_held": 3,
+    "type": "VictoryHoldBroken",
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 36`] = `
+[
+  {
+    "player": 0,
+    "type": "PlayerEliminated",
+  },
+  {
+    "player": 1,
+    "type": "PlayerEliminated",
+  },
+  {
+    "player": 2,
+    "type": "PlayerEliminated",
+  },
+  {
+    "target": 12,
+    "team": 0,
+    "turns_held": 3,
+    "type": "VictoryHoldBroken",
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 37`] = `
+[
+  {
+    "player": 0,
+    "type": "PlayerEliminated",
+  },
+  {
+    "player": 1,
+    "type": "PlayerEliminated",
+  },
+  {
+    "player": 2,
+    "type": "PlayerEliminated",
+  },
+  {
+    "target": 12,
+    "team": 0,
+    "turns_held": 3,
+    "type": "VictoryHoldBroken",
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 38`] = `
+[
+  {
+    "player": 0,
+    "type": "PlayerEliminated",
+  },
+  {
+    "player": 1,
+    "type": "PlayerEliminated",
+  },
+  {
+    "player": 2,
+    "type": "PlayerEliminated",
+  },
+  {
+    "target": 12,
+    "team": 0,
+    "turns_held": 3,
+    "type": "VictoryHoldBroken",
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 39`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+  {
+    "members": [
+      6,
+    ],
+    "target": 4,
+    "team": 2,
+    "vp": 3,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 40`] = `false`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 41`] = `null`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 42`] = `2`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 43`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+  {
+    "members": [
+      6,
+    ],
+    "target": 4,
+    "team": 2,
+    "vp": 3,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 44`] = `false`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 45`] = `null`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 46`] = `2`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 47`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+  {
+    "members": [
+      6,
+    ],
+    "target": 4,
+    "team": 2,
+    "vp": 3,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 48`] = `false`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 49`] = `null`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 50`] = `2`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 51`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+  {
+    "members": [
+      6,
+    ],
+    "target": 4,
+    "team": 2,
+    "vp": 3,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 52`] = `false`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 53`] = `null`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 54`] = `2`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 55`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+  {
+    "members": [
+      6,
+    ],
+    "target": 4,
+    "team": 2,
+    "vp": 3,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 56`] = `false`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 57`] = `null`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 58`] = `2`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 59`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+  {
+    "members": [
+      6,
+    ],
+    "target": 4,
+    "team": 2,
+    "vp": 3,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 60`] = `false`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 61`] = `null`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 62`] = `2`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 63`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+  {
+    "members": [
+      6,
+    ],
+    "target": 4,
+    "team": 2,
+    "vp": 3,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 64`] = `false`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 65`] = `null`;
+
+exports[`WASM VP hold behavior > an eliminated holder loses its hold with an event and the game goes on 66`] = `2`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 1`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 4,
+      "turns_needed": 10,
+    },
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 2`] = `false`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 3`] = `null`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 4`] = `1`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 5`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 4,
+      "turns_needed": 10,
+    },
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 6`] = `false`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 7`] = `null`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 8`] = `1`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 9`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 4,
+      "turns_needed": 10,
+    },
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 10`] = `false`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 11`] = `null`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 12`] = `1`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 13`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 4,
+      "turns_needed": 10,
+    },
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 14`] = `false`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 15`] = `null`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 16`] = `1`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 17`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 4,
+      "turns_needed": 10,
+    },
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 18`] = `false`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 19`] = `null`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 20`] = `1`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 21`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 4,
+      "turns_needed": 10,
+    },
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 22`] = `false`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 23`] = `null`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 24`] = `1`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 25`] = `
+[
+  {
+    "target": 12,
+    "team": 0,
+    "turns_held": 4,
+    "type": "VictoryHoldBroken",
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 26`] = `false`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 27`] = `null`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 28`] = `
+[
+  {
+    "target": 12,
+    "team": 0,
+    "turns_held": 4,
+    "type": "VictoryHoldBroken",
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 29`] = `
+[
+  {
+    "target": 12,
+    "team": 0,
+    "turns_held": 4,
+    "type": "VictoryHoldBroken",
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 30`] = `
+[
+  {
+    "target": 12,
+    "team": 0,
+    "turns_held": 4,
+    "type": "VictoryHoldBroken",
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 31`] = `
+[
+  {
+    "target": 12,
+    "team": 0,
+    "turns_held": 4,
+    "type": "VictoryHoldBroken",
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 32`] = `
+[
+  {
+    "target": 12,
+    "team": 0,
+    "turns_held": 4,
+    "type": "VictoryHoldBroken",
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 33`] = `
+[
+  {
+    "target": 12,
+    "team": 0,
+    "turns_held": 4,
+    "type": "VictoryHoldBroken",
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 34`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 35`] = `false`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 36`] = `null`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 37`] = `2`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 38`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 39`] = `false`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 40`] = `null`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 41`] = `2`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 42`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 43`] = `false`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 44`] = `null`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 45`] = `2`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 46`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 47`] = `false`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 48`] = `null`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 49`] = `2`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 50`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 51`] = `false`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 52`] = `null`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 53`] = `2`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 54`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 55`] = `false`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 56`] = `null`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 57`] = `2`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 58`] = `[]`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 59`] = `false`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 60`] = `null`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 61`] = `[]`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 62`] = `[]`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 63`] = `[]`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 64`] = `[]`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 65`] = `[]`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 66`] = `[]`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 67`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 68`] = `false`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 69`] = `null`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 70`] = `3`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 71`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 72`] = `false`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 73`] = `null`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 74`] = `3`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 75`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 76`] = `false`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 77`] = `null`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 78`] = `3`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 79`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 80`] = `false`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 81`] = `null`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 82`] = `3`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 83`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 84`] = `false`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 85`] = `null`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 86`] = `3`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 87`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 88`] = `false`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 89`] = `null`;
+
+exports[`WASM VP hold behavior > dropping below the target ends the hold on both, with the same event 90`] = `3`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 1`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 3,
+      "turns_needed": 10,
+    },
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 2`] = `false`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 3`] = `null`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 4`] = `1`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 5`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 3,
+      "turns_needed": 10,
+    },
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 6`] = `false`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 7`] = `null`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 8`] = `1`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 9`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 3,
+      "turns_needed": 10,
+    },
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 10`] = `false`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 11`] = `null`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 12`] = `1`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 13`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 3,
+      "turns_needed": 10,
+    },
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 14`] = `false`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 15`] = `null`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 16`] = `1`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 17`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 3,
+      "turns_needed": 10,
+    },
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 18`] = `false`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 19`] = `null`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 20`] = `1`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 21`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 3,
+      "turns_needed": 10,
+    },
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 22`] = `false`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 23`] = `null`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 24`] = `1`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 25`] = `
+[
+  {
+    "player": 3,
+    "type": "PlayerEliminated",
+  },
+  {
+    "player": 4,
+    "type": "PlayerEliminated",
+  },
+  {
+    "player": 5,
+    "type": "PlayerEliminated",
+  },
+  {
+    "reason": "P0 & P1 & P2 is the last team standing",
+    "team": 0,
+    "type": "GameWon",
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 26`] = `true`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 27`] = `0`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 28`] = `
+[
+  {
+    "player": 3,
+    "type": "PlayerEliminated",
+  },
+  {
+    "player": 4,
+    "type": "PlayerEliminated",
+  },
+  {
+    "player": 5,
+    "type": "PlayerEliminated",
+  },
+  {
+    "reason": "P0 & P1 & P2 is the last team standing",
+    "team": 0,
+    "type": "GameWon",
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 29`] = `
+[
+  {
+    "player": 3,
+    "type": "PlayerEliminated",
+  },
+  {
+    "player": 4,
+    "type": "PlayerEliminated",
+  },
+  {
+    "player": 5,
+    "type": "PlayerEliminated",
+  },
+  {
+    "reason": "P0 & P1 & P2 is the last team standing",
+    "team": 0,
+    "type": "GameWon",
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 30`] = `
+[
+  {
+    "player": 3,
+    "type": "PlayerEliminated",
+  },
+  {
+    "player": 4,
+    "type": "PlayerEliminated",
+  },
+  {
+    "player": 5,
+    "type": "PlayerEliminated",
+  },
+  {
+    "reason": "P0 & P1 & P2 is the last team standing",
+    "team": 0,
+    "type": "GameWon",
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 31`] = `
+[
+  {
+    "player": 3,
+    "type": "PlayerEliminated",
+  },
+  {
+    "player": 4,
+    "type": "PlayerEliminated",
+  },
+  {
+    "player": 5,
+    "type": "PlayerEliminated",
+  },
+  {
+    "reason": "P0 & P1 & P2 is the last team standing",
+    "team": 0,
+    "type": "GameWon",
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 32`] = `
+[
+  {
+    "player": 3,
+    "type": "PlayerEliminated",
+  },
+  {
+    "player": 4,
+    "type": "PlayerEliminated",
+  },
+  {
+    "player": 5,
+    "type": "PlayerEliminated",
+  },
+  {
+    "reason": "P0 & P1 & P2 is the last team standing",
+    "team": 0,
+    "type": "GameWon",
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 33`] = `
+[
+  {
+    "player": 3,
+    "type": "PlayerEliminated",
+  },
+  {
+    "player": 4,
+    "type": "PlayerEliminated",
+  },
+  {
+    "player": 5,
+    "type": "PlayerEliminated",
+  },
+  {
+    "reason": "P0 & P1 & P2 is the last team standing",
+    "team": 0,
+    "type": "GameWon",
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 34`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 3,
+      "turns_needed": 10,
+    },
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 35`] = `true`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 36`] = `0`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 37`] = `2`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 38`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 3,
+      "turns_needed": 10,
+    },
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 39`] = `true`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 40`] = `0`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 41`] = `2`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 42`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 3,
+      "turns_needed": 10,
+    },
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 43`] = `true`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 44`] = `0`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 45`] = `2`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 46`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 3,
+      "turns_needed": 10,
+    },
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 47`] = `true`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 48`] = `0`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 49`] = `2`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 50`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 3,
+      "turns_needed": 10,
+    },
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 51`] = `true`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 52`] = `0`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 53`] = `2`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 54`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 3,
+      "turns_needed": 10,
+    },
+    "vp": 11,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 55`] = `true`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 56`] = `0`;
+
+exports[`WASM VP hold behavior > elimination is instant, ahead of an unfinished hold 57`] = `2`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 1`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 2`] = `false`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 3`] = `null`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 4`] = `1`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 5`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 6`] = `false`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 7`] = `null`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 8`] = `1`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 9`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 10`] = `false`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 11`] = `null`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 12`] = `1`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 13`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 14`] = `false`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 15`] = `null`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 16`] = `1`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 17`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 18`] = `false`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 19`] = `null`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 20`] = `1`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 21`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 22`] = `false`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 23`] = `null`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 24`] = `1`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 25`] = `
+[
+  {
+    "target": 12,
+    "team": 0,
+    "turns_needed": 10,
+    "type": "VictoryHoldStarted",
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 26`] = `false`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 27`] = `null`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 28`] = `
+[
+  {
+    "target": 12,
+    "team": 0,
+    "turns_needed": 10,
+    "type": "VictoryHoldStarted",
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 29`] = `
+[
+  {
+    "target": 12,
+    "team": 0,
+    "turns_needed": 10,
+    "type": "VictoryHoldStarted",
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 30`] = `
+[
+  {
+    "target": 12,
+    "team": 0,
+    "turns_needed": 10,
+    "type": "VictoryHoldStarted",
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 31`] = `
+[
+  {
+    "target": 12,
+    "team": 0,
+    "turns_needed": 10,
+    "type": "VictoryHoldStarted",
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 32`] = `
+[
+  {
+    "target": 12,
+    "team": 0,
+    "turns_needed": 10,
+    "type": "VictoryHoldStarted",
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 33`] = `
+[
+  {
+    "target": 12,
+    "team": 0,
+    "turns_needed": 10,
+    "type": "VictoryHoldStarted",
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 34`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 1,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 35`] = `false`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 36`] = `null`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 37`] = `2`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 38`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 1,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 39`] = `false`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 40`] = `null`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 41`] = `2`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 42`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 1,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 43`] = `false`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 44`] = `null`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 45`] = `2`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 46`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 1,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 47`] = `false`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 48`] = `null`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 49`] = `2`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 50`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 1,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 51`] = `false`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 52`] = `null`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 53`] = `2`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 54`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 1,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 55`] = `false`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 56`] = `null`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 57`] = `2`;
+
+exports[`WASM VP hold behavior > starts a hold on the turn the target is reached: event and public view field 58`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 1,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 1`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 9,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "victory_hold": {
+      "turns_held": 9,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 2`] = `false`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 3`] = `null`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 4`] = `1`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 5`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 9,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "victory_hold": {
+      "turns_held": 9,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 6`] = `false`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 7`] = `null`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 8`] = `1`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 9`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 9,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "victory_hold": {
+      "turns_held": 9,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 10`] = `false`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 11`] = `null`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 12`] = `1`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 13`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 9,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "victory_hold": {
+      "turns_held": 9,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 14`] = `false`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 15`] = `null`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 16`] = `1`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 17`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 9,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "victory_hold": {
+      "turns_held": 9,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 18`] = `false`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 19`] = `null`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 20`] = `1`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 21`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 9,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "victory_hold": {
+      "turns_held": 9,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 22`] = `false`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 23`] = `null`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 24`] = `1`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 25`] = `12`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 26`] = `
+[
+  {
+    "reason": "Draw: 2 teams completed their VP holds with 12 VP and 3 population",
+    "type": "GameDrawn",
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 27`] = `true`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 28`] = `null`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 29`] = `
+[
+  {
+    "reason": "Draw: 2 teams completed their VP holds with 12 VP and 3 population",
+    "type": "GameDrawn",
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 30`] = `
+[
+  {
+    "reason": "Draw: 2 teams completed their VP holds with 12 VP and 3 population",
+    "type": "GameDrawn",
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 31`] = `
+[
+  {
+    "reason": "Draw: 2 teams completed their VP holds with 12 VP and 3 population",
+    "type": "GameDrawn",
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 32`] = `
+[
+  {
+    "reason": "Draw: 2 teams completed their VP holds with 12 VP and 3 population",
+    "type": "GameDrawn",
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 33`] = `
+[
+  {
+    "reason": "Draw: 2 teams completed their VP holds with 12 VP and 3 population",
+    "type": "GameDrawn",
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 34`] = `
+[
+  {
+    "reason": "Draw: 2 teams completed their VP holds with 12 VP and 3 population",
+    "type": "GameDrawn",
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 35`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 10,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "victory_hold": {
+      "turns_held": 10,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 36`] = `true`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 37`] = `null`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 38`] = `2`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 39`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 10,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "victory_hold": {
+      "turns_held": 10,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 40`] = `true`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 41`] = `null`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 42`] = `2`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 43`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 10,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "victory_hold": {
+      "turns_held": 10,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 44`] = `true`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 45`] = `null`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 46`] = `2`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 47`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 10,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "victory_hold": {
+      "turns_held": 10,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 48`] = `true`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 49`] = `null`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 50`] = `2`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 51`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 10,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "victory_hold": {
+      "turns_held": 10,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 52`] = `true`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 53`] = `null`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 54`] = `2`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 55`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 10,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "victory_hold": {
+      "turns_held": 10,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 56`] = `true`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 57`] = `null`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP and population draw 58`] = `2`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 1`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 9,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "victory_hold": {
+      "turns_held": 9,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 2`] = `false`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 3`] = `null`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 4`] = `1`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 5`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 9,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "victory_hold": {
+      "turns_held": 9,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 6`] = `false`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 7`] = `null`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 8`] = `1`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 9`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 9,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "victory_hold": {
+      "turns_held": 9,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 10`] = `false`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 11`] = `null`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 12`] = `1`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 13`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 9,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "victory_hold": {
+      "turns_held": 9,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 14`] = `false`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 15`] = `null`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 16`] = `1`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 17`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 9,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "victory_hold": {
+      "turns_held": 9,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 18`] = `false`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 19`] = `null`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 20`] = `1`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 21`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 9,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "victory_hold": {
+      "turns_held": 9,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 22`] = `false`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 23`] = `null`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 24`] = `1`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 25`] = `
+[
+  {
+    "reason": "P0 & P1 & P2 held 12 of 12 VP for 10 turns",
+    "team": 0,
+    "type": "GameWon",
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 26`] = `true`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 27`] = `0`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 28`] = `
+[
+  {
+    "reason": "P0 & P1 & P2 held 12 of 12 VP for 10 turns",
+    "team": 0,
+    "type": "GameWon",
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 29`] = `
+[
+  {
+    "reason": "P0 & P1 & P2 held 12 of 12 VP for 10 turns",
+    "team": 0,
+    "type": "GameWon",
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 30`] = `
+[
+  {
+    "reason": "P0 & P1 & P2 held 12 of 12 VP for 10 turns",
+    "team": 0,
+    "type": "GameWon",
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 31`] = `
+[
+  {
+    "reason": "P0 & P1 & P2 held 12 of 12 VP for 10 turns",
+    "team": 0,
+    "type": "GameWon",
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 32`] = `
+[
+  {
+    "reason": "P0 & P1 & P2 held 12 of 12 VP for 10 turns",
+    "team": 0,
+    "type": "GameWon",
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 33`] = `
+[
+  {
+    "reason": "P0 & P1 & P2 held 12 of 12 VP for 10 turns",
+    "team": 0,
+    "type": "GameWon",
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 34`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 10,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "victory_hold": {
+      "turns_held": 10,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 35`] = `true`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 36`] = `0`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 37`] = `2`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 38`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 10,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "victory_hold": {
+      "turns_held": 10,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 39`] = `true`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 40`] = `0`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 41`] = `2`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 42`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 10,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "victory_hold": {
+      "turns_held": 10,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 43`] = `true`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 44`] = `0`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 45`] = `2`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 46`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 10,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "victory_hold": {
+      "turns_held": 10,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 47`] = `true`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 48`] = `0`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 49`] = `2`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 50`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 10,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "victory_hold": {
+      "turns_held": 10,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 51`] = `true`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 52`] = `0`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 53`] = `2`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 54`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 10,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "victory_hold": {
+      "turns_held": 10,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 55`] = `true`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 56`] = `0`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 57`] = `2`;
+
+exports[`WASM VP hold behavior > teams completing the same turn on equal VP: the larger population wins 58`] = `12`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 1`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 9,
+      "turns_needed": 10,
+    },
+    "vp": 13,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "victory_hold": {
+      "turns_held": 9,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 2`] = `false`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 3`] = `null`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 4`] = `1`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 5`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 9,
+      "turns_needed": 10,
+    },
+    "vp": 13,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "victory_hold": {
+      "turns_held": 9,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 6`] = `false`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 7`] = `null`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 8`] = `1`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 9`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 9,
+      "turns_needed": 10,
+    },
+    "vp": 13,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "victory_hold": {
+      "turns_held": 9,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 10`] = `false`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 11`] = `null`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 12`] = `1`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 13`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 9,
+      "turns_needed": 10,
+    },
+    "vp": 13,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "victory_hold": {
+      "turns_held": 9,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 14`] = `false`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 15`] = `null`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 16`] = `1`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 17`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 9,
+      "turns_needed": 10,
+    },
+    "vp": 13,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "victory_hold": {
+      "turns_held": 9,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 18`] = `false`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 19`] = `null`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 20`] = `1`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 21`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 9,
+      "turns_needed": 10,
+    },
+    "vp": 13,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "victory_hold": {
+      "turns_held": 9,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 22`] = `false`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 23`] = `null`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 24`] = `1`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 25`] = `
+[
+  {
+    "reason": "P0 & P1 & P2 held 13 of 12 VP for 10 turns",
+    "team": 0,
+    "type": "GameWon",
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 26`] = `true`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 27`] = `0`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 28`] = `
+[
+  {
+    "reason": "P0 & P1 & P2 held 13 of 12 VP for 10 turns",
+    "team": 0,
+    "type": "GameWon",
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 29`] = `
+[
+  {
+    "reason": "P0 & P1 & P2 held 13 of 12 VP for 10 turns",
+    "team": 0,
+    "type": "GameWon",
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 30`] = `
+[
+  {
+    "reason": "P0 & P1 & P2 held 13 of 12 VP for 10 turns",
+    "team": 0,
+    "type": "GameWon",
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 31`] = `
+[
+  {
+    "reason": "P0 & P1 & P2 held 13 of 12 VP for 10 turns",
+    "team": 0,
+    "type": "GameWon",
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 32`] = `
+[
+  {
+    "reason": "P0 & P1 & P2 held 13 of 12 VP for 10 turns",
+    "team": 0,
+    "type": "GameWon",
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 33`] = `
+[
+  {
+    "reason": "P0 & P1 & P2 held 13 of 12 VP for 10 turns",
+    "team": 0,
+    "type": "GameWon",
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 34`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 10,
+      "turns_needed": 10,
+    },
+    "vp": 13,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "victory_hold": {
+      "turns_held": 10,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 35`] = `true`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 36`] = `0`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 37`] = `2`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 38`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 10,
+      "turns_needed": 10,
+    },
+    "vp": 13,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "victory_hold": {
+      "turns_held": 10,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 39`] = `true`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 40`] = `0`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 41`] = `2`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 42`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 10,
+      "turns_needed": 10,
+    },
+    "vp": 13,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "victory_hold": {
+      "turns_held": 10,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 43`] = `true`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 44`] = `0`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 45`] = `2`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 46`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 10,
+      "turns_needed": 10,
+    },
+    "vp": 13,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "victory_hold": {
+      "turns_held": 10,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 47`] = `true`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 48`] = `0`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 49`] = `2`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 50`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 10,
+      "turns_needed": 10,
+    },
+    "vp": 13,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "victory_hold": {
+      "turns_held": 10,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 51`] = `true`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 52`] = `0`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 53`] = `2`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 54`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 10,
+      "turns_needed": 10,
+    },
+    "vp": 13,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "victory_hold": {
+      "turns_held": 10,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 55`] = `true`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 56`] = `0`;
+
+exports[`WASM VP hold behavior > teams completing the same turn: the higher VP wins 57`] = `2`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 1`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 2`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 3`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 4`] = `1`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 5`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 6`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 7`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 8`] = `1`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 9`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 10`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 11`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 12`] = `1`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 13`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 14`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 15`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 16`] = `1`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 17`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 18`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 19`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 20`] = `1`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 21`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 22`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 23`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 24`] = `1`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 25`] = `
+[
+  {
+    "target": 12,
+    "team": 0,
+    "turns_needed": 10,
+    "type": "VictoryHoldStarted",
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 26`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 27`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 28`] = `
+[
+  {
+    "target": 12,
+    "team": 0,
+    "turns_needed": 10,
+    "type": "VictoryHoldStarted",
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 29`] = `
+[
+  {
+    "target": 12,
+    "team": 0,
+    "turns_needed": 10,
+    "type": "VictoryHoldStarted",
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 30`] = `
+[
+  {
+    "target": 12,
+    "team": 0,
+    "turns_needed": 10,
+    "type": "VictoryHoldStarted",
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 31`] = `
+[
+  {
+    "target": 12,
+    "team": 0,
+    "turns_needed": 10,
+    "type": "VictoryHoldStarted",
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 32`] = `
+[
+  {
+    "target": 12,
+    "team": 0,
+    "turns_needed": 10,
+    "type": "VictoryHoldStarted",
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 33`] = `
+[
+  {
+    "target": 12,
+    "team": 0,
+    "turns_needed": 10,
+    "type": "VictoryHoldStarted",
+    "vp": 12,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 34`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 1,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 35`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 36`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 37`] = `2`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 38`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 1,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 39`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 40`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 41`] = `2`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 42`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 1,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 43`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 44`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 45`] = `2`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 46`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 1,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 47`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 48`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 49`] = `2`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 50`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 1,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 51`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 52`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 53`] = `2`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 54`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 1,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 55`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 56`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 57`] = `2`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 58`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 59`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 60`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 61`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 62`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 63`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 64`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 65`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 66`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 67`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 2,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 68`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 69`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 70`] = `3`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 71`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 2,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 72`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 73`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 74`] = `3`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 75`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 2,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 76`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 77`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 78`] = `3`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 79`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 2,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 80`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 81`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 82`] = `3`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 83`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 2,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 84`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 85`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 86`] = `3`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 87`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 2,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 88`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 89`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 90`] = `3`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 91`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 92`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 93`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 94`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 95`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 96`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 97`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 98`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 99`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 100`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 3,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 101`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 102`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 103`] = `4`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 104`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 3,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 105`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 106`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 107`] = `4`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 108`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 3,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 109`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 110`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 111`] = `4`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 112`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 3,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 113`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 114`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 115`] = `4`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 116`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 3,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 117`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 118`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 119`] = `4`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 120`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 3,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 121`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 122`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 123`] = `4`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 124`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 125`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 126`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 127`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 128`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 129`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 130`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 131`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 132`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 133`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 4,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 134`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 135`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 136`] = `5`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 137`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 4,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 138`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 139`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 140`] = `5`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 141`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 4,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 142`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 143`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 144`] = `5`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 145`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 4,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 146`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 147`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 148`] = `5`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 149`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 4,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 150`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 151`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 152`] = `5`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 153`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 4,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 154`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 155`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 156`] = `5`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 157`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 158`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 159`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 160`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 161`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 162`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 163`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 164`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 165`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 166`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 5,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 167`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 168`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 169`] = `6`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 170`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 5,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 171`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 172`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 173`] = `6`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 174`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 5,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 175`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 176`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 177`] = `6`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 178`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 5,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 179`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 180`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 181`] = `6`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 182`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 5,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 183`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 184`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 185`] = `6`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 186`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 5,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 187`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 188`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 189`] = `6`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 190`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 191`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 192`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 193`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 194`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 195`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 196`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 197`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 198`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 199`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 6,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 200`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 201`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 202`] = `7`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 203`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 6,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 204`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 205`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 206`] = `7`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 207`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 6,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 208`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 209`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 210`] = `7`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 211`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 6,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 212`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 213`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 214`] = `7`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 215`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 6,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 216`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 217`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 218`] = `7`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 219`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 6,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 220`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 221`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 222`] = `7`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 223`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 224`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 225`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 226`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 227`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 228`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 229`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 230`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 231`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 232`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 7,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 233`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 234`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 235`] = `8`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 236`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 7,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 237`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 238`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 239`] = `8`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 240`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 7,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 241`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 242`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 243`] = `8`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 244`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 7,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 245`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 246`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 247`] = `8`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 248`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 7,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 249`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 250`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 251`] = `8`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 252`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 7,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 253`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 254`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 255`] = `8`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 256`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 257`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 258`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 259`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 260`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 261`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 262`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 263`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 264`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 265`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 8,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 266`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 267`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 268`] = `9`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 269`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 8,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 270`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 271`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 272`] = `9`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 273`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 8,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 274`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 275`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 276`] = `9`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 277`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 8,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 278`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 279`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 280`] = `9`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 281`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 8,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 282`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 283`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 284`] = `9`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 285`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 8,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 286`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 287`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 288`] = `9`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 289`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 290`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 291`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 292`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 293`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 294`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 295`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 296`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 297`] = `[]`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 298`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 9,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 299`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 300`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 301`] = `10`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 302`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 9,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 303`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 304`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 305`] = `10`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 306`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 9,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 307`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 308`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 309`] = `10`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 310`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 9,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 311`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 312`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 313`] = `10`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 314`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 9,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 315`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 316`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 317`] = `10`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 318`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 9,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 319`] = `false`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 320`] = `null`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 321`] = `10`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 322`] = `
+[
+  {
+    "reason": "P0 & P1 & P2 held 12 of 12 VP for 10 turns",
+    "team": 0,
+    "type": "GameWon",
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 323`] = `true`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 324`] = `0`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 325`] = `
+[
+  {
+    "reason": "P0 & P1 & P2 held 12 of 12 VP for 10 turns",
+    "team": 0,
+    "type": "GameWon",
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 326`] = `
+[
+  {
+    "reason": "P0 & P1 & P2 held 12 of 12 VP for 10 turns",
+    "team": 0,
+    "type": "GameWon",
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 327`] = `
+[
+  {
+    "reason": "P0 & P1 & P2 held 12 of 12 VP for 10 turns",
+    "team": 0,
+    "type": "GameWon",
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 328`] = `
+[
+  {
+    "reason": "P0 & P1 & P2 held 12 of 12 VP for 10 turns",
+    "team": 0,
+    "type": "GameWon",
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 329`] = `
+[
+  {
+    "reason": "P0 & P1 & P2 held 12 of 12 VP for 10 turns",
+    "team": 0,
+    "type": "GameWon",
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 330`] = `
+[
+  {
+    "reason": "P0 & P1 & P2 held 12 of 12 VP for 10 turns",
+    "team": 0,
+    "type": "GameWon",
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 331`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 10,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 332`] = `true`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 333`] = `0`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 334`] = `11`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 335`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 10,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 336`] = `true`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 337`] = `0`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 338`] = `11`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 339`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 10,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 340`] = `true`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 341`] = `0`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 342`] = `11`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 343`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 10,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 344`] = `true`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 345`] = `0`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 346`] = `11`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 347`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 10,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 348`] = `true`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 349`] = `0`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 350`] = `11`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 351`] = `
+[
+  {
+    "members": [
+      0,
+      1,
+      2,
+    ],
+    "target": 12,
+    "team": 0,
+    "victory_hold": {
+      "turns_held": 10,
+      "turns_needed": 10,
+    },
+    "vp": 12,
+  },
+  {
+    "members": [
+      3,
+      4,
+      5,
+    ],
+    "target": 12,
+    "team": 1,
+    "vp": 11,
+  },
+]
+`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 352`] = `true`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 353`] = `0`;
+
+exports[`WASM VP hold behavior > wins after holding for 10 turn ends 354`] = `11`;

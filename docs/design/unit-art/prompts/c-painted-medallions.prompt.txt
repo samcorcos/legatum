@@ -1,0 +1,10 @@
+Use case: stylized-concept
+Asset type: transparent five-sprite source sheet for an art-direction exploration of Legatum historical strategy-game unit counters and panel portraits
+Primary request: Create exactly five distinct painterly portrait medallions, individually isolated and evenly spaced in one horizontal row, left-to-right: Ancient Spearman (head-and-shoulders armored foot soldier; upright spear and edge of round shield clearly visible), Ancient Archer (head-and-shoulders archer with bow held visibly beside them), Ancient Horseman (mounted warrior bust with horse head/neck clearly included), Modern Tank (compact painted profile vignette of a tracked tank, turret and barrel), Future military drone swarm (three distinct realistic small military quadcopters in a compact portrait composition). Keep class identity unmistakable from the outer silhouette even when small.
+Style/medium: covetable small oil-painting portraits on historic enamel-and-parchment medallions, refined painterly realism, museum-quality, serious and tactile, not cartoon
+Composition/framing: five equally sized circles with identical thick muted-bronze rims, one vignette per circle; medallions entirely in frame with transparent exterior; clear, bold shapes large in each circle and minimal background behind each subject; consistent framing and scale
+Lighting/mood: soft painterly light, rich but restrained
+Color palette: parchment grounds, muted bronze, umber, cream, dark olive, slate steel; all medallion rims neutral bronze so owner color can be overlaid later
+Materials/textures: visible brushwork in painted portrait scene, delicately aged enamel, subtle metal rim, no gradients outside painted medallion
+Constraints: exactly five isolated complete circles; transparent background outside the circles; figures and vehicles must remain discernible as silhouettes; no text, no letters, no numbers, no watermark
+Avoid: square tiles, loose figures without a medallion, flat glyphs, clip art, comic-book outlines, saturated colors, sci-fi styling, tank or drones rendered as human busts

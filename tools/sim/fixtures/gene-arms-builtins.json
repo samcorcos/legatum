@@ -1,0 +1,317 @@
+{
+  "arms": [
+    {
+      "brain": "params",
+      "label": "ctl",
+      "mode": "all",
+      "params": {
+        "decisions": {
+          "army_war_extra": 0,
+          "aztecs_playbook": 0,
+          "celts_playbook": 0,
+          "india_playbook": 0,
+          "swiss_playbook": 0,
+          "walls_garrison": 0
+        },
+        "faction_overrides": {
+          "Athens": {
+            "army_war_extra": 0,
+            "aztecs_playbook": 0,
+            "celts_playbook": 0,
+            "india_playbook": 0,
+            "swiss_playbook": 0,
+            "walls_garrison": 0
+          },
+          "Aztecs": {
+            "army_war_extra": 0,
+            "aztecs_playbook": 0,
+            "celts_playbook": 0,
+            "india_playbook": 0,
+            "swiss_playbook": 0,
+            "walls_garrison": 0
+          },
+          "Byzantium": {
+            "army_war_extra": 0,
+            "aztecs_playbook": 0,
+            "celts_playbook": 0,
+            "india_playbook": 0,
+            "swiss_playbook": 0,
+            "walls_garrison": 0
+          },
+          "Celts": {
+            "army_war_extra": 0,
+            "aztecs_playbook": 0,
+            "celts_playbook": 0,
+            "india_playbook": 0,
+            "swiss_playbook": 0,
+            "walls_garrison": 0
+          },
+          "Germany": {
+            "army_war_extra": 0,
+            "aztecs_playbook": 0,
+            "celts_playbook": 0,
+            "india_playbook": 0,
+            "swiss_playbook": 0,
+            "walls_garrison": 0
+          },
+          "India": {
+            "army_war_extra": 0,
+            "aztecs_playbook": 0,
+            "celts_playbook": 0,
+            "india_playbook": 0,
+            "swiss_playbook": 0,
+            "walls_garrison": 0
+          },
+          "Mongols": {
+            "army_war_extra": 0,
+            "aztecs_playbook": 0,
+            "celts_playbook": 0,
+            "india_playbook": 0,
+            "swiss_playbook": 0,
+            "walls_garrison": 0
+          },
+          "Rome": {
+            "army_war_extra": 0,
+            "aztecs_playbook": 0,
+            "celts_playbook": 0,
+            "india_playbook": 0,
+            "swiss_playbook": 0,
+            "walls_garrison": 0
+          },
+          "Sparta": {
+            "army_war_extra": 0,
+            "aztecs_playbook": 0,
+            "celts_playbook": 0,
+            "india_playbook": 0,
+            "swiss_playbook": 0,
+            "walls_garrison": 0
+          },
+          "Switzerland": {
+            "army_war_extra": 0,
+            "aztecs_playbook": 0,
+            "celts_playbook": 0,
+            "india_playbook": 0,
+            "swiss_playbook": 0,
+            "walls_garrison": 0
+          },
+          "Egypt": {
+            "army_war_extra": 0,
+            "aztecs_playbook": 0,
+            "celts_playbook": 0,
+            "india_playbook": 0,
+            "swiss_playbook": 0,
+            "walls_garrison": 0
+          }
+        },
+        "name": "genes-off",
+        "schema": 1
+      }
+    },
+    {
+      "brain": "params",
+      "label": "rivals",
+      "mode": "seat",
+      "params": {
+        "decisions": {
+          "army_war_extra": 0,
+          "aztecs_playbook": 0,
+          "celts_playbook": 0,
+          "india_playbook": 0,
+          "swiss_playbook": 0,
+          "walls_garrison": 0
+        },
+        "faction_overrides": {
+          "Athens": {
+            "army_war_extra": 0,
+            "aztecs_playbook": 0,
+            "celts_playbook": 0,
+            "india_playbook": 0,
+            "swiss_playbook": 0,
+            "walls_garrison": 0
+          },
+          "Aztecs": {
+            "army_war_extra": 0,
+            "aztecs_playbook": 0,
+            "celts_playbook": 0,
+            "india_playbook": 0,
+            "swiss_playbook": 0,
+            "walls_garrison": 0
+          },
+          "Byzantium": {
+            "army_war_extra": 0,
+            "aztecs_playbook": 0,
+            "celts_playbook": 0,
+            "india_playbook": 0,
+            "swiss_playbook": 0,
+            "walls_garrison": 0
+          },
+          "Celts": {
+            "army_war_extra": 0,
+            "aztecs_playbook": 0,
+            "celts_playbook": 0,
+            "india_playbook": 0,
+            "swiss_playbook": 0,
+            "walls_garrison": 0
+          },
+          "Germany": {
+            "army_war_extra": 0,
+            "aztecs_playbook": 0,
+            "celts_playbook": 0,
+            "india_playbook": 0,
+            "swiss_playbook": 0,
+            "walls_garrison": 0
+          },
+          "India": {
+            "army_war_extra": 0,
+            "aztecs_playbook": 0,
+            "celts_playbook": 0,
+            "india_playbook": 0,
+            "swiss_playbook": 0,
+            "walls_garrison": 0
+          },
+          "Mongols": {
+            "army_war_extra": 0,
+            "aztecs_playbook": 0,
+            "celts_playbook": 0,
+            "india_playbook": 0,
+            "swiss_playbook": 0,
+            "walls_garrison": 0
+          },
+          "Rome": {
+            "army_war_extra": 0,
+            "aztecs_playbook": 0,
+            "celts_playbook": 0,
+            "india_playbook": 0,
+            "swiss_playbook": 0,
+            "walls_garrison": 0
+          },
+          "Sparta": {
+            "army_war_extra": 0,
+            "aztecs_playbook": 0,
+            "celts_playbook": 0,
+            "india_playbook": 0,
+            "swiss_playbook": 0,
+            "walls_garrison": 0
+          },
+          "Switzerland": {
+            "army_war_extra": 0,
+            "aztecs_playbook": 0,
+            "celts_playbook": 0,
+            "india_playbook": 0,
+            "swiss_playbook": 0,
+            "walls_garrison": 0
+          },
+          "Egypt": {
+            "army_war_extra": 0,
+            "aztecs_playbook": 0,
+            "celts_playbook": 0,
+            "india_playbook": 0,
+            "swiss_playbook": 0,
+            "walls_garrison": 0
+          }
+        },
+        "name": "seat-genes-off",
+        "schema": 1
+      }
+    },
+    {
+      "brain": "params",
+      "label": "all",
+      "mode": "all",
+      "params": {
+        "faction_overrides": {
+          "Athens": {
+            "army_war_extra": 0,
+            "aztecs_playbook": 0,
+            "celts_playbook": 0,
+            "india_playbook": 0,
+            "swiss_playbook": 0,
+            "walls_garrison": 1
+          },
+          "Aztecs": {
+            "army_war_extra": 1,
+            "aztecs_playbook": 7,
+            "celts_playbook": 0,
+            "india_playbook": 0,
+            "swiss_playbook": 0,
+            "walls_garrison": 1
+          },
+          "Byzantium": {
+            "army_war_extra": 1,
+            "aztecs_playbook": 0,
+            "celts_playbook": 0,
+            "india_playbook": 0,
+            "swiss_playbook": 0,
+            "walls_garrison": 1
+          },
+          "Celts": {
+            "army_war_extra": 1,
+            "aztecs_playbook": 0,
+            "celts_playbook": 2,
+            "india_playbook": 0,
+            "swiss_playbook": 0,
+            "walls_garrison": 1
+          },
+          "Germany": {
+            "army_war_extra": 1,
+            "aztecs_playbook": 0,
+            "celts_playbook": 0,
+            "india_playbook": 0,
+            "swiss_playbook": 0,
+            "walls_garrison": 1
+          },
+          "India": {
+            "army_war_extra": 1,
+            "aztecs_playbook": 0,
+            "celts_playbook": 0,
+            "india_playbook": 2,
+            "swiss_playbook": 0,
+            "walls_garrison": 1
+          },
+          "Mongols": {
+            "army_war_extra": 1,
+            "aztecs_playbook": 0,
+            "celts_playbook": 0,
+            "india_playbook": 0,
+            "swiss_playbook": 0,
+            "walls_garrison": 1
+          },
+          "Rome": {
+            "army_war_extra": 1,
+            "aztecs_playbook": 0,
+            "celts_playbook": 0,
+            "india_playbook": 0,
+            "swiss_playbook": 0,
+            "walls_garrison": 1
+          },
+          "Sparta": {
+            "army_war_extra": 1,
+            "aztecs_playbook": 0,
+            "celts_playbook": 0,
+            "india_playbook": 0,
+            "swiss_playbook": 0,
+            "walls_garrison": 1
+          },
+          "Switzerland": {
+            "army_war_extra": 1,
+            "aztecs_playbook": 0,
+            "celts_playbook": 0,
+            "india_playbook": 0,
+            "swiss_playbook": 3,
+            "walls_garrison": 1
+          },
+          "Egypt": {
+            "army_war_extra": 1,
+            "aztecs_playbook": 0,
+            "celts_playbook": 0,
+            "india_playbook": 0,
+            "swiss_playbook": 0,
+            "walls_garrison": 1
+          }
+        },
+        "name": "genes-on",
+        "schema": 1
+      }
+    }
+  ]
+}

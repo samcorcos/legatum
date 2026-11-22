@@ -1,0 +1,43 @@
+best responses by composition (units: melee/ranged/mounted), Human policy, open ground, d4
+Ancient (16 candidate mixes)
+  best vs line     3/3/0=50  8/0/0=50  4/2/0=43
+  best vs gunline  2/1/3=100  3/1/2=100  5/0/2=100
+  best vs horse    1/0/5=100  2/0/4=100  2/1/3=100
+  best vs balanced 8/0/0=62  6/0/1=56  5/0/2=50
+  mixes that beat every archetype at 60%+: none   best worst-case: 8/0/0=50
+Classical (17 candidate mixes)
+  best vs line     3/3/0=56  8/0/0=50  6/1/0=43
+  best vs gunline  1/1/4=100  2/1/3=100  2/2/2=100
+  best vs horse    1/0/5=100  1/1/4=100  2/0/4=100
+  best vs balanced 5/1/1=75  5/0/2=56  6/0/1=50
+  mixes that beat every archetype at 60%+: none   best worst-case: 8/0/0=43
+Medieval (17 candidate mixes)
+  best vs line     2/4/0=100  3/3/0=87  5/2/0=81
+  best vs gunline  1/1/4=100  5/0/2=100  1/3/2=87
+  best vs horse    1/0/5=100  1/1/4=100  2/0/4=100
+  best vs balanced 5/0/2=62  5/1/1=56  6/0/1=50
+  mixes that beat every archetype at 60%+: none   best worst-case: 5/1/1=25
+Renaissance (27 candidate mixes)
+  best vs line     1/5/0=100  4/3/0=100  0/6/0=87
+  best vs gunline  0/2/4=100  1/1/4=100  5/0/2=93
+  best vs horse    1/0/5=100  1/1/4=100  2/0/4=100
+  best vs balanced 4/0/3=93  5/0/2=75  6/0/1=56
+  mixes that beat every archetype at 60%+: none   best worst-case: 5/1/1=18
+Industrial (23 candidate mixes)
+  best vs line     2/5/0=100  3/2/2=100  3/3/1=100
+  best vs gunline  1/1/4=100  2/5/0=93  5/0/2=93
+  best vs horse    1/0/5=100  1/1/4=100  2/0/4=100
+  best vs balanced 4/0/3=93  5/0/2=81  5/1/1=62
+  mixes that beat every archetype at 60%+: none   best worst-case: 3/3/1=50
+Modern (26 candidate mixes)
+  best vs line     0/6/1=100  0/7/0=100  1/4/2=100
+  best vs gunline  3/1/3=100  1/1/4=93  0/1/5=87
+  best vs horse    1/0/5=100  1/1/4=100  3/1/3=100
+  best vs balanced 3/1/3=100  0/6/1=87  5/0/2=87
+  mixes that beat every archetype at 60%+: none   best worst-case: 2/4/1=50
+Future (22 candidate mixes)
+  best vs line     0/5/2=100  0/6/1=100  1/4/2=100
+  best vs gunline  3/1/3=100  0/5/2=87  1/5/1=87
+  best vs horse    1/0/5=100  2/2/3=100  2/3/2=100
+  best vs balanced 0/5/2=87  3/1/3=87  4/0/3=75
+  mixes that beat every archetype at 60%+: none   best worst-case: 1/4/2=50

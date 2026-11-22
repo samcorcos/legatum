@@ -1,0 +1,30 @@
+[
+  {
+    "slug": "arquebusier",
+    "kind": "unit",
+    "prompt": "Repaint the reference as a late-sixteenth-century standing arquebusier AT REST. Keep his recognizable morion helmet and red/cream slashed doublet and hose, leather closed shoes and powder-charge bandolier, but give him a calm upright posture. His right hand holds a complete matchlock arquebus upright, butt on base: wooden fishtail stock, long iron barrel, visible small side lock with curved serpentine holding a THIN dark slow-match cord, its unlit end beside the CLOSED priming-pan cover. No glowing rope, no flame, no smoke. Left hand rests lightly on belt. No firing or combat. Do not include forked gun rest. Refined painterly historical miniature, realistic adult proportions, calm upright standing pose, full figure on ONE plain smooth warm cream circular disc, three-quarter camera and soft warm upper-left lighting matching reference. Natural fingers on every visible hand, coherent equipment, restrained pigments. Transparent background, no words, watermark or halo. ",
+    "input": "~/code/legatum/.claude/worktrees/lane-5/app/src/assets/units/arquebusier-source.png",
+    "attempt": 1
+  },
+  {
+    "slug": "barbarian-crossbowman",
+    "kind": "unit",
+    "prompt": "Repaint this medieval crossbowman as a calm upright standing man at rest, hooded brown wool mantle, simple padded tunic, plain hose and closed leather ankle shoes, small bolt quiver on belt. He holds a complete medieval crossbow upright beside his right leg: wooden tiller, steel bow mounted crosswise at its lower end, simple foot stirrup extending below the bow, and one unbroken linen string joining both bow tips across the stock. The stirrup rests on the base; BOTH feet are flat on the base, neither foot touches the crossbow. Right hand encircles upper wooden tiller; left hand rests on belt. No spanning action, no extra ropes, no firing. Refined painterly historical miniature, realistic adult proportions, calm upright standing pose, full figure on ONE plain smooth warm cream circular disc, three-quarter camera and soft warm upper-left lighting matching reference. Natural fingers on every visible hand, coherent equipment, restrained pigments. Transparent background, no words, watermark or halo. ",
+    "input": "~/code/legatum/.claude/worktrees/lane-5/app/src/assets/units/barbarian-crossbowman-source.png",
+    "attempt": 1
+  },
+  {
+    "slug": "crossbowman",
+    "kind": "unit",
+    "prompt": "Repaint this medieval crossbowman as a calm standing man at rest in kettle helmet, cream quilted gambeson, muted red cowl, hose and plain closed leather shoes. On his LEFT a tall wooden pavise stands on the ground, red/ochre simple geometric paint, his left hand resting on its top edge. On his RIGHT entirely clear of the pavise, he holds a medieval crossbow upright beside his leg: wooden tiller at top held in right hand, horizontal steel prod near bottom, foot stirrup on the base, one continuous linen string between tips crossing the stock. Both feet on disc. Shield and crossbow must never overlap or intersect. No firing or kneeling. Refined painterly historical miniature, realistic adult proportions, calm upright standing pose, full figure on ONE plain smooth warm cream circular disc, three-quarter camera and soft warm upper-left lighting matching reference. Natural fingers on every visible hand, coherent equipment, restrained pigments. Transparent background, no words, watermark or halo. ",
+    "input": "~/code/legatum/.claude/worktrees/lane-5/app/src/assets/units/crossbowman-source.png",
+    "attempt": 1
+  },
+  {
+    "slug": "barbarian-pikeman",
+    "kind": "unit",
+    "prompt": "Repaint this miniature as a calm standing late-medieval irregular pikeman, preserving face and kettle hat, worn cream gambeson, red armband, plain wool hose and closed leather shoes. Replace the short hooked axe with an actual PIKE: a very long slender straight ash shaft with a SMALL narrow leaf-shaped iron point and iron butt cap, NO axe blade, NO hook. Pike upright beside him, butt grounded, top fully visible, length about twice man's height; two hands naturally wrapping shaft at chest and waist. No swinging or attack pose. Refined painterly historical miniature, realistic adult proportions, calm upright standing pose, full figure on ONE plain smooth warm cream circular disc, three-quarter camera and soft warm upper-left lighting matching reference. Natural fingers on every visible hand, coherent equipment, restrained pigments. Transparent background, no words, watermark or halo. ",
+    "input": "~/code/legatum/.claude/worktrees/lane-5/app/src/assets/units/barbarian-pikeman-source.png",
+    "attempt": 1
+  }
+]

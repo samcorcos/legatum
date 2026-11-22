@@ -1,0 +1,8 @@
+2026-11-16 — Codex built-in image generation. Provisional author review; lead review pending.
+Reference images and requested edits: see docs/design/art-pass-2/generation-*.json.
+
+Edit only the two small sailing boats at the distant right edge of this existing refined oil painting of New Kingdom Egypt, c.1300 BCE. Their triangular lateen sails are anachronistic. Replace each with a single broad rectangular linen square sail on a horizontal yard at the top of one mast, seen obliquely with coherent ropes and period papyrus/wood boat hull. Keep boats small in their exact locations. Preserve everything else precisely: both adults, faces, all hands, the corrected wooden scribal palette with exactly two pigment cakes and reed-pen slot, clothing, jewelry, grain, river, buildings, oil brushwork, color and lighting. No text, watermark, modern objects or other people. One small background correction only.
+
+--- FOLLOW-UP REQUEST ---
+
+Precise small background correction to this painting: REMOVE the tiny triangular-sailed boat in the river near the centre, just LEFT of the woman's hair below the temple and palm tree. Replace that tiny triangle and its hull with plain blue river. Keep the TWO rectangular square-sailed boats on the FAR RIGHT unchanged. No other sailing boats anywhere. Preserve all people, hands, scribal palette, buildings, colors and brushwork exactly. No new objects.

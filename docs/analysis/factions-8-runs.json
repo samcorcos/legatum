@@ -1,0 +1,1853 @@
+{
+  "confidence_interval": "95% Wilson score, per faction seat; draws remain in denominator",
+  "runs": [
+    {
+      "stage": "Initial implementation",
+      "report_sha256": "445f1bd7a76ff3339f037a9587afb45966f6cd0ffa1203bc234b11dd133d8dcd",
+      "meta": {
+        "brain": "scripted",
+        "command": [
+          "target/release/legatum-sim",
+          "--games",
+          "1000",
+          "--seed",
+          "1",
+          "--label",
+          "factions-8",
+          "--status-file",
+          "target/factions-8-status.json"
+        ],
+        "date": "2026-09-26",
+        "determinism": false,
+        "first_seed": "1",
+        "first_setup": {
+          "height": 32,
+          "players": [
+            {
+              "faction": "Switzerland",
+              "is_human": false,
+              "name": "AI 1",
+              "team": 0
+            },
+            {
+              "faction": "Celts",
+              "is_human": false,
+              "name": "AI 2",
+              "team": 1
+            },
+            {
+              "faction": "Sparta",
+              "is_human": false,
+              "name": "AI 3",
+              "team": 2
+            },
+            {
+              "faction": "Byzantium",
+              "is_human": false,
+              "name": "AI 4",
+              "team": 3
+            },
+            {
+              "faction": "Germany",
+              "is_human": false,
+              "name": "AI 5",
+              "team": 4
+            },
+            {
+              "faction": "Japan",
+              "is_human": false,
+              "name": "AI 6",
+              "team": 5
+            },
+            {
+              "faction": "Mongols",
+              "is_human": false,
+              "name": "AI 7",
+              "team": 6
+            },
+            {
+              "faction": "Athens",
+              "is_human": false,
+              "name": "AI 8",
+              "team": 7
+            }
+          ],
+          "seed": "1",
+          "turn_limit": 150,
+          "width": 48
+        },
+        "games": 1000,
+        "label": "factions-8",
+        "source": {
+          "commit": "d1e0c11007b203c6f6885e1460b62767cca46dad",
+          "worktree_dirty": true
+        },
+        "started_at": "2026-09-26T23:42:56Z",
+        "threads": 16,
+        "turn_limit": 150,
+        "wall_ms": 26979
+      },
+      "factions": {
+        "Switzerland": {
+          "seats": 1000,
+          "wins": 175,
+          "win_percent": 17.5,
+          "win_ci95_percent": [
+            15.27057476303958,
+            19.978164538521504
+          ],
+          "goals": 536,
+          "goal_percent": 53.6,
+          "goal_ci95_percent": [
+            50.50118052369239,
+            56.67126681521162
+          ],
+          "goal_turn_mean": 93.75373134328358,
+          "goal_turn_median": 90.0,
+          "goal_turn_p10": 78,
+          "goal_turn_p90": 117,
+          "mean_final_cities": 4.227,
+          "mean_final_population": 21.922
+        },
+        "Japan": {
+          "seats": 1000,
+          "wins": 140,
+          "win_percent": 14.0,
+          "win_ci95_percent": [
+            11.986857462597705,
+            16.28866914836227
+          ],
+          "goals": 320,
+          "goal_percent": 32.0,
+          "goal_ci95_percent": [
+            29.182400898144156,
+            34.95536240733583
+          ],
+          "goal_turn_mean": 87.69375,
+          "goal_turn_median": 81.0,
+          "goal_turn_p10": 67,
+          "goal_turn_p90": 117,
+          "mean_final_cities": 4.571,
+          "mean_final_population": 20.68
+        },
+        "Byzantium": {
+          "seats": 1000,
+          "wins": 195,
+          "win_percent": 19.5,
+          "win_ci95_percent": [
+            17.163009389189863,
+            22.070422878429007
+          ],
+          "goals": 980,
+          "goal_percent": 98.0,
+          "goal_ci95_percent": [
+            96.93099947702822,
+            98.70163170835849
+          ],
+          "goal_turn_mean": 83.3030612244898,
+          "goal_turn_median": 81.0,
+          "goal_turn_p10": 71,
+          "goal_turn_p90": 99,
+          "mean_final_cities": 4.519,
+          "mean_final_population": 21.427
+        },
+        "Germany": {
+          "seats": 1000,
+          "wins": 8,
+          "win_percent": 0.8,
+          "win_ci95_percent": [
+            0.4059195818806103,
+            1.5706334530980144
+          ],
+          "goals": 583,
+          "goal_percent": 58.3,
+          "goal_ci95_percent": [
+            55.21794617220657,
+            61.31852963693321
+          ],
+          "goal_turn_mean": 102.25214408233276,
+          "goal_turn_median": 96,
+          "goal_turn_p10": 81,
+          "goal_turn_p90": 134,
+          "mean_final_cities": 2.543,
+          "mean_final_population": 15.068
+        },
+        "Celts": {
+          "seats": 1000,
+          "wins": 31,
+          "win_percent": 3.1,
+          "win_ci95_percent": [
+            2.1924003447158573,
+            4.366549601229214
+          ],
+          "goals": 80,
+          "goal_percent": 8.0,
+          "goal_ci95_percent": [
+            6.474803809836388,
+            9.846643902950241
+          ],
+          "goal_turn_mean": 124.075,
+          "goal_turn_median": 125.0,
+          "goal_turn_p10": 96,
+          "goal_turn_p90": 146,
+          "mean_final_cities": 3.455,
+          "mean_final_population": 20.244
+        },
+        "Mongols": {
+          "seats": 1000,
+          "wins": 146,
+          "win_percent": 14.6,
+          "win_ci95_percent": [
+            12.546927343040052,
+            16.92400715773725
+          ],
+          "goals": 404,
+          "goal_percent": 40.4,
+          "goal_ci95_percent": [
+            37.40102086208163,
+            43.472452900841034
+          ],
+          "goal_turn_mean": 87.36138613861387,
+          "goal_turn_median": 83.5,
+          "goal_turn_p10": 73,
+          "goal_turn_p90": 109,
+          "mean_final_cities": 4.272,
+          "mean_final_population": 19.775
+        },
+        "Sparta": {
+          "seats": 1000,
+          "wins": 76,
+          "win_percent": 7.6,
+          "win_ci95_percent": [
+            6.114944807170235,
+            9.409564312404841
+          ],
+          "goals": 140,
+          "goal_percent": 14.0,
+          "goal_ci95_percent": [
+            11.986857462597705,
+            16.28866914836227
+          ],
+          "goal_turn_mean": 129.37142857142857,
+          "goal_turn_median": 132.0,
+          "goal_turn_p10": 110,
+          "goal_turn_p90": 144,
+          "mean_final_cities": 4.289,
+          "mean_final_population": 19.813
+        },
+        "Athens": {
+          "seats": 1000,
+          "wins": 128,
+          "win_percent": 12.8,
+          "win_ci95_percent": [
+            10.870752216300936,
+            15.013958615024366
+          ],
+          "goals": 792,
+          "goal_percent": 79.2,
+          "goal_ci95_percent": [
+            76.57498688268167,
+            81.60153042176192
+          ],
+          "goal_turn_mean": 86.32575757575758,
+          "goal_turn_median": 84.0,
+          "goal_turn_p10": 72,
+          "goal_turn_p90": 102,
+          "mean_final_cities": 3.786,
+          "mean_final_population": 18.054
+        }
+      },
+      "outcomes": {
+        "vp": 633,
+        "turn_limit": 266,
+        "draw": 101
+      },
+      "mean_turns": 134.376,
+      "turns_median": 139.0
+    },
+    {
+      "stage": "Faction-aware hill claims and capital planning",
+      "report_sha256": "9d6ff53d3fe66c076d06fc5e9d9b2676c4e1ad2c575dd11a049826d726cb9f08",
+      "meta": {
+        "brain": "scripted",
+        "command": [
+          "target/release/legatum-sim",
+          "--games",
+          "1000",
+          "--seed",
+          "1",
+          "--label",
+          "factions-8-ai-pass",
+          "--out-dir",
+          "target/factions-ai-pass"
+        ],
+        "date": "2026-09-26",
+        "determinism": false,
+        "first_seed": "1",
+        "first_setup": {
+          "height": 32,
+          "players": [
+            {
+              "faction": "Switzerland",
+              "is_human": false,
+              "name": "AI 1",
+              "team": 0
+            },
+            {
+              "faction": "Celts",
+              "is_human": false,
+              "name": "AI 2",
+              "team": 1
+            },
+            {
+              "faction": "Sparta",
+              "is_human": false,
+              "name": "AI 3",
+              "team": 2
+            },
+            {
+              "faction": "Byzantium",
+              "is_human": false,
+              "name": "AI 4",
+              "team": 3
+            },
+            {
+              "faction": "Germany",
+              "is_human": false,
+              "name": "AI 5",
+              "team": 4
+            },
+            {
+              "faction": "Japan",
+              "is_human": false,
+              "name": "AI 6",
+              "team": 5
+            },
+            {
+              "faction": "Mongols",
+              "is_human": false,
+              "name": "AI 7",
+              "team": 6
+            },
+            {
+              "faction": "Athens",
+              "is_human": false,
+              "name": "AI 8",
+              "team": 7
+            }
+          ],
+          "seed": "1",
+          "turn_limit": 150,
+          "width": 48
+        },
+        "games": 1000,
+        "label": "factions-8-ai-pass",
+        "source": {
+          "commit": "d1e0c11007b203c6f6885e1460b62767cca46dad",
+          "worktree_dirty": true
+        },
+        "started_at": "2026-09-26T23:45:01Z",
+        "threads": 16,
+        "turn_limit": 150,
+        "wall_ms": 21400
+      },
+      "factions": {
+        "Switzerland": {
+          "seats": 1000,
+          "wins": 168,
+          "win_percent": 16.8,
+          "win_ci95_percent": [
+            14.610794675394784,
+            19.243302088046082
+          ],
+          "goals": 507,
+          "goal_percent": 50.7,
+          "goal_ci95_percent": [
+            47.604583278568626,
+            53.790059259551604
+          ],
+          "goal_turn_mean": 93.06508875739645,
+          "goal_turn_median": 89,
+          "goal_turn_p10": 78,
+          "goal_turn_p90": 116,
+          "mean_final_cities": 4.194,
+          "mean_final_population": 21.636
+        },
+        "Japan": {
+          "seats": 1000,
+          "wins": 128,
+          "win_percent": 12.8,
+          "win_ci95_percent": [
+            10.870752216300936,
+            15.013958615024366
+          ],
+          "goals": 297,
+          "goal_percent": 29.7,
+          "goal_ci95_percent": [
+            26.949969988900683,
+            32.605396405612844
+          ],
+          "goal_turn_mean": 86.61279461279462,
+          "goal_turn_median": 81,
+          "goal_turn_p10": 66,
+          "goal_turn_p90": 115,
+          "mean_final_cities": 4.507,
+          "mean_final_population": 20.415
+        },
+        "Byzantium": {
+          "seats": 1000,
+          "wins": 172,
+          "win_percent": 17.2,
+          "win_ci95_percent": [
+            14.987640210972414,
+            19.663395145680003
+          ],
+          "goals": 976,
+          "goal_percent": 97.6,
+          "goal_ci95_percent": [
+            96.45370943883886,
+            98.3819831533363
+          ],
+          "goal_turn_mean": 83.40881147540983,
+          "goal_turn_median": 81.0,
+          "goal_turn_p10": 71,
+          "goal_turn_p90": 98,
+          "mean_final_cities": 4.491,
+          "mean_final_population": 21.222
+        },
+        "Germany": {
+          "seats": 1000,
+          "wins": 21,
+          "win_percent": 2.1,
+          "win_ci95_percent": [
+            1.3775739567924286,
+            3.189029506123752
+          ],
+          "goals": 499,
+          "goal_percent": 49.9,
+          "goal_ci95_percent": [
+            46.8073488750724,
+            52.9934164766247
+          ],
+          "goal_turn_mean": 105.58717434869739,
+          "goal_turn_median": 100,
+          "goal_turn_p10": 84,
+          "goal_turn_p90": 133,
+          "mean_final_cities": 2.938,
+          "mean_final_population": 15.902
+        },
+        "Celts": {
+          "seats": 1000,
+          "wins": 74,
+          "win_percent": 7.4,
+          "win_ci95_percent": [
+            5.935499258410698,
+            9.190540564558598
+          ],
+          "goals": 366,
+          "goal_percent": 36.6,
+          "goal_ci95_percent": [
+            33.67094419466035,
+            39.63161293275252
+          ],
+          "goal_turn_mean": 105.68579234972678,
+          "goal_turn_median": 103.0,
+          "goal_turn_p10": 86,
+          "goal_turn_p90": 130,
+          "mean_final_cities": 3.592,
+          "mean_final_population": 22.584
+        },
+        "Mongols": {
+          "seats": 1000,
+          "wins": 148,
+          "win_percent": 14.8,
+          "win_ci95_percent": [
+            12.733898867646579,
+            17.135504929736502
+          ],
+          "goals": 409,
+          "goal_percent": 40.9,
+          "goal_ci95_percent": [
+            37.89324249556991,
+            43.97640450886719
+          ],
+          "goal_turn_mean": 88.42053789731051,
+          "goal_turn_median": 84,
+          "goal_turn_p10": 73,
+          "goal_turn_p90": 111,
+          "mean_final_cities": 4.231,
+          "mean_final_population": 19.62
+        },
+        "Sparta": {
+          "seats": 1000,
+          "wins": 63,
+          "win_percent": 6.3,
+          "win_ci95_percent": [
+            4.9549663211729085,
+            7.97949237046461
+          ],
+          "goals": 140,
+          "goal_percent": 14.0,
+          "goal_ci95_percent": [
+            11.986857462597705,
+            16.28866914836227
+          ],
+          "goal_turn_mean": 128.35714285714286,
+          "goal_turn_median": 130.0,
+          "goal_turn_p10": 111,
+          "goal_turn_p90": 144,
+          "mean_final_cities": 4.239,
+          "mean_final_population": 19.518
+        },
+        "Athens": {
+          "seats": 1000,
+          "wins": 120,
+          "win_percent": 12.0,
+          "win_ci95_percent": [
+            10.129926060130913,
+            14.160907584771277
+          ],
+          "goals": 801,
+          "goal_percent": 80.1,
+          "goal_ci95_percent": [
+            77.51234971811168,
+            82.4572794210579
+          ],
+          "goal_turn_mean": 86.68414481897628,
+          "goal_turn_median": 85,
+          "goal_turn_p10": 72,
+          "goal_turn_p90": 103,
+          "mean_final_cities": 3.774,
+          "mean_final_population": 18.055
+        }
+      },
+      "outcomes": {
+        "turn_limit": 243,
+        "vp": 651,
+        "draw": 106
+      },
+      "mean_turns": 133.845,
+      "turns_median": 138.0
+    },
+    {
+      "stage": "Foundry +4",
+      "report_sha256": "84220e47e72e59baf5f7c0a91f335f80060951a507aff56ec8f99f7ccff3843b",
+      "meta": {
+        "brain": "scripted",
+        "command": [
+          "target/release/legatum-sim",
+          "--games",
+          "1000",
+          "--seed",
+          "1",
+          "--label",
+          "factions-8-foundry4",
+          "--out-dir",
+          "target/factions-foundry4"
+        ],
+        "date": "2026-09-26",
+        "determinism": false,
+        "first_seed": "1",
+        "first_setup": {
+          "height": 32,
+          "players": [
+            {
+              "faction": "Switzerland",
+              "is_human": false,
+              "name": "AI 1",
+              "team": 0
+            },
+            {
+              "faction": "Celts",
+              "is_human": false,
+              "name": "AI 2",
+              "team": 1
+            },
+            {
+              "faction": "Sparta",
+              "is_human": false,
+              "name": "AI 3",
+              "team": 2
+            },
+            {
+              "faction": "Byzantium",
+              "is_human": false,
+              "name": "AI 4",
+              "team": 3
+            },
+            {
+              "faction": "Germany",
+              "is_human": false,
+              "name": "AI 5",
+              "team": 4
+            },
+            {
+              "faction": "Japan",
+              "is_human": false,
+              "name": "AI 6",
+              "team": 5
+            },
+            {
+              "faction": "Mongols",
+              "is_human": false,
+              "name": "AI 7",
+              "team": 6
+            },
+            {
+              "faction": "Athens",
+              "is_human": false,
+              "name": "AI 8",
+              "team": 7
+            }
+          ],
+          "seed": "1",
+          "turn_limit": 150,
+          "width": 48
+        },
+        "games": 1000,
+        "label": "factions-8-foundry4",
+        "source": {
+          "commit": "d1e0c11007b203c6f6885e1460b62767cca46dad",
+          "worktree_dirty": true
+        },
+        "started_at": "2026-09-26T23:47:48Z",
+        "threads": 16,
+        "turn_limit": 150,
+        "wall_ms": 21378
+      },
+      "factions": {
+        "Switzerland": {
+          "seats": 1000,
+          "wins": 168,
+          "win_percent": 16.8,
+          "win_ci95_percent": [
+            14.610794675394784,
+            19.243302088046082
+          ],
+          "goals": 505,
+          "goal_percent": 50.5,
+          "goal_ci95_percent": [
+            47.40520072158691,
+            53.59097251992754
+          ],
+          "goal_turn_mean": 93.80990099009901,
+          "goal_turn_median": 89,
+          "goal_turn_p10": 78,
+          "goal_turn_p90": 120,
+          "mean_final_cities": 4.16,
+          "mean_final_population": 21.492
+        },
+        "Japan": {
+          "seats": 1000,
+          "wins": 127,
+          "win_percent": 12.7,
+          "win_ci95_percent": [
+            10.778000925843848,
+            14.907475257178568
+          ],
+          "goals": 301,
+          "goal_percent": 30.1,
+          "goal_ci95_percent": [
+            27.33762104461901,
+            33.014683943106085
+          ],
+          "goal_turn_mean": 86.7873754152824,
+          "goal_turn_median": 81,
+          "goal_turn_p10": 66,
+          "goal_turn_p90": 117,
+          "mean_final_cities": 4.511,
+          "mean_final_population": 20.481
+        },
+        "Byzantium": {
+          "seats": 1000,
+          "wins": 169,
+          "win_percent": 16.9,
+          "win_ci95_percent": [
+            14.704962548581355,
+            19.3483688631624
+          ],
+          "goals": 976,
+          "goal_percent": 97.6,
+          "goal_ci95_percent": [
+            96.45370943883886,
+            98.3819831533363
+          ],
+          "goal_turn_mean": 83.30532786885246,
+          "goal_turn_median": 81.0,
+          "goal_turn_p10": 72,
+          "goal_turn_p90": 98,
+          "mean_final_cities": 4.49,
+          "mean_final_population": 21.086
+        },
+        "Germany": {
+          "seats": 1000,
+          "wins": 36,
+          "win_percent": 3.6,
+          "win_ci95_percent": [
+            2.6115571407387317,
+            4.943566046720783
+          ],
+          "goals": 571,
+          "goal_percent": 57.1,
+          "goal_ci95_percent": [
+            54.01101233129566,
+            60.13464769820944
+          ],
+          "goal_turn_mean": 102.15936952714536,
+          "goal_turn_median": 97,
+          "goal_turn_p10": 82,
+          "goal_turn_p90": 131,
+          "mean_final_cities": 3.046,
+          "mean_final_population": 16.811
+        },
+        "Celts": {
+          "seats": 1000,
+          "wins": 69,
+          "win_percent": 6.9,
+          "win_ci95_percent": [
+            5.488394558591125,
+            8.641472022863727
+          ],
+          "goals": 364,
+          "goal_percent": 36.4,
+          "goal_ci95_percent": [
+            33.4751650912775,
+            39.42892273952959
+          ],
+          "goal_turn_mean": 105.3543956043956,
+          "goal_turn_median": 103.0,
+          "goal_turn_p10": 85,
+          "goal_turn_p90": 130,
+          "mean_final_cities": 3.6,
+          "mean_final_population": 22.6
+        },
+        "Mongols": {
+          "seats": 1000,
+          "wins": 153,
+          "win_percent": 15.3,
+          "win_ci95_percent": [
+            13.201921562431126,
+            17.663655476466403
+          ],
+          "goals": 407,
+          "goal_percent": 40.7,
+          "goal_ci95_percent": [
+            37.69631485524506,
+            43.77486285258626
+          ],
+          "goal_turn_mean": 88.32923832923834,
+          "goal_turn_median": 84,
+          "goal_turn_p10": 73,
+          "goal_turn_p90": 111,
+          "mean_final_cities": 4.28,
+          "mean_final_population": 19.843
+        },
+        "Sparta": {
+          "seats": 1000,
+          "wins": 66,
+          "win_percent": 6.6,
+          "win_ci95_percent": [
+            5.221235045948585,
+            8.3109275905976
+          ],
+          "goals": 131,
+          "goal_percent": 13.1,
+          "goal_ci95_percent": [
+            11.149250620200899,
+            15.333164156033071
+          ],
+          "goal_turn_mean": 127.86259541984732,
+          "goal_turn_median": 128,
+          "goal_turn_p10": 113,
+          "goal_turn_p90": 142,
+          "mean_final_cities": 4.237,
+          "mean_final_population": 19.508
+        },
+        "Athens": {
+          "seats": 1000,
+          "wins": 116,
+          "win_percent": 11.6,
+          "win_ci95_percent": [
+            9.760567703963382,
+            13.733327347727254
+          ],
+          "goals": 795,
+          "goal_percent": 79.5,
+          "goal_ci95_percent": [
+            76.88722989694242,
+            81.88699135240984
+          ],
+          "goal_turn_mean": 86.6314465408805,
+          "goal_turn_median": 84,
+          "goal_turn_p10": 72,
+          "goal_turn_p90": 103,
+          "mean_final_cities": 3.74,
+          "mean_final_population": 17.848
+        }
+      },
+      "outcomes": {
+        "draw": 96,
+        "vp": 665,
+        "turn_limit": 239
+      },
+      "mean_turns": 133.677,
+      "turns_median": 139.0
+    },
+    {
+      "stage": "Foundry +5",
+      "report_sha256": "4abc1aace962dea3a6aa27568e3c42685b79ea93738ed929d49ed04f656c1b1d",
+      "meta": {
+        "brain": "scripted",
+        "command": [
+          "target/release/legatum-sim",
+          "--games",
+          "1000",
+          "--seed",
+          "1",
+          "--label",
+          "factions-8-foundry5",
+          "--out-dir",
+          "target/factions-foundry5"
+        ],
+        "date": "2026-09-26",
+        "determinism": false,
+        "first_seed": "1",
+        "first_setup": {
+          "height": 32,
+          "players": [
+            {
+              "faction": "Switzerland",
+              "is_human": false,
+              "name": "AI 1",
+              "team": 0
+            },
+            {
+              "faction": "Celts",
+              "is_human": false,
+              "name": "AI 2",
+              "team": 1
+            },
+            {
+              "faction": "Sparta",
+              "is_human": false,
+              "name": "AI 3",
+              "team": 2
+            },
+            {
+              "faction": "Byzantium",
+              "is_human": false,
+              "name": "AI 4",
+              "team": 3
+            },
+            {
+              "faction": "Germany",
+              "is_human": false,
+              "name": "AI 5",
+              "team": 4
+            },
+            {
+              "faction": "Japan",
+              "is_human": false,
+              "name": "AI 6",
+              "team": 5
+            },
+            {
+              "faction": "Mongols",
+              "is_human": false,
+              "name": "AI 7",
+              "team": 6
+            },
+            {
+              "faction": "Athens",
+              "is_human": false,
+              "name": "AI 8",
+              "team": 7
+            }
+          ],
+          "seed": "1",
+          "turn_limit": 150,
+          "width": 48
+        },
+        "games": 1000,
+        "label": "factions-8-foundry5",
+        "source": {
+          "commit": "d1e0c11007b203c6f6885e1460b62767cca46dad",
+          "worktree_dirty": true
+        },
+        "started_at": "2026-09-26T23:50:28Z",
+        "threads": 16,
+        "turn_limit": 150,
+        "wall_ms": 28089
+      },
+      "factions": {
+        "Switzerland": {
+          "seats": 1000,
+          "wins": 157,
+          "win_percent": 15.7,
+          "win_ci95_percent": [
+            13.576932698088532,
+            18.085582934020554
+          ],
+          "goals": 514,
+          "goal_percent": 51.4,
+          "goal_ci95_percent": [
+            48.30281064268122,
+            54.48647443355923
+          ],
+          "goal_turn_mean": 94.43774319066148,
+          "goal_turn_median": 89.0,
+          "goal_turn_p10": 78,
+          "goal_turn_p90": 120,
+          "mean_final_cities": 4.152,
+          "mean_final_population": 21.419
+        },
+        "Japan": {
+          "seats": 1000,
+          "wins": 114,
+          "win_percent": 11.4,
+          "win_ci95_percent": [
+            9.576165709721693,
+            13.519260045363163
+          ],
+          "goals": 287,
+          "goal_percent": 28.7,
+          "goal_ci95_percent": [
+            25.981978203919994,
+            31.581041707564655
+          ],
+          "goal_turn_mean": 85.97560975609755,
+          "goal_turn_median": 81,
+          "goal_turn_p10": 66,
+          "goal_turn_p90": 112,
+          "mean_final_cities": 4.466,
+          "mean_final_population": 20.228
+        },
+        "Byzantium": {
+          "seats": 1000,
+          "wins": 181,
+          "win_percent": 18.1,
+          "win_ci95_percent": [
+            15.837194044398084,
+            20.606953146980334
+          ],
+          "goals": 974,
+          "goal_percent": 97.4,
+          "goal_ci95_percent": [
+            96.21761711573102,
+            98.21960617983837
+          ],
+          "goal_turn_mean": 83.25872689938399,
+          "goal_turn_median": 81.0,
+          "goal_turn_p10": 71,
+          "goal_turn_p90": 98,
+          "mean_final_cities": 4.485,
+          "mean_final_population": 21.264
+        },
+        "Germany": {
+          "seats": 1000,
+          "wins": 49,
+          "win_percent": 4.9,
+          "win_ci95_percent": [
+            3.7261034647360614,
+            6.419070150661013
+          ],
+          "goals": 637,
+          "goal_percent": 63.7,
+          "goal_ci95_percent": [
+            60.67244308198836,
+            66.62270373550743
+          ],
+          "goal_turn_mean": 99.63736263736264,
+          "goal_turn_median": 94,
+          "goal_turn_p10": 81,
+          "goal_turn_p90": 128,
+          "mean_final_cities": 3.16,
+          "mean_final_population": 17.541
+        },
+        "Celts": {
+          "seats": 1000,
+          "wins": 73,
+          "win_percent": 7.3,
+          "win_ci95_percent": [
+            5.8459026212413345,
+            9.08090255342507
+          ],
+          "goals": 363,
+          "goal_percent": 36.3,
+          "goal_ci95_percent": [
+            33.377296264492564,
+            39.32755691801164
+          ],
+          "goal_turn_mean": 105.5564738292011,
+          "goal_turn_median": 103,
+          "goal_turn_p10": 86,
+          "goal_turn_p90": 130,
+          "mean_final_cities": 3.574,
+          "mean_final_population": 22.505
+        },
+        "Mongols": {
+          "seats": 1000,
+          "wins": 144,
+          "win_percent": 14.4,
+          "win_ci95_percent": [
+            12.360094991201349,
+            16.712370212970175
+          ],
+          "goals": 400,
+          "goal_percent": 40.0,
+          "goal_ci95_percent": [
+            37.00747812113773,
+            43.06905704857338
+          ],
+          "goal_turn_mean": 87.805,
+          "goal_turn_median": 84.0,
+          "goal_turn_p10": 72,
+          "goal_turn_p90": 110,
+          "mean_final_cities": 4.238,
+          "mean_final_population": 19.642
+        },
+        "Sparta": {
+          "seats": 1000,
+          "wins": 54,
+          "win_percent": 5.4,
+          "win_ci95_percent": [
+            4.1621313723062725,
+            6.979215484605245
+          ],
+          "goals": 137,
+          "goal_percent": 13.7,
+          "goal_ci95_percent": [
+            11.707313063299473,
+            15.97050960275183
+          ],
+          "goal_turn_mean": 129.55474452554745,
+          "goal_turn_median": 131,
+          "goal_turn_p10": 111,
+          "goal_turn_p90": 146,
+          "mean_final_cities": 4.249,
+          "mean_final_population": 19.583
+        },
+        "Athens": {
+          "seats": 1000,
+          "wins": 114,
+          "win_percent": 11.4,
+          "win_ci95_percent": [
+            9.576165709721693,
+            13.519260045363163
+          ],
+          "goals": 803,
+          "goal_percent": 80.3,
+          "goal_ci95_percent": [
+            77.72091460935388,
+            82.64718382642148
+          ],
+          "goal_turn_mean": 86.76836861768369,
+          "goal_turn_median": 84,
+          "goal_turn_p10": 72,
+          "goal_turn_p90": 104,
+          "mean_final_cities": 3.764,
+          "mean_final_population": 17.948
+        }
+      },
+      "outcomes": {
+        "vp": 658,
+        "draw": 114,
+        "turn_limit": 228
+      },
+      "mean_turns": 133.708,
+      "turns_median": 138.0
+    },
+    {
+      "stage": "Foundry +6; Sparta garrison rotation",
+      "report_sha256": "9cdf1af4bcf006fdbe161a4c85c3902d7c9ca21d57f602b1059e33458b3f0060",
+      "meta": {
+        "brain": "scripted",
+        "command": [
+          "target/release/legatum-sim",
+          "--games",
+          "1000",
+          "--seed",
+          "1",
+          "--label",
+          "factions-8",
+          "--status-file",
+          "target/factions-8-status.json"
+        ],
+        "date": "2026-09-26",
+        "determinism": false,
+        "first_seed": "1",
+        "first_setup": {
+          "height": 32,
+          "players": [
+            {
+              "faction": "Switzerland",
+              "is_human": false,
+              "name": "AI 1",
+              "team": 0
+            },
+            {
+              "faction": "Celts",
+              "is_human": false,
+              "name": "AI 2",
+              "team": 1
+            },
+            {
+              "faction": "Sparta",
+              "is_human": false,
+              "name": "AI 3",
+              "team": 2
+            },
+            {
+              "faction": "Byzantium",
+              "is_human": false,
+              "name": "AI 4",
+              "team": 3
+            },
+            {
+              "faction": "Germany",
+              "is_human": false,
+              "name": "AI 5",
+              "team": 4
+            },
+            {
+              "faction": "Japan",
+              "is_human": false,
+              "name": "AI 6",
+              "team": 5
+            },
+            {
+              "faction": "Mongols",
+              "is_human": false,
+              "name": "AI 7",
+              "team": 6
+            },
+            {
+              "faction": "Athens",
+              "is_human": false,
+              "name": "AI 8",
+              "team": 7
+            }
+          ],
+          "seed": "1",
+          "turn_limit": 150,
+          "width": 48
+        },
+        "games": 1000,
+        "label": "factions-8",
+        "source": {
+          "commit": "d1e0c11007b203c6f6885e1460b62767cca46dad",
+          "worktree_dirty": true
+        },
+        "started_at": "2026-09-26T23:52:45Z",
+        "threads": 16,
+        "turn_limit": 150,
+        "wall_ms": 21300
+      },
+      "factions": {
+        "Switzerland": {
+          "seats": 1000,
+          "wins": 157,
+          "win_percent": 15.7,
+          "win_ci95_percent": [
+            13.576932698088532,
+            18.085582934020554
+          ],
+          "goals": 505,
+          "goal_percent": 50.5,
+          "goal_ci95_percent": [
+            47.40520072158691,
+            53.59097251992754
+          ],
+          "goal_turn_mean": 94.33069306930693,
+          "goal_turn_median": 90,
+          "goal_turn_p10": 78,
+          "goal_turn_p90": 120,
+          "mean_final_cities": 4.17,
+          "mean_final_population": 21.561
+        },
+        "Japan": {
+          "seats": 1000,
+          "wins": 109,
+          "win_percent": 10.9,
+          "win_ci95_percent": [
+            9.116003338451376,
+            12.983249175119035
+          ],
+          "goals": 295,
+          "goal_percent": 29.5,
+          "goal_ci95_percent": [
+            26.756241055666713,
+            32.400656042241046
+          ],
+          "goal_turn_mean": 87.09152542372881,
+          "goal_turn_median": 81,
+          "goal_turn_p10": 66,
+          "goal_turn_p90": 116,
+          "mean_final_cities": 4.457,
+          "mean_final_population": 20.212
+        },
+        "Byzantium": {
+          "seats": 1000,
+          "wins": 183,
+          "win_percent": 18.3,
+          "win_ci95_percent": [
+            16.0262841168905,
+            20.816332371093697
+          ],
+          "goals": 975,
+          "goal_percent": 97.5,
+          "goal_ci95_percent": [
+            96.33547107321566,
+            98.30098687065659
+          ],
+          "goal_turn_mean": 83.27179487179487,
+          "goal_turn_median": 81,
+          "goal_turn_p10": 71,
+          "goal_turn_p90": 98,
+          "mean_final_cities": 4.46,
+          "mean_final_population": 21.152
+        },
+        "Germany": {
+          "seats": 1000,
+          "wins": 78,
+          "win_percent": 7.8,
+          "win_ci95_percent": [
+            6.294716759073616,
+            9.628261657107236
+          ],
+          "goals": 666,
+          "goal_percent": 66.6,
+          "goal_ci95_percent": [
+            63.61818350568,
+            69.45476811259958
+          ],
+          "goal_turn_mean": 97.2987987987988,
+          "goal_turn_median": 91.0,
+          "goal_turn_p10": 79,
+          "goal_turn_p90": 125,
+          "mean_final_cities": 3.302,
+          "mean_final_population": 18.555
+        },
+        "Celts": {
+          "seats": 1000,
+          "wins": 76,
+          "win_percent": 7.6,
+          "win_ci95_percent": [
+            6.114944807170235,
+            9.409564312404841
+          ],
+          "goals": 360,
+          "goal_percent": 36.0,
+          "goal_ci95_percent": [
+            33.08377297718964,
+            39.0233762604059
+          ],
+          "goal_turn_mean": 105.03611111111111,
+          "goal_turn_median": 103.0,
+          "goal_turn_p10": 86,
+          "goal_turn_p90": 129,
+          "mean_final_cities": 3.565,
+          "mean_final_population": 22.505
+        },
+        "Mongols": {
+          "seats": 1000,
+          "wins": 129,
+          "win_percent": 12.9,
+          "win_ci95_percent": [
+            10.963544529450505,
+            15.12040095017769
+          ],
+          "goals": 396,
+          "goal_percent": 39.6,
+          "goal_ci95_percent": [
+            36.614144983616576,
+            42.66545159288297
+          ],
+          "goal_turn_mean": 87.33080808080808,
+          "goal_turn_median": 84.0,
+          "goal_turn_p10": 72,
+          "goal_turn_p90": 108,
+          "mean_final_cities": 4.176,
+          "mean_final_population": 19.333
+        },
+        "Sparta": {
+          "seats": 1000,
+          "wins": 54,
+          "win_percent": 5.4,
+          "win_ci95_percent": [
+            4.1621313723062725,
+            6.979215484605245
+          ],
+          "goals": 118,
+          "goal_percent": 11.8,
+          "goal_ci95_percent": [
+            9.945155840122327,
+            13.947208508174084
+          ],
+          "goal_turn_mean": 128.22033898305085,
+          "goal_turn_median": 130.0,
+          "goal_turn_p10": 109,
+          "goal_turn_p90": 145,
+          "mean_final_cities": 4.252,
+          "mean_final_population": 19.594
+        },
+        "Athens": {
+          "seats": 1000,
+          "wins": 106,
+          "win_percent": 10.6,
+          "win_ci95_percent": [
+            8.840506686305154,
+            12.661041882356589
+          ],
+          "goals": 795,
+          "goal_percent": 79.5,
+          "goal_ci95_percent": [
+            76.88722989694242,
+            81.88699135240984
+          ],
+          "goal_turn_mean": 86.37232704402516,
+          "goal_turn_median": 84,
+          "goal_turn_p10": 72,
+          "goal_turn_p90": 103,
+          "mean_final_cities": 3.758,
+          "mean_final_population": 17.962
+        }
+      },
+      "outcomes": {
+        "vp": 647,
+        "turn_limit": 245,
+        "draw": 108
+      },
+      "mean_turns": 133.799,
+      "turns_median": 138.0
+    },
+    {
+      "stage": "Final: Foundry +6, Oathbearer 24",
+      "report_sha256": "e8d6c0f69586804713c4f2a138fb4e0823670fd9fd72225debb6c4aedf9b1040",
+      "meta": {
+        "brain": "scripted",
+        "command": [
+          "target/release/legatum-sim",
+          "--games",
+          "1000",
+          "--seed",
+          "1",
+          "--label",
+          "factions-8",
+          "--status-file",
+          "target/factions-8-status.json"
+        ],
+        "date": "2026-09-26",
+        "determinism": false,
+        "first_seed": "1",
+        "first_setup": {
+          "height": 32,
+          "players": [
+            {
+              "faction": "Switzerland",
+              "is_human": false,
+              "name": "AI 1",
+              "team": 0
+            },
+            {
+              "faction": "Celts",
+              "is_human": false,
+              "name": "AI 2",
+              "team": 1
+            },
+            {
+              "faction": "Sparta",
+              "is_human": false,
+              "name": "AI 3",
+              "team": 2
+            },
+            {
+              "faction": "Byzantium",
+              "is_human": false,
+              "name": "AI 4",
+              "team": 3
+            },
+            {
+              "faction": "Germany",
+              "is_human": false,
+              "name": "AI 5",
+              "team": 4
+            },
+            {
+              "faction": "Japan",
+              "is_human": false,
+              "name": "AI 6",
+              "team": 5
+            },
+            {
+              "faction": "Mongols",
+              "is_human": false,
+              "name": "AI 7",
+              "team": 6
+            },
+            {
+              "faction": "Athens",
+              "is_human": false,
+              "name": "AI 8",
+              "team": 7
+            }
+          ],
+          "seed": "1",
+          "turn_limit": 150,
+          "width": 48
+        },
+        "games": 1000,
+        "label": "factions-8",
+        "source": {
+          "commit": "d1e0c11007b203c6f6885e1460b62767cca46dad",
+          "worktree_dirty": true
+        },
+        "started_at": "2026-09-26T23:54:33Z",
+        "threads": 16,
+        "turn_limit": 150,
+        "wall_ms": 25405
+      },
+      "factions": {
+        "Switzerland": {
+          "seats": 1000,
+          "wins": 161,
+          "win_percent": 16.1,
+          "win_ci95_percent": [
+            13.952453255948704,
+            18.507000969371934
+          ],
+          "goals": 514,
+          "goal_percent": 51.4,
+          "goal_ci95_percent": [
+            48.30281064268122,
+            54.48647443355923
+          ],
+          "goal_turn_mean": 94.6284046692607,
+          "goal_turn_median": 90.0,
+          "goal_turn_p10": 78,
+          "goal_turn_p90": 121,
+          "mean_final_cities": 4.171,
+          "mean_final_population": 21.468
+        },
+        "Japan": {
+          "seats": 1000,
+          "wins": 116,
+          "win_percent": 11.6,
+          "win_ci95_percent": [
+            9.760567703963382,
+            13.733327347727254
+          ],
+          "goals": 298,
+          "goal_percent": 29.8,
+          "goal_ci95_percent": [
+            27.046858673913043,
+            32.70774236890338
+          ],
+          "goal_turn_mean": 86.99664429530202,
+          "goal_turn_median": 81.0,
+          "goal_turn_p10": 66,
+          "goal_turn_p90": 117,
+          "mean_final_cities": 4.452,
+          "mean_final_population": 20.244
+        },
+        "Byzantium": {
+          "seats": 1000,
+          "wins": 162,
+          "win_percent": 16.2,
+          "win_ci95_percent": [
+            14.046411184834309,
+            18.612277688789224
+          ],
+          "goals": 973,
+          "goal_percent": 97.3,
+          "goal_ci95_percent": [
+            96.10012692469599,
+            98.1378617225705
+          ],
+          "goal_turn_mean": 83.29188078108942,
+          "goal_turn_median": 81,
+          "goal_turn_p10": 71,
+          "goal_turn_p90": 98,
+          "mean_final_cities": 4.445,
+          "mean_final_population": 21.142
+        },
+        "Germany": {
+          "seats": 1000,
+          "wins": 76,
+          "win_percent": 7.6,
+          "win_ci95_percent": [
+            6.114944807170235,
+            9.409564312404841
+          ],
+          "goals": 682,
+          "goal_percent": 68.2,
+          "goal_ci95_percent": [
+            65.24865706462924,
+            71.01204892649656
+          ],
+          "goal_turn_mean": 97.85483870967742,
+          "goal_turn_median": 92.0,
+          "goal_turn_p10": 79,
+          "goal_turn_p90": 126,
+          "mean_final_cities": 3.283,
+          "mean_final_population": 18.529
+        },
+        "Celts": {
+          "seats": 1000,
+          "wins": 75,
+          "win_percent": 7.5,
+          "win_ci95_percent": [
+            6.025180497346736,
+            9.30009397392545
+          ],
+          "goals": 366,
+          "goal_percent": 36.6,
+          "goal_ci95_percent": [
+            33.67094419466035,
+            39.63161293275252
+          ],
+          "goal_turn_mean": 105.02732240437159,
+          "goal_turn_median": 103.0,
+          "goal_turn_p10": 86,
+          "goal_turn_p90": 129,
+          "mean_final_cities": 3.581,
+          "mean_final_population": 22.634
+        },
+        "Mongols": {
+          "seats": 1000,
+          "wins": 125,
+          "win_percent": 12.5,
+          "win_ci95_percent": [
+            10.592623063520474,
+            14.694383822896162
+          ],
+          "goals": 393,
+          "goal_percent": 39.3,
+          "goal_ci95_percent": [
+            36.31928332405499,
+            42.362609307535884
+          ],
+          "goal_turn_mean": 87.32824427480917,
+          "goal_turn_median": 84,
+          "goal_turn_p10": 72,
+          "goal_turn_p90": 108,
+          "mean_final_cities": 4.169,
+          "mean_final_population": 19.33
+        },
+        "Sparta": {
+          "seats": 1000,
+          "wins": 67,
+          "win_percent": 6.7,
+          "win_ci95_percent": [
+            5.310191960662385,
+            8.421205324186689
+          ],
+          "goals": 128,
+          "goal_percent": 12.8,
+          "goal_ci95_percent": [
+            10.870752216300936,
+            15.013958615024366
+          ],
+          "goal_turn_mean": 129.4921875,
+          "goal_turn_median": 130.5,
+          "goal_turn_p10": 111,
+          "goal_turn_p90": 146,
+          "mean_final_cities": 4.311,
+          "mean_final_population": 19.909
+        },
+        "Athens": {
+          "seats": 1000,
+          "wins": 96,
+          "win_percent": 9.6,
+          "win_ci95_percent": [
+            7.925690009839675,
+            11.583512075793179
+          ],
+          "goals": 793,
+          "goal_percent": 79.3,
+          "goal_ci95_percent": [
+            76.67904475082261,
+            81.69670720192386
+          ],
+          "goal_turn_mean": 86.33669609079445,
+          "goal_turn_median": 84,
+          "goal_turn_p10": 72,
+          "goal_turn_p90": 102,
+          "mean_final_cities": 3.715,
+          "mean_final_population": 17.827
+        }
+      },
+      "outcomes": {
+        "vp": 655,
+        "turn_limit": 223,
+        "draw": 122
+      },
+      "mean_turns": 134.118,
+      "turns_median": 138.0
+    },
+    {
+      "stage": "Independent seeds 1001-2000",
+      "report_sha256": "92c8404aec5737b247ef43e1c4c21819af69bb6f236a7b82fdbc60c6523f4b24",
+      "meta": {
+        "brain": "scripted",
+        "command": [
+          "target/release/legatum-sim",
+          "--games",
+          "1000",
+          "--seed",
+          "1001",
+          "--label",
+          "factions-8-holdout",
+          "--out-dir",
+          "target/factions-holdout"
+        ],
+        "date": "2026-09-27",
+        "determinism": false,
+        "first_seed": "1001",
+        "first_setup": {
+          "height": 32,
+          "players": [
+            {
+              "faction": "Switzerland",
+              "is_human": false,
+              "name": "AI 1",
+              "team": 0
+            },
+            {
+              "faction": "Byzantium",
+              "is_human": false,
+              "name": "AI 2",
+              "team": 1
+            },
+            {
+              "faction": "Japan",
+              "is_human": false,
+              "name": "AI 3",
+              "team": 2
+            },
+            {
+              "faction": "Sparta",
+              "is_human": false,
+              "name": "AI 4",
+              "team": 3
+            },
+            {
+              "faction": "Germany",
+              "is_human": false,
+              "name": "AI 5",
+              "team": 4
+            },
+            {
+              "faction": "Mongols",
+              "is_human": false,
+              "name": "AI 6",
+              "team": 5
+            },
+            {
+              "faction": "Athens",
+              "is_human": false,
+              "name": "AI 7",
+              "team": 6
+            },
+            {
+              "faction": "Celts",
+              "is_human": false,
+              "name": "AI 8",
+              "team": 7
+            }
+          ],
+          "seed": "1001",
+          "turn_limit": 150,
+          "width": 48
+        },
+        "games": 1000,
+        "label": "factions-8-holdout",
+        "source": {
+          "commit": "d1e0c11007b203c6f6885e1460b62767cca46dad",
+          "worktree_dirty": true
+        },
+        "started_at": "2026-09-27T00:01:03Z",
+        "threads": 16,
+        "turn_limit": 150,
+        "wall_ms": 23782
+      },
+      "factions": {
+        "Switzerland": {
+          "seats": 1000,
+          "wins": 146,
+          "win_percent": 14.6,
+          "win_ci95_percent": [
+            12.546927343040052,
+            16.92400715773725
+          ],
+          "goals": 530,
+          "goal_percent": 53.0,
+          "goal_ci95_percent": [
+            49.901030909301674,
+            56.07600853978501
+          ],
+          "goal_turn_mean": 93.99622641509434,
+          "goal_turn_median": 90.0,
+          "goal_turn_p10": 77,
+          "goal_turn_p90": 118,
+          "mean_final_cities": 4.257,
+          "mean_final_population": 21.788
+        },
+        "Japan": {
+          "seats": 1000,
+          "wins": 132,
+          "win_percent": 13.2,
+          "win_ci95_percent": [
+            11.24216361480769,
+            15.439485809729172
+          ],
+          "goals": 309,
+          "goal_percent": 30.9,
+          "goal_ci95_percent": [
+            28.113685771666347,
+            33.83249640248185
+          ],
+          "goal_turn_mean": 86.46925566343042,
+          "goal_turn_median": 80,
+          "goal_turn_p10": 68,
+          "goal_turn_p90": 117,
+          "mean_final_cities": 4.491,
+          "mean_final_population": 20.706
+        },
+        "Byzantium": {
+          "seats": 1000,
+          "wins": 152,
+          "win_percent": 15.2,
+          "win_ci95_percent": [
+            13.108250256297902,
+            17.558092134296736
+          ],
+          "goals": 971,
+          "goal_percent": 97.1,
+          "goal_ci95_percent": [
+            95.86616416633058,
+            97.97335518433013
+          ],
+          "goal_turn_mean": 83.6961894953656,
+          "goal_turn_median": 81,
+          "goal_turn_p10": 72,
+          "goal_turn_p90": 99,
+          "mean_final_cities": 4.407,
+          "mean_final_population": 21.29
+        },
+        "Germany": {
+          "seats": 1000,
+          "wins": 73,
+          "win_percent": 7.3,
+          "win_ci95_percent": [
+            5.8459026212413345,
+            9.08090255342507
+          ],
+          "goals": 656,
+          "goal_percent": 65.6,
+          "goal_ci95_percent": [
+            62.60105435553518,
+            68.47955077971551
+          ],
+          "goal_turn_mean": 98.8795731707317,
+          "goal_turn_median": 93.0,
+          "goal_turn_p10": 79,
+          "goal_turn_p90": 128,
+          "mean_final_cities": 3.266,
+          "mean_final_population": 18.351
+        },
+        "Celts": {
+          "seats": 1000,
+          "wins": 88,
+          "win_percent": 8.8,
+          "win_ci95_percent": [
+            7.1980997942320855,
+            10.717225104977658
+          ],
+          "goals": 375,
+          "goal_percent": 37.5,
+          "goal_ci95_percent": [
+            34.5526294232981,
+            40.54303953884077
+          ],
+          "goal_turn_mean": 104.064,
+          "goal_turn_median": 101,
+          "goal_turn_p10": 85,
+          "goal_turn_p90": 129,
+          "mean_final_cities": 3.517,
+          "mean_final_population": 22.34
+        },
+        "Mongols": {
+          "seats": 1000,
+          "wins": 123,
+          "win_percent": 12.3,
+          "win_ci95_percent": [
+            10.407414325107295,
+            14.48112326470356
+          ],
+          "goals": 414,
+          "goal_percent": 41.4,
+          "goal_ci95_percent": [
+            38.38578816406266,
+            44.48003208188888
+          ],
+          "goal_turn_mean": 87.56280193236715,
+          "goal_turn_median": 84.0,
+          "goal_turn_p10": 72,
+          "goal_turn_p90": 113,
+          "mean_final_cities": 4.187,
+          "mean_final_population": 19.495
+        },
+        "Sparta": {
+          "seats": 1000,
+          "wins": 63,
+          "win_percent": 6.3,
+          "win_ci95_percent": [
+            4.9549663211729085,
+            7.97949237046461
+          ],
+          "goals": 148,
+          "goal_percent": 14.8,
+          "goal_ci95_percent": [
+            12.733898867646579,
+            17.135504929736502
+          ],
+          "goal_turn_mean": 130.41216216216216,
+          "goal_turn_median": 131.5,
+          "goal_turn_p10": 114,
+          "goal_turn_p90": 147,
+          "mean_final_cities": 4.352,
+          "mean_final_population": 20.089
+        },
+        "Athens": {
+          "seats": 1000,
+          "wins": 92,
+          "win_percent": 9.2,
+          "win_ci95_percent": [
+            7.561389956796885,
+            11.150873535624411
+          ],
+          "goals": 800,
+          "goal_percent": 80.0,
+          "goal_ci95_percent": [
+            77.40810353518654,
+            82.36229095568015
+          ],
+          "goal_turn_mean": 87.04875,
+          "goal_turn_median": 85.0,
+          "goal_turn_p10": 72,
+          "goal_turn_p90": 105,
+          "mean_final_cities": 3.691,
+          "mean_final_population": 17.535
+        }
+      },
+      "outcomes": {
+        "vp": 633,
+        "draw": 131,
+        "turn_limit": 236
+      },
+      "mean_turns": 135.13,
+      "turns_median": 139.0
+    }
+  ]
+}

@@ -1,0 +1,69 @@
+/* The Cities overview (CitiesOverview.tsx): a sheet over the map with one sortable table of your cities. */
+dialog.co-sheet {
+  position: fixed; margin: auto; padding: 0; overflow: hidden; color: var(--ink); background: var(--panel);
+  width: min(1000px, calc(100% - 16px)); max-height: min(780px, calc(100% - 16px));
+  border: var(--slip-border); box-shadow: 0 0 0 3px var(--panel), 0 0 0 4px var(--rule-2), 0 18px 40px rgba(40, 28, 10, 0.35);
+  animation: fade 0.18s ease both;
+}
+dialog.co-sheet[open] { display: flex; flex-direction: column; }
+dialog.co-sheet::backdrop { background: var(--scrim); }
+.co-head { flex: none; display: flex; align-items: center; gap: 18px; padding: 8px 14px 7px; border-bottom: 1px solid var(--rule-2); }
+.co-head h2 { margin: 1px 0 0; font: 600 22px/1 var(--display); color: var(--ink); }
+.co-kick { display: inline-flex; align-items: center; gap: 5px; color: var(--accent); font: 700 9.5px/1 var(--sans); letter-spacing: var(--label-track, 0.14em); text-transform: uppercase; }
+.co-count { margin: 0; font: 500 13px/1.2 var(--sans); color: var(--ink-2); white-space: nowrap; }
+.co-count b { color: var(--ink); font-weight: 700; }
+.co-count .co-idle-count { color: var(--accent); }
+.co-help { margin: 0 0 0 auto; font: 500 12px/1.25 var(--sans); color: var(--ink-2); }
+.co-close { flex: none; }
+.co-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; overscroll-behavior: contain; }
+.co-automation { display: flex; flex: none; align-items: center; gap: 8px; padding: 7px 14px; border-bottom: 1px solid var(--rule); font: 600 12px/1.2 var(--sans); }
+.co-automation select { min-height: 30px; padding: 3px 8px; border: 1px solid var(--rule-2); background: var(--panel-2); color: var(--ink); font: inherit; cursor: pointer; }
+.co-automation .btn { min-height: 30px; }
+.co-select { width: 30px; padding-inline: 3px !important; text-align: center !important; }
+.co-select input { width: 24px; height: 24px; margin: 0; cursor: pointer; accent-color: var(--accent); }
+.co-auto-badge { display: block; width: fit-content; margin-top: 3px; padding: 1px 4px; border: 1px solid var(--accent); color: var(--accent); font: 700 9px/1.2 var(--sans); text-transform: uppercase; letter-spacing: .03em; }
+.co-empty { margin: 0; padding: 28px 20px; font: 500 14px/1.4 var(--sans); color: var(--ink-2); }
+.co-table { width: 100%; border-collapse: separate; border-spacing: 0; font: 500 13px/1.25 var(--sans); }
+.co-table thead th { position: sticky; top: 0; z-index: 2; padding: 0; text-align: left; background: var(--panel-2); border-bottom: 1px solid var(--rule-2); }
+.co-sort { display: inline-flex; align-items: center; gap: 5px; width: 100%; min-height: 32px; padding: 4px 8px; font: 600 11px/1.1 var(--sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-2); cursor: pointer; text-align: left; }
+.co-table th.sorted .co-sort { color: var(--ink); }
+.co-arrow { opacity: 0.35; }
+.co-arrow.on { opacity: 1; color: var(--accent); }
+@media (hover: hover) { .co-sort:hover { color: var(--accent); background: color-mix(in srgb, var(--ink) 5%, transparent); } .co-sort:hover .co-arrow { opacity: 0.9; } }
+.co-sort:focus-visible, .co-city:focus-visible, .co-close:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.co-table td, .co-table tbody th { padding: 6px 8px; border-bottom: 1px solid var(--rule); vertical-align: middle; text-align: left; font-weight: 500; }
+.co-table tbody tr { cursor: pointer; }
+@media (hover: hover) { .co-table tbody tr:hover > * { background: color-mix(in srgb, var(--accent) 7%, var(--panel)); } }
+.co-table tbody tr.idle > * { background: color-mix(in srgb, var(--accent) 5%, var(--panel)); }
+.co-table .co-num { white-space: nowrap; font: 600 15px/1.1 var(--num-font); font-variant-numeric: lining-nums tabular-nums; width: 76px; }
+.co-table thead .co-production, .co-table thead .co-gold, .co-table thead .co-science { width: 76px; }
+.co-table thead .co-food { width: 104px; }
+.co-table .co-population { width: 112px; }
+.co-table .co-defence { width: 108px; }
+.co-table .co-build { width: auto; min-width: 192px; }
+.co-table .co-go { width: 26px; padding-inline: 0 8px; text-align: right; }
+.co-chevron { font: 400 20px/1 var(--display); color: var(--ink-2); }
+.co-name { width: 120px; }
+.co-city { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; min-height: 24px; padding: 0; font: 600 15px/1.2 var(--display); color: var(--ink); text-decoration: underline; text-decoration-color: var(--rule-2); text-underline-offset: 3px; text-align: left; cursor: pointer; }
+@media (hover: hover) { .co-city:hover { color: var(--accent); text-decoration-color: var(--accent); } }
+.co-capital { display: inline-flex; color: var(--gilt, var(--accent)); }
+.co-pop, .co-def { white-space: nowrap; }
+.co-pop .co-sub { white-space: normal; max-width: 112px; }
+.co-pop b, .co-def b { display: block; font: 600 15px/1.1 var(--num-font); font-variant-numeric: lining-nums tabular-nums; color: var(--ink); }
+.co-sub { display: block; font: 500 12px/1.25 var(--sans); color: var(--ink-2); }
+.co-sub.bad { color: var(--bad); font-weight: 600; }
+.co-hurt { color: var(--bad); font-weight: 600; }
+.co-buildcell { min-width: 0; }
+.co-building { display: block; min-width: 0; }
+.co-build-top { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; min-width: 0; }
+.co-build-name { flex: 0 1 auto; min-width: min-content; font-weight: 600; color: var(--ink); overflow-wrap: normal; word-break: normal; }
+.co-turns { flex: none; margin-left: auto; font: 600 13px/1 var(--sans); color: var(--ink); white-space: nowrap; }
+.co-pending { flex: none; font: 600 10px/1 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
+.co-bar { display: block; height: 4px; margin: 4px 0 2px; background: var(--rule); }
+.co-bar > i { display: block; height: 100%; background: var(--y-production, #b9731f); }
+.co-idle { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; color: var(--accent); }
+.co-idle b { font-weight: 700; }
+.co-idle .co-sub { color: var(--ink-2); }
+.co-idle-mark { display: inline-grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; background: var(--accent); color: var(--panel); font: 700 11px/1 var(--sans); }
+
+.co-num .bad { color: var(--bad); }

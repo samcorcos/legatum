@@ -1,0 +1,84 @@
+{
+  "format": "legatum-scenario",
+  "version": 1,
+  "id": "supported-defence-take",
+  "revision": 1,
+  "title": "Supported Defence: Take Munich",
+  "faction": "India",
+  "seat": 1,
+  "difficulty": "Hard",
+  "minutes": 8,
+  "briefing": "Industrial era. You are India with three Riflemen standing next to Munich, a walled German city of size 5, on its west side. India is at War with Germany. A German Rifleman holds Munich and three more German Riflemen stand next to it on the east side. Your home city, Chittor, is six tiles west. This tries a new rule, supported defence: units the defender orders into its own city while you attack it support the city. The walls take the first damage. What gets through is shared between the garrison and every supporter, and each of them strikes back at your attackers. If the garrison falls, the supporter that can take the most damage moves in. The city falls only when the garrison and all its supporters are dead. Pinning a supporter, by attacking it where it stands, stops it supporting that turn. Take Munich within 10 turns. Does supporting a city feel right, and can three attackers still take it?",
+  "tests": "Does supporting a city feel right, and can three attackers still take it?",
+  "objective": {
+    "summary": "Take Munich by turn 11, keeping your own cities.",
+    "turns": 10,
+    "win": [
+      {
+        "OwnCity": 1
+      }
+    ],
+    "end_on_win": true,
+    "keep": [
+      "HoldStartingCities"
+    ],
+    "score": [
+      {
+        "metric": "ObjectiveMet",
+        "weight": 300
+      },
+      {
+        "metric": "TurnsLeft",
+        "weight": 20
+      },
+      {
+        "metric": "CitiesCaptured",
+        "weight": 50
+      },
+      {
+        "metric": "StartingCitiesHeld",
+        "weight": 100
+      },
+      {
+        "metric": "CombatUnits",
+        "weight": 10
+      },
+      {
+        "metric": {
+          "CityDamage": 1
+        },
+        "weight": 1
+      }
+    ]
+  },
+  "predictions": {
+    "good_play": "",
+    "ai_play": "",
+    "ai_score": {
+      "median": 0,
+      "low": 0,
+      "high": 0,
+      "win_percent": 0
+    }
+  },
+  "source": "Cut from supported-state.json at turn 1: the position before that turn's orders, a save replayed on the engine it was recorded on (every turn checked against the recorded hash). Every empire is a Hard AI except the seat; its AI memory starts fresh and the seat's standing orders are cleared. Built by `tools/scenarios/cut.sh`. Edits: Germany: Industrialization; India: Industrialization.",
+  "baseline": {
+    "runs": 50,
+    "difficulty": "Hard",
+    "median": 130,
+    "p10": 130,
+    "p90": 130,
+    "win_percent": 0,
+    "measured_at": "2026-11-15T16:13:26Z"
+  },
+  "lab": {
+    "question": "Does supporting a city feel right, and can three attackers still take it?",
+    "blurb": "Three Indian Riflemen stand at the west gate of walled Munich. Its Rifleman garrison has three more German Riflemen just east of it.",
+    "era": 4
+  },
+  "state": {
+    "encoding": "gzip-base64",
+    "hash": "8849256182022680404",
+    "data": "H4sIAAAAAAAC/+1bS2/bOBD+Lzz7INmW/Dg26HYDbLBBgUUOQSAwEm0RpUmVj6Ru4P++M5TkRxo7jpOmccKLLVKcJ18zmE93JOeWM0PGdyTGn2vlpqUlY+mE6JBrx0XB5RTeX5ILKoQhVx0yUarIjFWaFWQcYdvJghWZdVqScdx2aP+yrMi4G8EDL/w7brKcVtxSQcZWO9YhghqbVU7nJTWsYVKLl3TGyJicOcnzknSI0nzKJRX3Oahb2UirVOUEtVwBjwSb3rLvZJx2CIzoL6BPq8LlYBS++cYlqEX+k9wCf4d/Y/KVTwSbUUmWo5Fh9t0xB+pcXm30rvlBM8ONpTJnvmm5YGCsoHzmBwC37m4XP8m38T3fdg/y7UnJLUh73LnxpnN7686N3oBzgV3BK6FmNJ+j8NyvVs8wV9LS3GLrMurEV9Al2Q/wi1ZgA1jMaxG+02pG7Xyj65bqtl0xmrMsV0oU4BezVNjzaZqa1U7C5h2hnu7aO7BgoLBmuhnIJhMGdt6w1exOHdVUWsYyJ8FET2tY7jS383bmwAsWp+6C4rTdADs/IzCyVRTHLUCAcRW8ZQV66PIKPDThkpsSmxNQFyZ3Rit0Vsm4X5KjxrFe83xNZrMI6oZ2XC45WKY1xTb5oqkxgsKcLzqBOlAH6kAdqAN1oA7UgTpQP0bdXc81XoHuo/o5Xk+YX4Eu7IZj2A0fafe99g4IOy7suODnsBsCdaAO1IE6UAfqQB2oA3WgPmJqqDDf8sKWEJpj7d/XypFd1sARfAeW/X0H1JYrQed19Rvq4gIK3y3GgP2Ayr2v9N8RwbAU3k2BudIFDo7TuD8apMMoGQ6T3ihO00G3E6f9UX+Q9EfdqJ/2fHGb5jU2gXxhekblnCz7sqmCMn+hJFtaNIUSPshJGvRE5NETpUNkQjukgUisuKlrw/QNojFKRAnUhjQohyWuYRMx0UIkkiVEwjAmVwX/GhUxwJnYj1ENZOltYTTcn1GtUbKF0WjhkQyGUZ2X6+iMts9jPLwMfKqXi8lWE4nAhZwzmbOs5IjjmNf0becatMMwawWsi8ziGms6LaOz5iEvPf7oVGs+reEnHfJJK/mTXSj9rRZ/Ro2SGifpxGkNEvDxQnPbvrYl+MLy3EDrs5yCHKbrd6fAasXoRBXs38k/9BYHnpdcKKOqErn9xVwBq9bMPD/0AKsFlvyGCv/4uXB5q+GJVtVXZdvmFycrdYvIHaBmlgrh9BRpzrjglur5plKfqGwUOocetOIcPI86ncrCGas5qPKzZn5VozayGZvVbvYb+Df/7HdyLP7YuPdn0Utb/ir6RS826K175FmW+n9aMLG8fB7HTf6CjtyGgjRwvGQTpe2S+W0NjkM+i6ObqrBuw/H1fm+hPX+uUIenxNDD3mAUDxOImbuDURolgzTqDEZJ0ouHaS/tD++F0BBlcPqUADreHkC3vJ4WPkcPw7cfClZ7O6PeDUaDnYz6T2W0LQ5P9meU7ozD07cRh8chDv9jcfjxnHFv7pR9V3fiMd51z5IRv9igtz7lvzXa3HtenuXvRzKY7o4MZu0bpG3fGm1NYRot3v6S+ZjpYTgTjvxMCJflkVyWHzvQe6GcGvMiesOy5UeV/aFPi9z9ryTXK1kFn0x47gQaQP6muiAP16Iery81NQ/0x26mbUb9WMbdJG/eLoYJHelG3TSO4wRfQqaZCT7zGTReJevFvI001KeqPfwBDda+HsVLg09qCORUWdXOGV5OcXs5we39ayI8UzfMZIJN7Dp+8sGUH5Tp7xAd7RDdP1D0YCU6OVB08izRPRSdHig6fZbDExQ9OFD0YH/RD1ZHQfTwQNHDA0WnK4ePDhQ9epbV4PAF7j25PPQW/wOjQ72plkEAAA=="
+  }
+}

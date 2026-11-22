@@ -1,0 +1,1081 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Byzantium and Celts core behavior > a Celtic sack takes Gold and raises a warband camp > carries off exactly 60 Gold per population, whatever the victim holds 1`] = `
+[
+  {
+    "at": {
+      "q": 4,
+      "r": 10,
+    },
+    "camp": 0,
+    "type": "BarbarianCampSpawned",
+  },
+  {
+    "at": {
+      "q": 5,
+      "r": 10,
+    },
+    "by": 0,
+    "camp": {
+      "q": 4,
+      "r": 10,
+    },
+    "city": 2,
+    "from": 1,
+    "sack_gold": 120,
+    "type": "CityRazed",
+  },
+]
+`;
+
+exports[`Byzantium and Celts core behavior > a Celtic sack takes Gold and raises a warband camp > carries off exactly 60 Gold per population, whatever the victim holds 2`] = `
+[
+  {
+    "at": {
+      "q": 5,
+      "r": 10,
+    },
+    "by": 0,
+    "camp": {
+      "q": 4,
+      "r": 10,
+    },
+    "city": 2,
+    "from": 1,
+    "sack_gold": 120,
+    "type": "CityRazed",
+  },
+]
+`;
+
+exports[`Byzantium and Celts core behavior > a Celtic sack takes Gold and raises a warband camp > carries off exactly 60 Gold per population, whatever the victim holds 3`] = `
+[
+  {
+    "pos": {
+      "q": 4,
+      "r": 10,
+    },
+    "visible": true,
+  },
+]
+`;
+
+exports[`Byzantium and Celts core behavior > a Celtic sack takes Gold and raises a warband camp > carries off exactly 60 Gold per population, whatever the victim holds 4`] = `
+[
+  {
+    "at": {
+      "q": 5,
+      "r": 10,
+    },
+    "by": 0,
+    "camp": {
+      "q": 4,
+      "r": 10,
+    },
+    "city": 2,
+    "from": 1,
+    "sack_gold": 120,
+    "type": "CityRazed",
+  },
+]
+`;
+
+exports[`Byzantium and Celts core behavior > a Celtic sack takes Gold and raises a warband camp > carries off exactly 60 Gold per population, whatever the victim holds 5`] = `undefined`;
+
+exports[`Byzantium and Celts core behavior > a Celtic sack takes Gold and raises a warband camp > changes no technology: the victim keeps its own and the Celts gain none 1`] = `
+[
+  {
+    "at": {
+      "q": 4,
+      "r": 10,
+    },
+    "camp": 0,
+    "type": "BarbarianCampSpawned",
+  },
+  {
+    "at": {
+      "q": 5,
+      "r": 10,
+    },
+    "by": 0,
+    "camp": {
+      "q": 4,
+      "r": 10,
+    },
+    "city": 2,
+    "from": 1,
+    "sack_gold": 120,
+    "type": "CityRazed",
+  },
+]
+`;
+
+exports[`Byzantium and Celts core behavior > a Celtic sack takes Gold and raises a warband camp > changes no technology: the victim keeps its own and the Celts gain none 2`] = `
+[
+  {
+    "at": {
+      "q": 5,
+      "r": 10,
+    },
+    "by": 0,
+    "camp": {
+      "q": 4,
+      "r": 10,
+    },
+    "city": 2,
+    "from": 1,
+    "sack_gold": 120,
+    "type": "CityRazed",
+  },
+]
+`;
+
+exports[`Byzantium and Celts core behavior > a Celtic sack takes Gold and raises a warband camp > changes no technology: the victim keeps its own and the Celts gain none 3`] = `
+[
+  {
+    "pos": {
+      "q": 4,
+      "r": 10,
+    },
+    "visible": true,
+  },
+]
+`;
+
+exports[`Byzantium and Celts core behavior > a Celtic sack takes Gold and raises a warband camp > changes no technology: the victim keeps its own and the Celts gain none 4`] = `
+[
+  {
+    "at": {
+      "q": 5,
+      "r": 10,
+    },
+    "by": 0,
+    "camp": {
+      "q": 4,
+      "r": 10,
+    },
+    "city": 2,
+    "from": 1,
+    "sack_gold": 120,
+    "type": "CityRazed",
+  },
+]
+`;
+
+exports[`Byzantium and Celts core behavior > a Celtic sack takes Gold and raises a warband camp > changes no technology: the victim keeps its own and the Celts gain none 5`] = `undefined`;
+
+exports[`Byzantium and Celts core behavior > a Celtic sack takes Gold and raises a warband camp > creates the camp state even with barbarians off 1`] = `
+[
+  {
+    "at": {
+      "q": 4,
+      "r": 10,
+    },
+    "camp": 0,
+    "type": "BarbarianCampSpawned",
+  },
+  {
+    "at": {
+      "q": 5,
+      "r": 10,
+    },
+    "by": 0,
+    "camp": {
+      "q": 4,
+      "r": 10,
+    },
+    "city": 2,
+    "from": 1,
+    "sack_gold": 120,
+    "type": "CityRazed",
+  },
+]
+`;
+
+exports[`Byzantium and Celts core behavior > a Celtic sack takes Gold and raises a warband camp > creates the camp state even with barbarians off 2`] = `
+[
+  {
+    "at": {
+      "q": 5,
+      "r": 10,
+    },
+    "by": 0,
+    "camp": {
+      "q": 4,
+      "r": 10,
+    },
+    "city": 2,
+    "from": 1,
+    "sack_gold": 120,
+    "type": "CityRazed",
+  },
+]
+`;
+
+exports[`Byzantium and Celts core behavior > a Celtic sack takes Gold and raises a warband camp > creates the camp state even with barbarians off 3`] = `
+[
+  {
+    "pos": {
+      "q": 4,
+      "r": 10,
+    },
+    "visible": true,
+  },
+]
+`;
+
+exports[`Byzantium and Celts core behavior > a Celtic sack takes Gold and raises a warband camp > creates the camp state even with barbarians off 4`] = `
+[
+  {
+    "at": {
+      "q": 5,
+      "r": 10,
+    },
+    "by": 0,
+    "camp": {
+      "q": 4,
+      "r": 10,
+    },
+    "city": 2,
+    "from": 1,
+    "sack_gold": 120,
+    "type": "CityRazed",
+  },
+]
+`;
+
+exports[`Byzantium and Celts core behavior > a Celtic sack takes Gold and raises a warband camp > creates the camp state even with barbarians off 5`] = `undefined`;
+
+exports[`Byzantium and Celts core behavior > a Celtic sack takes Gold and raises a warband camp > prefers the land of a Celtic city that has no camp yet 1`] = `
+[
+  {
+    "at": {
+      "q": 7,
+      "r": 10,
+    },
+    "camp": 0,
+    "type": "BarbarianCampSpawned",
+  },
+  {
+    "at": {
+      "q": 5,
+      "r": 10,
+    },
+    "by": 0,
+    "camp": {
+      "q": 7,
+      "r": 10,
+    },
+    "city": 2,
+    "from": 1,
+    "sack_gold": 120,
+    "type": "CityRazed",
+  },
+]
+`;
+
+exports[`Byzantium and Celts core behavior > a Celtic sack takes Gold and raises a warband camp > prefers the land of a Celtic city that has no camp yet 2`] = `
+[
+  {
+    "at": {
+      "q": 5,
+      "r": 10,
+    },
+    "by": 0,
+    "camp": {
+      "q": 7,
+      "r": 10,
+    },
+    "city": 2,
+    "from": 1,
+    "sack_gold": 120,
+    "type": "CityRazed",
+  },
+]
+`;
+
+exports[`Byzantium and Celts core behavior > a Celtic sack takes Gold and raises a warband camp > prefers the land of a Celtic city that has no camp yet 3`] = `
+[
+  {
+    "pos": {
+      "q": 7,
+      "r": 10,
+    },
+    "visible": true,
+  },
+]
+`;
+
+exports[`Byzantium and Celts core behavior > a Celtic sack takes Gold and raises a warband camp > prefers the land of a Celtic city that has no camp yet 4`] = `
+[
+  {
+    "at": {
+      "q": 5,
+      "r": 10,
+    },
+    "by": 0,
+    "camp": {
+      "q": 7,
+      "r": 10,
+    },
+    "city": 2,
+    "from": 1,
+    "sack_gold": 120,
+    "type": "CityRazed",
+  },
+]
+`;
+
+exports[`Byzantium and Celts core behavior > a Celtic sack takes Gold and raises a warband camp > prefers the land of a Celtic city that has no camp yet 5`] = `undefined`;
+
+exports[`Byzantium and Celts core behavior > a Celtic sack takes Gold and raises a warband camp > raises a Celtic warband camp within three tiles of the ruins, in the report and on the map 1`] = `
+[
+  {
+    "at": {
+      "q": 4,
+      "r": 10,
+    },
+    "camp": 0,
+    "type": "BarbarianCampSpawned",
+  },
+  {
+    "at": {
+      "q": 5,
+      "r": 10,
+    },
+    "by": 0,
+    "camp": {
+      "q": 4,
+      "r": 10,
+    },
+    "city": 2,
+    "from": 1,
+    "sack_gold": 120,
+    "type": "CityRazed",
+  },
+]
+`;
+
+exports[`Byzantium and Celts core behavior > a Celtic sack takes Gold and raises a warband camp > raises a Celtic warband camp within three tiles of the ruins, in the report and on the map 2`] = `
+[
+  {
+    "at": {
+      "q": 5,
+      "r": 10,
+    },
+    "by": 0,
+    "camp": {
+      "q": 4,
+      "r": 10,
+    },
+    "city": 2,
+    "from": 1,
+    "sack_gold": 120,
+    "type": "CityRazed",
+  },
+]
+`;
+
+exports[`Byzantium and Celts core behavior > a Celtic sack takes Gold and raises a warband camp > raises a Celtic warband camp within three tiles of the ruins, in the report and on the map 3`] = `
+[
+  {
+    "pos": {
+      "q": 4,
+      "r": 10,
+    },
+    "visible": true,
+  },
+]
+`;
+
+exports[`Byzantium and Celts core behavior > a Celtic sack takes Gold and raises a warband camp > raises a Celtic warband camp within three tiles of the ruins, in the report and on the map 4`] = `
+[
+  {
+    "at": {
+      "q": 5,
+      "r": 10,
+    },
+    "by": 0,
+    "camp": {
+      "q": 4,
+      "r": 10,
+    },
+    "city": 2,
+    "from": 1,
+    "sack_gold": 120,
+    "type": "CityRazed",
+  },
+]
+`;
+
+exports[`Byzantium and Celts core behavior > a Celtic sack takes Gold and raises a warband camp > raises a Celtic warband camp within three tiles of the ruins, in the report and on the map 5`] = `undefined`;
+
+exports[`Byzantium and Celts core behavior > keeps a foreign unit at full strength during Peace and shows Celtic archers normally 1`] = `
+[
+  {
+    "at": {
+      "q": 1,
+      "r": 7,
+    },
+    "gold": 80,
+    "owner": 0,
+    "science": 0,
+    "type": "WonderDiscovered",
+    "wonder": "Uluru",
+  },
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": 0,
+      "r": 4,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 2,
+    "owner": 1,
+    "tile": {
+      "q": 6,
+      "r": 16,
+    },
+    "type": "TileClaimed",
+  },
+]
+`;
+
+exports[`Byzantium and Celts core behavior > keeps a foreign unit at full strength during Peace and shows Celtic archers normally 2`] = `
+[
+  {
+    "at": {
+      "q": 6,
+      "r": 10,
+    },
+    "attacker": 1,
+    "attacker_at": {
+      "q": 5,
+      "r": 10,
+    },
+    "attacker_hp_after": 100,
+    "attacker_owner": 0,
+    "attacker_roll": 87,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Archer (ranged)",
+          15,
+        ],
+      ],
+      "total": 15,
+    },
+    "damage_to_attacker": 0,
+    "damage_to_defender": 21,
+    "defender": {
+      "kind": "Unit",
+      "owner": 1,
+      "unit": 2,
+      "unit_kind": "Soldier",
+    },
+    "defender_hp_after": 79,
+    "defender_roll": 0,
+    "defender_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "meeting": false,
+    "ranged": true,
+    "type": "Battle",
+  },
+]
+`;
+
+exports[`Byzantium and Celts core behavior > researches normally and keeps the core economy in sync 1`] = `
+{
+  "parts": [
+    [
+      "C0",
+      11,
+    ],
+  ],
+  "total": 11,
+}
+`;
+
+exports[`Byzantium and Celts core behavior > researches normally and keeps the core economy in sync 2`] = `
+{
+  "focus": "Balanced",
+  "focus_reason": "no active build",
+  "sources": [
+    {
+      "label": "City center",
+      "yields": {
+        "food": 4,
+        "gold": 1,
+        "production": 1,
+        "science": 0,
+      },
+    },
+    {
+      "label": "Worked tiles",
+      "yields": {
+        "food": 12,
+        "gold": 0,
+        "production": 0,
+        "science": 0,
+      },
+    },
+    {
+      "label": "Minimum city production",
+      "yields": {
+        "food": 0,
+        "gold": 0,
+        "production": 2,
+        "science": 0,
+      },
+    },
+    {
+      "label": "Citizens",
+      "yields": {
+        "food": 0,
+        "gold": 0,
+        "production": 0,
+        "science": 1,
+      },
+    },
+    {
+      "label": "Capital",
+      "yields": {
+        "food": 0,
+        "gold": 0,
+        "production": 2,
+        "science": 2,
+      },
+    },
+  ],
+  "total": {
+    "food": 16,
+    "gold": 1,
+    "production": 5,
+    "science": 3,
+  },
+  "worked": [
+    {
+      "q": 4,
+      "r": 10,
+    },
+    {
+      "q": 4,
+      "r": 11,
+    },
+    {
+      "q": 5,
+      "r": 9,
+    },
+    {
+      "q": 5,
+      "r": 11,
+    },
+    {
+      "q": 6,
+      "r": 9,
+    },
+    {
+      "q": 6,
+      "r": 10,
+    },
+  ],
+}
+`;
+
+exports[`Byzantium and Celts core behavior > researches normally and keeps the core economy in sync 3`] = `
+{
+  "focus": "Balanced",
+  "focus_reason": "no active build",
+  "sources": [
+    {
+      "label": "City center",
+      "yields": {
+        "food": 4,
+        "gold": 1,
+        "production": 1,
+        "science": 0,
+      },
+    },
+    {
+      "label": "Worked tiles",
+      "yields": {
+        "food": 12,
+        "gold": 0,
+        "production": 0,
+        "science": 0,
+      },
+    },
+    {
+      "label": "Minimum city production",
+      "yields": {
+        "food": 0,
+        "gold": 0,
+        "production": 2,
+        "science": 0,
+      },
+    },
+    {
+      "label": "Citizens",
+      "yields": {
+        "food": 0,
+        "gold": 0,
+        "production": 0,
+        "science": 2,
+      },
+    },
+    {
+      "label": "Capital",
+      "yields": {
+        "food": 0,
+        "gold": 0,
+        "production": 2,
+        "science": 2,
+      },
+    },
+    {
+      "label": "University",
+      "yields": {
+        "food": 0,
+        "gold": 0,
+        "production": 0,
+        "science": 4,
+      },
+    },
+    {
+      "label": "Library",
+      "yields": {
+        "food": 0,
+        "gold": 0,
+        "production": 0,
+        "science": 3,
+      },
+    },
+  ],
+  "total": {
+    "food": 16,
+    "gold": 1,
+    "production": 5,
+    "science": 11,
+  },
+  "worked": [
+    {
+      "q": 1,
+      "r": 4,
+    },
+    {
+      "q": 1,
+      "r": 5,
+    },
+    {
+      "q": 2,
+      "r": 3,
+    },
+    {
+      "q": 2,
+      "r": 5,
+    },
+    {
+      "q": 3,
+      "r": 3,
+    },
+    {
+      "q": 3,
+      "r": 4,
+    },
+  ],
+}
+`;
+
+exports[`Byzantium and Celts core behavior > researches normally and keeps the core economy in sync 4`] = `
+[
+  "Library",
+  {
+    "food": 0,
+    "gold": 0,
+    "production": 0,
+    "science": 3,
+  },
+]
+`;
+
+exports[`Byzantium and Celts core behavior > researches normally and keeps the core economy in sync 5`] = `
+[
+  "University",
+  {
+    "food": 0,
+    "gold": 0,
+    "production": 0,
+    "science": 4,
+  },
+]
+`;
+
+exports[`Byzantium and Celts core behavior > researches normally and keeps the core economy in sync 6`] = `
+[
+  "Research Lab",
+  {
+    "food": 0,
+    "gold": 0,
+    "production": 0,
+    "science": 6,
+  },
+]
+`;
+
+exports[`Byzantium and Celts core behavior > researches normally and keeps the core economy in sync 7`] = `
+[
+  {
+    "at": {
+      "q": 1,
+      "r": 7,
+    },
+    "gold": 80,
+    "owner": 0,
+    "science": 0,
+    "type": "WonderDiscovered",
+    "wonder": "Uluru",
+  },
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": 0,
+      "r": 4,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": 0,
+      "r": 5,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": 0,
+      "r": 6,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": 1,
+      "r": 3,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 2,
+    "owner": 1,
+    "tile": {
+      "q": 3,
+      "r": 12,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "idle": 1,
+    "player": 0,
+    "resource": "Iron",
+    "supplied": 0,
+    "type": "SupplyShortage",
+    "used": 1,
+  },
+]
+`;
+
+exports[`Byzantium and Celts core behavior > researches normally and keeps the core economy in sync 8`] = `11`;
+
+exports[`Byzantium and Celts core behavior > researches normally and keeps the core economy in sync 9`] = `
+{
+  "done": false,
+  "label": "The Heir to the Throne is not trained",
+  "live": false,
+  "target": 1,
+  "value": 0,
+}
+`;
+
+exports[`Byzantium and Celts core behavior > sacks a Celtic conquest and releases its territory 1`] = `[]`;
+
+exports[`Byzantium and Celts core behavior > sacks a Celtic conquest and releases its territory 2`] = `
+[
+  {
+    "at": {
+      "q": 5,
+      "r": 10,
+    },
+    "by": 0,
+    "camp": {
+      "q": 4,
+      "r": 10,
+    },
+    "city": 2,
+    "from": 1,
+    "sack_gold": 120,
+    "type": "CityRazed",
+  },
+]
+`;
+
+exports[`Germany industry core behavior > converts city Production into recurring Gold or Science with ordinary unit movement 1`] = `
+[
+  2,
+  3,
+]
+`;
+
+exports[`Germany industry core behavior > converts city Production into recurring Gold or Science with ordinary unit movement 2`] = `
+[
+  {
+    "at": {
+      "q": 1,
+      "r": 7,
+    },
+    "gold": 80,
+    "owner": 0,
+    "science": 0,
+    "type": "WonderDiscovered",
+    "wonder": "Uluru",
+  },
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": 0,
+      "r": 4,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 2,
+    "owner": 1,
+    "tile": {
+      "q": 6,
+      "r": 15,
+    },
+    "type": "TileClaimed",
+  },
+]
+`;
+
+exports[`Germany industry core behavior > converts city Production into recurring Gold or Science with ordinary unit movement 3`] = `
+{
+  "focus": "Balanced",
+  "focus_reason": "building Industry: Gold",
+  "sources": [
+    {
+      "label": "City center",
+      "yields": {
+        "food": 4,
+        "gold": 1,
+        "production": 1,
+        "science": 0,
+      },
+    },
+    {
+      "label": "Worked tiles",
+      "yields": {
+        "food": 14,
+        "gold": 0,
+        "production": 0,
+        "science": 0,
+      },
+    },
+    {
+      "label": "Minimum city production",
+      "yields": {
+        "food": 0,
+        "gold": 0,
+        "production": 2,
+        "science": 0,
+      },
+    },
+    {
+      "label": "Citizens",
+      "yields": {
+        "food": 0,
+        "gold": 0,
+        "production": 0,
+        "science": 1,
+      },
+    },
+    {
+      "label": "Capital",
+      "yields": {
+        "food": 0,
+        "gold": 0,
+        "production": 2,
+        "science": 2,
+      },
+    },
+    {
+      "label": "Industry project: Gold (50% Production)",
+      "yields": {
+        "food": 0,
+        "gold": 2,
+        "production": 0,
+        "science": 0,
+      },
+    },
+  ],
+  "total": {
+    "food": 18,
+    "gold": 3,
+    "production": 5,
+    "science": 3,
+  },
+  "worked": [
+    {
+      "q": 0,
+      "r": 4,
+    },
+    {
+      "q": 1,
+      "r": 4,
+    },
+    {
+      "q": 1,
+      "r": 5,
+    },
+    {
+      "q": 2,
+      "r": 3,
+    },
+    {
+      "q": 2,
+      "r": 5,
+    },
+    {
+      "q": 3,
+      "r": 3,
+    },
+    {
+      "q": 3,
+      "r": 4,
+    },
+  ],
+}
+`;
+
+exports[`Germany industry core behavior > converts city Production into recurring Gold or Science with ordinary unit movement 4`] = `0`;
+
+exports[`Germany industry core behavior > converts city Production into recurring Gold or Science with ordinary unit movement 5`] = `[]`;
+
+exports[`Germany industry core behavior > converts city Production into recurring Gold or Science with ordinary unit movement 6`] = `
+{
+  "focus": "Balanced",
+  "focus_reason": "building Industry: Science",
+  "sources": [
+    {
+      "label": "City center",
+      "yields": {
+        "food": 4,
+        "gold": 1,
+        "production": 1,
+        "science": 0,
+      },
+    },
+    {
+      "label": "Worked tiles",
+      "yields": {
+        "food": 14,
+        "gold": 0,
+        "production": 0,
+        "science": 0,
+      },
+    },
+    {
+      "label": "Minimum city production",
+      "yields": {
+        "food": 0,
+        "gold": 0,
+        "production": 2,
+        "science": 0,
+      },
+    },
+    {
+      "label": "Citizens",
+      "yields": {
+        "food": 0,
+        "gold": 0,
+        "production": 0,
+        "science": 1,
+      },
+    },
+    {
+      "label": "Capital",
+      "yields": {
+        "food": 0,
+        "gold": 0,
+        "production": 2,
+        "science": 2,
+      },
+    },
+    {
+      "label": "Industry project: Science (25% Production)",
+      "yields": {
+        "food": 0,
+        "gold": 0,
+        "production": 0,
+        "science": 1,
+      },
+    },
+  ],
+  "total": {
+    "food": 18,
+    "gold": 1,
+    "production": 5,
+    "science": 4,
+  },
+  "worked": [
+    {
+      "q": 0,
+      "r": 4,
+    },
+    {
+      "q": 1,
+      "r": 4,
+    },
+    {
+      "q": 1,
+      "r": 5,
+    },
+    {
+      "q": 2,
+      "r": 3,
+    },
+    {
+      "q": 2,
+      "r": 5,
+    },
+    {
+      "q": 3,
+      "r": 3,
+    },
+    {
+      "q": 3,
+      "r": 4,
+    },
+  ],
+}
+`;
+
+exports[`Germany industry core behavior > converts city Production into recurring Gold or Science with ordinary unit movement 7`] = `0`;

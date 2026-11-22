@@ -1,0 +1,49 @@
+{
+  "name": "legatum-app",
+  "private": true,
+  "license": "MIT",
+  "repository": "github:samcorcos/legatum",
+  "homepage": "https://legatum-game.pages.dev",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "e2e": "playwright test",
+    "e2e:hosted": "playwright test -c e2e-hosted/playwright.config.ts",
+    "test:watch": "vitest",
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
+    "lan:fake": "node scripts/fake-lan-server.mjs",
+    "test:e2e": "cargo build --release -p legatum-server && playwright test"
+  },
+  "dependencies": {
+    "@fontsource/cormorant": "^5.3.0",
+    "@fontsource/libre-franklin": "^5.3.0",
+    "@tauri-apps/api": "^2.12.0",
+    "@tauri-apps/plugin-dialog": "^2.8.0",
+    "@tauri-apps/plugin-fs": "^2.6.0",
+    "@tauri-apps/plugin-haptics": "~2.4.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@tauri-apps/cli": "^2.12.0",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.8",
+    "@types/node": "^26.6.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "fake-indexeddb": "^6.2.5",
+    "happy-dom": "^21.0.4",
+    "typescript": "5.9",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.5"
+  }
+}

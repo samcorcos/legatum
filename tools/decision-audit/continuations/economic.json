@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "name": "audit-economic",
+  "decisions": {
+    "campaign_commit": 0,
+    "campaign_persist": 0,
+    "focus_fire": 0,
+    "war_siege": 0,
+    "production_military_percent": 40,
+    "research_military_percent": 40,
+    "research_economy_percent": 200,
+    "relative_economy_percent": 250,
+    "buy_hold": 3
+  }
+}

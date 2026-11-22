@@ -1,0 +1,44 @@
+[
+  {
+    "era": "machine",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-17d5726a-ab55-48f7-a7e7-e904183f82b9.png",
+    "prompt": "Paint a NEW city-wall overlay for a serious historical strategy game. Reference is ONLY for the exact camera, overall ring footprint, front gate position, and refined miniature oil-painting style. Machine era 1900\u20131918: low weathered poured-concrete perimeter with broad earth-backed berms, four squat rounded concrete shelters, recessed steel entry gate at the front. Visible board-form seams, muted warm grey concrete and olive turf. No crenellations, brick star bastions or medieval towers. Entire perimeter is an oval ring seen from elevated three-quarter front, EMPTY open centre filled pure magenta. Match reference footprint: ring spans x18..494 and y185..454 on a512 square canvas, gate front at x256 y440. Preserve ample blank upper half. One standalone architectural painting, subtle textured brushwork and crisp small detail, soft upper-left light. Flat pure magenta outside AND inside ring for transparency; no ground slab spanning the centre, no city, people, weapons, text, border or drop shadow. Return complete square image.",
+    "fit512": [
+      0.4135534317984361,
+      -2.677671589921772,
+      -5.457862728062537
+    ]
+  },
+  {
+    "era": "modern",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-05edfcfd-2235-4201-b7bc-ff3cd2de59cc.png",
+    "prompt": "Paint a NEW city-wall overlay for a serious historical strategy game. Reference is ONLY for the exact camera, overall ring footprint, front gate position, and refined miniature oil-painting style. Modern era 1940\u20131960: angular reinforced-concrete perimeter of connected low trapezoidal sections, squared gatehouse with dark double steel gate at front, six low rectangular concrete corner shelters with chamfered roofs. Restrained cold grey concrete and brown gravel, distinct angular outline. Entire perimeter is an oval ring seen from elevated three-quarter front, EMPTY open centre filled pure magenta. Match reference footprint: ring spans x18..494 and y185..454 on a512 square canvas, gate front at x256 y440. Preserve ample blank upper half. One standalone architectural painting, subtle textured brushwork and crisp small detail, soft upper-left light. Flat pure magenta outside AND inside ring for transparency; no ground slab spanning the centre, no city, people, weapons, text, border or drop shadow. Return complete square image.",
+    "fit512": [
+      0.4110535405872193,
+      -0.49740932642487223,
+      -8.024179620034545
+    ]
+  },
+  {
+    "era": "contemporary",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-1cb061bc-371c-49b3-8acb-24f7d7d9000c.png",
+    "prompt": "Paint a NEW city-wall overlay for a serious historical strategy game. Reference is ONLY for the exact camera, overall ring footprint, front gate position, and refined miniature oil-painting style. Contemporary era: precast pale grey modular concrete perimeter with narrow panel joints and a pair of slender rectangular observation towers on either side of the front vehicle entrance, understated steel sliding gate, muted slate guard cabins. No flags, symbols or lettering. Entire perimeter is an oval ring seen from elevated three-quarter front, EMPTY open centre filled pure magenta. Match reference footprint: ring spans x18..494 and y185..454 on a512 square canvas, gate front at x256 y440. Preserve ample blank upper half. One standalone architectural painting, subtle textured brushwork and crisp small detail, soft upper-left light. Flat pure magenta outside AND inside ring for transparency; no ground slab spanning the centre, no city, people, weapons, text, border or drop shadow. Return complete square image.",
+    "fit512": [
+      0.4124783362218371,
+      -2.623916811091874,
+      -4.263431542461035
+    ]
+  },
+  {
+    "era": "future",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-b8598d6d-3383-4b8c-b7df-0a328caf0373.png",
+    "prompt": "Paint a NEW city-wall overlay for a serious historical strategy game. Reference is ONLY for the exact camera, overall ring footprint, front gate position, and refined miniature oil-painting style. Plausible future era: low continuous layered ivory mineral-composite perimeter with rounded corners and broad sloping buttresses, compact charcoal inset gate, two low integrated sensor domes. Restrained cream and graphite materials, green ground seams. No robots, drones, neon, glowing shields, lasers or fantasy. Entire perimeter is an oval ring seen from elevated three-quarter front, EMPTY open centre filled pure magenta. Match reference footprint: ring spans x18..494 and y185..454 on a512 square canvas, gate front at x256 y440. Preserve ample blank upper half. One standalone architectural painting, subtle textured brushwork and crisp small detail, soft upper-left light. Flat pure magenta outside AND inside ring for transparency; no ground slab spanning the centre, no city, people, weapons, text, border or drop shadow. Return complete square image.",
+    "previousPath": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-dce762a8-d728-41e5-a028-f2b8e6319d8b.png",
+    "correctionPrompt": "Edit IMAGE ONE only: replace its old arched front gateway and steps with the clean flat rectangular charcoal sliding gate and smooth concrete access ramp shown in IMAGE TWO. Keep the entire wall ring, camera, placement, proportions and empty centre exactly unchanged. Gate fits in existing gateway footprint. No old stone arch or columns. Keep flat pure magenta background outside AND inside the open ring. Complete square painting, exact same framing.",
+    "fit512": [
+      0.4103448275862069,
+      -0.4655172413793025,
+      -2.303448275862081
+    ]
+  }
+]

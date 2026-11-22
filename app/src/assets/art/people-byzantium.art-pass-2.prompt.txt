@@ -1,0 +1,4 @@
+2026-11-16 — Codex built-in image generation. Provisional author review; lead review pending.
+Reference images and requested edits: see docs/design/art-pass-2/generation-*.json.
+
+Edit this existing Legatum oil painting with one historically necessary correction. Preserve EXACTLY the two adults, faces, all hands and fingers, books, garments, jewelry, foreground columns, brushwork, colors, lighting and square composition. In the distant upper-right background, Hagia Sophia is currently shown with Ottoman minarets. This portrait depicts Constantinople in AD 1000: remove ALL minarets, replacing their thin tower shapes with sky or low Byzantine rooftops, and replace the dome finial with a small simple Christian cross. Preserve the great domed basilica and its semi-domes and the rest of the city. No new towers. No words or watermark. The sole change is the historically correct pre-Ottoman skyline. Return the edited painting.

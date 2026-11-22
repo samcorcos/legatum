@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "name": "no-last",
+  "faction_overrides": {
+    "India": {
+      "india_last_office_value": 0
+    }
+  }
+}

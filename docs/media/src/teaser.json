@@ -1,0 +1,28 @@
+{
+  "note": "Storyboard for docs/media/legatum-teaser.mp4 (teaser.mjs). clip = a master recorded by app/e2e/media/launch.media.ts; ss/t = start and length in seconds; speed multiplies playback; crop = [x, y, w, h] in the 1920x1080 master; sqx = left edge of the square cut; fade = seconds of dissolve into the shot.",
+  "fps": 60,
+  "fade": 0.2,
+  "music": { "file": "app/public/audio/music/war.m4a", "ss": 4.0, "fadeIn": 0.25, "fadeOut": 3.0, "gain": 1.6 },
+  "end": {
+    "kicker": "A HISTORICAL 4X ON A HEX MAP",
+    "tagline": ["Empires rise and fall.", "Some are remembered."],
+    "foot": [["OPEN SOURCE"], ["GITHUB.COM/SAMCORCOS/LEGATUM"]]
+  },
+  "shots": [
+    { "clip": "battle", "ss": 0.25, "t": 3.6, "caption": "Empires rise and fall.", "captionIn": 0.1, "crop": [24, 14, 1872, 1053], "sqx": 280 },
+    { "clip": "world", "ss": 1.4, "t": 4.6, "speed": 1.25, "caption": "Some are remembered.", "crop": [24, 14, 1872, 1053], "sqx": 420 },
+    { "clip": "opening", "ss": 0.3, "t": 5.4, "speed": 1.8, "caption": "Explore.", "sqx": 120 },
+    { "clip": "growth-a", "ss": 0.3, "t": 1.7, "caption": "Expand.", "crop": [24, 14, 1872, 1053], "sqx": 420 },
+    { "clip": "growth-b", "ss": 0.3, "t": 2.1, "caption": "Expand.", "captionIn": 0, "fade": 1.0, "crop": [24, 14, 1872, 1053], "sqx": 420 },
+    { "clip": "research", "ss": 2.6, "t": 2.6, "caption": "Build.", "sqx": 420 },
+    { "clip": "era", "ss": 0.2, "t": 1.6, "sqx": 420 },
+    { "clip": "era", "ss": 4.4, "t": 3.4, "caption": "Nine eras.", "captionAt": "top", "sqx": 420 },
+    { "clip": "forecast", "ss": 3.0, "t": 2.9, "caption": "Know the odds.", "sqx": 760 },
+    { "clip": "battle-b", "ss": 0.3, "t": 2.6, "caption": "Then strike.", "crop": [24, 14, 1872, 1053], "sqx": 200 },
+    { "clip": "air", "ss": 1.0, "t": 2.2, "crop": [24, 14, 1872, 1053], "sqx": 320 },
+    { "clip": "race", "ss": 3.6, "t": 3.0, "caption": "The race is public.", "sqx": 40 },
+    { "clip": "factions", "ss": 0.5, "t": 6.4, "speed": 1.6, "caption": "Choose your people.", "crop": [452, 140, 1300, 731], "sqx": 420 },
+    { "clip": "late-map", "ss": 4.6, "t": 2.4, "sqx": 420 }
+  ],
+  "endCard": 4.5
+}

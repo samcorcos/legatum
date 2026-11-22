@@ -1,0 +1,272 @@
+.moment-lane { position: absolute; z-index: 4; top: var(--story-top); left: var(--story-left); right: var(--story-right); pointer-events: none; display: grid; justify-items: center; gap: 6px; }
+.moment-card { isolation: isolate; position: relative; width: 100%; max-width: 440px; max-height: calc(100dvh - var(--story-top) - 180px); display: flex; flex-direction: column; overflow: hidden; padding: 18px 22px 10px; color: var(--ink); background: var(--panel); border: 1px solid var(--frame); box-shadow: 0 5px 22px #0003; pointer-events: auto; animation: moment-arrive 240ms ease-out both; text-align: center; }
+.moment-card.major, .moment-card.legendary { border: 6px solid transparent; border-image: var(--frame-image); padding: 22px 26px 12px; }
+.moment-card.major { background: radial-gradient(ellipse at 50% 18%, #d4ad4930, transparent 65%), var(--panel); }
+.moment-body { flex: 0 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+/* A card that does not fit scrolls its body; the kicker and the buttons stay pinned (UI review 8.9.4: the Fighter card hid both). */
+.moment-kicker, .moment-card footer { flex: none; }
+.moment-card footer { padding-top: 4px; }
+.moment-kicker { font: 600 9px/1.5 var(--sans); letter-spacing: .16em; text-transform: uppercase; color: var(--accent); margin: 0 26px 12px; }
+.moment-heading { display: flex; justify-content: center; align-items: center; gap: 14px; }
+.moment-heading h2 { position: relative; font: 600 28px/1.08 var(--display); margin: 0; overflow-wrap: anywhere; }
+.moment-frame { position: relative; display: inline-block; flex: none; line-height: 0; }
+.moment-frame .pf { margin: 0; }
+.moment-crest { position: relative; flex: none; display: grid; place-items: center; }
+.moment-crest > .medallion { position: relative; z-index: 1; }
+.moment-vignette { display: block; width: 104px; height: 104px; object-fit: cover; flex: none; border: 1px solid var(--frame); }
+.moment-heading:has(.moment-vignette) .moment-crest { z-index: 1; margin-left: -34px; align-self: end; }
+.moment-card.legendary .moment-heading:has(.moment-vignette) { flex-direction: row; }
+.moment-rays { display: none; }
+.moment-effect { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 44px; margin: 12px 0 0; padding: 8px; border: 1px solid var(--rule-2); background: var(--panel-2); color: var(--ink); font: 600 13px/1.4 var(--sans); cursor: pointer; touch-action: manipulation; }
+.moment-effect.plain { cursor: default; border-color: transparent; background: transparent; }
+/* A reward lists everything it gave, expanded, with the icon of each gain (never behind a chevron). */
+.moment-gains { flex-wrap: wrap; gap: 6px 22px; padding: 8px 12px; margin-inline: 0; list-style: none; cursor: default; border-color: var(--rule-2); background: var(--panel-2); }
+.moment-gains li { display: inline-flex; align-items: center; gap: 8px; font: 700 19px/1.2 var(--display); letter-spacing: .01em; }
+.moment-gains li b { font-weight: 700; }
+/* The reward's engraved emblem sits in the medallion ring where the faction crest used to. */
+.moment-emblem-art { display: block; width: 90%; height: 90%; background-color: var(--ink); -webkit-mask-size: contain; mask-size: contain; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; }
+.moment-card.loss .moment-emblem-art { background-color: var(--ink-2); }
+@media (hover: hover) {
+  .moment-link:hover, .moment-more:hover {
+    background: var(--panel-3);
+    color: var(--ink);
+  }
+}
+.moment-effect:active, .moment-dismiss:active, .moment-more:active { opacity: .75; }
+.moment-link:active { background: var(--panel-3); }
+.moment-show-map:active { opacity: 1; background: var(--panel-3); color: var(--ink); }
+.moment-lore { font: italic 500 19px/1.3 var(--display); color: var(--ink-2); margin: 12px 0 8px; }
+.moment-card footer { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; }
+.moment-link { border: 1px solid var(--rule); background: transparent; color: var(--ink); font: 500 11px var(--sans); padding: 8px 12px; min-height: 44px; cursor: pointer; touch-action: manipulation; }
+.moment-show-map { border-color: var(--accent); color: var(--accent); font-weight: 700; }
+.moment-dismiss { position: absolute; top: 0; right: 0; z-index: 2; min-width: 44px; min-height: 44px; border: 0; background: transparent; color: var(--ink); font-size: 24px; cursor: pointer; }
+.moment-details { font: 12px/1.45 var(--sans); text-align: left; padding: 0 8px; color: var(--ink-2); }
+.moment-details p { margin: 4px 0; }
+.moment-more { pointer-events: auto; border: 1px solid var(--frame); color: var(--ink); background: var(--panel); padding: 6px 12px; min-height: 44px; font: 600 12px var(--sans); cursor: pointer; }
+.moment-more span { font-weight: 400; }
+.moment-card.partner { padding: 12px 16px 8px; }
+.moment-card.partner h2 { font-size: 22px; }
+.moment-card.loss .moment-kicker { color: var(--bad); }
+/* Losses are sober: no rays or gold wash, a plain rule and a muted crest. */
+.moment-card.major.loss { background: var(--panel); border: 1px solid var(--bad); border-image: none; }
+.moment-card.loss:has(.moment-vignette) { border-left: 6px solid var(--bad); }
+.moment-card.loss .moment-vignette { border: 2px solid var(--bad); filter: saturate(.55); }
+.moment-card.loss .moment-rays { display: none; }
+/* A loss shows its amount in red with its sign; the clause after it stays ink. */
+.moment-card.loss .moment-effect .amt { color: var(--bad); font-weight: 700; }
+.moment-effect.plain > span { text-align: center; }
+.moment-card.loss .moment-crest { filter: grayscale(0.6); opacity: 0.85; }
+.moment-card.legendary { max-width: 100%; padding: 26px 36px 14px; border-top-width: 10px; border-bottom-width: 10px; background: linear-gradient(180deg, #d3ab4428, transparent 70%), var(--panel); }
+.moment-card.legendary .moment-heading { flex-direction: column; gap: 12px; }
+.moment-card.legendary h2 { font-size: clamp(28px, 3vw, 42px); font-weight: 700; letter-spacing: .015em; text-wrap: balance; }
+.moment-card.legendary .moment-effect { max-width: 520px; margin-inline: auto; }
+.moment-card.legendary .moment-lore { font-size: 22px; }
+[data-celebration-counter] { position: relative; }
+.celebrate-delta { position: absolute; z-index: 2; left: 50%; top: 100%; transform: translateX(-50%); white-space: nowrap; padding: 2px 5px; color: var(--good); background: var(--panel); border: 1px solid var(--accent); font: 700 14px/1.2 var(--sans); animation: counter-land 260ms 720ms ease-out both; pointer-events: none; }
+[data-celebration-counter]:has(.celebrate-delta:not(.reduced)) { animation: counter-pulse 320ms 720ms ease-out; }
+@keyframes moment-arrive { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes crest-burst { from { opacity: 0; transform: scale(.6); } 45% { opacity: 1; } to { opacity: .8; transform: scale(1); } }
+@keyframes counter-land { from { opacity: 0; } to { opacity: 1; } }
+@keyframes counter-pulse { 40% { background: #dbb74960; box-shadow: 0 0 0 8px #dbb74928, 0 0 18px #dbb74980; } }
+.moment-lane.reduced, .moment-lane.reduced *, .moment-lane.reduced *::before, .moment-lane.reduced *::after, .celebrate-delta.reduced { animation: none !important; transition: none !important; }
+.moment-lane .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+@media (min-width: 961px) {
+  .moment-card:has(.moment-vignette) { max-height: calc(100dvh - var(--story-top) - 145px); }
+  .moment-heading:has(.moment-vignette) { flex-wrap: wrap; gap: 6px 0; }
+  .moment-heading:has(.moment-vignette) h2 { order: -1; flex: 0 0 100%; }
+}
+@media (max-width: 960px) {
+  .moment-lane { gap: 4px; }
+  .moment-card, .moment-card.major, .moment-card.legendary, .moment-card.partner { max-width: 100%; max-height: min(184px, 25dvh); padding: 8px 10px 6px; border-width: 2px; animation-name: counter-land; }
+  .moment-card.major { border-image: none; border-color: #b58b34; border-left-width: 6px; box-shadow: inset 0 0 0 1px #d9ac4040, 0 5px 22px #0003; }
+  .moment-card.legendary { border-image: none; border-color: #d7ae50; background: linear-gradient(180deg, #d3ab4428, transparent 70%), var(--panel); }
+  .moment-kicker, .moment-lore, .moment-details { display: none; }
+  .moment-gains { gap: 2px 14px; padding: 4px 8px; }
+  .moment-gains li { font-size: 15px; gap: 6px; }
+  .moment-gains li .mask-icon { width: 18px !important; height: 18px !important; }
+  .moment-card.legendary .moment-kicker { display: block; margin: -8px -10px 6px; padding: 4px 10px; color: #2c210c; background: #e0bd66; font-weight: 700; }
+  .moment-card.legendary .moment-dismiss { top: 24px; background: var(--panel); }
+  .moment-heading, .moment-card.legendary .moment-heading { flex-direction: row; gap: 8px; min-height: 36px; padding-right: 30px; }
+  .moment-vignette { width: 56px; height: 56px; }
+  .moment-heading:has(.moment-vignette) .moment-crest { margin-left: -18px; }
+  .moment-heading h2, .moment-card.partner h2 { font-size: 19px; line-height: 1.1; text-align: left; }
+  .moment-card.legendary h2 { font-size: 22px; }
+  .moment-crest > .medallion { width: 32px !important; height: 32px !important; }
+  .legendary .moment-crest > .medallion { width: 36px !important; height: 36px !important; }
+  .moment-crest > .medallion.moment-emblem { width: 40px !important; height: 40px !important; }
+  .legendary .moment-crest > .medallion.moment-emblem { width: 44px !important; height: 44px !important; }
+  .moment-effect { margin-top: 4px; padding: 4px 8px; font-size: 12px; }
+  .moment-card footer { gap: 8px; margin-top: 4px; }
+  .moment-link { padding: 6px 12px; }
+  .moment-more { justify-self: end; font-size: 11px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .moment-lane *, .celebrate-delta, [data-celebration-counter] { animation: none !important; transition: none !important; }
+}
+
+.counter-flight-layer { position: absolute; inset: 0; z-index: 6; pointer-events: none; }
+/* A VP delta stays on its score line so it cannot sit on the track below it. */
+.vp-num .celebrate-delta { position: static; display: inline; margin-left: 2px; padding: 0; border: 0; background: transparent; transform: none; font-size: 10px; }
+/* Keep the VP gain below the standing inside its own block; the next objective line stays clear. */
+.race-headline .celebrate-delta { position: static; display: inline-block; margin: 4px 0 0 35px; transform: none; }
+
+/* Tech unlock card (legatum-ui: finishing a tech must feel like an unlock). Centred over the map,
+   outside the story lane's flow; the scrim never takes a click, so End Turn and the map stay live. */
+.unlock-scrim { position: fixed; left: 0; right: 0; top: 54px; bottom: 0; z-index: 4; pointer-events: none; background: rgba(60, 45, 25, .2); animation: moment-arrive 240ms ease-out both; }
+.moment-card.unlock { position: fixed; z-index: 5; left: 50%; top: calc(54px + (100dvh - 54px) / 2); transform: translate(-50%, -50%); width: min(560px, calc(100vw - 32px)); max-width: none; max-height: calc(100dvh - 54px - 16px);
+  padding: 18px 30px 14px; border: 6px solid transparent; border-image: var(--frame-image); box-shadow: 0 8px 36px #0005; overflow: hidden;
+  background: radial-gradient(ellipse at 50% 10%, #d4ad4940, transparent 62%), var(--panel); animation: unlock-arrive 320ms ease-out both; }
+@keyframes unlock-arrive { from { opacity: 0; transform: translate(-50%, calc(-50% + 8px)) scale(.98); } }
+.unlock-crest { position: relative; width: 62px; height: 62px; margin: 0 auto; }
+.unlock-rays { position: absolute; inset: -40px; pointer-events: none; background: repeating-conic-gradient(from 8deg, #d9ac4055 0deg 4deg, transparent 4deg 22deg), radial-gradient(circle, #e5bd6270, transparent 70%);
+  -webkit-mask-image: radial-gradient(circle, #000 18%, transparent 70%); mask-image: radial-gradient(circle, #000 18%, transparent 70%); animation: crest-burst 700ms ease-out both; }
+.unlock-seal { position: relative; display: grid; place-items: center; width: 62px; height: 62px; border: 1px solid var(--accent); border-radius: 50%; background: var(--panel); color: var(--accent); box-shadow: inset 0 0 0 3px var(--panel), inset 0 0 0 4px var(--accent); }
+.unlock-kicker { margin: 12px 0 2px; font: 600 10px/1.4 var(--sans); letter-spacing: .18em; text-transform: uppercase; color: var(--accent); }
+.unlock-title { margin: 0; font: 700 46px/1.05 var(--display); letter-spacing: .01em; overflow-wrap: anywhere; }
+.unlock-quote { margin: 4px 0 0; font: italic 500 20px/1.3 var(--display); color: var(--ink-2); }
+.unlock-rule { display: flex; align-items: center; gap: 10px; margin: 12px 0 10px; }
+.unlock-rule::before, .unlock-rule::after { content: ''; flex: 1; height: 1px; background: var(--rule-2); }
+.unlock-label { margin-bottom: 8px; font: 600 10px/1 var(--sans); letter-spacing: .22em; text-transform: uppercase; color: var(--label-color); }
+.unlock-tiles { display: flex; flex-direction: column; gap: 5px; margin: 0; padding: 0; list-style: none; }
+.unlock-tile { display: grid; grid-template-columns: 64px minmax(0, 1fr); align-items: center; gap: 3px 10px; min-width: 0; padding-bottom: 6px; border-bottom: 1px solid var(--rule); text-align: left; }
+.unlock-tile:last-child { padding-bottom: 0; border-bottom: 0; }
+.unlock-kind { grid-column: 1 / -1; color: var(--ink-2); font: 600 11px/1.2 var(--sans); }
+.unlock-frame { display: grid; place-items: center; flex: none; width: 68px; height: 68px; border: 1px solid var(--rule-2); background: var(--field); color: var(--accent); box-shadow: inset 0 0 0 3px var(--field), inset 0 0 0 4px var(--rule); }
+.unlock-tile.unit .unlock-frame, .unlock-tile.unit-art .unlock-frame { border-radius: 50%; }
+.unlock-art { display: block; width: 64px; height: 64px; object-fit: contain; }
+.unlock-art-pair { display: flex; align-items: center; width: 64px; height: 64px; }
+.unlock-art-pair img { width: 50%; height: 100%; object-fit: contain; }
+.unlock-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.unlock-name { min-width: 0; color: var(--ink); font: 600 21px/1.1 var(--display); overflow-wrap: break-word; text-wrap: pretty; }
+.unlock-cost { display: block; min-width: 0; font: 500 12px/1.3 var(--sans); overflow-wrap: break-word; text-wrap: pretty; }
+/* A rule's name is a sentence, not a title: it wraps whole at a reading size, never an ellipsis (8.9.23 review: "Fighters can upgrade to Stealth Fighters: range 7, guard …"). */
+.unlock-tile.effect .unlock-name { font: 600 16px/1.25 var(--display); }
+.unlock-cost { color: var(--ink-2); }
+.unlock-sentence { color: var(--ink); font: 500 12px/1.3 var(--sans); }
+.unlock-tiles[data-count='1'] .unlock-tile { grid-template-columns: minmax(0, 1fr); }
+.unlock-tiles[data-count='1'] .unlock-art { width: 100%; height: 112px; }
+.unlock-tiles[data-count='1'] .unlock-art-pair { justify-self: center; width: 112px; height: 112px; }
+.unlock-tiles[data-count='1'] .unlock-frame { justify-self: center; }
+.unlock-tiles[data-count='1'] .unlock-text { align-items: center; text-align: center; }
+.unlock-tiles[data-count='1'] .unlock-name { font-size: 26px; }
+.unlock-stone { display: flex; flex-direction: column; gap: 2px; margin: 4px 0 8px; padding: 9px 12px; border: 1px solid var(--rule-2); background: var(--panel-2); font: 600 14px/1.35 var(--sans); color: var(--ink); }
+.unlock-stone span { font-weight: 400; color: var(--ink-2); }
+.unlock-next { margin: 0; font: 400 12px/1.35 var(--sans); color: var(--muted); }
+.unlock-next b { color: var(--ink-2); font-weight: 600; }
+/* The body is the scroller; the footer's primary button is pinned and always in view (legatum-ui, 8.9.14 review). */
+.unlock-body { flex: 1 1 auto; min-height: 0; overflow-x: hidden; overflow-y: auto; }
+.unlock-foot { display: flex; flex: none; justify-content: center; align-items: center; gap: 10px; margin-top: 12px; }
+.unlock-foot .btn { min-height: 40px; }
+@media (max-height: 700px), (max-width: 1200px) {
+  .moment-card.unlock { padding: 10px 26px 10px; }
+  .unlock-crest, .unlock-seal { width: 52px; height: 52px; }
+  .unlock-seal .mask-icon { width: 26px !important; height: 26px !important; }
+  .unlock-kicker { margin-top: 8px; }
+  .unlock-title { font-size: 38px; }
+  .unlock-quote { font-size: 18px; }
+  .unlock-rule { margin: 8px 0; }
+  .unlock-frame { width: 56px; height: 56px; }
+  .unlock-tiles[data-count='1'] .unlock-frame .mask-icon { width: 34px !important; height: 34px !important; }
+  .unlock-name { font-size: 23px; }
+  .unlock-foot { margin-top: 10px; }
+  .unlock-foot .btn { min-height: 36px; }
+}
+/* One item plus resource reveals (Combustion: Tank and Oil) keeps the large painting on a tall window. On a short one
+   (under 701 px) it is a compact ledger row like any card with two benefits, so the reveal is not pushed below the fold. */
+@media (min-height: 701px) {
+  .unlock-tiles[data-hero='true'] .unlock-tile:first-child { grid-template-columns: minmax(0, 1fr); }
+  .unlock-tiles[data-hero='true'] .unlock-tile:first-child .unlock-art { width: 100%; height: 112px; }
+  .unlock-tiles[data-hero='true'] .unlock-tile:first-child .unlock-frame { justify-self: center; }
+  .unlock-tiles[data-hero='true'] .unlock-tile:first-child .unlock-text { align-items: center; text-align: center; }
+  .unlock-tiles[data-hero='true'] .unlock-tile:first-child .unlock-name { font-size: 26px; }
+}
+/* Three or more unlocks on a short window (Iron Working: four; Metallurgy, Industrialization: three): the card keeps a small
+   seal and drops the rays and quote, and each row is a compact ledger line (art left; kind, name, price and sentence stacked
+   right), so every row is on screen with the buttons at 1000x600. */
+@media (max-height: 700px) {
+  .moment-card.unlock[data-dense] .unlock-rays, .moment-card.unlock[data-dense] .unlock-quote { display: none; }
+  .moment-card.unlock[data-dense] .unlock-crest, .moment-card.unlock[data-dense] .unlock-seal { width: 30px; height: 30px; }
+  .moment-card.unlock[data-dense] .unlock-seal { box-shadow: inset 0 0 0 2px var(--panel), inset 0 0 0 3px var(--accent); }
+  .moment-card.unlock[data-dense] .unlock-seal .mask-icon { width: 16px !important; height: 16px !important; }
+  .moment-card.unlock[data-dense] .unlock-kicker { margin-top: 4px; }
+  .moment-card.unlock[data-dense] .unlock-rule { margin: 6px 0; }
+  .moment-card.unlock[data-dense] .unlock-label { margin-bottom: 4px; }
+  .moment-card.unlock[data-dense] .unlock-tiles { gap: 4px; }
+  .moment-card.unlock[data-dense] .unlock-tile { grid-template-columns: 48px minmax(0, 1fr); gap: 0 10px; padding-bottom: 4px; }
+  .moment-card.unlock[data-dense] .unlock-kind { grid-column: 2; grid-row: 1; font-size: 10px; }
+  .moment-card.unlock[data-dense] .unlock-tile > :is(.unlock-art, .unlock-art-pair, .unlock-frame) { grid-column: 1; grid-row: 1 / span 2; }
+  .moment-card.unlock[data-dense] .unlock-art, .moment-card.unlock[data-dense] .unlock-art-pair, .moment-card.unlock[data-dense] .unlock-frame { width: 48px; height: 48px; }
+  .moment-card.unlock[data-dense] .unlock-text { grid-column: 2; grid-row: 2; gap: 1px; }
+  .moment-card.unlock[data-dense] .unlock-name { font-size: 19px; }
+  .moment-card.unlock[data-dense] .unlock-tile.effect .unlock-name { font-size: 14px; }
+}
+@media (max-width: 960px) {
+  .moment-card.unlock { max-height: calc(100dvh - 54px - 16px); border-image: var(--frame-image); }
+  .moment-card.unlock .unlock-kicker, .moment-card.unlock .unlock-quote { display: block; }
+}
+/* Above every dock and panel (they top out at 9), below menus and tooltips. */
+.moment-lane:has(.moment-card.unlock) { z-index: 12; }
+/* An effect (no item behind it) is a plain statement beside its glyph, not a named thing. */
+.unlock-tile.effect .unlock-name { font: 600 15px/1.3 var(--sans); }
+.unlock-tile.effect .unlock-frame { width: 52px; height: 52px; }
+.unlock-foot { flex-wrap: wrap; }
+/* A stepping stone is a quiet card: no crest or rays, a smaller title, a narrower frame. */
+.moment-card.unlock.quiet { width: min(460px, calc(100vw - 32px)); padding: 14px 26px 12px; }
+.moment-card.unlock.quiet .unlock-kicker { margin-top: 0; }
+.moment-card.unlock.quiet .unlock-title { font-size: 32px; }
+.moment-card.unlock.quiet .unlock-quote { font-size: 17px; }
+.moment-card.unlock.quiet .unlock-rule { margin: 10px 0 8px; }
+.unlock-foot { gap: 8px; }
+.unlock-foot .btn { padding-inline: 12px; }
+/* Three buttons (show, choose research, later) share one row: the card is a little wider then. */
+.moment-card.unlock:has(.unlock-foot .btn:nth-child(3)) { width: min(640px, calc(100vw - 32px)); }
+.unlock-foot .btn .kbd { margin-left: 0; }
+
+/* Short windows (the 1000x600 laptop): the gains stay, the explanatory lines go to the turn report. */
+@media (max-height: 700px) and (min-width: 961px) {
+  .moment-details { display: none; }
+  .moment-gains { margin-top: 8px; gap: 2px 16px; }
+  .moment-card .moment-lore { margin: 8px 0 6px; font-size: 17px; }
+  /* A picture card (a ruin's archive) with a two-line title cut its quote at 600px (UX review, 2026-11-21): a smaller picture and title make room. */
+  .moment-card .moment-vignette { width: 76px; height: 76px; }
+  .moment-card .moment-heading:has(.moment-vignette) .moment-crest { margin-left: -26px; }
+  .moment-card:not(.legendary) .moment-heading:has(.moment-vignette) h2 { font-size: 24px; }
+  .moment-card .moment-kicker { margin-bottom: 8px; }
+  .legendary .moment-crest > .medallion.moment-emblem { width: 56px !important; height: 56px !important; }
+  /* A legendary card is taller than the lane's cap on a 600px window: tighten it so the quote and both buttons show. */
+  .moment-card.legendary { padding: 12px 20px 8px; border-top-width: 6px; border-bottom-width: 6px; }
+  .moment-card.legendary .moment-kicker { margin: 0 22px 6px; letter-spacing: .12em; }
+  .moment-card.legendary .moment-heading { gap: 6px; }
+  .moment-card.legendary h2 { font-size: 25px; }
+  .moment-card.legendary .moment-effect { margin-top: 6px; min-height: 32px; padding: 4px 8px; }
+  .moment-card.legendary .moment-lore { font-size: 15px; margin: 6px 0 4px; }
+  .moment-card.legendary .moment-link { min-height: 38px; padding: 6px 12px; }
+}
+
+/* Wonder art on the discovery card. */
+.moment-wonder-art { display: block; width: 104px; height: 104px; object-fit: contain; flex: none; }
+@media (max-width: 960px) { .moment-wonder-art { width: 56px; height: 56px; } }
+
+/*
+ * The unlock reveal (moments-fx, 2026-10-24; kept restrained after the user's "cheesy" verdict): the seal settles onto
+ * the card, the name settles in from wide spacing, and each painted unlock washes in from its ground like ink taking on
+ * wet paper, one after the other. No bounce, ripple or spin. The buttons never animate; reduced motion stands the card.
+ */
+.moment-card.unlock .unlock-seal { animation: unlock-stamp 520ms 140ms cubic-bezier(.2, .7, .2, 1) backwards; }
+.moment-card.unlock .unlock-rays { animation: crest-burst 900ms 380ms ease-out backwards; }
+.moment-card.unlock .unlock-kicker { animation: unlock-fade 420ms 120ms ease-out backwards; }
+.moment-card.unlock .unlock-title { animation: unlock-name 820ms 260ms cubic-bezier(.2, .7, .2, 1) backwards; }
+.moment-card.unlock .unlock-quote { animation: unlock-fade 700ms 620ms ease-out backwards; }
+.moment-card.unlock .unlock-art { -webkit-mask-image: radial-gradient(circle at 50% 80%, #000 55%, transparent 72%); mask-image: radial-gradient(circle at 50% 80%, #000 55%, transparent 72%);
+  -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: 50% 80%; mask-position: 50% 80%; -webkit-mask-size: 260% 260%; mask-size: 260% 260%;
+  animation: unlock-wash 900ms 700ms cubic-bezier(.3, .6, .3, 1) backwards; }
+.moment-card.unlock :is(.unlock-art-pair, .unlock-frame) { animation: unlock-fade 500ms 700ms ease-out backwards; }
+.moment-card.unlock .unlock-tile:nth-child(2) :is(.unlock-art, .unlock-art-pair, .unlock-frame) { animation-delay: 830ms; }
+.moment-card.unlock .unlock-tile:nth-child(3) :is(.unlock-art, .unlock-art-pair, .unlock-frame) { animation-delay: 960ms; }
+.moment-card.unlock .unlock-tile:nth-child(n+4) :is(.unlock-art, .unlock-art-pair, .unlock-frame) { animation-delay: 1090ms; }
+.moment-card.unlock .unlock-text { animation: unlock-fade 480ms 900ms ease-out backwards; }
+@keyframes unlock-stamp { from { opacity: 0; transform: scale(1.12); } to { opacity: 1; transform: none; } }
+@keyframes unlock-name { from { opacity: 0; letter-spacing: .22em; transform: translateY(6px); } to { opacity: 1; letter-spacing: .01em; transform: none; } }
+@keyframes unlock-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes unlock-wash { from { opacity: .2; transform: translateY(8px); -webkit-mask-size: 0% 0%; mask-size: 0% 0%; } 30% { opacity: 1; } to { opacity: 1; transform: none; -webkit-mask-size: 260% 260%; mask-size: 260% 260%; } }
+.moment-lane.reduced .moment-card.unlock *, .moment-lane.reduced .moment-card.unlock *::after { animation: none !important; }

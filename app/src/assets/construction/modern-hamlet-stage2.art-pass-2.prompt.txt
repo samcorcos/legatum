@@ -1,0 +1,4 @@
+2026-11-16 — Codex built-in image generation. Provisional author review; lead review pending.
+Reference images and requested edits: see docs/design/art-pass-2/generation-*.json.
+
+Edit this EXACT 1930s hamlet into construction stage 2 of 3. Preserve exactly the camera, lens, oval ground outline, street T-junction and rails, the five cottage locations and footprints, post office location, railway goods shed location and garden plot. Do not move or rescale any building footprint. Remove car and tram and overhead wires for construction clarity. All five cottages and post office reduced to half-height brick walls and exposed timber roof framing, no roof tiles or glass. Goods shed partly framed. Restrained scaffold clings to buildings, no standalone tower. Same restrained painted miniature brushwork, palette and light, same exact base and composition. Transparent background, no letters, numbers or watermark. Square canvas with full margin.

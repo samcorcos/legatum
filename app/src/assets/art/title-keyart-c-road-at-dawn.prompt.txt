@@ -1,0 +1,9 @@
+Use case: historical title-screen key art painting for premium 4X strategy game LEGATUM. Candidate C: “The road at dawn.” Deliver an edge-to-edge panoramic landscape, true 16:9, intended master 2560 × 1440. Image only, no text.
+
+Scene: a quiet continental ridge landscape at first light. One long, subtle ancient road crosses the whole continent, entering in the foreground and winding over plains and river valleys until it disappears into haze beside a distant sea. Layered mountain ranges, steppe and fertile plains establish a continent-scale journey rather than one small valley. Far-separated tiny watch-fires and thin hearth smoke suggest distinct settlements without identifying one people. In the lower-left foreground, weathered fragments of older stone ruins rise among ridge grass. No visible people.
+
+Composition: reserve calm, pale, low-detail negative space across the upper centre (x 28–72 percent, y 12–34 percent) for the LEGATUM wordmark. Keep the lower centre subdued and low-detail for the menu card. The left third remains richer in detail because it is exposed.
+
+Technique and palette: refined classical landscape oil painting meeting delicate engraved-atlas relief hachure. Luminous thin glazes, restrained expressive brushwork, fine contour hatching over ridges, rivers and plains, tactile paint surface. Light parchment-compatible ivory, pale honey, restrained rose-beige dawn, sage, dusty ochre, umber and blue-grey. Historically serious, grand, quiet and hopeful, compatible with parchment UI and dark-ink double rules.
+
+Constraints: finished painting, no text, writing, labels, border, frame, caption, logo, watermark, UI, fantasy, science fiction, technology, celestial symbols, battle, black masses, saturated sunrise, foreground people, obvious Earth coastline or obvious single-nation signifier (flags, costumes or distinctive architecture).

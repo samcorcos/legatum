@@ -1,0 +1,203 @@
+{
+  "name": "Legatum first playable",
+  "spec": "plans/first-playable.md",
+  "goal": "You and your partner each play on your own computer over the LAN (one Mac hosts) against 6 scripted AIs, with simultaneous turns and a live VP track. One-screen hot-seat is a secondary mode.",
+  "stories": [
+    {
+      "id": "S1",
+      "title": "Workspace and core skeleton",
+      "acceptance": [
+        "Cargo workspace with core, ai, sim, wasm crates",
+        "Core types, hex math, RNG, state hash",
+        "Float arithmetic denied in core"
+      ],
+      "verification": [
+        "cargo test --workspace",
+        "cargo clippy --workspace -- -D warnings"
+      ],
+      "passes": true
+    },
+    {
+      "id": "S2",
+      "title": "Map generation",
+      "acceptance": [
+        "72x44 maps with 35-45% land",
+        "8 valid starts, pairwise distance >= 9",
+        "Ruins placed",
+        "Same seed gives identical map"
+      ],
+      "verification": [
+        "cargo test -p legatum-core mapgen (100 seeds)"
+      ],
+      "passes": true
+    },
+    {
+      "id": "S3",
+      "title": "Turn resolution rules",
+      "acceptance": [
+        "Movement rounds with bounce and swap rules",
+        "Combat and city capture",
+        "Founding, growth, production, buying, upkeep",
+        "Research with diffusion",
+        "Borders",
+        "Faction rules",
+        "Events explain outcomes"
+      ],
+      "verification": [
+        "cargo test -p legatum-core rules (one test per rule)"
+      ],
+      "passes": true
+    },
+    {
+      "id": "S4",
+      "title": "Scoring and victory",
+      "acceptance": [
+        "Five live titles",
+        "Milestones",
+        "Faction goals",
+        "Team targets 10/15 VP",
+        "Turn-limit winner"
+      ],
+      "verification": [
+        "cargo test -p legatum-core scoring"
+      ],
+      "passes": true
+    },
+    {
+      "id": "S5",
+      "title": "Player views, fog, forecasts, breakdowns",
+      "acceptance": [
+        "PlayerView hides unseen enemies",
+        "Team shares vision",
+        "Yield breakdowns and turns-remaining",
+        "Battle forecast"
+      ],
+      "verification": [
+        "cargo test -p legatum-core view"
+      ],
+      "passes": true
+    },
+    {
+      "id": "S6",
+      "title": "Scripted AI v1",
+      "acceptance": [
+        "AI reads only PlayerView",
+        "Explores, settles, builds, researches, fights",
+        "Knobs per faction"
+      ],
+      "verification": [
+        "cargo test -p legatum-ai",
+        "AI-only game reaches a winner"
+      ],
+      "passes": true
+    },
+    {
+      "id": "S7",
+      "title": "Headless simulation runner and determinism",
+      "acceptance": [
+        "Parallel runner writes docs/sim-results",
+        "Determinism check replays and compares hashes"
+      ],
+      "verification": [
+        "cargo run --release -p legatum-sim -- --games 200 --determinism: 0 panics, 0 mismatches"
+      ],
+      "passes": true
+    },
+    {
+      "id": "S8",
+      "title": "WASM bindings",
+      "acceptance": [
+        "wasm-bindgen API: new game, view, validate, submit orders, AI orders, resolve, forecast, save/load",
+        "WASM hash equals native hash for the same game"
+      ],
+      "verification": [
+        "wasm-pack build",
+        "node smoke test comparing hashes with native"
+      ],
+      "passes": true
+    },
+    {
+      "id": "S9",
+      "title": "Web UI",
+      "acceptance": [
+        "New game setup",
+        "Canvas hex map with pan/zoom and fog",
+        "Unit selection and move orders",
+        "City panel with production and breakdowns",
+        "Tech panel",
+        "Always-visible VP track",
+        "Both human seats plan, then Ready resolves the turn",
+        "Turn report log",
+        "Battle forecast on hover",
+        "Autosave and load"
+      ],
+      "verification": [
+        "npm run build",
+        "npm test",
+        "Browser play-through: found city, build, research, end 10 turns, VP track updates"
+      ],
+      "passes": true
+    },
+    {
+      "id": "S10",
+      "title": "Tauri desktop app",
+      "acceptance": [
+        "Mac .app bundle that runs the web UI"
+      ],
+      "verification": [
+        "npm run tauri build produces Legatum.app",
+        "App launches"
+      ],
+      "passes": true
+    },
+    {
+      "id": "S13",
+      "title": "LAN play (two computers)",
+      "acceptance": [
+        "legatum-server hosts the game and serves the UI on the LAN",
+        "Each browser joins one seat and sees only its own view",
+        "Turn resolves when both humans are Ready",
+        "Autosave and reconnect"
+      ],
+      "verification": [
+        "cargo test -p legatum-server (two WebSocket clients play turns)",
+        "Browser play-through with two separate clients"
+      ],
+      "passes": true
+    },
+    {
+      "id": "S11",
+      "title": "Balance pass v1",
+      "acceptance": [
+        "No faction wins more than ~20% or less than ~6% of its seats (distinctiveness beats evenness inside that band)",
+        ">= 60% of games decided by VP (no default turn limit since the game-speed decision; stalls reported separately)",
+        "Median game length 110-150 turns at Quick speed (Standard ~2x, about 300)",
+        "Early game feel at Quick: first trained Soldier in 10-14 turns, first Settler in 18-25 (Standard ~2x)"
+      ],
+      "verification": [
+        "legatum-sim --games 1000; results written to docs/sim-results"
+      ],
+      "passes": true,
+      "evidence": [
+        "docs/sim-results/2026-09-27-ai-early-soldier-comparison.md (Quick 1,000 + Standard 500 games: first Soldier median 12 / 23, first Settler 25 / 50, median length 145 / 283, VP-decided 99.8% / 100%, factions 7.0-16.9% / 7.0-19.8%, 1,500/1,500 deterministic)",
+        "docs/sim-results/2026-09-27-v1-standard-1000.md and v1-quick-1000.md (pre-tuning baselines)"
+      ]
+    },
+    {
+      "id": "S12",
+      "title": "Independent review",
+      "acceptance": [
+        "Codex (gpt-6-astra) and Claude code reviews",
+        "Confirmed findings fixed"
+      ],
+      "verification": [
+        "Full test suite, sim run and UI play-through re-run after fixes"
+      ],
+      "passes": true,
+      "evidence": [
+        ".reviews/astra-final-review-{core,server,app}.md and the Claude final review (11 findings); all confirmed findings fixed and merged",
+        "Re-run after fixes: cargo test --workspace, 423 vitest, 10/10 Playwright, native/WASM tape check, a 25-turn UI play-through with no console errors"
+      ]
+    }
+  ]
+}

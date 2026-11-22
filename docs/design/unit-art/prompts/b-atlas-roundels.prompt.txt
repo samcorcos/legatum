@@ -1,0 +1,10 @@
+Use case: stylized-concept
+Asset type: transparent five-sprite source sheet for an art-direction exploration of Legatum historical strategy-game unit counters
+Primary request: Create exactly five distinct, individually isolated unit emblems, evenly spaced in one horizontal row and in this left-to-right order: Ancient Spearman (recognizable foot soldier with upright spear and round shield), Ancient Archer (recognizable foot soldier with curved bow drawn), Ancient Horseman (clear horse and rider), Modern Tank (tracked vehicle, turret and barrel), Future military drone swarm (three realistic small quadcopters in formation). The three ancient silhouettes must read instantly as different land classes.
+Style/medium: precise antique atlas copperplate engraving and pen-and-wash, refined sepia ink contours with restrained watercolor washes, hatching, serious museum atlas
+Composition/framing: each figure occupies a separate identical circular roundel of clean pale vellum with a distinct dark ink boundary; consistent scale, strong silhouette and ample spacing; roundels same neutral parchment, owner color can later tint outer rim; transparent canvas outside roundels
+Lighting/mood: flat printed engraving, no lighting effects
+Color palette: sepia, charcoal and muted ochre on parchment; no owner color
+Materials/textures: fine etched linework and tasteful crosshatching, no tiny noisy detail, legible when reduced
+Constraints: exactly five separate roundels in one horizontal row, evenly spaced; transparent pixels outside roundels; no text, lettering, labels, numbers or watermark; all figures fully visible inside roundels
+Avoid: painted 3D miniatures, glossy finish, cartoon look, fantasy, science fiction, modern military drone aesthetics beyond plausible quadcopter shapes, extra objects, overlapping emblems

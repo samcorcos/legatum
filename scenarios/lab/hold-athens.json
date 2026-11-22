@@ -1,0 +1,84 @@
+{
+  "format": "legatum-scenario",
+  "version": 1,
+  "id": "hold-athens",
+  "revision": 1,
+  "title": "Hold Athens",
+  "faction": "Athens",
+  "seat": 3,
+  "difficulty": "Hard",
+  "minutes": 20,
+  "briefing": "Turn 10. You are Athens: one city, also called Athens, with 1 population and Walls, a Spearman, an Archer, a Scout and 69 Gold. Sparta's capital, Amyclae, is seven tiles east of you, and Sparta is training Spearmen: one stands three tiles from your gates. In the recorded game Sparta declared war on turn 16, took Athens on turn 20 and cleared the whole map by turn 40. You have six turns of warning, a walled city and 69 Gold. Another Spartan empire at Therapne and the Mongols at Karakorum share the map. Hold Athens through turn 35.",
+  "tests": "Warned on turn 10, can a human Athens hold against Sparta's Hoplite rush?",
+  "objective": {
+    "summary": "Hold your city through turn 35.",
+    "turns": 25,
+    "win": [
+      "HoldStartingCities"
+    ],
+    "keep": [
+      "HoldStartingCities"
+    ],
+    "score": [
+      {
+        "metric": "StartingCitiesHeld",
+        "weight": 100
+      },
+      {
+        "metric": "CitiesFounded",
+        "weight": 50
+      },
+      {
+        "metric": "CitiesCaptured",
+        "weight": 50
+      },
+      {
+        "metric": "CombatUnits",
+        "weight": 10
+      }
+    ]
+  },
+  "predictions": {
+    "good_play": "",
+    "ai_play": "",
+    "ai_score": {
+      "median": 0,
+      "low": 0,
+      "high": 0,
+      "win_percent": 0
+    }
+  },
+  "source": "Cut from save.legatum at turn 10: the position before that turn's orders, replayed with the current engine (0 hash mismatches). Every empire is a Hard AI except the seat; its AI memory starts fresh and the seat's standing orders are cleared. Built by `tools/scenarios/cut.sh`.",
+  "baseline": {
+    "runs": 50,
+    "difficulty": "Hard",
+    "median": 90,
+    "p10": 80,
+    "p90": 90,
+    "win_percent": 0,
+    "measured_at": "2026-10-18T18:48:29Z"
+  },
+  "lab": {
+    "question": "Warned on turn 10, can a human Athens hold against Sparta's Hoplite rush?",
+    "blurb": "Turn 10. You are Athens, one walled city with two defenders and 69 Gold. Sparta is training Spearmen, and it will declare war in six turns.",
+    "ask": "Did the rush feel beatable? What would have let you hold, and what did you want to do that you could not?",
+    "era": 0,
+    "opponent": "Sparta follows a fixed rush plan. It trains Spearmen without a break, declares war on you on turn 16, never accepts peace, and attacks together once three Spearmen stand next to your city. Everything else it does is the normal Hard AI.",
+    "order": 10
+  },
+  "rusher": {
+    "player": 0,
+    "wars": [
+      {
+        "against": 3,
+        "turn": 16
+      }
+    ],
+    "storm": 3
+  },
+  "state": {
+    "encoding": "gzip-base64",
+    "hash": "4836612675319467787",
+    "data": "H4sIAAAAAAAC/+1d65ObOBL/V7b4zFXphRDzLZe77Ka2tm5rk7t8mJpyKbZmTAUDETCT2dT87ycBtvH4xfiFsbtMlAH006NbEk2ru/npfJXaHKGMM+fmpzOUk9T8cXvnOpHM8oE9H+SFjp0b5Dqx+lFfCkfmwovrDMM8VCUS2+RrUjyMc+cmLqLIdb4WYTQK44e6wPskGQ2yPNHKgBm2F4p4pEZ1+bMLuqzrQSdP8SAPI1v87U/nu8lBXMfcFC9u8zR4MWWPU+eGIAOzDTMlhZlpZxrmMnJucl2oujtpoYdjmam6yqqZsZwo58Z5N3keRlI5rmMqrhuRJmkRyTxMTGZqT8uu2rrZtClOqpNRMTTdtLe+hbFpgPPfOMxNQYX978b5lBgymBJnmW2Bg++FKlTZtS2gvTPcLdQ75QAxZNIqC7NcxkNVdrek9sBQIZyUOUyDydvY6m3iKt7EVewtshX7S3wlbflKZkz9XWr5LdHFZM5WvJ2tti0t+PqXjB/WsnU10XnQhuj0bUSnG+cSWUl1v+woQUtEpjtNns9jpWUaN2YPWSQzaZK5qhy/mj1Vga1J6W+jJDbFs82UdL7IKMqcpcVp4zCmryjGdltu8rEya+6MXnSRXniZXsFe5No629GLKX8UplEykcPn6mFgiVMWOEziXA5ze3aLXHLn3uIyJS69u6sfDKZS02QZVQ+H+mKulcyfFy49ST09T5UcqsEwMSuVIUM2a3xZTn2qVUWTaujKEve17M9ImcZrpeuM6v5emT4/qjnPHgoz/+NcqUERm+6W2EwNCx3mz1MKGorkliF/2rYYfjyaAksWmLzTptqcdnma1U46rZ12VDvutO+4076Tjmo3VWRFau6qkZ2lt3dmlt6HcZiN7em9mSZmtRmHdppXk3askzgcRpVoMSyrbMg29YPsQ7W6mQtpJJ9raafugO1wjWs+Ptci8Spk44GwFkhWAWfr4loYXYDV2b4k5eK8oj/cELS6eeN8NKz5u/hQrmutwKIB/tUIyXn2XhaZepLPpVilJmmo64eq1BPT/lviudXBGge3x91cXDar56ufLUzLNXcezPpobnHscuJy6nJmS8SMm3++S0j5727xAWIX6PJHpz87koahKpf/28b12d1cDce2cch99TP3HtPZjWbbysnxquNLxyE6btvLXENG13eFGyx3dvqrO/2qs/Pfqs42kWSxs40ONztLkbvyYAfnMucu910uXL610+RNnV7J4aq45o01HGaoeXTS6Xkhqzs9Jckyp+fIRqcXhrWVCENtRLjZSuNMZGrX17EKS2GS8FqCaqyz1dJeC3TViS7CeLZM50prac+d/wyVjJ35sgdIQAISkIAEJCABCUhAAhKQgAQkIAEJSEACEpCABCQgAQlIQAISkIAEJCABCUhAAhKQgAQkILtHvk9klgPyYpAwhgAJax8gAQnPbEC+HfmrllkWyXgE6J6g+zW+/qUypbdBVZYU2roJOV/GSlpH/jWl/RmZ/7OdGvJbOPUtfCvycxGPtOwRFKQvQALyEudKF639kJj1+bqgGxzTT9iYtmLC/On5KU9Kx/5OpZZ5cz7qJO66NcdA7yGF9A7aSn47tMTVqr2th/01sQtEP0D2UZjq3yvxfi2+QqFqF+gfSRHnOy+Gq9C4GUVyP9FpsShQUl3rM7eSczbEo2opxrxP0rQMdnVweerIktiVC3Enev8CAQ2QfRXQLgvNmrFh2wo9O4F6J9q1kYlOB+qj1LafyHtNctce0BMQ+RR7mtcE7Z+GAMQREJ5A/HkDaNfK2rzenuglbb8Hy5mLUyfYyzwzmWi/ivfYO3uj2dTxlCedqI72IBxIUx3IoaDYAiTIZn2RzV4v6YcXsbasNNeqS+ydeu/UBmNmFkdd7X+1NVvbvRX7CZPnu4cHO4dgdAYCHFiZ9+FZcyozo4t+KoAE1mtD/k60QVc3SdpDq+/SgvYLZFMQuq7bGv2c+3oKPXLbZb4PLma9WJ6OZ3J84I1QULKdocl796Osdz6Re0A724sG8Q4Est5vtR1XA9dY62SeR+f46n6xdsVnbmh7ql2rY+2dnUQoeq0C6Yue7mxn+yVMum7ErN5Bu3AL7RcSVGUQeRJ0x/toiTaJFpeuwj9Ht/wzF+e2Q8kMhw8LOvtV5XL9AvcXf5oxNLThwnsZPycxCFSnslAE4QwUbt1Z/4KfNLz5d7cOnY9h2dFko4MJVMcXxGDanbVdXB+RDeHyf+EwT3QoP8gONp472e0GKQvkM0Bf24bESU3xjmqzfhGRa/cQt8JJqpNHNZpulTbKOdVuZJcuNj3S6h1Pa9+VsPf2peCyVOadyHogsF3f9wTP9kMumzcA+2j7fAI73Lbq+kNqDugMR95E8za4/tvk76Qj60xa7FDVvt+07J/29ppe7Lri7Zk5QYN8BUhQ/PVLC3Ama20bYQkks36o5PYR3LvpxVXFH7uECLqH/m5qz6xGQdAC5KUq7Pr4fYweOK/tKgcdEgci1LVD+6fGurJv+oAgBEhAgsB3IOTnIh5peWpov1w0dhEZe67BOvtd8FMS4FhmPbtHCrk+L/Kzei3r8g0TvukISECCEHfNgUx6p1U5f9vLo4l5vRByN+89dfaicy1rCcg0gAQkIEFeBGTf1/hOVLEXKJrC8x6QgAQkIAEJSJBwQU4AJCABCUhAAhKQgAQkIAEJSEACEpCABCQgAQnIs0Peuc5TOMrHzg1DL64Tqx/5wBY1CEfmUn2hiMO8vIB910kj+ax05tzc/nRkFD6qqQuE+pFGZq/bZPvpRMrUgRFDNsa9HtncyEUuZgwxJnBAKfYZJZS4mGOGAoSRT5GgPPAMyiXEwz7FKGAEI88LbC6KRUAF5xQz4SFqcvmIBAETvqAI+YFLMCemBEyE4MgnnHjcxeae+UsI4fkIcZ96lLvCD7AfCOSxABuY8Dn3GeE4EAIzgoRtZuB5mHHCXDT93Rny3MthHiaWfJ9SqXPpzC4NHhIZDUY2ZMeU1g9JZGhBiKGZpZ0hRZgNxsVEztkRy4mqXCAMSX/Bprjka6b0oxoN8rFWMq/I/C2MR7ZOU2BYurvM3ZfSJLP0/u7cmGpsHEFhmpkpFQ/yQsflVcs95yawrE6TJ6UH4zDLE21Gyy3xXBLMD8OO6XFX2mAqqYfjwfdCFaaZt877QmsVD59NCz5qHT7Ikhiu80+dxH+rL4k2DX0w53/ILIm1zfZFh7m91ijOnt40i7IDNBvMRw82HRiG5qZqttSli7+7eS6bxwIJt123Dh46G+R2nKuK7rmSk/qP4diS1IDzMFKDiZpUxZdTBRJI+pC0W+xfri4fcAvyXeZoAh7BWIOxBvlg7F7TYEUHywTDtEdL8eWMwfJ/OVLRTOExTs1rOkKVRgSXGpGhTE2maKpFqlUi7ybPw0gqp1lHmqRFVOkcbAyXLJd6cJ/ofFb6U/n1xGkrYBrBtIR5ePKRDkIkDPeLYwUQ5xLH/ZVTFwbhjvmspApr9HksB7CiwUS+7g0mGAIwVGCAwECC0QSjBEbJ2eUjB8vUL4nkFANiodAtuw10w27D57HSMo3VK9PK+XYDab/dsBO/e8ZHSCCBBBJI3pLc2YfBW10m5j+PIUZx4HlEMOYFHnEZItyjWBhMgBARCBMkCBXIJy72hW8uURqYqx4SyPN5mYuZPzAqXSioi6mgHvLMXU9g4WFEKXet64X1xsDU92wehE0GsewD8UcSPyTmCbjdCSJobvivdIF49/EXss39YZgU+RrnB+xV3g900fsBo6n7g1jp/sBc6wHROCiqjpXuD6/dHBo+DGv9HF5jXjs7kNXODvPfOmcH64qzwdkBz50dFn01pr4Z4AIBCSSQQAIJJJBAclHJFW19nowGV07Tk5AJHyzTGTEaNpePxvItSn+yQen/u9TyW6KLidOsZUcnAxi3sEu5O+vDSaqTR6vAqUYojBfId0HeATCOId8lP18uyuWkF69OMLLhBRvy9VKhAMwD5gFTgD2Xpm2GpJfJjkZZGAkkOA0w8nhAfd8PbNRUggnxmE+Qy7DPA+YHmIvA9wXlAs2MrTjyEAk8IQIDMpk9EhCMMfUY4Z7nYsGI8EnATZmUBQILIUx9nHvY8xj2CPeJS4SpP+BlQFxuEDZoK6PMoLDJ4RLCAm6j4iJGkY8Dl/OgauQ+sWx50NSqrrPjom8NY4sXLLlYZcnlrbPk4pZhdVF/yfihWRJtlsTLgoJ15Zga1piEvTpEdaw0CZtHut0YEHdqHtawGVuyFJsX1TIg7nYbMYI32ogRCIgLCSSQnLFkCQQDwgI54W2xKeLBOD4mLVvlPOvYeFf+1LqIad2/UQj5YLBDPsgHUwMMDSDf2c4PYEBPGA8jFobtpQzbo3oHwECEgbiBUb32kAEdCuSDsKuQ7+pDKgLfDzA++hwhElZAWNkuN1gsML+rwQRPQMgHtveQQHKOyQG9EzD1SIAZDwRhLvYDxhAJfO5RUoaGxQJ7wsOUB4GPMLYuCdxl1JbDOcOBoC5mJBABEQJzU5C95TLCMcNEcOZ6Bu7hAJl7yDdYbO6gAGHEmUcE5ab6RjTbRQ+Ed/lYxdkbPBDoRg8Etkck2cprwF/rNUBXeg147ppjpdfA3B1go9fAel+BeQFv9hUof6viyYqNvgK0EU8WQshCAgkkZyuyA8GAsNf4ygicOWq+o9ooA8dOyLEtGwFsw0bA7FWl6XI83wbAG7YBqs8Gw2i69JX5LHwZgNGQ78pEDuARfN4a8kFwMWAe8A34BhyEZROYB3MQyA4bFZBAAgkkF57cWducTD6qwaPSWamPZ5VZS5Fapf9Xqc0RyjibKvXHKnwYG0U94UaNH8lnAysNhUbh/X04LCK7iDu/ST1yVgZMXWeD9GdZ1C/YmZrPIPtM2Fzo/GvaW76RXX/geXuJW5tZB2uto4FuL3C297HF9qo2GSq5oawZkcM9H2P7hXGfYUYZspkKHQ+icGKtqqpH41M4yseGZYZYzqLdVWmchbFNTWPm30myuyzh/XNpp/SQ5Mm0JLubg6e7Odjsybwy/JokjyobROo+L3dsVkWP/Qep4tD6L6Y1mDSqrrs8q5tvqpu4y2Fvm7WT1bX7dexaWzfdsdu0ZbfXmL/9sIVx2wC21IChNamztnUll1jbFrEtxEDNkF6NkMBoRaO8ZY4stspryyLPXQon3IJDvMEhvoVAoi2B+I4EorNQx3MC+dsIFLRtlb+ZQGjTSMKi2SiyRChZ5Mmk3jt1/l2ZMTotG0ZaDvAFWhGyTKsdZxjdjVt0HuB61gJvtxZ4GylAVkfYJnWE7XLs8h0Xtm0jlbaI7p3LeBTGD4NEj2xG51OkVOqYO2I3aohdFjw7/XVp19tgR7AjVYLWqz1ZXu3LqbKGKLO2vdjHZNx4n3xK4pE12R2F2dDUVNry3lY9q0Z6GS/dsp3Wq+jdy/8BjNYq5cu3AQA="
+  }
+}

@@ -1,0 +1,107 @@
+// Terrain round 2 review shots: the same map view in current, s1, s2 and s3 (?terrain=), normal and far zoom,
+// plus Settle and Resources lenses. Shots only. TERRAIN_SHOTS=<dir> picks the output directory.
+import { test as base, expect, type Page } from '@playwright/test';
+import { createServer } from 'vite';
+import { mkdir } from 'node:fs/promises';
+import path from 'node:path';
+import type { useGame } from '../src/store';
+import { coreFixture } from '../src/test/coreFixture';
+import { mapArtFixture } from '../src/test/mapArtFixture';
+import { spawnUnit } from '../src/test/fixtureEngine';
+import { hexEq } from '../src/hex';
+import type { Hex } from '../src/types';
+
+type MapWindow = Window & { legatum: typeof useGame; legatumMap: { camera: { zoom: number }; redraw(): void } };
+const out = process.env.TERRAIN_SHOTS ? path.resolve(process.env.TERRAIN_SHOTS) : path.resolve('test-results/terrain-round2');
+
+const test = base.extend<{}, { devURL: string }>({
+  devURL: [async ({}, use) => {
+    const server = await createServer({ cacheDir: 'test-results/terrain-round2/vite-cache', server: { host: '127.0.0.1', port: 0 } });
+    await server.listen();
+    try {
+      const address = server.httpServer!.address();
+      if (!address || typeof address === 'string') throw new Error('Vite did not bind');
+      await use(`http://127.0.0.1:${address.port}`);
+    } finally { await server.close(); }
+  }, { scope: 'worker' }],
+  baseURL: async ({ devURL }, use) => { await use(devURL); },
+});
+
+const fx = mapArtFixture();
+const g = fx.fixture;
+const W = g.width;
+const hexOf = (col: number, row: number): Hex => ({ q: col - Math.floor((row - (row & 1)) / 2), r: row });
+const terrainAtCR = (col: number, row: number) => g.terrain[row * W + col];
+/** The nearest plain-land free hex to (col,row). */
+function freeNear(col: number, row: number, ok: string[] = ['Grassland', 'Plains', 'Desert', 'Hills']): Hex {
+  for (let d = 0; d < 6; d++) for (let dr = -d; dr <= d; dr++) for (let dc = -d; dc <= d; dc++) {
+    const c = col + dc, r = row + dr;
+    if (c < 0 || r < 0 || c >= W || r >= g.height) continue;
+    const h = hexOf(c, r);
+    if (!ok.includes(terrainAtCR(c, r)) || g.resource?.[r * W + c] || g.wonder?.[r * W + c]) continue;
+    if (g.units.some((u) => hexEq(u.pos, h)) || g.cities.some((x) => hexEq(x.pos, h))) continue;
+    return h;
+  }
+  throw new Error('no free hex');
+}
+// A few units around the view: the viewer's soldier and scout, a settler for the Settle lens, a Swiss and a Germany soldier by their cities.
+const SCENE = { col: Number(process.env.VIEW_COL ?? 27), row: Number(process.env.VIEW_ROW ?? 11) };
+const settlerAt = freeNear(23, 11, ['Grassland', 'Plains']);
+const settler = spawnUnit(g, 0, 'Settler', settlerAt, false);
+spawnUnit(g, 0, 'Soldier', freeNear(20, 12), false);
+spawnUnit(g, 0, 'Scout', freeNear(26, 9), false);
+spawnUnit(g, 0, 'Ranger', freeNear(25, 12, ['Grassland', 'Plains']), false);
+spawnUnit(g, 3, 'Soldier', freeNear(22, 8), false);
+spawnUnit(g, 3, 'Ranger', freeNear(24, 7, ['Grassland', 'Plains']), false);
+spawnUnit(g, 5, 'Soldier', freeNear(30, 12, ['Grassland', 'Plains']), false);
+spawnUnit(g, 2, 'Soldier', freeNear(15, 12, ['Plains', 'Grassland']), false);
+spawnUnit(g, 7, 'Scout', freeNear(13, 9), false);
+
+async function open(page: Page, variant: string) {
+  await page.addInitScript(({ game }) => {
+    localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 12, names: ['Ada'], savedAt: new Date().toISOString(), game }));
+    localStorage.setItem('legatum.first-game-hints.v1', JSON.stringify({ enabled: false, seen: [] }));
+  }, { game: coreFixture(g) });
+  await page.goto(`/?client=wasm&terrain=${variant}`);
+  await page.getByRole('button', { name: /^Continue/ }).click();
+  await expect(page.getByTestId('turn-number')).toHaveText('12');
+  await expect(page.locator('.loading-screen')).toHaveCount(0);
+  await page.evaluate(() => document.fonts.ready.then(() => undefined));
+}
+
+async function frame(page: Page, at: Hex, zoom: number, select?: number) {
+  await page.evaluate(({ at, zoom, select }) => {
+    const w = window as unknown as MapWindow;
+    const s = w.legatum.getState();
+    s.set({ techOpen: false });
+    s.select(select ? { kind: 'unit', id: select } : null);
+    s.jumpTo(at);
+    w.legatumMap.camera.zoom = zoom;
+    w.legatumMap.redraw();
+  }, { at, zoom, select });
+  await page.mouse.move(2, 2);
+  await page.waitForTimeout(900);
+}
+async function lens(page: Page, name: string) {
+  await page.getByRole('radiogroup', { name: 'Map lens', exact: true }).getByRole('radio', { name: new RegExp(`^${name}`) }).click();
+  await page.mouse.move(2, 2);
+  await page.waitForTimeout(600);
+}
+
+const centre = hexOf(SCENE.col, SCENE.row);
+for (const variant of ['current', 's1', 's2', 's3']) {
+  test(`terrain ${variant}`, async ({ page }) => {
+    test.setTimeout(120_000);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await open(page, variant);
+    const shot = async (name: string) => { await mkdir(out, { recursive: true }); await page.screenshot({ path: `${out}/${variant}-${name}.png`, animations: 'disabled' }); };
+    const NZ = Number(process.env.NORMAL_ZOOM ?? 0.66);
+    await frame(page, centre, NZ); await shot('normal');
+    await frame(page, centre, 0.4); await shot('far');
+    await frame(page, hexOf(31, 17), 0.9); await shot('east');
+    await frame(page, hexOf(16, 15), 1.4); await shot('close');
+    await frame(page, centre, NZ, settler.id); await lens(page, 'Settle'); await shot('settle');
+    await frame(page, centre, NZ); await lens(page, 'Resources'); await shot('resources');
+    await lens(page, 'Default');
+  });
+}

@@ -1,0 +1,180 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`faction goal progress: core behavior > Athens: an empty empire and a part-way one report the same progress 1`] = `
+{
+  "done": false,
+  "label": "The Learning is not shared yet",
+  "live": false,
+  "target": 1,
+  "value": 0,
+}
+`;
+
+exports[`faction goal progress: core behavior > Athens: an empty empire and a part-way one report the same progress 2`] = `
+{
+  "done": false,
+  "label": "The Learning is not shared yet",
+  "live": false,
+  "target": 1,
+  "value": 0,
+}
+`;
+
+exports[`faction goal progress: core behavior > Byzantium: an empty empire and a part-way one report the same progress 1`] = `
+{
+  "done": false,
+  "label": "The Heir to the Throne is not trained",
+  "live": false,
+  "target": 1,
+  "value": 0,
+}
+`;
+
+exports[`faction goal progress: core behavior > Byzantium: an empty empire and a part-way one report the same progress 2`] = `
+{
+  "done": false,
+  "label": "The Heir to the Throne is not trained",
+  "live": false,
+  "target": 1,
+  "value": 0,
+}
+`;
+
+exports[`faction goal progress: core behavior > Celts: an empty empire and a part-way one report the same progress 1`] = `
+{
+  "done": false,
+  "label": "0 of 1 cities with a wild camp in their territory",
+  "live": true,
+  "target": 1,
+  "value": 0,
+}
+`;
+
+exports[`faction goal progress: core behavior > Celts: an empty empire and a part-way one report the same progress 2`] = `
+{
+  "done": false,
+  "label": "0 of 3 cities with a wild camp in their territory",
+  "live": true,
+  "target": 3,
+  "value": 0,
+}
+`;
+
+exports[`faction goal progress: core behavior > Germany: an empty empire and a part-way one report the same progress 1`] = `
+{
+  "done": false,
+  "label": "0 of 5 Ruhr Foundries",
+  "live": true,
+  "target": 5,
+  "value": 0,
+}
+`;
+
+exports[`faction goal progress: core behavior > Germany: an empty empire and a part-way one report the same progress 2`] = `
+{
+  "done": false,
+  "label": "0 of 5 Ruhr Foundries",
+  "live": true,
+  "target": 5,
+  "value": 0,
+}
+`;
+
+exports[`faction goal progress: core behavior > India: an empty empire and a part-way one report the same progress 1`] = `
+{
+  "done": false,
+  "label": "The Imperial Diwan is not built",
+  "live": false,
+  "target": 1,
+  "value": 0,
+}
+`;
+
+exports[`faction goal progress: core behavior > India: an empty empire and a part-way one report the same progress 2`] = `
+{
+  "done": false,
+  "label": "The Imperial Diwan is not built",
+  "live": false,
+  "target": 1,
+  "value": 0,
+}
+`;
+
+exports[`faction goal progress: core behavior > Mongols: an empty empire and a part-way one report the same progress 1`] = `
+{
+  "done": false,
+  "label": "The Yam Relay Station is not built",
+  "live": false,
+  "target": 1,
+  "value": 0,
+}
+`;
+
+exports[`faction goal progress: core behavior > Mongols: an empty empire and a part-way one report the same progress 2`] = `
+{
+  "done": false,
+  "label": "The Yam Relay Station is not built",
+  "live": false,
+  "target": 1,
+  "value": 0,
+}
+`;
+
+exports[`faction goal progress: core behavior > Sparta: an empty empire and a part-way one report the same progress 1`] = `
+{
+  "done": false,
+  "label": "0 of 3 veterans retired",
+  "live": false,
+  "target": 3,
+  "value": 0,
+}
+`;
+
+exports[`faction goal progress: core behavior > Sparta: an empty empire and a part-way one report the same progress 2`] = `
+{
+  "done": false,
+  "label": "0 of 3 veterans retired",
+  "live": false,
+  "target": 3,
+  "value": 0,
+}
+`;
+
+exports[`faction goal progress: core behavior > Switzerland: an empty empire and a part-way one report the same progress 1`] = `
+{
+  "done": false,
+  "label": "60 of 5,000 Gold",
+  "live": true,
+  "target": 5000,
+  "value": 60,
+}
+`;
+
+exports[`faction goal progress: core behavior > Switzerland: an empty empire and a part-way one report the same progress 2`] = `
+{
+  "done": false,
+  "label": "123 of 5,000 Gold",
+  "live": true,
+  "target": 5000,
+  "value": 123,
+}
+`;
+
+exports[`faction goal progress: core behavior > is null once the goal is done, and typed sources name what scored 1`] = `
+[
+  [
+    {
+      "kind": "GreatWork",
+      "of": 0,
+    },
+    2,
+  ],
+  [
+    {
+      "kind": "FactionGoal",
+      "of": 0,
+    },
+    2,
+  ],
+]
+`;

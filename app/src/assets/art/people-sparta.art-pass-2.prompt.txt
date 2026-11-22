@@ -1,0 +1,4 @@
+2026-11-16 — Codex built-in image generation. Provisional author review; lead review pending.
+Reference images and requested edits: see docs/design/art-pass-2/generation-*.json.
+
+Edit only the BACKGROUND of this existing refined oil portrait, intended to show Sparta in the fifth century BCE. The enormous stone city fortification and hanging lambda banner are historically wrong for unwalled Classical Sparta. Replace that wall and banner with an unwalled Laconian settlement of low plastered mudbrick houses with simple terracotta pitched roofs, sparse olive trees and cypresses, against the rugged Taygetus mountains at golden evening light. No defensive city wall, no towers, no banners. Preserve both adults EXACTLY: faces, helmet crest, bronze cuirass, cloak, peplos, spear, shield and all visible fingers, foreground scale, pigments and rich oil technique. Background only, do not shift either person. No words or watermark.

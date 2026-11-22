@@ -1,0 +1,17 @@
+Keshig: 82 Production, 25 melee, 18 ranged at range 2, 5 moves (Mongol); Cataphract 75 Production
+win share % of the riders, Human policy, mean of starts 2-5 hexes apart, both arena sides, equal Production
+columns: Keshig (Mongol, charges or shoots) / Mongol Cataphract (same rider, no bow, Cataphract price) / Japan Cataphract
+Open    vs 6 Phalangites                   Keshig   0   Mongol Cataphract   0   Japan Cataphract   0
+Open    vs 6 Composite Archers             Keshig 100   Mongol Cataphract 100   Japan Cataphract 100
+Open    vs 6 Cataphracts                   Keshig  42   Mongol Cataphract  34   Japan Cataphract  50
+Open    vs 3 Phalangites + 3 Comp. Archers Keshig  30   Mongol Cataphract   0   Japan Cataphract   0
+Open    vs 4 Phalangites + 2 Cataphracts   Keshig   4   Mongol Cataphract   0   Japan Cataphract   0
+Open    vs 6 Spearmen (Ancient)            Keshig   0   Mongol Cataphract   0   Japan Cataphract   0
+Forest  vs 6 Phalangites                   Keshig  15   Mongol Cataphract   0   Japan Cataphract   0
+Forest  vs 6 Composite Archers             Keshig  94   Mongol Cataphract  58   Japan Cataphract  61
+Forest  vs 6 Cataphracts                   Keshig  49   Mongol Cataphract  42   Japan Cataphract  50
+Forest  vs 3 Phalangites + 3 Comp. Archers Keshig  51   Mongol Cataphract   4   Japan Cataphract   7
+Forest  vs 4 Phalangites + 2 Cataphracts   Keshig  37   Mongol Cataphract   0   Japan Cataphract   0
+Forest  vs 6 Spearmen (Ancient)            Keshig  16   Mongol Cataphract   0   Japan Cataphract   0
+TakeCity unwalled (Phalangite garrison, Phalangite + Composite Archer beside it), 450 Production: Keshig  95   Mongol Cataphract  95
+TakeCity walled (Phalangite garrison, Phalangite + Composite Archer beside it), 450 Production: Keshig  47   Mongol Cataphract  20

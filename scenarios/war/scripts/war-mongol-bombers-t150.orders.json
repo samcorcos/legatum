@@ -1,0 +1,990 @@
+{
+  "first": 150,
+  "last": 167,
+  "seat": 0,
+  "turns": {
+    "150": [
+      {
+        "plane": 150,
+        "target": {
+          "q": 15,
+          "r": 21
+        },
+        "type": "AirStrike"
+      }
+    ],
+    "151": [
+      {
+        "path": [
+          {
+            "q": 15,
+            "r": 21
+          },
+          {
+            "q": 16,
+            "r": 21
+          }
+        ],
+        "to": {
+          "q": 16,
+          "r": 21
+        },
+        "type": "MoveUnitPath",
+        "unit": 143
+      },
+      {
+        "accept": false,
+        "proposal": 60,
+        "type": "RespondToProposal"
+      }
+    ],
+    "152": [
+      {
+        "type": "SleepUnit",
+        "unit": 143
+      },
+      {
+        "plane": 150,
+        "target": {
+          "q": 17,
+          "r": 21
+        },
+        "type": "AirStrike"
+      }
+    ],
+    "153": [
+      {
+        "to": {
+          "q": 17,
+          "r": 21
+        },
+        "type": "MoveUnit",
+        "unit": 143
+      },
+      {
+        "plane": 150,
+        "target": {
+          "q": 17,
+          "r": 21
+        },
+        "type": "AirStrike"
+      },
+      {
+        "path": [
+          {
+            "q": 15,
+            "r": 14
+          },
+          {
+            "q": 15,
+            "r": 15
+          },
+          {
+            "q": 15,
+            "r": 16
+          },
+          {
+            "q": 15,
+            "r": 17
+          },
+          {
+            "q": 14,
+            "r": 18
+          },
+          {
+            "q": 13,
+            "r": 19
+          },
+          {
+            "q": 12,
+            "r": 20
+          },
+          {
+            "q": 12,
+            "r": 21
+          }
+        ],
+        "to": {
+          "q": 12,
+          "r": 21
+        },
+        "type": "MoveUnitPath",
+        "unit": 3
+      },
+      {
+        "city": 14,
+        "queue": [
+          {
+            "building": "Autoworks",
+            "kind": "Building"
+          },
+          {
+            "building": "Clearinghouse",
+            "kind": "Building"
+          }
+        ],
+        "type": "SetProductionQueue"
+      }
+    ],
+    "154": [
+      {
+        "city": 7,
+        "queue": [
+          {
+            "building": "Hydroponics",
+            "kind": "Building"
+          },
+          {
+            "building": "Clearinghouse",
+            "kind": "Building"
+          },
+          {
+            "building": "College",
+            "kind": "Building"
+          }
+        ],
+        "type": "SetProductionQueue"
+      },
+      {
+        "type": "UpgradeUnit",
+        "unit": 143
+      },
+      {
+        "plane": 150,
+        "target": {
+          "q": 16,
+          "r": 22
+        },
+        "type": "AirStrike"
+      },
+      {
+        "city": 30,
+        "queue": [
+          {
+            "building": "Hydroponics",
+            "kind": "Building"
+          }
+        ],
+        "type": "SetProductionQueue"
+      }
+    ],
+    "155": [
+      {
+        "type": "SleepUnit",
+        "unit": 143
+      },
+      {
+        "plane": 150,
+        "target": {
+          "q": 17,
+          "r": 22
+        },
+        "type": "AirStrike"
+      },
+      {
+        "city": 16,
+        "queue": [
+          {
+            "building": "Autoworks",
+            "kind": "Building"
+          },
+          {
+            "building": "College",
+            "kind": "Building"
+          }
+        ],
+        "type": "SetProductionQueue"
+      }
+    ],
+    "156": [
+      {
+        "type": "UpgradeUnit",
+        "unit": 3
+      },
+      {
+        "plane": 150,
+        "to": 7,
+        "type": "Rebase"
+      },
+      {
+        "city": 11,
+        "queue": [
+          {
+            "building": "Roadworks",
+            "kind": "Building"
+          },
+          {
+            "building": "College",
+            "kind": "Building"
+          },
+          {
+            "building": "Autoworks",
+            "kind": "Building"
+          }
+        ],
+        "type": "SetProductionQueue"
+      }
+    ],
+    "157": [
+      {
+        "accept": false,
+        "proposal": 66,
+        "type": "RespondToProposal"
+      },
+      {
+        "path": [
+          {
+            "q": 12,
+            "r": 21
+          },
+          {
+            "q": 13,
+            "r": 21
+          }
+        ],
+        "to": {
+          "q": 13,
+          "r": 21
+        },
+        "type": "MoveUnitPath",
+        "unit": 3
+      },
+      {
+        "city": 32,
+        "queue": [
+          {
+            "building": "Hydroponics",
+            "kind": "Building"
+          },
+          {
+            "building": "Castle",
+            "kind": "Building"
+          },
+          {
+            "building": "Roadworks",
+            "kind": "Building"
+          }
+        ],
+        "type": "SetProductionQueue"
+      }
+    ],
+    "158": [
+      {
+        "path": [
+          {
+            "q": 17,
+            "r": 22
+          },
+          {
+            "q": 17,
+            "r": 23
+          },
+          {
+            "q": 16,
+            "r": 24
+          }
+        ],
+        "to": {
+          "q": 16,
+          "r": 24
+        },
+        "type": "MoveUnitPath",
+        "unit": 143
+      },
+      {
+        "path": [
+          {
+            "q": 14,
+            "r": 21
+          },
+          {
+            "q": 15,
+            "r": 21
+          },
+          {
+            "q": 16,
+            "r": 21
+          },
+          {
+            "q": 17,
+            "r": 21
+          }
+        ],
+        "to": {
+          "q": 17,
+          "r": 21
+        },
+        "type": "MoveUnitPath",
+        "unit": 3
+      }
+    ],
+    "159": [
+      {
+        "accept": false,
+        "proposal": 68,
+        "type": "RespondToProposal"
+      },
+      {
+        "path": [
+          {
+            "q": 17,
+            "r": 22
+          },
+          {
+            "q": 17,
+            "r": 23
+          },
+          {
+            "q": 18,
+            "r": 23
+          },
+          {
+            "q": 19,
+            "r": 22
+          }
+        ],
+        "to": {
+          "q": 19,
+          "r": 22
+        },
+        "type": "MoveUnitPath",
+        "unit": 3
+      },
+      {
+        "to": {
+          "q": 16,
+          "r": 25
+        },
+        "type": "MoveUnit",
+        "unit": 143
+      },
+      {
+        "plane": 150,
+        "target": {
+          "q": 16,
+          "r": 25
+        },
+        "type": "AirStrike"
+      },
+      {
+        "city": 24,
+        "queue": [
+          {
+            "improvement": "SaltpeterWorks",
+            "kind": "Improvement",
+            "tile": {
+              "q": 12,
+              "r": 23
+            }
+          },
+          {
+            "improvement": "Mine",
+            "kind": "Improvement",
+            "tile": {
+              "q": 12,
+              "r": 22
+            }
+          },
+          {
+            "improvement": "Mine",
+            "kind": "Improvement",
+            "tile": {
+              "q": 11,
+              "r": 21
+            }
+          },
+          {
+            "improvement": "Quarry",
+            "kind": "Improvement",
+            "tile": {
+              "q": 10,
+              "r": 23
+            }
+          }
+        ],
+        "type": "SetProductionQueue"
+      }
+    ],
+    "160": [
+      {
+        "accept": false,
+        "proposal": 69,
+        "type": "RespondToProposal"
+      },
+      {
+        "to": {
+          "q": 20,
+          "r": 22
+        },
+        "type": "MoveUnit",
+        "unit": 3
+      },
+      {
+        "type": "SleepUnit",
+        "unit": 143
+      },
+      {
+        "plane": 150,
+        "target": {
+          "q": 20,
+          "r": 22
+        },
+        "type": "AirStrike"
+      },
+      {
+        "city": 27,
+        "queue": [
+          {
+            "kind": "Unit",
+            "unit": "Tank"
+          },
+          {
+            "kind": "Unit",
+            "unit": "Tank"
+          },
+          {
+            "kind": "Unit",
+            "unit": "Tank"
+          }
+        ],
+        "type": "SetProductionQueue"
+      }
+    ],
+    "161": [
+      {
+        "path": [
+          {
+            "q": 17,
+            "r": 24
+          },
+          {
+            "q": 18,
+            "r": 23
+          },
+          {
+            "q": 19,
+            "r": 23
+          },
+          {
+            "q": 20,
+            "r": 23
+          }
+        ],
+        "to": {
+          "q": 20,
+          "r": 23
+        },
+        "type": "MoveUnitPath",
+        "unit": 143
+      },
+      {
+        "plane": 150,
+        "target": {
+          "q": 23,
+          "r": 20
+        },
+        "type": "AirStrike"
+      },
+      {
+        "city": 4,
+        "queue": [
+          {
+            "kind": "Unit",
+            "unit": "Tank"
+          },
+          {
+            "kind": "Unit",
+            "unit": "Tank"
+          },
+          {
+            "kind": "Unit",
+            "unit": "Tank"
+          },
+          {
+            "kind": "Unit",
+            "unit": "Tank"
+          },
+          {
+            "kind": "Unit",
+            "unit": "Tank"
+          }
+        ],
+        "type": "SetProductionQueue"
+      },
+      {
+        "type": "SkipUnit",
+        "unit": 3
+      },
+      {
+        "path": [
+          {
+            "q": 13,
+            "r": 13
+          },
+          {
+            "q": 13,
+            "r": 14
+          },
+          {
+            "q": 12,
+            "r": 15
+          },
+          {
+            "q": 11,
+            "r": 16
+          },
+          {
+            "q": 10,
+            "r": 17
+          },
+          {
+            "q": 9,
+            "r": 18
+          },
+          {
+            "q": 9,
+            "r": 19
+          },
+          {
+            "q": 9,
+            "r": 20
+          }
+        ],
+        "to": {
+          "q": 9,
+          "r": 20
+        },
+        "type": "MoveUnitPath",
+        "unit": 169
+      },
+      {
+        "city": 19,
+        "queue": [
+          {
+            "kind": "Unit",
+            "unit": "Settler"
+          },
+          {
+            "kind": "Unit",
+            "unit": "Settler"
+          },
+          {
+            "kind": "Unit",
+            "unit": "Settler"
+          },
+          {
+            "kind": "Unit",
+            "unit": "Settler"
+          }
+        ],
+        "type": "SetProductionQueue"
+      },
+      {
+        "city": 1,
+        "queue": [
+          {
+            "building": "Workshop",
+            "kind": "Building"
+          },
+          {
+            "building": "Hydroponics",
+            "kind": "Building"
+          },
+          {
+            "building": "Clearinghouse",
+            "kind": "Building"
+          },
+          {
+            "building": "College",
+            "kind": "Building"
+          },
+          {
+            "improvement": "Farm",
+            "kind": "Improvement",
+            "tile": {
+              "q": 12,
+              "r": 11
+            }
+          },
+          {
+            "improvement": "Mine",
+            "kind": "Improvement",
+            "tile": {
+              "q": 15,
+              "r": 11
+            }
+          },
+          {
+            "improvement": "Quarry",
+            "kind": "Improvement",
+            "tile": {
+              "q": 15,
+              "r": 12
+            }
+          }
+        ],
+        "type": "SetProductionQueue"
+      },
+      {
+        "city": 26,
+        "queue": [
+          {
+            "building": "Hydroponics",
+            "kind": "Building"
+          },
+          {
+            "building": "MachineShop",
+            "kind": "Building"
+          },
+          {
+            "building": "College",
+            "kind": "Building"
+          },
+          {
+            "building": "Clearinghouse",
+            "kind": "Building"
+          }
+        ],
+        "type": "SetProductionQueue"
+      }
+    ],
+    "162": [
+      {
+        "path": [
+          {
+            "q": 21,
+            "r": 23
+          },
+          {
+            "q": 22,
+            "r": 23
+          }
+        ],
+        "to": {
+          "q": 22,
+          "r": 23
+        },
+        "type": "MoveUnitPath",
+        "unit": 143
+      },
+      {
+        "path": [
+          {
+            "q": 21,
+            "r": 22
+          },
+          {
+            "q": 22,
+            "r": 22
+          },
+          {
+            "q": 23,
+            "r": 21
+          }
+        ],
+        "to": {
+          "q": 23,
+          "r": 21
+        },
+        "type": "MoveUnitPath",
+        "unit": 3
+      },
+      {
+        "plane": 150,
+        "target": {
+          "q": 22,
+          "r": 20
+        },
+        "type": "AirStrike"
+      }
+    ],
+    "163": [
+      {
+        "to": {
+          "q": 23,
+          "r": 20
+        },
+        "type": "MoveUnit",
+        "unit": 3
+      },
+      {
+        "to": {
+          "q": 22,
+          "r": 24
+        },
+        "type": "MoveUnit",
+        "unit": 143
+      },
+      {
+        "plane": 150,
+        "target": {
+          "q": 22,
+          "r": 24
+        },
+        "type": "AirStrike"
+      },
+      {
+        "type": "FoundCity",
+        "unit": 169
+      }
+    ],
+    "164": [
+      {
+        "city": 36,
+        "queue": [
+          {
+            "building": "Granary",
+            "kind": "Building"
+          },
+          {
+            "building": "Workshop",
+            "kind": "Building"
+          },
+          {
+            "building": "Market",
+            "kind": "Building"
+          },
+          {
+            "building": "Laboratory",
+            "kind": "Building"
+          },
+          {
+            "building": "Walls",
+            "kind": "Building"
+          }
+        ],
+        "type": "SetProductionQueue"
+      },
+      {
+        "type": "SleepUnit",
+        "unit": 143
+      },
+      {
+        "plane": 150,
+        "target": {
+          "q": 19,
+          "r": 23
+        },
+        "type": "AirStrike"
+      },
+      {
+        "type": "SleepUnit",
+        "unit": 3
+      },
+      {
+        "city": 23,
+        "queue": [
+          {
+            "kind": "Unit",
+            "unit": "Tank"
+          },
+          {
+            "kind": "Unit",
+            "unit": "Tank"
+          },
+          {
+            "kind": "Unit",
+            "unit": "Tank"
+          },
+          {
+            "kind": "Unit",
+            "unit": "Tank"
+          }
+        ],
+        "type": "SetProductionQueue"
+      }
+    ],
+    "165": [
+      {
+        "to": {
+          "q": 23,
+          "r": 19
+        },
+        "type": "MoveUnit",
+        "unit": 3
+      },
+      {
+        "path": [
+          {
+            "q": 22,
+            "r": 23
+          },
+          {
+            "q": 22,
+            "r": 22
+          },
+          {
+            "q": 23,
+            "r": 21
+          },
+          {
+            "q": 24,
+            "r": 20
+          }
+        ],
+        "to": {
+          "q": 24,
+          "r": 20
+        },
+        "type": "MoveUnitPath",
+        "unit": 143
+      },
+      {
+        "plane": 150,
+        "target": {
+          "q": 24,
+          "r": 20
+        },
+        "type": "AirStrike"
+      }
+    ],
+    "166": [
+      {
+        "to": {
+          "q": 22,
+          "r": 19
+        },
+        "type": "MoveUnit",
+        "unit": 3
+      },
+      {
+        "type": "SleepUnit",
+        "unit": 143
+      },
+      {
+        "path": [
+          {
+            "q": 23,
+            "r": 21
+          },
+          {
+            "q": 22,
+            "r": 22
+          },
+          {
+            "q": 21,
+            "r": 23
+          },
+          {
+            "q": 20,
+            "r": 23
+          },
+          {
+            "q": 19,
+            "r": 23
+          },
+          {
+            "q": 18,
+            "r": 23
+          },
+          {
+            "q": 17,
+            "r": 23
+          },
+          {
+            "q": 16,
+            "r": 24
+          },
+          {
+            "q": 15,
+            "r": 24
+          },
+          {
+            "q": 14,
+            "r": 24
+          },
+          {
+            "q": 13,
+            "r": 24
+          }
+        ],
+        "to": {
+          "q": 13,
+          "r": 24
+        },
+        "type": "MoveUnitPath",
+        "unit": 129
+      },
+      {
+        "plane": 150,
+        "target": {
+          "q": 11,
+          "r": 23
+        },
+        "type": "AirStrike"
+      },
+      {
+        "city": 12,
+        "queue": [
+          {
+            "kind": "Unit",
+            "unit": "Tank"
+          },
+          {
+            "kind": "Unit",
+            "unit": "Tank"
+          },
+          {
+            "kind": "Unit",
+            "unit": "Tank"
+          },
+          {
+            "kind": "Unit",
+            "unit": "Tank"
+          }
+        ],
+        "type": "SetProductionQueue"
+      },
+      {
+        "city": 24,
+        "queue": [
+          {
+            "kind": "Unit",
+            "unit": "Tank"
+          },
+          {
+            "kind": "Unit",
+            "unit": "Tank"
+          },
+          {
+            "kind": "Unit",
+            "unit": "Tank"
+          },
+          {
+            "kind": "Unit",
+            "unit": "Tank"
+          }
+        ],
+        "type": "SetProductionQueue"
+      }
+    ],
+    "167": [
+      {
+        "to": {
+          "q": 22,
+          "r": 18
+        },
+        "type": "MoveUnit",
+        "unit": 3
+      },
+      {
+        "plane": 150,
+        "target": {
+          "q": 22,
+          "r": 18
+        },
+        "type": "AirStrike"
+      },
+      {
+        "techs": [
+          "AutonomousSystems",
+          "Robotics",
+          "FusionPower",
+          "QuantumComputing",
+          "RecursiveAi"
+        ],
+        "type": "SetResearchQueue"
+      }
+    ]
+  }
+}

@@ -1,0 +1,4 @@
+2026-11-16 — Codex built-in image generation. Provisional author review; lead review pending.
+Reference images and requested edits: see docs/design/art-pass-2/generation-*.json.
+
+Correct this Ancient Greek cavalry miniature. Preserve the man, face, horse, bridle, reins, spear, shield, helmet, chiton and camera. Remove both bronze forearm cuffs, leaving bare forearms. Remove stirrups and all stirrup leathers: his sandalled feet hang freely at the sides of the horse, soles supported by nothing. Use simple low Greek leather sandals instead of high calf-strapped costume boots. No medieval saddle; plain saddlecloth under rider. Keep natural adult/horse proportions, no extra limbs. Single plain warm cream disc. Transparent background, no colored edge, no words.

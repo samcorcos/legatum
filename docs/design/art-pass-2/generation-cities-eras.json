@@ -1,0 +1,44 @@
+[
+  {
+    "slug": "contemporary-hamlet",
+    "kind": "city",
+    "attempt": 1,
+    "input": "~/code/legatum/.claude/worktrees/lane-5/app/src/assets/cities/modern-hamlet.png",
+    "prompt": "Paint an entirely NEW a late-twentieth-century hamlet with five modest contemporary houses, a low community hall, small paved lanes, a bus shelter, two compact1990s cars, gardens and mature trees; simple pitched and flat roofs, no monumental classical portico, no futuristic structures. Reference is only for camera, neutral earthy oval patch, painterly atlas-miniature finish, soft upper-left light, overall footprint and transparent margin. Entirely new architectural composition and road layout, do not recolor or copy existing reference. Refined realistic painted miniature, muted grey concrete, mineral blue glass, small cream stone accents, restrained sage vegetation. Clear masses at64px, no words, logos, signs or watermark. Same isometric viewpoint. Full base visible with transparent margin all around. Square canvas, genuine transparency."
+  },
+  {
+    "slug": "contemporary-town",
+    "kind": "city",
+    "attempt": 1,
+    "input": "~/code/legatum/.claude/worktrees/lane-5/app/src/assets/cities/modern-town.png",
+    "prompt": "Paint an entirely NEW a contemporary town with low brick-and-glass civic library, three-to-five-storey apartment blocks, a supermarket-sized commercial hall without signs, tree-lined streets, crosswalks and a small bus plaza; varied flat roofs, no skyscrapers or clock tower. Reference is only for camera, neutral earthy oval patch, painterly atlas-miniature finish, soft upper-left light, overall footprint and transparent margin. Entirely new architectural composition and road layout, do not recolor or copy existing reference. Refined realistic painted miniature, muted grey concrete, mineral blue glass, small cream stone accents, restrained sage vegetation. Clear masses at64px, no words, logos, signs or watermark. Same isometric viewpoint. Full base visible with transparent margin all around. Square canvas, genuine transparency."
+  },
+  {
+    "slug": "contemporary-city",
+    "kind": "city",
+    "attempt": 1,
+    "input": "~/code/legatum/.claude/worktrees/lane-5/app/src/assets/cities/modern-city.png",
+    "prompt": "Paint an entirely NEW a contemporary city with a cluster of six mid-rise office and apartment blocks, two slender glass-and-steel towers, a low circular civic auditorium, tree-lined avenues and a compact surface light-rail station; varied roof heights, no art-deco clocktower, no science-fiction. Reference is only for camera, neutral earthy oval patch, painterly atlas-miniature finish, soft upper-left light, overall footprint and transparent margin. Entirely new architectural composition and road layout, do not recolor or copy existing reference. Refined realistic painted miniature, muted grey concrete, mineral blue glass, small cream stone accents, restrained sage vegetation. Clear masses at64px, no words, logos, signs or watermark. Same isometric viewpoint. Full base visible with transparent margin all around. Square canvas, genuine transparency."
+  },
+  {
+    "slug": "contemporary-metropolis",
+    "kind": "city",
+    "attempt": 1,
+    "input": "~/code/legatum/.claude/worktrees/lane-5/app/src/assets/cities/modern-metropolis.png",
+    "prompt": "Paint an entirely NEW a dense late-twentieth/early-twenty-first century metropolis, slender varied glass-and-steel highrises at centre, modern apartment and office blocks around them, a long low transit concourse, tree-lined urban plaza and street grid; no domes, no art-deco central clock tower, no giant futuristic structures. Reference is only for camera, neutral earthy oval patch, painterly atlas-miniature finish, soft upper-left light, overall footprint and transparent margin. Entirely new architectural composition and road layout, do not recolor or copy existing reference. Refined realistic painted miniature, muted grey concrete, mineral blue glass, small cream stone accents, restrained sage vegetation. Clear masses at64px, no words, logos, signs or watermark. Same isometric viewpoint. Full base visible with transparent margin all around. Square canvas, genuine transparency."
+  },
+  {
+    "slug": "machine",
+    "kind": "era",
+    "attempt": 1,
+    "input": "~/code/legatum/.claude/worktrees/lane-5/app/src/assets/eras/industrial.png",
+    "prompt": "Paint an entirely NEW cinematic16:9 oil painting for the Machine Age c.1905–1914, same sophisticated painted technique and parchment-compatible palette as reference, NOT its composition. View from a high public terrace across an early electrified European-American city: broad central avenue with electric trams connected by trolley poles to overhead wires, stone-clad early steel office towers, brick tenement blocks, iron railway terminal to left, small factories at distance, public gardens, adults in period clothing strolling on terrace. Early motorcars and horse carts small in scene, no cars after1914, no glass skyscrapers, jets or modern technology. Morning light, muted ivory, umber, ochre, mineral blue, sage. Main subject central for a portrait crop. No readable text, signage, logos, flags or watermark. Wide landscape master, refined oil brushwork rather than3D render."
+  },
+  {
+    "slug": "contemporary",
+    "kind": "era",
+    "attempt": 1,
+    "input": "~/code/legatum/.claude/worktrees/lane-5/app/src/assets/eras/modern.png",
+    "prompt": "Paint an entirely NEW cinematic16:9 oil painting for the contemporary era c.2000, same sophisticated oil brushwork and parchment-compatible pigments as reference but new composition and correctly modern city. View over a broad pedestrian waterfront park toward a recognizably contemporary skyline of varied glass-and-steel towers, apartment blocks and a low contemporary civic museum. A modern passenger commuter train crosses a bridge in middle distance, ordinary compact cars on a tree-lined boulevard, a small container port at far edge. Foreground adults in ordinary contemporary clothing, natural hands if visible, small scale. Peaceful credible civic life, no flying cars, robots or futuristic domes. Main civic museum and skyline centred for portrait crop; restrained warm ivory, mineral blue, sage and umber, luminous afternoon. No text, logos, signage or watermark. Wide landscape16:9."
+  }
+]

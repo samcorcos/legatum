@@ -1,0 +1,72 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`city healing core behavior > a city damaged this turn does not heal; the next quiet turn it does 1`] = `
+[
+  {
+    "at": {
+      "q": 6,
+      "r": 5,
+    },
+    "attacker": 3,
+    "attacker_at": {
+      "q": 8,
+      "r": 5,
+    },
+    "attacker_hp_after": 100,
+    "attacker_owner": 1,
+    "attacker_roll": 98,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Archer (ranged)",
+          15,
+        ],
+      ],
+      "total": 15,
+    },
+    "damage_to_attacker": 0,
+    "damage_to_defender": 34,
+    "defender": {
+      "city": 0,
+      "kind": "City",
+      "owner": 0,
+    },
+    "defender_hp_after": 66,
+    "defender_roll": 0,
+    "defender_strength": {
+      "parts": [
+        [
+          "City",
+          10,
+        ],
+        [
+          "Population",
+          6,
+        ],
+        [
+          "Wounded",
+          -5,
+        ],
+      ],
+      "total": 11,
+    },
+    "meeting": false,
+    "ranged": true,
+    "type": "Battle",
+  },
+]
+`;
+
+exports[`city healing core behavior > a city damaged this turn does not heal; the next quiet turn it does 2`] = `[]`;
+
+exports[`city healing core behavior > an at-war military unit adjacent stops the heal and the forecast says so; an enemy Settler does not 1`] = `[]`;
+
+exports[`city healing core behavior > an at-war military unit adjacent stops the heal and the forecast says so; an enemy Settler does not 2`] = `[]`;
+
+exports[`city healing core behavior > an undamaged, unthreatened city heals 20 a turn, caps at full, and forecasts the turns to full 1`] = `[]`;
+
+exports[`city healing core behavior > an undamaged, unthreatened city heals 20 a turn, caps at full, and forecasts the turns to full 2`] = `[]`;
+
+exports[`city healing core behavior > an undamaged, unthreatened city heals 20 a turn, caps at full, and forecasts the turns to full 3`] = `[]`;
+
+exports[`city healing core behavior > an undamaged, unthreatened city heals 20 a turn, caps at full, and forecasts the turns to full 4`] = `[]`;

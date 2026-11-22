@@ -1,0 +1,12 @@
+# Build image for the Linux ARM simulator binaries. Amazon Linux 2023 is the OS the cloud servers
+# run (Graviton AMI), so the binaries link against a glibc no newer than the servers have.
+# Native on Apple silicon: linux/arm64 containers run without emulation.
+FROM --platform=linux/arm64 public.ecr.aws/amazonlinux/amazonlinux:2023
+ARG RUST_VERSION
+RUN dnf install -y gcc gcc-c++ make cmake git tar gzip findutils which \
+    && dnf clean all
+RUN test -n "$RUST_VERSION" \
+    && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
+       | sh -s -- -y --profile minimal --default-toolchain "$RUST_VERSION"
+ENV PATH=/root/.cargo/bin:$PATH
+WORKDIR /src

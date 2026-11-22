@@ -1,0 +1,161 @@
+/* The race panel's holdings (VpHoldings.tsx, VpTrack.tsx). Classes: vhc- (holdings), vp- (the race
+   panel's existing frame, rows, footer). `--oc` is an empire's colour for fills, `--oi` its shade for
+   ink on parchment (see vpParts.css). */
+
+/* ---------- Head ---------- */
+.game .vp .vhc-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px 3px; text-align: left; border-bottom: 0; }
+.vhc-head h3 { margin: 0; padding: 0; font: 600 16px/1.1 var(--display); color: var(--ink); white-space: nowrap; }
+.vhc-key { display: inline-flex; align-items: center; gap: 3px; font: 500 10px/1 var(--sans); color: var(--ink-2); white-space: nowrap; }
+.vhc-tok.demo { --oc: var(--ink-2); --oi: var(--ink-2); display: inline-block; width: 12px; height: 9px; min-width: 0; margin-left: 4px; padding: 0; cursor: default; }
+.vhc-tok.demo:first-child { margin-left: 0; }
+
+/* ---------- Rows ---------- */
+.vp-rows { padding: 2px 8px; }
+.vhc-row {
+  display: grid; grid-template-columns: auto fit-content(150px) minmax(0, 1fr) auto; align-items: center; gap: 6px;
+  box-sizing: border-box; padding: 2px 6px 2px 7px; border-left: 3px solid var(--oi);
+}
+.vhc-row.mine { background: color-mix(in srgb, var(--gilt) 11%, var(--panel)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gilt) 55%, transparent); }
+.vhc-row.dead { opacity: 0.45; }
+.vhc-who { display: inline-flex; align-items: center; }
+.vhc-who .vhc-roundel + .vhc-roundel { margin-left: -4px; }
+.vhc-roundel.vp-player { margin: 0; padding: 0; background: none; box-shadow: none; }
+.vhc-roundel .pf-roundel { margin: 1px 2px 1px 1px; }
+.vp-label { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: max-content; overflow: visible; padding: 0; }
+.vp-ai-level { max-width: 150px; white-space: normal; font: 600 10px/1.2 var(--sans); color: var(--ink-2); }
+.vp-team-name { flex: none; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 13.5px/1.2 var(--display); color: var(--ink); }
+.vp-row.mine .vp-team-name { font-weight: 700; }
+.vhc-roundel { position: relative; }
+.vhc-rel {
+  position: absolute; left: -3px; bottom: -2px; display: grid; place-items: center; box-sizing: border-box; width: 11px; height: 11px; border-radius: 50%;
+  color: var(--panel); background: var(--good); box-shadow: 0 0 0 1px var(--panel);
+}
+.vhc-rel.war { background: var(--bad); }
+.vhc-rel.war.declared { color: var(--bad); background: var(--panel); box-shadow: 0 0 0 1px var(--bad); }
+.vhc-rel.war.new { box-shadow: 0 0 0 1px var(--panel), 0 0 0 2.5px var(--bad); }
+.vhc-rel.alliance { background: var(--gilt); }
+.vhc-holds { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 2px; min-width: 0; }
+.vp-num { font: 500 10.5px/1 var(--sans); color: var(--muted); white-space: nowrap; text-align: right; }
+.vp-num b { font: 700 15px/1 var(--num-font); color: var(--ink); }
+
+/* ---------- Tokens ---------- */
+.vhc-tok {
+  all: unset; box-sizing: border-box; position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 1px;
+  height: 20px; min-width: 20px; padding: 0 2px; border-radius: 3px; cursor: pointer; color: var(--ink);
+  background: color-mix(in srgb, var(--oc) 42%, var(--panel));
+  box-shadow: inset 0 0 0 1px var(--oi), 0 1px 0 rgba(40, 28, 10, 0.18);
+}
+.vhc-tok.live { background: color-mix(in srgb, var(--oc) 10%, var(--panel)); box-shadow: inset 0 0 0 1.5px var(--oi), 0 1px 0 rgba(40, 28, 10, 0.18); }
+.vhc-tok small { font: 700 8.5px/1 var(--sans); }
+.vhc-tok .medallion { background: transparent; box-shadow: none; }
+.vhc-tok:hover, .vhc-tok:focus-visible, .vhc-goal-open:hover, .vhc-goal-open:focus-visible, .vhc-open-tok:hover, .vhc-open-tok:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+/* A transparent slop around each token: a finger lands, a mouse still has room. */
+.vhc-tok::after, .vhc-goal-open::after, .vhc-open-tok::after { content: ''; position: absolute; inset: -2px; }
+.vhc-goal-open {
+  all: unset; box-sizing: border-box; position: relative; display: inline-grid; place-items: center; width: 20px; height: 20px; margin-left: 2px; cursor: pointer;
+  border: 1.5px dashed var(--oi); border-radius: 50%;
+}
+.vhc-goal-wrap { display: inline-flex; align-items: center; gap: 4px; }
+.vhc-goal-progress { font: 600 9px/1.15 var(--num-font); color: var(--ink-2); min-width: 0; }
+.vhc-goal-wrap.mine { flex: 0 1 auto; min-width: 0; max-width: 100%; padding: 1px 4px 1px 1px; border-radius: 12px; background: color-mix(in srgb, var(--gilt) 12%, var(--panel)); }
+.vhc-goal-open .medallion { background: transparent; box-shadow: none; }
+.vhc-open-tok { all: unset; box-sizing: border-box; position: relative; display: inline-flex; align-items: center; gap: 1px; border-radius: 50%; cursor: pointer; }
+.vhc-open-tok small { font: 700 8.5px/1 var(--sans); color: var(--muted); }
+/* The rate that lead costs, every yield: red with a down arrow (colour is never alone). */
+.vhc-decadence { display: inline-flex; align-items: center; gap: 1px; height: 20px; padding: 0 4px 0 3px; border-radius: 10px; cursor: help; font: 700 10.5px/1 var(--num-font, var(--sans)); color: var(--bad); background: color-mix(in srgb, var(--bad) 9%, var(--panel)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bad) 45%, transparent); }
+/* How far ahead of the average empire a row's empire is. */
+.vhc-lead { display: inline-flex; align-items: center; height: 20px; padding: 0 4px; border-radius: 10px; cursor: help; font: 700 10.5px/1 var(--num-font, var(--sans)); color: var(--ink-2); background: color-mix(in srgb, var(--ink-2) 8%, var(--panel)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink-2) 35%, transparent); }
+.vhc-era-n { font: 700 10px/1 var(--display); letter-spacing: 0; }
+.vhc-era-open { display: inline-grid; place-items: center; box-sizing: border-box; width: 19px; height: 19px; border: 1.5px dashed var(--rule-2); border-radius: 50%; color: var(--ink-2); }
+.vhc-tok.k-era { padding: 0 3px; }
+
+/* ---------- Nobody yet ---------- */
+.vhc-nobody {
+  display: grid; grid-template-columns: auto auto minmax(0, 1fr); align-items: center; gap: 6px; flex: none;
+  box-sizing: border-box; margin: 0 8px 1px; padding: 2px 6px 2px 7px; border-top: 1px solid var(--rule); border-left: 3px dashed var(--rule-2);
+}
+.vhc-nobody-mark { display: grid; place-items: center; box-sizing: border-box; width: 22px; height: 22px; border: 1.5px dashed var(--rule-2); border-radius: 50%; color: var(--muted); }
+.vhc-nobody-who { display: grid; min-width: 0; }
+.vhc-name { min-width: 0; font: italic 600 13.5px/1.1 var(--display); color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vhc-worth { font: 500 10.5px/1.15 var(--sans); color: var(--muted); white-space: nowrap; }
+.vhc-worth b { font: 700 10.5px/1.15 var(--num-font); color: var(--ink-2); }
+.vhc-none { font: 500 10.5px/1.2 var(--sans); text-align: right; }
+
+/* ---------- Footer ---------- */
+.vp-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 2px 12px 7px; text-align: left; }
+.vp-foot .vp-more { display: inline-flex; align-items: center; gap: 3px; margin-right: auto; }
+.vp-foot .link + .link { margin-left: 0; }
+/* One line in every state: "Back to top" and a pending-offer count must not wrap the footer, or the paged rows lose 33px and the last one is cut (the allies save, 1000x600). */
+.vp .vp-foot { flex-wrap: nowrap; gap: 6px; }
+.vp .vp-foot .link { white-space: nowrap; }
+.vp .vp-foot .link + .link { margin-left: 0; }
+
+/* ---------- The token card ---------- */
+.vhc-pop { position: fixed; z-index: 90; display: grid; gap: 6px; width: 252px; pointer-events: none; }
+.vhc-pop .vh-card { box-shadow: 0 12px 28px rgba(40, 28, 10, 0.32); }
+.vhc-pop .vh-card.own-mine { box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--gilt), 0 12px 28px rgba(40, 28, 10, 0.32); }
+.vhc-pop .vh-card.own-open, .vhc-pop .vh-card.shared { background: var(--panel); box-shadow: 0 12px 28px rgba(40, 28, 10, 0.32); }
+.vhc-pop-hint { display: inline-flex; align-items: center; gap: 4px; justify-self: end; padding: 2px 6px; border: 1px solid var(--rule); background: var(--panel); font: 500 10.5px/1.2 var(--sans); color: var(--ink-2); }
+.vhc-pop-hint .kbd { margin-left: 0; }
+
+/* Touch: the generic 44 px minimum would make seven tokens a 300 px line. Tokens are 30 px with slop
+   (a tap pins the card), and a row wraps its tokens instead. */
+@media (pointer: coarse) {
+  :root .vhc-tok, :root .vhc-goal-open, :root .vhc-open-tok { min-width: 30px; min-height: 30px; height: 30px; }
+  :root .vhc-goal-open, :root .vhc-open-tok { width: 30px; }
+  :root .vhc-roundel { min-width: 0; min-height: 0; }
+  .vhc-holds { gap: 4px; }
+}
+
+/* ---------- The hold-to-win countdown ---------- */
+.vhc-holds-list { display: grid; gap: 3px; flex: none; margin: 0 10px 4px; }
+.vhc-hold {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 4px 8px;
+  border: 1.5px solid var(--oi); border-left-width: 5px; background: color-mix(in srgb, var(--oc) 12%, var(--panel)); color: var(--ink);
+}
+.vhc-hold.rival { border-color: var(--bad); border-left-color: var(--oi); background: color-mix(in srgb, var(--bad) 9%, var(--panel)); }
+.vhc-hold.mine { border-color: var(--gilt); border-left-color: var(--gilt); background: color-mix(in srgb, var(--gilt) 14%, var(--panel)); }
+.vhc-hold.last { box-shadow: 0 0 0 2px color-mix(in srgb, var(--bad) 35%, transparent); }
+.vhc-hold.mine.last { box-shadow: 0 0 0 2px color-mix(in srgb, var(--gilt) 40%, transparent); }
+.vhc-hold-icon { display: grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; color: var(--panel); background: var(--bad); }
+.vhc-hold.mine .vhc-hold-icon { background: var(--gilt); }
+.vhc-hold-text { display: grid; min-width: 0; }
+.vhc-hold-text b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 700 12.5px/1.2 var(--sans); }
+.vhc-hold-text small { white-space: normal; font: 500 10.5px/1.2 var(--sans); color: var(--ink-2); }
+.vhc-hold-meter { display: inline-flex; gap: 2px; }
+.vhc-hold-meter i { width: 5px; height: 14px; border-radius: 1px; box-shadow: inset 0 0 0 1px var(--rule-2); background: transparent; }
+.vhc-hold-meter i.on { background: var(--bad); box-shadow: inset 0 0 0 1px var(--bad); }
+.vhc-hold.mine .vhc-hold-meter i.on { background: var(--gilt); box-shadow: inset 0 0 0 1px var(--gilt); }
+.vhc-hold-more { font: 600 10.5px/1.2 var(--sans); color: var(--bad); text-align: right; }
+.vhc-row.holding { box-shadow: inset 0 0 0 1.5px var(--bad); }
+.vhc-row.holding.mine { box-shadow: inset 0 0 0 1.5px var(--gilt); }
+
+/* More width on a big window, so the leader's name and its tokens both fit. */
+@media (min-width: 1360px) and (pointer: fine) { .game { --race-width: 352px; } }
+
+/* A legacy Sakoku vow: a torii mark and countdown beside the empire's tokens (the icon and figure identify it). */
+.vhc-closed { display: inline-flex; align-items: center; gap: 3px; height: 20px; padding: 0 5px 0 4px; border-radius: 10px; cursor: help; font: 700 10.5px/1 var(--num-font, var(--sans)); color: var(--ink-2); background: color-mix(in srgb, var(--ink) 6%, var(--panel)); box-shadow: inset 0 0 0 1px var(--rule-2); white-space: nowrap; }
+.vhc-closed.holding { color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--gilt); background: color-mix(in srgb, var(--gilt) 14%, var(--panel)); }
+.vhc-closed.blocked { color: var(--bad); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bad) 55%, transparent); }
+
+/* ---------- Room for the rows (raceFit.ts, VpTrack.tsx): the race is the panel's job, so its furniture is tight ---------- */
+/* A box under three rows tall must not pin your row: a pinned row would cover it and the rows below could never be reached. */
+:root .game .vp .vp-rows[data-narrow] .vp-row.mine { position: static; }
+:root .game .vp .vp-rows[data-pinned] .vp-row.mine { top: calc(-1 * var(--rows-pt, 0px)); bottom: calc(-1 * var(--rows-pb, 0px)); }
+.vp-rows[data-pinned]::after { content: ''; display: block; height: var(--pin-h, 0); }
+/* The "N more" / "Back to top" control is a real button: it pages the rows. */
+.vp-foot .vp-more { margin-right: auto; font: 600 11.5px/1 var(--sans); color: var(--ink-2); }
+.vp-foot .vp-more:hover, .vp-foot .vp-more:focus-visible { color: var(--ink); }
+/* A short window (the 1000x600 laptop): a tighter head, foot and rows, so four rows are whole beside a siege card. */
+@media (max-height: 700px) {
+  .game .vp .vhc-head { padding-top: 5px; padding-bottom: 2px; }
+  :root .game .vp .vp-foot { padding-bottom: 4px; }
+  .vp-rows { padding-block: 1px; }
+  .vhc-row { padding-block: 1px; }
+  .vhc-holds { row-gap: 0; }
+}
+
+/* The capitals victory: a star and "Capital" while an original capital of the team's own stands, a struck one and "Capital fallen" once none does. */
+.vhc-capital { display: inline-flex; align-items: center; gap: 3px; height: 20px; padding: 0 5px 0 4px; border-radius: 10px; cursor: help; font: 700 10.5px/1 var(--num-font, var(--sans)); color: var(--ink-2); background: color-mix(in srgb, var(--ink) 6%, var(--panel)); box-shadow: inset 0 0 0 1px var(--rule-2); white-space: nowrap; }
+.vhc-capital.fallen { color: var(--bad); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bad) 55%, transparent); }
+.vhc-rule { margin: 2px 0 4px; font: 500 11px/1.3 var(--sans); color: var(--ink-2); }

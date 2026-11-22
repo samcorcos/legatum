@@ -1,0 +1,100 @@
+/* The unlock hovercard: it sells the unlock. Big art, what it is for, what it beats, how it compares. */
+.unlock-card {
+  position: fixed;
+  z-index: 100;
+  box-sizing: border-box;
+  width: 372px;
+  max-width: calc(100vw - 16px);
+  max-height: calc(100dvh - 16px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px 10px;
+  color: var(--ink);
+  background: var(--tip-bg, var(--panel));
+  border: 1px solid var(--rule-2);
+  border-top: 4px solid var(--accent);
+  box-shadow: 0 0 0 3px var(--panel), 0 0 0 4px var(--rule-2), 0 14px 32px -6px rgba(20, 16, 8, .45);
+  overflow: hidden;
+  /* Read, never touched: the pointer passes through to the card underneath. */
+  pointer-events: none;
+}
+.unlock-card.pinned { pointer-events: auto; overflow: auto; overscroll-behavior: contain; }
+@media (prefers-reduced-motion: no-preference) { .unlock-card { transition: opacity .12s; } }
+.unlock-card-close { position: absolute; top: 4px; right: 4px; z-index: 1; display: grid; place-items: center; width: 28px; height: 28px; color: var(--ink-2); background: var(--panel); border: 1px solid var(--rule-2); cursor: pointer; }
+
+.uc-top { display: flex; gap: 12px; align-items: stretch; min-width: 0; }
+.uc-art {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 140px;
+  height: 148px;
+  overflow: hidden;
+  border: 1px solid var(--rule-2);
+  background: radial-gradient(ellipse at 50% 38%, var(--field) 0%, color-mix(in srgb, var(--accent) 12%, var(--panel-2)) 100%);
+  box-shadow: inset 0 0 0 3px var(--panel), inset 0 0 0 4px var(--rule);
+}
+.uc-art.pair { width: 100%; height: 150px; }
+.uc-figure { display: block; width: 138px; height: 138px; object-fit: contain; filter: drop-shadow(0 3px 3px rgba(20, 16, 8, .35)); }
+.uc-hero { width: 100%; height: 100%; object-fit: cover; filter: none; }
+.uc-glyph { display: grid; place-items: center; color: var(--accent); }
+.uc-head { display: flex; flex: 1 1 auto; flex-direction: column; gap: 4px; min-width: 0; }
+.uc-name { margin: 0; font: var(--display-weight) 24px/1.05 var(--display); overflow-wrap: anywhere; }
+.uc-name.effect-text { font-size: 19px; line-height: 1.2; }
+.uc-tags { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; }
+.uc-class { padding: 1px 7px; background: var(--accent); color: var(--panel); font: 700 10.5px/1.5 var(--sans); letter-spacing: .08em; text-transform: uppercase; }
+.uc-era { color: var(--ink-2); font: 600 12px/1.3 var(--sans); }
+.uc-flavour { margin: 2px 0 0; color: var(--ink); font: italic 500 14.5px/1.35 var(--display); }
+
+.uc-matchup { display: flex; flex-direction: column; gap: 5px; padding: 6px 8px; border: 1px solid var(--rule); background: var(--panel-2); }
+.uc-matchup p, .uc-rule, .uc-why, .uc-gives-line { margin: 0; font: 500 13px/1.35 var(--sans); }
+.uc-chips { display: flex; flex-wrap: wrap; gap: 4px 6px; }
+.uc-chip { padding: 1px 7px; border: 1px solid currentColor; font: 500 12px/1.4 var(--sans); }
+.uc-chip b { font-weight: 700; letter-spacing: .02em; }
+.uc-chip.good { color: var(--good); }
+.uc-chip.bad { color: var(--bad); }
+.uc-rule { color: var(--ink-2); }
+
+.uc-compare { display: flex; flex-direction: column; gap: 3px; }
+/* A faction piece against the standard item it replaces: each difference with an arrow, in green or the cost colour. */
+.uc-piece { display: flex; flex-direction: column; gap: 3px; padding: 5px 8px; border: 1px solid var(--rule); background: var(--panel-2); }
+.uc-piece-list { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: 0; list-style: none; font: 600 13px/1.3 var(--sans); }
+.uc-piece-list li { display: flex; align-items: baseline; gap: 5px; }
+.uc-piece-list li.good { color: var(--good); }
+.uc-piece-list li.bad { color: var(--bad); }
+.uc-piece-note { margin: 0; font: 500 13px/1.3 var(--sans); color: var(--ink-2); }
+.uc-vs { color: var(--label-color); font: 600 11px/1.2 var(--sans); letter-spacing: var(--label-track); text-transform: uppercase; }
+.uc-vs b { color: var(--ink); letter-spacing: 0; text-transform: none; font-size: 12px; }
+.uc-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px 14px; margin: 0; }
+.uc-stat { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; padding: 2px 0; border-bottom: 1px dotted var(--rule-2); }
+.uc-stat dt { color: var(--ink-2); font: 600 12px/1.3 var(--sans); }
+.uc-stat dd { display: inline-flex; align-items: baseline; gap: 4px; margin: 0; font: 600 14px/1.3 var(--sans); font-variant-numeric: tabular-nums lining-nums; font-style: normal; }
+.uc-from { color: var(--ink-2); font-weight: 400; font-size: 12.5px; }
+.uc-arrow { color: var(--ink-2); font-size: 12px; }
+.uc-delta { padding: 0 4px; font: 700 11px/1.4 var(--sans); border: 1px solid currentColor; }
+.uc-delta.good { color: var(--good); }
+.uc-delta.bad { color: var(--bad); }
+.uc-delta.neutral { color: var(--ink-2); }
+
+.uc-upgrade { display: flex; align-items: center; gap: 8px; padding: 5px 8px; border: 1px dashed var(--rule-2); background: var(--field); font: 500 13px/1.3 var(--sans); }
+.uc-pair { display: inline-flex; align-items: center; gap: 4px; flex: none; }
+.uc-pair .uc-figure { width: 40px; height: 40px; filter: none; }
+.uc-pair.big { gap: 6px; }
+.uc-pair-unit { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.uc-pair-unit small { max-width: 110px; font: 600 11px/1.1 var(--sans); text-align: center; color: var(--ink-2); }
+.uc-pair.big .uc-figure { width: 104px; height: 104px; filter: drop-shadow(0 3px 3px rgba(20, 16, 8, .35)); }
+.uc-arrow.big { font-size: 28px; color: var(--accent); }
+
+.uc-gives { display: flex; flex-direction: column; gap: 4px; padding: 6px 8px; border: 1px solid var(--rule); background: var(--panel-2); }
+.uc-gives-line { font-weight: 700; font-size: 15px; }
+.uc-why b { font-weight: 700; }
+.uc-foot { display: flex; flex-wrap: wrap; gap: 2px 14px; padding-top: 4px; border-top: 1px solid var(--rule); font: 500 13px/1.4 var(--sans); }
+.uc-foot-label { color: var(--ink-2); font: 600 11px/1 var(--sans); letter-spacing: .08em; text-transform: uppercase; }
+.uc-top.effect { flex-direction: column; }
+
+/* The research ledger's rows open the same full detail card. */
+.era-unlock { cursor: pointer; }
+.era-unlock:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.uc-locked { color: var(--ink); }

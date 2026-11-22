@@ -1,0 +1,143 @@
+name: Deploy web
+
+# Builds the hosted web version ("Play in your browser") and publishes it to Cloudflare Pages.
+# Setup, secrets and the first deploy are described in docs/ops/releasing.md.
+#
+# It runs only for pushes to master and manual runs, never for pull requests, so code from a fork
+# never runs with the Cloudflare token. A repository without the two secrets (a fork, or this one
+# before they are added) passes with a notice instead of failing.
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-web
+  cancel-in-progress: true
+
+env:
+  PAGES_PROJECT: ${{ vars.CLOUDFLARE_PAGES_PROJECT || 'legatum-game' }}
+  # Optional: the public address for the link-preview tags, when it is not the one in app/package.json (`homepage`).
+  LEGATUM_SITE_URL: ${{ vars.LEGATUM_SITE_URL }}
+
+jobs:
+  deploy:
+    name: Build and deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Decide whether to deploy
+        id: gate
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ "$GITHUB_REF" != "refs/heads/master" ]; then
+            echo "::notice title=Web deploy skipped::Only master is deployed; this run is for $GITHUB_REF."
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+          elif [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::notice title=Web deploy skipped::The CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID secrets are not set in this repository (see docs/ops/releasing.md)."
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        if: steps.gate.outputs.deploy == 'true'
+        with:
+          persist-credentials: false
+
+      - name: Install pinned Rust toolchain
+        if: steps.gate.outputs.deploy == 'true'
+        run: rustup show
+
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        if: steps.gate.outputs.deploy == 'true'
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        if: steps.gate.outputs.deploy == 'true'
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - uses: taiki-e/install-action@25f51f6b1bf4e18876107cece836f4f77ac17c8c # v2.90.7
+        if: steps.gate.outputs.deploy == 'true'
+        with:
+          tool: wasm-pack@0.15.0
+          fallback: none
+
+      - name: Install app dependencies
+        if: steps.gate.outputs.deploy == 'true'
+        run: npm ci
+        working-directory: app
+
+      - name: Build the hosted web version
+        if: steps.gate.outputs.deploy == 'true'
+        run: scripts/build-web.sh
+
+      - name: Install Chromium for the smoke test
+        if: steps.gate.outputs.deploy == 'true'
+        run: npx playwright install --with-deps chromium
+        working-directory: app
+
+      - name: Smoke test the built site on a plain static server
+        if: steps.gate.outputs.deploy == 'true'
+        run: npm run e2e:hosted
+        working-directory: app
+
+      - name: Create the Cloudflare Pages project if it is missing
+        if: steps.gate.outputs.deploy == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          api="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects"
+          body="$(mktemp)"
+          status="$(curl -sS -o "$body" -w '%{http_code}' -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$api/$PAGES_PROJECT")"
+          if [ "$status" = 200 ]; then
+            branch="$(jq -r '.result.production_branch // ""' "$body")"
+            echo "Pages project $PAGES_PROJECT exists (production branch: $branch)."
+            if [ "$branch" != master ]; then
+              echo "::warning title=Cloudflare Pages::Project $PAGES_PROJECT has production branch '$branch', not master, so this deploy would be a preview. Change it in the Cloudflare dashboard."
+            fi
+          elif [ "$status" = 404 ]; then
+            echo "Pages project $PAGES_PROJECT is missing: creating it."
+            status="$(curl -sS -o "$body" -w '%{http_code}' -X POST -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H 'Content-Type: application/json' \
+              --data "$(jq -n --arg name "$PAGES_PROJECT" '{name: $name, production_branch: "master"}')" "$api")"
+            if [ "$status" != 200 ]; then
+              echo "::error title=Cloudflare Pages::Could not create project $PAGES_PROJECT (HTTP $status). The name may be taken: set the CLOUDFLARE_PAGES_PROJECT repository variable to another one."
+              jq -c '.errors' "$body" || cat "$body"
+              exit 1
+            fi
+            echo "Created $(jq -r '.result.subdomain' "$body")."
+          else
+            echo "::error title=Cloudflare Pages::Could not read project $PAGES_PROJECT (HTTP $status). Check that the token has the Cloudflare Pages Edit permission for this account."
+            jq -c '.errors' "$body" || cat "$body"
+            exit 1
+          fi
+
+      - name: Deploy to Cloudflare Pages
+        id: deploy
+        if: steps.gate.outputs.deploy == 'true'
+        uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3.15.0
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy app/dist --project-name=${{ env.PAGES_PROJECT }} --branch=master --commit-hash=${{ github.sha }} --commit-dirty=true
+
+      - name: Report the address
+        if: steps.gate.outputs.deploy == 'true'
+        env:
+          DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
+        run: |
+          {
+            echo "### Web build deployed"
+            echo "- Project: \`$PAGES_PROJECT\` (https://$PAGES_PROJECT.pages.dev once the name is yours)"
+            echo "- This deployment: $DEPLOYMENT_URL"
+            echo "- First-load size and file count are in the build step's last line."
+          } >> "$GITHUB_STEP_SUMMARY"

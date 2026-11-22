@@ -1,0 +1,4 @@
+2026-11-16 — Codex built-in image generation. Provisional author review; lead review pending.
+Reference images and requested edits: see docs/design/art-pass-2/generation-*.json.
+
+Focused repair to the left shield arm on this existing historical tabletop miniature. Preserve man, face, hair, tunic, mantle, boots, spear, camera, lighting and size. The oval wooden shield with central iron boss must be carried by a hand grasping the rear central handle directly behind the boss: bend the left elbow and forearm behind the shield so the hand is hidden centrally. No fingers gripping its rim. Maintain the shield itself and its orientation. Replace rough base with plain smooth warm cream disc. Transparent background, no halo, no text.

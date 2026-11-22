@@ -1,0 +1,46 @@
+[package]
+name = "legatum-desktop"
+version = "0.1.0"
+description = "Legatum desktop app (Tauri shell around the web UI + WASM engine)"
+edition = "2021"
+publish = false
+license = "MIT"
+repository = "https://github.com/samcorcos/legatum"
+
+# Standalone: not a member of the root engine workspace.
+[workspace]
+
+[lib]
+name = "legatum_desktop_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+tauri-plugin-fs = "2"
+legatum-archive = { path = "../../crates/archive" }
+# Training mode: the battle search runs natively on all cores (WASM is the fallback).
+legatum-ai = { path = "../../crates/ai", features = ["parallel-search"] }
+legatum-core = { path = "../../crates/core" }
+# Online hosting: the LAN/relay server runs inside the app (src/online.rs).
+legatum-server = { path = "../../crates/server" }
+# Scenario Lab folder: the same load check the engine runs when a scenario starts.
+legatum-wasm = { path = "../../crates/wasm" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true
+
+# The training search is hot simulation code: full speed, not size.
+[profile.release.package.legatum-ai]
+opt-level = 3
+
+[profile.release.package.legatum-core]
+opt-level = 3

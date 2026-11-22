@@ -1,0 +1,272 @@
+[
+  {
+    "slug": "archer",
+    "source": "app/src/assets/units/archer-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/archer.jpg"
+  },
+  {
+    "slug": "arquebusier",
+    "source": "app/src/assets/units/arquebusier-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/arquebusier.jpg"
+  },
+  {
+    "slug": "artillery",
+    "source": "app/src/assets/units/artillery-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/artillery.jpg"
+  },
+  {
+    "slug": "autonomous-armour",
+    "source": "app/src/assets/units/autonomous-armour-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/autonomous-armour.jpg"
+  },
+  {
+    "slug": "barbarian-archer",
+    "source": "app/src/assets/units/barbarian-archer-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/barbarian-archer.jpg"
+  },
+  {
+    "slug": "barbarian-crossbowman",
+    "source": "app/src/assets/units/barbarian-crossbowman-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/barbarian-crossbowman.jpg"
+  },
+  {
+    "slug": "barbarian-musketman",
+    "source": "app/src/assets/units/barbarian-musketman-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/barbarian-musketman.jpg"
+  },
+  {
+    "slug": "barbarian-pikeman",
+    "source": "app/src/assets/units/barbarian-pikeman-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/barbarian-pikeman.jpg"
+  },
+  {
+    "slug": "barbarian-scout",
+    "source": "app/src/assets/units/barbarian-scout-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/barbarian-scout.jpg"
+  },
+  {
+    "slug": "barbarian-spearman",
+    "source": "app/src/assets/units/barbarian-spearman-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/barbarian-spearman.jpg"
+  },
+  {
+    "slug": "biplane",
+    "source": "app/src/assets/units/biplane-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/biplane.jpg"
+  },
+  {
+    "slug": "bomber",
+    "source": "app/src/assets/units/bomber-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/bomber.jpg"
+  },
+  {
+    "slug": "byzantine-heir",
+    "source": "app/src/assets/units/byzantine-heir-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/byzantine-heir.jpg"
+  },
+  {
+    "slug": "cataphract",
+    "source": "app/src/assets/units/cataphract-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/cataphract.jpg"
+  },
+  {
+    "slug": "cavalry",
+    "source": "app/src/assets/units/cavalry-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/cavalry.jpg"
+  },
+  {
+    "slug": "composite-archer",
+    "source": "app/src/assets/units/composite-archer-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/composite-archer.jpg"
+  },
+  {
+    "slug": "crossbowman",
+    "source": "app/src/assets/units/crossbowman-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/crossbowman.jpg"
+  },
+  {
+    "slug": "cuirassier",
+    "source": "app/src/assets/units/cuirassier-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/cuirassier.jpg"
+  },
+  {
+    "slug": "drone-swarm",
+    "source": "app/src/assets/units/drone-swarm-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/drone-swarm.jpg"
+  },
+  {
+    "slug": "eagle-warrior",
+    "source": "app/src/assets/units/eagle-warrior-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/eagle-warrior.jpg"
+  },
+  {
+    "slug": "field-cannon",
+    "source": "app/src/assets/units/field-cannon-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/field-cannon.jpg"
+  },
+  {
+    "slug": "fighter",
+    "source": "app/src/assets/units/fighter-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/fighter.jpg"
+  },
+  {
+    "slug": "gaesatae",
+    "source": "app/src/assets/units/gaesatae-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/gaesatae.jpg"
+  },
+  {
+    "slug": "horseman",
+    "source": "app/src/assets/units/horseman-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/horseman.jpg"
+  },
+  {
+    "slug": "howitzer",
+    "source": "app/src/assets/units/howitzer-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/howitzer.jpg"
+  },
+  {
+    "slug": "hunter-killer",
+    "source": "app/src/assets/units/hunter-killer-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/hunter-killer.jpg"
+  },
+  {
+    "slug": "infantry",
+    "source": "app/src/assets/units/infantry-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/infantry.jpg"
+  },
+  {
+    "slug": "jet-bomber",
+    "source": "app/src/assets/units/jet-bomber-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/jet-bomber.jpg"
+  },
+  {
+    "slug": "jet-fighter",
+    "source": "app/src/assets/units/jet-fighter-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/jet-fighter.jpg"
+  },
+  {
+    "slug": "keshig",
+    "source": "app/src/assets/units/keshig-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/keshig.jpg"
+  },
+  {
+    "slug": "knight",
+    "source": "app/src/assets/units/knight-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/knight.jpg"
+  },
+  {
+    "slug": "landship",
+    "source": "app/src/assets/units/landship-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/landship.jpg"
+  },
+  {
+    "slug": "legionary",
+    "source": "app/src/assets/units/legionary-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/legionary.jpg"
+  },
+  {
+    "slug": "main-battle-tank",
+    "source": "app/src/assets/units/main-battle-tank-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/main-battle-tank.jpg"
+  },
+  {
+    "slug": "mechanised-infantry",
+    "source": "app/src/assets/units/mechanised-infantry-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/mechanised-infantry.jpg"
+  },
+  {
+    "slug": "medjay",
+    "source": "app/src/assets/units/medjay-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/medjay.jpg"
+  },
+  {
+    "slug": "musketman",
+    "source": "app/src/assets/units/musketman-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/musketman.jpg"
+  },
+  {
+    "slug": "panzer",
+    "source": "app/src/assets/units/panzer-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/panzer.jpg"
+  },
+  {
+    "slug": "peltast",
+    "source": "app/src/assets/units/peltast-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/peltast.jpg"
+  },
+  {
+    "slug": "phalangite",
+    "source": "app/src/assets/units/phalangite-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/phalangite.jpg"
+  },
+  {
+    "slug": "pikeman",
+    "source": "app/src/assets/units/pikeman-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/pikeman.jpg"
+  },
+  {
+    "slug": "reislaufer",
+    "source": "app/src/assets/units/reislaufer-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/reislaufer.jpg"
+  },
+  {
+    "slug": "rifleman",
+    "source": "app/src/assets/units/rifleman-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/rifleman.jpg"
+  },
+  {
+    "slug": "rocket-artillery",
+    "source": "app/src/assets/units/rocket-artillery-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/rocket-artillery.jpg"
+  },
+  {
+    "slug": "scout",
+    "source": "app/src/assets/units/scout-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/scout.jpg"
+  },
+  {
+    "slug": "settler",
+    "source": "app/src/assets/units/settler-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/settler.jpg"
+  },
+  {
+    "slug": "spartan-hoplite",
+    "source": "app/src/assets/units/spartan-hoplite-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/spartan-hoplite.jpg"
+  },
+  {
+    "slug": "spearman",
+    "source": "app/src/assets/units/spearman-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/spearman.jpg"
+  },
+  {
+    "slug": "stealth-bomber",
+    "source": "app/src/assets/units/stealth-bomber-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/stealth-bomber.jpg"
+  },
+  {
+    "slug": "stealth-fighter",
+    "source": "app/src/assets/units/stealth-fighter-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/stealth-fighter.jpg"
+  },
+  {
+    "slug": "tagmatic-soldier",
+    "source": "app/src/assets/units/tagmatic-soldier-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/tagmatic-soldier.jpg"
+  },
+  {
+    "slug": "tank",
+    "source": "app/src/assets/units/tank-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/tank.jpg"
+  },
+  {
+    "slug": "trench-infantry",
+    "source": "app/src/assets/units/trench-infantry-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/trench-infantry.jpg"
+  },
+  {
+    "slug": "war-elephant",
+    "source": "app/src/assets/units/war-elephant-source.png",
+    "inspection": "docs/design/art-pass-2/inspection/war-elephant.jpg"
+  }
+]

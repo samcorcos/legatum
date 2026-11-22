@@ -1,0 +1,10 @@
+# cargo-nextest settings (the gate runs `cargo nextest run`; tools/astra/gate-tests.sh).
+nextest-version = "0.9.100"
+
+# The long tests start first, so the test step's wall time is the longest test, not "the rest, then the longest": the
+# gate used to wait for the 280 s opening-league test to start after the other binaries had been scheduled.
+# Measured durations: tools/ops/rust-test-durations.py; the list that the fast profile skips is
+# tools/astra/extended-rust-tests.txt.
+[[profile.default.overrides]]
+filter = 'test(opening_league_twenty_standard_games_finish_without_panics_or_stalls) | test(same_orders_have_identical_rules_and_views_at_every_difficulty) | test(heartbeat_traffic_cannot_extend_a_watchers_pre_join_deadline) | test(standard_hard_duel_holds_are_consistent_and_never_stall)'
+priority = 100

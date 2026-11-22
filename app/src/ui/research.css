@@ -1,0 +1,463 @@
+/* The research screen under the strict era gate: the current era's cards, the queue with its arrival
+   forecast, the later eras as quiet rows, and the era chip in the top bar. */
+
+/* ---------- Top bar era chip ---------- */
+.era-chip-tip { display: inline-flex; align-items: center; height: 100%; }
+.era-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+  padding: 0 10px;
+  border-left: 1px solid var(--rule);
+  color: var(--ink);
+  background: transparent;
+  cursor: pointer;
+  white-space: nowrap;
+}
+@media (hover: hover) {
+  .era-chip:hover { background: var(--panel-2); }
+}
+.era-chip:focus-visible { outline: 2px solid var(--ink); outline-offset: -3px; }
+.era-chip-numeral {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 3px;
+  border: 1px solid var(--accent);
+  border-radius: 11px;
+  color: var(--accent);
+  font: 700 11px/1 var(--display);
+  letter-spacing: .02em;
+}
+.era-chip-name { font: var(--display-weight) 16px/1 var(--display); }
+.era-chip-count { color: var(--ink-2); font: 600 11px/1 var(--sans); font-variant-numeric: tabular-nums; }
+@media (min-width: 701px) {
+  .topbar[data-compact~='tight'] .era-chip { padding-inline: 8px; }
+  .topbar[data-compact~='era'] .era-chip :is(.era-chip-count, .era-chip-numeral) { display: none; }
+  /* The last resort in a bar this crowded: the era's numeral stands for its name (the tooltip and label still say it). */
+  .topbar[data-compact~='eraname'] .era-chip .era-chip-name { display: none; }
+  .topbar[data-compact~='eraname'] .era-chip .era-chip-numeral { display: inline-grid; }
+  /* Beyond that the research cell wins: the era is still on the Technologies screen. */
+  .topbar[data-compact~='erachip'] .era-chip-tip { display: none; }
+}
+
+/* ---------- Header: the era badge ---------- */
+.tech-modal .modal-head { gap: 20px; }
+.research-head-main { flex: 1 1 auto; min-width: 0; }
+.era-badge {
+  display: flex;
+  align-items: center;
+  flex: none;
+  gap: 10px;
+  padding: 5px 12px 5px 8px;
+  border: 1px solid var(--rule-2);
+  border-left: 4px solid var(--accent);
+  background: var(--field);
+  box-shadow: 2px 2px 0 var(--rule-2);
+}
+.era-badge-numeral {
+  display: inline-grid;
+  place-items: center;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 4px;
+  border: 1px solid var(--accent);
+  border-radius: 15px;
+  color: var(--accent);
+  font: 700 14px/1 var(--display);
+  box-shadow: inset 0 0 0 2px var(--field), inset 0 0 0 3px var(--accent);
+}
+.era-badge-text { display: flex; flex-direction: column; gap: 2px; }
+.era-badge-name { font: var(--display-weight) 20px/1 var(--display); }
+.era-badge-count { color: var(--ink-2); font: 600 12px/1.2 var(--sans); }
+.era-badge-first { max-width: 150px; color: var(--ink-2); font: italic 400 12px/1.2 var(--display); }
+.era-pips { display: inline-flex; gap: 3px; }
+.era-pips i { width: 9px; height: 9px; border: 1px solid var(--ink-2); border-radius: 50%; }
+.era-pips i.on { background: var(--good); border-color: var(--good); }
+
+/* ---------- Queue ---------- */
+.research-queue {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0 24px 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--rule-2);
+  background: var(--panel-2);
+}
+.research-queue.idle { border-color: var(--accent); background: var(--field); box-shadow: inset 4px 0 0 var(--accent); }
+.research-queue-head { display: flex; align-items: center; gap: 12px; min-width: 0; height: 34px; }
+.research-queue-head .btn { height: 30px; padding-top: 0; padding-bottom: 0; }
+.research-queue-title { font: 600 11px/1.2 var(--sans); letter-spacing: var(--label-track); text-transform: uppercase; color: var(--label-color); white-space: nowrap; }
+.research-queue-hint { flex: 0 1 auto; min-width: 0; overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.research-queue-actions { display: inline-flex; gap: 6px; margin-left: auto; }
+.research-queue-actions .btn { padding: 3px 10px; font-size: 12px; }
+.research-queue-cta { display: inline-flex; align-items: center; gap: 12px; margin-left: auto; }
+.research-queue-cta .muted { font-size: 13px; }
+.research-queue-cta .btn.primary { min-height: 38px; padding: 6px 18px; font-size: 12px; font-weight: 700; letter-spacing: .08em; }
+.research-queue-slots { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(224px, 1fr); grid-template-rows: 56px; gap: 8px; margin: -3px; padding: 3px; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: thin; scrollbar-color: var(--rule-2) transparent; }
+.research-queue-pending { display: inline-flex; align-items: center; margin-left: 4px; }
+/* The list's items join the slot grid; the empty slots beside them keep the strip the same height whatever is queued. */
+.research-queue ol { display: contents; margin: 0; padding: 0; list-style: none; }
+.research-queue li {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) auto;
+  grid-template-rows: 24px 24px;
+  align-items: center;
+  gap: 0 6px;
+  min-width: 0;
+  padding: 3px 4px 3px 8px;
+  border: 1px solid var(--rule-2);
+  background: var(--panel);
+}
+.research-queue li.first { border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
+.rq-ghost { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 4px 8px; border: 1px dashed var(--rule-2); overflow: hidden; color: var(--muted); font: 400 12px/1.25 var(--sans); }
+.rq-ghost .rq-number { border-color: var(--rule-2); color: var(--muted); }
+.rq-ghost.hint { border-color: var(--accent); color: var(--ink); font-weight: 600; }
+.rq-ghost.hint .rq-number { border-color: var(--accent); color: var(--accent); }
+.rq-number {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--accent);
+  border-radius: 50%;
+  color: var(--accent);
+  font: 700 11px/1 var(--sans);
+}
+.research-queue li.first .rq-number { background: var(--accent); color: var(--panel); }
+.rq-name { min-width: 0; overflow: hidden; font: var(--display-weight) 15px/1.2 var(--display); text-overflow: ellipsis; white-space: nowrap; }
+.rq-arrival { grid-column: 1 / 3; padding-left: 26px; min-width: 0; overflow: hidden; color: var(--ink-2); font: 600 11.5px/1.2 var(--sans); font-variant-numeric: tabular-nums; text-overflow: ellipsis; white-space: nowrap; }
+.rq-remove { grid-column: 3; grid-row: 1; }
+.research-queue-controls { grid-column: 3; grid-row: 2; display: inline-flex; gap: 2px; justify-self: end; }
+.research-queue .icon-btn { width: 24px; height: 24px; font-size: 9px; }
+.research-queue-controls .icon-btn:disabled { color: var(--muted); border-style: dashed; cursor: not-allowed; }
+.research-queue-total { font-size: 12px; }
+
+/* ---------- Body ---------- */
+.research-scroll {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  padding: 0 24px 6px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: var(--rule-2) var(--panel-2);
+}
+.era-heading { margin: 0; font: var(--display-weight) 20px/1.2 var(--display); }
+.era-heading .muted { font: 400 13px/1.2 var(--sans); }
+.era-cards { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; padding-top: 22px; }
+.era-cards[data-count='1'], .era-cards[data-count='2'] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.era-cards[data-count='3'], .era-cards[data-count='4'] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.era-cards:is([data-count='6'], [data-count='7'], [data-count='8']) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+/* ---------- A card ---------- */
+.era-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  padding: 8px 9px 7px;
+  color: var(--ink);
+  background: var(--field);
+  border: 1px solid var(--rule-2);
+  border-left: 4px solid var(--accent);
+  box-shadow: 2px 2px 0 var(--rule-2);
+  user-select: none;
+}
+.era-card:is(.available, .queued, .researching) { cursor: pointer; }
+.era-card:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 55%, transparent); outline-offset: 2px; }
+@media (hover: hover) { .era-card:is(.available, .queued):hover { background: color-mix(in srgb, var(--accent) 7%, var(--field)); border-color: var(--accent); } }
+.era-card.queued { border-color: var(--accent); }
+.era-card.researching {
+  padding: 7px 8px 6px;
+  border: 2px solid var(--accent);
+  border-left-width: 4px;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent), 0 6px 16px -6px color-mix(in srgb, var(--accent) 70%, transparent);
+}
+.era-card.known { border: 3px double var(--rule-2); background: var(--panel-2); box-shadow: none; padding: 6px 8px 5px; }
+.era-card.chosen { outline: 2px solid var(--ink); outline-offset: 2px; }
+.era-card-head { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.era-seal {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--accent);
+  border-radius: 50%;
+  color: var(--accent);
+  font: 700 10px/1 var(--display);
+  box-shadow: inset 0 0 0 2px var(--field), inset 0 0 0 3px currentColor;
+}
+.era-card.known .era-seal { background: var(--good); border-color: var(--good); color: var(--panel); box-shadow: none; }
+.era-card.researching .era-seal { background: var(--accent); color: var(--panel); }
+.era-card-name { flex: 1 1 auto; min-width: 0; margin: 0; font: var(--display-weight) 17px/1.1 var(--display); overflow-wrap: normal; word-break: normal; hyphens: none; }
+/* A name with a very long word (Industrialization) steps down a size so it wraps between words, never inside one. */
+/* The state tag is pinned to the card's top-right corner, out of the layout flow: it takes no room from the card. */
+.era-queue-tag {
+  position: absolute;
+  top: -17px;
+  right: 8px;
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding-left: 8px;
+  background: var(--accent);
+  color: var(--panel);
+  box-shadow: 1px 1px 0 var(--rule-2);
+}
+.era-queue-tag b { font: 700 11px/1 var(--sans); letter-spacing: .06em; text-transform: uppercase; }
+.era-queue-x { display: grid; place-items: center; width: 24px; height: 24px; margin-left: 2px; color: inherit; background: transparent; cursor: pointer; }
+@media (hover: hover) { .era-queue-x:hover { background: color-mix(in srgb, var(--panel) 25%, transparent); } }
+.era-queue-x:focus-visible { outline: 2px solid var(--panel); outline-offset: -3px; }
+.era-queue-x .icon { color: inherit; }
+.era-cost { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; flex-wrap: nowrap; min-height: 19px; }
+.era-cost-main { display: inline-flex; align-items: baseline; gap: 6px; font: 700 15px/1.2 var(--sans); font-variant-numeric: tabular-nums; }
+.era-cost-base { color: var(--ink-2); font-weight: 400; font-size: 12px; text-decoration-thickness: 1px; }
+.era-when { min-width: 0; overflow: hidden; color: var(--ink-2); font: 600 11.5px/1.2 var(--sans); font-variant-numeric: tabular-nums; text-overflow: ellipsis; white-space: nowrap; }
+.era-card.researching .era-when, .era-card.queued .era-when { color: var(--accent); }
+.era-cost-note { color: var(--good); font: 600 11.5px/1.25 var(--sans); }
+/* No discount is not good news: neutral ink, not the green of a real discount. */
+.era-cost-note.none { color: var(--muted); font-weight: 500; }
+.era-progress { display: block; height: 6px; background: color-mix(in srgb, var(--accent) 18%, transparent); }
+.era-progress > span { display: block; height: 100%; min-width: 2px; background: var(--accent); }
+
+
+/* Each benefit owns one illustrated, labelled ledger row. The detail card holds its full text. */
+.era-unlocks { display: flex; flex-direction: column; gap: 5px; min-width: 0; margin: 0; padding: 0; list-style: none; }
+.era-unlocks:empty::after { content: 'No unlocks'; font: italic 12px var(--display); color: var(--ink-2); }
+.era-unlock { position: relative; display: grid; grid-template-columns: 42px minmax(0, 1fr); align-items: center; gap: 2px 5px; min-width: 0; padding-bottom: 5px; border-bottom: 1px solid var(--rule); }
+.era-unlock:last-child { padding-bottom: 0; border-bottom: 0; }
+.ledger-heading { grid-column: 1 / -1; color: var(--ink-2); font: 600 11px/1.2 var(--sans); }
+.era-unlock-art { display: flex; align-items: center; justify-content: center; width: 42px; height: 44px; min-width: 0; color: var(--accent); }
+.era-unlock-art img { display: block; width: 100%; height: 100%; min-width: 0; object-fit: contain; }
+.era-unlock-art.pair img { width: 26px; height: 26px; flex: none; }
+.era-unlock-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.era-unlock-label, .ledger-upgrade { display: block; min-width: 0; white-space: normal; overflow-wrap: break-word; }
+.era-unlock-label { color: var(--ink); font: 500 12px/1.3 var(--sans); }
+.era-unlock-gain { display: flex; flex-wrap: nowrap; gap: 0 5px; min-width: 0; overflow: hidden; white-space: nowrap; color: var(--ink-2); font: 600 11px/1.2 var(--sans); }
+.era-unlock-gain.unit-line { flex-wrap: wrap; overflow: visible; white-space: normal; overflow-wrap: break-word; }
+.ledger-upgrade { grid-column: 1 / -1; padding-top: 3px; border-top: 1px solid var(--rule); color: var(--ink-2); font: 500 11px/1.2 var(--sans); }
+.benefit-ledger[data-benefits='1'] .era-unlock { grid-template-columns: minmax(0, 1fr); }
+.benefit-ledger[data-benefits='1'] .era-unlock-art { width: 100%; height: 82px; }
+.benefit-ledger[data-benefits='1'] .era-unlock-text { text-align: center; }
+.benefit-ledger[data-benefits='1'] .era-unlock-gain { justify-content: center; }
+.benefit-ledger[data-hero='true'] .era-unlock:first-child { grid-template-columns: minmax(0, 1fr); }
+.benefit-ledger[data-hero='true'] .era-unlock:first-child .era-unlock-art { width: 100%; height: 82px; }
+.benefit-ledger[data-hero='true'] .era-unlock:first-child .era-unlock-text { text-align: center; }
+.benefit-ledger[data-hero='true'] .era-unlock:first-child .era-unlock-gain { justify-content: center; }
+.era-stepping { padding: 3px 6px; border: 1px dashed var(--rule-2); background: repeating-linear-gradient(135deg, transparent 0 6px, color-mix(in srgb, var(--rule) 45%, transparent) 6px 7px); }
+.era-stepping b { color: var(--ink); font: 600 12px/1.25 var(--sans); }
+.era-card.stepping .era-card-name, .era-card-title.stepping { font-style: italic; }
+
+.era-card-foot { display: flex; align-items: stretch; gap: 6px; box-sizing: border-box; height: 34px; margin-top: auto; padding-top: 2px; }
+.era-research-status { display: flex; flex: 1; flex-direction: column; justify-content: center; gap: 4px; }
+.era-card-foot .btn:first-child { flex: 1 1 auto; }
+.era-card-foot .btn.quiet { border-color: var(--rule-2); }
+.era-card-foot .btn { flex: 0 1 auto; min-width: 0; padding: 4px 8px; font-size: 12px; letter-spacing: 0; text-transform: none; white-space: nowrap; }
+.era-now { color: var(--accent); font: 700 12px/1.3 var(--sans); text-align: center; }
+/* Details: a chevron beside the tech name (the card itself researches on click, so the name stays plain text). */
+.era-card-head .era-card-name { flex: 0 1 auto; }
+.era-details-chevron { display: inline-grid; place-items: center; flex: none; width: 24px; height: 24px; margin: 0 auto 0 -6px; padding: 0; color: var(--accent); background: transparent; border: 1px solid transparent; border-radius: 50%; cursor: pointer; }
+.era-details-chevron[aria-expanded='true'] { border-color: var(--accent); }
+@media (hover: hover) { .era-details-chevron:hover { border-color: var(--accent); background: var(--panel); } }
+.era-details-chevron:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+
+/* At laptop height keep the actions in view. */
+.era-card-head { gap: 5px; }
+.era-card-head .era-seal { width: 20px; height: 20px; }
+.era-card-head .era-card-name { font-size: 16px; }
+@media (min-width: 1200px) and (min-height: 760px) {
+  .era-card-head { gap: 7px; }
+  .era-card-head .era-seal { width: 22px; height: 22px; }
+  .era-card-head .era-card-name { font-size: 17px; }
+  .era-unlock { grid-template-columns: 64px minmax(0, 1fr); gap: 4px 8px; padding-bottom: 8px; }
+  .era-unlock-art { width: 64px; height: 64px; }
+  .era-unlock-label { font-size: 13px; }
+  .benefit-ledger[data-benefits='1'] .era-unlock-art { height: 140px; }
+  .benefit-ledger[data-hero='true'] .era-unlock:first-child .era-unlock-art { height: 140px; }
+}
+
+/* ---------- Later eras ---------- */
+.era-rows ol { display: flex; flex-direction: column; gap: 3px; margin: 0; padding: 0; list-style: none; }
+.era-row { border: 1px solid var(--rule); background: transparent; }
+.era-row.locked { border-style: dashed; }
+.era-row.past { background: var(--panel-2); }
+.era-row-main { display: flex; align-items: center; gap: 10px; width: 100%; padding: 4px 10px; text-align: left; color: var(--ink-2); cursor: pointer; }
+@media (hover: hover) { .era-row-main:hover { background: var(--field); } }
+.era-row-main:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
+.era-row-numeral { flex: none; min-width: 26px; color: var(--ink-2); font: 700 12px/1 var(--display); text-align: center; }
+.era-row-name { flex: none; min-width: 96px; color: var(--ink); font: var(--display-weight) 16px/1.2 var(--display); }
+.era-row.locked .era-row-name { color: var(--ink-2); }
+.era-row-count { flex: 1 1 auto; min-width: 0; font: 400 12.5px/1.2 var(--sans); }
+.era-row.past .era-row-count { color: var(--good); font-weight: 600; }
+.era-row-first { flex: none; font: italic 400 12px/1.2 var(--display); }
+.era-row-chevron { flex: none; }
+.era-peek { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0; padding: 2px 12px 6px 46px; list-style: none; color: var(--ink-2); font: 400 12.5px/1.3 var(--sans); }
+
+/* ---------- Detail ---------- */
+.research-detail { flex: none; padding: 10px 14px; border: 1px solid var(--rule-2); border-left: 4px solid var(--ink-2); background: var(--panel-2); scroll-margin-block: 8px; }
+.research-detail-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 4px; }
+.research-detail h3 { margin: 0; font: var(--display-weight) 22px/1.1 var(--display); }
+.research-detail-columns { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 20px; }
+.research-detail p { margin: 0 0 6px; font-size: 13px; line-height: 1.4; }
+.research-detail .research-impact { border-left: 1px solid var(--rule); padding-left: 20px; }
+.research-stepping strong { color: var(--ink); }
+
+.era-card-title { display: inline-flex; align-items: center; min-height: 24px; padding: 0; margin: 0; color: inherit; font: inherit; text-align: left; background: none; cursor: pointer; overflow-wrap: anywhere; }
+@media (hover: hover) { .era-card-title:hover { text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 3px; } }
+.era-card-title:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+.era-track { display: inline-flex; gap: 5px; align-items: baseline; font: 700 10px/1 var(--display); letter-spacing: .04em; }
+.era-track i { font-style: normal; color: var(--ink-2); }
+.era-track i.past { color: var(--good); }
+.era-track i.current { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 2px; }
+.era-badge-text { gap: 3px; }
+.era-badge { flex-wrap: nowrap; }
+
+
+/* ---------- Picking a technology: about 0.4 s of feedback, never a layout change ---------- */
+.fly-chip {
+  position: fixed;
+  z-index: 5;
+  padding: 3px 10px;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: var(--panel);
+  font: 700 12px/1.3 var(--sans);
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 4px 12px -2px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .era-card.picked { animation: era-pick .38s ease-out; }
+  .research-queue li.landed { animation: rq-land .4s ease-out .14s backwards; }
+}
+@keyframes era-pick {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 65%, transparent), 0 0 22px 4px color-mix(in srgb, var(--accent) 55%, transparent); }
+  100% { box-shadow: 0 0 0 12px color-mix(in srgb, var(--accent) 0%, transparent), 0 0 22px 4px color-mix(in srgb, var(--accent) 0%, transparent); }
+}
+@keyframes rq-land {
+  0% { background: color-mix(in srgb, var(--accent) 35%, var(--panel)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 45%, transparent); }
+  100% { background: var(--panel); box-shadow: 0 0 0 3px transparent; }
+}
+
+/* ---------- A short window (the 1000x600 laptop): the head and the queue strip give the first cards their room ----------
+   A card's name, art, cost and both buttons are in view together without scrolling; the strip keeps its one-slot-per-tech
+   height rule (nothing moves under the pointer), only smaller. */
+@media (max-height: 700px) {
+  dialog.tech-modal { max-height: calc(100dvh - 16px); }
+  /* The Science note spans the whole head (three lines beside the badge, two below it). */
+  .tech-modal .modal-head { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 0 20px; padding-block: 6px 5px; }
+  .research-head-main { display: contents; }
+  .tech-modal .modal-head h2 { grid-column: 1; grid-row: 1; margin: 0; font-size: 26px; line-height: 1.1; }
+  .tech-modal .modal-head .muted { grid-column: 1; grid-row: 2; margin-top: 1px; font-size: 13px; }
+  .tech-modal .research-no-science { grid-column: 1 / -1; grid-row: 3; max-width: none; margin-top: 3px; font-size: 12px; line-height: 1.3; }
+  .tech-modal .era-badge { grid-column: 2; grid-row: 1 / 3; }
+  .tech-modal .research-head-actions { grid-column: 3; grid-row: 1 / 3; }
+  .era-card { gap: 3px; }
+  .era-badge { padding-block: 3px; }
+  .era-badge-numeral { min-width: 26px; height: 26px; }
+  .era-badge-name { font-size: 18px; }
+  .research-queue { gap: 3px; margin-bottom: 5px; padding: 4px 10px 5px; }
+  .research-queue-head { height: auto; min-height: 26px; }
+  .research-queue-head .btn:not(.primary) { height: 24px; font-size: 12px; }
+  .research-queue-cta .btn.primary { min-height: 34px; padding: 4px 14px; }
+  /* A slot is one row: number, name over arrival, then the three 24 px controls (the audit's minimum target). */
+  .research-queue-slots { grid-auto-columns: minmax(258px, 1fr); grid-template-rows: 38px; }
+  .research-queue li { grid-template-columns: 20px minmax(0, 1fr) 24px auto; grid-template-rows: 18px 16px; align-content: center; gap: 0 6px; padding-block: 2px; }
+  .research-queue li .rq-number { grid-column: 1; grid-row: 1 / 3; align-self: center; }
+  .research-queue li .rq-name { grid-column: 2; grid-row: 1; font-size: 14px; }
+  .research-queue li .rq-arrival { grid-column: 2; grid-row: 2; padding-left: 0; font-size: 12px; }
+  .research-queue li .rq-remove { grid-column: 3; grid-row: 1 / 3; align-self: center; }
+  .research-queue li .research-queue-controls { grid-column: 4; grid-row: 1 / 3; align-self: center; }
+  .research-scroll { gap: 6px; padding-bottom: 4px; scroll-padding-block: 6px; }
+  .era-cards { padding-top: 19px; }
+  .era-unlocks { gap: 3px; }
+  .era-unlock { grid-template-columns: 34px minmax(0, 1fr); gap: 1px 5px; padding-bottom: 3px; }
+  .era-unlock-art { width: 34px; height: 36px; }
+  .era-unlock-label { font-size: 11.5px; }
+  .benefit-ledger[data-benefits='1'] .era-unlock-art { height: 76px; }
+  .benefit-ledger[data-hero='true'] .era-unlock:first-child .era-unlock-art { height: 76px; }
+  .benefit-ledger[data-benefits='4'] .era-unlock { grid-template-columns: 30px minmax(0, 1fr); }
+  .benefit-ledger[data-benefits='4'] .era-unlock-art { width: 30px; height: 28px; }
+  .benefit-ledger[data-benefits='4'] .era-unlock-text { gap: 2px; }
+  .benefit-ledger[data-benefits='4'] .ledger-upgrade { padding-top: 2px; }
+  .tech-modal .modal-foot { padding-block: 4px; }
+}
+
+/* At laptop width, keep each part of the queue header in a known lane. The title and status
+   stay together, the forecast can use a second line, and queue controls never run into either. */
+@media (max-width: 1100px) {
+  .era-unlock:not(.effect) .era-unlock-label { font-size: 11px; }
+  .research-queue-head {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-rows: minmax(24px, auto) minmax(20px, auto);
+    align-items: center;
+    gap: 2px 10px;
+  }
+  .research-queue-title { grid-column: 1; grid-row: 1; }
+  .research-queue-hint { grid-column: 2; grid-row: 1; }
+  .research-queue-total { grid-column: 2; grid-row: 2; }
+  .research-queue-pending { grid-column: 1; grid-row: 2; }
+  .research-queue-cta, .research-queue-actions { grid-column: 3; grid-row: 1 / span 2; justify-self: end; }
+  .research-queue-cta { margin-left: 0; }
+  .research-queue-actions { margin-left: 0; }
+  .research-queue-actions:empty { display: none; }
+}
+
+/* An unlock the faction lists but cannot build yet says so in place of its name and gain (core `locked_note`). */
+.era-unlock.locked .era-unlock-label { font: 500 13px/1.25 var(--sans); }
+.research-locked { color: var(--ink); }
+/* The post-tree Science choice: three equal cards, one selected. */
+.science-conversion-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.science-choice { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0; padding: 8px 10px; border: 1px solid var(--rule-2); background: var(--panel-2); color: var(--ink); text-align: left; white-space: normal; cursor: pointer; font: 500 12px/1.3 var(--sans); }
+.science-choice-name { display: flex; align-items: center; gap: 6px; font: 600 15px/1.2 var(--display); }
+.science-choice-gain { display: inline-flex; align-items: center; gap: 4px; font: 700 17px/1.2 var(--sans); font-variant-numeric: tabular-nums; }
+.science-choice small { color: var(--ink-2); font: 400 12px/1.3 var(--sans); }
+.science-choice.chosen { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 9%, var(--panel)); box-shadow: inset 0 0 0 1px var(--accent); }
+.science-choice-mark { display: inline-flex; align-items: center; gap: 3px; margin-left: auto; color: var(--accent); font: 700 11px/1 var(--sans); text-transform: uppercase; letter-spacing: 0.05em; }
+@media (hover: hover) { .science-choice:hover { border-color: var(--accent); } }
+.science-choice:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+@media (max-width: 1199px) { .era-card-head .era-card-name.long-word { font-size: 13.5px; } }
+
+/* A laptop-height window keeps all five complete cards in view even when a rule wraps to two lines. */
+@media (max-height: 700px) {
+  .era-unlock { grid-template-columns: 34px minmax(0, 1fr); gap: 1px 5px; padding-bottom: 3px; }
+  .era-unlock-art { width: 34px; height: 38px; }
+  .era-unlock-label { font-size: 11.5px; line-height: 1.2; }
+  .ledger-heading { line-height: 1.1; }
+  /* "No discounts yet" is the quiet default: at laptop height it gives its line to the rules above it (a real discount still shows). */
+  .era-cost-note.none { display: none; }
+  .era-card-foot { height: 31px; }
+}
+
+/* A unit row that carries rule clauses (Stealth Technology: two aircraft and two rules) lets its subline run the card's full width under the name,
+   with the section headings dropped, so the card keeps its price and buttons in view at laptop height. */
+@media (max-height: 700px) {
+  .era-card:has(.era-unlock.has-notes) .ledger-heading { display: none; }
+  .era-card:has(.era-unlock.has-notes) .era-unlock { grid-template-columns: 28px minmax(0, 1fr); gap: 0 5px; padding-bottom: 2px; }
+  .era-card:has(.era-unlock.has-notes) .era-unlock-art { width: 28px; height: 26px; }
+  .era-card:has(.era-unlock.has-notes) .era-unlocks { gap: 2px; }
+  .era-unlock.has-notes .era-unlock-text { display: contents; }
+  .era-unlock.has-notes .era-unlock-gain { grid-column: 1 / -1; font-size: 10.5px; line-height: 1.2; }
+  .era-card:has(.era-unlock.has-notes) .era-unlock.upgrade-rule .era-unlock-label { font-size: 10.5px; line-height: 1.2; }
+}
+
+/* A pair keeps both painted subjects legible even when compact card rules narrow the ordinary art lane. */
+.era-unlock:has(.era-unlock-art.pair),
+.benefit-ledger[data-benefits='4'] .era-unlock:has(.era-unlock-art.pair),
+.era-card:has(.era-unlock.has-notes) .era-unlock:has(.era-unlock-art.pair) { grid-template-columns: 52px minmax(0, 1fr); }
+.era-unlock-art.pair,
+.benefit-ledger[data-benefits='4'] .era-unlock-art.pair,
+.era-card:has(.era-unlock.has-notes) .era-unlock-art.pair { width: 52px; min-height: 26px; }

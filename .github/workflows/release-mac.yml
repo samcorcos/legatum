@@ -1,0 +1,276 @@
+name: Release Mac app
+
+# Builds the universal (Apple Silicon + Intel) Mac app, signs it with a Developer ID Application
+# certificate, has Apple notarize it, staples the ticket, and attaches the .dmg to a DRAFT GitHub
+# release. It never publishes: a person reviews the draft and publishes it by hand.
+# How to cut a release and what each secret is: docs/ops/releasing.md.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version or tag to release, e.g. 0.1.0 or v0.1.0. It must match the version in app/src-tauri/tauri.conf.json.'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-mac-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build, sign and notarize
+    runs-on: macos-15
+    timeout-minutes: 120
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Resolve the version
+        id: version
+        env:
+          REQUESTED: ${{ inputs.version || github.ref_name }}
+        run: |
+          version="${REQUESTED#v}"
+          if ! printf '%s' "$version" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$'; then
+            echo "::error title=Version::'$REQUESTED' is not a version such as 0.1.0 or v0.1.0."
+            exit 1
+          fi
+          conf="$(jq -r .version app/src-tauri/tauri.conf.json)"
+          pkg="$(jq -r .version app/package.json)"
+          crate="$(sed -n 's/^version = "\(.*\)"$/\1/p' app/src-tauri/Cargo.toml | head -1)"
+          if [ "$conf" != "$version" ] || [ "$pkg" != "$version" ] || [ "$crate" != "$version" ]; then
+            echo "::error title=Version::Releasing $version, but tauri.conf.json says $conf, app/package.json says $pkg and app/src-tauri/Cargo.toml says $crate. Set all three to $version first."
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+
+      - name: Check that the signing secrets are set
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          missing=""
+          for name in APPLE_CERTIFICATE APPLE_CERTIFICATE_PASSWORD APPLE_ID APPLE_PASSWORD APPLE_TEAM_ID; do
+            if [ -z "${!name}" ]; then missing="$missing $name"; fi
+          done
+          if [ -n "$missing" ]; then
+            echo "::error title=Signing secrets missing::Not set in this repository:$missing. A release must be signed and notarized, so this run stops here. See docs/ops/releasing.md."
+            exit 1
+          fi
+
+      # The identity is read from the certificate itself, so no name is written in this repository.
+      # The keychain is deleted again: Tauri imports the certificate into its own temporary keychain
+      # for the build, and the same identity in two keychains makes codesign refuse it as ambiguous.
+      - name: Read the signing identity from the certificate
+        id: identity
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          keychain="$RUNNER_TEMP/identity-check.keychain-db"
+          password="$(uuidgen)"
+          p12="$RUNNER_TEMP/certificate.p12"
+          trap 'security delete-keychain "$keychain" >/dev/null 2>&1 || true; rm -f "$p12"' EXIT
+          printf '%s' "$APPLE_CERTIFICATE" | base64 --decode > "$p12"
+          security create-keychain -p "$password" "$keychain"
+          security unlock-keychain -p "$password" "$keychain"
+          security import "$p12" -k "$keychain" -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign >/dev/null
+          identity="$(security find-identity -v -p codesigning "$keychain" | sed -n 's/.*"\(Developer ID Application: .*\)".*/\1/p' | head -1)"
+          if [ -z "$identity" ]; then
+            echo "::error title=Certificate::APPLE_CERTIFICATE holds no valid 'Developer ID Application' identity with its private key. Export that certificate from Keychain Access as a .p12 (docs/ops/releasing.md)."
+            security find-identity -v -p codesigning "$keychain" | sed 's/"[^"]*"/"(name hidden)"/' || true
+            exit 1
+          fi
+          case "$identity" in
+            *"($APPLE_TEAM_ID)") ;;
+            *) echo "::error title=Certificate::The certificate's team is not APPLE_TEAM_ID. Notarization would fail."; exit 1 ;;
+          esac
+          echo "::add-mask::$identity"
+          echo "name=$identity" >> "$GITHUB_OUTPUT"
+
+      - name: Install pinned Rust toolchain with both Mac targets
+        run: |
+          rustup show
+          rustup target add aarch64-apple-darwin x86_64-apple-darwin
+
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: |
+            . -> target
+            app/src-tauri -> target
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - uses: taiki-e/install-action@25f51f6b1bf4e18876107cece836f4f77ac17c8c # v2.90.7
+        with:
+          tool: wasm-pack@0.15.0
+          fallback: none
+
+      - name: Install app dependencies
+        run: npm ci
+        working-directory: app
+
+      - name: Build the WebAssembly engine
+        run: scripts/build-wasm.sh
+
+      - name: Write the third-party licence notices
+        run: node tools/release/third-party-licenses.mjs --scope desktop
+
+      # Tauri reads these variables (https://v2.tauri.app/distribute/sign/macos/): it imports
+      # APPLE_CERTIFICATE into a temporary keychain, signs with the hardened runtime and the
+      # entitlements from tauri.conf.json, then notarizes the app with APPLE_ID, APPLE_PASSWORD and
+      # APPLE_TEAM_ID and staples the ticket to it before it builds the disk image.
+      - name: Build, sign and notarize the universal app
+        working-directory: app
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ steps.identity.outputs.name }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          LEGATUM_BUILD_LABEL: Version ${{ steps.version.outputs.version }}
+          CI: 'true'
+        run: npx tauri build --target universal-apple-darwin --bundles app,dmg --config src-tauri/tauri.dist.conf.json
+
+      - name: Find the app and the disk image
+        id: bundle
+        run: |
+          dir="app/src-tauri/target/universal-apple-darwin/release/bundle"
+          app="$dir/macos/Legatum.app"
+          dmg="$(find "$dir/dmg" -maxdepth 1 -name '*.dmg' | head -1)"
+          [ -d "$app" ] || { echo "::error::$app is missing"; exit 1; }
+          [ -f "$dmg" ] || { echo "::error::no .dmg in $dir/dmg"; exit 1; }
+          echo "app=$app" >> "$GITHUB_OUTPUT"
+          echo "dmg=$dmg" >> "$GITHUB_OUTPUT"
+
+      # Tauri notarizes the app, not the disk image around it. Notarizing and stapling the image
+      # too means Gatekeeper accepts the download itself, even on a Mac that is offline.
+      - name: Notarize and staple the disk image
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          DMG: ${{ steps.bundle.outputs.dmg }}
+        run: |
+          log="$RUNNER_TEMP/notary.json"
+          xcrun notarytool submit "$DMG" --apple-id "$APPLE_ID" --password "$APPLE_PASSWORD" --team-id "$APPLE_TEAM_ID" --wait --timeout 45m --output-format json | tee "$log"
+          status="$(jq -r .status "$log")"
+          if [ "$status" != Accepted ]; then
+            echo "::error title=Notarization::Apple answered '$status' for the disk image."
+            xcrun notarytool log "$(jq -r .id "$log")" --apple-id "$APPLE_ID" --password "$APPLE_PASSWORD" --team-id "$APPLE_TEAM_ID" || true
+            exit 1
+          fi
+          xcrun stapler staple "$DMG"
+
+      # Every check must pass, or the job fails and nothing is uploaded.
+      - name: Verify the signature, notarization and architectures
+        env:
+          APP: ${{ steps.bundle.outputs.app }}
+          DMG: ${{ steps.bundle.outputs.dmg }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+          check_app() {
+            local app="$1" details archs
+            codesign --verify --deep --strict --verbose=2 "$app"
+            spctl -a -t exec -vv "$app"
+            xcrun stapler validate "$app"
+            details="$(codesign -d --verbose=4 "$app" 2>&1)"
+            printf '%s\n' "$details" | grep -q "^TeamIdentifier=$APPLE_TEAM_ID$" || { echo "::error::$app is not signed by the expected team"; exit 1; }
+            printf '%s\n' "$details" | grep -Eq '^CodeDirectory .*flags=0x[0-9a-f]+\(.*runtime.*\)' || { echo "::error::$app is not signed with the hardened runtime"; exit 1; }
+            archs="$(lipo -archs "$app/Contents/MacOS/$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$app/Contents/Info.plist")")"
+            case "$archs" in *arm64*) ;; *) echo "::error::no arm64 slice ($archs)"; exit 1 ;; esac
+            case "$archs" in *x86_64*) ;; *) echo "::error::no x86_64 slice ($archs)"; exit 1 ;; esac
+            [ -s "$app/Contents/Resources/THIRD_PARTY_LICENSES.txt" ] || { echo "::error::$app carries no THIRD_PARTY_LICENSES.txt"; exit 1; }
+          }
+          echo "== the built app"
+          check_app "$APP"
+          echo "== the disk image"
+          codesign --verify --strict --verbose=2 "$DMG"
+          xcrun stapler validate "$DMG"
+          spctl -a -t open --context context:primary-signature -vv "$DMG"
+          echo "== the app as a player gets it, inside the disk image"
+          mount="$RUNNER_TEMP/dmg-mount"
+          mkdir -p "$mount"
+          hdiutil attach "$DMG" -readonly -nobrowse -mountpoint "$mount"
+          trap 'hdiutil detach "$mount" -force >/dev/null 2>&1 || true' EXIT
+          check_app "$mount/Legatum.app"
+
+      - name: Name the download
+        id: asset
+        env:
+          DMG: ${{ steps.bundle.outputs.dmg }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          mkdir -p release
+          cp "$DMG" "release/Legatum-$VERSION-mac-universal.dmg"
+          (cd release && shasum -a 256 "Legatum-$VERSION-mac-universal.dmg" > "Legatum-$VERSION-mac-universal.dmg.sha256" && cat "Legatum-$VERSION-mac-universal.dmg.sha256")
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: legatum-mac
+          path: release/
+          if-no-files-found: error
+          retention-days: 14
+
+  draft-release:
+    name: Attach to a draft release
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: legatum-mac
+          path: release
+
+      - name: Create or update the draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ needs.build.outputs.tag }}
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          set -euo pipefail
+          if state="$(gh release view "$TAG" --json isDraft --jq .isDraft 2>/dev/null)"; then
+            if [ "$state" != true ]; then
+              echo "::error title=Release::$TAG is already published. This workflow only writes to drafts; delete the files by hand or release a new version."
+              exit 1
+            fi
+            gh release upload "$TAG" release/* --clobber
+          else
+            {
+              echo "Legatum $VERSION for Mac (Apple Silicon and Intel, macOS 11 or later)."
+              echo
+              echo "Open the disk image and drag Legatum to Applications. The app is signed and notarized by Apple."
+              echo
+              echo "Saves from an older version are not migrated: this version refuses them with a message."
+            } > notes.md
+            gh release create "$TAG" release/* --draft --target "$GITHUB_SHA" --title "Legatum $VERSION" --notes-file notes.md
+          fi
+          {
+            echo "### Draft release ready"
+            echo "Review and publish it by hand: $(gh release view "$TAG" --json url --jq .url)"
+          } >> "$GITHUB_STEP_SUMMARY"

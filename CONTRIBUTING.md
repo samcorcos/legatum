@@ -1,0 +1,118 @@
+# Contributing to Legatum
+
+Thanks for looking. Legatum is a historical 4X on a hex map: a deterministic Rust engine, scripted AI,
+a headless simulation runner, and a React/TypeScript UI that runs the same engine as WASM (browser,
+Tauri desktop shell, or a LAN host).
+
+Anyone may open an issue or a pull request. The maintainer, Sam Corcos, decides what merges. The project
+is pre-release and changes quickly, so for anything larger than a fix, open an issue first and say what you
+have in mind.
+
+## Where to start reading
+
+- [README.md](README.md): what the game is and how to run it.
+- [ARCHITECTURE.md](ARCHITECTURE.md): the crates, the turn pipeline and the determinism rules.
+- [The rules reference](.claude/skills/legatum-rules/references/game-rules.md): how the game works and
+  which systems do not exist. It is the engineering reference: long, dated and checked against the code.
+  The in-app Guide is the short version.
+- [docs/README.md](docs/README.md): an index of everything else.
+
+Much of this project is written by AI coding agents. `CLAUDE.md`, `AGENTS.md` and `.claude/` are their
+instructions and notes. You do not need to use an agent or follow those files to contribute, but they
+explain why things are the way they are.
+
+## Set up
+
+You need:
+
+- [rustup](https://rustup.rs/) (the checked-in toolchain file installs Rust 1.98.1, rustfmt, clippy and the WASM target)
+- [`wasm-pack`](https://wasm-bindgen.github.io/wasm-pack/installer/) 0.15.0
+- Node.js 22 (see `.nvmrc`) and npm
+- Python 3 (`python3`): `scripts/build-wasm.sh` and the art test run small Python tools. On a Mac it comes
+  with the Xcode command line tools.
+- For the app tests: Playwright's Chromium, installed once with `cd app && npx playwright install chromium`
+- For the Mac app only: the Xcode command line tools
+
+```sh
+git clone https://github.com/samcorcos/legatum && cd legatum
+nvm use                                # or install Node.js 22 by another method
+scripts/build-wasm.sh                  # the engine as WASM -> app/src/wasm-pkg (git-ignored)
+cd app && npm ci && npm run dev        # the game at http://localhost:5173
+```
+
+Other entry points:
+
+```sh
+cargo run --release -p legatum-sim -- --help    # headless simulation runner
+./scripts/lan-host.sh                           # serve the app and the authoritative game on your LAN
+scripts/build-mac-app.sh                        # macOS app bundle, unsigned (see app/README.md)
+scripts/build-web.sh                            # the hosted web build, as deployed (static files in app/dist)
+```
+
+Releases (the web deploy, the signed Mac app, the secrets each needs) are described in
+[docs/ops/releasing.md](docs/ops/releasing.md).
+
+## Test
+
+Run what your change touches, and everything before you open a pull request:
+
+```sh
+cargo fmt --all --check
+cargo clippy --workspace --all-targets -- -D warnings
+cargo test --workspace --release                # engine, AI, sim, server, WASM bindings
+scripts/build-wasm.sh && cd app && npm ci && npx playwright install chromium && npm test && npm run build
+```
+
+`cargo test --workspace --release` also compiles every example program (over a hundred, mostly in
+`crates/sim/examples`), which takes a long time on a cold build. While iterating,
+`cargo test --workspace --release --lib --bins --tests` runs the same tests without building them.
+
+These are the commands CI runs (`.github/workflows/ci.yml`). Browser end-to-end tests (Playwright) are
+described in [app/README.md](app/README.md#browser-end-to-end-tests); CI does not run them.
+
+## What a pull request needs
+
+**CI is the bar for an outside pull request.** If the checks above pass and the change is focused, it is
+ready for review.
+
+`CLAUDE.md` describes further gates before anything lands on `master`: `tools/gates/check.py`, an AI
+documentation review and, for UI changes, an AI UI review. The maintainer runs those himself on your
+branch. You do not need to run them or produce their marker files, and a pull request is not held up for
+lacking them. They may lead to follow-up commits or requests.
+
+- Keep a change focused, with tests that fail before and pass after.
+- Describe what changed for a player and what you ran. Include screenshots for UI changes (at 1000x600 and
+  1440x900, the sizes the layout is tuned for).
+- If the change makes a line in `README.md`, `CONTRIBUTING.md`, `ARCHITECTURE.md`, `docs/README.md` or the
+  in-app Guide untrue, fix that line in the same pull request.
+- Art and audio: add the prompt or source and its licence next to the file (see `LICENSE-ART` and
+  `app/public/audio/CREDITS.md`). Third-party assets need a licence that allows redistribution.
+
+## The rules that matter
+
+1. **One engine.** All game rules live in `crates/core`. The UI, the server and the simulation runner call
+   it; nothing re-implements a rule in TypeScript or Python. If the UI needs a number, the engine
+   computes it.
+2. **Determinism.** Integer maths only, seeded RNG streams, no dependence on hash-map iteration order.
+   The same state, orders and seed must give the same next state on every platform; tests compare state
+   hashes across native and WASM.
+3. **Pinned tapes.** Recorded game tapes and their hashes live in `crates/sim/tests/` (`pins.json` and
+   `fixtures/`). A rule change that is meant to change outcomes also changes the pins: regenerate them
+   with `tools/sim/repin.sh`, review the diff, and say in the pull request why games changed.
+4. **Saves carry a rules version.** Any change to the rules or to the serialized state bumps
+   `legatum_core::RULES_VERSION` (`crates/core/src/lib.rs`). A save from another version is refused with
+   a clear message; there are no migrations. Current-version fixtures in
+   `crates/wasm/tests/fixtures/saves/` guard the round trip.
+5. **No hidden maths, no AI bonuses.** A number shown to a player should open into a breakdown. An AI
+   seat at Easy, Normal or Hard plans from its own `PlayerView` and plays under the same rules as a
+   human: a level may change how it decides, never its yields, costs, combat strength or sight.
+6. **Delete, don't comment out.** Remove dead code and old experiments; git has the history.
+7. **Rules docs follow code.** If you change a rule or mechanic, update `.claude/skills/legatum-rules/references/game-rules.md` in the same change.
+
+## Licence of contributions
+
+By contributing you agree that your contribution is licensed as the repository is: images and video under
+CC BY 4.0 ([LICENSE-ART](LICENSE-ART)) and everything else under the MIT licence ([LICENSE](LICENSE)).
+
+See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for how we work together and [SECURITY.md](SECURITY.md) to report
+a vulnerability.

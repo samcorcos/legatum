@@ -1,0 +1,35 @@
+Shared atlas specification
+
+Transparent PNG, portrait 1024x1536, precise 3-column by 4-row grid for a premium historical
+strategy map. Columns left-to-right are woodland, rolling hills and mountains; each row is a visibly
+different variant. One centered, self-contained feature cluster per cell, with transparent margins.
+Woodland cells use 3–5 separated readable trees with visible trunks, a mix of broadleaf and conifers;
+the fourth woodland variant is sparse tundra conifers and frost scrub. Hills use 2–3 broad low rounded
+mounds. Mountains use 2–3 bold asymmetric connected peaks with ivory snow caps and cool shadow faces.
+Keep each cluster under 55% of its cell, leaving at least 40% of the implied hex as open ground.
+Feature silhouettes and colors must be instantly distinct. No grid lines, ground plate, hex tile,
+full scene, text, symbols, glossy gradients or detached cast shadow. Preserve genuine transparency.
+
+Reference: docs/design/terrain-art/reference/civ6-reference-user.webp
+
+S1 · Painted toy
+
+Apply restrained soft dimensional painted landforms, believable and refined, never cute or cartoon.
+Use muted sage and deep pine for trees, warm ochre and olive for hills, ivory snow with slate/umber
+rock shadows for mountains. Soft painted volume with subtle edge definition. No black outline, glossy
+gradient, miniature landscape or detailed scenery.
+
+S2 · Flat illustrated
+
+Apply a refined modern illustrated board-game style: clean flat pigment areas, crisp elegant silhouettes
+with one muted shade tone per object and understated fine ink edges. Use muted sage-green canopies,
+dark pine undersides, sage and ochre hills, and ivory snow with cool slate/umber mountain shadow.
+Simple solid shapes, controlled ink edge, one shade plane. No texture or cartoon.
+
+S3 · Watercolour sprite
+
+Apply very sparse organic watercolor pigment shapes with a delicate light sepia ink contour, elegant
+parchment-compatible earth colors, atmospheric but crisp at small game-map scale. Use muted greens for
+woodland, ochre and sage for hills, ivory snow and subdued blue-grey/umber shadow washes for mountains.
+Keep watercolor controlled within each shape with slight organic edge variation. No sprawling paint,
+heavy outline, dense fine detail, glow or gradient.

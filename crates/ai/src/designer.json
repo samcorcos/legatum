@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "name": "designer-v2",
+  "source": "Imitation seat (2026-11-09): Hard with the designer's recurring plays as genes, from docs/playtests/human-reasoning.md and the legatum-coach playbook. Early strike on an open neighbour (Sparta 8.8.1 T25, Aztecs 8.9.29 T42, India 8.9.25 T22); follow up city by city and pay through Walls for a prize; snipe exposed Settlers; focus fire; commit to the war he started; buy the decisive unit (Bomber after Flight); Walls on the frontier; expand hard while unthreatened.",
+  "decisions": {
+    "strike_eagerness": 60,
+    "early_campaign_value": 400,
+    "early_prize_opening": 1,
+    "open_followup": 1,
+    "chain_press": 1,
+    "walled_prize": 1,
+    "open_city_radius": 12,
+    "open_prize_radius": 16,
+    "conquest_min_cities": 1,
+    "conquest_nearby_weight": 80,
+    "campaign_commit": 1000,
+    "campaign_persist": 200,
+    "war_commit_ratio": 200,
+    "focus_fire": 250,
+    "settler_raid": 1,
+    "settler_raid_range": 2,
+    "decisive_buy": 2,
+    "walls_near_enemy_bonus": 200,
+    "production_settler_percent": 150
+  }
+}

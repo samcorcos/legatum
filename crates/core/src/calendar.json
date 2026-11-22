@@ -1,0 +1,16 @@
+{
+  "note": "Display-only calendar (designer, 2026-11-14): the year shown beside the turn number. Each anchor is a turn and the year it falls in (BC negative, no year 0). Years between anchors are interpolated linearly; past the last anchor the calendar runs one year per turn. Never read by the rules.",
+  "anchors": [
+    { "turn": 1, "year": -4000, "era": "Ancient" },
+    { "turn": 30, "year": -1000, "era": "Classical" },
+    { "turn": 60, "year": 500, "era": "Medieval" },
+    { "turn": 90, "year": 1400, "era": "Renaissance" },
+    { "turn": 125, "year": 1750, "era": "Industrial" },
+    { "turn": 160, "year": 1880, "era": "Machine Age" },
+    { "turn": 190, "year": 1914, "era": "World War" },
+    { "turn": 215, "year": 1950, "era": "Modern" },
+    { "turn": 240, "year": 2010, "era": "Future" },
+    { "turn": 250, "year": 2026, "era": "Future" },
+    { "turn": 300, "year": 2076, "era": "Future" }
+  ]
+}

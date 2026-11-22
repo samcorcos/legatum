@@ -1,0 +1,326 @@
+[
+  {
+    "owner": 0,
+    "archived_id": 3,
+    "kind": "Soldier",
+    "pos": {
+      "q": 22,
+      "r": 10
+    }
+  },
+  {
+    "owner": 0,
+    "archived_id": 31,
+    "kind": "Ranger",
+    "pos": {
+      "q": 23,
+      "r": 8
+    }
+  },
+  {
+    "owner": 0,
+    "archived_id": 37,
+    "kind": "Ranger",
+    "pos": {
+      "q": 22,
+      "r": 13
+    }
+  },
+  {
+    "owner": 0,
+    "archived_id": 45,
+    "kind": "Soldier",
+    "pos": {
+      "q": 20,
+      "r": 14
+    }
+  },
+  {
+    "owner": 0,
+    "archived_id": 58,
+    "kind": "Ranger",
+    "pos": {
+      "q": 14,
+      "r": 13
+    }
+  },
+  {
+    "owner": 0,
+    "archived_id": 63,
+    "kind": "Soldier",
+    "pos": {
+      "q": 14,
+      "r": 13
+    }
+  },
+  {
+    "owner": 0,
+    "archived_id": 71,
+    "kind": "Ranger",
+    "pos": {
+      "q": 14,
+      "r": 13
+    }
+  },
+  {
+    "owner": 1,
+    "archived_id": 5,
+    "kind": "Scout",
+    "pos": {
+      "q": 6,
+      "r": 16
+    }
+  },
+  {
+    "owner": 1,
+    "archived_id": 6,
+    "kind": "Soldier",
+    "pos": {
+      "q": 1,
+      "r": 15
+    }
+  },
+  {
+    "owner": 1,
+    "archived_id": 50,
+    "kind": "Ranger",
+    "pos": {
+      "q": 2,
+      "r": 12
+    }
+  },
+  {
+    "owner": 2,
+    "archived_id": 8,
+    "kind": "Scout",
+    "pos": {
+      "q": 13,
+      "r": 17
+    }
+  },
+  {
+    "owner": 2,
+    "archived_id": 9,
+    "kind": "Soldier",
+    "pos": {
+      "q": 18,
+      "r": 25
+    }
+  },
+  {
+    "owner": 2,
+    "archived_id": 25,
+    "kind": "Ranger",
+    "pos": {
+      "q": 17,
+      "r": 25
+    }
+  },
+  {
+    "owner": 2,
+    "archived_id": 38,
+    "kind": "Settler",
+    "pos": {
+      "q": 16,
+      "r": 26
+    }
+  },
+  {
+    "owner": 2,
+    "archived_id": 61,
+    "kind": "Settler",
+    "pos": {
+      "q": 18,
+      "r": 25
+    }
+  },
+  {
+    "owner": 3,
+    "archived_id": 11,
+    "kind": "Scout",
+    "pos": {
+      "q": 18,
+      "r": 20
+    }
+  },
+  {
+    "owner": 3,
+    "archived_id": 12,
+    "kind": "Soldier",
+    "pos": {
+      "q": 3,
+      "r": 21
+    }
+  },
+  {
+    "owner": 3,
+    "archived_id": 42,
+    "kind": "Ranger",
+    "pos": {
+      "q": 11,
+      "r": 13
+    }
+  },
+  {
+    "owner": 3,
+    "archived_id": 52,
+    "kind": "Soldier",
+    "pos": {
+      "q": 3,
+      "r": 20
+    }
+  },
+  {
+    "owner": 3,
+    "archived_id": 64,
+    "kind": "Soldier",
+    "pos": {
+      "q": 4,
+      "r": 17
+    }
+  },
+  {
+    "owner": 3,
+    "archived_id": 72,
+    "kind": "Settler",
+    "pos": {
+      "q": 3,
+      "r": 21
+    }
+  },
+  {
+    "owner": 4,
+    "archived_id": 14,
+    "kind": "Scout",
+    "pos": {
+      "q": 5,
+      "r": 20
+    }
+  },
+  {
+    "owner": 4,
+    "archived_id": 15,
+    "kind": "Soldier",
+    "pos": {
+      "q": 23,
+      "r": 17
+    }
+  },
+  {
+    "owner": 4,
+    "archived_id": 56,
+    "kind": "Ranger",
+    "pos": {
+      "q": 20,
+      "r": 15
+    }
+  },
+  {
+    "owner": 4,
+    "archived_id": 59,
+    "kind": "Ranger",
+    "pos": {
+      "q": 22,
+      "r": 17
+    }
+  },
+  {
+    "owner": 4,
+    "archived_id": 66,
+    "kind": "Ranger",
+    "pos": {
+      "q": 23,
+      "r": 17
+    }
+  },
+  {
+    "owner": 5,
+    "archived_id": 17,
+    "kind": "Scout",
+    "pos": {
+      "q": 3,
+      "r": 25
+    }
+  },
+  {
+    "owner": 5,
+    "archived_id": 18,
+    "kind": "Soldier",
+    "pos": {
+      "q": 18,
+      "r": 21
+    }
+  },
+  {
+    "owner": 5,
+    "archived_id": 46,
+    "kind": "Ranger",
+    "pos": {
+      "q": 18,
+      "r": 19
+    }
+  },
+  {
+    "owner": 5,
+    "archived_id": 60,
+    "kind": "Soldier",
+    "pos": {
+      "q": 15,
+      "r": 20
+    }
+  },
+  {
+    "owner": 5,
+    "archived_id": 62,
+    "kind": "Soldier",
+    "pos": {
+      "q": 18,
+      "r": 21
+    }
+  },
+  {
+    "owner": 5,
+    "archived_id": 67,
+    "kind": "Ranger",
+    "pos": {
+      "q": 15,
+      "r": 20
+    }
+  },
+  {
+    "owner": 6,
+    "archived_id": 20,
+    "kind": "Scout",
+    "pos": {
+      "q": 19,
+      "r": 18
+    }
+  },
+  {
+    "owner": 6,
+    "archived_id": 21,
+    "kind": "Soldier",
+    "pos": {
+      "q": 12,
+      "r": 27
+    }
+  },
+  {
+    "owner": 6,
+    "archived_id": 26,
+    "kind": "Ranger",
+    "pos": {
+      "q": 11,
+      "r": 25
+    }
+  },
+  {
+    "owner": 6,
+    "archived_id": 65,
+    "kind": "Soldier",
+    "pos": {
+      "q": 11,
+      "r": 24
+    }
+  }
+]

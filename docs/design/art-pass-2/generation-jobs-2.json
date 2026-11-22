@@ -1,0 +1,30 @@
+[
+  {
+    "slug": "barbarian-spearman",
+    "kind": "unit",
+    "prompt": "Focused repair to the left shield arm on this existing historical tabletop miniature. Preserve man, face, hair, tunic, mantle, boots, spear, camera, lighting and size. The oval wooden shield with central iron boss must be carried by a hand grasping the rear central handle directly behind the boss: bend the left elbow and forearm behind the shield so the hand is hidden centrally. No fingers gripping its rim. Maintain the shield itself and its orientation. Replace rough base with plain smooth warm cream disc. Transparent background, no halo, no text.",
+    "input": "~/code/legatum/.claude/worktrees/lane-5/app/src/assets/units/barbarian-spearman-source.png",
+    "attempt": 1
+  },
+  {
+    "slug": "horseman",
+    "kind": "unit",
+    "prompt": "Correct this Ancient Greek cavalry miniature. Preserve the man, face, horse, bridle, reins, spear, shield, helmet, chiton and camera. Remove both bronze forearm cuffs, leaving bare forearms. Remove stirrups and all stirrup leathers: his sandalled feet hang freely at the sides of the horse, soles supported by nothing. Use simple low Greek leather sandals instead of high calf-strapped costume boots. No medieval saddle; plain saddlecloth under rider. Keep natural adult/horse proportions, no extra limbs. Single plain warm cream disc. Transparent background, no colored edge, no words.",
+    "input": "~/code/legatum/.claude/worktrees/lane-5/app/src/assets/units/horseman-source.png",
+    "attempt": 1
+  },
+  {
+    "slug": "cataphract",
+    "kind": "unit",
+    "prompt": "Repaint this cataphract miniature as a historically grounded late Roman/Sarmatian armoured horseman of the third century CE, same refined painterly miniature style, calm display pose on one plain cream disc. One adult on a realistically proportioned full-size standing horse, not a pony: long horse legs, substantial torso. Scale barding over torso, exposed lower legs and four grounded hooves. Rider in mail and scale, simple iron helmet, trousers and leather boots. NO stirrups, NO stirrup leathers; rider's boots hang freely alongside a Roman four-horn saddle. Long straight kontos held upright at slight diagonal in right hand, left hand naturally holds reins; both hands have natural fingers. Lance very long slim wooden shaft and small iron point, fully in frame. Horse and rider at rest, no battle, no action. Three-quarter view, warm upper-left studio light, muted parchment-compatible color, realistic anatomy, no fantasy armor or exaggerated mask. Genuine transparent background. No text or watermark.",
+    "input": "~/code/legatum/.claude/worktrees/lane-5/app/src/assets/units/cataphract-source.png",
+    "attempt": 1
+  },
+  {
+    "slug": "trench-infantry",
+    "kind": "unit",
+    "prompt": "Repaint this French First World War infantry miniature as a single standing poilu at rest, circa1916. Match refined detailed oil miniature technique, adult anatomy and warm upper-left light. He wears correctly formed Adrian helmet, horizon-blue wool greatcoat, brown leather ammunition pouches and pack, wrapped puttees and brown lace-up ankle boots. Feet planted naturally shoulder width on ONE plain smooth cream circular disc. Complete Lebel M1886/93 rifle held UPRIGHT at his right side, butt resting on the disc, right hand gripping wooden fore-end, left hand resting naturally on pack strap. Rifle must clearly have full curved wooden buttstock, receiver with bolt handle, long wood fore-end, straight steel barrel and slender long cruciform needle bayonet at muzzle; coherent continuous length, no duplicated barrels or broken ends. No grenade, no firing, no combat pose. Simple three-quarter standing museum figure, full head to feet in frame, transparent background, no text or watermark.",
+    "input": "~/code/legatum/.claude/worktrees/lane-5/app/src/assets/units/trench-infantry-source.png",
+    "attempt": 1
+  }
+]

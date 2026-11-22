@@ -1,0 +1,2172 @@
+{
+ "generated": "2026-10-23",
+ "source": "tools/ai-quality/climb-targets.py: the user's saves in ~/LegatumRuns/bug-saves grouped into games by map seed (latest save of each game); per-turn telemetry for cities, VP, Gold and wars; chronicle (8.9.4+), fight counter (8.8.1+) or telemetry city deltas for captures; medians over wins and losses (unfinished games count at the checkpoints they reached); faction medians prefer 4-player Small (40x26) games when the faction has any",
+ "games": [
+  {
+   "id": "path-detour-t38",
+   "files": [
+    "path-detour-t38.legatum"
+   ],
+   "version": "7a",
+   "engine_commit": "faecae92c",
+   "seed": "3907687813630410",
+   "faction": "Sparta",
+   "players": 8,
+   "map": [
+    48,
+    32
+   ],
+   "ai_difficulty": "Hard",
+   "ai_search": false,
+   "opponents": [
+    "Germany",
+    "Celts",
+    "Mongols",
+    "Sparta",
+    "Athens",
+    "Switzerland",
+    "Japan"
+   ],
+   "result": "unfinished",
+   "last_turn": 38,
+   "win_turn": null,
+   "victory": null,
+   "winner_faction": null,
+   "note": null,
+   "cities": {
+    "50": null,
+    "100": null,
+    "150": null,
+    "200": null
+   },
+   "vp": {
+    "50": null,
+    "100": null,
+    "150": null,
+    "200": null
+   },
+   "final_cities": 4,
+   "final_vp": 5,
+   "captures": 2,
+   "lost": 0,
+   "captures_source": "telemetry-lower-bound",
+   "eliminated": 1,
+   "eliminated_any": 1,
+   "first_war": 21,
+   "gold_100": null,
+   "small_4p": false
+  },
+  {
+   "id": "reinforce-bounce-t107",
+   "files": [
+    "reinforce-bounce-t107.legatum"
+   ],
+   "version": "7a",
+   "engine_commit": "faecae92c",
+   "seed": "4596155679703988",
+   "faction": "Byzantium",
+   "players": 8,
+   "map": [
+    48,
+    32
+   ],
+   "ai_difficulty": "Hard",
+   "ai_search": false,
+   "opponents": [
+    "Mongols",
+    "Sparta",
+    "Athens",
+    "Switzerland",
+    "Japan",
+    "Byzantium",
+    "Germany"
+   ],
+   "result": "unfinished",
+   "last_turn": 108,
+   "win_turn": null,
+   "victory": null,
+   "winner_faction": null,
+   "note": null,
+   "cities": {
+    "50": 4,
+    "100": 6,
+    "150": null,
+    "200": null
+   },
+   "vp": {
+    "50": 5,
+    "100": 6,
+    "150": null,
+    "200": null
+   },
+   "final_cities": 5,
+   "final_vp": 7,
+   "captures": 1,
+   "lost": 2,
+   "captures_source": "telemetry-lower-bound",
+   "eliminated": 0,
+   "eliminated_any": 0,
+   "first_war": 16,
+   "gold_100": 531,
+   "small_4p": false
+  },
+  {
+   "id": "p82-sparta-final",
+   "files": [
+    "p82-sparta-final-1703.legatum",
+    "p82-sparta-crush-1655.legatum"
+   ],
+   "version": "8.2",
+   "engine_commit": "7bc01cdac",
+   "seed": "6919242403981409",
+   "faction": "Sparta",
+   "players": 8,
+   "map": [
+    48,
+    32
+   ],
+   "ai_difficulty": "Hard",
+   "ai_search": true,
+   "opponents": [
+    "Byzantium",
+    "Germany",
+    "Celts",
+    "Mongols",
+    "Sparta",
+    "Athens",
+    "Switzerland"
+   ],
+   "result": "unfinished",
+   "last_turn": 57,
+   "win_turn": null,
+   "victory": null,
+   "winner_faction": null,
+   "note": null,
+   "cities": {
+    "50": 6,
+    "100": null,
+    "150": null,
+    "200": null
+   },
+   "vp": {
+    "50": 7,
+    "100": null,
+    "150": null,
+    "200": null
+   },
+   "final_cities": 8,
+   "final_vp": 7,
+   "captures": 4,
+   "lost": 0,
+   "captures_source": "telemetry-lower-bound",
+   "eliminated": 2,
+   "eliminated_any": 2,
+   "first_war": 18,
+   "gold_100": null,
+   "small_4p": false
+  },
+  {
+   "id": "playtest-8.3-switzerland-win",
+   "files": [
+    "playtest-8.3-switzerland-win.legatum",
+    "current-8.3-game.legatum"
+   ],
+   "version": "8.3",
+   "engine_commit": "6e3780bf0",
+   "seed": "7996239807468428",
+   "faction": "Switzerland",
+   "players": 2,
+   "map": [
+    40,
+    26
+   ],
+   "ai_difficulty": "Hard",
+   "ai_search": true,
+   "opponents": [
+    "Mongols"
+   ],
+   "result": "win",
+   "last_turn": 91,
+   "win_turn": 91,
+   "victory": "vp-hold",
+   "winner_faction": "Switzerland",
+   "note": null,
+   "cities": {
+    "50": 4,
+    "100": null,
+    "150": null,
+    "200": null
+   },
+   "vp": {
+    "50": 7,
+    "100": null,
+    "150": null,
+    "200": null
+   },
+   "final_cities": 6,
+   "final_vp": 10,
+   "captures": 0,
+   "lost": 1,
+   "captures_source": "telemetry-lower-bound",
+   "eliminated": 0,
+   "eliminated_any": 0,
+   "first_war": 60,
+   "gold_100": null,
+   "small_4p": false
+  },
+  {
+   "id": "playtest-8.4-japan-win",
+   "files": [
+    "playtest-8.4-japan-win.legatum",
+    "p84-scout-deadlock.legatum",
+    "p84-settler-into-war-t67.legatum"
+   ],
+   "version": "8.4",
+   "engine_commit": "900d58c4e",
+   "seed": "8165050069796095",
+   "faction": "Japan",
+   "players": 4,
+   "map": [
+    40,
+    26
+   ],
+   "ai_difficulty": "Hard",
+   "ai_search": true,
+   "opponents": [
+    "Switzerland",
+    "Japan",
+    "Byzantium"
+   ],
+   "result": "win",
+   "last_turn": 162,
+   "win_turn": 162,
+   "victory": "vp-hold",
+   "winner_faction": "Japan",
+   "note": null,
+   "cities": {
+    "50": 6,
+    "100": 10,
+    "150": 10,
+    "200": null
+   },
+   "vp": {
+    "50": 6,
+    "100": 6,
+    "150": 9,
+    "200": null
+   },
+   "final_cities": 9,
+   "final_vp": 11,
+   "captures": 0,
+   "lost": 2,
+   "captures_source": "telemetry-lower-bound",
+   "eliminated": 0,
+   "eliminated_any": 0,
+   "first_war": 32,
+   "gold_100": 731,
+   "small_4p": true
+  },
+  {
+   "id": "playtest-8.4-sparta-win",
+   "files": [
+    "playtest-8.4-sparta-win.legatum",
+    "p84-capture-stale-orders-t31.legatum"
+   ],
+   "version": "8.4",
+   "engine_commit": "900d58c4e",
+   "seed": "5792497936169552",
+   "faction": "Sparta",
+   "players": 4,
+   "map": [
+    40,
+    26
+   ],
+   "ai_difficulty": "Hard",
+   "ai_search": true,
+   "opponents": [
+    "Japan",
+    "Byzantium",
+    "Germany"
+   ],
+   "result": "win",
+   "last_turn": 61,
+   "win_turn": 61,
+   "victory": "elimination",
+   "winner_faction": "Sparta",
+   "note": null,
+   "cities": {
+    "50": 5,
+    "100": null,
+    "150": null,
+    "200": null
+   },
+   "vp": {
+    "50": 7,
+    "100": null,
+    "150": null,
+    "200": null
+   },
+   "final_cities": 8,
+   "final_vp": 7,
+   "captures": 5,
+   "lost": 0,
+   "captures_source": "telemetry-lower-bound",
+   "eliminated": 3,
+   "eliminated_any": 3,
+   "first_war": 26,
+   "gold_100": null,
+   "small_4p": true
+  },
+  {
+   "id": "playtest-8.4-celts-win",
+   "files": [
+    "playtest-8.4-celts-win.legatum",
+    "p84-settle-lens.legatum"
+   ],
+   "version": "8.4",
+   "engine_commit": "900d58c4e",
+   "seed": "8590218284315437",
+   "faction": "Celts",
+   "players": 4,
+   "map": [
+    40,
+    26
+   ],
+   "ai_difficulty": "Hard",
+   "ai_search": true,
+   "opponents": [
+    "Sparta",
+    "Athens",
+    "Switzerland"
+   ],
+   "result": "win",
+   "last_turn": 149,
+   "win_turn": 149,
+   "victory": "vp-hold",
+   "winner_faction": "Celts",
+   "note": null,
+   "cities": {
+    "50": 5,
+    "100": 9,
+    "150": null,
+    "200": null
+   },
+   "vp": {
+    "50": 6,
+    "100": 7,
+    "150": null,
+    "200": null
+   },
+   "final_cities": 11,
+   "final_vp": 11,
+   "captures": 0,
+   "lost": 0,
+   "captures_source": "telemetry-lower-bound",
+   "eliminated": 0,
+   "eliminated_any": 1,
+   "first_war": 25,
+   "gold_100": 918,
+   "small_4p": true
+  },
+  {
+   "id": "playtest-8.5-mongols-partial-t54",
+   "files": [
+    "playtest-8.5-mongols-partial-t54.tape.json.zst"
+   ],
+   "version": "8.5",
+   "engine_commit": "d52050470",
+   "seed": "4984786037573775",
+   "faction": "Mongols",
+   "players": 4,
+   "map": [
+    40,
+    26
+   ],
+   "ai_difficulty": "Hard",
+   "ai_search": true,
+   "opponents": [
+    "Switzerland",
+    "Japan",
+    "Byzantium"
+   ],
+   "result": "unfinished",
+   "last_turn": 54,
+   "win_turn": null,
+   "victory": null,
+   "winner_faction": null,
+   "note": null,
+   "cities": {
+    "50": 3,
+    "100": null,
+    "150": null,
+    "200": null
+   },
+   "vp": {
+    "50": 3,
+    "100": null,
+    "150": null,
+    "200": null
+   },
+   "final_cities": 3,
+   "final_vp": 4,
+   "captures": 0,
+   "lost": 1,
+   "captures_source": "telemetry-lower-bound",
+   "eliminated": 0,
+   "eliminated_any": 0,
+   "first_war": 16,
+   "gold_100": null,
+   "small_4p": true
+  },
+  {
+   "id": "playtest-8.5-mongols-win",
+   "files": [
+    "playtest-8.5-mongols-win.legatum",
+    "playtest-8.5-mongols-win.tape.json.zst"
+   ],
+   "version": "8.5",
+   "engine_commit": "d52050470",
+   "seed": "874654782136188",
+   "faction": "Mongols",
+   "players": 4,
+   "map": [
+    40,
+    26
+   ],
+   "ai_difficulty": "Hard",
+   "ai_search": true,
+   "opponents": [
+    "Mongols",
+    "Sparta",
+    "Athens"
+   ],
+   "result": "win",
+   "last_turn": 123,
+   "win_turn": 123,
+   "victory": "vp-hold",
+   "winner_faction": "Mongols",
+   "note": null,
+   "cities": {
+    "50": 5,
+    "100": 8,
+    "150": null,
+    "200": null
+   },
+   "vp": {
+    "50": 5,
+    "100": 9,
+    "150": null,
+    "200": null
+   },
+   "final_cities": 9,
+   "final_vp": 10,
+   "captures": 1,
+   "lost": 1,
+   "captures_source": "telemetry-lower-bound",
+   "eliminated": 0,
+   "eliminated_any": 0,
+   "first_war": 28,
+   "gold_100": 1241,
+   "small_4p": true
+  },
+  {
+   "id": "playtest-8.5-switzerland-win",
+   "files": [
+    "playtest-8.5-switzerland-win.legatum",
+    "p85-switzerland-t59.legatum",
+    "p85-switzerland-fog-borders.legatum",
+    "playtest-8.5-switzerland-win.tape.json.zst"
+   ],
+   "version": "8.5",
+   "engine_commit": "d52050470",
+   "seed": "5468583503244302",
+   "faction": "Switzerland",
+   "players": 4,
+   "map": [
+    40,
+    26
+   ],
+   "ai_difficulty": "Hard",
+   "ai_search": true,
+   "opponents": [
+    "Athens",
+    "Switzerland",
+    "Japan"
+   ],
+   "result": "win",
+   "last_turn": 110,
+   "win_turn": 110,
+   "victory": "vp-hold",
+   "winner_faction": "Switzerland",
+   "note": null,
+   "cities": {
+    "50": 5,
+    "100": 13,
+    "150": null,
+    "200": null
+   },
+   "vp": {
+    "50": 5,
+    "100": 9,
+    "150": null,
+    "200": null
+   },
+   "final_cities": 13,
+   "final_vp": 10,
+   "captures": 0,
+   "lost": 2,
+   "captures_source": "telemetry-lower-bound",
+   "eliminated": 0,
+   "eliminated_any": 0,
+   "first_war": 19,
+   "gold_100": 1355,
+   "small_4p": true
+  },
+  {
+   "id": "playtest-8.6-germany-2-vs-mongols",
+   "files": [
+    "playtest-8.6-germany-2-vs-mongols.legatum"
+   ],
+   "version": "8.6",
+   "engine_commit": "a39d0928e",
+   "seed": "5355669152530667",
+   "faction": "Germany",
+   "players": 4,
+   "map": [
+    40,
+    26
+   ],
+   "ai_difficulty": "Hard",
+   "ai_search": true,
+   "opponents": [
+    "Celts",
+    "Mongols",
+    "Sparta"
+   ],
+   "result": "loss",
+   "last_turn": 124,
+   "win_turn": null,
+   "victory": null,
+   "winner_faction": null,
+   "note": "8.6 Germany vs Mongols: 'about to lose another game' at T125, second Germany loss (docs/playtests/human-reasoning.md, 2026-10-09; docs/learnings.md)",
+   "cities": {
+    "50": 2,
+    "100": 5,
+    "150": null,
+    "200": null
+   },
+   "vp": {
+    "50": 0,
+    "100": 3,
+    "150": null,
+    "200": null
+   },
+   "final_cities": 6,
+   "final_vp": 3,
+   "captures": 0,
+   "lost": 1,
+   "captures_source": "telemetry-lower-bound",
+   "eliminated": 0,
+   "eliminated_any": 0,
+   "first_war": 99,
+   "gold_100": 273,
+   "small_4p": true
+  },
+  {
+   "id": "playtest-8.6-germany-loss",
+   "files": [
+    "playtest-8.6-germany-loss.legatum",
+    "playtest-8.6-germany-loss.tape.json.zst"
+   ],
+   "version": "8.6",
+   "engine_commit": "a39d0928e",
+   "seed": "8657891372967061",
+   "faction": "Germany",
+   "players": 4,
+   "map": [
+    40,
+    26
+   ],
+   "ai_difficulty": "Hard",
+   "ai_search": true,
+   "opponents": [
+    "Sparta",
+    "Athens",
+    "Switzerland"
+   ],
+   "result": "loss",
+   "last_turn": 88,
+   "win_turn": null,
+   "victory": "vp-hold",
+   "winner_faction": "Athens",
+   "note": null,
+   "cities": {
+    "50": 3,
+    "100": null,
+    "150": null,
+    "200": null
+   },
+   "vp": {
+    "50": 2,
+    "100": null,
+    "150": null,
+    "200": null
+   },
+   "final_cities": 4,
+   "final_vp": 3,
+   "captures": 0,
+   "lost": 1,
+   "captures_source": "telemetry-lower-bound",
+   "eliminated": 0,
+   "eliminated_any": 0,
+   "first_war": 69,
+   "gold_100": null,
+   "small_4p": true
+  },
+  {
+   "id": "playtest-8.6-sparta-win",
+   "files": [
+    "playtest-8.6-sparta-win.legatum",
+    "p86-pathing-t79.legatum",
+    "playtest-8.6-sparta-win.tape.json.zst"
+   ],
+   "version": "8.6",
+   "engine_commit": "a39d0928e",
+   "seed": "6813926672671224",
+   "faction": "Sparta",
+   "players": 4,
+   "map": [
+    40,
+    26
+   ],
+   "ai_difficulty": "Hard",
+   "ai_search": true,
+   "opponents": [
+    "Japan",
+    "Byzantium",
+    "Germany"
+   ],
+   "result": "win",
+   "last_turn": 84,
+   "win_turn": 84,
+   "victory": "elimination",
+   "winner_faction": "Sparta",
+   "note": null,
+   "cities": {
+    "50": 4,
+    "100": null,
+    "150": null,
+    "200": null
+   },
+   "vp": {
+    "50": 6,
+    "100": null,
+    "150": null,
+    "200": null
+   },
+   "final_cities": 10,
+   "final_vp": 8,
+   "captures": 7,
+   "lost": 0,
+   "captures_source": "telemetry-lower-bound",
+   "eliminated": 3,
+   "eliminated_any": 3,
+   "first_war": 29,
+   "gold_100": null,
+   "small_4p": true
+  },
+  {
+   "id": "p881-sparta-t56",
+   "files": [
+    "p881-sparta-t56-1004.legatum",
+    "p881-horseman-t31-0922.legatum",
+    "p881-sparta-conquest-0932.legatum"
+   ],
+   "version": "8.8.1",
+   "engine_commit": "0f917ec4f",
+   "seed": "631844514158384",
+   "faction": "Sparta",
+   "players": 4,
+   "map": [
+    40,
+    26
+   ],
+   "ai_difficulty": "Hard",
+   "ai_search": false,
+   "opponents": [
+    "Japan",
+    "Byzantium",
+    "Germany"
+   ],
+   "result": "unfinished",
+   "last_turn": 55,
+   "win_turn": null,
+   "victory": null,
+   "winner_faction": null,
+   "note": null,
+   "cities": {
+    "50": 5,
+    "100": null,
+    "150": null,
+    "200": null
+   },
+   "vp": {
+    "50": 4,
+    "100": null,
+    "150": null,
+    "200": null
+   },
+   "final_cities": 6,
+   "final_vp": 4,
+   "captures": 4,
+   "lost": 0,
+   "captures_source": "fight-counter",
+   "eliminated": 2,
+   "eliminated_any": 2,
+   "first_war": 25,
+   "gold_100": null,
+   "small_4p": true
+  },
+  {
+   "id": "p892-ai-beat-user-final",
+   "files": [
+    "p892-ai-beat-user-final-1441.legatum",
+    "p892-blue-rects-t114-1406.legatum",
+    "p892-rect-t136-1410.legatum",
+    "p892-mongol-assault-t149-1416.legatum",
+    "p892-race-panel-t203-1428.legatum",
+    "p892-fighter-t204-1432.legatum"
+   ],
+   "version": "8.9.2",
+   "engine_commit": "28be168b1",
+   "seed": "2602274368712031",
+   "faction": "Switzerland",
+   "players": 8,
+   "map": [
+    48,
+    32
+   ],
+   "ai_difficulty": "Hard",
+   "ai_search": false,
+   "opponents": [
+    "Switzerland",
+    "Japan",
+    "Byzantium",
+    "Germany",
+    "Celts",
+    "Mongols",
+    "Sparta"
+   ],
+   "result": "loss",
+   "last_turn": 220,
+   "win_turn": null,
+   "victory": null,
+   "winner_faction": null,
+   "note": "8.9.2 Swiss: abandoned at T220 with the Mongols and Sparta at 8 VP to his 5; he said 'the AI legitimately beat me' (docs/playtests/human-reasoning.md, 2026-10-17)",
+   "cities": {
+    "50": 2,
+    "100": 3,
+    "150": 4,
+    "200": 8
+   },
+   "vp": {
+    "50": 1,
+    "100": 0,
+    "150": 1,
+    "200": 5
+   },
+   "final_cities": 7,
+   "final_vp": 5,
+   "captures": 1,
+   "lost": 3,
+   "captures_source": "fight-counter",
+   "eliminated": 0,
+   "eliminated_any": 0,
+   "first_war": 78,
+   "gold_100": 921,
+   "small_4p": false
+  },
+  {
+   "id": "p892-sparta-crush-t87",
+   "files": [
+    "p892-sparta-crush-t87.legatum"
+   ],
+   "version": "8.9.2",
+   "engine_commit": "28be168b1",
+   "seed": "5498811444162614",
+   "faction": "Sparta",
+   "players": 8,
+   "map": [
+    48,
+    32
+   ],
+   "ai_difficulty": "Hard",
+   "ai_search": false,
+   "opponents": [
+    "Athens",
+    "Switzerland",
+    "Japan",
+    "Byzantium",
+    "Germany",
+    "Celts",
+    "Mongols"
+   ],
+   "result": "unfinished",
+   "last_turn": 86,
+   "win_turn": null,
+   "victory": null,
+   "winner_faction": null,
+   "note": null,
+   "cities": {
+    "50": 7,
+    "100": null,
+    "150": null,
+    "200": null
+   },
+   "vp": {
+    "50": 3,
+    "100": null,
+    "150": null,
+    "200": null
+   },
+   "final_cities": 9,
+   "final_vp": 5,
+   "captures": 7,
+   "lost": 0,
+   "captures_source": "fight-counter",
+   "eliminated": 3,
+   "eliminated_any": 3,
+   "first_war": 18,
+   "gold_100": null,
+   "small_4p": false
+  },
+  {
+   "id": "p892-swiss-win-t203",
+   "files": [
+    "p892-swiss-win-t203.legatum",
+    "p892-mongol-peace-flip-t173-1538.legatum"
+   ],
+   "version": "8.9.2",
+   "engine_commit": "28be168b1",
+   "seed": "183543760505468",
+   "faction": "Switzerland",
+   "players": 8,
+   "map": [
+    48,
+    32
+   ],
+   "ai_difficulty": "Hard",
+   "ai_search": false,
+   "opponents": [
+    "Mongols",
+    "Sparta",
+    "Athens",
+    "Switzerland",
+    "Japan",
+    "Byzantium",
+    "Germany"
+   ],
+   "result": "win",
+   "last_turn": 202,
+   "win_turn": 202,
+   "victory": "vp-hold",
+   "winner_faction": "Switzerland",
+   "note": null,
+   "cities": {
+    "50": 4,
+    "100": 6,
+    "150": 10,
+    "200": 9
+   },
+   "vp": {
+    "50": 1,
+    "100": 4,
+    "150": 5,
+    "200": 11
+   },
+   "final_cities": 9,
+   "final_vp": 11,
+   "captures": 0,
+   "lost": 2,
+   "captures_source": "fight-counter",
+   "eliminated": 0,
+   "eliminated_any": 1,
+   "first_war": 23,
+   "gold_100": 1706,
+   "small_4p": false
+  },
+  {
+   "id": "p893-unseen-attacker",
+   "files": [
+    "p893-unseen-attacker-2119.legatum",
+    "p893-zoom-artifact-2046.legatum"
+   ],
+   "version": "8.9.3",
+   "engine_commit": "dcb4f0dcd",
+   "seed": "5780469365826314",
+   "faction": "Japan",
+   "players": 4,
+   "map": [
+    40,
+    26
+   ],
+   "ai_difficulty": "Hard",
+   "ai_search": false,
+   "opponents": [
+    "Germany",
+    "Celts",
+    "Mongols"
+   ],
+   "result": "unfinished",
+   "last_turn": 139,
+   "win_turn": null,
+   "victory": null,
+   "winner_faction": null,
+   "note": null,
+   "cities": {
+    "50": 4,
+    "100": 6,
+    "150": null,
+    "200": null
+   },
+   "vp": {
+    "50": 1,
+    "100": 0,
+    "150": null,
+    "200": null
+   },
+   "final_cities": 8,
+   "final_vp": 6,
+   "captures": 2,
+   "lost": 0,
+   "captures_source": "fight-counter",
+   "eliminated": 0,
+   "eliminated_any": 0,
+   "first_war": 77,
+   "gold_100": 836,
+   "small_4p": true
+  },
+  {
+   "id": "p894-sparta-win-t40",
+   "files": [
+    "p894-sparta-win-t40-1308.legatum",
+    "p894-rects-t36-1305.legatum"
+   ],
+   "version": "8.9.4",
+   "engine_commit": "eeccf4800",
+   "seed": "6571181857414340",
+   "faction": "Sparta",
+   "players": 4,
+   "map": [
+    40,
+    26
+   ],
+   "ai_difficulty": "Hard",
+   "ai_search": false,
+   "opponents": [
+    "Mongols",
+    "Sparta",
+    "Athens"
+   ],
+   "result": "win",
+   "last_turn": 40,
+   "win_turn": 40,
+   "victory": "elimination",
+   "winner_faction": "Sparta",
+   "note": null,
+   "cities": {
+    "50": null,
+    "100": null,
+    "150": null,
+    "200": null
+   },
+   "vp": {
+    "50": null,
+    "100": null,
+    "150": null,
+    "200": null
+   },
+   "final_cities": 5,
+   "final_vp": 3,
+   "captures": 4,
+   "lost": 0,
+   "captures_source": "chronicle",
+   "eliminated": 3,
+   "eliminated_any": 3,
+   "first_war": 16,
+   "gold_100": null,
+   "small_4p": true
+  },
+  {
+   "id": "p894-swiss-win",
+   "files": [
+    "p894-swiss-win-1621.legatum",
+    "p894-mongol-attack-t126-1540.legatum",
+    "p894-tanks-lost-t232-1615.legatum"
+   ],
+   "version": "8.9.4",
+   "engine_commit": "eeccf4800",
+   "seed": "6135497475989443",
+   "faction": "Switzerland",
+   "players": 8,
+   "map": [
+    48,
+    32
+   ],
+   "ai_difficulty": "Hard",
+   "ai_search": false,
+   "opponents": [
+    "Celts",
+    "Mongols",
+    "Sparta",
+    "Athens",
+    "Switzerland",
+    "Japan",
+    "Byzantium"
+   ],
+   "result": "win",
+   "last_turn": 246,
+   "win_turn": 246,
+   "victory": "vp-hold",
+   "winner_faction": "Switzerland",
+   "note": null,
+   "cities": {
+    "50": 2,
+    "100": 4,
+    "150": 6,
+    "200": 9
+   },
+   "vp": {
+    "50": 0,
+    "100": 0,
+    "150": 2,
+    "200": 6
+   },
+   "final_cities": 9,
+   "final_vp": 11,
+   "captures": 4,
+   "lost": 2,
+   "captures_source": "chronicle",
+   "eliminated": 1,
+   "eliminated_any": 1,
+   "first_war": 45,
+   "gold_100": 276,
+   "small_4p": false
+  },
+  {
+   "id": "p895-athens-loss",
+   "files": [
+    "p895-athens-loss-1927.legatum",
+    "p895-athens-bomber-1916.legatum"
+   ],
+   "version": "8.9.5",
+   "engine_commit": "64ad962f9",
+   "seed": "6641729794338098",
+   "faction": "Athens",
+   "players": 8,
+   "map": [
+    48,
+    32
+   ],
+   "ai_difficulty": "Hard",
+   "ai_search": false,
+   "opponents": [
+    "Germany",
+    "Celts",
+    "Mongols",
+    "Sparta",
+    "Athens",
+    "Switzerland",
+    "Japan"
+   ],
+   "result": "loss",
+   "last_turn": 229,
+   "win_turn": null,
+   "victory": "vp-hold",
+   "winner_faction": "Sparta",
+   "note": null,
+   "cities": {
+    "50": 2,
+    "100": 6,
+    "150": 9,
+    "200": 9
+   },
+   "vp": {
+    "50": 0,
+    "100": 1,
+    "150": 5,
+    "200": 5
+   },
+   "final_cities": 9,
+   "final_vp": 5,
+   "captures": 0,
+   "lost": 0,
+   "captures_source": "chronicle",
+   "eliminated": 0,
+   "eliminated_any": 1,
+   "first_war": 107,
+   "gold_100": 792,
+   "small_4p": false
+  },
+  {
+   "id": "p896-athens-win",
+   "files": [
+    "p896-athens-win-1019-1800.legatum"
+   ],
+   "version": "8.9.6",
+   "engine_commit": "632868622",
+   "seed": "1261515010563583",
+   "faction": "Athens",
+   "players": 8,
+   "map": [
+    48,
+    32
+   ],
+   "ai_difficulty": "Hard",
+   "ai_search": false,
+   "opponents": [
+    "Sparta",
+    "Switzerland",
+    "Byzantium",
+    "Germany",
+    "Japan",
+    "Celts",
+    "Mongols"
+   ],
+   "result": "win",
+   "last_turn": 233,
+   "win_turn": 233,
+   "victory": "vp-hold",
+   "winner_faction": "Athens",
+   "note": null,
+   "cities": {
+    "50": 4,
+    "100": 5,
+    "150": 8,
+    "200": 9
+   },
+   "vp": {
+    "50": 0,
+    "100": 2,
+    "150": 2,
+    "200": 5
+   },
+   "final_cities": 8,
+   "final_vp": 11,
+   "captures": 3,
+   "lost": 4,
+   "captures_source": "chronicle",
+   "eliminated": 0,
+   "eliminated_any": 2,
+   "first_war": 17,
+   "gold_100": 136,
+   "small_4p": false
+  },
+  {
+   "id": "p896-swiss-win-japan-led",
+   "files": [
+    "p896-swiss-win-japan-led-1019-2126.legatum",
+    "p896-mongol-found-evict-t155-2027.legatum",
+    "p896-mongol-attack-t180-2102.legatum"
+   ],
+   "version": "8.9.6",
+   "engine_commit": "632868622",
+   "seed": "8802523705428817",
+   "faction": "Switzerland",
+   "players": 8,
+   "map": [
+    48,
+    32
+   ],
+   "ai_difficulty": "Hard",
+   "ai_search": false,
+   "opponents": [
+    "Mongols",
+    "Athens",
+    "Byzantium",
+    "Japan",
+    "Celts",
+    "Sparta",
+    "Germany"
+   ],
+   "result": "win",
+   "last_turn": 244,
+   "win_turn": 244,
+   "victory": "vp-hold",
+   "winner_faction": "Switzerland",
+   "note": null,
+   "cities": {
+    "50": 2,
+    "100": 4,
+    "150": 6,
+    "200": 8
+   },
+   "vp": {
+    "50": 0,
+    "100": 0,
+    "150": 3,
+    "200": 5
+   },
+   "final_cities": 8,
+   "final_vp": 10,
+   "captures": 3,
+   "lost": 3,
+   "captures_source": "chronicle",
+   "eliminated": 0,
+   "eliminated_any": 0,
+   "first_war": 40,
+   "gold_100": 829,
+   "small_4p": false
+  },
+  {
+   "id": "p897-celts-win",
+   "files": [
+    "p897-celts-win-1022-2028.legatum",
+    "p897-celt-seen-1022-1926.legatum",
+    "p897-bomber-rebase-t217-2011.legatum"
+   ],
+   "version": "8.9.7",
+   "engine_commit": "5637d8115",
+   "seed": "706754597613429",
+   "faction": "Celts",
+   "players": 4,
+   "map": [
+    40,
+    26
+   ],
+   "ai_difficulty": "Hard",
+   "ai_search": false,
+   "opponents": [
+    "Japan",
+    "Germany",
+    "Sparta"
+   ],
+   "result": "win",
+   "last_turn": 249,
+   "win_turn": 249,
+   "victory": "vp-hold",
+   "winner_faction": "Celts",
+   "note": null,
+   "cities": {
+    "50": 3,
+    "100": 6,
+    "150": 10,
+    "200": 12
+   },
+   "vp": {
+    "50": 2,
+    "100": 1,
+    "150": 1,
+    "200": 6
+   },
+   "final_cities": 12,
+   "final_vp": 10,
+   "captures": 6,
+   "lost": 0,
+   "captures_source": "chronicle",
+   "eliminated": 0,
+   "eliminated_any": 1,
+   "first_war": 21,
+   "gold_100": 545,
+   "small_4p": true
+  }
+ ],
+ "dropped": [
+  {
+   "seed": "5461343066548954",
+   "files": [
+    "p892-alliance-loop-t20.legatum"
+   ],
+   "last_turn": 19,
+   "reason": "shorter than 30 turns (bug repro save)"
+  },
+  {
+   "seed": "717573554647689",
+   "files": [
+    "switzerland-bankrupt-2026-10-06.legatum"
+   ],
+   "last_turn": 6,
+   "reason": "shorter than 30 turns (bug repro save)"
+  }
+ ],
+ "factions": {
+  "Japan": {
+   "games": 2,
+   "finished": 1,
+   "wins": 1,
+   "losses": 0,
+   "win_rate": 1.0,
+   "small_4p_games": 2,
+   "small_4p_wins": 1,
+   "cities": {
+    "50": 5,
+    "100": 8,
+    "150": 10,
+    "200": null
+   },
+   "vp": {
+    "50": 3.5,
+    "100": 3,
+    "150": 9,
+    "200": null
+   },
+   "captures": 1,
+   "lost": 1,
+   "eliminated": 0,
+   "first_war": 54.5,
+   "win_turn": 162,
+   "gold_100": 783.5,
+   "n": {
+    "cities_50": 2,
+    "cities_100": 2,
+    "cities_150": 1,
+    "cities_200": 0,
+    "vp_50": 2,
+    "vp_100": 2,
+    "vp_150": 1,
+    "vp_200": 0,
+    "captures": 2,
+    "lost": 2,
+    "eliminated": 2,
+    "first_war": 2,
+    "win_turn": 1,
+    "gold_100": 2
+   },
+   "basis": {
+    "cities_50": "small_4p",
+    "cities_100": "small_4p",
+    "cities_150": "small_4p",
+    "cities_200": "all",
+    "vp_50": "small_4p",
+    "vp_100": "small_4p",
+    "vp_150": "small_4p",
+    "vp_200": "all",
+    "captures": "small_4p",
+    "lost": "small_4p",
+    "eliminated": "small_4p",
+    "first_war": "small_4p",
+    "win_turn": "small_4p",
+    "gold_100": "small_4p"
+   },
+   "rules_8_9_median": {
+    "games": 1,
+    "cities": {
+     "50": 4,
+     "100": 6,
+     "150": null,
+     "200": null
+    },
+    "vp": {
+     "50": 1,
+     "100": 0,
+     "150": null,
+     "200": null
+    },
+    "captures": 2,
+    "first_war": 77,
+    "win_turn": null
+   },
+   "all_games_median": {
+    "cities": {
+     "50": 5,
+     "100": 8,
+     "150": 10,
+     "200": null
+    },
+    "vp": {
+     "50": 3.5,
+     "100": 3,
+     "150": 9,
+     "200": null
+    },
+    "captures": 1,
+    "first_war": 54.5,
+    "win_turn": 162
+   },
+   "name": "Japan"
+  },
+  "Germany": {
+   "games": 2,
+   "finished": 2,
+   "wins": 0,
+   "losses": 2,
+   "win_rate": 0.0,
+   "small_4p_games": 2,
+   "small_4p_wins": 0,
+   "cities": {
+    "50": 2.5,
+    "100": 5,
+    "150": null,
+    "200": null
+   },
+   "vp": {
+    "50": 1,
+    "100": 3,
+    "150": null,
+    "200": null
+   },
+   "captures": 0,
+   "lost": 1,
+   "eliminated": 0,
+   "first_war": 84,
+   "win_turn": null,
+   "gold_100": 273,
+   "n": {
+    "cities_50": 2,
+    "cities_100": 1,
+    "cities_150": 0,
+    "cities_200": 0,
+    "vp_50": 2,
+    "vp_100": 1,
+    "vp_150": 0,
+    "vp_200": 0,
+    "captures": 2,
+    "lost": 2,
+    "eliminated": 2,
+    "first_war": 2,
+    "win_turn": 0,
+    "gold_100": 1
+   },
+   "basis": {
+    "cities_50": "small_4p",
+    "cities_100": "small_4p",
+    "cities_150": "all",
+    "cities_200": "all",
+    "vp_50": "small_4p",
+    "vp_100": "small_4p",
+    "vp_150": "all",
+    "vp_200": "all",
+    "captures": "small_4p",
+    "lost": "small_4p",
+    "eliminated": "small_4p",
+    "first_war": "small_4p",
+    "win_turn": "all",
+    "gold_100": "small_4p"
+   },
+   "rules_8_9_median": {
+    "games": 0,
+    "cities": {
+     "50": null,
+     "100": null,
+     "150": null,
+     "200": null
+    },
+    "vp": {
+     "50": null,
+     "100": null,
+     "150": null,
+     "200": null
+    },
+    "captures": null,
+    "first_war": null,
+    "win_turn": null
+   },
+   "all_games_median": {
+    "cities": {
+     "50": 2.5,
+     "100": 5,
+     "150": null,
+     "200": null
+    },
+    "vp": {
+     "50": 1,
+     "100": 3,
+     "150": null,
+     "200": null
+    },
+    "captures": 0,
+    "first_war": 84,
+    "win_turn": null
+   },
+   "name": "Germany"
+  },
+  "Mongols": {
+   "games": 2,
+   "finished": 1,
+   "wins": 1,
+   "losses": 0,
+   "win_rate": 1.0,
+   "small_4p_games": 2,
+   "small_4p_wins": 1,
+   "cities": {
+    "50": 4,
+    "100": 8,
+    "150": null,
+    "200": null
+   },
+   "vp": {
+    "50": 4,
+    "100": 9,
+    "150": null,
+    "200": null
+   },
+   "captures": 0.5,
+   "lost": 1,
+   "eliminated": 0,
+   "first_war": 22,
+   "win_turn": 123,
+   "gold_100": 1241,
+   "n": {
+    "cities_50": 2,
+    "cities_100": 1,
+    "cities_150": 0,
+    "cities_200": 0,
+    "vp_50": 2,
+    "vp_100": 1,
+    "vp_150": 0,
+    "vp_200": 0,
+    "captures": 2,
+    "lost": 2,
+    "eliminated": 2,
+    "first_war": 2,
+    "win_turn": 1,
+    "gold_100": 1
+   },
+   "basis": {
+    "cities_50": "small_4p",
+    "cities_100": "small_4p",
+    "cities_150": "all",
+    "cities_200": "all",
+    "vp_50": "small_4p",
+    "vp_100": "small_4p",
+    "vp_150": "all",
+    "vp_200": "all",
+    "captures": "small_4p",
+    "lost": "small_4p",
+    "eliminated": "small_4p",
+    "first_war": "small_4p",
+    "win_turn": "small_4p",
+    "gold_100": "small_4p"
+   },
+   "rules_8_9_median": {
+    "games": 0,
+    "cities": {
+     "50": null,
+     "100": null,
+     "150": null,
+     "200": null
+    },
+    "vp": {
+     "50": null,
+     "100": null,
+     "150": null,
+     "200": null
+    },
+    "captures": null,
+    "first_war": null,
+    "win_turn": null
+   },
+   "all_games_median": {
+    "cities": {
+     "50": 4,
+     "100": 8,
+     "150": null,
+     "200": null
+    },
+    "vp": {
+     "50": 4,
+     "100": 9,
+     "150": null,
+     "200": null
+    },
+    "captures": 0.5,
+    "first_war": 22,
+    "win_turn": 123
+   },
+   "name": "Mongols"
+  },
+  "Sparta": {
+   "games": 7,
+   "finished": 3,
+   "wins": 3,
+   "losses": 0,
+   "win_rate": 1.0,
+   "small_4p_games": 4,
+   "small_4p_wins": 3,
+   "cities": {
+    "50": 5,
+    "100": null,
+    "150": null,
+    "200": null
+   },
+   "vp": {
+    "50": 6,
+    "100": null,
+    "150": null,
+    "200": null
+   },
+   "captures": 4.5,
+   "lost": 0,
+   "eliminated": 3,
+   "first_war": 25.5,
+   "win_turn": 61,
+   "gold_100": null,
+   "n": {
+    "cities_50": 3,
+    "cities_100": 0,
+    "cities_150": 0,
+    "cities_200": 0,
+    "vp_50": 3,
+    "vp_100": 0,
+    "vp_150": 0,
+    "vp_200": 0,
+    "captures": 4,
+    "lost": 4,
+    "eliminated": 4,
+    "first_war": 4,
+    "win_turn": 3,
+    "gold_100": 0
+   },
+   "basis": {
+    "cities_50": "small_4p",
+    "cities_100": "all",
+    "cities_150": "all",
+    "cities_200": "all",
+    "vp_50": "small_4p",
+    "vp_100": "all",
+    "vp_150": "all",
+    "vp_200": "all",
+    "captures": "small_4p",
+    "lost": "small_4p",
+    "eliminated": "small_4p",
+    "first_war": "small_4p",
+    "win_turn": "small_4p",
+    "gold_100": "all"
+   },
+   "rules_8_9_median": {
+    "games": 2,
+    "cities": {
+     "50": 7,
+     "100": null,
+     "150": null,
+     "200": null
+    },
+    "vp": {
+     "50": 3,
+     "100": null,
+     "150": null,
+     "200": null
+    },
+    "captures": 5.5,
+    "first_war": 17,
+    "win_turn": 40
+   },
+   "all_games_median": {
+    "cities": {
+     "50": 5,
+     "100": null,
+     "150": null,
+     "200": null
+    },
+    "vp": {
+     "50": 6,
+     "100": null,
+     "150": null,
+     "200": null
+    },
+    "captures": 4,
+    "first_war": 21,
+    "win_turn": 61
+   },
+   "name": "Sparta"
+  },
+  "Byzantium": {
+   "games": 1,
+   "finished": 0,
+   "wins": 0,
+   "losses": 0,
+   "win_rate": null,
+   "small_4p_games": 0,
+   "small_4p_wins": 0,
+   "cities": {
+    "50": 4,
+    "100": 6,
+    "150": null,
+    "200": null
+   },
+   "vp": {
+    "50": 5,
+    "100": 6,
+    "150": null,
+    "200": null
+   },
+   "captures": 1,
+   "lost": 2,
+   "eliminated": 0,
+   "first_war": 16,
+   "win_turn": null,
+   "gold_100": 531,
+   "n": {
+    "cities_50": 1,
+    "cities_100": 1,
+    "cities_150": 0,
+    "cities_200": 0,
+    "vp_50": 1,
+    "vp_100": 1,
+    "vp_150": 0,
+    "vp_200": 0,
+    "captures": 1,
+    "lost": 1,
+    "eliminated": 1,
+    "first_war": 1,
+    "win_turn": 0,
+    "gold_100": 1
+   },
+   "basis": {
+    "cities_50": "all",
+    "cities_100": "all",
+    "cities_150": "all",
+    "cities_200": "all",
+    "vp_50": "all",
+    "vp_100": "all",
+    "vp_150": "all",
+    "vp_200": "all",
+    "captures": "all",
+    "lost": "all",
+    "eliminated": "all",
+    "first_war": "all",
+    "win_turn": "all",
+    "gold_100": "all"
+   },
+   "rules_8_9_median": {
+    "games": 0,
+    "cities": {
+     "50": null,
+     "100": null,
+     "150": null,
+     "200": null
+    },
+    "vp": {
+     "50": null,
+     "100": null,
+     "150": null,
+     "200": null
+    },
+    "captures": null,
+    "first_war": null,
+    "win_turn": null
+   },
+   "all_games_median": {
+    "cities": {
+     "50": 4,
+     "100": 6,
+     "150": null,
+     "200": null
+    },
+    "vp": {
+     "50": 5,
+     "100": 6,
+     "150": null,
+     "200": null
+    },
+    "captures": 1,
+    "first_war": 16,
+    "win_turn": null
+   },
+   "name": "Byzantium"
+  },
+  "Athens": {
+   "games": 2,
+   "finished": 2,
+   "wins": 1,
+   "losses": 1,
+   "win_rate": 0.5,
+   "small_4p_games": 0,
+   "small_4p_wins": 0,
+   "cities": {
+    "50": 3,
+    "100": 5.5,
+    "150": 8.5,
+    "200": 9
+   },
+   "vp": {
+    "50": 0,
+    "100": 1.5,
+    "150": 3.5,
+    "200": 5
+   },
+   "captures": 1.5,
+   "lost": 2,
+   "eliminated": 0,
+   "first_war": 62,
+   "win_turn": 233,
+   "gold_100": 464,
+   "n": {
+    "cities_50": 2,
+    "cities_100": 2,
+    "cities_150": 2,
+    "cities_200": 2,
+    "vp_50": 2,
+    "vp_100": 2,
+    "vp_150": 2,
+    "vp_200": 2,
+    "captures": 2,
+    "lost": 2,
+    "eliminated": 2,
+    "first_war": 2,
+    "win_turn": 1,
+    "gold_100": 2
+   },
+   "basis": {
+    "cities_50": "all",
+    "cities_100": "all",
+    "cities_150": "all",
+    "cities_200": "all",
+    "vp_50": "all",
+    "vp_100": "all",
+    "vp_150": "all",
+    "vp_200": "all",
+    "captures": "all",
+    "lost": "all",
+    "eliminated": "all",
+    "first_war": "all",
+    "win_turn": "all",
+    "gold_100": "all"
+   },
+   "rules_8_9_median": {
+    "games": 2,
+    "cities": {
+     "50": 3,
+     "100": 5.5,
+     "150": 8.5,
+     "200": 9
+    },
+    "vp": {
+     "50": 0,
+     "100": 1.5,
+     "150": 3.5,
+     "200": 5
+    },
+    "captures": 1.5,
+    "first_war": 62,
+    "win_turn": 233
+   },
+   "all_games_median": {
+    "cities": {
+     "50": 3,
+     "100": 5.5,
+     "150": 8.5,
+     "200": 9
+    },
+    "vp": {
+     "50": 0,
+     "100": 1.5,
+     "150": 3.5,
+     "200": 5
+    },
+    "captures": 1.5,
+    "first_war": 62,
+    "win_turn": 233
+   },
+   "name": "Athens"
+  },
+  "Switzerland": {
+   "games": 6,
+   "finished": 6,
+   "wins": 5,
+   "losses": 1,
+   "win_rate": 0.833,
+   "small_4p_games": 1,
+   "small_4p_wins": 1,
+   "cities": {
+    "50": 5,
+    "100": 13,
+    "150": 6,
+    "200": 8.5
+   },
+   "vp": {
+    "50": 5,
+    "100": 9,
+    "150": 2.5,
+    "200": 5.5
+   },
+   "captures": 0,
+   "lost": 2,
+   "eliminated": 0,
+   "first_war": 19,
+   "win_turn": 110,
+   "gold_100": 1355,
+   "n": {
+    "cities_50": 1,
+    "cities_100": 1,
+    "cities_150": 4,
+    "cities_200": 4,
+    "vp_50": 1,
+    "vp_100": 1,
+    "vp_150": 4,
+    "vp_200": 4,
+    "captures": 1,
+    "lost": 1,
+    "eliminated": 1,
+    "first_war": 1,
+    "win_turn": 1,
+    "gold_100": 1
+   },
+   "basis": {
+    "cities_50": "small_4p",
+    "cities_100": "small_4p",
+    "cities_150": "all",
+    "cities_200": "all",
+    "vp_50": "small_4p",
+    "vp_100": "small_4p",
+    "vp_150": "all",
+    "vp_200": "all",
+    "captures": "small_4p",
+    "lost": "small_4p",
+    "eliminated": "small_4p",
+    "first_war": "small_4p",
+    "win_turn": "small_4p",
+    "gold_100": "small_4p"
+   },
+   "rules_8_9_median": {
+    "games": 4,
+    "cities": {
+     "50": 2,
+     "100": 4,
+     "150": 6,
+     "200": 8.5
+    },
+    "vp": {
+     "50": 0.5,
+     "100": 0,
+     "150": 2.5,
+     "200": 5.5
+    },
+    "captures": 2,
+    "first_war": 42.5,
+    "win_turn": 244
+   },
+   "all_games_median": {
+    "cities": {
+     "50": 3,
+     "100": 4,
+     "150": 6,
+     "200": 8.5
+    },
+    "vp": {
+     "50": 1,
+     "100": 0,
+     "150": 2.5,
+     "200": 5.5
+    },
+    "captures": 0.5,
+    "first_war": 42.5,
+    "win_turn": 202
+   },
+   "name": "Switzerland"
+  },
+  "Celts": {
+   "games": 2,
+   "finished": 2,
+   "wins": 2,
+   "losses": 0,
+   "win_rate": 1.0,
+   "small_4p_games": 2,
+   "small_4p_wins": 2,
+   "cities": {
+    "50": 4,
+    "100": 7.5,
+    "150": 10,
+    "200": 12
+   },
+   "vp": {
+    "50": 4,
+    "100": 4,
+    "150": 1,
+    "200": 6
+   },
+   "captures": 3,
+   "lost": 0,
+   "eliminated": 0,
+   "first_war": 23,
+   "win_turn": 199,
+   "gold_100": 731.5,
+   "n": {
+    "cities_50": 2,
+    "cities_100": 2,
+    "cities_150": 1,
+    "cities_200": 1,
+    "vp_50": 2,
+    "vp_100": 2,
+    "vp_150": 1,
+    "vp_200": 1,
+    "captures": 2,
+    "lost": 2,
+    "eliminated": 2,
+    "first_war": 2,
+    "win_turn": 2,
+    "gold_100": 2
+   },
+   "basis": {
+    "cities_50": "small_4p",
+    "cities_100": "small_4p",
+    "cities_150": "small_4p",
+    "cities_200": "small_4p",
+    "vp_50": "small_4p",
+    "vp_100": "small_4p",
+    "vp_150": "small_4p",
+    "vp_200": "small_4p",
+    "captures": "small_4p",
+    "lost": "small_4p",
+    "eliminated": "small_4p",
+    "first_war": "small_4p",
+    "win_turn": "small_4p",
+    "gold_100": "small_4p"
+   },
+   "rules_8_9_median": {
+    "games": 1,
+    "cities": {
+     "50": 3,
+     "100": 6,
+     "150": 10,
+     "200": 12
+    },
+    "vp": {
+     "50": 2,
+     "100": 1,
+     "150": 1,
+     "200": 6
+    },
+    "captures": 6,
+    "first_war": 21,
+    "win_turn": 249
+   },
+   "all_games_median": {
+    "cities": {
+     "50": 4,
+     "100": 7.5,
+     "150": 10,
+     "200": 12
+    },
+    "vp": {
+     "50": 4,
+     "100": 4,
+     "150": 1,
+     "200": 6
+    },
+    "captures": 3,
+    "first_war": 23,
+    "win_turn": 199
+   },
+   "name": "Celts"
+  }
+ },
+ "overall": {
+  "games": 24,
+  "finished": 17,
+  "wins": 13,
+  "losses": 4,
+  "win_rate": 0.765,
+  "small_4p_games": 13,
+  "small_4p_wins": 8,
+  "cities": {
+   "50": 4,
+   "100": 6,
+   "150": 8.5,
+   "200": 9
+  },
+  "vp": {
+   "50": 3,
+   "100": 2.5,
+   "150": 2.5,
+   "200": 5
+  },
+  "captures": 1.5,
+  "lost": 1,
+  "eliminated": 0,
+  "first_war": 25.5,
+  "win_turn": 149,
+  "gold_100": 810.5,
+  "n": {
+   "cities_50": 22,
+   "cities_100": 14,
+   "cities_150": 8,
+   "cities_200": 7,
+   "vp_50": 22,
+   "vp_100": 14,
+   "vp_150": 8,
+   "vp_200": 7,
+   "captures": 24,
+   "lost": 24,
+   "eliminated": 24,
+   "first_war": 24,
+   "win_turn": 13,
+   "gold_100": 14
+  },
+  "basis": {
+   "cities_50": "all",
+   "cities_100": "all",
+   "cities_150": "all",
+   "cities_200": "all",
+   "vp_50": "all",
+   "vp_100": "all",
+   "vp_150": "all",
+   "vp_200": "all",
+   "captures": "all",
+   "lost": "all",
+   "eliminated": "all",
+   "first_war": "all",
+   "win_turn": "all",
+   "gold_100": "all"
+  },
+  "small_4p": {
+   "games": 13,
+   "finished": 10,
+   "wins": 8,
+   "losses": 2,
+   "win_rate": 0.8,
+   "small_4p_games": 13,
+   "small_4p_wins": 8,
+   "cities": {
+    "50": 4.5,
+    "100": 8,
+    "150": 10,
+    "200": 12
+   },
+   "vp": {
+    "50": 4.5,
+    "100": 6,
+    "150": 5,
+    "200": 6
+   },
+   "captures": 1,
+   "lost": 0,
+   "eliminated": 0,
+   "first_war": 26,
+   "win_turn": 116.5,
+   "gold_100": 836,
+   "n": {
+    "cities_50": 12,
+    "cities_100": 7,
+    "cities_150": 2,
+    "cities_200": 1,
+    "vp_50": 12,
+    "vp_100": 7,
+    "vp_150": 2,
+    "vp_200": 1,
+    "captures": 13,
+    "lost": 13,
+    "eliminated": 13,
+    "first_war": 13,
+    "win_turn": 8,
+    "gold_100": 7
+   },
+   "basis": {
+    "cities_50": "all",
+    "cities_100": "all",
+    "cities_150": "all",
+    "cities_200": "all",
+    "vp_50": "all",
+    "vp_100": "all",
+    "vp_150": "all",
+    "vp_200": "all",
+    "captures": "all",
+    "lost": "all",
+    "eliminated": "all",
+    "first_war": "all",
+    "win_turn": "all",
+    "gold_100": "all"
+   }
+  }
+ }
+}

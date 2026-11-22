@@ -1,0 +1,1 @@
+Lanczos 64 px derivative of modern-hamlet-stage2.png. See modern-hamlet-stage2.prompt.txt for the image edit prompt.

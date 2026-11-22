@@ -1,0 +1,31 @@
+{
+  "title": "Unlock art: three directions",
+  "lede": "What each technology unlocks, painted, so the research screen sells it. Same five Ancient cards in each direction, mocked on the real screen.",
+  "quote": "“In Civ … seeing what they enable and thinking ‘ooh, I want that’.”",
+  "pick": "a",
+  "recommendation": "<p style=\"margin:0\"><b>A, the painted miniature.</b> It is the same hand-painted tabletop family as the cities and units already on the map, so a Workshop, a Knight and a Market read as one collection on every card. It needs no frame, stays legible at 64 px, and several unlocks sit side by side on one card like pieces on a shelf. The 1440 card gives it real presence; at 1000 × 600 it fits with Research now still in view.</p>",
+  "directions": [
+    {
+      "id": "a",
+      "title": "Painted miniature",
+      "what": "The building as a hand-painted tabletop miniature on a small patch of ground, with the city art's camera and finish. No frame: it stands on the card.",
+      "good": "One family with the city and unit miniatures; reads at 64 px; frameless, so two or three unlocks share a card cleanly.",
+      "bad": "Smallest area of paint of the three, so less atmosphere; abstract effects (cheaper tiles) need a clever object to stand for them."
+    },
+    {
+      "id": "b",
+      "title": "Illuminated roundel",
+      "what": "A round painted vignette in a fine gilt and ink double ring, like a struck medal. Units would sit in the same ring.",
+      "good": "Ceremonial and premium; one shape for buildings, effects and units; matches the ringed medallions used across the UI.",
+      "bad": "Leans on people, not places (the Library is a scribe’s portrait); close to the resource medallions, so a building can read as a resource."
+    },
+    {
+      "id": "c",
+      "title": "Painted scene plate",
+      "what": "A landscape oil painting of the place in use, edge to edge across the card, like the era and moment paintings.",
+      "good": "The most atmosphere and story: the most Civ-like ‘postcard’, and the widest image on the card.",
+      "bad": "At 1000 × 600 the plate shrinks to a thin 166 × 66 strip and the detail goes; cards with two or three unlocks don’t fit; units have no matching scenes."
+    }
+  ],
+  "footer": "Paintings by the house image pipeline (Luna), prompts beside each file in docs/design/unlock-art/samples/. Mocks: the real research screen with the art injected (app/e2e/unlock-art-mock.spec.ts on branch claude/unlock-art-mocks); the details link moves onto the tech name to make room."
+}

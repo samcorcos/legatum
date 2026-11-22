@@ -1,0 +1,4 @@
+2026-11-16 — Codex built-in image generation. Provisional author review; lead review pending.
+Reference images and requested edits: see docs/design/art-pass-2/generation-*.json.
+
+Repaint a historically grounded seventeenth-century SALTPETRE WORKS, a nitrary, as a coherent compact isometric miniature. Show a low open-sided timber shed sheltering rectangular earthen nitrary beds, several wooden leaching tubs, a small masonry boiling furnace beneath a copper cauldron, stacks of wood and a few sacks of finished pale crystals. It must read as a modest chemical works, not a modern salt evaporation pond or swimming pool. One compact neutral earth oval patch matching refined Legatum building miniatures; dark timber/masonry, pale mineral accents, muted umber/cream, warm upper-left light. Every tub rests on ground, furnace beneath pot, no mysterious disconnected pipes. No people, lettering, labels or watermarks. Genuine transparent background, full footprint in frame.

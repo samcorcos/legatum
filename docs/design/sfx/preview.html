@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Legatum sound effects preview</title>
+  <style>
+    :root { color-scheme: light; font: 16px/1.5 system-ui, sans-serif; color: #2d261e; background: #f4efe5; }
+    body { max-width: 1100px; margin: 0 auto; padding: 2rem 1rem 4rem; }
+    h1 { font: 600 2rem/1.15 Georgia, serif; margin: 0 0 .5rem; }
+    p { color: #61584b; margin: 0 0 1.5rem; }
+    .event { display: grid; grid-template-columns: minmax(150px, .7fr) 2fr; gap: 1rem; align-items: center; padding: .9rem 0; border-top: 1px solid #cfc4b1; }
+    .event h2 { font: 600 1rem/1.3 system-ui, sans-serif; margin: 0; overflow-wrap: anywhere; }
+    .player { min-width: 0; }
+    .player strong { display: block; font-size: .8rem; color: #716552; margin-bottom: .3rem; }
+    audio { display: block; width: 100%; height: 38px; }
+    @media (max-width: 650px) { .event { grid-template-columns: 1fr; gap: .4rem .75rem; } }
+  </style>
+</head>
+<body>
+  <h1>Sound effects</h1>
+  <p>Every shipped effect with its source. The preview plays the shipped AAC files.</p>
+  <main>
+    <section class="event" aria-label="allReady">
+      <h2>allReady</h2>
+      <div class="player"><strong>Music Jingles: jingles_PIZZI16.ogg</strong><audio controls preload="none" src="../../../app/public/audio/multiplayer/all-ready.m4a"></audio></div>
+    </section>
+    <section class="event" aria-label="battleLost">
+      <h2>battleLost</h2>
+      <div class="player"><strong>Impact Sounds: impactPunch_heavy_002.ogg</strong><audio controls preload="none" src="../../../app/public/audio/turn/battle-lost.m4a"></audio></div>
+    </section>
+    <section class="event" aria-label="battleWon">
+      <h2>battleWon</h2>
+      <div class="player"><strong>Impact Sounds: impactMetal_light_000.ogg</strong><audio controls preload="none" src="../../../app/public/audio/turn/battle-won.m4a"></audio></div>
+    </section>
+    <section class="event" aria-label="buildingComplete">
+      <h2>buildingComplete</h2>
+      <div class="player"><strong>Impact Sounds: impactPlank_medium_000.ogg</strong><audio controls preload="none" src="../../../app/public/audio/turn/building-complete.m4a"></audio></div>
+    </section>
+    <section class="event" aria-label="cityCaptured">
+      <h2>cityCaptured</h2>
+      <div class="player"><strong>Music Jingles: jingles_HIT10.ogg</strong><audio controls preload="none" src="../../../app/public/audio/stings/city-captured.m4a"></audio></div>
+    </section>
+    <section class="event" aria-label="cityFounded">
+      <h2>cityFounded</h2>
+      <div class="player"><strong>Music Jingles: jingles_PIZZI10.ogg</strong><audio controls preload="none" src="../../../app/public/audio/stings/city-founded.m4a"></audio></div>
+    </section>
+    <section class="event" aria-label="cityLost">
+      <h2>cityLost</h2>
+      <div class="player"><strong>Music Jingles: jingles_HIT03.ogg</strong><audio controls preload="none" src="../../../app/public/audio/stings/city-lost.m4a"></audio></div>
+    </section>
+    <section class="event" aria-label="commit">
+      <h2>commit</h2>
+      <div class="player"><strong>RPG Audio: footstep00.ogg + footstep03.ogg + footstep07.ogg</strong><audio controls preload="none" src="../../../app/public/audio/orders/commit.m4a"></audio></div>
+    </section>
+    <section class="event" aria-label="commitAttack">
+      <h2>commitAttack</h2>
+      <div class="player"><strong>Impact Sounds: impactMetal_heavy_000.ogg</strong><audio controls preload="none" src="../../../app/public/audio/orders/commit-attack.m4a"></audio></div>
+    </section>
+    <section class="event" aria-label="defeat">
+      <h2>defeat</h2>
+      <div class="player"><strong>Music Jingles: jingles_PIZZI07.ogg</strong><audio controls preload="none" src="../../../app/public/audio/stings/defeat.m4a"></audio></div>
+    </section>
+    <section class="event" aria-label="discovery">
+      <h2>discovery</h2>
+      <div class="player"><strong>Music Jingles: jingles_PIZZI03.ogg</strong><audio controls preload="none" src="../../../app/public/audio/stings/discovery.m4a"></audio></div>
+    </section>
+    <section class="event" aria-label="eliminated">
+      <h2>eliminated</h2>
+      <div class="player"><strong>Music Jingles: jingles_HIT15.ogg</strong><audio controls preload="none" src="../../../app/public/audio/stings/eliminated.m4a"></audio></div>
+    </section>
+    <section class="event" aria-label="fanfare.legendary">
+      <h2>fanfare.legendary</h2>
+      <div class="player"><strong>Short Choir</strong><audio controls preload="none" src="../../../app/public/audio/stings/legendary.m4a"></audio></div>
+    </section>
+    <section class="event" aria-label="greatWork">
+      <h2>greatWork</h2>
+      <div class="player"><strong>Short Choir</strong><audio controls preload="none" src="../../../app/public/audio/stings/great-work.m4a"></audio></div>
+    </section>
+    <section class="event" aria-label="invalid">
+      <h2>invalid</h2>
+      <div class="player"><strong>RPG Audio: dropLeather.ogg</strong><audio controls preload="none" src="../../../app/public/audio/ui/invalid.m4a"></audio></div>
+    </section>
+    <section class="event" aria-label="longPress">
+      <h2>longPress</h2>
+      <div class="player"><strong>RPG Audio: creak1.ogg</strong><audio controls preload="none" src="../../../app/public/audio/ui/long-press.m4a"></audio></div>
+    </section>
+    <section class="event" aria-label="partnerReady">
+      <h2>partnerReady</h2>
+      <div class="player"><strong>RPG Audio: metalLatch.ogg</strong><audio controls preload="none" src="../../../app/public/audio/multiplayer/partner-ready.m4a"></audio></div>
+    </section>
+    <section class="event" aria-label="preview">
+      <h2>preview</h2>
+      <div class="player"><strong>RPG Audio: bookFlip1.ogg</strong><audio controls preload="none" src="../../../app/public/audio/ui/preview.m4a"></audio></div>
+    </section>
+    <section class="event" aria-label="purchase">
+      <h2>purchase</h2>
+      <div class="player"><strong>RPG Audio: handleCoins2.ogg</strong><audio controls preload="none" src="../../../app/public/audio/orders/purchase.m4a"></audio></div>
+    </section>
+    <section class="event" aria-label="ready">
+      <h2>ready</h2>
+      <div class="player"><strong>RPG Audio: bookClose.ogg</strong><audio controls preload="none" src="../../../app/public/audio/orders/ready.m4a"></audio></div>
+    </section>
+    <section class="event" aria-label="seatTaken">
+      <h2>seatTaken</h2>
+      <div class="player"><strong>Impact Sounds: impactWood_medium_001.ogg</strong><audio controls preload="none" src="../../../app/public/audio/multiplayer/seat-taken.m4a"></audio></div>
+    </section>
+    <section class="event" aria-label="select">
+      <h2>select</h2>
+      <div class="player"><strong>RPG Audio: handleSmallLeather.ogg</strong><audio controls preload="none" src="../../../app/public/audio/ui/select.m4a"></audio></div>
+    </section>
+    <section class="event" aria-label="sheet">
+      <h2>sheet</h2>
+      <div class="player"><strong>RPG Audio: bookOpen.ogg</strong><audio controls preload="none" src="../../../app/public/audio/ui/sheet.m4a"></audio></div>
+    </section>
+    <section class="event" aria-label="snap">
+      <h2>snap</h2>
+      <div class="player"><strong>Impact Sounds: impactWood_light_001.ogg</strong><audio controls preload="none" src="../../../app/public/audio/ui/snap.m4a"></audio></div>
+    </section>
+    <section class="event" aria-label="sting.major">
+      <h2>sting.major</h2>
+      <div class="player"><strong>Music Jingles: jingles_PIZZI12.ogg</strong><audio controls preload="none" src="../../../app/public/audio/stings/major.m4a"></audio></div>
+    </section>
+    <section class="event" aria-label="sting.minor">
+      <h2>sting.minor</h2>
+      <div class="player"><strong>Music Jingles: jingles_PIZZI02.ogg</strong><audio controls preload="none" src="../../../app/public/audio/stings/minor.m4a"></audio></div>
+    </section>
+    <section class="event" aria-label="sting.notable">
+      <h2>sting.notable</h2>
+      <div class="player"><strong>Music Jingles: jingles_PIZZI04.ogg</strong><audio controls preload="none" src="../../../app/public/audio/stings/notable.m4a"></audio></div>
+    </section>
+    <section class="event" aria-label="techComplete">
+      <h2>techComplete</h2>
+      <div class="player"><strong>Music Jingles: jingles_PIZZI06.ogg</strong><audio controls preload="none" src="../../../app/public/audio/stings/tech-complete.m4a"></audio></div>
+    </section>
+    <section class="event" aria-label="turnResolved">
+      <h2>turnResolved</h2>
+      <div class="player"><strong>RPG Audio: bookFlip2.ogg</strong><audio controls preload="none" src="../../../app/public/audio/turn/turn-resolved.m4a"></audio></div>
+    </section>
+    <section class="event" aria-label="unready">
+      <h2>unready</h2>
+      <div class="player"><strong>RPG Audio: bookPlace1.ogg</strong><audio controls preload="none" src="../../../app/public/audio/orders/unready.m4a"></audio></div>
+    </section>
+    <section class="event" aria-label="victory">
+      <h2>victory</h2>
+      <div class="player"><strong>Music Jingles: jingles_PIZZI15.ogg</strong><audio controls preload="none" src="../../../app/public/audio/stings/victory.m4a"></audio></div>
+    </section>
+    <section class="event" aria-label="vpGained">
+      <h2>vpGained</h2>
+      <div class="player"><strong>Music Jingles: jingles_PIZZI16.ogg</strong><audio controls preload="none" src="../../../app/public/audio/turn/vp-gained.m4a"></audio></div>
+    </section>
+    <section class="event" aria-label="vpLost">
+      <h2>vpLost</h2>
+      <div class="player"><strong>Music Jingles: jingles_PIZZI05.ogg</strong><audio controls preload="none" src="../../../app/public/audio/turn/vp-lost.m4a"></audio></div>
+    </section>
+    <section class="event" aria-label="warDeclared">
+      <h2>warDeclared</h2>
+      <div class="player"><strong>Music Jingles: jingles_HIT11.ogg</strong><audio controls preload="none" src="../../../app/public/audio/stings/war-declared.m4a"></audio></div>
+    </section>
+    <section class="event" aria-label="warning">
+      <h2>warning</h2>
+      <div class="player"><strong>Impact Sounds: impactWood_heavy_002.ogg</strong><audio controls preload="none" src="../../../app/public/audio/turn/warning.m4a"></audio></div>
+    </section>
+  </main>
+</body>
+</html>

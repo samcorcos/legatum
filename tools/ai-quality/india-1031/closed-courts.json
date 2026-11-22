@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "name": "closed-courts",
+  "faction_overrides": {
+    "India": {
+      "india_last_office_value": 0,
+      "india_diwan_commit": 0,
+      "campaign_contain_only": 1,
+      "second_front_temperament": -60
+    }
+  }
+}

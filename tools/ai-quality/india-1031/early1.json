@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "name": "early1",
+  "faction_overrides": {
+    "India": {
+      "india_early_office_min_gold": 1
+    }
+  }
+}

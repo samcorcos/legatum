@@ -1,0 +1,30 @@
+[
+  {
+    "slug": "machine-hamlet",
+    "kind": "city",
+    "attempt": 1,
+    "input": "~/code/legatum/.claude/worktrees/lane-5/app/src/assets/cities/industrial-hamlet.png",
+    "prompt": "Create an entirely NEW Machine Age c.1900–1914 hamlet miniature: a small rural electrified hamlet with four modest brick-and-plaster cottages, a narrow rural railway halt, tiny brick dynamo house and two wooden electricity poles connected by wires; vegetable gardens, dirt lane, no large factory, no skyline. Use reference only for exact three-quarter isometric camera, small neutral earth oval ground patch, upper-left daylight, realistic hand-painted atlas miniature finish, parchment-compatible umber/brick/ivory/mineral-grey palette, and overall canvas footprint. Replace ALL architecture and street plan with a new arrangement; do not copy or recolor reference buildings. Clear silhouette and simple masses legible at64px. No people large enough for portrait detail, no words, signs, numbers, flags or logos. Full oval patch and all buildings visible with transparent margin. Genuine transparent background, square canvas."
+  },
+  {
+    "slug": "machine-town",
+    "kind": "city",
+    "attempt": 1,
+    "input": "~/code/legatum/.claude/worktrees/lane-5/app/src/assets/cities/industrial-town.png",
+    "prompt": "Create an entirely NEW Machine Age c.1900–1914 town miniature: a compact early-electrified town of brick terraced houses, a low sawtooth-roof workshop, central modest civic clock tower, electric tram crossing a small square, a railway platform and small gardens; no skyscrapers. Use reference only for exact three-quarter isometric camera, small neutral earth oval ground patch, upper-left daylight, realistic hand-painted atlas miniature finish, parchment-compatible umber/brick/ivory/mineral-grey palette, and overall canvas footprint. Replace ALL architecture and street plan with a new arrangement; do not copy or recolor reference buildings. Clear silhouette and simple masses legible at64px. No people large enough for portrait detail, no words, signs, numbers, flags or logos. Full oval patch and all buildings visible with transparent margin. Genuine transparent background, square canvas."
+  },
+  {
+    "slug": "machine-city",
+    "kind": "city",
+    "attempt": 1,
+    "input": "~/code/legatum/.claude/worktrees/lane-5/app/src/assets/cities/industrial-city.png",
+    "prompt": "Create an entirely NEW Machine Age c.1900–1914 city miniature: a dense early-electrified city with brick tenement blocks, two early steel-framed commercial towers of ten stories, a large railway terminal with arched iron roof, low factory halls, electric tram street and small civic square; no glass curtain-wall skyscrapers. Use reference only for exact three-quarter isometric camera, small neutral earth oval ground patch, upper-left daylight, realistic hand-painted atlas miniature finish, parchment-compatible umber/brick/ivory/mineral-grey palette, and overall canvas footprint. Replace ALL architecture and street plan with a new arrangement; do not copy or recolor reference buildings. Clear silhouette and simple masses legible at64px. No people large enough for portrait detail, no words, signs, numbers, flags or logos. Full oval patch and all buildings visible with transparent margin. Genuine transparent background, square canvas."
+  },
+  {
+    "slug": "machine-metropolis",
+    "kind": "city",
+    "attempt": 1,
+    "input": "~/code/legatum/.claude/worktrees/lane-5/app/src/assets/cities/industrial-metropolis.png",
+    "prompt": "Create an entirely NEW Machine Age c.1900–1914 metropolis miniature: a dense grand early-twentieth-century metropolis, concentric blocks of brick tenements, several tall early stone-clad steel-frame office towers with stepped rooflines, great railway terminal, tram boulevard, brick factories at outer edge and a civic square; no postwar glass slab skyscrapers. Use reference only for exact three-quarter isometric camera, small neutral earth oval ground patch, upper-left daylight, realistic hand-painted atlas miniature finish, parchment-compatible umber/brick/ivory/mineral-grey palette, and overall canvas footprint. Replace ALL architecture and street plan with a new arrangement; do not copy or recolor reference buildings. Clear silhouette and simple masses legible at64px. No people large enough for portrait detail, no words, signs, numbers, flags or logos. Full oval patch and all buildings visible with transparent margin. Genuine transparent background, square canvas."
+  }
+]

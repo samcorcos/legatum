@@ -1,0 +1,63 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`fogged public borders and cities: core behavior > shows a new city on explored land, hides one on unexplored land, and removes razed cities 1`] = `
+{
+  "cities": [
+    {
+      "hp": 200,
+      "id": 1,
+      "name": "Waypost Seven",
+      "owner": 1,
+      "population": 1,
+      "visible": false,
+      "walls": false,
+    },
+  ],
+  "tile": {
+    "explored": true,
+    "owner": 1,
+    "ruin": false,
+    "terrain": "Grassland",
+    "visible": false,
+  },
+  "units": [],
+}
+`;
+
+exports[`fogged public borders and cities: core behavior > shows a new city on explored land, hides one on unexplored land, and removes razed cities 2`] = `
+{
+  "cities": [],
+  "tile": {
+    "explored": true,
+    "owner": null,
+    "ruin": false,
+    "terrain": "Grassland",
+    "visible": false,
+  },
+  "units": [],
+}
+`;
+
+exports[`fogged public borders and cities: core behavior > updates a captured city and border without revealing private facts or units 1`] = `
+{
+  "cities": [
+    {
+      "hp": 200,
+      "id": 1,
+      "name": "New Waypost",
+      "owner": 2,
+      "population": 3,
+      "visible": false,
+      "walls": false,
+    },
+  ],
+  "tile": {
+    "explored": true,
+    "owner": 2,
+    "ruin": false,
+    "terrain": "Grassland",
+    "visible": false,
+  },
+  "units": [],
+}
+`;

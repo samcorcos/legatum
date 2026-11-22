@@ -1,0 +1,8 @@
+2026-11-16 — Codex built-in image generation. Provisional author review; lead review pending.
+Reference images and requested edits: see docs/design/art-pass-2/generation-*.json.
+
+Edit this exact early-1900s hamlet painting into construction stage 1 of three. STRICT REGISTRATION: preserve exact original square canvas, camera, oval earth outline, all road and railway geometry, trees, and the exact footprint and position of EVERY building. Do not change layout, enlarge the ground or move buildings. Remove traffic and people so construction is readable. Reduce each building to low masonry or concrete foundations inside its exact finished footprint, with modest material piles. No roofs or full walls. Use period-appropriate brick and timber building methods. Ground colour, light and painting style must match reference exactly. Fine painted miniature, clear continuous shapes. Full transparent background and margins, no text or watermarks.
+
+--- FOLLOW-UP REQUEST ---
+
+Edit only the small passenger shelter on the railway platform at the front-right of this construction-stage painting. This is stage 1: remove the shelter's finished roof, posts, walls, bench and lamp under the roof, leaving only its low rectangular timber sill or brick footing exactly in place on the platform. Keep platform, tracks, adjacent separate street lamp and every other foundation, tree, wire, material pile and pixel of the scene unchanged. Same framing, transparent background. No new structure, no text.

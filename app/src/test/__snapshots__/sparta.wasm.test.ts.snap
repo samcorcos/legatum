@@ -1,0 +1,221 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Sparta WASM behavior > heals after a military kill 1`] = `
+[
+  {
+    "at": {
+      "q": 6,
+      "r": 4,
+    },
+    "attacker": 1,
+    "attacker_at": {
+      "q": 4,
+      "r": 4,
+    },
+    "attacker_hp_after": 40,
+    "attacker_owner": 0,
+    "attacker_roll": 86,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Archer (ranged)",
+          15,
+        ],
+        [
+          "Level 1: +10%",
+          1,
+        ],
+        [
+          "Wounded",
+          -6,
+        ],
+      ],
+      "total": 10,
+    },
+    "damage_to_attacker": 0,
+    "damage_to_defender": 45,
+    "defender": {
+      "kind": "Unit",
+      "owner": 1,
+      "unit": 2,
+      "unit_kind": "Scout",
+    },
+    "defender_hp_after": 0,
+    "defender_roll": 0,
+    "defender_strength": {
+      "parts": [
+        [
+          "Scout",
+          5,
+        ],
+        [
+          "Wounded",
+          -9,
+        ],
+      ],
+      "total": -4,
+    },
+    "meeting": false,
+    "ranged": true,
+    "type": "Battle",
+  },
+  {
+    "at": {
+      "q": 6,
+      "r": 4,
+    },
+    "owner": 1,
+    "type": "UnitDestroyed",
+    "unit": 2,
+    "unit_kind": "Scout",
+  },
+  {
+    "hp_healed": 60,
+    "player": 0,
+    "type": "SpartaKillHeal",
+    "unit": 2,
+    "unit_kind": "Scout",
+    "victim_owner": 1,
+  },
+]
+`;
+
+exports[`Sparta WASM behavior > heals after a military kill 2`] = `100`;
+
+exports[`Sparta WASM behavior > heals nearby regiments on capture without a Gold payout 1`] = `
+[
+  {
+    "city": 2,
+    "from": 1,
+    "to": 0,
+    "type": "CityCaptured",
+  },
+  {
+    "city": 2,
+    "player": 0,
+    "type": "SpartaConquest",
+    "units_healed": 1,
+  },
+]
+`;
+
+exports[`Sparta WASM behavior > heals nearby regiments on capture without a Gold payout 2`] = `180`;
+
+exports[`Sparta WASM behavior > starts every military type at level one and quotes the 50% home cost 1`] = `
+[
+  [
+    "Soldier",
+    1,
+    16,
+    46,
+  ],
+  [
+    "Scout",
+    1,
+    16,
+    46,
+  ],
+  [
+    "Ranger",
+    1,
+    16,
+    46,
+  ],
+  [
+    "Trooper",
+    1,
+    16,
+    46,
+  ],
+]
+`;
+
+exports[`Sparta WASM behavior > starts every military type at level one and quotes the 50% home cost 2`] = `
+[
+  [
+    {
+      "kind": "Unit",
+      "unit": "Settler",
+    },
+    105,
+    {
+      "parts": [
+        [
+          "Listed cost",
+          70,
+        ],
+        [
+          "Sparta: non-military +50%",
+          35,
+        ],
+      ],
+      "total": 105,
+    },
+    75,
+  ],
+  [
+    {
+      "kind": "Unit",
+      "unit": "Soldier",
+    },
+    80,
+    {
+      "parts": [
+        [
+          "Listed cost",
+          80,
+        ],
+      ],
+      "total": 80,
+    },
+    0,
+  ],
+]
+`;
+
+exports[`Sparta WASM behavior > starts every military type at level one and quotes the 50% home cost 3`] = `
+[
+  [
+    {
+      "kind": "Unit",
+      "unit": "Settler",
+    },
+    180,
+    {
+      "parts": [
+        [
+          "Listed cost",
+          70,
+        ],
+        [
+          "Previously trained Settlers",
+          50,
+        ],
+        [
+          "Sparta: non-military +50%",
+          60,
+        ],
+      ],
+      "total": 180,
+    },
+    75,
+  ],
+  [
+    {
+      "kind": "Unit",
+      "unit": "Soldier",
+    },
+    80,
+    {
+      "parts": [
+        [
+          "Listed cost",
+          80,
+        ],
+      ],
+      "total": 80,
+    },
+    0,
+  ],
+]
+`;

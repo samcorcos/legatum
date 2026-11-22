@@ -1,0 +1,19 @@
+box cargo: cargo test -> cargo nextest run (+ doctests); LEGATUM_BOX_NO_NEXTEST=1 for plain cargo test
+    Finished `release-checked` profile [optimized] target(s) in 0.10s
+────────────
+ Nextest run ID 629d31a5-868a-499f-8ff5-e2c0747c63aa with nextest profile: default
+    Starting 12 tests across 1 binary
+        PASS [   0.019s] ( 1/12) legatum-sim::determinism wasm_api_rejects_changed_initial_hash
+        PASS [   0.020s] ( 2/12) legatum-sim::determinism wasm_api_rejects_changed_turn_hash
+        PASS [   0.033s] ( 3/12) legatum-sim::determinism wasm_api_rejects_wrong_turn_number
+        PASS [   0.037s] ( 4/12) legatum-sim::determinism confirmed_movement_path_survives_every_save_boundary
+        PASS [   0.081s] ( 5/12) legatum-sim::determinism diplomacy_boundary_tape_preserves_pending_offers_and_guarantees
+        PASS [   0.363s] ( 6/12) legatum-sim::determinism recorded_hashes_seed_max_minus_one
+        PASS [   0.367s] ( 7/12) legatum-sim::determinism recorded_hashes_seed_max_minus_two
+        PASS [   0.367s] ( 8/12) legatum-sim::determinism recorded_hashes_seed_max
+        PASS [   0.389s] ( 9/12) legatum-sim::determinism research_queue_tape_survives_every_save_boundary
+        PASS [   0.487s] (10/12) legatum-sim::determinism production_queue_and_separate_purchase_tape_survives_every_save_boundary
+        PASS [   0.829s] (11/12) legatum-sim::determinism alliance_tape_survives_every_save_boundary_with_gold_and_betrayal
+        PASS [   1.783s] (12/12) legatum-sim::determinism scripted_hard_city_fire_tape_survives_every_save_boundary
+────────────
+     Summary [   1.783s] 12 tests run: 12 passed, 0 skipped

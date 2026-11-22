@@ -1,0 +1,1 @@
+Lanczos 128 px derivative of classical-walls-stage2.png. See classical-walls-stage2.prompt.txt for the image edit prompt.

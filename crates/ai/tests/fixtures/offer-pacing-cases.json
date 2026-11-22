@@ -1,0 +1,501 @@
+{
+ "comment": "Cases for crates/ai/tests/offer_pacing.rs. players: [team, is_human, alive]; 'me' is the sender's team (its first player plans).",
+ "cases": [
+  {
+   "name": "Standard turn 15",
+   "speed": "Standard",
+   "turn": 15,
+   "me": 1,
+   "to": 2,
+   "players": [
+    [
+     0,
+     true,
+     true
+    ],
+    [
+     1,
+     false,
+     true
+    ],
+    [
+     2,
+     false,
+     true
+    ],
+    [
+     3,
+     false,
+     true
+    ]
+   ],
+   "acquainted": false,
+   "slot_open": true
+  },
+  {
+   "name": "Standard turn 16",
+   "speed": "Standard",
+   "turn": 16,
+   "me": 1,
+   "to": 2,
+   "players": [
+    [
+     0,
+     true,
+     true
+    ],
+    [
+     1,
+     false,
+     true
+    ],
+    [
+     2,
+     false,
+     true
+    ],
+    [
+     3,
+     false,
+     true
+    ]
+   ],
+   "acquainted": true,
+   "slot_open": true
+  },
+  {
+   "name": "turn 12: only team 1 may offer to the human (sender team 1)",
+   "speed": "Standard",
+   "turn": 12,
+   "me": 1,
+   "to": 0,
+   "players": [
+    [
+     0,
+     true,
+     true
+    ],
+    [
+     1,
+     false,
+     true
+    ],
+    [
+     2,
+     false,
+     true
+    ],
+    [
+     3,
+     false,
+     true
+    ]
+   ],
+   "acquainted": false,
+   "slot_open": true
+  },
+  {
+   "name": "turn 20: only team 3 may offer to the human (sender team 1)",
+   "speed": "Standard",
+   "turn": 20,
+   "me": 1,
+   "to": 0,
+   "players": [
+    [
+     0,
+     true,
+     true
+    ],
+    [
+     1,
+     false,
+     true
+    ],
+    [
+     2,
+     false,
+     true
+    ],
+    [
+     3,
+     false,
+     true
+    ]
+   ],
+   "acquainted": true,
+   "slot_open": false
+  },
+  {
+   "name": "turn 12: only team 1 may offer to the human (sender team 2)",
+   "speed": "Standard",
+   "turn": 12,
+   "me": 2,
+   "to": 0,
+   "players": [
+    [
+     0,
+     true,
+     true
+    ],
+    [
+     1,
+     false,
+     true
+    ],
+    [
+     2,
+     false,
+     true
+    ],
+    [
+     3,
+     false,
+     true
+    ]
+   ],
+   "acquainted": false,
+   "slot_open": false
+  },
+  {
+   "name": "turn 20: only team 3 may offer to the human (sender team 2)",
+   "speed": "Standard",
+   "turn": 20,
+   "me": 2,
+   "to": 0,
+   "players": [
+    [
+     0,
+     true,
+     true
+    ],
+    [
+     1,
+     false,
+     true
+    ],
+    [
+     2,
+     false,
+     true
+    ],
+    [
+     3,
+     false,
+     true
+    ]
+   ],
+   "acquainted": true,
+   "slot_open": false
+  },
+  {
+   "name": "turn 12: only team 1 may offer to the human (sender team 3)",
+   "speed": "Standard",
+   "turn": 12,
+   "me": 3,
+   "to": 0,
+   "players": [
+    [
+     0,
+     true,
+     true
+    ],
+    [
+     1,
+     false,
+     true
+    ],
+    [
+     2,
+     false,
+     true
+    ],
+    [
+     3,
+     false,
+     true
+    ]
+   ],
+   "acquainted": false,
+   "slot_open": false
+  },
+  {
+   "name": "turn 20: only team 3 may offer to the human (sender team 3)",
+   "speed": "Standard",
+   "turn": 20,
+   "me": 3,
+   "to": 0,
+   "players": [
+    [
+     0,
+     true,
+     true
+    ],
+    [
+     1,
+     false,
+     true
+    ],
+    [
+     2,
+     false,
+     true
+    ],
+    [
+     3,
+     false,
+     true
+    ]
+   ],
+   "acquainted": true,
+   "slot_open": true
+  },
+  {
+   "name": "offers to an AI team are never staggered",
+   "speed": "Standard",
+   "turn": 20,
+   "me": 2,
+   "to": 1,
+   "players": [
+    [
+     0,
+     true,
+     true
+    ],
+    [
+     1,
+     false,
+     true
+    ],
+    [
+     2,
+     false,
+     true
+    ],
+    [
+     3,
+     false,
+     true
+    ]
+   ],
+   "acquainted": true,
+   "slot_open": true
+  },
+  {
+   "name": "an eliminated AI team has no slot (sender team 1)",
+   "speed": "Standard",
+   "turn": 13,
+   "me": 1,
+   "to": 0,
+   "players": [
+    [
+     0,
+     true,
+     true
+    ],
+    [
+     1,
+     false,
+     true
+    ],
+    [
+     2,
+     false,
+     false
+    ],
+    [
+     3,
+     false,
+     true
+    ]
+   ],
+   "acquainted": false,
+   "slot_open": false
+  },
+  {
+   "name": "an eliminated AI team has no slot (sender team 3)",
+   "speed": "Standard",
+   "turn": 13,
+   "me": 3,
+   "to": 0,
+   "players": [
+    [
+     0,
+     true,
+     true
+    ],
+    [
+     1,
+     false,
+     true
+    ],
+    [
+     2,
+     false,
+     false
+    ],
+    [
+     3,
+     false,
+     true
+    ]
+   ],
+   "acquainted": false,
+   "slot_open": true
+  },
+  {
+   "name": "an eliminated human is not staggered",
+   "speed": "Standard",
+   "turn": 20,
+   "me": 2,
+   "to": 0,
+   "players": [
+    [
+     0,
+     true,
+     false
+    ],
+    [
+     1,
+     false,
+     true
+    ],
+    [
+     2,
+     false,
+     true
+    ],
+    [
+     3,
+     false,
+     true
+    ]
+   ],
+   "acquainted": true,
+   "slot_open": true
+  },
+  {
+   "name": "a two-player AI team holds one slot (sender team 1)",
+   "speed": "Standard",
+   "turn": 4,
+   "me": 1,
+   "to": 0,
+   "players": [
+    [
+     0,
+     true,
+     true
+    ],
+    [
+     1,
+     false,
+     true
+    ],
+    [
+     1,
+     false,
+     true
+    ],
+    [
+     2,
+     false,
+     true
+    ]
+   ],
+   "acquainted": false,
+   "slot_open": true
+  },
+  {
+   "name": "a two-player AI team holds one slot (sender team 2)",
+   "speed": "Standard",
+   "turn": 4,
+   "me": 2,
+   "to": 0,
+   "players": [
+    [
+     0,
+     true,
+     true
+    ],
+    [
+     1,
+     false,
+     true
+    ],
+    [
+     1,
+     false,
+     true
+    ],
+    [
+     2,
+     false,
+     true
+    ]
+   ],
+   "acquainted": false,
+   "slot_open": false
+  },
+  {
+   "name": "a human's AI teammate also takes a slot toward another human (sender team 1)",
+   "speed": "Standard",
+   "turn": 5,
+   "me": 1,
+   "to": 0,
+   "players": [
+    [
+     0,
+     true,
+     true
+    ],
+    [
+     1,
+     false,
+     true
+    ],
+    [
+     1,
+     true,
+     true
+    ],
+    [
+     2,
+     false,
+     true
+    ]
+   ],
+   "acquainted": false,
+   "slot_open": false
+  },
+  {
+   "name": "a human's AI teammate also takes a slot toward another human (sender team 2)",
+   "speed": "Standard",
+   "turn": 5,
+   "me": 2,
+   "to": 0,
+   "players": [
+    [
+     0,
+     true,
+     true
+    ],
+    [
+     1,
+     false,
+     true
+    ],
+    [
+     1,
+     true,
+     true
+    ],
+    [
+     2,
+     false,
+     true
+    ]
+   ],
+   "acquainted": false,
+   "slot_open": true
+  }
+ ]
+}

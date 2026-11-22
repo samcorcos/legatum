@@ -1,0 +1,4 @@
+2026-11-16 — Codex built-in image generation. Provisional author review; lead review pending.
+Reference images and requested edits: see docs/design/art-pass-2/generation-*.json.
+
+Edit this existing painted early Cold-War swept-wing jet miniature, same orientation, exact wings, tail, fuselage, nose intake, colors and lighting. Add the missing closed clear bubble canopy over the exposed cockpit seat. It must be physically attached to the cockpit rim, with metal frame and glazed windscreen, transparent glass subtle highlights, seat visible through glass. No open cockpit. Preserve curved display support but make its circular base ONE plain warm cream disc, without tiered steps or ornate texture. Genuine transparent background; no words or watermark.

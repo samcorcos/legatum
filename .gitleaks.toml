@@ -1,0 +1,8 @@
+# gitleaks allowlist for this repository: these are localStorage key names, not credentials.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "UI storage-key constants"
+regexTarget = "line"
+regexes = ['''(RECORDS_KEY|SORT_KEY) = ''']

@@ -1,0 +1,28 @@
+[package]
+name = "legatum-ai"
+description = "Legatum AI: scripted and search brains that plan from a player's own view"
+edition.workspace = true
+version.workspace = true
+publish.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+legatum-core.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+flate2 = "1"
+base64 = "0.22"
+rayon = { workspace = true, optional = true }
+
+[features]
+# Hard+Search rollouts run in parallel (native simulator only; WASM stays sequential).
+parallel-search = ["dep:rayon"]
+
+[dev-dependencies]
+flate2 = "1"
+zstd = "0.13"
+
+[[example]]
+name = "perf_profile"
+test = true

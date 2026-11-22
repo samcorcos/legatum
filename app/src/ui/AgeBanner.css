@@ -1,0 +1,26 @@
+/* A World Age has begun: one card, open to every empire. A banner below the top bar; one action. It stays inside the map lane
+   between the left panel and the race panel, so nothing hangs outside the box. */
+.toast.age-banner {
+  top: 76px;
+  bottom: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+  left: calc(var(--story-left, 16px) + (100% - var(--story-left, 16px) - var(--story-right, 16px)) / 2);
+  width: min(520px, calc(100% - var(--story-left, 16px) - var(--story-right, 16px) - 16px));
+  max-width: none;
+  padding: 8px 10px 10px;
+  border-left: 6px solid var(--accent);
+  font-size: 13px;
+  align-items: start;
+}
+.age-banner header { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.age-banner h3 { flex: 1; min-width: 0; margin: 0; font: 700 15px/1.2 var(--display); overflow-wrap: break-word; }
+.age-banner-numeral { display: inline-grid; place-items: center; flex: none; min-width: 26px; height: 26px; padding: 0 3px; border: 1px solid var(--accent); border-radius: 13px; color: var(--accent); font: 700 12px/1 var(--display); }
+.age-banner-sub { margin: 0; color: var(--ink-2); font-size: 12px; overflow-wrap: break-word; }
+.age-banner ul { display: grid; gap: 4px; min-width: 0; margin: 0; padding: 0; list-style: none; }
+.age-banner li { display: grid; grid-template-columns: 52px minmax(0, 1fr); column-gap: 8px; align-items: baseline; min-width: 0; }
+.age-banner-fam { color: var(--ink-2); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
+.age-banner-text { min-width: 0; font-weight: 600; overflow-wrap: break-word; }
+.age-banner .icon-btn { flex: none; width: 26px; height: 26px; }
+.age-banner-go { justify-self: end; max-width: 100%; }

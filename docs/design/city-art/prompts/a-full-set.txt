@@ -1,0 +1,31 @@
+Legatum city art · direction A · generation record
+2026-10-10
+
+Common prompt for each era sheet
+--------------------------------
+Create a transparent-background 2 by 2 sheet of four separate isolated city miniatures for a premium serious historical 4X game. Follow the approved direction-A Ancient reference: restrained hand-painted 3D miniature, aerial three-quarter isometric camera, warm natural materials, clear modeled forms, soft daylight, refined detail, no text, labels, frame, UI, hex or opaque base tile. Use one low broad oval settlement footprint and the same camera scale in all four cells. Increase the number and density of buildings with each population tier; the central civic landmark may grow gradually taller. Center one city in each equal quadrant with generous transparent gutters, and do not let sprites touch or cross cell boundaries. Exact cell order: top-left hamlet, population 1–3; top-right town, population 4–7; bottom-left city, population 8–12; bottom-right metropolis, population 13+. Keep the game-map footprint low and broad. Transparent alpha around every city.
+
+Era prompts
+------------
+
+Ancient: Mediterranean hill-country settlement and city, pale limestone/plaster walls, terracotta tile roofs, olive trees, cypress, garden plots and worn paths. Hamlet has three small homes and a tiny shrine; town has roughly eight homes and a larger shrine porch; city has a clear temple and more than a dozen homes; metropolis is dense with an acropolis temple and 25 or more buildings. Ancient Greek/Roman visual language only.
+
+Classical: Greece and Rome. Hamlet has whitewashed homes and a small Doric shrine; town adds an agora and stoas; city adds a prominent agora, basilica and temple; metropolis has a dense forum, civic basilica and major temple. Use varied tile roofs and pale stone. Avoid medieval or Renaissance forms.
+
+Medieval: European timber-and-stone cottages, steep roofs, parish chapel, market hall, stone keep, church steeple, gatehouse and cathedral as the tier increases. Keep the hamlet modest and reserve the dense great-cathedral skyline for the metropolis. No Renaissance dome.
+
+Renaissance: Italian stucco and masonry, red tile roofs, chapel, loggia, civic square, domed church and palazzi. The city and metropolis gain an elegant dome and arcaded civic space; retain a low clustered footprint.
+
+Industrial: nineteenth-century brick and stone, mill cottages, small mills, clock tower, iron roofs, rail shed and grand rail terminal. Keep chimneys modest and smoke pale and minimal; no pollution clouds or dystopian grime.
+
+Modern: twentieth- and early twenty-first-century low-rise homes, neighborhood shops, civic library, mid-rise stone/glass blocks, public plaza, art-deco civic tower and transit hub. This is present-day architecture, not science fiction.
+
+Future: hopeful, human-scale 2040s architecture: attractive low homes with solar roofs, gardens and green roofs; mid-rise timber and glass civic buildings; public gardens, rooftop planting, clean transit and solar canopies. Bright and livable. No cyberpunk, dystopia, holograms or flying cars.
+
+Optional fortification overlay prompt
+------------------------------------
+Create a transparent-background 3 by 2 sheet of isolated painted isometric fortification overlays. Show only the defensive wall or fort around an empty transparent center: no city buildings, trees, ground disk, tile, background, text or banners. Match the city set's camera angle, scale and oval footprint. Cells in row-major order: Ancient low limestone curtain wall with round towers and gate; Classical stone circuit wall with square towers and monumental arched gate; Medieval crenellated wall, towers and gatehouse; Renaissance low angular Italian star fort with sloped bastions and five-point trace, no medieval towers; Industrial brick angular fortifications and iron gate; second Medieval gatehouse variant. Historical masonry, refined painted miniature, transparent alpha.
+
+Extraction and cleanup
+----------------------
+The 1536×1024 tier sheets are saved under `sources/cities/`; each 768×512 quadrant was cropped in hamlet/town/city/metropolis order. Small disconnected fragments and the pure-red generation fringe were discarded. Each crop was trimmed and fitted to a centered 512×512 transparent canvas with a common 476 px maximum footprint width and shared bottom baseline. The 128 px and 64 px files are Lanczos derivatives. Fort overlays were cropped from a 1536×1024 sheet, background fringe removed, then fitted to the same canvas. The far-zoom marks are separate simplified silhouettes, drawn for each size tier and exported at 128 and 64 px.

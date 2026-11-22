@@ -1,0 +1,44 @@
+[
+  {
+    "slug": "crest-aztecs",
+    "kind": "crest",
+    "input": "~/code/legatum/.claude/worktrees/lane-5/app/src/assets/heraldry/raster/crest-athens-512.png",
+    "attempt": 1,
+    "prompt": "Create a new Legatum Aztec faction grand crest. Match reference's circular embossed-gold relief frame, deep matte navy field, brushed old gold, subtle engraved texture, straight-on view and upper-left light. Replace ALL central imagery with one bold upright NEW FIRE TORCH: straight thick vertical handle rising from lower centre, shallow trapezoidal brazier bowl at its top, a stylised five-tongued flame rising above it. Flame's tallest tongue at centre, two shorter tongues per side. The torch charge is simple, symmetrical and fills the central field; do not include eagle, snake, skull, calendar, weapons or text. Add understated stepped geometric Mesoamerican engraving to outer circular ring, preserve small four-point star at top of ring. One emblem only, square canvas, full round frame visible with same margin as reference. Gold on opaque navy, no letters, watermark or surrounding scenery."
+  },
+  {
+    "slug": "improvement-oil-well",
+    "kind": "improvement",
+    "attempt": 1,
+    "input": "~/code/legatum/.claude/worktrees/lane-5/app/src/assets/unlocks/improvement-oil-well-256.png",
+    "prompt": "Repaint this early-twentieth-century oil drilling site as a stronger readable historical miniature. One tall timber derrick with coherent four-legged braced frame, visible vertical drill cable descending through centre, small adjacent engine shed, two cylindrical storage tanks and timber pipe racks. Keep realistic period machinery and no people. Solid compact neutral earth OVAL patch, broad enough under entire installation, same isometric camera, warm upper-left light, refined muted oil-painted style. Dark timber silhouette contrasts with pale ground at64px, more substantial footprint, no tiny pale scattered detached pieces. Genuine transparent background, all equipment and ground visible, no text, logos or watermarks."
+  },
+  {
+    "slug": "improvement-saltpetre-works",
+    "kind": "improvement",
+    "attempt": 1,
+    "input": "~/code/legatum/.claude/worktrees/lane-5/app/src/assets/unlocks/improvement-saltpetre-works-256.png",
+    "prompt": "Repaint a historically grounded seventeenth-century SALTPETRE WORKS, a nitrary, as a coherent compact isometric miniature. Show a low open-sided timber shed sheltering rectangular earthen nitrary beds, several wooden leaching tubs, a small masonry boiling furnace beneath a copper cauldron, stacks of wood and a few sacks of finished pale crystals. It must read as a modest chemical works, not a modern salt evaporation pond or swimming pool. One compact neutral earth oval patch matching refined Legatum building miniatures; dark timber/masonry, pale mineral accents, muted umber/cream, warm upper-left light. Every tub rests on ground, furnace beneath pot, no mysterious disconnected pipes. No people, lettering, labels or watermarks. Genuine transparent background, full footprint in frame."
+  },
+  {
+    "slug": "improvement-quartz-mine",
+    "kind": "improvement",
+    "attempt": 1,
+    "input": "~/code/legatum/.claude/worktrees/lane-5/app/src/assets/unlocks/improvement-quartz-mine-256.png",
+    "prompt": "Repaint this quartz mine miniature for clearer64px readability, maintaining a real rock quarry rather than fantasy crystals. Compact rocky hill with exposed pale milky quartz veins in darker grey host rock, two broad stepped benches, a timber-supported dark mine entrance, short connected narrow-gauge cart track and one loaded ore cart. Clear dark entrance contrasts with white quartz face. Small tool shelter and restrained scrub. Same three-quarter isometric view and warm upper-left light, neutral EARTH OVAL patch similar footprint to the Deep Mine set, refined detailed muted oil miniature. No towering crystal spikes, glitter or gems. Full hill and footprint in frame, genuine transparent background, no text or watermark."
+  },
+  {
+    "slug": "legionary",
+    "kind": "unit",
+    "attempt": 1,
+    "input": "~/code/legatum/.claude/worktrees/lane-5/app/src/assets/units/legionary-source.png",
+    "prompt": "Precise equipment edit of this standing early-Roman-Empire legionary miniature. Preserve face, helmet, segmented armour, tunic, sword, shield, hidden shield grip, hands and correct low caligae sandals with NO side studs. Fix only PILUM proportions: its iron shank must be a long THIN dark metal rod, about one third of whole weapon length, ending in a SMALL pyramidal point, not a broad spearhead. Move the rectangular wooden riveted attachment block LOWER on the shaft to just above his gripping fist so the long iron shank extends from there almost to the tip. Keep entire pilum fully in frame, with wooden lower shaft straight to base, no gaps. One smooth plain cream circular disc with no marbling. Same standing pose, camera, light, refined paint. Genuine transparent background, no words or halo."
+  },
+  {
+    "slug": "hunter-killer",
+    "kind": "unit",
+    "attempt": 1,
+    "input": "~/code/legatum/.claude/worktrees/lane-5/app/src/assets/units/hunter-killer-source.png",
+    "prompt": "Repair cut-out damage on this existing approved quadruped robot miniature. Preserve the exact four-legged robot, sensors, machinery, all joints, feet, mounted equipment, shape and camera. Restore small missing opaque metal areas: tiny square transparent holes around the knee bolt flanges and near the head upper-left corner should be solid adjoining olive metal or dark joint housing. Keep intentional large openings between limbs and pistons, do not fill real air gaps. Ensure every leg has a continuous structural connection to its joint. Change grey mottled platform to one plain smooth warm cream disc. No redesign, no humanoid, no new equipment, no pose change, no text. Genuine transparent background with clean edges."
+  }
+]

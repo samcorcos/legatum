@@ -1,0 +1,13 @@
+#sound { grid-column: 1 / -1; }
+.sb-note { color: var(--muted); font-size: 12px; margin-bottom: 8px; }
+.sb-scroll { overflow-x: auto; }
+.sb-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.sb-table th { text-align: left; font: 600 11px var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--line); }
+.sb-table td { padding: 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.sb-table code { font: 12px var(--sans); }
+.sb-why, .sb-src { color: var(--muted); font-size: 12px; margin-top: 2px; max-width: 46ch; }
+.sb-play { white-space: nowrap; }
+.sb-play button { margin: 0 4px 4px 0; }
+.sb-verdict .actions { margin-top: 0; align-items: center; flex-wrap: nowrap; }
+.sb-verdict input { min-width: 120px; flex: 1; background: var(--field); color: var(--text); border: 1px solid var(--line); border-radius: 0; padding: 6px 8px; font: 13px var(--sans); }
+@media (max-width: 760px) { .sb-verdict .actions { flex-wrap: wrap; } }

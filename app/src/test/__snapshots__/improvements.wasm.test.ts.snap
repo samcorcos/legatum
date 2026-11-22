@@ -1,0 +1,4726 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`WASM improvement behavior > builds the improvement, yields its bonus only afterwards, and upgrades with technology 1`] = `
+{
+  "options": [
+    [
+      {
+        "buy": 60,
+        "cost": 30,
+        "item": {
+          "improvement": "Farm",
+          "kind": "Improvement",
+          "tile": {
+            "q": 3,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 1,
+            "gold": 0,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Wheat",
+          "tile": {
+            "q": 3,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 1,
+              "gold": 0,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Irrigated Farm",
+            "tech": "CropRotation",
+          },
+        },
+        "stored": 0,
+        "turns": 6,
+      },
+      {
+        "buy": 80,
+        "cost": 40,
+        "item": {
+          "improvement": "Mine",
+          "kind": "Improvement",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 0,
+            "gold": 2,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Copper",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 0,
+              "gold": 1,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Deep Mine",
+            "tech": "IronWorking",
+          },
+        },
+        "stored": 0,
+        "turns": 8,
+      },
+      {
+        "buy": 60,
+        "cost": 30,
+        "item": {
+          "improvement": "Farm",
+          "kind": "Improvement",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 1,
+            "gold": 0,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Wheat",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 1,
+              "gold": 0,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Irrigated Farm",
+            "tech": "CropRotation",
+          },
+        },
+        "stored": 0,
+        "turns": 6,
+      },
+    ],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      0,
+    ],
+  ],
+  "territory": [
+    37,
+  ],
+  "tiles": [],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 74,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > builds the improvement, yields its bonus only afterwards, and upgrades with technology 2`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      0,
+    ],
+  ],
+  "territory": [
+    7,
+  ],
+  "tiles": [],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 17,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > builds the improvement, yields its bonus only afterwards, and upgrades with technology 3`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      0,
+    ],
+  ],
+  "territory": [
+    7,
+  ],
+  "tiles": [],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 16,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > builds the improvement, yields its bonus only afterwards, and upgrades with technology 4`] = `
+{
+  "options": [
+    [
+      {
+        "buy": 60,
+        "cost": 30,
+        "item": {
+          "improvement": "Farm",
+          "kind": "Improvement",
+          "tile": {
+            "q": 3,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 1,
+            "gold": 0,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Wheat",
+          "tile": {
+            "q": 3,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 1,
+              "gold": 0,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Irrigated Farm",
+            "tech": "CropRotation",
+          },
+        },
+        "stored": 1000,
+        "turns": 1,
+      },
+      {
+        "buy": 80,
+        "cost": 40,
+        "item": {
+          "improvement": "Mine",
+          "kind": "Improvement",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 0,
+            "gold": 2,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Copper",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 0,
+              "gold": 1,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Deep Mine",
+            "tech": "IronWorking",
+          },
+        },
+        "stored": 0,
+        "turns": 8,
+      },
+      {
+        "buy": 60,
+        "cost": 30,
+        "item": {
+          "improvement": "Farm",
+          "kind": "Improvement",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 1,
+            "gold": 0,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Wheat",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 1,
+              "gold": 0,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Irrigated Farm",
+            "tech": "CropRotation",
+          },
+        },
+        "stored": 0,
+        "turns": 6,
+      },
+    ],
+  ],
+  "producing": [
+    [
+      {
+        "improvement": "Farm",
+        "kind": "Improvement",
+        "tile": {
+          "q": 3,
+          "r": 4,
+        },
+      },
+      [],
+      [],
+      1000,
+    ],
+  ],
+  "territory": [
+    37,
+  ],
+  "tiles": [],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 74,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > builds the improvement, yields its bonus only afterwards, and upgrades with technology 5`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      0,
+    ],
+  ],
+  "territory": [
+    7,
+  ],
+  "tiles": [],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 17,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > builds the improvement, yields its bonus only afterwards, and upgrades with technology 6`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      0,
+    ],
+  ],
+  "territory": [
+    7,
+  ],
+  "tiles": [],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 16,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > builds the improvement, yields its bonus only afterwards, and upgrades with technology 7`] = `[]`;
+
+exports[`WASM improvement behavior > builds the improvement, yields its bonus only afterwards, and upgrades with technology 8`] = `[]`;
+
+exports[`WASM improvement behavior > builds the improvement, yields its bonus only afterwards, and upgrades with technology 9`] = `[]`;
+
+exports[`WASM improvement behavior > builds the improvement, yields its bonus only afterwards, and upgrades with technology 10`] = `
+[
+  {
+    "city": 1,
+    "item": {
+      "improvement": "Farm",
+      "kind": "Improvement",
+      "tile": {
+        "q": 3,
+        "r": 4,
+      },
+    },
+    "owner": 0,
+    "type": "ProductionCompleted",
+  },
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": 1,
+      "r": 8,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": 0,
+      "r": 8,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": -2,
+      "r": 4,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 2,
+    "owner": 1,
+    "tile": {
+      "q": -5,
+      "r": 14,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 2,
+    "owner": 1,
+    "tile": {
+      "q": -5,
+      "r": 15,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 3,
+    "owner": 2,
+    "tile": {
+      "q": 5,
+      "r": 14,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 3,
+    "owner": 2,
+    "tile": {
+      "q": 5,
+      "r": 15,
+    },
+    "type": "TileClaimed",
+  },
+]
+`;
+
+exports[`WASM improvement behavior > builds the improvement, yields its bonus only afterwards, and upgrades with technology 11`] = `
+{
+  "options": [
+    [
+      {
+        "buy": 80,
+        "cost": 40,
+        "item": {
+          "improvement": "Mine",
+          "kind": "Improvement",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 0,
+            "gold": 2,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Copper",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 0,
+              "gold": 1,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Deep Mine",
+            "tech": "IronWorking",
+          },
+        },
+        "stored": 975,
+        "turns": 1,
+      },
+      {
+        "buy": 60,
+        "cost": 30,
+        "item": {
+          "improvement": "Farm",
+          "kind": "Improvement",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 1,
+            "gold": 0,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Wheat",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 1,
+              "gold": 0,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Irrigated Farm",
+            "tech": "CropRotation",
+          },
+        },
+        "stored": 975,
+        "turns": 1,
+      },
+    ],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      975,
+    ],
+  ],
+  "territory": [
+    40,
+  ],
+  "tiles": [
+    [
+      85,
+      {
+        "kind": "Farm",
+      },
+    ],
+  ],
+  "yields": [
+    {
+      "sources": [
+        {
+          "label": "Resources: Wheat (Farm)",
+          "yields": {
+            "food": 1,
+            "gold": 0,
+            "production": 0,
+            "science": 0,
+          },
+        },
+      ],
+      "total": {
+        "food": 94,
+        "gold": 1,
+        "production": 5,
+        "science": 4,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > builds the improvement, yields its bonus only afterwards, and upgrades with technology 12`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      5,
+    ],
+  ],
+  "territory": [
+    9,
+  ],
+  "tiles": [
+    [
+      85,
+      {
+        "kind": "Farm",
+      },
+    ],
+  ],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 21,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > builds the improvement, yields its bonus only afterwards, and upgrades with technology 13`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      5,
+    ],
+  ],
+  "territory": [
+    9,
+  ],
+  "tiles": [],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 20,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > builds the improvement, yields its bonus only afterwards, and upgrades with technology 14`] = `
+{
+  "options": [
+    [
+      {
+        "buy": 80,
+        "cost": 40,
+        "item": {
+          "improvement": "Mine",
+          "kind": "Improvement",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 0,
+            "gold": 2,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Copper",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 0,
+              "gold": 1,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Deep Mine",
+            "tech": "IronWorking",
+          },
+        },
+        "stored": 975,
+        "turns": 1,
+      },
+      {
+        "buy": 60,
+        "cost": 30,
+        "item": {
+          "improvement": "Farm",
+          "kind": "Improvement",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 1,
+            "gold": 0,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Wheat",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 1,
+              "gold": 0,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Irrigated Farm",
+            "tech": "CropRotation",
+          },
+        },
+        "stored": 975,
+        "turns": 1,
+      },
+    ],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      975,
+    ],
+  ],
+  "territory": [
+    40,
+  ],
+  "tiles": [
+    [
+      85,
+      {
+        "kind": "Farm",
+      },
+    ],
+  ],
+  "yields": [
+    {
+      "sources": [
+        {
+          "label": "Resources: Wheat (Farm)",
+          "yields": {
+            "food": 1,
+            "gold": 0,
+            "production": 0,
+            "science": 0,
+          },
+        },
+      ],
+      "total": {
+        "food": 94,
+        "gold": 1,
+        "production": 5,
+        "science": 4,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > builds the improvement, yields its bonus only afterwards, and upgrades with technology 15`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      5,
+    ],
+  ],
+  "territory": [
+    9,
+  ],
+  "tiles": [
+    [
+      85,
+      {
+        "kind": "Farm",
+      },
+    ],
+  ],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 21,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > builds the improvement, yields its bonus only afterwards, and upgrades with technology 16`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      5,
+    ],
+  ],
+  "territory": [
+    9,
+  ],
+  "tiles": [],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 20,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > builds the improvement, yields its bonus only afterwards, and upgrades with technology 17`] = `
+{
+  "options": [
+    [
+      {
+        "buy": 80,
+        "cost": 40,
+        "item": {
+          "improvement": "Mine",
+          "kind": "Improvement",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 0,
+            "gold": 2,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Copper",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 0,
+              "gold": 1,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Deep Mine",
+            "tech": "IronWorking",
+          },
+        },
+        "stored": 975,
+        "turns": 1,
+      },
+      {
+        "buy": 60,
+        "cost": 30,
+        "item": {
+          "improvement": "Farm",
+          "kind": "Improvement",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 2,
+            "gold": 0,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Wheat",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+        },
+        "stored": 975,
+        "turns": 1,
+      },
+    ],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      975,
+    ],
+  ],
+  "territory": [
+    40,
+  ],
+  "tiles": [
+    [
+      85,
+      {
+        "kind": "Farm",
+        "upgraded": true,
+      },
+    ],
+  ],
+  "yields": [
+    {
+      "sources": [
+        {
+          "label": "Resources: Wheat (Irrigated Farm)",
+          "yields": {
+            "food": 2,
+            "gold": 0,
+            "production": 0,
+            "science": 0,
+          },
+        },
+      ],
+      "total": {
+        "food": 95,
+        "gold": 1,
+        "production": 5,
+        "science": 4,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > builds the improvement, yields its bonus only afterwards, and upgrades with technology 18`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      5,
+    ],
+  ],
+  "territory": [
+    9,
+  ],
+  "tiles": [
+    [
+      85,
+      {
+        "kind": "Farm",
+      },
+    ],
+  ],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 21,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > builds the improvement, yields its bonus only afterwards, and upgrades with technology 19`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      5,
+    ],
+  ],
+  "territory": [
+    9,
+  ],
+  "tiles": [],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 20,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > builds the improvement, yields its bonus only afterwards, and upgrades with technology 20`] = `[]`;
+
+exports[`WASM improvement behavior > builds the improvement, yields its bonus only afterwards, and upgrades with technology 21`] = `[]`;
+
+exports[`WASM improvement behavior > builds the improvement, yields its bonus only afterwards, and upgrades with technology 22`] = `[]`;
+
+exports[`WASM improvement behavior > builds the improvement, yields its bonus only afterwards, and upgrades with technology 23`] = `
+[
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": -2,
+      "r": 5,
+    },
+    "type": "TileClaimed",
+  },
+]
+`;
+
+exports[`WASM improvement behavior > builds the improvement, yields its bonus only afterwards, and upgrades with technology 24`] = `
+{
+  "options": [
+    [
+      {
+        "buy": 80,
+        "cost": 40,
+        "item": {
+          "improvement": "Mine",
+          "kind": "Improvement",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 0,
+            "gold": 2,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Copper",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 0,
+              "gold": 1,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Deep Mine",
+            "tech": "IronWorking",
+          },
+        },
+        "stored": 975,
+        "turns": 1,
+      },
+      {
+        "buy": 60,
+        "cost": 30,
+        "item": {
+          "improvement": "Farm",
+          "kind": "Improvement",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 2,
+            "gold": 0,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Wheat",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+        },
+        "stored": 975,
+        "turns": 1,
+      },
+    ],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      975,
+    ],
+  ],
+  "territory": [
+    41,
+  ],
+  "tiles": [
+    [
+      85,
+      {
+        "kind": "Farm",
+        "upgraded": true,
+      },
+    ],
+  ],
+  "yields": [
+    {
+      "sources": [
+        {
+          "label": "Resources: Wheat (Irrigated Farm)",
+          "yields": {
+            "food": 2,
+            "gold": 0,
+            "production": 0,
+            "science": 0,
+          },
+        },
+      ],
+      "total": {
+        "food": 95,
+        "gold": 1,
+        "production": 5,
+        "science": 4,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > builds the improvement, yields its bonus only afterwards, and upgrades with technology 25`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      10,
+    ],
+  ],
+  "territory": [
+    9,
+  ],
+  "tiles": [
+    [
+      85,
+      {
+        "kind": "Farm",
+      },
+    ],
+  ],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 21,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > builds the improvement, yields its bonus only afterwards, and upgrades with technology 26`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      10,
+    ],
+  ],
+  "territory": [
+    9,
+  ],
+  "tiles": [],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 20,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > builds the improvement, yields its bonus only afterwards, and upgrades with technology 27`] = `
+{
+  "options": [
+    [
+      {
+        "buy": 80,
+        "cost": 40,
+        "item": {
+          "improvement": "Mine",
+          "kind": "Improvement",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 0,
+            "gold": 2,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Copper",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 0,
+              "gold": 1,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Deep Mine",
+            "tech": "IronWorking",
+          },
+        },
+        "stored": 975,
+        "turns": 1,
+      },
+      {
+        "buy": 60,
+        "cost": 30,
+        "item": {
+          "improvement": "Farm",
+          "kind": "Improvement",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 2,
+            "gold": 0,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Wheat",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+        },
+        "stored": 975,
+        "turns": 1,
+      },
+    ],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      975,
+    ],
+  ],
+  "territory": [
+    41,
+  ],
+  "tiles": [
+    [
+      85,
+      {
+        "kind": "Farm",
+        "upgraded": true,
+      },
+    ],
+  ],
+  "yields": [
+    {
+      "sources": [
+        {
+          "label": "Resources: Wheat (Irrigated Farm)",
+          "yields": {
+            "food": 2,
+            "gold": 0,
+            "production": 0,
+            "science": 0,
+          },
+        },
+      ],
+      "total": {
+        "food": 95,
+        "gold": 1,
+        "production": 5,
+        "science": 4,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > builds the improvement, yields its bonus only afterwards, and upgrades with technology 28`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      10,
+    ],
+  ],
+  "territory": [
+    9,
+  ],
+  "tiles": [
+    [
+      85,
+      {
+        "kind": "Farm",
+      },
+    ],
+  ],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 21,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > builds the improvement, yields its bonus only afterwards, and upgrades with technology 29`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      10,
+    ],
+  ],
+  "territory": [
+    9,
+  ],
+  "tiles": [],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 20,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 1`] = `
+{
+  "options": [
+    [
+      {
+        "buy": 60,
+        "cost": 30,
+        "item": {
+          "improvement": "Farm",
+          "kind": "Improvement",
+          "tile": {
+            "q": 3,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 1,
+            "gold": 0,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Wheat",
+          "tile": {
+            "q": 3,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 1,
+              "gold": 0,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Irrigated Farm",
+            "tech": "CropRotation",
+          },
+        },
+        "stored": 0,
+        "turns": 6,
+      },
+      {
+        "buy": 80,
+        "cost": 40,
+        "item": {
+          "improvement": "Mine",
+          "kind": "Improvement",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 0,
+            "gold": 2,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Copper",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 0,
+              "gold": 1,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Deep Mine",
+            "tech": "IronWorking",
+          },
+        },
+        "stored": 0,
+        "turns": 8,
+      },
+      {
+        "buy": 60,
+        "cost": 30,
+        "item": {
+          "improvement": "Farm",
+          "kind": "Improvement",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 1,
+            "gold": 0,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Wheat",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 1,
+              "gold": 0,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Irrigated Farm",
+            "tech": "CropRotation",
+          },
+        },
+        "stored": 0,
+        "turns": 6,
+      },
+    ],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      0,
+    ],
+  ],
+  "territory": [
+    37,
+  ],
+  "tiles": [],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 74,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 2`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      0,
+    ],
+  ],
+  "territory": [
+    7,
+  ],
+  "tiles": [],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 17,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 3`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      0,
+    ],
+  ],
+  "territory": [
+    7,
+  ],
+  "tiles": [],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 16,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 4`] = `[]`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 5`] = `[]`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 6`] = `[]`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 7`] = `
+[
+  {
+    "city": 1,
+    "gold": 60,
+    "item": {
+      "improvement": "Farm",
+      "kind": "Improvement",
+      "tile": {
+        "q": 3,
+        "r": 4,
+      },
+    },
+    "owner": 0,
+    "type": "ItemBought",
+  },
+  {
+    "city": 1,
+    "item": {
+      "improvement": "Farm",
+      "kind": "Improvement",
+      "tile": {
+        "q": 3,
+        "r": 4,
+      },
+    },
+    "owner": 0,
+    "type": "ProductionCompleted",
+  },
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": 1,
+      "r": 8,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": 0,
+      "r": 8,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": -2,
+      "r": 4,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 2,
+    "owner": 1,
+    "tile": {
+      "q": -5,
+      "r": 14,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 2,
+    "owner": 1,
+    "tile": {
+      "q": -5,
+      "r": 15,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 3,
+    "owner": 2,
+    "tile": {
+      "q": 5,
+      "r": 14,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 3,
+    "owner": 2,
+    "tile": {
+      "q": 5,
+      "r": 15,
+    },
+    "type": "TileClaimed",
+  },
+]
+`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 8`] = `
+{
+  "options": [
+    [
+      {
+        "buy": 80,
+        "cost": 40,
+        "item": {
+          "improvement": "Mine",
+          "kind": "Improvement",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 0,
+            "gold": 2,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Copper",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 0,
+              "gold": 1,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Deep Mine",
+            "tech": "IronWorking",
+          },
+        },
+        "stored": 5,
+        "turns": 7,
+      },
+      {
+        "buy": 60,
+        "cost": 30,
+        "item": {
+          "improvement": "Farm",
+          "kind": "Improvement",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 1,
+            "gold": 0,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Wheat",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 1,
+              "gold": 0,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Irrigated Farm",
+            "tech": "CropRotation",
+          },
+        },
+        "stored": 5,
+        "turns": 5,
+      },
+    ],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      5,
+    ],
+  ],
+  "territory": [
+    40,
+  ],
+  "tiles": [
+    [
+      85,
+      {
+        "kind": "Farm",
+      },
+    ],
+  ],
+  "yields": [
+    {
+      "sources": [
+        {
+          "label": "Resources: Wheat (Farm)",
+          "yields": {
+            "food": 1,
+            "gold": 0,
+            "production": 0,
+            "science": 0,
+          },
+        },
+      ],
+      "total": {
+        "food": 94,
+        "gold": 1,
+        "production": 5,
+        "science": 4,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 9`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      5,
+    ],
+  ],
+  "territory": [
+    9,
+  ],
+  "tiles": [
+    [
+      85,
+      {
+        "kind": "Farm",
+      },
+    ],
+  ],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 21,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 10`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      5,
+    ],
+  ],
+  "territory": [
+    9,
+  ],
+  "tiles": [],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 20,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 11`] = `
+{
+  "options": [
+    [
+      {
+        "buy": 80,
+        "cost": 40,
+        "item": {
+          "improvement": "Mine",
+          "kind": "Improvement",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 0,
+            "gold": 2,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Copper",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 0,
+              "gold": 1,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Deep Mine",
+            "tech": "IronWorking",
+          },
+        },
+        "stored": 5,
+        "turns": 7,
+      },
+      {
+        "buy": 60,
+        "cost": 30,
+        "item": {
+          "improvement": "Farm",
+          "kind": "Improvement",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 1,
+            "gold": 0,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Wheat",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 1,
+              "gold": 0,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Irrigated Farm",
+            "tech": "CropRotation",
+          },
+        },
+        "stored": 5,
+        "turns": 5,
+      },
+    ],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      5,
+    ],
+  ],
+  "territory": [
+    40,
+  ],
+  "tiles": [
+    [
+      85,
+      {
+        "kind": "Farm",
+      },
+    ],
+  ],
+  "yields": [
+    {
+      "sources": [
+        {
+          "label": "Resources: Wheat (Farm)",
+          "yields": {
+            "food": 1,
+            "gold": 0,
+            "production": 0,
+            "science": 0,
+          },
+        },
+      ],
+      "total": {
+        "food": 94,
+        "gold": 1,
+        "production": 5,
+        "science": 4,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 12`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      5,
+    ],
+  ],
+  "territory": [
+    9,
+  ],
+  "tiles": [
+    [
+      85,
+      {
+        "kind": "Farm",
+      },
+    ],
+  ],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 21,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 13`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      5,
+    ],
+  ],
+  "territory": [
+    9,
+  ],
+  "tiles": [],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 20,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 14`] = `
+{
+  "options": [
+    [
+      {
+        "buy": 80,
+        "cost": 40,
+        "item": {
+          "improvement": "Mine",
+          "kind": "Improvement",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 0,
+            "gold": 2,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Copper",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 0,
+              "gold": 1,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Deep Mine",
+            "tech": "IronWorking",
+          },
+        },
+        "stored": 12,
+        "turns": 6,
+      },
+      {
+        "buy": 60,
+        "cost": 30,
+        "item": {
+          "improvement": "Farm",
+          "kind": "Improvement",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 1,
+            "gold": 0,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Wheat",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 1,
+              "gold": 0,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Irrigated Farm",
+            "tech": "CropRotation",
+          },
+        },
+        "stored": 0,
+        "turns": 6,
+      },
+    ],
+  ],
+  "producing": [
+    [
+      {
+        "improvement": "Mine",
+        "kind": "Improvement",
+        "tile": {
+          "q": 4,
+          "r": 4,
+        },
+      },
+      [],
+      [],
+      12,
+    ],
+  ],
+  "territory": [
+    40,
+  ],
+  "tiles": [
+    [
+      85,
+      {
+        "kind": "Farm",
+      },
+    ],
+  ],
+  "yields": [
+    {
+      "sources": [
+        {
+          "label": "Resources: Wheat (Farm)",
+          "yields": {
+            "food": 1,
+            "gold": 0,
+            "production": 0,
+            "science": 0,
+          },
+        },
+      ],
+      "total": {
+        "food": 94,
+        "gold": 1,
+        "production": 5,
+        "science": 4,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 15`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      5,
+    ],
+  ],
+  "territory": [
+    9,
+  ],
+  "tiles": [
+    [
+      85,
+      {
+        "kind": "Farm",
+      },
+    ],
+  ],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 21,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 16`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      5,
+    ],
+  ],
+  "territory": [
+    9,
+  ],
+  "tiles": [],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 20,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 17`] = `[]`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 18`] = `[]`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 19`] = `[]`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 20`] = `
+[
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": -2,
+      "r": 5,
+    },
+    "type": "TileClaimed",
+  },
+]
+`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 21`] = `
+{
+  "options": [
+    [
+      {
+        "buy": 80,
+        "cost": 40,
+        "item": {
+          "improvement": "Mine",
+          "kind": "Improvement",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 0,
+            "gold": 2,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Copper",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 0,
+              "gold": 1,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Deep Mine",
+            "tech": "IronWorking",
+          },
+        },
+        "stored": 12,
+        "turns": 6,
+      },
+      {
+        "buy": 60,
+        "cost": 30,
+        "item": {
+          "improvement": "Farm",
+          "kind": "Improvement",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 1,
+            "gold": 0,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Wheat",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 1,
+              "gold": 0,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Irrigated Farm",
+            "tech": "CropRotation",
+          },
+        },
+        "stored": 0,
+        "turns": 6,
+      },
+    ],
+  ],
+  "producing": [
+    [
+      {
+        "kind": "Unit",
+        "unit": "Soldier",
+      },
+      [],
+      [
+        {
+          "item": {
+            "improvement": "Mine",
+            "kind": "Improvement",
+            "tile": {
+              "q": 4,
+              "r": 4,
+            },
+          },
+          "progress": 12,
+        },
+      ],
+      5,
+    ],
+  ],
+  "territory": [
+    41,
+  ],
+  "tiles": [
+    [
+      85,
+      {
+        "kind": "Farm",
+      },
+    ],
+  ],
+  "yields": [
+    {
+      "sources": [
+        {
+          "label": "Resources: Wheat (Farm)",
+          "yields": {
+            "food": 1,
+            "gold": 0,
+            "production": 0,
+            "science": 0,
+          },
+        },
+      ],
+      "total": {
+        "food": 94,
+        "gold": 1,
+        "production": 5,
+        "science": 4,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 22`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      10,
+    ],
+  ],
+  "territory": [
+    9,
+  ],
+  "tiles": [
+    [
+      85,
+      {
+        "kind": "Farm",
+      },
+    ],
+  ],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 21,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 23`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      10,
+    ],
+  ],
+  "territory": [
+    9,
+  ],
+  "tiles": [],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 20,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 24`] = `
+{
+  "options": [
+    [
+      {
+        "buy": 80,
+        "cost": 40,
+        "item": {
+          "improvement": "Mine",
+          "kind": "Improvement",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 0,
+            "gold": 2,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Copper",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 0,
+              "gold": 1,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Deep Mine",
+            "tech": "IronWorking",
+          },
+        },
+        "stored": 12,
+        "turns": 6,
+      },
+      {
+        "buy": 60,
+        "cost": 30,
+        "item": {
+          "improvement": "Farm",
+          "kind": "Improvement",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 1,
+            "gold": 0,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Wheat",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 1,
+              "gold": 0,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Irrigated Farm",
+            "tech": "CropRotation",
+          },
+        },
+        "stored": 0,
+        "turns": 6,
+      },
+    ],
+  ],
+  "producing": [
+    [
+      {
+        "kind": "Unit",
+        "unit": "Soldier",
+      },
+      [],
+      [
+        {
+          "item": {
+            "improvement": "Mine",
+            "kind": "Improvement",
+            "tile": {
+              "q": 4,
+              "r": 4,
+            },
+          },
+          "progress": 12,
+        },
+      ],
+      5,
+    ],
+  ],
+  "territory": [
+    41,
+  ],
+  "tiles": [
+    [
+      85,
+      {
+        "kind": "Farm",
+      },
+    ],
+  ],
+  "yields": [
+    {
+      "sources": [
+        {
+          "label": "Resources: Wheat (Farm)",
+          "yields": {
+            "food": 1,
+            "gold": 0,
+            "production": 0,
+            "science": 0,
+          },
+        },
+      ],
+      "total": {
+        "food": 94,
+        "gold": 1,
+        "production": 5,
+        "science": 4,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 25`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      10,
+    ],
+  ],
+  "territory": [
+    9,
+  ],
+  "tiles": [
+    [
+      85,
+      {
+        "kind": "Farm",
+      },
+    ],
+  ],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 21,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 26`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      10,
+    ],
+  ],
+  "territory": [
+    9,
+  ],
+  "tiles": [],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 20,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 27`] = `[]`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 28`] = `[]`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 29`] = `[]`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 30`] = `
+[
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": -2,
+      "r": 6,
+    },
+    "type": "TileClaimed",
+  },
+]
+`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 31`] = `
+{
+  "options": [
+    [
+      {
+        "buy": 80,
+        "cost": 40,
+        "item": {
+          "improvement": "Mine",
+          "kind": "Improvement",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 0,
+            "gold": 2,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Copper",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 0,
+              "gold": 1,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Deep Mine",
+            "tech": "IronWorking",
+          },
+        },
+        "stored": 17,
+        "turns": 5,
+      },
+      {
+        "buy": 60,
+        "cost": 30,
+        "item": {
+          "improvement": "Farm",
+          "kind": "Improvement",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 1,
+            "gold": 0,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Wheat",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 1,
+              "gold": 0,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Irrigated Farm",
+            "tech": "CropRotation",
+          },
+        },
+        "stored": 0,
+        "turns": 6,
+      },
+    ],
+  ],
+  "producing": [
+    [
+      {
+        "improvement": "Mine",
+        "kind": "Improvement",
+        "tile": {
+          "q": 4,
+          "r": 4,
+        },
+      },
+      [],
+      [
+        {
+          "item": {
+            "kind": "Unit",
+            "unit": "Soldier",
+          },
+          "progress": 5,
+        },
+      ],
+      17,
+    ],
+  ],
+  "territory": [
+    42,
+  ],
+  "tiles": [
+    [
+      85,
+      {
+        "kind": "Farm",
+      },
+    ],
+  ],
+  "yields": [
+    {
+      "sources": [
+        {
+          "label": "Resources: Wheat (Farm)",
+          "yields": {
+            "food": 1,
+            "gold": 0,
+            "production": 0,
+            "science": 0,
+          },
+        },
+      ],
+      "total": {
+        "food": 94,
+        "gold": 1,
+        "production": 5,
+        "science": 5,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 32`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      15,
+    ],
+  ],
+  "territory": [
+    9,
+  ],
+  "tiles": [
+    [
+      85,
+      {
+        "kind": "Farm",
+      },
+    ],
+  ],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 21,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 33`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      15,
+    ],
+  ],
+  "territory": [
+    9,
+  ],
+  "tiles": [],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 20,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 34`] = `
+{
+  "options": [
+    [
+      {
+        "buy": 80,
+        "cost": 40,
+        "item": {
+          "improvement": "Mine",
+          "kind": "Improvement",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 0,
+            "gold": 2,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Copper",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 0,
+              "gold": 1,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Deep Mine",
+            "tech": "IronWorking",
+          },
+        },
+        "stored": 17,
+        "turns": 5,
+      },
+      {
+        "buy": 60,
+        "cost": 30,
+        "item": {
+          "improvement": "Farm",
+          "kind": "Improvement",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 1,
+            "gold": 0,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Wheat",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 1,
+              "gold": 0,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Irrigated Farm",
+            "tech": "CropRotation",
+          },
+        },
+        "stored": 0,
+        "turns": 6,
+      },
+    ],
+  ],
+  "producing": [
+    [
+      {
+        "improvement": "Mine",
+        "kind": "Improvement",
+        "tile": {
+          "q": 4,
+          "r": 4,
+        },
+      },
+      [],
+      [
+        {
+          "item": {
+            "kind": "Unit",
+            "unit": "Soldier",
+          },
+          "progress": 5,
+        },
+      ],
+      17,
+    ],
+  ],
+  "territory": [
+    42,
+  ],
+  "tiles": [
+    [
+      85,
+      {
+        "kind": "Farm",
+      },
+    ],
+  ],
+  "yields": [
+    {
+      "sources": [
+        {
+          "label": "Resources: Wheat (Farm)",
+          "yields": {
+            "food": 1,
+            "gold": 0,
+            "production": 0,
+            "science": 0,
+          },
+        },
+      ],
+      "total": {
+        "food": 94,
+        "gold": 1,
+        "production": 5,
+        "science": 5,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 35`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      15,
+    ],
+  ],
+  "territory": [
+    9,
+  ],
+  "tiles": [
+    [
+      85,
+      {
+        "kind": "Farm",
+      },
+    ],
+  ],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 21,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 36`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      15,
+    ],
+  ],
+  "territory": [
+    9,
+  ],
+  "tiles": [],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 20,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 37`] = `
+{
+  "options": [
+    [
+      {
+        "buy": 80,
+        "cost": 40,
+        "item": {
+          "improvement": "Mine",
+          "kind": "Improvement",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 0,
+            "gold": 2,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Copper",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 0,
+              "gold": 1,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Deep Mine",
+            "tech": "IronWorking",
+          },
+        },
+        "stored": 0,
+        "turns": -1,
+      },
+      {
+        "buy": 60,
+        "cost": 30,
+        "item": {
+          "improvement": "Farm",
+          "kind": "Improvement",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 1,
+            "gold": 0,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Wheat",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 1,
+              "gold": 0,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Irrigated Farm",
+            "tech": "CropRotation",
+          },
+        },
+        "stored": 5,
+        "turns": -1,
+      },
+    ],
+  ],
+  "producing": [
+    [
+      {
+        "improvement": "Farm",
+        "kind": "Improvement",
+        "tile": {
+          "q": 5,
+          "r": 4,
+        },
+      },
+      [],
+      [],
+      5,
+    ],
+  ],
+  "territory": [
+    40,
+  ],
+  "tiles": [
+    [
+      85,
+      {
+        "kind": "Farm",
+      },
+    ],
+  ],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 0,
+        "gold": 0,
+        "production": 0,
+        "science": 0,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 38`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      5,
+    ],
+  ],
+  "territory": [
+    9,
+  ],
+  "tiles": [
+    [
+      85,
+      {
+        "kind": "Farm",
+      },
+    ],
+  ],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 21,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 39`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      5,
+    ],
+  ],
+  "territory": [
+    9,
+  ],
+  "tiles": [],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 20,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 40`] = `[]`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 41`] = `[]`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 42`] = `[]`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 43`] = `
+[
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": 3,
+      "r": 4,
+    },
+    "type": "TileReleased",
+  },
+]
+`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 44`] = `
+{
+  "options": [
+    [
+      {
+        "buy": 80,
+        "cost": 40,
+        "item": {
+          "improvement": "Mine",
+          "kind": "Improvement",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 0,
+            "gold": 2,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Copper",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 0,
+              "gold": 1,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Deep Mine",
+            "tech": "IronWorking",
+          },
+        },
+        "stored": 0,
+        "turns": -1,
+      },
+      {
+        "buy": 60,
+        "cost": 30,
+        "item": {
+          "improvement": "Farm",
+          "kind": "Improvement",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 1,
+            "gold": 0,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Wheat",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 1,
+              "gold": 0,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Irrigated Farm",
+            "tech": "CropRotation",
+          },
+        },
+        "stored": 5,
+        "turns": -1,
+      },
+    ],
+  ],
+  "producing": [
+    [
+      {
+        "improvement": "Farm",
+        "kind": "Improvement",
+        "tile": {
+          "q": 5,
+          "r": 4,
+        },
+      },
+      [],
+      [],
+      5,
+    ],
+  ],
+  "territory": [
+    39,
+  ],
+  "tiles": [
+    [
+      85,
+      {
+        "kind": "Farm",
+      },
+    ],
+  ],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 0,
+        "gold": 0,
+        "production": 0,
+        "science": 0,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 45`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      10,
+    ],
+  ],
+  "territory": [
+    9,
+  ],
+  "tiles": [
+    [
+      85,
+      {
+        "kind": "Farm",
+      },
+    ],
+  ],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 21,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 46`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      10,
+    ],
+  ],
+  "territory": [
+    9,
+  ],
+  "tiles": [],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 20,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 47`] = `
+{
+  "options": [
+    [
+      {
+        "buy": 80,
+        "cost": 40,
+        "item": {
+          "improvement": "Mine",
+          "kind": "Improvement",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 0,
+            "gold": 2,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Copper",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 0,
+              "gold": 1,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Deep Mine",
+            "tech": "IronWorking",
+          },
+        },
+        "stored": 0,
+        "turns": -1,
+      },
+      {
+        "buy": 60,
+        "cost": 30,
+        "item": {
+          "improvement": "Farm",
+          "kind": "Improvement",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 1,
+            "gold": 0,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Wheat",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 1,
+              "gold": 0,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Irrigated Farm",
+            "tech": "CropRotation",
+          },
+        },
+        "stored": 5,
+        "turns": -1,
+      },
+    ],
+  ],
+  "producing": [
+    [
+      {
+        "improvement": "Farm",
+        "kind": "Improvement",
+        "tile": {
+          "q": 5,
+          "r": 4,
+        },
+      },
+      [],
+      [],
+      5,
+    ],
+  ],
+  "territory": [
+    39,
+  ],
+  "tiles": [
+    [
+      85,
+      {
+        "kind": "Farm",
+      },
+    ],
+  ],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 0,
+        "gold": 0,
+        "production": 0,
+        "science": 0,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 48`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      10,
+    ],
+  ],
+  "territory": [
+    9,
+  ],
+  "tiles": [
+    [
+      85,
+      {
+        "kind": "Farm",
+      },
+    ],
+  ],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 21,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > buys an improvement, banks progress on a switch, and retains it when the tile is lost 49`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      10,
+    ],
+  ],
+  "territory": [
+    9,
+  ],
+  "tiles": [],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 20,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > lists only owned, worked, known, matching resource tiles, with the same previews 1`] = `
+{
+  "options": [
+    [
+      {
+        "buy": 60,
+        "cost": 30,
+        "item": {
+          "improvement": "Farm",
+          "kind": "Improvement",
+          "tile": {
+            "q": 3,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 1,
+            "gold": 0,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Wheat",
+          "tile": {
+            "q": 3,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 1,
+              "gold": 0,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Irrigated Farm",
+            "tech": "CropRotation",
+          },
+        },
+        "stored": 0,
+        "turns": 6,
+      },
+      {
+        "buy": 80,
+        "cost": 40,
+        "item": {
+          "improvement": "Mine",
+          "kind": "Improvement",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 0,
+            "gold": 2,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Copper",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 0,
+              "gold": 1,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Deep Mine",
+            "tech": "IronWorking",
+          },
+        },
+        "stored": 0,
+        "turns": 8,
+      },
+      {
+        "buy": 60,
+        "cost": 30,
+        "item": {
+          "improvement": "Farm",
+          "kind": "Improvement",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 1,
+            "gold": 0,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Wheat",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 1,
+              "gold": 0,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Irrigated Farm",
+            "tech": "CropRotation",
+          },
+        },
+        "stored": 0,
+        "turns": 6,
+      },
+    ],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      0,
+    ],
+  ],
+  "territory": [
+    37,
+  ],
+  "tiles": [],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 74,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > lists only owned, worked, known, matching resource tiles, with the same previews 2`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      0,
+    ],
+  ],
+  "territory": [
+    7,
+  ],
+  "tiles": [],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 17,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > lists only owned, worked, known, matching resource tiles, with the same previews 3`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      0,
+    ],
+  ],
+  "territory": [
+    7,
+  ],
+  "tiles": [],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 16,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > lists only owned, worked, known, matching resource tiles, with the same previews 4`] = `[]`;
+
+exports[`WASM improvement behavior > lists only owned, worked, known, matching resource tiles, with the same previews 5`] = `[]`;
+
+exports[`WASM improvement behavior > lists only owned, worked, known, matching resource tiles, with the same previews 6`] = `[]`;
+
+exports[`WASM improvement behavior > lists only owned, worked, known, matching resource tiles, with the same previews 7`] = `
+[
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": 1,
+      "r": 8,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": 0,
+      "r": 8,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 1,
+    "owner": 0,
+    "tile": {
+      "q": -2,
+      "r": 4,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 2,
+    "owner": 1,
+    "tile": {
+      "q": -5,
+      "r": 14,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 2,
+    "owner": 1,
+    "tile": {
+      "q": -5,
+      "r": 15,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 3,
+    "owner": 2,
+    "tile": {
+      "q": 5,
+      "r": 14,
+    },
+    "type": "TileClaimed",
+  },
+  {
+    "city": 3,
+    "owner": 2,
+    "tile": {
+      "q": 5,
+      "r": 15,
+    },
+    "type": "TileClaimed",
+  },
+]
+`;
+
+exports[`WASM improvement behavior > lists only owned, worked, known, matching resource tiles, with the same previews 8`] = `
+{
+  "options": [
+    [
+      {
+        "buy": 60,
+        "cost": 30,
+        "item": {
+          "improvement": "Farm",
+          "kind": "Improvement",
+          "tile": {
+            "q": 3,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 1,
+            "gold": 0,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Wheat",
+          "tile": {
+            "q": 3,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 1,
+              "gold": 0,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Irrigated Farm",
+            "tech": "CropRotation",
+          },
+        },
+        "stored": 5,
+        "turns": 5,
+      },
+      {
+        "buy": 80,
+        "cost": 40,
+        "item": {
+          "improvement": "Mine",
+          "kind": "Improvement",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 0,
+            "gold": 2,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Copper",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 0,
+              "gold": 1,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Deep Mine",
+            "tech": "IronWorking",
+          },
+        },
+        "stored": 5,
+        "turns": 7,
+      },
+      {
+        "buy": 60,
+        "cost": 30,
+        "item": {
+          "improvement": "Farm",
+          "kind": "Improvement",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 1,
+            "gold": 0,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Wheat",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 1,
+              "gold": 0,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Irrigated Farm",
+            "tech": "CropRotation",
+          },
+        },
+        "stored": 5,
+        "turns": 5,
+      },
+    ],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      5,
+    ],
+  ],
+  "territory": [
+    40,
+  ],
+  "tiles": [],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 93,
+        "gold": 1,
+        "production": 5,
+        "science": 4,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > lists only owned, worked, known, matching resource tiles, with the same previews 9`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      5,
+    ],
+  ],
+  "territory": [
+    9,
+  ],
+  "tiles": [],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 21,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > lists only owned, worked, known, matching resource tiles, with the same previews 10`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      5,
+    ],
+  ],
+  "territory": [
+    9,
+  ],
+  "tiles": [],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 20,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > lists only owned, worked, known, matching resource tiles, with the same previews 11`] = `
+{
+  "options": [
+    [
+      {
+        "buy": 60,
+        "cost": 30,
+        "item": {
+          "improvement": "Farm",
+          "kind": "Improvement",
+          "tile": {
+            "q": 3,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 1,
+            "gold": 0,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Wheat",
+          "tile": {
+            "q": 3,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 1,
+              "gold": 0,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Irrigated Farm",
+            "tech": "CropRotation",
+          },
+        },
+        "stored": 5,
+        "turns": 5,
+      },
+      {
+        "buy": 80,
+        "cost": 40,
+        "item": {
+          "improvement": "Mine",
+          "kind": "Improvement",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 0,
+            "gold": 2,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Copper",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 0,
+              "gold": 1,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Deep Mine",
+            "tech": "IronWorking",
+          },
+        },
+        "stored": 5,
+        "turns": 7,
+      },
+      {
+        "buy": 60,
+        "cost": 30,
+        "item": {
+          "improvement": "Farm",
+          "kind": "Improvement",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 1,
+            "gold": 0,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Wheat",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 1,
+              "gold": 0,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Irrigated Farm",
+            "tech": "CropRotation",
+          },
+        },
+        "stored": 5,
+        "turns": 5,
+      },
+    ],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      5,
+    ],
+  ],
+  "territory": [
+    40,
+  ],
+  "tiles": [],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 93,
+        "gold": 1,
+        "production": 5,
+        "science": 4,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > lists only owned, worked, known, matching resource tiles, with the same previews 12`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      5,
+    ],
+  ],
+  "territory": [
+    9,
+  ],
+  "tiles": [],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 21,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > lists only owned, worked, known, matching resource tiles, with the same previews 13`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      5,
+    ],
+  ],
+  "territory": [
+    9,
+  ],
+  "tiles": [],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 20,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > validates the same refusals 1`] = `
+{
+  "options": [
+    [
+      {
+        "buy": 60,
+        "cost": 30,
+        "item": {
+          "improvement": "Farm",
+          "kind": "Improvement",
+          "tile": {
+            "q": 3,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 1,
+            "gold": 0,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Wheat",
+          "tile": {
+            "q": 3,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 1,
+              "gold": 0,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Irrigated Farm",
+            "tech": "CropRotation",
+          },
+        },
+        "stored": 0,
+        "turns": 6,
+      },
+      {
+        "buy": 80,
+        "cost": 40,
+        "item": {
+          "improvement": "Mine",
+          "kind": "Improvement",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 0,
+            "gold": 2,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Copper",
+          "tile": {
+            "q": 4,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 0,
+              "gold": 1,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Deep Mine",
+            "tech": "IronWorking",
+          },
+        },
+        "stored": 0,
+        "turns": 8,
+      },
+      {
+        "buy": 60,
+        "cost": 30,
+        "item": {
+          "improvement": "Farm",
+          "kind": "Improvement",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+        },
+        "preview": {
+          "gain": {
+            "food": 1,
+            "gold": 0,
+            "production": 0,
+            "science": 0,
+          },
+          "resource": "Wheat",
+          "tile": {
+            "q": 5,
+            "r": 4,
+          },
+          "upgrade": {
+            "gain": {
+              "food": 1,
+              "gold": 0,
+              "production": 0,
+              "science": 0,
+            },
+            "name": "Irrigated Farm",
+            "tech": "CropRotation",
+          },
+        },
+        "stored": 0,
+        "turns": 6,
+      },
+    ],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      0,
+    ],
+  ],
+  "territory": [
+    37,
+  ],
+  "tiles": [],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 74,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > validates the same refusals 2`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      0,
+    ],
+  ],
+  "territory": [
+    7,
+  ],
+  "tiles": [],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 17,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > validates the same refusals 3`] = `
+{
+  "options": [
+    [],
+  ],
+  "producing": [
+    [
+      null,
+      [],
+      [],
+      0,
+    ],
+  ],
+  "territory": [
+    7,
+  ],
+  "tiles": [],
+  "yields": [
+    {
+      "sources": [],
+      "total": {
+        "food": 16,
+        "gold": 1,
+        "production": 5,
+        "science": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM improvement behavior > validates the same refusals 4`] = `
+[
+  {
+    "index": 0,
+    "message": "A cannot produce Mine: Wheat needs a Farm, not a Mine",
+  },
+  {
+    "index": 1,
+    "message": "A cannot produce Mine: There is no known resource on that tile",
+  },
+  {
+    "index": 2,
+    "message": "A cannot produce Farm: There is no known resource on that tile",
+  },
+  {
+    "index": 3,
+    "message": "A cannot produce Pasture: That tile isn't owned by A",
+  },
+]
+`;
+
+exports[`WASM improvement behavior > validates the same refusals 5`] = `
+[
+  {
+    "index": 0,
+    "message": "Enemy cannot produce Farm: That tile isn't owned by Enemy",
+  },
+]
+`;

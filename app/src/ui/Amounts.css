@@ -1,0 +1,22 @@
+/* Yield amounts: a signed number and its icon, sized to the text around it (legatum-ui). */
+.amt { display: inline-flex; align-items: baseline; white-space: nowrap; }
+/* The gap sits between the number and its icon only: the screen-reader word is a flex item too and
+   took a second gap, which showed as "(+2 🌾 )" (m6). */
+.amt-n { margin-inline-end: 0.15em; }
+.amt > .sr-only { position: absolute; }
+/* Upright sans lining figures: the display face's italic old-style figures made "+2" and "11" read
+   as "1 1" at icon size (7b review B1). Columns that align digits set tabular-nums themselves. */
+.amt-n { font-family: var(--sans); font-style: normal; font-weight: 600; font-variant-numeric: lining-nums proportional-nums; }
+.amt-icon {
+  display: inline-block; flex: none; align-self: center;
+  width: 1em; height: 1em; min-width: 10px; min-height: 10px;
+  -webkit-mask-size: contain; mask-size: contain;
+  -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+  -webkit-mask-position: center; mask-position: center;
+}
+/* A strategic resource keeps its name in view: "1 [icon] Iron". */
+.amt-word { margin-inline-start: 0.25em; }
+/* Before a ; , . : or ) the icon's own transparent side space reads as a stray space (8.9.16 review: "+3 [icon] ; upgrades"). */
+.amt-tight > .amt-icon { margin-inline-end: -0.22em; }
+/* The VP seal fills its box, so it has no side space to pull back: the full stop after it stays visible. */
+.amt-vp.amt-tight > .amt-icon { margin-inline-end: 0; }

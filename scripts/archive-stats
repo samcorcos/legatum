@@ -1,0 +1,173 @@
+#!/usr/bin/env python3
+"""Summarize Legatum's metadata index, or export games/players/turns without replay."""
+import argparse
+import collections
+import csv
+import fcntl
+import gzip
+import json
+import os
+from pathlib import Path
+import sys
+
+LIMIT = 64 * 1024 * 1024
+
+
+def read_archive(path):
+    if path.suffix == ".zst":
+        try:
+            from compression import zstd
+            opener = zstd.open
+        except ImportError:
+            try:
+                import zstandard
+                opener = zstandard.open
+            except ImportError as error:
+                raise ValueError("zstd reads need Python 3.14+ or pip install zstandard") from error
+    elif path.suffix == ".gz":
+        opener = gzip.open
+    else:
+        opener = open
+    with opener(path, "rb") as stream:
+        data = stream.read(LIMIT + 1)
+    if len(data) > LIMIT:
+        raise ValueError(f"archive too large: {path}")
+    record = json.loads(data)
+    if record["metadata"]["schema_version"] != 1:
+        raise ValueError(f"unsupported schema: {path}")
+    return record
+
+
+def index_rows(root):
+    path = root / "index.jsonl"
+    if not path.exists():
+        return
+    with path.open(encoding="utf-8") as file:
+        for number, line in enumerate(file, 1):
+            if not line.endswith("\n"):
+                raise ValueError(f"unfinished index line {number}; run --repair-index")
+            metadata = json.loads(line)
+            if metadata["schema_version"] != 1:
+                raise ValueError(f"unsupported index schema on line {number}")
+            yield metadata
+
+
+def repair_index(root):
+    root.mkdir(parents=True, exist_ok=True)
+    # Same OS lock as the Rust writers; append missing receipts, never replay old engines.
+    with (root / "archive.lock").open("a+b") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        index = root / "index.jsonl"
+        with index.open("a+b") as file:
+            file.seek(0)
+            seen = set()
+            offset = 0
+            for line in file:
+                if not line.endswith(b"\n"):
+                    break
+                seen.add(json.loads(line)["game_id"])
+                offset += len(line)
+            file.truncate(offset)
+            file.seek(offset)
+            recovered = 0
+            for path in sorted(root.glob("[0-9][0-9][0-9][0-9]/[0-9][0-9]/*.tape.json*")):
+                record = read_archive(path)
+                metadata = record["metadata"]
+                if metadata["finished_at"] is None or metadata["game_id"] in seen:
+                    continue
+                file.write((json.dumps(metadata, ensure_ascii=False, separators=(",", ":")) + "\n").encode())
+                seen.add(metadata["game_id"])
+                recovered += 1
+            file.flush()
+            os.fsync(file.fileno())
+    print(f"Recovered {recovered} missing index entries")
+
+
+def archive_path(root, meta):
+    game = meta["game_id"]
+    if not game or not all(c.isascii() and (c.isalnum() or c in "-_") for c in game):
+        raise ValueError("invalid game id in index")
+    date = meta["created_at"]
+    if len(date) < 7 or not date[:4].isdigit() or not date[5:7].isdigit():
+        raise ValueError("invalid date in index")
+    base = root / date[:4] / date[5:7]
+    for suffix in ("zst", "gz"):
+        path = base / f"{game}.tape.json.{suffix}"
+        if path.exists():
+            return path
+    raise ValueError(f"missing archive for {game}; index alone can still be summarized")
+
+
+def cell(value):
+    if isinstance(value, (list, dict)):
+        return json.dumps(value, ensure_ascii=False, separators=(",", ":"))
+    # Names are preserved in JSON. Prevent spreadsheet formula evaluation on CSV open.
+    if isinstance(value, str) and value.startswith(("=", "+", "-", "@", "\t", "\r")):
+        return "'" + value
+    return value
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--archive-dir", type=Path, default=Path(os.environ.get("LEGATUM_ARCHIVE", "~/LegatumData/archive")).expanduser())
+    parser.add_argument("--csv", type=Path, help="write games.csv, players.csv and turns.csv here")
+    parser.add_argument("--repair-index", action="store_true", help="recover unindexed finished files after a crash")
+    args = parser.parse_args()
+    root = args.archive_dir.expanduser().resolve()
+    if any((p / ".git").exists() or p.name == ".git" for p in (root, *root.parents)):
+        parser.error("archive must be outside git repositories")
+    if args.repair_index:
+        repair_index(root)
+    counts = {key: collections.Counter() for key in ("source", "speed", "faction", "outcome")}
+    handles = []
+    writers = {}
+    fields = {
+        "games": ["game_id", "created_at", "finished_at", "source", "speed", "seed", "map", "winner", "outcome", "turn_count", "engine_commit", "rules_fingerprint", "first_turn", "complete_history", "parent_game_id"],
+        "players": ["game_id", "player", "name", "faction", "team", "difficulty", "human", "final_vp", "titles"],
+        "turns": ["game_id", "turn", "player", "vp", "cities", "population", "science", "science_stored", "gold", "army_strength", "techs", "wars", "peace", "alive"],
+    }
+    def write(kind, row):
+        writers[kind].writerow({key: cell(row.get(key)) for key in fields[kind]})
+    try:
+        if args.csv:
+            args.csv.mkdir(parents=True, exist_ok=True)
+            for kind, names in fields.items():
+                file = (args.csv / f"{kind}.csv").open("w", newline="", encoding="utf-8")
+                handles.append(file)
+                writers[kind] = csv.DictWriter(file, fieldnames=names)
+                writers[kind].writeheader()
+        total = 0
+        seen = set()
+        for meta in index_rows(root):
+            if meta["game_id"] in seen:
+                raise ValueError(f"duplicate game in index: {meta['game_id']}")
+            seen.add(meta["game_id"])
+            total += 1
+            for key in ("source", "speed", "outcome"):
+                counts[key][meta[key]] += 1
+            counts["faction"].update({s["faction"] for s in meta["seats"]})
+            if writers:
+                write("games", meta)
+                for seat in meta["seats"]:
+                    write("players", {"game_id": meta["game_id"], **seat})
+                record = read_archive(archive_path(root, meta))
+                for turn in record["telemetry"]:
+                    for player in turn["players"]:
+                        write("turns", {"game_id": meta["game_id"], "turn": turn["turn"], **player})
+        print(f"Games: {total}")
+        for key, counter in counts.items():
+            print(f"By {key}" + (" (games containing each faction)" if key == "faction" else "") + ":")
+            for value, count in sorted(counter.items()):
+                print(f"  {value}: {count}")
+        if writers:
+            print(f"CSV files: {args.csv}")
+    finally:
+        for file in handles:
+            file.close()
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except (OSError, ValueError, KeyError) as error:
+        sys.exit(f"archive-stats: {error}")

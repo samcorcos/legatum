@@ -1,0 +1,3 @@
+distinctness=1
+pins=0
+determinism=0

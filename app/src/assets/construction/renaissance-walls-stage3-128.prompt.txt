@@ -1,0 +1,1 @@
+Lanczos 128 px derivative of renaissance-walls-stage3.png. See renaissance-walls-stage3.prompt.txt for the image edit prompt.

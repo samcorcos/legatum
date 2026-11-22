@@ -1,0 +1,20 @@
+/* Every touch control has explicit feedback before suppressing WebKit's blue flash.
+   Scale is independent of transform, so centered overlays keep their positioning. */
+:where(button, a[href], summary, select, input, textarea, label:has(input[type='checkbox']), label:has(input[type='radio']), [role='button'], [role='radio'], [role='tab'], [role='option'], [role='checkbox'], [data-tip-static='true']) {
+  touch-action: manipulation;
+}
+:root [data-touch-pressed='true'] {
+  scale: .97;
+  filter: brightness(.92);
+  transition: none;
+}
+@media (pointer: coarse) {
+  :root :where(button, a[href], summary, select, [role='button'], [role='radio'], [role='tab'], [role='option'], [role='checkbox'], [data-tip-static='true']):active:not(:disabled) {
+    scale: .97;
+    filter: brightness(.92);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root [data-touch-pressed='true'], :root :active { scale: none; }
+}
+:root { -webkit-tap-highlight-color: transparent; }

@@ -1,0 +1,229 @@
+[
+  {
+    "slug": "archer",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-b92d8d1a-ccc7-4dad-bcdc-a75c6f6bfc36.png"
+  },
+  {
+    "slug": "arquebusier",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-34be728b-a88e-427e-8a8d-7b602471a140.png"
+  },
+  {
+    "slug": "artillery",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-ce1796c3-d060-44f8-afde-7bad0c4ab265.png"
+  },
+  {
+    "slug": "autonomous-armour",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-ba0ea92e-23a0-4aee-925b-c94251b26037.png"
+  },
+  {
+    "slug": "barbarian-archer",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-82740ebd-9230-4e1e-b1a1-ae26d5252d90.png"
+  },
+  {
+    "slug": "barbarian-crossbowman",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-5ef4c4d4-e9f5-4cf8-a3f7-d0eca057701e.png"
+  },
+  {
+    "slug": "barbarian-musketman",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-b65c81e3-5536-485b-98a3-c3fd7e868653.png"
+  },
+  {
+    "slug": "barbarian-pikeman",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-bb78efb1-1c8c-4f4a-acb6-865b3b6c3cf2.png",
+    "baseOnlyPath": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-c9cf6219-d8d5-400f-8f30-1582f999ad50.png",
+    "figurePrompt": "Revise this historical miniature for physically credible pike length. Keep same adult person, costume, two-handed braced stance and cream disc. Widen the composition around him, REDUCE figure to occupy roughly seventy percent of canvas height: helmet top at y300, boot soles y1120 on a1254 square. Body must retain slender realistic adult anatomy. The long pike runs diagonally from near x40 y1210 to x1210 y40, held in both hands around middle-left; its straight round wooden shaft has SLENDER UNIFORM DIAMETER about10 pixels, not a tapered cone or thick staff. Tiny narrow iron point at upper tip about35 pixels long, plain wooden butt. Thus weapon is visibly about twice man's height in projection and longer into depth, unmistakably a pike. Both grips wrap shaft. Whole base fits, one low warm cream disc, no rubble. No other changes; magenta background. Full miniature, no cropped shaft."
+  },
+  {
+    "slug": "barbarian-scout",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-af67a77d-1934-46cd-933b-a237874fe0e4.png"
+  },
+  {
+    "slug": "barbarian-spearman",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-72862830-b2f0-4f09-88aa-cf60026ecf6d.png"
+  },
+  {
+    "slug": "biplane",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-a1bfeb40-70ed-4e6a-8579-211ba8d868c6.png"
+  },
+  {
+    "slug": "bomber",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-635d12f0-0746-4055-b975-aeef6d083003.png"
+  },
+  {
+    "slug": "byzantine-heir",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-0f6d27a1-e33d-4932-83d6-762b779eda0a.png"
+  },
+  {
+    "slug": "cataphract",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-54e80823-6173-44e8-8018-9751f8511323.png"
+  },
+  {
+    "slug": "cavalry",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-9032d79b-9722-41f7-8fa7-808e9d1e9a1c.png"
+  },
+  {
+    "slug": "composite-archer",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-ef350670-4394-4d99-8c68-2b8670f3b2c4.png"
+  },
+  {
+    "slug": "crossbowman",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-304ced89-c23d-4cb2-803c-0129c98a1169.png"
+  },
+  {
+    "slug": "cuirassier",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-92d0eb6f-c3e6-4818-b31b-51903ceacf46.png"
+  },
+  {
+    "slug": "drone-swarm",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-d77c201d-9cf5-4733-9a3c-a8c825eec76a.png"
+  },
+  {
+    "slug": "eagle-warrior",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-2e341c62-9419-4a02-879c-9fdc089a214b.png"
+  },
+  {
+    "slug": "field-cannon",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-befc3347-32e4-405e-8bd5-4deac99a25eb.png"
+  },
+  {
+    "slug": "fighter",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-da221267-29d3-4fcc-959a-35816b2565e0.png"
+  },
+  {
+    "slug": "gaesatae",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-96c7c028-35f9-417b-a2ea-289f3a2340f1.png"
+  },
+  {
+    "slug": "horseman",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-c4e40770-2b23-41c8-b5b9-eca3ced0fd36.png"
+  },
+  {
+    "slug": "howitzer",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-40401ec8-1600-41ac-848b-e93fd1f1875c.png"
+  },
+  {
+    "slug": "hunter-killer",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-b9408c07-31da-48b7-8698-98e930749bfd.png"
+  },
+  {
+    "slug": "infantry",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-004621b7-f195-4f0e-9d9a-3c2ee8961a9f.png"
+  },
+  {
+    "slug": "jet-bomber",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-29e9e8a5-45af-4ff6-a815-eb0cfc162cf4.png"
+  },
+  {
+    "slug": "jet-fighter",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-8701162b-a68c-4f6f-9271-3a66bfa92b55.png"
+  },
+  {
+    "slug": "keshig",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-0c6c7b4d-74a1-4a0f-a9a8-b6139b881132.png"
+  },
+  {
+    "slug": "knight",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-8ed795b3-0e8a-4992-9e24-258b39134d34.png"
+  },
+  {
+    "slug": "landship",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-0743bf59-2b36-4983-b952-74e58d148d37.png"
+  },
+  {
+    "slug": "legionary",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-c5c71f4e-a9f5-4da5-aa5b-11eef4c653f4.png"
+  },
+  {
+    "slug": "main-battle-tank",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-6f864ee1-52c4-415e-b43d-4e0fe98fbb18.png"
+  },
+  {
+    "slug": "panzer",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-de208321-a185-48db-81a6-15b7f5b7667f.png",
+    "baseOnlyPath": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-699daab7-06eb-4d9f-b585-b5f97dd92e75.png",
+    "figurePrompt": "Precise miniature detail edit ONLY: add correctly proportioned Panzer IV hull Schuerzen side-skirt plates to the visible hull flank. Thin overlapping rectangular metal plates on external support rails, hanging outside upper track and road-wheel tops, leaving lower wheels and track visible. Preserve existing eight small road wheels on four bogies underneath, front sprocket and rear idler, existing turret side skirts, long barrel and its two-chamber muzzle brake, cupola, proportions, orientation, paint and plain warm cream disc. No mirroring, no new pose, no changed camera, no insignia or text. This is a collectible scale model. Return same complete miniature on flat magenta background."
+  },
+  {
+    "slug": "medjay",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-1e4763b4-f52c-4d74-8e6a-073284390fb0.png"
+  },
+  {
+    "slug": "musketman",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-b08ca3ee-6333-4840-91a1-952aa508ab01.png"
+  },
+  {
+    "slug": "mechanised-infantry",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-f66c2970-563a-49c1-aa72-f5c392f6d746.png"
+  },
+  {
+    "slug": "phalangite",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-1417018e-28c1-4021-840c-955ea80d7a6a.png",
+    "baseOnlyPath": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-8d91c99e-90e2-4966-85e4-84221e2fa67e.png",
+    "figurePrompt": "Replace this three-person tabletop miniature with ONE full-size adult Macedonian phalangite, in the same refined painted miniature style. One soldier only: restrained bronze helmet with cheek pieces, off-white linen cuirass with short leather pteruges, muted red tunic, bronze greaves and simple sandals. Small plain round bronze shield strapped securely to LEFT forearm at left side of torso, not centred on his chest; both hands hold a single continuous long sarissa at the slope. Slender wooden shaft with tiny iron point, not a broad spearhead; weapon projects diagonally into depth, at least twice man's visible body length. Natural two-handed grip, no fingers passing through shield. Calm ready stance with a measured forward step. Figure fills about70percent canvas height, plain round warm cream stone single-step disc with soft contact shadows, no rubble. Magenta background, full square canvas and complete figure, no text, no extra people or objects."
+  },
+  {
+    "slug": "peltast",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-93295e1b-6181-4ba3-a63a-1b8cb7262646.png"
+  },
+  {
+    "slug": "pikeman",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-df82f406-362d-4e03-ad9f-64bbaadf665f.png",
+    "baseOnlyPath": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-cbe35acd-1f66-44f5-bff1-34848a1dad74.png",
+    "figurePrompt": "Revise this historical miniature for physically credible pike length. Keep same adult person, costume, two-handed braced stance and cream disc. Widen the composition around him, REDUCE figure to occupy roughly seventy percent of canvas height: helmet top at y300, boot soles y1120 on a1254 square. Body must retain slender realistic adult anatomy. The long pike runs diagonally from near x40 y1210 to x1210 y40, held in both hands around middle-left; its straight round wooden shaft has SLENDER UNIFORM DIAMETER about10 pixels, not a tapered cone or thick staff. Tiny narrow iron point at upper tip about35 pixels long, plain wooden butt. Thus weapon is visibly about twice man's height in projection and longer into depth, unmistakably a pike. Both grips wrap shaft. Whole base fits, one low warm cream disc, no rubble. No other changes; magenta background. Full miniature, no cropped shaft."
+  },
+  {
+    "slug": "reislaufer",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-44b80a44-5597-4c71-bfad-58d31022f597.png"
+  },
+  {
+    "slug": "rifleman",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-82ddc3f3-85d0-4435-84a4-a798daf0dbff.png"
+  },
+  {
+    "slug": "rocket-artillery",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-cf5be1b3-12ad-40ba-9845-7143422af813.png"
+  },
+  {
+    "slug": "scout",
+    "path": "/tmp/legatum-art-pass-3/scout-composite.png",
+    "rejected": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-15ba07b7-77fe-46b0-b2e1-f4a4423e74d2.png",
+    "crop_source": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-10982fb0-3b7e-4f81-b906-a83784979fe1.png",
+    "attempts": 2
+  },
+  {
+    "slug": "settler",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-571d3fdc-b3ff-49db-9daf-dee9c71903b6.png"
+  },
+  {
+    "slug": "spartan-hoplite",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-19b5b8ee-50a8-4cfc-ad06-a2862b9137ad.png"
+  },
+  {
+    "slug": "spearman",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-8fe4361e-db29-49df-bda1-34908ccdd2a4.png"
+  },
+  {
+    "slug": "stealth-bomber",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-e3fa9457-ea8a-4f5d-9233-435f39d553dc.png"
+  },
+  {
+    "slug": "stealth-fighter",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-eb7be9c7-30f8-4a29-81c0-d3d63b0e79a4.png"
+  },
+  {
+    "slug": "tagmatic-soldier",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-d2158842-736b-429b-b881-0b3c1e850c1d.png"
+  },
+  {
+    "slug": "tank",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-6e0a2571-0e84-47bf-a746-c6a1ea209180.png"
+  },
+  {
+    "slug": "trench-infantry",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-03cf31f3-99db-4392-98c1-294119043225.png"
+  },
+  {
+    "slug": "war-elephant",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-7f4a9102-ff28-4052-bf89-79f9b57b3804.png"
+  }
+]

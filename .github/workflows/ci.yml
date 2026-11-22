@@ -1,0 +1,214 @@
+name: CI
+
+# Where the time went (2026-11-21): one job on a 2-core runner took about 75 minutes. 49 of them were one release
+# build of every test target, and 42% of that build was the 125 example tools that have no tests (clippy already
+# compiles them). Now the release tests build only test targets, split into groups that build and run on separate
+# runners (tools/ci/rust_test_groups.py), and the app tests share one WASM build across three shards.
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+
+jobs:
+  changes:
+    # Docs-only changes (Markdown outside crates/ and app/) skip the builds and tests. Everything else runs them all.
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.diff.outputs.code }}
+      rust-groups: ${{ steps.groups.outputs.names }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - id: diff
+        run: |
+          if [ "${{ github.event_name }}" = pull_request ]; then base="origin/${{ github.base_ref }}"; else base="${{ github.event.before }}"; fi
+          if ! git rev-parse -q --verify "$base^{commit}" >/dev/null; then echo "code=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          files="$(git diff --name-only "$base"...HEAD)"
+          echo "$files"
+          if [ -n "$files" ] && ! echo "$files" | grep -vqE '^(docs|plans|\.claude)/.*\.md$|^[^/]+\.md$'; then
+            echo "code=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "code=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Rust test groups
+        # Every test target lands in exactly one group (checked here), so new tests and crates are never skipped.
+        id: groups
+        run: |
+          python3 tools/ci/rust_test_groups.py check
+          echo "names=$(python3 tools/ci/rust_test_groups.py names)" >> "$GITHUB_OUTPUT"
+
+  gates:
+    # The static pre-merge gates (tools/gates/check.py): secrets, personal data, saves, large binaries,
+    # engine invariants. Reviewer markers and the art check stay with the lead before merging.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Pre-merge gates
+        # fetch-depth 0 already brings origin/<base>; a second fetch would need the credentials we don't keep.
+        run: |
+          python3 tools/gates/check.py HEAD --base "origin/${{ github.base_ref }}" --checks-only --skip art
+
+  lint:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Personal-data scan of the tracked tree
+        run: tools/release/test-scrub.sh
+      - name: Install pinned Rust toolchain
+        run: rustup show
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: lint
+          save-if: ${{ github.ref == 'refs/heads/master' }}
+      - name: Rust format
+        run: cargo fmt --all --check
+      - name: Rust lint
+        # --all-targets also compiles every example, so the release test build can skip the ones without tests.
+        run: cargo clippy --workspace --all-targets -- -D warnings
+      - name: Doctests
+        # nextest does not run doctests.
+        run: cargo test --workspace --doc
+
+  rust-test:
+    # Release-mode tests, one group of test targets per runner. Each group builds only what it needs.
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        group: ${{ fromJSON(needs.changes.outputs.rust-groups) }}
+    name: rust-test (${{ matrix.group }})
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install pinned Rust toolchain
+        run: rustup show
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: release-${{ matrix.group }}
+          save-if: ${{ github.ref == 'refs/heads/master' }}
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-nextest@0.9.100
+          fallback: none
+      - name: Rust tests (${{ matrix.group }})
+        run: |
+          args="$(python3 tools/ci/rust_test_groups.py args '${{ matrix.group }}')"
+          echo "cargo nextest run --cargo-profile release $args"
+          cargo nextest run --cargo-profile release $args --no-fail-fast
+
+  wasm:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install pinned Rust toolchain
+        run: rustup show
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: wasm
+          save-if: ${{ github.ref == 'refs/heads/master' }}
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: wasm-pack@0.15.0
+          fallback: none
+      - name: Build WebAssembly engine
+        # Thin LTO (wasm-playtest): the same engine, built in a fraction of the fat-LTO time.
+        run: scripts/build-wasm.sh
+        env:
+          LEGATUM_PLAYTEST_PROFILE: 1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wasm-pkg
+          path: app/src/wasm-pkg
+          retention-days: 1
+
+  app-test:
+    needs: wasm
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
+    name: app-test (${{ matrix.shard }} of 3)
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - uses: actions/download-artifact@v4
+        with:
+          name: wasm-pkg
+          path: app/src/wasm-pkg
+      - name: Install app dependencies
+        run: npm ci
+        working-directory: app
+      - name: Install Chromium for the art render tests
+        run: npx playwright install --with-deps chromium
+        working-directory: app
+      - name: App tests (shard ${{ matrix.shard }} of 3)
+        run: npm test -- --shard=${{ matrix.shard }}/3
+        working-directory: app
+
+  app-build:
+    needs: wasm
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - uses: actions/download-artifact@v4
+        with:
+          name: wasm-pkg
+          path: app/src/wasm-pkg
+      - name: Install app dependencies
+        run: npm ci
+        working-directory: app
+      - name: Build app
+        run: npm run build
+        working-directory: app
+
+  ci-ok:
+    # One check to require in branch protection: green when every job passed or was skipped for a docs-only change.
+    if: always()
+    needs: [changes, gates, lint, rust-test, wasm, app-test, app-build]
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo '${{ toJSON(needs) }}'
+          ! echo '${{ toJSON(needs.*.result) }}' | grep -qE 'failure|cancelled'

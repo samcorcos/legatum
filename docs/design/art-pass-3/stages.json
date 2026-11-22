@@ -1,0 +1,74 @@
+[
+  {
+    "era": "machine",
+    "stage": 1,
+    "prompt": "Create CONSTRUCTION STAGE 1 as a precise image edit of this city perimeter. Same exact camera, 1254 square canvas, ring location, corners, front entry and ground footprint. Show only the LOW FOUNDATION FOOTINGS and exposed soil trenches along the ring, small concrete pads where the existing shelters/towers stand, upright rebar cages and stacks of formwork beside those pads. All tall walls, roofs, gates, domes and finished upper surfaces not yet built. Earth and concrete are understated painted miniature materials matching reference. Ring centre and outside remain entirely pure magenta, no ground filling centre. Do NOT shrink, recenter or move the ring when lowering the structures. No people, text, weapons. Return full square image.",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-79703caf-34f0-4fa6-a227-976f7b6422ce.png"
+  },
+  {
+    "era": "modern",
+    "stage": 1,
+    "prompt": "Create CONSTRUCTION STAGE 1 as a precise image edit of this city perimeter. Same exact camera, 1254 square canvas, ring location, corners, front entry and ground footprint. Show only the LOW FOUNDATION FOOTINGS and exposed soil trenches along the ring, small concrete pads where the existing shelters/towers stand, upright rebar cages and stacks of formwork beside those pads. All tall walls, roofs, gates, domes and finished upper surfaces not yet built. Earth and concrete are understated painted miniature materials matching reference. Ring centre and outside remain entirely pure magenta, no ground filling centre. Do NOT shrink, recenter or move the ring when lowering the structures. No people, text, weapons. Return full square image.",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-496fb14b-2209-4a09-97a0-552739402bd9.png"
+  },
+  {
+    "era": "contemporary",
+    "stage": 1,
+    "prompt": "Create CONSTRUCTION STAGE 1 as a precise image edit of this city perimeter. Same exact camera, 1254 square canvas, ring location, corners, front entry and ground footprint. Show only the LOW FOUNDATION FOOTINGS and exposed soil trenches along the ring, small concrete pads where the existing shelters/towers stand, upright rebar cages and stacks of formwork beside those pads. All tall walls, roofs, gates, domes and finished upper surfaces not yet built. Earth and concrete are understated painted miniature materials matching reference. Ring centre and outside remain entirely pure magenta, no ground filling centre. Do NOT shrink, recenter or move the ring when lowering the structures. No people, text, weapons. Return full square image.",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-00847bcf-7063-4451-9650-ee51fe1ddaa2.png"
+  },
+  {
+    "era": "future",
+    "stage": 1,
+    "prompt": "Create CONSTRUCTION STAGE 1 as a precise image edit of this city perimeter. Same exact camera, 1254 square canvas, ring location, corners, front entry and ground footprint. Show only the LOW FOUNDATION FOOTINGS and exposed soil trenches along the ring, small concrete pads where the existing shelters/towers stand, upright rebar cages and stacks of formwork beside those pads. All tall walls, roofs, gates, domes and finished upper surfaces not yet built. Earth and concrete are understated painted miniature materials matching reference. Ring centre and outside remain entirely pure magenta, no ground filling centre. Do NOT shrink, recenter or move the ring when lowering the structures. No people, text, weapons. Return full square image.",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-c2601aed-f4a8-4729-801d-6fe7a82e6cff.png"
+  },
+  {
+    "era": "machine",
+    "stage": 2,
+    "prompt": "Create CONSTRUCTION STAGE 2 as a precise image edit of this city perimeter. Exact same camera, 1254 square canvas, ring location, corners, front entry and ground footprint. Show HALF-HEIGHT reinforced concrete walls, exposed reinforcing bars emerging from incomplete wall tops, tight timber or steel formwork alongside sections, small material stacks. Shelters and gate towers are open unfinished lower shells with no roof, no doors, no finished dome or top cap. Earthworks partially filled. Structurally unfinished, not finished art cut off. Match reference miniature painting materials and lighting. Ring centre and outside entirely pure magenta. Do NOT shrink, recenter or move ring. No people, text, weapons. Return full square image.",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-49c047a4-f190-44c3-9aed-377121653dab.png"
+  },
+  {
+    "era": "modern",
+    "stage": 2,
+    "prompt": "Create CONSTRUCTION STAGE 2 as a precise image edit of this city perimeter. Exact same camera, 1254 square canvas, ring location, corners, front entry and ground footprint. Show HALF-HEIGHT reinforced concrete walls, exposed reinforcing bars emerging from incomplete wall tops, tight timber or steel formwork alongside sections, small material stacks. Shelters and gate towers are open unfinished lower shells with no roof, no doors, no finished dome or top cap. Earthworks partially filled. Structurally unfinished, not finished art cut off. Match reference miniature painting materials and lighting. Ring centre and outside entirely pure magenta. Do NOT shrink, recenter or move ring. No people, text, weapons. Return full square image.",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-ea658a64-2286-44bb-9bc9-42037937f468.png"
+  },
+  {
+    "era": "contemporary",
+    "stage": 2,
+    "prompt": "Create CONSTRUCTION STAGE 2 as a precise image edit of this city perimeter. Exact same camera, 1254 square canvas, ring location, corners, front entry and ground footprint. Show HALF-HEIGHT reinforced concrete walls, exposed reinforcing bars emerging from incomplete wall tops, tight timber or steel formwork alongside sections, small material stacks. Shelters and gate towers are open unfinished lower shells with no roof, no doors, no finished dome or top cap. Earthworks partially filled. Structurally unfinished, not finished art cut off. Match reference miniature painting materials and lighting. Ring centre and outside entirely pure magenta. Do NOT shrink, recenter or move ring. No people, text, weapons. Return full square image.",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-c9cea1dc-a349-479d-81fd-226bde2db171.png"
+  },
+  {
+    "era": "future",
+    "stage": 2,
+    "prompt": "Create CONSTRUCTION STAGE 2 as a precise image edit of this city perimeter. Exact same camera, 1254 square canvas, ring location, corners, front entry and ground footprint. Show HALF-HEIGHT reinforced concrete walls, exposed reinforcing bars emerging from incomplete wall tops, tight timber or steel formwork alongside sections, small material stacks. Shelters and gate towers are open unfinished lower shells with no roof, no doors, no finished dome or top cap. Earthworks partially filled. Structurally unfinished, not finished art cut off. Match reference miniature painting materials and lighting. Ring centre and outside entirely pure magenta. Do NOT shrink, recenter or move ring. No people, text, weapons. Return full square image.",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-53fb3750-2eab-4339-a4bd-7c1253a25049.png"
+  },
+  {
+    "era": "machine",
+    "stage": 3,
+    "prompt": "Create CONSTRUCTION STAGE 3 as a precise image edit of this finished city perimeter. Same exact camera, 1254 square canvas, ring position, every corner, shelter, front gate and ground footprint. The walls have reached FULL HEIGHT with their finished silhouette, but shelters and gate towers are still ROOFLESS OPEN SHELLS, no domes or roofs yet, steel roof supports exposed. Gates not hung yet: open entrance. Scaffolding closely hugs upper sections; a few upper facing panels missing, unfinished concrete and restrained material stacks. Ring shape and structure count must match finished reference. Structurally unfinished, NOT a faded or clipped copy. Refined miniature oil-painting texture. Keep ring centre and outside pure magenta. Do not move, shrink, recenter or change the construction site. No people, text, weapons. Return complete square image.",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-26ac1960-5cb2-44bd-a367-dbd89e1cfcfd.png"
+  },
+  {
+    "era": "modern",
+    "stage": 3,
+    "prompt": "Create CONSTRUCTION STAGE 3 as a precise image edit of this finished city perimeter. Same exact camera, 1254 square canvas, ring position, every corner, shelter, front gate and ground footprint. The walls have reached FULL HEIGHT with their finished silhouette, but shelters and gate towers are still ROOFLESS OPEN SHELLS, no domes or roofs yet, steel roof supports exposed. Gates not hung yet: open entrance. Scaffolding closely hugs upper sections; a few upper facing panels missing, unfinished concrete and restrained material stacks. Ring shape and structure count must match finished reference. Structurally unfinished, NOT a faded or clipped copy. Refined miniature oil-painting texture. Keep ring centre and outside pure magenta. Do not move, shrink, recenter or change the construction site. No people, text, weapons. Return complete square image.",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-85c25d6b-4999-4399-939a-43d9309c75ef.png"
+  },
+  {
+    "era": "contemporary",
+    "stage": 3,
+    "prompt": "Create CONSTRUCTION STAGE 3 as a precise image edit of this finished city perimeter. Same exact camera, 1254 square canvas, ring position, every corner, shelter, front gate and ground footprint. The walls have reached FULL HEIGHT with their finished silhouette, but shelters and gate towers are still ROOFLESS OPEN SHELLS, no domes or roofs yet, steel roof supports exposed. Gates not hung yet: open entrance. Scaffolding closely hugs upper sections; a few upper facing panels missing, unfinished concrete and restrained material stacks. Ring shape and structure count must match finished reference. Structurally unfinished, NOT a faded or clipped copy. Refined miniature oil-painting texture. Keep ring centre and outside pure magenta. Do not move, shrink, recenter or change the construction site. No people, text, weapons. Return complete square image.",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-9c1b11ba-dad7-4543-8d33-b734d2a6e22d.png"
+  },
+  {
+    "era": "future",
+    "stage": 3,
+    "prompt": "Create CONSTRUCTION STAGE 3 as a precise image edit of this finished city perimeter. Same exact camera, 1254 square canvas, ring position, every corner, shelter, front gate and ground footprint. The walls have reached FULL HEIGHT with their finished silhouette, but shelters and gate towers are still ROOFLESS OPEN SHELLS, no domes or roofs yet, steel roof supports exposed. Gates not hung yet: open entrance. Scaffolding closely hugs upper sections; a few upper facing panels missing, unfinished concrete and restrained material stacks. Ring shape and structure count must match finished reference. Structurally unfinished, NOT a faded or clipped copy. Refined miniature oil-painting texture. Keep ring centre and outside pure magenta. Do not move, shrink, recenter or change the construction site. No people, text, weapons. Return complete square image.",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-186c819f-24ab-4f8e-b01c-e648d93e36fc.png"
+  }
+]

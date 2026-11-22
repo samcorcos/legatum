@@ -1,0 +1,779 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`thin levies: core behavior > caps armed units at one per city plus one, with Scouts free, and greys armed units with the same reason 1`] = `
+{
+  "cap": 2,
+  "units": 1,
+}
+`;
+
+exports[`thin levies: core behavior > caps armed units at one per city plus one, with Scouts free, and greys armed units with the same reason 2`] = `
+[
+  [
+    "{"kind":"Building","building":"Hydroponics"}",
+    "Requires Granary",
+  ],
+]
+`;
+
+exports[`thin levies: core behavior > caps armed units at one per city plus one, with Scouts free, and greys armed units with the same reason 3`] = `
+[
+  [
+    "{"kind":"Unit","unit":"Soldier"}",
+    "Levies full: 2 of 2",
+  ],
+  [
+    "{"kind":"Unit","unit":"Ranger"}",
+    "Levies full: 2 of 2",
+  ],
+  [
+    "{"kind":"Unit","unit":"Trooper"}",
+    "Levies full: 2 of 2",
+  ],
+  [
+    "{"kind":"Unit","unit":"Horseman"}",
+    "Levies full: 2 of 2",
+  ],
+  [
+    "{"kind":"Building","building":"Hydroponics"}",
+    "Requires Granary",
+  ],
+]
+`;
+
+exports[`thin levies: core behavior > caps armed units at one per city plus one, with Scouts free, and greys armed units with the same reason 4`] = `
+[
+  {
+    "index": 0,
+    "message": "Spearman cannot be bought",
+  },
+]
+`;
+
+exports[`thin levies: core behavior > caps armed units at one per city plus one, with Scouts free, and greys armed units with the same reason 5`] = `
+[
+  {
+    "index": 0,
+    "message": "C0 cannot produce Spearman: Levies full: 2 of 2",
+  },
+]
+`;
+
+exports[`thin levies: core behavior > losing a city never disbands units; it only blocks new ones (same turn results) 1`] = `[]`;
+
+exports[`thin levies: core behavior > losing a city never disbands units; it only blocks new ones (same turn results) 2`] = `[]`;
+
+exports[`thin levies: core behavior > losing a city never disbands units; it only blocks new ones (same turn results) 3`] = `[]`;
+
+exports[`thin levies: core behavior > losing a city never disbands units; it only blocks new ones (same turn results) 4`] = `[]`;
+
+exports[`thin levies: core behavior > losing a city never disbands units; it only blocks new ones (same turn results) 5`] = `[]`;
+
+exports[`thin levies: core behavior > losing a city never disbands units; it only blocks new ones (same turn results) 6`] = `[]`;
+
+exports[`thin levies: core behavior > losing a city never disbands units; it only blocks new ones (same turn results) 7`] = `[]`;
+
+exports[`thin levies: core behavior > losing a city never disbands units; it only blocks new ones (same turn results) 8`] = `
+{
+  "actions": [
+    {
+      "blocked_reason": null,
+      "cost": 0,
+      "effective_turn": 2,
+      "order": {
+        "against": 1,
+        "breach": false,
+        "type": "DeclareWar",
+      },
+    },
+    {
+      "blocked_reason": null,
+      "cost": 0,
+      "effective_turn": 2,
+      "order": {
+        "against": 1,
+        "breach": true,
+        "type": "DeclareWar",
+      },
+    },
+    {
+      "blocked_reason": "No Alliance to leave",
+      "cost": 0,
+      "effective_turn": 3,
+      "order": {
+        "agreement": "Security",
+        "type": "BreakTreaty",
+        "with": 1,
+      },
+    },
+    {
+      "blocked_reason": "Peace offers require War",
+      "cost": 0,
+      "effective_turn": 4,
+      "order": {
+        "kind": "Peace",
+        "to": 1,
+        "type": "ProposeTreaty",
+      },
+    },
+    {
+      "blocked_reason": null,
+      "cost": 0,
+      "effective_turn": 4,
+      "order": {
+        "kind": "Alliance",
+        "to": 1,
+        "type": "ProposeTreaty",
+      },
+      "upkeep": 1,
+    },
+    {
+      "blocked_reason": null,
+      "cost": 0,
+      "effective_turn": 2,
+      "order": {
+        "against": 2,
+        "breach": false,
+        "type": "DeclareWar",
+      },
+    },
+    {
+      "blocked_reason": null,
+      "cost": 0,
+      "effective_turn": 2,
+      "order": {
+        "against": 2,
+        "breach": true,
+        "type": "DeclareWar",
+      },
+    },
+    {
+      "blocked_reason": "No Alliance to leave",
+      "cost": 0,
+      "effective_turn": 3,
+      "order": {
+        "agreement": "Security",
+        "type": "BreakTreaty",
+        "with": 2,
+      },
+    },
+    {
+      "blocked_reason": "Peace offers require War",
+      "cost": 0,
+      "effective_turn": 4,
+      "order": {
+        "kind": "Peace",
+        "to": 2,
+        "type": "ProposeTreaty",
+      },
+    },
+    {
+      "blocked_reason": null,
+      "cost": 0,
+      "effective_turn": 4,
+      "order": {
+        "kind": "Alliance",
+        "to": 2,
+        "type": "ProposeTreaty",
+      },
+      "upkeep": 1,
+    },
+  ],
+  "alliances": [],
+  "betrayals": [],
+  "calls": [],
+  "coalition": null,
+  "exploration": {
+    "borrowed_current": 0,
+    "native_land": 102,
+  },
+  "legacy": false,
+  "met": [
+    1,
+    2,
+  ],
+  "peace_cooldowns": [],
+  "proposals": [],
+  "queued": [],
+  "relations": [
+    {
+      "a": 0,
+      "b": 1,
+      "declarers": [
+        0,
+      ],
+      "effective_turn": 1,
+      "guarantee_until": 0,
+      "security": null,
+      "state": "Peace",
+      "version": 0,
+      "war_id": 1,
+    },
+    {
+      "a": 0,
+      "b": 2,
+      "declarers": [],
+      "effective_turn": 1,
+      "guarantee_until": 0,
+      "security": null,
+      "state": "Peace",
+      "version": 0,
+      "war_id": null,
+    },
+    {
+      "a": 1,
+      "b": 2,
+      "declarers": [],
+      "effective_turn": 1,
+      "guarantee_until": 0,
+      "security": null,
+      "state": "Peace",
+      "version": 0,
+      "war_id": null,
+    },
+  ],
+  "replies": [],
+  "superseded": [],
+}
+`;
+
+exports[`thin levies: core behavior > losing a city never disbands units; it only blocks new ones (same turn results) 9`] = `600`;
+
+exports[`thin levies: core behavior > losing a city never disbands units; it only blocks new ones (same turn results) 10`] = `
+{
+  "actions": [
+    {
+      "blocked_reason": null,
+      "cost": 0,
+      "effective_turn": 2,
+      "order": {
+        "against": 0,
+        "breach": false,
+        "type": "DeclareWar",
+      },
+    },
+    {
+      "blocked_reason": null,
+      "cost": 0,
+      "effective_turn": 2,
+      "order": {
+        "against": 0,
+        "breach": true,
+        "type": "DeclareWar",
+      },
+    },
+    {
+      "blocked_reason": "No Alliance to leave",
+      "cost": 0,
+      "effective_turn": 3,
+      "order": {
+        "agreement": "Security",
+        "type": "BreakTreaty",
+        "with": 0,
+      },
+    },
+    {
+      "blocked_reason": "Peace offers require War",
+      "cost": 0,
+      "effective_turn": 4,
+      "order": {
+        "kind": "Peace",
+        "to": 0,
+        "type": "ProposeTreaty",
+      },
+    },
+    {
+      "blocked_reason": null,
+      "cost": 0,
+      "effective_turn": 4,
+      "order": {
+        "kind": "Alliance",
+        "to": 0,
+        "type": "ProposeTreaty",
+      },
+      "upkeep": 1,
+    },
+    {
+      "blocked_reason": null,
+      "cost": 0,
+      "effective_turn": 2,
+      "order": {
+        "against": 2,
+        "breach": false,
+        "type": "DeclareWar",
+      },
+    },
+    {
+      "blocked_reason": null,
+      "cost": 0,
+      "effective_turn": 2,
+      "order": {
+        "against": 2,
+        "breach": true,
+        "type": "DeclareWar",
+      },
+    },
+    {
+      "blocked_reason": "No Alliance to leave",
+      "cost": 0,
+      "effective_turn": 3,
+      "order": {
+        "agreement": "Security",
+        "type": "BreakTreaty",
+        "with": 2,
+      },
+    },
+    {
+      "blocked_reason": "Peace offers require War",
+      "cost": 0,
+      "effective_turn": 4,
+      "order": {
+        "kind": "Peace",
+        "to": 2,
+        "type": "ProposeTreaty",
+      },
+    },
+    {
+      "blocked_reason": null,
+      "cost": 0,
+      "effective_turn": 4,
+      "order": {
+        "kind": "Alliance",
+        "to": 2,
+        "type": "ProposeTreaty",
+      },
+      "upkeep": 1,
+    },
+  ],
+  "alliances": [],
+  "betrayals": [],
+  "calls": [],
+  "coalition": null,
+  "exploration": {
+    "borrowed_current": 0,
+    "native_land": 97,
+  },
+  "legacy": false,
+  "met": [
+    0,
+    2,
+  ],
+  "peace_cooldowns": [],
+  "proposals": [],
+  "queued": [],
+  "relations": [
+    {
+      "a": 0,
+      "b": 1,
+      "declarers": [
+        0,
+      ],
+      "effective_turn": 1,
+      "guarantee_until": 0,
+      "security": null,
+      "state": "Peace",
+      "version": 0,
+      "war_id": 1,
+    },
+    {
+      "a": 0,
+      "b": 2,
+      "declarers": [],
+      "effective_turn": 1,
+      "guarantee_until": 0,
+      "security": null,
+      "state": "Peace",
+      "version": 0,
+      "war_id": null,
+    },
+    {
+      "a": 1,
+      "b": 2,
+      "declarers": [],
+      "effective_turn": 1,
+      "guarantee_until": 0,
+      "security": null,
+      "state": "Peace",
+      "version": 0,
+      "war_id": null,
+    },
+  ],
+  "replies": [],
+  "superseded": [],
+}
+`;
+
+exports[`thin levies: core behavior > losing a city never disbands units; it only blocks new ones (same turn results) 11`] = `605`;
+
+exports[`thin levies: core behavior > losing a city never disbands units; it only blocks new ones (same turn results) 12`] = `
+{
+  "actions": [
+    {
+      "blocked_reason": null,
+      "cost": 0,
+      "effective_turn": 2,
+      "order": {
+        "against": 0,
+        "breach": false,
+        "type": "DeclareWar",
+      },
+    },
+    {
+      "blocked_reason": null,
+      "cost": 0,
+      "effective_turn": 2,
+      "order": {
+        "against": 0,
+        "breach": true,
+        "type": "DeclareWar",
+      },
+    },
+    {
+      "blocked_reason": "No Alliance to leave",
+      "cost": 0,
+      "effective_turn": 3,
+      "order": {
+        "agreement": "Security",
+        "type": "BreakTreaty",
+        "with": 0,
+      },
+    },
+    {
+      "blocked_reason": "Peace offers require War",
+      "cost": 0,
+      "effective_turn": 4,
+      "order": {
+        "kind": "Peace",
+        "to": 0,
+        "type": "ProposeTreaty",
+      },
+    },
+    {
+      "blocked_reason": null,
+      "cost": 0,
+      "effective_turn": 4,
+      "order": {
+        "kind": "Alliance",
+        "to": 0,
+        "type": "ProposeTreaty",
+      },
+      "upkeep": 1,
+    },
+    {
+      "blocked_reason": null,
+      "cost": 0,
+      "effective_turn": 2,
+      "order": {
+        "against": 1,
+        "breach": false,
+        "type": "DeclareWar",
+      },
+    },
+    {
+      "blocked_reason": null,
+      "cost": 0,
+      "effective_turn": 2,
+      "order": {
+        "against": 1,
+        "breach": true,
+        "type": "DeclareWar",
+      },
+    },
+    {
+      "blocked_reason": "No Alliance to leave",
+      "cost": 0,
+      "effective_turn": 3,
+      "order": {
+        "agreement": "Security",
+        "type": "BreakTreaty",
+        "with": 1,
+      },
+    },
+    {
+      "blocked_reason": "Peace offers require War",
+      "cost": 0,
+      "effective_turn": 4,
+      "order": {
+        "kind": "Peace",
+        "to": 1,
+        "type": "ProposeTreaty",
+      },
+    },
+    {
+      "blocked_reason": null,
+      "cost": 0,
+      "effective_turn": 4,
+      "order": {
+        "kind": "Alliance",
+        "to": 1,
+        "type": "ProposeTreaty",
+      },
+      "upkeep": 1,
+    },
+  ],
+  "alliances": [],
+  "betrayals": [],
+  "calls": [],
+  "coalition": null,
+  "exploration": {
+    "borrowed_current": 0,
+    "native_land": 71,
+  },
+  "legacy": false,
+  "met": [
+    0,
+    1,
+  ],
+  "peace_cooldowns": [],
+  "proposals": [],
+  "queued": [],
+  "relations": [
+    {
+      "a": 0,
+      "b": 1,
+      "declarers": [
+        0,
+      ],
+      "effective_turn": 1,
+      "guarantee_until": 0,
+      "security": null,
+      "state": "Peace",
+      "version": 0,
+      "war_id": 1,
+    },
+    {
+      "a": 0,
+      "b": 2,
+      "declarers": [],
+      "effective_turn": 1,
+      "guarantee_until": 0,
+      "security": null,
+      "state": "Peace",
+      "version": 0,
+      "war_id": null,
+    },
+    {
+      "a": 1,
+      "b": 2,
+      "declarers": [],
+      "effective_turn": 1,
+      "guarantee_until": 0,
+      "security": null,
+      "state": "Peace",
+      "version": 0,
+      "war_id": null,
+    },
+  ],
+  "replies": [],
+  "superseded": [],
+}
+`;
+
+exports[`thin levies: core behavior > losing a city never disbands units; it only blocks new ones (same turn results) 13`] = `602`;
+
+exports[`thin levies: core behavior > losing a city never disbands units; it only blocks new ones (same turn results) 14`] = `[]`;
+
+exports[`thin levies: core behavior > losing a city never disbands units; it only blocks new ones (same turn results) 15`] = `
+[
+  [
+    "{"kind":"Unit","unit":"Soldier"}",
+    "Levies full: 3 of 2",
+  ],
+  [
+    "{"kind":"Unit","unit":"Ranger"}",
+    "Levies full: 3 of 2",
+  ],
+  [
+    "{"kind":"Unit","unit":"Horseman"}",
+    "Levies full: 3 of 2",
+  ],
+]
+`;
+
+exports[`thin levies: core behavior > skips a unit whose levy filled while it was being built, with the same notice 1`] = `[]`;
+
+exports[`thin levies: core behavior > skips a unit whose levy filled while it was being built, with the same notice 2`] = `
+[
+  {
+    "player": 0,
+    "reason": "C0 can no longer produce Spearman: Levies full: 2 of 2; its 10 Production stays banked",
+    "type": "OrderFailed",
+  },
+]
+`;
+
+exports[`thin levies: core behavior > skips a unit whose levy filled while it was being built, with the same notice 3`] = `
+[
+  {
+    "player": 0,
+    "reason": "C0 can no longer produce Spearman: Levies full: 2 of 2; its 10 Production stays banked",
+    "type": "OrderFailed",
+  },
+]
+`;
+
+exports[`thin levies: core behavior > skips a unit whose levy filled while it was being built, with the same notice 4`] = `
+{
+  "actions": [
+    {
+      "blocked_reason": null,
+      "cost": 0,
+      "effective_turn": 2,
+      "order": {
+        "against": 1,
+        "breach": false,
+        "type": "DeclareWar",
+      },
+    },
+    {
+      "blocked_reason": null,
+      "cost": 0,
+      "effective_turn": 2,
+      "order": {
+        "against": 1,
+        "breach": true,
+        "type": "DeclareWar",
+      },
+    },
+    {
+      "blocked_reason": "No Alliance to leave",
+      "cost": 0,
+      "effective_turn": 3,
+      "order": {
+        "agreement": "Security",
+        "type": "BreakTreaty",
+        "with": 1,
+      },
+    },
+    {
+      "blocked_reason": "Peace offers require War",
+      "cost": 0,
+      "effective_turn": 4,
+      "order": {
+        "kind": "Peace",
+        "to": 1,
+        "type": "ProposeTreaty",
+      },
+    },
+    {
+      "blocked_reason": null,
+      "cost": 0,
+      "effective_turn": 4,
+      "order": {
+        "kind": "Alliance",
+        "to": 1,
+        "type": "ProposeTreaty",
+      },
+      "upkeep": 1,
+    },
+    {
+      "blocked_reason": null,
+      "cost": 0,
+      "effective_turn": 2,
+      "order": {
+        "against": 2,
+        "breach": false,
+        "type": "DeclareWar",
+      },
+    },
+    {
+      "blocked_reason": null,
+      "cost": 0,
+      "effective_turn": 2,
+      "order": {
+        "against": 2,
+        "breach": true,
+        "type": "DeclareWar",
+      },
+    },
+    {
+      "blocked_reason": "No Alliance to leave",
+      "cost": 0,
+      "effective_turn": 3,
+      "order": {
+        "agreement": "Security",
+        "type": "BreakTreaty",
+        "with": 2,
+      },
+    },
+    {
+      "blocked_reason": "Peace offers require War",
+      "cost": 0,
+      "effective_turn": 4,
+      "order": {
+        "kind": "Peace",
+        "to": 2,
+        "type": "ProposeTreaty",
+      },
+    },
+    {
+      "blocked_reason": null,
+      "cost": 0,
+      "effective_turn": 4,
+      "order": {
+        "kind": "Alliance",
+        "to": 2,
+        "type": "ProposeTreaty",
+      },
+      "upkeep": 1,
+    },
+  ],
+  "alliances": [],
+  "betrayals": [],
+  "calls": [],
+  "coalition": null,
+  "exploration": {
+    "borrowed_current": 0,
+    "native_land": 71,
+  },
+  "legacy": false,
+  "met": [
+    1,
+    2,
+  ],
+  "peace_cooldowns": [],
+  "proposals": [],
+  "queued": [],
+  "relations": [
+    {
+      "a": 0,
+      "b": 1,
+      "declarers": [
+        0,
+      ],
+      "effective_turn": 1,
+      "guarantee_until": 0,
+      "security": null,
+      "state": "Peace",
+      "version": 0,
+      "war_id": 1,
+    },
+    {
+      "a": 0,
+      "b": 2,
+      "declarers": [],
+      "effective_turn": 1,
+      "guarantee_until": 0,
+      "security": null,
+      "state": "Peace",
+      "version": 0,
+      "war_id": null,
+    },
+    {
+      "a": 1,
+      "b": 2,
+      "declarers": [],
+      "effective_turn": 1,
+      "guarantee_until": 0,
+      "security": null,
+      "state": "Peace",
+      "version": 0,
+      "war_id": null,
+    },
+  ],
+  "replies": [],
+  "superseded": [],
+}
+`;
+
+exports[`thin levies: core behavior > skips a unit whose levy filled while it was being built, with the same notice 5`] = `601`;

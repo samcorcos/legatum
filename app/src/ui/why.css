@@ -1,0 +1,78 @@
+/* Coach questions: a floating card under the top bar; the map stays usable. */
+.why-card {
+  position: fixed;
+  top: 64px;
+  /* Clear of the unit panel on the left (about 333 px) and the sidebar on the right (about 215 px). */
+  left: max(345px, calc(50% - 220px));
+  z-index: 30;
+  width: min(440px, calc(100vw - 560px));
+  box-sizing: border-box;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--panel-solid);
+  border: 1px solid var(--ink-2);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.28);
+  border-radius: var(--radius);
+}
+.why-kicker { font: 600 11px/1 var(--sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); }
+.why-text { margin: 0; font: 400 14px/1.4 var(--serif); color: var(--ink); max-height: 30vh; overflow-y: auto; }
+.why-input {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  min-height: 56px;
+  max-height: 22vh;
+  padding: 6px 8px;
+  font: 400 14px/1.35 var(--sans);
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--ink-2);
+  border-radius: var(--radius);
+}
+.why-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.why-actions .btn { white-space: nowrap; }
+/* Esc hides the card behind this button (same spot, under the top bar); a click brings it back. */
+.why-reopen {
+  position: fixed;
+  top: 64px;
+  left: max(345px, calc(50% - 220px));
+  z-index: 30;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding: 5px 12px 5px 6px;
+  font: 600 11px/1 var(--sans);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: var(--panel-solid);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.why-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--panel-solid);
+  font: 700 12px/1 var(--sans);
+}
+.why-reopen-draft { font-weight: 400; letter-spacing: 0; text-transform: none; font-size: 12px; color: var(--ink-2); }
+@media (hover: hover) {
+  .why-reopen:hover { border-color: var(--accent-hi); color: var(--accent-hi); background: var(--panel-2); }
+}
+.why-reopen:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* The coach's question in the turn report (L): the full question, its status and a way back to the card. */
+.why-mark { flex: none; }
+.report-coach .report-cat { gap: 8px; }
+.report-coach-text { margin: 0; font: 400 13px/1.4 var(--serif); color: var(--ink); }
+.report-coach-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px; font-size: 12px; }
+.btn.quiet.report-coach-open { border-color: var(--accent); color: var(--ink); }
+/* Later is the safe second choice beside Send: a hairline so it reads as a button. */
+.btn.quiet.why-later { border-color: var(--rule); }

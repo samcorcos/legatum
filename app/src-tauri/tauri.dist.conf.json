@@ -1,0 +1,9 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "bundle": {
+    "targets": ["app", "dmg"],
+    "resources": {
+      "../public/THIRD_PARTY_LICENSES.txt": "THIRD_PARTY_LICENSES.txt"
+    }
+  }
+}

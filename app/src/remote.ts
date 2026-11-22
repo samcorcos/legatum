@@ -1,0 +1,583 @@
+// LAN play (plans/lan-protocol.md): the game runs on the host's legatum-server; each browser is
+// bound to one human seat and talks to it over a WebSocket.
+import type { GameClient } from './client';
+import { decodeOrders } from './orderDecoding';
+import { HOSTED } from './platform/hosted';
+import { wrapRelaySocket } from './relaySocket';
+import type { StagingState } from './staging';
+import type {
+  AttackMode,
+  AlongsideAttack,
+  BattleForecast,
+  CityAssaultForecast,
+  Event,
+  Faction,
+  GameSetup,
+  Hex,
+  Order,
+  OrderError,
+  PlayerView,
+  TeamId,
+  TurnResult,
+} from './types';
+
+// ---- Protocol ----
+
+export interface SeatStatus {
+  seat: number;
+  player: number;
+  name: string;
+  faction: Faction;
+  connected: boolean;
+  reserved?: boolean;
+  ready: boolean;
+  orders: number;
+}
+
+export interface ServerStatus {
+  mode: 'server';
+  has_game: boolean;
+  turn: number;
+  seats: SeatStatus[];
+  lan_urls: string[];
+  is_local: boolean;
+  /** Staging room (plans/lan-protocol.md); presence of the field advertises support. */
+  staging?: StagingState | null;
+}
+
+export type ClientMsg =
+  | { type: 'join'; seat: number; name: string; token: string }
+  | { type: 'game_take'; seat: number }
+  | { type: 'game_release'; seat: number }
+  | { type: 'orders'; game_id: string; turn: number; orders: Order[] }
+  | { type: 'ready'; game_id: string; turn: number; ready: boolean }
+  | { type: 'forecast'; req_id: number; unit: number; target: Hex; mode: AttackMode }
+  | { type: 'assault'; req_id: number; unit: number; target: Hex; mode: AttackMode; alongside: AlongsideAttack[] }
+  | { type: 'ping' };
+
+export type ServerMsg =
+  | { type: 'seat_token'; seat: number; game_id: string; token: string }
+  | { type: 'welcome'; seat: number; game_id: string; orders: Order[] }
+  | { type: 'view'; view: PlayerView }
+  | { type: 'seats'; seats: SeatStatus[] }
+  | { type: 'validation'; errors: OrderError[] }
+  | { type: 'turn'; turn: number; events: Event[]; hash: string; finished: boolean; winner: TeamId | null }
+  | { type: 'forecast'; req_id: number; forecast: BattleForecast | null }
+  | { type: 'assault'; req_id: number; assault: CityAssaultForecast | null }
+  | { type: 'error'; code?: string; message: string }
+  | { type: 'pong' };
+
+// ---- HTTP ----
+
+type FetchLike = (input: string, init?: { method?: string; body?: string; headers?: Record<string, string>; signal?: AbortSignal }) => Promise<{
+  ok: boolean;
+  status: number;
+  text(): Promise<string>;
+}>;
+
+// ---- Server base ----
+// Same-origin by default (LAN play: the page is served by the host's legatum-server). Online play
+// points a guest at a room on the relay instead, e.g. `https://relay.example/rooms/abc`: status then
+// comes from `<base>/api/status` and the socket from `<base>/ws`.
+let serverBaseUrl = '';
+
+export function setServerBase(base: string) {
+  serverBaseUrl = base.replace(/\/+$/, '');
+}
+
+/** The room URL a guest is connected through; '' for the same-origin server. */
+export function serverBase(): string {
+  return serverBaseUrl;
+}
+
+/** The socket URL for a server base ('' = this page's own origin). https becomes wss. */
+export function wsUrlFor(base: string): string {
+  if (!base) {
+    const loc = globalThis.location;
+    if (!loc) return 'ws://localhost:7878/ws';
+    return `${loc.protocol === 'https:' ? 'wss' : 'ws'}://${loc.host}/ws`;
+  }
+  return `${base.replace(/^http/i, 'ws')}/ws`;
+}
+
+/** GET /api/status. null when there is no legatum-server (the UI then runs locally via WASM). */
+export async function fetchStatus(base: string = serverBase(), fetchImpl: FetchLike = fetch, timeoutMs = 2000): Promise<ServerStatus | null> {
+  if (HOSTED) return null;
+  const ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const timer = ctl ? setTimeout(() => ctl.abort(), timeoutMs) : null;
+  try {
+    const res = await fetchImpl(`${base}/api/status`, { signal: ctl?.signal });
+    if (!res.ok) return null;
+    const body = JSON.parse(await res.text());
+    return body && body.mode === 'server' ? (body as ServerStatus) : null;
+  } catch {
+    // Not JSON (e.g. a static host's index.html fallback) or unreachable: local mode.
+    return null;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+export async function hostGame(setup: GameSetup, base: string = serverBase(), fetchImpl: FetchLike = fetch): Promise<ServerStatus> {
+  const res = await fetchImpl(`${base}/api/game`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(setup),
+  });
+  const text = await res.text();
+  if (!res.ok) throw new Error(text || `Server refused the new game (${res.status})`);
+  return JSON.parse(text) as ServerStatus;
+}
+
+// ---- Socket ----
+
+/** The subset of WebSocket the client uses, so tests can pass a fake. */
+export interface SocketLike {
+  readonly readyState: number;
+  send(data: string): void;
+  close(): void;
+  onopen: ((ev: unknown) => void) | null;
+  onmessage: ((ev: { data: unknown }) => void) | null;
+  onclose: ((ev: unknown) => void) | null;
+  onerror: ((ev: unknown) => void) | null;
+}
+
+export type SocketFactory = (url: string) => SocketLike;
+
+/** `taken`: another window joined this seat; we stop reconnecting until the player chooses to rejoin. */
+export type ConnState = 'connecting' | 'open' | 'reconnecting' | 'closed' | 'taken';
+
+export interface RemoteEvents {
+  /** `resetOrders` also covers a game/turn change missed while disconnected, without a turn report. */
+  view(view: PlayerView, turn: TurnResult | null, resetOrders: boolean): void;
+  seats(seats: SeatStatus[]): void;
+  validation(errors: OrderError[], orders?: Order[]): void;
+  /** A forecast reply arrived (the cache changed). */
+  forecast(): void;
+  connection(state: ConnState): void;
+  error(message: string, code?: string): void;
+}
+
+const SEAT_KEY = 'legatum.lan.seat';
+
+export interface RememberedSeat {
+  seat: number;
+  name: string;
+  gameId: string | null;
+  token?: string;
+  roomId?: string;
+  autoJoin?: boolean;
+}
+
+// Per tab (sessionStorage): survives reloads, but a new tab starts fresh instead of stealing the
+// seat from the first one.
+export function rememberedSeat(): RememberedSeat | null {
+  try {
+    const raw = globalThis.sessionStorage?.getItem(SEAT_KEY);
+    return raw ? (JSON.parse(raw) as RememberedSeat) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function rememberSeat(s: RememberedSeat | null) {
+  try {
+    if (s) globalThis.sessionStorage?.setItem(SEAT_KEY, JSON.stringify(s));
+    else globalThis.sessionStorage?.removeItem(SEAT_KEY);
+  } catch {
+    // best effort
+  }
+}
+
+export function defaultWsUrl(): string {
+  return wsUrlFor(serverBase());
+}
+
+/** A browser socket; through the relay (a base is set) it also reassembles large messages. */
+export function defaultSocketFactory(url: string): SocketLike {
+  const sock = new WebSocket(url) as unknown as SocketLike;
+  return serverBase() ? wrapRelaySocket(sock) : sock;
+}
+
+const OPEN = 1;
+
+/**
+ * GameClient over the LAN protocol. Views are cached from `view` messages; validation and
+ * forecasts arrive asynchronously (validate() returns the latest known errors, forecast()
+ * returns a cached reply and requests missing ones). Turns resolve on the server when every
+ * human seat is Ready, so endTurn() is replaced by setReady().
+ */
+export class RemoteClient implements GameClient {
+  readonly kind = 'remote' as const;
+  seat: number;
+  name: string;
+  gameId: string | null = null;
+  token: string | null = null;
+  state: ConnState = 'connecting';
+  seatsStatus: SeatStatus[] = [];
+  lastTurn: TurnResult | null = null;
+
+  private socket: SocketLike | null = null;
+  private cachedView: PlayerView | null = null;
+  private viewGameId: string | null = null;
+  private awaitingView = true;
+  private errors: OrderError[] = [];
+  private orders: Order[] = [];
+  private sentOrders: string | null = null;
+  // WebSocket replies preserve request order. Retain the submitted snapshot so presentation
+  // feedback cannot celebrate a newer Buy on an older validation reply.
+  private validatingOrders: Order[][] = [];
+  private pendingTurn: TurnResult | null = null;
+  private welcomeOrders: Order[] | null = null;
+  private unsentOrders: Order[] | null = null;
+  private forecasts = new Map<string, BattleForecast | null>();
+  private forecastReq = new Map<number, string>();
+  private assaults = new Map<string, CityAssaultForecast | null>();
+  private assaultReq = new Map<number, string>();
+  private nextReq = 1;
+  private attempts = 0;
+  private stopped = false;
+  /** Only an explicit `seat_taken` error identifies a displaced socket. */
+  private takeoverSocket: SocketLike | null = null;
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private pingTimer: ReturnType<typeof setInterval> | null = null;
+  private listeners: Partial<RemoteEvents> = {};
+
+  constructor(
+    seat: number,
+    name: string,
+    private readonly url: string = defaultWsUrl(),
+    private readonly factory: SocketFactory = defaultSocketFactory,
+    // Wrapped: calling the browser's setTimeout as a method of another object throws "Illegal invocation".
+    private readonly timers = {
+      set: (f: () => void, ms: number) => setTimeout(f, ms),
+      clear: (t: ReturnType<typeof setTimeout>) => clearTimeout(t),
+      every: (f: () => void, ms: number) => setInterval(f, ms),
+      stop: (t: ReturnType<typeof setInterval>) => clearInterval(t),
+    },
+  ) {
+    this.seat = seat;
+    this.name = name;
+    const saved = rememberedSeat();
+    if (saved?.seat === seat && !saved.roomId) this.token = saved.token ?? null;
+  }
+
+  on(l: Partial<RemoteEvents>) {
+    this.listeners = { ...this.listeners, ...l };
+  }
+
+  connect() {
+    this.stopped = false;
+    this.open(!this.token);
+  }
+
+  /** After a takeover: join again (this takes the seat back from the other window). */
+  rejoin() {
+    this.restart(!this.token);
+  }
+
+  /** Explicit host reassignment after credential rejection; the server enforces loopback. */
+  reclaimSeat() {
+    this.restart(true);
+  }
+
+  private restart(takeSeat: boolean) {
+    if (this.reconnectTimer) this.timers.clear(this.reconnectTimer);
+    const old = this.socket;
+    this.socket = null; // its onclose is then ignored
+    old?.close();
+    this.takeoverSocket = null;
+    this.attempts = 0;
+    this.stopped = false;
+    this.open(takeSeat);
+  }
+
+  /** One-shot host action; never replay a release after a reconnect. */
+  releaseSeat(seat: number): boolean {
+    return this.state === 'open' && this.send({ type: 'game_release', seat });
+  }
+
+  /** Stop reconnecting; an explicit leave retains the credential for a manual rejoin. */
+  disconnect(leave = true) {
+    this.stopped = true;
+    if (this.reconnectTimer) this.timers.clear(this.reconnectTimer);
+    if (this.pingTimer) this.timers.stop(this.pingTimer);
+    this.socket?.close();
+    this.socket = null;
+    this.setState('closed');
+    if (leave) {
+      const saved = rememberedSeat();
+      if (saved?.seat === this.seat && saved.token === this.token) rememberSeat({ ...saved, autoJoin: false });
+      else if (!saved?.token) rememberSeat(null);
+    }
+  }
+
+  private setState(s: ConnState) {
+    this.state = s;
+    this.listeners.connection?.(s);
+  }
+
+  private open(takeSeat = false) {
+    this.awaitingView = true;
+    this.welcomeOrders = null;
+    this.sentOrders = null;
+    this.pendingTurn = null;
+    this.setState(this.attempts === 0 ? 'connecting' : 'reconnecting');
+    let sock: SocketLike;
+    try {
+      sock = this.factory(this.url);
+    } catch (e) {
+      this.listeners.error?.(String(e));
+      this.scheduleReconnect();
+      return;
+    }
+    this.socket = sock;
+    sock.onopen = () => {
+      if (this.socket !== sock || this.stopped) return;
+      if (takeSeat) this.send({ type: 'game_take', seat: this.seat });
+      else if (this.token) this.send({ type: 'join', seat: this.seat, name: this.name, token: this.token });
+      else this.listeners.error?.('The seat claim was interrupted. Join again to retry.');
+    };
+    sock.onmessage = (ev) => this.receive(String(ev.data), sock);
+    sock.onerror = () => {
+      // onclose follows; reconnect happens there.
+    };
+    sock.onclose = () => {
+      if (this.socket !== sock) return;
+      this.socket = null;
+      if (this.pingTimer) this.timers.stop(this.pingTimer);
+      this.pingTimer = null;
+      if (this.takeoverSocket === sock) {
+        // Reconnecting after an explicit takeover would steal the seat back and cause ping-pong.
+        this.stopped = true;
+        this.setState('taken');
+        return;
+      }
+      if (!this.stopped) this.scheduleReconnect();
+    };
+  }
+
+  /** Exponential backoff: 0.5 s, 1 s, 2 s, … capped at 8 s. */
+  backoffMs(attempt: number): number {
+    return Math.min(8000, 500 * 2 ** Math.max(0, attempt - 1));
+  }
+
+  private scheduleReconnect() {
+    this.attempts++;
+    this.setState('reconnecting');
+    this.reconnectTimer = this.timers.set(() => {
+      this.reconnectTimer = null;
+      if (!this.stopped) this.open();
+    }, this.backoffMs(this.attempts));
+  }
+
+  private send(msg: ClientMsg): boolean {
+    if (!this.socket || this.socket.readyState !== OPEN) return false;
+    this.socket.send(JSON.stringify(msg));
+    return true;
+  }
+
+  private receive(raw: string, sock: SocketLike) {
+    if (sock !== this.socket) return;
+    let msg: ServerMsg;
+    try {
+      msg = JSON.parse(raw) as ServerMsg;
+    } catch {
+      return;
+    }
+    switch (msg.type) {
+      case 'seat_token':
+        this.seat = msg.seat;
+        this.token = msg.token;
+        this.gameId = msg.game_id;
+        rememberSeat({ seat: this.seat, name: this.name, gameId: this.gameId, token: msg.token });
+        this.send({ type: 'join', seat: this.seat, name: this.name, token: msg.token });
+        break;
+      case 'welcome':
+        this.validatingOrders = [];
+        this.seat = msg.seat;
+        this.gameId = msg.game_id;
+        this.attempts = 0;
+        // Restore the server snapshot with the following view, before enabling Ready.
+        this.welcomeOrders = decodeOrders(msg.orders);
+        this.pendingTurn = null;
+        rememberSeat({ seat: this.seat, name: this.name, gameId: this.gameId, token: this.token ?? undefined });
+        if (this.pingTimer) this.timers.stop(this.pingTimer);
+        this.pingTimer = this.timers.every(() => this.send({ type: 'ping' }), 20000);
+        break;
+      case 'view': {
+        if (this.awaitingView && this.welcomeOrders === null) break;
+        const turn = this.pendingTurn;
+        this.pendingTurn = null;
+        const resync = this.awaitingView;
+        const resetOrders = !this.cachedView || this.viewGameId !== this.gameId || this.cachedView.turn !== msg.view.turn;
+        this.cachedView = msg.view;
+        this.viewGameId = this.gameId;
+        this.forecasts.clear();
+        this.forecastReq.clear();
+        this.assaults.clear();
+        this.assaultReq.clear();
+        if (resync) {
+          // Only deliberate unsent edits for this same game/turn can replace the snapshot.
+          // A reload has no such draft; previously sent orders are never blindly replayed.
+          this.orders = !resetOrders && this.unsentOrders !== null ? this.unsentOrders : this.welcomeOrders!;
+          this.sentOrders = JSON.stringify(this.welcomeOrders);
+          this.welcomeOrders = null;
+          if (resetOrders) this.unsentOrders = null;
+        } else if (resetOrders) {
+          this.orders = [];
+          this.sentOrders = '[]';
+          this.unsentOrders = null;
+        }
+        if (resync || resetOrders) this.errors = [];
+        if (resetOrders && !turn) this.lastTurn = null;
+        this.listeners.view?.(msg.view, turn, resetOrders);
+        this.awaitingView = false;
+        if (resync) {
+          // The UI now shows exactly the pending list that Ready will use.
+          this.setState('open');
+          this.pushOrders();
+        }
+        break;
+      }
+      case 'turn':
+        // The wire carries the new planning turn; TurnResult names the turn just resolved.
+        this.lastTurn = { turn: msg.turn - 1, events: msg.events, hash: msg.hash, finished: msg.finished, winner: msg.winner };
+        this.pendingTurn = this.lastTurn;
+        break;
+      case 'seats':
+        this.seatsStatus = msg.seats;
+        this.listeners.seats?.(msg.seats);
+        break;
+      case 'validation':
+        this.errors = msg.errors;
+        this.listeners.validation?.(msg.errors, this.validatingOrders.shift());
+        break;
+      case 'forecast': {
+        const key = this.forecastReq.get(msg.req_id);
+        if (key === undefined) break;
+        this.forecastReq.delete(msg.req_id);
+        this.forecasts.set(key, msg.forecast);
+        this.listeners.forecast?.();
+        break;
+      }
+      case 'assault': {
+        const key = this.assaultReq.get(msg.req_id);
+        if (key === undefined) break;
+        this.assaultReq.delete(msg.req_id);
+        this.assaults.set(key, msg.assault);
+        this.listeners.forecast?.();
+        break;
+      }
+      case 'error':
+        this.validatingOrders = [];
+        if (sock && msg.code === 'seat_taken') this.takeoverSocket = sock;
+        this.listeners.error?.(msg.message, msg.code);
+        break;
+      case 'pong':
+        break;
+    }
+  }
+
+  // ---- LAN-specific API ----
+
+  hasView(): boolean {
+    return this.cachedView !== null;
+  }
+
+  syncOrders(orders: Order[]) {
+    if (JSON.stringify(orders) !== JSON.stringify(this.orders)) {
+      this.unsentOrders = orders;
+      this.errors = [];
+    }
+    this.orders = orders;
+    this.pushOrders();
+  }
+
+  private pushOrders() {
+    if (this.awaitingView || this.pendingTurn || this.state !== 'open' || !this.cachedView || !this.gameId) return;
+    const json = JSON.stringify(this.orders);
+    if (json === this.sentOrders) {
+      this.unsentOrders = null;
+      return;
+    }
+    if (this.send({ type: 'orders', game_id: this.gameId, turn: this.cachedView.turn, orders: this.orders })) {
+      this.validatingOrders.push(structuredClone(this.orders));
+      this.sentOrders = json;
+      this.unsentOrders = null;
+    }
+  }
+
+  setReady(ready: boolean): boolean {
+    if (this.awaitingView || this.pendingTurn || this.state !== 'open' || !this.cachedView || !this.gameId) return false;
+    this.pushOrders();
+    return this.send({ type: 'ready', game_id: this.gameId, turn: this.cachedView.turn, ready });
+  }
+
+  pendingOrders(): Order[] {
+    return [...this.orders];
+  }
+
+  myStatus(): SeatStatus | undefined {
+    return this.seatsStatus.find((s) => s.seat === this.seat);
+  }
+
+  teammateStatus(): SeatStatus | undefined {
+    return this.seatsStatus.find((s) => s.seat !== this.seat);
+  }
+
+  // ---- GameClient ----
+
+  async newGame(): Promise<void> {
+    throw new Error('In LAN mode the host creates games through /api/game');
+  }
+
+  async standardSetup(): Promise<GameSetup> {
+    throw new Error('In LAN mode, build the setup locally and POST it to /api/game');
+  }
+
+  /** This seat's view (the server never sends another seat's). */
+  view(): PlayerView {
+    if (!this.cachedView) throw new Error('No view from the server yet');
+    return this.cachedView;
+  }
+
+  /** Read cached validation only. Previewing a different plan must never change this seat. */
+  validate(_player: number, orders: Order[]): OrderError[] {
+    return JSON.stringify(orders) === this.sentOrders ? this.errors : [];
+  }
+
+  forecast(_player: number, unit: number, target: Hex, mode: AttackMode): BattleForecast | null {
+    const key = `${mode}:${unit}:${target.q},${target.r}`;
+    if (this.forecasts.has(key)) return this.forecasts.get(key) ?? null;
+    if (![...this.forecastReq.values()].includes(key)) {
+      const req_id = this.nextReq++;
+      this.forecastReq.set(req_id, key);
+      this.send({ type: 'forecast', req_id, unit, target, mode });
+    }
+    return null;
+  }
+
+  assault(_player: number, unit: number, target: Hex, mode: AttackMode, alongside: AlongsideAttack[]): CityAssaultForecast | null {
+    const key = `${mode}:${unit}:${target.q},${target.r}:${alongside.map((a) => `${a.mode}${a.unit}`).join(',')}`;
+    if (this.assaults.has(key)) return this.assaults.get(key) ?? null;
+    if (![...this.assaultReq.values()].includes(key)) {
+      const req_id = this.nextReq++;
+      this.assaultReq.set(req_id, key);
+      this.send({ type: 'assault', req_id, unit, target, mode, alongside });
+    }
+    return null;
+  }
+
+  endTurn(): TurnResult {
+    throw new Error('In LAN mode turns resolve on the server when every seat is Ready');
+  }
+
+  save(): string {
+    throw new Error('In LAN mode the server saves the game');
+  }
+
+  load(): void {
+    throw new Error('In LAN mode the server loads games');
+  }
+}

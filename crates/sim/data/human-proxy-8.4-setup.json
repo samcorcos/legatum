@@ -1,0 +1,40 @@
+{
+  "barbarians": true,
+  "height": 26,
+  "players": [
+    {
+      "faction": "Sparta",
+      "is_human": true,
+      "name": "Player 1",
+      "team": 0
+    },
+    {
+      "difficulty": "Hard",
+      "faction": "India",
+      "is_human": false,
+      "name": "AI 2",
+      "search": true,
+      "team": 1
+    },
+    {
+      "difficulty": "Hard",
+      "faction": "Byzantium",
+      "is_human": false,
+      "name": "AI 3",
+      "search": true,
+      "team": 2
+    },
+    {
+      "difficulty": "Hard",
+      "faction": "Germany",
+      "is_human": false,
+      "name": "AI 4",
+      "search": true,
+      "team": 3
+    }
+  ],
+  "seed": "5792497936169552",
+  "speed": "Standard",
+  "turn_limit": null,
+  "width": 40
+}

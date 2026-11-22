@@ -1,0 +1,110 @@
+/* Unit dossier: portrait and figures, then a small action ledger. */
+.game .left-dock .refined-unit-panel { padding: 0; gap: 0; }
+.game .refined-unit-panel > .up-head {
+  padding: 10px 12px; gap: 6px 10px; border-bottom: 1px solid var(--rule); background: var(--panel);
+}
+.game .refined-unit-panel .unit-panel-body { display: block; padding: 8px 12px 10px; scrollbar-gutter: auto; width: 100%; }
+.game .refined-unit-panel .up-kind { font-size: 26px; line-height: 1; overflow-wrap: normal; }
+.game .refined-unit-panel .up-owner { white-space: normal; overflow: visible; font-size: 11px; line-height: 1.5; }
+.game .refined-unit-panel .up-status { grid-column: 1 / -1; font-size: 10px; letter-spacing: .08em; margin-top: 2px; }
+.game .refined-unit-panel .up-rank-text { flex-direction: row; flex-wrap: wrap; gap: 3px 8px; }
+.game .refined-unit-panel .up-rank .muted { font-size: 11px; }
+.game .refined-unit-panel .up-stats {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 7px 12px;
+  padding: 0 0 8px; margin: 0 0 8px; border: 0; border-bottom: 1px solid var(--rule); min-height: 0;
+}
+.game .refined-unit-panel .up-stat { display: flex; height: auto; min-height: 22px; gap: 6px; }
+.game .refined-unit-panel .up-stat:first-child { grid-column: 1 / -1; }
+.game .refined-unit-panel .up-stat .lbl { display: flex; align-items: center; gap: 5px; font: 500 11px/1.2 var(--sans); letter-spacing: 0; text-transform: none; }
+.game .refined-unit-panel .up-stat .bar { flex: 1; }
+.game .refined-unit-panel .up-stat b { margin-left: auto; padding: 0; font-size: 14px; }
+.game .refined-unit-panel .up-strength-key { grid-column: 1 / -1; }
+.game .refined-unit-panel .actions { display: flex; flex-direction: column; flex-wrap: nowrap; padding: 0; gap: 8px; min-width: 0; }
+.game .refined-unit-panel .act { min-height: 30px; text-transform: none; letter-spacing: 0; font-size: 12px; line-height: 1.25; white-space: normal; text-align: left; }
+.game .refined-unit-panel .act.primary { min-height: 36px; }
+.game .refined-unit-panel .act-wrap > .tip-trigger { gap: 0; }
+.game .refined-unit-panel .act-pair { flex: none; gap: 8px; }
+.game .refined-unit-panel .act-pair .act-wrap { flex: 1 1 auto; }
+.game .refined-unit-panel .act-pair .act { background: var(--field); border: 1px solid var(--rule-2); box-shadow: none; width: 100%; padding: 6px; }
+.game .refined-unit-panel .act-pair .act-wrap:last-child .act { background: transparent; border-color: var(--rule); }
+.game .refined-unit-panel .act-pair .act.primary { background: var(--primary-bg); border-color: var(--primary-bg); color: var(--primary-ink); }
+.game .refined-unit-panel .act .kbd { margin-left: auto; flex: none; }
+/* The order a unit is standing on (Fortify, Heal, Skip): a filled accent with a check, so it reads at a glance and survives the pair's own button styling above. */
+.game .refined-unit-panel .act-pair .act-wrap .act.active, .game .refined-unit-panel .actions .act-wrap .act.active:not(.primary) {
+  background: var(--accent); border-color: var(--accent); color: var(--panel); box-shadow: none; font-weight: 600;
+}
+.game .refined-unit-panel .act.active .action-check { flex: none; }
+.game .refined-unit-panel .act.active .kbd { color: var(--panel); border-color: color-mix(in srgb, var(--panel) 55%, transparent); background: transparent; }
+.game .refined-unit-panel .act:disabled {
+  opacity: 1; background: var(--panel-2); background-image: none; border: 1px solid var(--rule); color: var(--muted); box-shadow: none;
+}
+.game .refined-unit-panel .unit-improve { min-width: 0; }
+.game .refined-unit-panel .unit-improve h3 { display: flex; align-items: center; gap: 7px; margin: 0 0 5px; font: 600 19px/1 var(--display); }
+.game .refined-unit-panel .unit-improve h3 > span { flex: 1; border-top: 1px solid var(--rule); }
+.game .refined-unit-panel .improve-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--rule); }
+.game .refined-unit-panel .improve-row > .tip-trigger { display: flex; align-items: stretch; gap: 0; min-width: 0; }
+.game .refined-unit-panel .improve-row .act { display: flex; gap: 7px; flex: 1; min-width: 0; padding: 7px; justify-content: start; }
+.game .refined-unit-panel .improve-copy { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 3px; }
+.game .refined-unit-panel .improve-copy small { font: 400 12px/1.3 var(--sans); color: var(--ink-2); }
+.game .refined-unit-panel .improve-row .primary small { color: var(--primary-sub); }
+.game .refined-unit-panel .improve-row .primary .rm { color: var(--ink); border-color: var(--primary-rule); }
+.game .refined-unit-panel .improve-row .tip-info { align-self: stretch; width: 24px; min-width: 24px; margin: 0; border: 1px solid var(--rule-2); border-left: 0; background: var(--field); border-radius: 0; }
+.game .refined-unit-panel .improve-cost { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; color: var(--spend); font: 600 12px/1.3 var(--sans); }
+.game .refined-unit-panel .improve-cost.improve-closed { max-width: 118px; align-items: flex-start; color: var(--ink-2); font-weight: 500; font-size: 11px; text-align: left; }
+.game .refined-unit-panel .improve-supply { font-size: 11px; }
+.game .refined-unit-panel .improve-reason { margin: 6px 0 2px; text-align: left; white-space: normal; overflow: visible; overflow-wrap: break-word; text-overflow: clip; color: var(--ink-2); line-height: 1.4; }
+.game .refined-unit-panel .unit-dismiss { display: flex; justify-content: space-between; border-top: 1px solid var(--rule); padding-top: 5px; }
+.game .refined-unit-panel .unit-dismiss .act { font-size: 11px; min-height: 24px; padding: 3px 6px; border: 1px solid var(--rule); }
+.game .refined-unit-panel .up-hints { position: static; grid-column: 1 / -1; padding: 0; gap: 5px; margin-top: 8px; }
+.game .refined-unit-panel .up-hints:empty { display: none; }
+.game .refined-unit-panel .up-hints > .hint { text-align: left; font-size: 12px; padding: 0; margin: 0; background: none; }
+.game .refined-unit-panel .up-pre-rule { grid-column: 1 / -1; margin: 0; padding: 0; }
+
+/* Reset row-oriented flex bases before laying actions out as a column. */
+.game .refined-unit-panel .actions > * { flex: none; }
+
+.game .refined-unit-panel .unit-badge.painted {
+  background: var(--panel-2); border: 1px solid var(--rule-2);
+  box-shadow: inset 0 0 0 2px var(--panel), inset 0 0 0 3px var(--rule);
+}
+.game .refined-unit-panel .unit-badge.painted img { object-fit: contain; }
+
+.game .refined-unit-panel .act-pair .act-wrap:last-child { flex: 1 1 auto; }
+/* A damaged unit adds Heal beside Fortify; Skip this turn drops to its own full row so no label is clipped at 1000x600. */
+.game .refined-unit-panel .act-pair.has-heal { flex-wrap: wrap; }
+.game .refined-unit-panel .act-pair.has-heal .act-wrap { flex: 1 1 0; }
+.game .refined-unit-panel .act-pair.has-heal .act-wrap:last-child { flex: 1 1 100%; }
+.game .refined-unit-panel .unit-orders { display: flex; flex-direction: column; gap: 8px; }
+
+/* The narrow left dock keeps the whole dossier above the map tools. */
+@media (max-height: 700px) {
+  .game .refined-unit-panel .unit-panel-body { overflow: auto; scrollbar-gutter: auto; width: 100%; padding-top: 4px; padding-bottom: 4px; }
+  .game .refined-unit-panel > .up-head { padding-top: 5px; padding-bottom: 5px; }
+  .game .refined-unit-panel .up-kind { font-size: 25px; }
+  .game .refined-unit-panel .up-status { grid-column: 2; }
+  .game .left-dock .refined-unit-panel .up-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px 10px; padding: 0 0 4px; margin: 0 0 4px; }
+  .game .left-dock .refined-unit-panel .up-stat { display: flex; flex-wrap: nowrap; gap: 3px; min-height: 18px; }
+  .game .left-dock .refined-unit-panel .up-stat:first-child { flex-wrap: nowrap; min-height: 15px; }
+  /* Three columns here: the aircraft's supply line needs the whole row. */
+  .game .left-dock .refined-unit-panel .up-stat.up-stat-wide { grid-column: 1 / -1; }
+  .game .refined-unit-panel .up-stat .lbl { font-size: 10px; gap: 3px; }
+  .game .refined-unit-panel .up-stat .rm { display: none; }
+  .game .refined-unit-panel .actions { gap: 3px; }
+  .game .refined-unit-panel .improve-row { gap: 5px; padding: 2px 0; }
+  .game .refined-unit-panel .improve-row .rm { display: none; }
+  .game .refined-unit-panel .improve-row .act { padding: 3px 5px; }
+  .game .refined-unit-panel .up-hints { margin-top: 7px; }
+  .game .refined-unit-panel > .up-head { row-gap: 4px; }
+  .game .refined-unit-panel .act.primary { min-height: 32px; }
+  .game .refined-unit-panel .unit-improve h3 { margin-bottom: 1px; font-size: 16px; }
+  .game .refined-unit-panel .improve-copy { gap: 2px; }
+  .game .refined-unit-panel .improve-reason { line-height: 1.3; margin: 2px 0 0; }
+  .game .refined-unit-panel .act-needs { row-gap: 0; }
+  .game .refined-unit-panel .act-pair .act { padding: 4px; min-height: 28px; gap: 4px; white-space: nowrap; }
+  .game .refined-unit-panel .unit-orders { gap: 3px; }
+  .game .refined-unit-panel .act-pair .action-icon { display: none; }
+  .game .refined-unit-panel .act-pair .kbd { font-size: 9px; padding: 1px 3px; }
+  .game .refined-unit-panel .unit-dismiss { padding-top: 3px; }
+  .game .refined-unit-panel .unit-dismiss .act { padding: 3px 6px; min-height: 22px; }
+}
+.game .refined-unit-panel .act[aria-expanded='true'] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }

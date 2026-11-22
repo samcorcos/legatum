@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "name": "no-diwan",
+  "faction_overrides": {
+    "India": {
+      "india_diwan_commit": 0
+    }
+  }
+}

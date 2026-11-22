@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Merged by the Tauri bundler into the macOS app's Info.plist (tauri.conf.json bundle.macOS.infoPlist). -->
+<plist version="1.0">
+<dict>
+	<!-- Online hosting (src/online.rs): the window loads the game from the embedded server on
+	     http://127.0.0.1:<port> and talks to it over ws://. Local networking only; everything
+	     else (the relay) stays HTTPS under App Transport Security. -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+</dict>
+</plist>

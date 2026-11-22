@@ -1,0 +1,61 @@
+Legatum art licence
+===================
+
+The original artwork in this repository is licensed under the Creative Commons
+Attribution 4.0 International licence (CC BY 4.0):
+
+    https://creativecommons.org/licenses/by/4.0/legalcode
+
+You may share and adapt it, including commercially, if you give appropriate credit
+("Legatum, Sam Corcos and contributors, CC BY 4.0"), link to the licence, and say whether
+you made changes.
+
+What this covers
+----------------
+Every image and video in this repository that depicts Legatum is under CC BY 4.0, wherever
+it sits: generated art, sprites, icons, heraldry, screenshots, diagrams and film. The main
+places are:
+
+- app/src/assets/      unit, city, era, leader, people, resource and key art, icons and heraldry
+- app/public/terrain/  terrain sprites
+- app/public/wonders/  natural-wonder sprites
+- app/src-tauri/icons/ and app/public/favicon*, apple-touch-icon.png  the app icon
+- docs/media/          screenshots, diagrams and film
+- docs/design/         design-review images
+
+Images elsewhere (for example under docs/playtests/, docs/research/, docs/status/,
+docs/sim-results/, tools/design/ and app/e2e/) are covered in the same way.
+
+What this does not cover
+------------------------
+- Everything that is not an image or a video: source code, scripts, documentation, in-game
+  text, the art prompts (`*.prompt.txt`), scenarios, saves, test fixtures, simulation results
+  and other data files. These are under the MIT licence (LICENSE).
+- Audio (app/public/audio/). All shipped music and sound effects are third-party works released
+  under CC0 1.0 (Kenney, Breviceps and vitalezzz). See app/public/audio/CREDITS.md and
+  app/public/audio/licenses/.
+- Fonts (Cormorant and Libre Franklin, SIL Open Font License 1.1), installed from npm through
+  `@fontsource` and not stored in this repository.
+- Historical peoples, places and names depicted in the game, which are public-domain history.
+
+How the art was made
+--------------------
+All of the art is AI-generated. Most of it was generated with OpenAI image models (through
+ChatGPT and the Codex image tool) from prompts, many of which are stored beside the files in
+the source tree (`*.prompt.txt`). The results were then selected, cropped, resized and
+composed for the game. The full-size masters of several sets are in this repository beside
+the files the game loads. `app/src/assets/PROVENANCE.md` lists, for each class of asset, how
+it was made and where its prompts are; a few sets have no stored prompt. The icons, heraldry glyphs and seals are drawn as SVG by scripts in this
+repository.
+
+Because purely machine-generated images may not attract copyright in some jurisdictions, the
+licence applies to the extent that rights exist.
+
+The Niter, Oil and Silicon resource medallions in app/src/assets/resources/ were generated
+with the Codex OpenAI image-generation tool on 2026-10-24 from the prompts beside the PNGs,
+using the existing resource medallions as visual references. Selected variants were resized
+for the game. They are included under the CC BY 4.0 terms above to the extent rights exist.
+
+Trademarks
+----------
+Legatum is an independent project and is not affiliated with, endorsed by or derived from Sid Meier's Civilization, Take-Two Interactive Software, Inc. or Firaxis Games; "Civilization" is their trademark and is named only to describe the genre.

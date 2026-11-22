@@ -1,0 +1,7 @@
+Use the built-in image generation tool to create ONE image, and nothing else; do not write code or edit files. After it is generated, reply with only the saved file path.
+
+Edit the attached miniature photograph-like painting. Keep the figure, pose, face, headband, feather, spear, kilt, belt, bow and bowstring, bracer, skin tone, camera, size and the flat pure magenta background EXACTLY the same. Change only these three things:
+1. The base: replace the pale stepped, veined plinth with a single plain round disc of warm cream sandstone-coloured stone with a finely speckled surface, one flat step only (no second tier, no rim step, no veins), about the same width as now and a modest thickness, the same as a small cream stone game-piece base. His bare feet and the spear butt stand on its flat top, with a soft contact shadow under the feet.
+2. The tall cowhide shield: keep its round arched top, patches and rim, but give it a straight, flat, horizontal bottom edge with two rounded corners, symmetrical, instead of the tapering off-centre point it has now.
+3. His torso: soften the muscle definition a little, so the abdomen is smooth with only a faint hint of muscle, a lean ordinary soldier.
+The thin bowstring from the bow tip to the lower bow end must stay clearly visible as a lighter straight line. No text, no extra objects.

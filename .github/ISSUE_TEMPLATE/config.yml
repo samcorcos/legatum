@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Report a security problem
+    url: https://github.com/samcorcos/legatum/security/advisories/new
+    about: Please report vulnerabilities privately, not in a public issue.
+  - name: How the game works
+    url: https://github.com/samcorcos/legatum/blob/master/.claude/skills/legatum-rules/references/game-rules.md
+    about: The rules reference, checked against the code. Read it before proposing a mechanic.

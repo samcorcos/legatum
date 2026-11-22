@@ -1,0 +1,8 @@
+2026-11-16 — Codex built-in image generation. Provisional author review; lead review pending.
+Reference images and requested edits: see docs/design/art-pass-2/generation-*.json.
+
+Focused base-only edit of this existing Cold War mechanised infantry miniature. Preserve the three figures, all hands, helmets, weapons and tracked vehicle exactly. Change the oversized thick pink/rose stone platform to a THIN plain smooth neutral warm cream oval disc, no pink, no veins, no decorative tiers. Reduce empty foreground depth and side margins around the figures, while every boot and tank track remains supported. Same camera, lighting and full group, genuine transparent background. Do not re-pose, mirror or change the soldiers or equipment. No text or watermark.
+
+--- FOLLOW-UP REQUEST ---
+
+Preserve this miniature group exactly, including all three figures, every hand, every weapon, vehicle and the new thin cream disc. Expand the framing slightly with a transparent margin on ALL sides. The entire rear flared end of the left soldier's shoulder launcher must be fully visible with transparent space before the canvas edge; also full rifle muzzle on right and every edge of the base. No cropped parts. No new objects, poses, color changes or words. Same refined miniature painting, genuine transparent background.

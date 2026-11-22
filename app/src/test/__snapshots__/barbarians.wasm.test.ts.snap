@@ -1,0 +1,3057 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 1`] = `[]`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 2`] = `[]`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 3`] = `[]`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 4`] = `
+[
+  {
+    "at": {
+      "q": 4,
+      "r": 3,
+    },
+    "city": 1,
+    "owner": 0,
+    "type": "BarbarianScoutSpotted",
+    "unit": 5,
+  },
+  {
+    "from": {
+      "q": 4,
+      "r": 3,
+    },
+    "owner": 255,
+    "to": {
+      "q": 5,
+      "r": 3,
+    },
+    "type": "UnitMoved",
+    "unit": 5,
+  },
+  {
+    "from": {
+      "q": 5,
+      "r": 3,
+    },
+    "owner": 255,
+    "to": {
+      "q": 6,
+      "r": 3,
+    },
+    "type": "UnitMoved",
+    "unit": 5,
+  },
+  {
+    "from": {
+      "q": 6,
+      "r": 3,
+    },
+    "owner": 255,
+    "to": {
+      "q": 7,
+      "r": 3,
+    },
+    "type": "UnitMoved",
+    "unit": 5,
+  },
+]
+`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 5`] = `
+{
+  "camps": [],
+  "gold": 507,
+  "units": [
+    {
+      "hp": 100,
+      "id": 1,
+      "kind": "Settler",
+      "owner": 0,
+      "pos": {
+        "q": -4,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 6`] = `
+{
+  "camps": [],
+  "gold": 505,
+  "units": [
+    {
+      "hp": 100,
+      "id": 2,
+      "kind": "Settler",
+      "owner": 1,
+      "pos": {
+        "q": 4,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 7`] = `
+{
+  "camps": [],
+  "gold": 505,
+  "units": [
+    {
+      "hp": 100,
+      "id": 3,
+      "kind": "Settler",
+      "owner": 2,
+      "pos": {
+        "q": 12,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 8`] = `[]`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 9`] = `[]`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 10`] = `[]`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 11`] = `
+[
+  {
+    "camp": 0,
+    "city": 1,
+    "direction": "east",
+    "owner": 0,
+    "type": "BarbarianRaidLaunched",
+  },
+  {
+    "from": {
+      "q": 7,
+      "r": 3,
+    },
+    "owner": 255,
+    "to": {
+      "q": 8,
+      "r": 2,
+    },
+    "type": "UnitMoved",
+    "unit": 5,
+  },
+  {
+    "from": {
+      "q": 8,
+      "r": 2,
+    },
+    "owner": 255,
+    "to": {
+      "q": 9,
+      "r": 1,
+    },
+    "type": "UnitMoved",
+    "unit": 5,
+  },
+  {
+    "from": {
+      "q": 9,
+      "r": 1,
+    },
+    "owner": 255,
+    "to": {
+      "q": 10,
+      "r": 1,
+    },
+    "type": "UnitMoved",
+    "unit": 5,
+  },
+]
+`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 12`] = `
+{
+  "camps": [],
+  "gold": 514,
+  "units": [
+    {
+      "hp": 100,
+      "id": 1,
+      "kind": "Settler",
+      "owner": 0,
+      "pos": {
+        "q": -4,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 13`] = `
+{
+  "camps": [],
+  "gold": 510,
+  "units": [
+    {
+      "hp": 100,
+      "id": 2,
+      "kind": "Settler",
+      "owner": 1,
+      "pos": {
+        "q": 4,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 14`] = `
+{
+  "camps": [],
+  "gold": 510,
+  "units": [
+    {
+      "hp": 100,
+      "id": 3,
+      "kind": "Settler",
+      "owner": 2,
+      "pos": {
+        "q": 12,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 15`] = `[]`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 16`] = `[]`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 17`] = `[]`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 18`] = `
+[
+  {
+    "from": {
+      "q": 10,
+      "r": 1,
+    },
+    "owner": 255,
+    "to": {
+      "q": 11,
+      "r": 1,
+    },
+    "type": "UnitMoved",
+    "unit": 5,
+  },
+  {
+    "from": {
+      "q": 7,
+      "r": 3,
+    },
+    "owner": 255,
+    "to": {
+      "q": 6,
+      "r": 3,
+    },
+    "type": "UnitMoved",
+    "unit": 6,
+  },
+  {
+    "from": {
+      "q": 11,
+      "r": 1,
+    },
+    "owner": 255,
+    "to": {
+      "q": 12,
+      "r": 1,
+    },
+    "type": "UnitMoved",
+    "unit": 5,
+  },
+  {
+    "from": {
+      "q": 6,
+      "r": 3,
+    },
+    "owner": 255,
+    "to": {
+      "q": 5,
+      "r": 3,
+    },
+    "type": "UnitMoved",
+    "unit": 6,
+  },
+  {
+    "from": {
+      "q": 12,
+      "r": 1,
+    },
+    "owner": 255,
+    "to": {
+      "q": 13,
+      "r": 1,
+    },
+    "type": "UnitMoved",
+    "unit": 5,
+  },
+]
+`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 19`] = `
+{
+  "camps": [],
+  "gold": 521,
+  "units": [
+    {
+      "hp": 100,
+      "id": 1,
+      "kind": "Settler",
+      "owner": 0,
+      "pos": {
+        "q": -4,
+        "r": 11,
+      },
+    },
+    {
+      "hp": 100,
+      "id": 6,
+      "kind": "Soldier",
+      "owner": 255,
+      "pos": {
+        "q": 5,
+        "r": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 20`] = `
+{
+  "camps": [],
+  "gold": 515,
+  "units": [
+    {
+      "hp": 100,
+      "id": 2,
+      "kind": "Settler",
+      "owner": 1,
+      "pos": {
+        "q": 4,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 21`] = `
+{
+  "camps": [],
+  "gold": 515,
+  "units": [
+    {
+      "hp": 100,
+      "id": 3,
+      "kind": "Settler",
+      "owner": 2,
+      "pos": {
+        "q": 12,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 22`] = `[]`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 23`] = `[]`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 24`] = `[]`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 25`] = `
+[
+  {
+    "from": {
+      "q": 13,
+      "r": 1,
+    },
+    "owner": 255,
+    "to": {
+      "q": 14,
+      "r": 1,
+    },
+    "type": "UnitMoved",
+    "unit": 5,
+  },
+  {
+    "from": {
+      "q": 5,
+      "r": 3,
+    },
+    "owner": 255,
+    "to": {
+      "q": 4,
+      "r": 3,
+    },
+    "type": "UnitMoved",
+    "unit": 6,
+  },
+  {
+    "from": {
+      "q": 14,
+      "r": 1,
+    },
+    "owner": 255,
+    "to": {
+      "q": 15,
+      "r": 1,
+    },
+    "type": "UnitMoved",
+    "unit": 5,
+  },
+]
+`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 26`] = `
+{
+  "camps": [],
+  "gold": 528,
+  "units": [
+    {
+      "hp": 100,
+      "id": 1,
+      "kind": "Settler",
+      "owner": 0,
+      "pos": {
+        "q": -4,
+        "r": 11,
+      },
+    },
+    {
+      "hp": 100,
+      "id": 6,
+      "kind": "Soldier",
+      "owner": 255,
+      "pos": {
+        "q": 4,
+        "r": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 27`] = `
+{
+  "camps": [],
+  "gold": 520,
+  "units": [
+    {
+      "hp": 100,
+      "id": 2,
+      "kind": "Settler",
+      "owner": 1,
+      "pos": {
+        "q": 4,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 28`] = `
+{
+  "camps": [],
+  "gold": 520,
+  "units": [
+    {
+      "hp": 100,
+      "id": 3,
+      "kind": "Settler",
+      "owner": 2,
+      "pos": {
+        "q": 12,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 29`] = `[]`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 30`] = `[]`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 31`] = `[]`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 32`] = `
+[
+  {
+    "from": {
+      "q": 15,
+      "r": 1,
+    },
+    "owner": 255,
+    "to": {
+      "q": 14,
+      "r": 2,
+    },
+    "type": "UnitMoved",
+    "unit": 5,
+  },
+  {
+    "from": {
+      "q": 7,
+      "r": 3,
+    },
+    "owner": 255,
+    "to": {
+      "q": 6,
+      "r": 3,
+    },
+    "type": "UnitMoved",
+    "unit": 7,
+  },
+  {
+    "from": {
+      "q": 6,
+      "r": 3,
+    },
+    "owner": 255,
+    "to": {
+      "q": 5,
+      "r": 3,
+    },
+    "type": "UnitMoved",
+    "unit": 7,
+  },
+]
+`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 33`] = `
+{
+  "camps": [],
+  "gold": 535,
+  "units": [
+    {
+      "hp": 100,
+      "id": 1,
+      "kind": "Settler",
+      "owner": 0,
+      "pos": {
+        "q": -4,
+        "r": 11,
+      },
+    },
+    {
+      "hp": 100,
+      "id": 6,
+      "kind": "Soldier",
+      "owner": 255,
+      "pos": {
+        "q": 4,
+        "r": 3,
+      },
+    },
+    {
+      "hp": 100,
+      "id": 7,
+      "kind": "Ranger",
+      "owner": 255,
+      "pos": {
+        "q": 5,
+        "r": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 34`] = `
+{
+  "camps": [],
+  "gold": 525,
+  "units": [
+    {
+      "hp": 100,
+      "id": 2,
+      "kind": "Settler",
+      "owner": 1,
+      "pos": {
+        "q": 4,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 35`] = `
+{
+  "camps": [],
+  "gold": 525,
+  "units": [
+    {
+      "hp": 100,
+      "id": 3,
+      "kind": "Settler",
+      "owner": 2,
+      "pos": {
+        "q": 12,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 36`] = `[]`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 37`] = `[]`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 38`] = `[]`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 39`] = `
+[
+  {
+    "from": {
+      "q": 14,
+      "r": 2,
+    },
+    "owner": 255,
+    "to": {
+      "q": 13,
+      "r": 2,
+    },
+    "type": "UnitMoved",
+    "unit": 5,
+  },
+  {
+    "from": {
+      "q": 5,
+      "r": 3,
+    },
+    "owner": 255,
+    "to": {
+      "q": 3,
+      "r": 4,
+    },
+    "type": "UnitMoved",
+    "unit": 7,
+  },
+  {
+    "from": {
+      "q": 13,
+      "r": 2,
+    },
+    "owner": 255,
+    "to": {
+      "q": 12,
+      "r": 2,
+    },
+    "type": "UnitMoved",
+    "unit": 5,
+  },
+  {
+    "from": {
+      "q": 12,
+      "r": 2,
+    },
+    "owner": 255,
+    "to": {
+      "q": 12,
+      "r": 1,
+    },
+    "type": "UnitMoved",
+    "unit": 5,
+  },
+]
+`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 40`] = `
+{
+  "camps": [],
+  "gold": 542,
+  "units": [
+    {
+      "hp": 100,
+      "id": 1,
+      "kind": "Settler",
+      "owner": 0,
+      "pos": {
+        "q": -4,
+        "r": 11,
+      },
+    },
+    {
+      "hp": 100,
+      "id": 6,
+      "kind": "Soldier",
+      "owner": 255,
+      "pos": {
+        "q": 4,
+        "r": 3,
+      },
+    },
+    {
+      "hp": 100,
+      "id": 7,
+      "kind": "Ranger",
+      "owner": 255,
+      "pos": {
+        "q": 3,
+        "r": 4,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 41`] = `
+{
+  "camps": [],
+  "gold": 530,
+  "units": [
+    {
+      "hp": 100,
+      "id": 2,
+      "kind": "Settler",
+      "owner": 1,
+      "pos": {
+        "q": 4,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 42`] = `
+{
+  "camps": [],
+  "gold": 530,
+  "units": [
+    {
+      "hp": 100,
+      "id": 3,
+      "kind": "Settler",
+      "owner": 2,
+      "pos": {
+        "q": 12,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 43`] = `[]`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 44`] = `[]`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 45`] = `[]`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 46`] = `
+[
+  {
+    "from": {
+      "q": 12,
+      "r": 1,
+    },
+    "owner": 255,
+    "to": {
+      "q": 12,
+      "r": 0,
+    },
+    "type": "UnitMoved",
+    "unit": 5,
+  },
+  {
+    "from": {
+      "q": 7,
+      "r": 3,
+    },
+    "owner": 255,
+    "to": {
+      "q": 6,
+      "r": 3,
+    },
+    "type": "UnitMoved",
+    "unit": 8,
+  },
+  {
+    "from": {
+      "q": 6,
+      "r": 3,
+    },
+    "owner": 255,
+    "to": {
+      "q": 5,
+      "r": 3,
+    },
+    "type": "UnitMoved",
+    "unit": 8,
+  },
+]
+`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 47`] = `
+{
+  "camps": [],
+  "gold": 549,
+  "units": [
+    {
+      "hp": 100,
+      "id": 1,
+      "kind": "Settler",
+      "owner": 0,
+      "pos": {
+        "q": -4,
+        "r": 11,
+      },
+    },
+    {
+      "hp": 100,
+      "id": 6,
+      "kind": "Soldier",
+      "owner": 255,
+      "pos": {
+        "q": 4,
+        "r": 3,
+      },
+    },
+    {
+      "hp": 100,
+      "id": 7,
+      "kind": "Ranger",
+      "owner": 255,
+      "pos": {
+        "q": 3,
+        "r": 4,
+      },
+    },
+    {
+      "hp": 100,
+      "id": 8,
+      "kind": "Soldier",
+      "owner": 255,
+      "pos": {
+        "q": 5,
+        "r": 3,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 48`] = `
+{
+  "camps": [],
+  "gold": 535,
+  "units": [
+    {
+      "hp": 100,
+      "id": 2,
+      "kind": "Settler",
+      "owner": 1,
+      "pos": {
+        "q": 4,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 49`] = `
+{
+  "camps": [],
+  "gold": 535,
+  "units": [
+    {
+      "hp": 100,
+      "id": 3,
+      "kind": "Settler",
+      "owner": 2,
+      "pos": {
+        "q": 12,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 50`] = `[]`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 51`] = `[]`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 52`] = `[]`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 53`] = `
+[
+  {
+    "from": {
+      "q": 12,
+      "r": 0,
+    },
+    "owner": 255,
+    "to": {
+      "q": 11,
+      "r": 0,
+    },
+    "type": "UnitMoved",
+    "unit": 5,
+  },
+  {
+    "from": {
+      "q": 5,
+      "r": 3,
+    },
+    "owner": 255,
+    "to": {
+      "q": 4,
+      "r": 2,
+    },
+    "type": "UnitMoved",
+    "unit": 8,
+  },
+  {
+    "from": {
+      "q": 11,
+      "r": 0,
+    },
+    "owner": 255,
+    "to": {
+      "q": 10,
+      "r": 0,
+    },
+    "type": "UnitMoved",
+    "unit": 5,
+  },
+  {
+    "from": {
+      "q": 10,
+      "r": 0,
+    },
+    "owner": 255,
+    "to": {
+      "q": 9,
+      "r": 1,
+    },
+    "type": "UnitMoved",
+    "unit": 5,
+  },
+]
+`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 54`] = `
+{
+  "camps": [],
+  "gold": 556,
+  "units": [
+    {
+      "hp": 100,
+      "id": 1,
+      "kind": "Settler",
+      "owner": 0,
+      "pos": {
+        "q": -4,
+        "r": 11,
+      },
+    },
+    {
+      "hp": 100,
+      "id": 6,
+      "kind": "Soldier",
+      "owner": 255,
+      "pos": {
+        "q": 4,
+        "r": 3,
+      },
+    },
+    {
+      "hp": 100,
+      "id": 7,
+      "kind": "Ranger",
+      "owner": 255,
+      "pos": {
+        "q": 3,
+        "r": 4,
+      },
+    },
+    {
+      "hp": 100,
+      "id": 8,
+      "kind": "Soldier",
+      "owner": 255,
+      "pos": {
+        "q": 4,
+        "r": 2,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 55`] = `
+{
+  "camps": [],
+  "gold": 540,
+  "units": [
+    {
+      "hp": 100,
+      "id": 2,
+      "kind": "Settler",
+      "owner": 1,
+      "pos": {
+        "q": 4,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > a scout that sees a city and gets home launches a raid that musters three raiders 56`] = `
+{
+  "camps": [],
+  "gold": 540,
+  "units": [
+    {
+      "hp": 100,
+      "id": 3,
+      "kind": "Settler",
+      "owner": 2,
+      "pos": {
+        "q": 12,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > barbarians are attackable at Peace with no Declare War 1`] = `[]`;
+
+exports[`WASM barbarian behavior > barbarians are attackable at Peace with no Declare War 2`] = `[]`;
+
+exports[`WASM barbarian behavior > barbarians are attackable at Peace with no Declare War 3`] = `[]`;
+
+exports[`WASM barbarian behavior > barbarians are attackable at Peace with no Declare War 4`] = `
+[
+  {
+    "at": {
+      "q": 7,
+      "r": 5,
+    },
+    "attacker": 6,
+    "attacker_at": {
+      "q": 6,
+      "r": 5,
+    },
+    "attacker_hp_after": 87,
+    "attacker_owner": 0,
+    "attacker_roll": 117,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "damage_to_attacker": 13,
+    "damage_to_defender": 87,
+    "defender": {
+      "kind": "Unit",
+      "owner": 255,
+      "unit": 7,
+      "unit_kind": "Scout",
+    },
+    "defender_hp_after": 0,
+    "defender_leaving": true,
+    "defender_roll": 111,
+    "defender_strength": {
+      "parts": [
+        [
+          "Scout",
+          5,
+        ],
+        [
+          "Wounded",
+          -8,
+        ],
+      ],
+      "total": -3,
+    },
+    "meeting": false,
+    "ranged": false,
+    "type": "Battle",
+  },
+  {
+    "at": {
+      "q": 7,
+      "r": 5,
+    },
+    "owner": 255,
+    "type": "UnitDestroyed",
+    "unit": 7,
+    "unit_kind": "Scout",
+  },
+  {
+    "from": {
+      "q": 14,
+      "r": 2,
+    },
+    "owner": 255,
+    "to": {
+      "q": 13,
+      "r": 2,
+    },
+    "type": "UnitMoved",
+    "unit": 5,
+  },
+  {
+    "from": {
+      "q": 6,
+      "r": 5,
+    },
+    "owner": 0,
+    "to": {
+      "q": 7,
+      "r": 5,
+    },
+    "type": "UnitMoved",
+    "unit": 6,
+  },
+  {
+    "from": {
+      "q": 13,
+      "r": 2,
+    },
+    "owner": 255,
+    "to": {
+      "q": 12,
+      "r": 2,
+    },
+    "type": "UnitMoved",
+    "unit": 5,
+  },
+  {
+    "from": {
+      "q": 12,
+      "r": 2,
+    },
+    "owner": 255,
+    "to": {
+      "q": 11,
+      "r": 2,
+    },
+    "type": "UnitMoved",
+    "unit": 5,
+  },
+]
+`;
+
+exports[`WASM barbarian behavior > barbarians are attackable at Peace with no Declare War 5`] = `
+{
+  "camps": [],
+  "gold": 507,
+  "units": [
+    {
+      "hp": 100,
+      "id": 1,
+      "kind": "Settler",
+      "owner": 0,
+      "pos": {
+        "q": -4,
+        "r": 11,
+      },
+    },
+    {
+      "hp": 87,
+      "id": 6,
+      "kind": "Soldier",
+      "owner": 0,
+      "pos": {
+        "q": 7,
+        "r": 5,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > barbarians are attackable at Peace with no Declare War 6`] = `
+{
+  "camps": [],
+  "gold": 505,
+  "units": [
+    {
+      "hp": 100,
+      "id": 2,
+      "kind": "Settler",
+      "owner": 1,
+      "pos": {
+        "q": 4,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > barbarians are attackable at Peace with no Declare War 7`] = `
+{
+  "camps": [],
+  "gold": 505,
+  "units": [
+    {
+      "hp": 100,
+      "id": 3,
+      "kind": "Settler",
+      "owner": 2,
+      "pos": {
+        "q": 12,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 1`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 2`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 3`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 4`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 5`] = `
+{
+  "camps": [],
+  "gold": 507,
+  "units": [
+    {
+      "hp": 100,
+      "id": 1,
+      "kind": "Settler",
+      "owner": 0,
+      "pos": {
+        "q": -4,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 6`] = `
+{
+  "camps": [],
+  "gold": 507,
+  "units": [
+    {
+      "hp": 100,
+      "id": 2,
+      "kind": "Settler",
+      "owner": 1,
+      "pos": {
+        "q": 4,
+        "r": 11,
+      },
+    },
+    {
+      "hp": 100,
+      "id": 3,
+      "kind": "Settler",
+      "owner": 2,
+      "pos": {
+        "q": 12,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 7`] = `
+{
+  "camps": [],
+  "gold": 505,
+  "units": [
+    {
+      "hp": 100,
+      "id": 3,
+      "kind": "Settler",
+      "owner": 2,
+      "pos": {
+        "q": 12,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 8`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 9`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 10`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 11`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 12`] = `
+{
+  "camps": [],
+  "gold": 514,
+  "units": [
+    {
+      "hp": 100,
+      "id": 1,
+      "kind": "Settler",
+      "owner": 0,
+      "pos": {
+        "q": -4,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 13`] = `
+{
+  "camps": [],
+  "gold": 514,
+  "units": [
+    {
+      "hp": 100,
+      "id": 2,
+      "kind": "Settler",
+      "owner": 1,
+      "pos": {
+        "q": 4,
+        "r": 11,
+      },
+    },
+    {
+      "hp": 100,
+      "id": 3,
+      "kind": "Settler",
+      "owner": 2,
+      "pos": {
+        "q": 12,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 14`] = `
+{
+  "camps": [],
+  "gold": 510,
+  "units": [
+    {
+      "hp": 100,
+      "id": 3,
+      "kind": "Settler",
+      "owner": 2,
+      "pos": {
+        "q": 12,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 15`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 16`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 17`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 18`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 19`] = `
+{
+  "camps": [],
+  "gold": 521,
+  "units": [
+    {
+      "hp": 100,
+      "id": 1,
+      "kind": "Settler",
+      "owner": 0,
+      "pos": {
+        "q": -4,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 20`] = `
+{
+  "camps": [],
+  "gold": 521,
+  "units": [
+    {
+      "hp": 100,
+      "id": 2,
+      "kind": "Settler",
+      "owner": 1,
+      "pos": {
+        "q": 4,
+        "r": 11,
+      },
+    },
+    {
+      "hp": 100,
+      "id": 3,
+      "kind": "Settler",
+      "owner": 2,
+      "pos": {
+        "q": 12,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 21`] = `
+{
+  "camps": [],
+  "gold": 515,
+  "units": [
+    {
+      "hp": 100,
+      "id": 3,
+      "kind": "Settler",
+      "owner": 2,
+      "pos": {
+        "q": 12,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 22`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 23`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 24`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 25`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 26`] = `
+{
+  "camps": [],
+  "gold": 528,
+  "units": [
+    {
+      "hp": 100,
+      "id": 1,
+      "kind": "Settler",
+      "owner": 0,
+      "pos": {
+        "q": -4,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 27`] = `
+{
+  "camps": [],
+  "gold": 528,
+  "units": [
+    {
+      "hp": 100,
+      "id": 2,
+      "kind": "Settler",
+      "owner": 1,
+      "pos": {
+        "q": 4,
+        "r": 11,
+      },
+    },
+    {
+      "hp": 100,
+      "id": 3,
+      "kind": "Settler",
+      "owner": 2,
+      "pos": {
+        "q": 12,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 28`] = `
+{
+  "camps": [],
+  "gold": 520,
+  "units": [
+    {
+      "hp": 100,
+      "id": 3,
+      "kind": "Settler",
+      "owner": 2,
+      "pos": {
+        "q": 12,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 29`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 30`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 31`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 32`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 33`] = `
+{
+  "camps": [],
+  "gold": 535,
+  "units": [
+    {
+      "hp": 100,
+      "id": 1,
+      "kind": "Settler",
+      "owner": 0,
+      "pos": {
+        "q": -4,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 34`] = `
+{
+  "camps": [],
+  "gold": 535,
+  "units": [
+    {
+      "hp": 100,
+      "id": 2,
+      "kind": "Settler",
+      "owner": 1,
+      "pos": {
+        "q": 4,
+        "r": 11,
+      },
+    },
+    {
+      "hp": 100,
+      "id": 3,
+      "kind": "Settler",
+      "owner": 2,
+      "pos": {
+        "q": 12,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 35`] = `
+{
+  "camps": [],
+  "gold": 525,
+  "units": [
+    {
+      "hp": 100,
+      "id": 3,
+      "kind": "Settler",
+      "owner": 2,
+      "pos": {
+        "q": 12,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 36`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 37`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 38`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 39`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 40`] = `
+{
+  "camps": [],
+  "gold": 542,
+  "units": [
+    {
+      "hp": 100,
+      "id": 1,
+      "kind": "Settler",
+      "owner": 0,
+      "pos": {
+        "q": -4,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 41`] = `
+{
+  "camps": [],
+  "gold": 542,
+  "units": [
+    {
+      "hp": 100,
+      "id": 2,
+      "kind": "Settler",
+      "owner": 1,
+      "pos": {
+        "q": 4,
+        "r": 11,
+      },
+    },
+    {
+      "hp": 100,
+      "id": 3,
+      "kind": "Settler",
+      "owner": 2,
+      "pos": {
+        "q": 12,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 42`] = `
+{
+  "camps": [],
+  "gold": 530,
+  "units": [
+    {
+      "hp": 100,
+      "id": 3,
+      "kind": "Settler",
+      "owner": 2,
+      "pos": {
+        "q": 12,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 43`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 44`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 45`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 46`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 47`] = `
+{
+  "camps": [],
+  "gold": 549,
+  "units": [
+    {
+      "hp": 100,
+      "id": 1,
+      "kind": "Settler",
+      "owner": 0,
+      "pos": {
+        "q": -4,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 48`] = `
+{
+  "camps": [],
+  "gold": 549,
+  "units": [
+    {
+      "hp": 100,
+      "id": 2,
+      "kind": "Settler",
+      "owner": 1,
+      "pos": {
+        "q": 4,
+        "r": 11,
+      },
+    },
+    {
+      "hp": 100,
+      "id": 3,
+      "kind": "Settler",
+      "owner": 2,
+      "pos": {
+        "q": 12,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 49`] = `
+{
+  "camps": [],
+  "gold": 535,
+  "units": [
+    {
+      "hp": 100,
+      "id": 3,
+      "kind": "Settler",
+      "owner": 2,
+      "pos": {
+        "q": 12,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 50`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 51`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 52`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 53`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 54`] = `
+{
+  "camps": [],
+  "gold": 556,
+  "units": [
+    {
+      "hp": 100,
+      "id": 1,
+      "kind": "Settler",
+      "owner": 0,
+      "pos": {
+        "q": -4,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 55`] = `
+{
+  "camps": [],
+  "gold": 556,
+  "units": [
+    {
+      "hp": 100,
+      "id": 2,
+      "kind": "Settler",
+      "owner": 1,
+      "pos": {
+        "q": 4,
+        "r": 11,
+      },
+    },
+    {
+      "hp": 100,
+      "id": 3,
+      "kind": "Settler",
+      "owner": 2,
+      "pos": {
+        "q": 12,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 56`] = `
+{
+  "camps": [],
+  "gold": 540,
+  "units": [
+    {
+      "hp": 100,
+      "id": 3,
+      "kind": "Settler",
+      "owner": 2,
+      "pos": {
+        "q": 12,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 57`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 58`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 59`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 60`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 61`] = `
+{
+  "camps": [],
+  "gold": 563,
+  "units": [
+    {
+      "hp": 100,
+      "id": 1,
+      "kind": "Settler",
+      "owner": 0,
+      "pos": {
+        "q": -4,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 62`] = `
+{
+  "camps": [],
+  "gold": 563,
+  "units": [
+    {
+      "hp": 100,
+      "id": 2,
+      "kind": "Settler",
+      "owner": 1,
+      "pos": {
+        "q": 4,
+        "r": 11,
+      },
+    },
+    {
+      "hp": 100,
+      "id": 3,
+      "kind": "Settler",
+      "owner": 2,
+      "pos": {
+        "q": 12,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 63`] = `
+{
+  "camps": [],
+  "gold": 545,
+  "units": [
+    {
+      "hp": 100,
+      "id": 3,
+      "kind": "Settler",
+      "owner": 2,
+      "pos": {
+        "q": 12,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 64`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 65`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 66`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 67`] = `
+[
+  {
+    "at": {
+      "q": 16,
+      "r": 0,
+    },
+    "camp": 0,
+    "type": "BarbarianCampSpawned",
+  },
+]
+`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 68`] = `
+{
+  "camps": [],
+  "gold": 570,
+  "units": [
+    {
+      "hp": 100,
+      "id": 1,
+      "kind": "Settler",
+      "owner": 0,
+      "pos": {
+        "q": -4,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 69`] = `
+{
+  "camps": [],
+  "gold": 570,
+  "units": [
+    {
+      "hp": 100,
+      "id": 2,
+      "kind": "Settler",
+      "owner": 1,
+      "pos": {
+        "q": 4,
+        "r": 11,
+      },
+    },
+    {
+      "hp": 100,
+      "id": 3,
+      "kind": "Settler",
+      "owner": 2,
+      "pos": {
+        "q": 12,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 70`] = `
+{
+  "camps": [],
+  "gold": 550,
+  "units": [
+    {
+      "hp": 100,
+      "id": 3,
+      "kind": "Settler",
+      "owner": 2,
+      "pos": {
+        "q": 12,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 71`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 72`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 73`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 74`] = `
+[
+  {
+    "from": {
+      "q": 15,
+      "r": 0,
+    },
+    "owner": 255,
+    "to": {
+      "q": 14,
+      "r": 0,
+    },
+    "type": "UnitMoved",
+    "unit": 5,
+  },
+  {
+    "from": {
+      "q": 14,
+      "r": 0,
+    },
+    "owner": 255,
+    "to": {
+      "q": 13,
+      "r": 1,
+    },
+    "type": "UnitMoved",
+    "unit": 5,
+  },
+  {
+    "from": {
+      "q": 13,
+      "r": 1,
+    },
+    "owner": 255,
+    "to": {
+      "q": 12,
+      "r": 2,
+    },
+    "type": "UnitMoved",
+    "unit": 5,
+  },
+]
+`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 75`] = `
+{
+  "camps": [],
+  "gold": 577,
+  "units": [
+    {
+      "hp": 100,
+      "id": 1,
+      "kind": "Settler",
+      "owner": 0,
+      "pos": {
+        "q": -4,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 76`] = `
+{
+  "camps": [],
+  "gold": 577,
+  "units": [
+    {
+      "hp": 100,
+      "id": 2,
+      "kind": "Settler",
+      "owner": 1,
+      "pos": {
+        "q": 4,
+        "r": 11,
+      },
+    },
+    {
+      "hp": 100,
+      "id": 3,
+      "kind": "Settler",
+      "owner": 2,
+      "pos": {
+        "q": 12,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 77`] = `
+{
+  "camps": [],
+  "gold": 555,
+  "units": [
+    {
+      "hp": 100,
+      "id": 3,
+      "kind": "Settler",
+      "owner": 2,
+      "pos": {
+        "q": 12,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 78`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 79`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 80`] = `[]`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 81`] = `
+[
+  {
+    "from": {
+      "q": 12,
+      "r": 2,
+    },
+    "owner": 255,
+    "to": {
+      "q": 11,
+      "r": 3,
+    },
+    "type": "UnitMoved",
+    "unit": 5,
+  },
+]
+`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 82`] = `
+{
+  "camps": [],
+  "gold": 584,
+  "units": [
+    {
+      "hp": 100,
+      "id": 1,
+      "kind": "Settler",
+      "owner": 0,
+      "pos": {
+        "q": -4,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 83`] = `
+{
+  "camps": [],
+  "gold": 584,
+  "units": [
+    {
+      "hp": 100,
+      "id": 2,
+      "kind": "Settler",
+      "owner": 1,
+      "pos": {
+        "q": 4,
+        "r": 11,
+      },
+    },
+    {
+      "hp": 100,
+      "id": 3,
+      "kind": "Settler",
+      "owner": 2,
+      "pos": {
+        "q": 12,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > camps appear at the grace turn on unseen land, identically 84`] = `
+{
+  "camps": [],
+  "gold": 560,
+  "units": [
+    {
+      "hp": 100,
+      "id": 3,
+      "kind": "Settler",
+      "owner": 2,
+      "pos": {
+        "q": 12,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > entering an undefended camp clears it for Gold, seen by the clearer 1`] = `[]`;
+
+exports[`WASM barbarian behavior > entering an undefended camp clears it for Gold, seen by the clearer 2`] = `[]`;
+
+exports[`WASM barbarian behavior > entering an undefended camp clears it for Gold, seen by the clearer 3`] = `[]`;
+
+exports[`WASM barbarian behavior > entering an undefended camp clears it for Gold, seen by the clearer 4`] = `
+[
+  {
+    "from": {
+      "q": 7,
+      "r": 6,
+    },
+    "owner": 1,
+    "to": {
+      "q": 8,
+      "r": 6,
+    },
+    "type": "UnitMoved",
+    "unit": 6,
+  },
+  {
+    "from": {
+      "q": 8,
+      "r": 6,
+    },
+    "owner": 1,
+    "to": {
+      "q": 9,
+      "r": 6,
+    },
+    "type": "UnitMoved",
+    "unit": 6,
+  },
+  {
+    "at": {
+      "q": 9,
+      "r": 6,
+    },
+    "by": 1,
+    "camp": 0,
+    "gold": 50,
+    "type": "BarbarianCampCleared",
+    "unit": 6,
+  },
+]
+`;
+
+exports[`WASM barbarian behavior > entering an undefended camp clears it for Gold, seen by the clearer 5`] = `
+{
+  "camps": [],
+  "gold": 505,
+  "units": [
+    {
+      "hp": 100,
+      "id": 1,
+      "kind": "Settler",
+      "owner": 0,
+      "pos": {
+        "q": -4,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > entering an undefended camp clears it for Gold, seen by the clearer 6`] = `
+{
+  "camps": [],
+  "gold": 557,
+  "units": [
+    {
+      "hp": 100,
+      "id": 2,
+      "kind": "Settler",
+      "owner": 1,
+      "pos": {
+        "q": 4,
+        "r": 11,
+      },
+    },
+    {
+      "hp": 100,
+      "id": 6,
+      "kind": "Soldier",
+      "owner": 1,
+      "pos": {
+        "q": 9,
+        "r": 6,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > entering an undefended camp clears it for Gold, seen by the clearer 7`] = `
+{
+  "camps": [],
+  "gold": 505,
+  "units": [
+    {
+      "hp": 100,
+      "id": 3,
+      "kind": "Settler",
+      "owner": 2,
+      "pos": {
+        "q": 12,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > entering an undefended camp clears it for Gold, seen by the clearer 8`] = `[]`;
+
+exports[`WASM barbarian behavior > entering an undefended camp clears it for Gold, seen by the clearer 9`] = `[]`;
+
+exports[`WASM barbarian behavior > entering an undefended camp clears it for Gold, seen by the clearer 10`] = `[]`;
+
+exports[`WASM barbarian behavior > entering an undefended camp clears it for Gold, seen by the clearer 11`] = `[]`;
+
+exports[`WASM barbarian behavior > entering an undefended camp clears it for Gold, seen by the clearer 12`] = `
+{
+  "camps": [],
+  "gold": 510,
+  "units": [
+    {
+      "hp": 100,
+      "id": 1,
+      "kind": "Settler",
+      "owner": 0,
+      "pos": {
+        "q": -4,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > entering an undefended camp clears it for Gold, seen by the clearer 13`] = `
+{
+  "camps": [],
+  "gold": 564,
+  "units": [
+    {
+      "hp": 100,
+      "id": 2,
+      "kind": "Settler",
+      "owner": 1,
+      "pos": {
+        "q": 4,
+        "r": 11,
+      },
+    },
+    {
+      "hp": 100,
+      "id": 6,
+      "kind": "Soldier",
+      "owner": 1,
+      "pos": {
+        "q": 9,
+        "r": 6,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > entering an undefended camp clears it for Gold, seen by the clearer 14`] = `
+{
+  "camps": [],
+  "gold": 510,
+  "units": [
+    {
+      "hp": 100,
+      "id": 3,
+      "kind": "Settler",
+      "owner": 2,
+      "pos": {
+        "q": 12,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > raiders capture a lone Settler and walk it to their camp 1`] = `[]`;
+
+exports[`WASM barbarian behavior > raiders capture a lone Settler and walk it to their camp 2`] = `[]`;
+
+exports[`WASM barbarian behavior > raiders capture a lone Settler and walk it to their camp 3`] = `[]`;
+
+exports[`WASM barbarian behavior > raiders capture a lone Settler and walk it to their camp 4`] = `
+[
+  {
+    "from": {
+      "q": 10,
+      "r": 6,
+    },
+    "owner": 255,
+    "to": {
+      "q": 11,
+      "r": 5,
+    },
+    "type": "UnitMoved",
+    "unit": 5,
+  },
+  {
+    "from": {
+      "q": 7,
+      "r": 6,
+    },
+    "owner": 255,
+    "to": {
+      "q": 6,
+      "r": 6,
+    },
+    "type": "UnitMoved",
+    "unit": 6,
+  },
+  {
+    "at": {
+      "q": 6,
+      "r": 6,
+    },
+    "from": 0,
+    "to": 255,
+    "type": "SettlerCaptured",
+    "unit": 7,
+  },
+  {
+    "from": {
+      "q": 11,
+      "r": 5,
+    },
+    "owner": 255,
+    "to": {
+      "q": 12,
+      "r": 4,
+    },
+    "type": "UnitMoved",
+    "unit": 5,
+  },
+  {
+    "from": {
+      "q": 12,
+      "r": 4,
+    },
+    "owner": 255,
+    "to": {
+      "q": 13,
+      "r": 3,
+    },
+    "type": "UnitMoved",
+    "unit": 5,
+  },
+]
+`;
+
+exports[`WASM barbarian behavior > raiders capture a lone Settler and walk it to their camp 5`] = `
+{
+  "camps": [],
+  "gold": 507,
+  "units": [
+    {
+      "hp": 100,
+      "id": 1,
+      "kind": "Settler",
+      "owner": 0,
+      "pos": {
+        "q": -4,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > raiders capture a lone Settler and walk it to their camp 6`] = `
+{
+  "camps": [],
+  "gold": 505,
+  "units": [
+    {
+      "hp": 100,
+      "id": 2,
+      "kind": "Settler",
+      "owner": 1,
+      "pos": {
+        "q": 4,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > raiders capture a lone Settler and walk it to their camp 7`] = `
+{
+  "camps": [],
+  "gold": 505,
+  "units": [
+    {
+      "hp": 100,
+      "id": 3,
+      "kind": "Settler",
+      "owner": 2,
+      "pos": {
+        "q": 12,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > raiders capture a lone Settler and walk it to their camp 8`] = `[]`;
+
+exports[`WASM barbarian behavior > raiders capture a lone Settler and walk it to their camp 9`] = `[]`;
+
+exports[`WASM barbarian behavior > raiders capture a lone Settler and walk it to their camp 10`] = `[]`;
+
+exports[`WASM barbarian behavior > raiders capture a lone Settler and walk it to their camp 11`] = `
+[
+  {
+    "from": {
+      "q": 13,
+      "r": 3,
+    },
+    "owner": 255,
+    "to": {
+      "q": 14,
+      "r": 2,
+    },
+    "type": "UnitMoved",
+    "unit": 5,
+  },
+  {
+    "from": {
+      "q": 6,
+      "r": 6,
+    },
+    "owner": 255,
+    "to": {
+      "q": 6,
+      "r": 7,
+    },
+    "type": "UnitMoved",
+    "unit": 6,
+  },
+  {
+    "from": {
+      "q": 6,
+      "r": 6,
+    },
+    "owner": 255,
+    "to": {
+      "q": 7,
+      "r": 6,
+    },
+    "type": "UnitMoved",
+    "unit": 7,
+  },
+  {
+    "from": {
+      "q": 14,
+      "r": 2,
+    },
+    "owner": 255,
+    "to": {
+      "q": 15,
+      "r": 1,
+    },
+    "type": "UnitMoved",
+    "unit": 5,
+  },
+  {
+    "from": {
+      "q": 6,
+      "r": 7,
+    },
+    "owner": 255,
+    "to": {
+      "q": 6,
+      "r": 8,
+    },
+    "type": "UnitMoved",
+    "unit": 6,
+  },
+  {
+    "from": {
+      "q": 7,
+      "r": 6,
+    },
+    "owner": 255,
+    "to": {
+      "q": 8,
+      "r": 6,
+    },
+    "type": "UnitMoved",
+    "unit": 7,
+  },
+  {
+    "from": {
+      "q": 15,
+      "r": 1,
+    },
+    "owner": 255,
+    "to": {
+      "q": 16,
+      "r": 1,
+    },
+    "type": "UnitMoved",
+    "unit": 5,
+  },
+]
+`;
+
+exports[`WASM barbarian behavior > raiders capture a lone Settler and walk it to their camp 12`] = `
+{
+  "camps": [],
+  "gold": 514,
+  "units": [
+    {
+      "hp": 100,
+      "id": 1,
+      "kind": "Settler",
+      "owner": 0,
+      "pos": {
+        "q": -4,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > raiders capture a lone Settler and walk it to their camp 13`] = `
+{
+  "camps": [],
+  "gold": 510,
+  "units": [
+    {
+      "hp": 100,
+      "id": 2,
+      "kind": "Settler",
+      "owner": 1,
+      "pos": {
+        "q": 4,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > raiders capture a lone Settler and walk it to their camp 14`] = `
+{
+  "camps": [],
+  "gold": 510,
+  "units": [
+    {
+      "hp": 100,
+      "id": 3,
+      "kind": "Settler",
+      "owner": 2,
+      "pos": {
+        "q": 12,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > raiders capture a lone Settler and walk it to their camp 15`] = `[]`;
+
+exports[`WASM barbarian behavior > raiders capture a lone Settler and walk it to their camp 16`] = `[]`;
+
+exports[`WASM barbarian behavior > raiders capture a lone Settler and walk it to their camp 17`] = `[]`;
+
+exports[`WASM barbarian behavior > raiders capture a lone Settler and walk it to their camp 18`] = `
+[
+  {
+    "from": {
+      "q": 16,
+      "r": 1,
+    },
+    "owner": 255,
+    "to": {
+      "q": 15,
+      "r": 2,
+    },
+    "type": "UnitMoved",
+    "unit": 5,
+  },
+  {
+    "from": {
+      "q": 6,
+      "r": 8,
+    },
+    "owner": 255,
+    "to": {
+      "q": 7,
+      "r": 8,
+    },
+    "type": "UnitMoved",
+    "unit": 6,
+  },
+  {
+    "from": {
+      "q": 8,
+      "r": 6,
+    },
+    "owner": 255,
+    "to": {
+      "q": 9,
+      "r": 6,
+    },
+    "type": "UnitMoved",
+    "unit": 7,
+  },
+  {
+    "from": {
+      "q": 15,
+      "r": 2,
+    },
+    "owner": 255,
+    "to": {
+      "q": 15,
+      "r": 3,
+    },
+    "type": "UnitMoved",
+    "unit": 5,
+  },
+  {
+    "from": {
+      "q": 7,
+      "r": 8,
+    },
+    "owner": 255,
+    "to": {
+      "q": 8,
+      "r": 8,
+    },
+    "type": "UnitMoved",
+    "unit": 6,
+  },
+  {
+    "from": {
+      "q": 9,
+      "r": 6,
+    },
+    "owner": 255,
+    "to": {
+      "q": 10,
+      "r": 6,
+    },
+    "type": "UnitMoved",
+    "unit": 7,
+  },
+  {
+    "from": {
+      "q": 15,
+      "r": 3,
+    },
+    "owner": 255,
+    "to": {
+      "q": 15,
+      "r": 4,
+    },
+    "type": "UnitMoved",
+    "unit": 5,
+  },
+]
+`;
+
+exports[`WASM barbarian behavior > raiders capture a lone Settler and walk it to their camp 19`] = `
+{
+  "camps": [],
+  "gold": 521,
+  "units": [
+    {
+      "hp": 100,
+      "id": 1,
+      "kind": "Settler",
+      "owner": 0,
+      "pos": {
+        "q": -4,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > raiders capture a lone Settler and walk it to their camp 20`] = `
+{
+  "camps": [],
+  "gold": 515,
+  "units": [
+    {
+      "hp": 100,
+      "id": 2,
+      "kind": "Settler",
+      "owner": 1,
+      "pos": {
+        "q": 4,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > raiders capture a lone Settler and walk it to their camp 21`] = `
+{
+  "camps": [],
+  "gold": 515,
+  "units": [
+    {
+      "hp": 100,
+      "id": 3,
+      "kind": "Settler",
+      "owner": 2,
+      "pos": {
+        "q": 12,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > raiders capture a lone Settler and walk it to their camp 22`] = `[]`;
+
+exports[`WASM barbarian behavior > raiders capture a lone Settler and walk it to their camp 23`] = `[]`;
+
+exports[`WASM barbarian behavior > raiders capture a lone Settler and walk it to their camp 24`] = `[]`;
+
+exports[`WASM barbarian behavior > raiders capture a lone Settler and walk it to their camp 25`] = `
+[
+  {
+    "from": {
+      "q": 15,
+      "r": 4,
+    },
+    "owner": 255,
+    "to": {
+      "q": 16,
+      "r": 4,
+    },
+    "type": "UnitMoved",
+    "unit": 5,
+  },
+  {
+    "from": {
+      "q": 8,
+      "r": 8,
+    },
+    "owner": 255,
+    "to": {
+      "q": 9,
+      "r": 8,
+    },
+    "type": "UnitMoved",
+    "unit": 6,
+  },
+  {
+    "from": {
+      "q": 10,
+      "r": 6,
+    },
+    "owner": 255,
+    "to": {
+      "q": 11,
+      "r": 6,
+    },
+    "type": "UnitMoved",
+    "unit": 7,
+  },
+  {
+    "from": {
+      "q": 16,
+      "r": 4,
+    },
+    "owner": 255,
+    "to": {
+      "q": 17,
+      "r": 4,
+    },
+    "type": "UnitMoved",
+    "unit": 5,
+  },
+]
+`;
+
+exports[`WASM barbarian behavior > raiders capture a lone Settler and walk it to their camp 26`] = `
+{
+  "camps": [],
+  "gold": 528,
+  "units": [
+    {
+      "hp": 100,
+      "id": 1,
+      "kind": "Settler",
+      "owner": 0,
+      "pos": {
+        "q": -4,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > raiders capture a lone Settler and walk it to their camp 27`] = `
+{
+  "camps": [],
+  "gold": 520,
+  "units": [
+    {
+      "hp": 100,
+      "id": 2,
+      "kind": "Settler",
+      "owner": 1,
+      "pos": {
+        "q": 4,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > raiders capture a lone Settler and walk it to their camp 28`] = `
+{
+  "camps": [],
+  "gold": 520,
+  "units": [
+    {
+      "hp": 100,
+      "id": 3,
+      "kind": "Settler",
+      "owner": 2,
+      "pos": {
+        "q": 12,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > raiders capture a lone Settler and walk it to their camp 29`] = `[]`;
+
+exports[`WASM barbarian behavior > raiders capture a lone Settler and walk it to their camp 30`] = `[]`;
+
+exports[`WASM barbarian behavior > raiders capture a lone Settler and walk it to their camp 31`] = `[]`;
+
+exports[`WASM barbarian behavior > raiders capture a lone Settler and walk it to their camp 32`] = `
+[
+  {
+    "from": {
+      "q": 17,
+      "r": 4,
+    },
+    "owner": 255,
+    "to": {
+      "q": 16,
+      "r": 4,
+    },
+    "type": "UnitMoved",
+    "unit": 5,
+  },
+  {
+    "from": {
+      "q": 9,
+      "r": 8,
+    },
+    "owner": 255,
+    "to": {
+      "q": 9,
+      "r": 7,
+    },
+    "type": "UnitMoved",
+    "unit": 6,
+  },
+]
+`;
+
+exports[`WASM barbarian behavior > raiders capture a lone Settler and walk it to their camp 33`] = `
+{
+  "camps": [],
+  "gold": 535,
+  "units": [
+    {
+      "hp": 100,
+      "id": 1,
+      "kind": "Settler",
+      "owner": 0,
+      "pos": {
+        "q": -4,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > raiders capture a lone Settler and walk it to their camp 34`] = `
+{
+  "camps": [],
+  "gold": 525,
+  "units": [
+    {
+      "hp": 100,
+      "id": 2,
+      "kind": "Settler",
+      "owner": 1,
+      "pos": {
+        "q": 4,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;
+
+exports[`WASM barbarian behavior > raiders capture a lone Settler and walk it to their camp 35`] = `
+{
+  "camps": [],
+  "gold": 525,
+  "units": [
+    {
+      "hp": 100,
+      "id": 3,
+      "kind": "Settler",
+      "owner": 2,
+      "pos": {
+        "q": 12,
+        "r": 11,
+      },
+    },
+  ],
+}
+`;

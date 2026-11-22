@@ -1,0 +1,10 @@
+Use case: stylized-concept
+Asset type: transparent five-sprite source sheet for an art-direction exploration of Legatum historical strategy-game unit counters
+Primary request: Create exactly five distinct, individually isolated, full-object unit miniatures, evenly spaced in one horizontal row and in this left-to-right order: Ancient Spearman (foot soldier, long upright spear and round shield), Ancient Archer (foot soldier drawing a curved bow), Ancient Horseman (rider mounted on a horse), Modern Tank (ground-level tracked tank, clear turret and barrel), Future military drone swarm (three small realistic quadcopter combat drones in a compact formation, no people). Make the silhouettes immediately distinguishable at small map-token size.
+Style/medium: covetable hand-painted historical game miniatures, restrained painterly realism, tactile bronze, linen, wood and stone; grounded, sophisticated, historical, warm but not toy-like
+Composition/framing: each object centered in its own equal-width invisible cell; compact, bold silhouette with clean separation between object and backdrop; each miniature sits on its own small simple round terrain base, bases identical neutral parchment stone so player color can be applied later; full objects and bases entirely inside canvas with generous transparent margins, no overlap
+Lighting/mood: soft diffuse studio light, subtle contact shadow contained within each object's cell
+Color palette: muted bronze, umber, linen, ochre and natural steel; neutral pale stone bases with no owner color
+Materials/textures: finely painted metal, worn leather, woven cloth and carved stone, painterly rather than photoreal
+Constraints: truly transparent background outside the five objects; no tile, no map, no border, no text, no letters, no numbers, no watermark, no decorative separators; exactly five objects, order as specified; keep composition and scale consistent across the five
+Avoid: extra weapons or figures, ambiguous mounted/flying silhouettes, modern guns on ancient units, sci-fi styling, cartoon gloss, chibi proportions, heavy cast shadows, extra props

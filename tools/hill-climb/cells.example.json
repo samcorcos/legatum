@@ -1,0 +1,27 @@
+[
+  {
+    "name": "opening-example",
+    "set": "train",
+    "tape": "hcdata/tapes/opening.tape-only.json",
+    "states": "hcdata/states/opening.jsonl",
+    "seat": 0,
+    "branch": 7,
+    "end": 80,
+    "target_name": "Example City",
+    "target": [3, 4, 70],
+    "war_turn": 60,
+    "report": 60,
+    "modes": ["tape", "hybrid", "hard", "storm", "quiet"]
+  },
+  {
+    "name": "hold-example",
+    "set": "heldout",
+    "tape": "hcdata/tapes/hold.tape-only.json",
+    "states": "hcdata/states/hold.jsonl",
+    "seat": 0,
+    "branch": 90,
+    "end": 120,
+    "win_by": 110,
+    "modes": ["tape", "hybrid", "hard", "quiet"]
+  }
+]

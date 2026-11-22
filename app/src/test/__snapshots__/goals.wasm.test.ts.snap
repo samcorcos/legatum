@@ -1,0 +1,1141 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`faction goal WASM behavior > Switzerland hoard is live: gained, lost below the hoard, regained with \`again\` 1`] = `
+{
+  "done": false,
+  "label": "5,100 of 5,000 Gold",
+  "live": true,
+  "target": 5000,
+  "value": 5000,
+}
+`;
+
+exports[`faction goal WASM behavior > Switzerland hoard is live: gained, lost below the hoard, regained with \`again\` 2`] = `
+[
+  {
+    "faction": "Switzerland",
+    "player": 0,
+    "type": "FactionGoalCompleted",
+    "vp": 2,
+  },
+]
+`;
+
+exports[`faction goal WASM behavior > Switzerland hoard is live: gained, lost below the hoard, regained with \`again\` 3`] = `
+[
+  {
+    "faction": "Switzerland",
+    "player": 0,
+    "type": "FactionGoalCompleted",
+    "vp": 2,
+  },
+]
+`;
+
+exports[`faction goal WASM behavior > Switzerland hoard is live: gained, lost below the hoard, regained with \`again\` 4`] = `
+[
+  [
+    {
+      "kind": "FactionGoal",
+      "of": 0,
+    },
+    2,
+  ],
+]
+`;
+
+exports[`faction goal WASM behavior > Switzerland hoard is live: gained, lost below the hoard, regained with \`again\` 5`] = `true`;
+
+exports[`faction goal WASM behavior > Switzerland hoard is live: gained, lost below the hoard, regained with \`again\` 6`] = `
+{
+  "done": true,
+  "label": "5,100 of 5,000 Gold",
+  "live": true,
+  "target": 5000,
+  "value": 5000,
+}
+`;
+
+exports[`faction goal WASM behavior > Switzerland hoard is live: gained, lost below the hoard, regained with \`again\` 7`] = `[]`;
+
+exports[`faction goal WASM behavior > Switzerland hoard is live: gained, lost below the hoard, regained with \`again\` 8`] = `[]`;
+
+exports[`faction goal WASM behavior > Switzerland hoard is live: gained, lost below the hoard, regained with \`again\` 9`] = `
+[
+  [
+    {
+      "kind": "FactionGoal",
+      "of": 0,
+    },
+    2,
+  ],
+]
+`;
+
+exports[`faction goal WASM behavior > Switzerland hoard is live: gained, lost below the hoard, regained with \`again\` 10`] = `true`;
+
+exports[`faction goal WASM behavior > Switzerland hoard is live: gained, lost below the hoard, regained with \`again\` 11`] = `
+{
+  "done": true,
+  "label": "4,900 of 5,000 Gold",
+  "live": true,
+  "target": 5000,
+  "value": 4900,
+}
+`;
+
+exports[`faction goal WASM behavior > Switzerland hoard is live: gained, lost below the hoard, regained with \`again\` 12`] = `
+[
+  {
+    "faction": "Switzerland",
+    "player": 0,
+    "type": "FactionGoalLost",
+    "vp": 2,
+  },
+]
+`;
+
+exports[`faction goal WASM behavior > Switzerland hoard is live: gained, lost below the hoard, regained with \`again\` 13`] = `
+[
+  {
+    "faction": "Switzerland",
+    "player": 0,
+    "type": "FactionGoalLost",
+    "vp": 2,
+  },
+]
+`;
+
+exports[`faction goal WASM behavior > Switzerland hoard is live: gained, lost below the hoard, regained with \`again\` 14`] = `[]`;
+
+exports[`faction goal WASM behavior > Switzerland hoard is live: gained, lost below the hoard, regained with \`again\` 15`] = `false`;
+
+exports[`faction goal WASM behavior > Switzerland hoard is live: gained, lost below the hoard, regained with \`again\` 16`] = `
+{
+  "done": false,
+  "label": "5,100 of 5,000 Gold",
+  "live": true,
+  "target": 5000,
+  "value": 5000,
+}
+`;
+
+exports[`faction goal WASM behavior > Switzerland hoard is live: gained, lost below the hoard, regained with \`again\` 17`] = `
+[
+  {
+    "again": true,
+    "faction": "Switzerland",
+    "player": 0,
+    "type": "FactionGoalCompleted",
+    "vp": 2,
+  },
+]
+`;
+
+exports[`faction goal WASM behavior > Switzerland hoard is live: gained, lost below the hoard, regained with \`again\` 18`] = `
+[
+  {
+    "again": true,
+    "faction": "Switzerland",
+    "player": 0,
+    "type": "FactionGoalCompleted",
+    "vp": 2,
+  },
+]
+`;
+
+exports[`faction goal WASM behavior > Switzerland hoard is live: gained, lost below the hoard, regained with \`again\` 19`] = `
+[
+  [
+    {
+      "kind": "FactionGoal",
+      "of": 0,
+    },
+    2,
+  ],
+]
+`;
+
+exports[`faction goal WASM behavior > Switzerland hoard is live: gained, lost below the hoard, regained with \`again\` 20`] = `true`;
+
+exports[`faction goal WASM behavior > Switzerland hoard is live: gained, lost below the hoard, regained with \`again\` 21`] = `
+{
+  "done": false,
+  "label": "4,900 of 5,000 Gold",
+  "live": true,
+  "target": 5000,
+  "value": 4900,
+}
+`;
+
+exports[`faction goal WASM behavior > Switzerland hoard is live: gained, lost below the hoard, regained with \`again\` 22`] = `[]`;
+
+exports[`faction goal WASM behavior > Switzerland hoard is live: gained, lost below the hoard, regained with \`again\` 23`] = `[]`;
+
+exports[`faction goal WASM behavior > Switzerland hoard is live: gained, lost below the hoard, regained with \`again\` 24`] = `[]`;
+
+exports[`faction goal WASM behavior > Switzerland hoard is live: gained, lost below the hoard, regained with \`again\` 25`] = `false`;
+
+exports[`faction goal WASM behavior > a Permanent goal is never lost and vp_sources are typed 1`] = `
+[
+  [
+    {
+      "kind": "FactionGoal",
+      "of": 0,
+    },
+    2,
+  ],
+]
+`;
+
+exports[`faction goal WASM behavior > a Permanent goal is never lost and vp_sources are typed 2`] = `null`;
+
+exports[`faction goal WASM behavior > a barbarian unit or camp on a worked tile removes its yields, in fixtureClient and core alike 1`] = `
+{
+  "focus": "Balanced",
+  "focus_reason": "no active build",
+  "sources": [
+    {
+      "label": "City center",
+      "yields": {
+        "food": 4,
+        "gold": 1,
+        "production": 1,
+        "science": 0,
+      },
+    },
+    {
+      "label": "Worked tiles",
+      "yields": {
+        "food": 72,
+        "gold": 0,
+        "production": 0,
+        "science": 0,
+      },
+    },
+    {
+      "label": "Minimum city production",
+      "yields": {
+        "food": 0,
+        "gold": 0,
+        "production": 2,
+        "science": 0,
+      },
+    },
+    {
+      "label": "Citizens",
+      "yields": {
+        "food": 0,
+        "gold": 0,
+        "production": 0,
+        "science": 1,
+      },
+    },
+    {
+      "label": "Capital",
+      "yields": {
+        "food": 0,
+        "gold": 0,
+        "production": 2,
+        "science": 2,
+      },
+    },
+    {
+      "label": "Switzerland: tolls",
+      "yields": {
+        "food": 0,
+        "gold": 1,
+        "production": 0,
+        "science": 0,
+      },
+    },
+  ],
+  "total": {
+    "food": 76,
+    "gold": 2,
+    "production": 5,
+    "science": 3,
+  },
+  "worked": [
+    {
+      "q": 1,
+      "r": 8,
+    },
+    {
+      "q": 1,
+      "r": 9,
+    },
+    {
+      "q": 1,
+      "r": 10,
+    },
+    {
+      "q": 1,
+      "r": 11,
+    },
+    {
+      "q": 2,
+      "r": 7,
+    },
+    {
+      "q": 2,
+      "r": 8,
+    },
+    {
+      "q": 2,
+      "r": 9,
+    },
+    {
+      "q": 2,
+      "r": 10,
+    },
+    {
+      "q": 2,
+      "r": 11,
+    },
+    {
+      "q": 3,
+      "r": 6,
+    },
+    {
+      "q": 3,
+      "r": 7,
+    },
+    {
+      "q": 3,
+      "r": 8,
+    },
+    {
+      "q": 3,
+      "r": 9,
+    },
+    {
+      "q": 3,
+      "r": 10,
+    },
+    {
+      "q": 3,
+      "r": 11,
+    },
+    {
+      "q": 4,
+      "r": 5,
+    },
+    {
+      "q": 4,
+      "r": 6,
+    },
+    {
+      "q": 4,
+      "r": 7,
+    },
+    {
+      "q": 4,
+      "r": 9,
+    },
+    {
+      "q": 4,
+      "r": 10,
+    },
+    {
+      "q": 4,
+      "r": 11,
+    },
+    {
+      "q": 5,
+      "r": 5,
+    },
+    {
+      "q": 5,
+      "r": 6,
+    },
+    {
+      "q": 5,
+      "r": 7,
+    },
+    {
+      "q": 5,
+      "r": 8,
+    },
+    {
+      "q": 5,
+      "r": 9,
+    },
+    {
+      "q": 5,
+      "r": 10,
+    },
+    {
+      "q": 6,
+      "r": 5,
+    },
+    {
+      "q": 6,
+      "r": 6,
+    },
+    {
+      "q": 6,
+      "r": 7,
+    },
+    {
+      "q": 6,
+      "r": 8,
+    },
+    {
+      "q": 6,
+      "r": 9,
+    },
+    {
+      "q": 7,
+      "r": 5,
+    },
+    {
+      "q": 7,
+      "r": 6,
+    },
+    {
+      "q": 7,
+      "r": 7,
+    },
+    {
+      "q": 7,
+      "r": 8,
+    },
+  ],
+}
+`;
+
+exports[`faction goal WASM behavior > a barbarian unit or camp on a worked tile removes its yields, in fixtureClient and core alike 2`] = `
+{
+  "focus": "Balanced",
+  "focus_reason": "no active build",
+  "sources": [
+    {
+      "label": "Barbarians hold the tile: it yields nothing at 5,8",
+      "yields": {
+        "food": 0,
+        "gold": 0,
+        "production": 0,
+        "science": 0,
+      },
+    },
+    {
+      "label": "City center",
+      "yields": {
+        "food": 4,
+        "gold": 1,
+        "production": 1,
+        "science": 0,
+      },
+    },
+    {
+      "label": "Worked tiles",
+      "yields": {
+        "food": 70,
+        "gold": 0,
+        "production": 0,
+        "science": 0,
+      },
+    },
+    {
+      "label": "Minimum city production",
+      "yields": {
+        "food": 0,
+        "gold": 0,
+        "production": 2,
+        "science": 0,
+      },
+    },
+    {
+      "label": "Citizens",
+      "yields": {
+        "food": 0,
+        "gold": 0,
+        "production": 0,
+        "science": 1,
+      },
+    },
+    {
+      "label": "Capital",
+      "yields": {
+        "food": 0,
+        "gold": 0,
+        "production": 2,
+        "science": 2,
+      },
+    },
+    {
+      "label": "Switzerland: tolls",
+      "yields": {
+        "food": 0,
+        "gold": 1,
+        "production": 0,
+        "science": 0,
+      },
+    },
+  ],
+  "total": {
+    "food": 74,
+    "gold": 2,
+    "production": 5,
+    "science": 3,
+  },
+  "worked": [
+    {
+      "q": 1,
+      "r": 8,
+    },
+    {
+      "q": 1,
+      "r": 9,
+    },
+    {
+      "q": 1,
+      "r": 10,
+    },
+    {
+      "q": 1,
+      "r": 11,
+    },
+    {
+      "q": 2,
+      "r": 7,
+    },
+    {
+      "q": 2,
+      "r": 8,
+    },
+    {
+      "q": 2,
+      "r": 9,
+    },
+    {
+      "q": 2,
+      "r": 10,
+    },
+    {
+      "q": 2,
+      "r": 11,
+    },
+    {
+      "q": 3,
+      "r": 6,
+    },
+    {
+      "q": 3,
+      "r": 7,
+    },
+    {
+      "q": 3,
+      "r": 8,
+    },
+    {
+      "q": 3,
+      "r": 9,
+    },
+    {
+      "q": 3,
+      "r": 10,
+    },
+    {
+      "q": 3,
+      "r": 11,
+    },
+    {
+      "q": 4,
+      "r": 5,
+    },
+    {
+      "q": 4,
+      "r": 6,
+    },
+    {
+      "q": 4,
+      "r": 7,
+    },
+    {
+      "q": 4,
+      "r": 9,
+    },
+    {
+      "q": 4,
+      "r": 10,
+    },
+    {
+      "q": 4,
+      "r": 11,
+    },
+    {
+      "q": 5,
+      "r": 5,
+    },
+    {
+      "q": 5,
+      "r": 6,
+    },
+    {
+      "q": 5,
+      "r": 7,
+    },
+    {
+      "q": 5,
+      "r": 9,
+    },
+    {
+      "q": 5,
+      "r": 10,
+    },
+    {
+      "q": 6,
+      "r": 5,
+    },
+    {
+      "q": 6,
+      "r": 6,
+    },
+    {
+      "q": 6,
+      "r": 7,
+    },
+    {
+      "q": 6,
+      "r": 8,
+    },
+    {
+      "q": 6,
+      "r": 9,
+    },
+    {
+      "q": 7,
+      "r": 5,
+    },
+    {
+      "q": 7,
+      "r": 6,
+    },
+    {
+      "q": 7,
+      "r": 7,
+    },
+    {
+      "q": 7,
+      "r": 8,
+    },
+  ],
+}
+`;
+
+exports[`faction goal WASM behavior > a barbarian unit or camp on a worked tile removes its yields, in fixtureClient and core alike 3`] = `
+{
+  "focus": "Balanced",
+  "focus_reason": "no active build",
+  "sources": [
+    {
+      "label": "City center",
+      "yields": {
+        "food": 4,
+        "gold": 1,
+        "production": 1,
+        "science": 0,
+      },
+    },
+    {
+      "label": "Worked tiles",
+      "yields": {
+        "food": 72,
+        "gold": 0,
+        "production": 0,
+        "science": 0,
+      },
+    },
+    {
+      "label": "Minimum city production",
+      "yields": {
+        "food": 0,
+        "gold": 0,
+        "production": 2,
+        "science": 0,
+      },
+    },
+    {
+      "label": "Citizens",
+      "yields": {
+        "food": 0,
+        "gold": 0,
+        "production": 0,
+        "science": 1,
+      },
+    },
+    {
+      "label": "Capital",
+      "yields": {
+        "food": 0,
+        "gold": 0,
+        "production": 2,
+        "science": 2,
+      },
+    },
+    {
+      "label": "Switzerland: tolls",
+      "yields": {
+        "food": 0,
+        "gold": 1,
+        "production": 0,
+        "science": 0,
+      },
+    },
+  ],
+  "total": {
+    "food": 76,
+    "gold": 2,
+    "production": 5,
+    "science": 3,
+  },
+  "worked": [
+    {
+      "q": 1,
+      "r": 8,
+    },
+    {
+      "q": 1,
+      "r": 9,
+    },
+    {
+      "q": 1,
+      "r": 10,
+    },
+    {
+      "q": 1,
+      "r": 11,
+    },
+    {
+      "q": 2,
+      "r": 7,
+    },
+    {
+      "q": 2,
+      "r": 8,
+    },
+    {
+      "q": 2,
+      "r": 9,
+    },
+    {
+      "q": 2,
+      "r": 10,
+    },
+    {
+      "q": 2,
+      "r": 11,
+    },
+    {
+      "q": 3,
+      "r": 6,
+    },
+    {
+      "q": 3,
+      "r": 7,
+    },
+    {
+      "q": 3,
+      "r": 8,
+    },
+    {
+      "q": 3,
+      "r": 9,
+    },
+    {
+      "q": 3,
+      "r": 10,
+    },
+    {
+      "q": 3,
+      "r": 11,
+    },
+    {
+      "q": 4,
+      "r": 5,
+    },
+    {
+      "q": 4,
+      "r": 6,
+    },
+    {
+      "q": 4,
+      "r": 7,
+    },
+    {
+      "q": 4,
+      "r": 9,
+    },
+    {
+      "q": 4,
+      "r": 10,
+    },
+    {
+      "q": 4,
+      "r": 11,
+    },
+    {
+      "q": 5,
+      "r": 5,
+    },
+    {
+      "q": 5,
+      "r": 6,
+    },
+    {
+      "q": 5,
+      "r": 7,
+    },
+    {
+      "q": 5,
+      "r": 8,
+    },
+    {
+      "q": 5,
+      "r": 9,
+    },
+    {
+      "q": 5,
+      "r": 10,
+    },
+    {
+      "q": 6,
+      "r": 5,
+    },
+    {
+      "q": 6,
+      "r": 6,
+    },
+    {
+      "q": 6,
+      "r": 7,
+    },
+    {
+      "q": 6,
+      "r": 8,
+    },
+    {
+      "q": 6,
+      "r": 9,
+    },
+    {
+      "q": 7,
+      "r": 5,
+    },
+    {
+      "q": 7,
+      "r": 6,
+    },
+    {
+      "q": 7,
+      "r": 7,
+    },
+    {
+      "q": 7,
+      "r": 8,
+    },
+  ],
+}
+`;
+
+exports[`faction goal WASM behavior > a barbarian unit or camp on a worked tile removes its yields, in fixtureClient and core alike 4`] = `
+{
+  "focus": "Balanced",
+  "focus_reason": "no active build",
+  "sources": [
+    {
+      "label": "Barbarians hold the tile: it yields nothing at 5,8",
+      "yields": {
+        "food": 0,
+        "gold": 0,
+        "production": 0,
+        "science": 0,
+      },
+    },
+    {
+      "label": "City center",
+      "yields": {
+        "food": 4,
+        "gold": 1,
+        "production": 1,
+        "science": 0,
+      },
+    },
+    {
+      "label": "Worked tiles",
+      "yields": {
+        "food": 70,
+        "gold": 0,
+        "production": 0,
+        "science": 0,
+      },
+    },
+    {
+      "label": "Minimum city production",
+      "yields": {
+        "food": 0,
+        "gold": 0,
+        "production": 2,
+        "science": 0,
+      },
+    },
+    {
+      "label": "Citizens",
+      "yields": {
+        "food": 0,
+        "gold": 0,
+        "production": 0,
+        "science": 1,
+      },
+    },
+    {
+      "label": "Capital",
+      "yields": {
+        "food": 0,
+        "gold": 0,
+        "production": 2,
+        "science": 2,
+      },
+    },
+    {
+      "label": "Switzerland: tolls",
+      "yields": {
+        "food": 0,
+        "gold": 1,
+        "production": 0,
+        "science": 0,
+      },
+    },
+  ],
+  "total": {
+    "food": 74,
+    "gold": 2,
+    "production": 5,
+    "science": 3,
+  },
+  "worked": [
+    {
+      "q": 1,
+      "r": 8,
+    },
+    {
+      "q": 1,
+      "r": 9,
+    },
+    {
+      "q": 1,
+      "r": 10,
+    },
+    {
+      "q": 1,
+      "r": 11,
+    },
+    {
+      "q": 2,
+      "r": 7,
+    },
+    {
+      "q": 2,
+      "r": 8,
+    },
+    {
+      "q": 2,
+      "r": 9,
+    },
+    {
+      "q": 2,
+      "r": 10,
+    },
+    {
+      "q": 2,
+      "r": 11,
+    },
+    {
+      "q": 3,
+      "r": 6,
+    },
+    {
+      "q": 3,
+      "r": 7,
+    },
+    {
+      "q": 3,
+      "r": 8,
+    },
+    {
+      "q": 3,
+      "r": 9,
+    },
+    {
+      "q": 3,
+      "r": 10,
+    },
+    {
+      "q": 3,
+      "r": 11,
+    },
+    {
+      "q": 4,
+      "r": 5,
+    },
+    {
+      "q": 4,
+      "r": 6,
+    },
+    {
+      "q": 4,
+      "r": 7,
+    },
+    {
+      "q": 4,
+      "r": 9,
+    },
+    {
+      "q": 4,
+      "r": 10,
+    },
+    {
+      "q": 4,
+      "r": 11,
+    },
+    {
+      "q": 5,
+      "r": 5,
+    },
+    {
+      "q": 5,
+      "r": 6,
+    },
+    {
+      "q": 5,
+      "r": 7,
+    },
+    {
+      "q": 5,
+      "r": 9,
+    },
+    {
+      "q": 5,
+      "r": 10,
+    },
+    {
+      "q": 6,
+      "r": 5,
+    },
+    {
+      "q": 6,
+      "r": 6,
+    },
+    {
+      "q": 6,
+      "r": 7,
+    },
+    {
+      "q": 6,
+      "r": 8,
+    },
+    {
+      "q": 6,
+      "r": 9,
+    },
+    {
+      "q": 7,
+      "r": 5,
+    },
+    {
+      "q": 7,
+      "r": 6,
+    },
+    {
+      "q": 7,
+      "r": 7,
+    },
+    {
+      "q": 7,
+      "r": 8,
+    },
+  ],
+}
+`;
+
+exports[`faction goal WASM behavior > every faction goal view agrees 1`] = `
+{
+  "done": false,
+  "label": "The Imperial Diwan is not built",
+  "live": false,
+  "target": 1,
+  "value": 0,
+}
+`;
+
+exports[`faction goal WASM behavior > every faction goal view agrees 2`] = `
+{
+  "done": false,
+  "label": "0 of 5 Ruhr Foundries",
+  "live": true,
+  "target": 5,
+  "value": 0,
+}
+`;
+
+exports[`faction goal WASM behavior > every faction goal view agrees 3`] = `
+{
+  "done": false,
+  "label": "0 of 1 cities with a wild camp in their territory",
+  "live": true,
+  "target": 1,
+  "value": 0,
+}
+`;
+
+exports[`faction goal WASM behavior > every faction goal view agrees 4`] = `
+{
+  "done": false,
+  "label": "The Yam Relay Station is not built",
+  "live": false,
+  "target": 1,
+  "value": 0,
+}
+`;
+
+exports[`faction goal WASM behavior > every faction goal view agrees 5`] = `
+{
+  "done": false,
+  "label": "0 of 3 veterans retired",
+  "live": false,
+  "target": 3,
+  "value": 0,
+}
+`;
+
+exports[`faction goal WASM behavior > every faction goal view agrees 6`] = `
+{
+  "done": false,
+  "label": "The Learning is not shared yet",
+  "live": false,
+  "target": 1,
+  "value": 0,
+}
+`;
+
+exports[`faction goal WASM behavior > every faction goal view agrees 7`] = `
+{
+  "done": false,
+  "label": "The Heir to the Throne is not trained",
+  "live": false,
+  "target": 1,
+  "value": 0,
+}
+`;
+
+exports[`faction goal WASM behavior > every faction goal view agrees 8`] = `
+{
+  "done": false,
+  "label": "60 of 5,000 Gold",
+  "live": true,
+  "target": 5000,
+  "value": 60,
+}
+`;

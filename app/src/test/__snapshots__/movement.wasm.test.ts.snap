@@ -1,0 +1,55 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`movement WASM behavior > forecasts zero damage from an ungarrisoned defeated city 1`] = `
+{
+  "attacker_hp": 100,
+  "attacker_strength": {
+    "parts": [
+      [
+        "Spearman",
+        20,
+      ],
+    ],
+    "total": 20,
+  },
+  "defender_hp": 0,
+  "defender_strength": {
+    "parts": [
+      [
+        "City",
+        10,
+      ],
+      [
+        "Population",
+        6,
+      ],
+      [
+        "Wounded",
+        -10,
+      ],
+    ],
+    "total": 6,
+  },
+  "expected_damage_to_attacker": 0,
+  "expected_damage_to_defender": 0,
+  "loss_chance": 0,
+  "ranged": false,
+  "win_chance": 100,
+}
+`;
+
+exports[`movement WASM behavior > teammate HP and seeded capture arbitration, seed 1 1`] = `0`;
+
+exports[`movement WASM behavior > teammate HP and seeded capture arbitration, seed 1 2`] = `1`;
+
+exports[`movement WASM behavior > teammate HP and seeded capture arbitration, seed 7 1`] = `0`;
+
+exports[`movement WASM behavior > teammate HP and seeded capture arbitration, seed 7 2`] = `1`;
+
+exports[`movement WASM behavior > teammate HP and seeded capture arbitration, seed 42 1`] = `0`;
+
+exports[`movement WASM behavior > teammate HP and seeded capture arbitration, seed 42 2`] = `1`;
+
+exports[`movement WASM behavior > teammate HP and seeded capture arbitration, seed 18446744073709551615 1`] = `0`;
+
+exports[`movement WASM behavior > teammate HP and seeded capture arbitration, seed 18446744073709551615 2`] = `1`;

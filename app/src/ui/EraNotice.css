@@ -1,0 +1,18 @@
+/* A rival entering an era: a banner over the map, below the top bar. The first empire in gets a heavier rule. */
+.toast.era-notice {
+  top: 76px;
+  bottom: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px 6px 10px;
+  left: calc(var(--story-left, 16px) + (100% - var(--story-left, 16px) - var(--story-right, 16px)) / 2);
+  max-width: min(560px, calc(100% - var(--story-left, 16px) - var(--story-right, 16px) - 16px));
+  width: max-content;
+  border-left-color: var(--accent);
+  font-size: 14px;
+}
+.toast.era-notice.first { border-left-width: 6px; box-shadow: 0 0 0 1px var(--accent), 2px 3px 0 var(--rule-2); }
+.era-notice-numeral { display: inline-grid; place-items: center; flex: none; min-width: 26px; height: 26px; padding: 0 3px; border: 1px solid var(--accent); border-radius: 13px; color: var(--accent); font: 700 12px/1 var(--display); }
+.era-notice-text small { color: var(--ink-2); font-size: 12px; }
+.era-notice .icon-btn { width: 26px; height: 26px; }

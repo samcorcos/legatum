@@ -1,0 +1,421 @@
+{
+  "first": 168,
+  "last": 177,
+  "seat": 0,
+  "turns": {
+    "168": [
+      {
+        "action": {
+          "action": "Broadcast"
+        },
+        "type": "Action"
+      },
+      {
+        "type": "SleepUnit",
+        "unit": 3
+      },
+      {
+        "path": [
+          {
+            "q": 23,
+            "r": 21
+          },
+          {
+            "q": 22,
+            "r": 22
+          },
+          {
+            "q": 21,
+            "r": 23
+          },
+          {
+            "q": 20,
+            "r": 23
+          },
+          {
+            "q": 19,
+            "r": 23
+          },
+          {
+            "q": 18,
+            "r": 23
+          },
+          {
+            "q": 17,
+            "r": 23
+          },
+          {
+            "q": 17,
+            "r": 22
+          }
+        ],
+        "to": {
+          "q": 17,
+          "r": 22
+        },
+        "type": "MoveUnitPath",
+        "unit": 143
+      },
+      {
+        "city": 33,
+        "queue": [
+          {
+            "building": "Hydroponics",
+            "kind": "Building"
+          }
+        ],
+        "type": "SetProductionQueue"
+      }
+    ],
+    "169": [
+      {
+        "plane": 150,
+        "target": {
+          "q": 10,
+          "r": 23
+        },
+        "type": "AirStrike"
+      }
+    ],
+    "170": [
+      {
+        "path": [
+          {
+            "q": 17,
+            "r": 21
+          },
+          {
+            "q": 17,
+            "r": 20
+          },
+          {
+            "q": 18,
+            "r": 19
+          }
+        ],
+        "to": {
+          "q": 18,
+          "r": 19
+        },
+        "type": "MoveUnitPath",
+        "unit": 143
+      },
+      {
+        "path": [
+          {
+            "q": 22,
+            "r": 17
+          },
+          {
+            "q": 21,
+            "r": 17
+          }
+        ],
+        "to": {
+          "q": 21,
+          "r": 17
+        },
+        "type": "MoveUnitPath",
+        "unit": 3
+      },
+      {
+        "type": "FoundCity",
+        "unit": 129
+      },
+      {
+        "plane": 150,
+        "target": {
+          "q": 11,
+          "r": 25
+        },
+        "type": "AirStrike"
+      }
+    ],
+    "171": [
+      {
+        "city": 37,
+        "queue": [
+          {
+            "kind": "Unit",
+            "unit": "Tank"
+          },
+          {
+            "kind": "Unit",
+            "unit": "Tank"
+          },
+          {
+            "kind": "Unit",
+            "unit": "Tank"
+          }
+        ],
+        "type": "SetProductionQueue"
+      },
+      {
+        "against": 3,
+        "breach": false,
+        "type": "DeclareWar"
+      },
+      {
+        "plane": 150,
+        "target": {
+          "q": 19,
+          "r": 16
+        },
+        "type": "AirStrike"
+      },
+      {
+        "to": {
+          "q": 19,
+          "r": 16
+        },
+        "type": "MoveUnit",
+        "unit": 143
+      },
+      {
+        "to": {
+          "q": 19,
+          "r": 16
+        },
+        "type": "MoveUnit",
+        "unit": 3
+      }
+    ],
+    "172": [
+      {
+        "type": "SkipUnit",
+        "unit": 3
+      },
+      {
+        "type": "SleepUnit",
+        "unit": 143
+      },
+      {
+        "plane": 150,
+        "target": {
+          "q": 20,
+          "r": 14
+        },
+        "type": "AirStrike"
+      },
+      {
+        "accept": true,
+        "proposal": 78,
+        "type": "RespondToProposal"
+      },
+      {
+        "city": 3,
+        "queue": [
+          {
+            "kind": "Unit",
+            "unit": "Tank"
+          },
+          {
+            "kind": "Unit",
+            "unit": "Tank"
+          },
+          {
+            "kind": "Unit",
+            "unit": "Tank"
+          },
+          {
+            "kind": "Unit",
+            "unit": "Tank"
+          },
+          {
+            "kind": "Unit",
+            "unit": "Tank"
+          }
+        ],
+        "type": "SetProductionQueue"
+      },
+      {
+        "city": 30,
+        "queue": [
+          {
+            "kind": "Unit",
+            "unit": "Tank"
+          },
+          {
+            "kind": "Unit",
+            "unit": "Tank"
+          },
+          {
+            "kind": "Unit",
+            "unit": "Tank"
+          },
+          {
+            "kind": "Unit",
+            "unit": "Tank"
+          },
+          {
+            "kind": "Unit",
+            "unit": "Tank"
+          }
+        ],
+        "type": "SetProductionQueue"
+      }
+    ],
+    "173": [
+      {
+        "to": {
+          "q": 20,
+          "r": 15
+        },
+        "type": "MoveUnit",
+        "unit": 3
+      },
+      {
+        "path": [
+          {
+            "q": 19,
+            "r": 15
+          },
+          {
+            "q": 19,
+            "r": 14
+          }
+        ],
+        "to": {
+          "q": 19,
+          "r": 14
+        },
+        "type": "MoveUnitPath",
+        "unit": 143
+      },
+      {
+        "plane": 150,
+        "target": {
+          "q": 19,
+          "r": 14
+        },
+        "type": "AirStrike"
+      }
+    ],
+    "174": [
+      {
+        "path": [
+          {
+            "q": 18,
+            "r": 16
+          },
+          {
+            "q": 18,
+            "r": 15
+          },
+          {
+            "q": 18,
+            "r": 14
+          }
+        ],
+        "to": {
+          "q": 18,
+          "r": 14
+        },
+        "type": "MoveUnitPath",
+        "unit": 143
+      },
+      {
+        "plane": 150,
+        "target": {
+          "q": 18,
+          "r": 14
+        },
+        "type": "AirStrike"
+      },
+      {
+        "accept": false,
+        "proposal": 80,
+        "type": "RespondToProposal"
+      },
+      {
+        "to": {
+          "q": 20,
+          "r": 14
+        },
+        "type": "MoveUnit",
+        "unit": 3
+      }
+    ],
+    "175": [
+      {
+        "to": {
+          "q": 20,
+          "r": 13
+        },
+        "type": "MoveUnit",
+        "unit": 3
+      },
+      {
+        "path": [
+          {
+            "q": 19,
+            "r": 15
+          },
+          {
+            "q": 19,
+            "r": 14
+          }
+        ],
+        "to": {
+          "q": 19,
+          "r": 14
+        },
+        "type": "MoveUnitPath",
+        "unit": 143
+      },
+      {
+        "plane": 150,
+        "to": 3,
+        "type": "Rebase"
+      }
+    ],
+    "176": [
+      {
+        "to": {
+          "q": 20,
+          "r": 12
+        },
+        "type": "MoveUnit",
+        "unit": 3
+      },
+      {
+        "type": "SkipUnit",
+        "unit": 143
+      },
+      {
+        "plane": 150,
+        "target": {
+          "q": 20,
+          "r": 12
+        },
+        "type": "AirStrike"
+      }
+    ],
+    "177": [
+      {
+        "to": {
+          "q": 20,
+          "r": 12
+        },
+        "type": "MoveUnit",
+        "unit": 3
+      },
+      {
+        "to": {
+          "q": 20,
+          "r": 14
+        },
+        "type": "MoveUnit",
+        "unit": 143
+      },
+      {
+        "plane": 150,
+        "target": {
+          "q": 20,
+          "r": 12
+        },
+        "type": "AirStrike"
+      }
+    ]
+  }
+}

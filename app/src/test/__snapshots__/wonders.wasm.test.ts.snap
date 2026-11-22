@@ -1,0 +1,162 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`matches WASM wonder visibility, city bonus and one-time discovery 1`] = `
+[
+  {
+    "label": "City center",
+    "yields": {
+      "food": 3,
+      "gold": 1,
+      "production": 1,
+      "science": 0,
+    },
+  },
+  {
+    "label": "Worked tiles",
+    "yields": {
+      "food": 5,
+      "gold": 1,
+      "production": 0,
+      "science": 0,
+    },
+  },
+  {
+    "label": "Minimum city production",
+    "yields": {
+      "food": 0,
+      "gold": 0,
+      "production": 2,
+      "science": 0,
+    },
+  },
+  {
+    "label": "Citizens",
+    "yields": {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 1,
+    },
+  },
+  {
+    "label": "Capital",
+    "yields": {
+      "food": 0,
+      "gold": 0,
+      "production": 2,
+      "science": 2,
+    },
+  },
+  {
+    "label": "India network",
+    "yields": {
+      "food": 1,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+  },
+  {
+    "label": "Grand Canyon (+25%)",
+    "yields": {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 1,
+    },
+  },
+]
+`;
+
+exports[`matches WASM wonder visibility, city bonus and one-time discovery 2`] = `
+[
+  {
+    "label": "City center",
+    "yields": {
+      "food": 3,
+      "gold": 1,
+      "production": 1,
+      "science": 0,
+    },
+  },
+  {
+    "label": "Worked tiles",
+    "yields": {
+      "food": 5,
+      "gold": 1,
+      "production": 0,
+      "science": 0,
+    },
+  },
+  {
+    "label": "Minimum city production",
+    "yields": {
+      "food": 0,
+      "gold": 0,
+      "production": 2,
+      "science": 0,
+    },
+  },
+  {
+    "label": "Citizens",
+    "yields": {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 1,
+    },
+  },
+  {
+    "label": "Capital",
+    "yields": {
+      "food": 0,
+      "gold": 0,
+      "production": 2,
+      "science": 2,
+    },
+  },
+  {
+    "label": "India network",
+    "yields": {
+      "food": 1,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+  },
+  {
+    "label": "Grand Canyon (+25%)",
+    "yields": {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 1,
+    },
+  },
+]
+`;
+
+exports[`matches WASM wonder visibility, city bonus and one-time discovery 3`] = `
+{
+  "food": 9,
+  "gold": 2,
+  "production": 5,
+  "science": 4,
+}
+`;
+
+exports[`matches WASM wonder visibility, city bonus and one-time discovery 4`] = `
+[
+  {
+    "at": {
+      "q": 5,
+      "r": 7,
+    },
+    "gold": 0,
+    "owner": 0,
+    "science": 50,
+    "type": "WonderDiscovered",
+    "wonder": "GrandCanyon",
+  },
+]
+`;

@@ -1,0 +1,3374 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`eras: core behavior > Railways, Code of Laws, Printing Press and the Castle tiers resolve the same 1`] = `[]`;
+
+exports[`eras: core behavior > Railways, Code of Laws, Printing Press and the Castle tiers resolve the same 2`] = `
+[
+  {
+    "label": "City center",
+    "yields": {
+      "food": 4,
+      "gold": 1,
+      "production": 1,
+      "science": 0,
+    },
+  },
+  {
+    "label": "Worked tiles",
+    "yields": {
+      "food": 20,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+  },
+  {
+    "label": "Minimum city production",
+    "yields": {
+      "food": 0,
+      "gold": 0,
+      "production": 2,
+      "science": 0,
+    },
+  },
+  {
+    "label": "Citizens",
+    "yields": {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 2,
+    },
+  },
+  {
+    "label": "Capital",
+    "yields": {
+      "food": 0,
+      "gold": 0,
+      "production": 2,
+      "science": 2,
+    },
+  },
+  {
+    "label": "Lyceum",
+    "yields": {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 6,
+    },
+  },
+  {
+    "label": "Research Lab",
+    "yields": {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 6,
+    },
+  },
+  {
+    "label": "Research Lab idle: no Iron",
+    "yields": {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": -6,
+    },
+  },
+  {
+    "label": "University",
+    "yields": {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 4,
+    },
+  },
+  {
+    "label": "University idle: no Iron",
+    "yields": {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": -4,
+    },
+  },
+  {
+    "label": "Lyceum",
+    "yields": {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 6,
+    },
+  },
+  {
+    "label": "Irrigation",
+    "yields": {
+      "food": 1,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+  },
+  {
+    "label": "Fusion Power",
+    "yields": {
+      "food": 0,
+      "gold": 0,
+      "production": 5,
+      "science": 0,
+    },
+  },
+  {
+    "label": "Printing Press",
+    "yields": {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 1,
+    },
+  },
+  {
+    "label": "Recursive AI (+20% Production)",
+    "yields": {
+      "food": 0,
+      "gold": 0,
+      "production": 2,
+      "science": 0,
+    },
+  },
+]
+`;
+
+exports[`eras: core behavior > Railways, Code of Laws, Printing Press and the Castle tiers resolve the same 3`] = `4`;
+
+exports[`eras: core behavior > Railways, Code of Laws, Printing Press and the Castle tiers resolve the same 4`] = `
+[
+  40,
+  true,
+  true,
+  true,
+]
+`;
+
+exports[`eras: core behavior > Railways, Code of Laws, Printing Press and the Castle tiers resolve the same 5`] = `
+[
+  [
+    "BronzeWorking",
+    {
+      "building": "Workshop",
+      "kind": "Building",
+    },
+    60,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 2,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "Currency",
+    {
+      "building": "Market",
+      "kind": "Building",
+    },
+    60,
+    {
+      "food": 0,
+      "gold": 1,
+      "production": 0,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "Writing",
+    {
+      "building": "Laboratory",
+      "kind": "Building",
+    },
+    70,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 6,
+    },
+    0,
+  ],
+  [
+    "Masonry",
+    {
+      "building": "Walls",
+      "kind": "Building",
+    },
+    100,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+    10,
+  ],
+  [
+    "Philosophy",
+    {
+      "building": "RelayUplink",
+      "kind": "Building",
+    },
+    600,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "Masonry",
+    {
+      "building": "Pyramids",
+      "kind": "Building",
+    },
+    240,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 1,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "Machinery",
+    {
+      "building": "HagiaSophia",
+      "kind": "Building",
+    },
+    400,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 2,
+    },
+    0,
+  ],
+  [
+    "Steel",
+    {
+      "building": "EiffelTower",
+      "kind": "Building",
+    },
+    720,
+    {
+      "food": 0,
+      "gold": 3,
+      "production": 0,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "FusionPower",
+    {
+      "building": "IterReactor",
+      "kind": "Building",
+    },
+    900,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 4,
+    },
+    0,
+  ],
+  [
+    "Feudalism",
+    {
+      "building": "Hydroponics",
+      "kind": "Building",
+    },
+    200,
+    {
+      "food": 3,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "IronWorking",
+    {
+      "building": "MachineShop",
+      "kind": "Building",
+    },
+    320,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 3,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "Education",
+    {
+      "building": "College",
+      "kind": "Building",
+    },
+    240,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 4,
+    },
+    0,
+  ],
+  [
+    "Banking",
+    {
+      "building": "Clearinghouse",
+      "kind": "Building",
+    },
+    200,
+    {
+      "food": 0,
+      "gold": 4,
+      "production": 0,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "Industrialization",
+    {
+      "building": "Autoworks",
+      "kind": "Building",
+    },
+    440,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 5,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "Chivalry",
+    {
+      "building": "Castle",
+      "kind": "Building",
+    },
+    240,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+    5,
+  ],
+  [
+    "MilitaryEngineering",
+    {
+      "building": "StarFort",
+      "kind": "Building",
+    },
+    320,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+    5,
+  ],
+  [
+    "Cannonry",
+    {
+      "building": "PlanetaryFoundry",
+      "kind": "Building",
+    },
+    600,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "Banking",
+    {
+      "building": "WorldExchange",
+      "kind": "Building",
+    },
+    600,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "Electronics",
+    {
+      "building": "InferenceCore",
+      "kind": "Building",
+    },
+    360,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 6,
+    },
+    0,
+  ],
+  [
+    "Engineering",
+    {
+      "building": "Roadworks",
+      "kind": "Building",
+    },
+    140,
+    {
+      "food": 0,
+      "gold": 1,
+      "production": 0,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "Electricity",
+    {
+      "building": "StockExchange",
+      "kind": "Building",
+    },
+    360,
+    {
+      "food": 0,
+      "gold": 6,
+      "production": 0,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "GreenRevolution",
+    {
+      "building": "Supermarket",
+      "kind": "Building",
+    },
+    360,
+    {
+      "food": 4,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "GuidedMissiles",
+    {
+      "building": "AirDefence",
+      "kind": "Building",
+    },
+    320,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "Feudalism",
+    {
+      "kind": "Unit",
+      "unit": "Trooper",
+    },
+    152,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "Machinery",
+    {
+      "kind": "Unit",
+      "unit": "Marksman",
+    },
+    214,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "Gunpowder",
+    {
+      "kind": "Unit",
+      "unit": "AssaultTrooper",
+    },
+    210,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "Chivalry",
+    {
+      "kind": "Unit",
+      "unit": "Knight",
+    },
+    204,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "MilitaryScience",
+    {
+      "kind": "Unit",
+      "unit": "Cavalry",
+    },
+    378,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "ArmouredWarfare",
+    {
+      "kind": "Unit",
+      "unit": "Tank",
+    },
+    514,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "AutonomousSystems",
+    {
+      "kind": "Unit",
+      "unit": "AutonomousArmour",
+    },
+    700,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "Rifling",
+    {
+      "kind": "Unit",
+      "unit": "Rifleman",
+    },
+    290,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "MassMobilisation",
+    {
+      "kind": "Unit",
+      "unit": "Infantry",
+    },
+    400,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "Robotics",
+    {
+      "kind": "Unit",
+      "unit": "HunterKiller",
+    },
+    552,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "Cannonry",
+    {
+      "kind": "Unit",
+      "unit": "FieldCannon",
+    },
+    346,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "Rocketry",
+    {
+      "kind": "Unit",
+      "unit": "Artillery",
+    },
+    440,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "AutonomousSystems",
+    {
+      "kind": "Unit",
+      "unit": "Drone",
+    },
+    560,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "AirPower",
+    {
+      "kind": "Unit",
+      "unit": "Fighter",
+    },
+    400,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "AirPower",
+    {
+      "kind": "Unit",
+      "unit": "Bomber",
+    },
+    460,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "StealthTechnology",
+    {
+      "kind": "Unit",
+      "unit": "StealthFighter",
+    },
+    552,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "StealthTechnology",
+    {
+      "kind": "Unit",
+      "unit": "StealthBomber",
+    },
+    636,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "Mathematics",
+    {
+      "kind": "Unit",
+      "unit": "Phalangite",
+    },
+    110,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "Engineering",
+    {
+      "kind": "Unit",
+      "unit": "CompositeArcher",
+    },
+    168,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "IronWorking",
+    {
+      "kind": "Unit",
+      "unit": "Cataphract",
+    },
+    150,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "Gunpowder",
+    {
+      "kind": "Unit",
+      "unit": "Arquebusier",
+    },
+    272,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "Metallurgy",
+    {
+      "kind": "Unit",
+      "unit": "Cuirassier",
+    },
+    278,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "ReplaceableParts",
+    {
+      "kind": "Unit",
+      "unit": "TrenchInfantry",
+    },
+    340,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "Steel",
+    {
+      "kind": "Unit",
+      "unit": "Howitzer",
+    },
+    390,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "Combustion",
+    {
+      "kind": "Unit",
+      "unit": "Landship",
+    },
+    440,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "Flight",
+    {
+      "kind": "Unit",
+      "unit": "Biplane",
+    },
+    340,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "MechanisedWarfare",
+    {
+      "kind": "Unit",
+      "unit": "MechanisedInfantry",
+    },
+    470,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "CompositeArmour",
+    {
+      "kind": "Unit",
+      "unit": "MainBattleTank",
+    },
+    600,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "GuidedMissiles",
+    {
+      "kind": "Unit",
+      "unit": "RocketArtillery",
+    },
+    495,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "JetEngines",
+    {
+      "kind": "Unit",
+      "unit": "JetFighter",
+    },
+    470,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+    0,
+  ],
+  [
+    "JetEngines",
+    {
+      "kind": "Unit",
+      "unit": "JetBomber",
+    },
+    540,
+    {
+      "food": 0,
+      "gold": 0,
+      "production": 0,
+      "science": 0,
+    },
+    0,
+  ],
+]
+`;
+
+exports[`eras: core behavior > a received free-technology grant is limited to the current era in both engines 1`] = `
+[
+  {
+    "index": 0,
+    "message": "Mathematics is not in your era: free technologies come from the Ancient era",
+  },
+]
+`;
+
+exports[`eras: core behavior > a received free-technology grant is limited to the current era in both engines 2`] = `
+[
+  {
+    "index": 0,
+    "message": "Mathematics is not in your era: free technologies come from the Ancient era",
+  },
+]
+`;
+
+exports[`eras: core behavior > a received free-technology grant is limited to the current era in both engines 3`] = `[]`;
+
+exports[`eras: core behavior > a received free-technology grant is limited to the current era in both engines 4`] = `
+{
+  "choices": [
+    "Writing",
+  ],
+  "from": 0,
+  "pending": 3,
+}
+`;
+
+exports[`eras: core behavior > a received free-technology grant is limited to the current era in both engines 5`] = `
+[
+  {
+    "player": 1,
+    "tech": "Writing",
+    "type": "TechResearched",
+  },
+  {
+    "era": 2,
+    "first": true,
+    "player": 1,
+    "type": "EraEntered",
+  },
+]
+`;
+
+exports[`eras: core behavior > a received free-technology grant is limited to the current era in both engines 6`] = `
+{
+  "broadcast": null,
+  "free_techs": {
+    "choices": [
+      "Mathematics",
+      "Engineering",
+      "IronWorking",
+      "CodeOfLaws",
+      "Philosophy",
+    ],
+    "from": 0,
+    "pending": 2,
+  },
+  "retire": null,
+  "sakoku": null,
+  "swarm": null,
+  "wild": {
+    "blocker": null,
+    "cities": 1,
+    "sites": [
+      {
+        "at": {
+          "q": 9,
+          "r": 22,
+        },
+        "city": 2,
+      },
+    ],
+    "with_camp": 0,
+  },
+}
+`;
+
+exports[`eras: core behavior > entering the next era and the first-into-era mark happen in the same turn 1`] = `
+[
+  {
+    "player": 0,
+    "tech": "Writing",
+    "type": "TechResearched",
+  },
+  {
+    "era": 2,
+    "first": true,
+    "player": 0,
+    "type": "EraEntered",
+  },
+  {
+    "next": null,
+    "player": 0,
+    "type": "ResearchQueueAdvanced",
+  },
+  {
+    "player": 1,
+    "tech": "Writing",
+    "type": "TechResearched",
+  },
+  {
+    "era": 2,
+    "first": false,
+    "player": 1,
+    "type": "EraEntered",
+  },
+  {
+    "next": null,
+    "player": 1,
+    "type": "ResearchQueueAdvanced",
+  },
+]
+`;
+
+exports[`eras: core behavior > entering the next era and the first-into-era mark happen in the same turn 2`] = `
+[
+  {
+    "player": 0,
+    "tech": "Writing",
+    "type": "TechResearched",
+  },
+  {
+    "era": 2,
+    "first": true,
+    "player": 0,
+    "type": "EraEntered",
+  },
+  {
+    "next": null,
+    "player": 0,
+    "type": "ResearchQueueAdvanced",
+  },
+  {
+    "era": 2,
+    "first": false,
+    "player": 1,
+    "type": "EraEntered",
+  },
+]
+`;
+
+exports[`eras: core behavior > entering the next era and the first-into-era mark happen in the same turn 3`] = `
+{
+  "costs": [
+    19,
+    23,
+    27,
+    28,
+    34,
+    48,
+    48,
+    56,
+    62,
+    68,
+    120,
+    126,
+    132,
+    136,
+    140,
+    216,
+    224,
+    230,
+    238,
+    248,
+    344,
+    352,
+    356,
+    368,
+    376,
+    388,
+    394,
+    402,
+    414,
+    422,
+    504,
+    514,
+    525,
+    539,
+    551,
+    654,
+    670,
+    686,
+    702,
+    720,
+    840,
+    862,
+    884,
+    906,
+    930,
+  ],
+  "era": 1,
+  "firsts": [
+    [
+      1,
+      0,
+    ],
+  ],
+  "known": [
+    "Irrigation",
+    "BronzeWorking",
+    "Masonry",
+    "Currency",
+    "Writing",
+  ],
+  "queue": [],
+}
+`;
+
+exports[`eras: core behavior > entering the next era and the first-into-era mark happen in the same turn 4`] = `
+[
+  {
+    "era": 2,
+    "first": true,
+    "player": 0,
+    "type": "EraEntered",
+  },
+  {
+    "player": 1,
+    "tech": "Writing",
+    "type": "TechResearched",
+  },
+  {
+    "era": 2,
+    "first": false,
+    "player": 1,
+    "type": "EraEntered",
+  },
+  {
+    "next": null,
+    "player": 1,
+    "type": "ResearchQueueAdvanced",
+  },
+]
+`;
+
+exports[`eras: core behavior > entering the next era and the first-into-era mark happen in the same turn 5`] = `
+{
+  "costs": [
+    19,
+    23,
+    27,
+    28,
+    34,
+    48,
+    48,
+    56,
+    62,
+    68,
+    120,
+    126,
+    132,
+    136,
+    140,
+    216,
+    224,
+    230,
+    238,
+    248,
+    344,
+    352,
+    356,
+    368,
+    376,
+    388,
+    394,
+    402,
+    414,
+    422,
+    504,
+    514,
+    525,
+    539,
+    551,
+    654,
+    670,
+    686,
+    702,
+    720,
+    840,
+    862,
+    884,
+    906,
+    930,
+  ],
+  "era": 1,
+  "firsts": [
+    [
+      1,
+      0,
+    ],
+  ],
+  "known": [
+    "Irrigation",
+    "BronzeWorking",
+    "Masonry",
+    "Currency",
+    "Writing",
+  ],
+  "queue": [],
+}
+`;
+
+exports[`eras: core behavior > entering the next era and the first-into-era mark happen in the same turn 6`] = `
+[
+  {
+    "era": 2,
+    "first": true,
+    "player": 0,
+    "type": "EraEntered",
+  },
+  {
+    "era": 2,
+    "first": false,
+    "player": 1,
+    "type": "EraEntered",
+  },
+]
+`;
+
+exports[`eras: core behavior > entering the next era and the first-into-era mark happen in the same turn 7`] = `
+{
+  "costs": [
+    19,
+    20,
+    24,
+    25,
+    30,
+    48,
+    48,
+    56,
+    62,
+    68,
+    120,
+    126,
+    132,
+    136,
+    140,
+    216,
+    224,
+    230,
+    238,
+    248,
+    344,
+    352,
+    356,
+    368,
+    376,
+    388,
+    394,
+    402,
+    414,
+    422,
+    504,
+    514,
+    525,
+    539,
+    551,
+    654,
+    670,
+    686,
+    702,
+    720,
+    840,
+    862,
+    884,
+    906,
+    930,
+  ],
+  "era": 0,
+  "firsts": [
+    [
+      1,
+      0,
+    ],
+  ],
+  "known": [
+    "Irrigation",
+  ],
+  "queue": [
+    "Masonry",
+  ],
+}
+`;
+
+exports[`eras: core behavior > entering the next era and the first-into-era mark happen in the same turn 8`] = `[]`;
+
+exports[`eras: core behavior > entering the next era and the first-into-era mark happen in the same turn 9`] = `[]`;
+
+exports[`eras: core behavior > entering the next era and the first-into-era mark happen in the same turn 10`] = `
+{
+  "costs": [
+    19,
+    23,
+    27,
+    28,
+    34,
+    48,
+    48,
+    56,
+    62,
+    68,
+    120,
+    126,
+    132,
+    136,
+    140,
+    216,
+    224,
+    230,
+    238,
+    248,
+    344,
+    352,
+    356,
+    368,
+    376,
+    388,
+    394,
+    402,
+    414,
+    422,
+    504,
+    514,
+    525,
+    539,
+    551,
+    654,
+    670,
+    686,
+    702,
+    720,
+    840,
+    862,
+    884,
+    906,
+    930,
+  ],
+  "era": 1,
+  "firsts": [
+    [
+      1,
+      0,
+    ],
+  ],
+  "known": [
+    "Irrigation",
+    "BronzeWorking",
+    "Masonry",
+    "Currency",
+    "Writing",
+  ],
+  "queue": [],
+}
+`;
+
+exports[`eras: core behavior > entering the next era and the first-into-era mark happen in the same turn 11`] = `[]`;
+
+exports[`eras: core behavior > entering the next era and the first-into-era mark happen in the same turn 12`] = `
+{
+  "costs": [
+    19,
+    23,
+    27,
+    28,
+    34,
+    48,
+    48,
+    56,
+    62,
+    68,
+    120,
+    126,
+    132,
+    136,
+    140,
+    216,
+    224,
+    230,
+    238,
+    248,
+    344,
+    352,
+    356,
+    368,
+    376,
+    388,
+    394,
+    402,
+    414,
+    422,
+    504,
+    514,
+    525,
+    539,
+    551,
+    654,
+    670,
+    686,
+    702,
+    720,
+    840,
+    862,
+    884,
+    906,
+    930,
+  ],
+  "era": 1,
+  "firsts": [
+    [
+      1,
+      0,
+    ],
+  ],
+  "known": [
+    "Irrigation",
+    "BronzeWorking",
+    "Masonry",
+    "Currency",
+    "Writing",
+  ],
+  "queue": [],
+}
+`;
+
+exports[`eras: core behavior > entering the next era and the first-into-era mark happen in the same turn 13`] = `[]`;
+
+exports[`eras: core behavior > entering the next era and the first-into-era mark happen in the same turn 14`] = `
+{
+  "costs": [
+    19,
+    20,
+    24,
+    25,
+    30,
+    48,
+    48,
+    56,
+    62,
+    68,
+    120,
+    126,
+    132,
+    136,
+    140,
+    216,
+    224,
+    230,
+    238,
+    248,
+    344,
+    352,
+    356,
+    368,
+    376,
+    388,
+    394,
+    402,
+    414,
+    422,
+    504,
+    514,
+    525,
+    539,
+    551,
+    654,
+    670,
+    686,
+    702,
+    720,
+    840,
+    862,
+    884,
+    906,
+    930,
+  ],
+  "era": 0,
+  "firsts": [
+    [
+      1,
+      0,
+    ],
+  ],
+  "known": [
+    "Irrigation",
+  ],
+  "queue": [
+    "Masonry",
+  ],
+}
+`;
+
+exports[`eras: core behavior > entering the next era and the first-into-era mark happen in the same turn 15`] = `[]`;
+
+exports[`eras: core behavior > entering the next era and the first-into-era mark happen in the same turn 16`] = `[]`;
+
+exports[`eras: core behavior > entering the next era and the first-into-era mark happen in the same turn 17`] = `
+{
+  "costs": [
+    19,
+    23,
+    27,
+    28,
+    34,
+    48,
+    48,
+    56,
+    62,
+    68,
+    120,
+    126,
+    132,
+    136,
+    140,
+    216,
+    224,
+    230,
+    238,
+    248,
+    344,
+    352,
+    356,
+    368,
+    376,
+    388,
+    394,
+    402,
+    414,
+    422,
+    504,
+    514,
+    525,
+    539,
+    551,
+    654,
+    670,
+    686,
+    702,
+    720,
+    840,
+    862,
+    884,
+    906,
+    930,
+  ],
+  "era": 1,
+  "firsts": [
+    [
+      1,
+      0,
+    ],
+  ],
+  "known": [
+    "Irrigation",
+    "BronzeWorking",
+    "Masonry",
+    "Currency",
+    "Writing",
+  ],
+  "queue": [],
+}
+`;
+
+exports[`eras: core behavior > entering the next era and the first-into-era mark happen in the same turn 18`] = `[]`;
+
+exports[`eras: core behavior > entering the next era and the first-into-era mark happen in the same turn 19`] = `
+{
+  "costs": [
+    19,
+    23,
+    27,
+    28,
+    34,
+    48,
+    48,
+    56,
+    62,
+    68,
+    120,
+    126,
+    132,
+    136,
+    140,
+    216,
+    224,
+    230,
+    238,
+    248,
+    344,
+    352,
+    356,
+    368,
+    376,
+    388,
+    394,
+    402,
+    414,
+    422,
+    504,
+    514,
+    525,
+    539,
+    551,
+    654,
+    670,
+    686,
+    702,
+    720,
+    840,
+    862,
+    884,
+    906,
+    930,
+  ],
+  "era": 1,
+  "firsts": [
+    [
+      1,
+      0,
+    ],
+  ],
+  "known": [
+    "Irrigation",
+    "BronzeWorking",
+    "Masonry",
+    "Currency",
+    "Writing",
+  ],
+  "queue": [],
+}
+`;
+
+exports[`eras: core behavior > entering the next era and the first-into-era mark happen in the same turn 20`] = `[]`;
+
+exports[`eras: core behavior > entering the next era and the first-into-era mark happen in the same turn 21`] = `
+{
+  "costs": [
+    19,
+    20,
+    24,
+    25,
+    30,
+    48,
+    48,
+    56,
+    62,
+    68,
+    120,
+    126,
+    132,
+    136,
+    140,
+    216,
+    224,
+    230,
+    238,
+    248,
+    344,
+    352,
+    356,
+    368,
+    376,
+    388,
+    394,
+    402,
+    414,
+    422,
+    504,
+    514,
+    525,
+    539,
+    551,
+    654,
+    670,
+    686,
+    702,
+    720,
+    840,
+    862,
+    884,
+    906,
+    930,
+  ],
+  "era": 0,
+  "firsts": [
+    [
+      1,
+      0,
+    ],
+  ],
+  "known": [
+    "Irrigation",
+  ],
+  "queue": [
+    "Masonry",
+  ],
+}
+`;
+
+exports[`eras: core behavior > refuses and accepts research orders with the same words 1`] = `
+[
+  {
+    "index": 0,
+    "message": "Mathematics is in the Classical era: finish the Ancient era first",
+  },
+]
+`;
+
+exports[`eras: core behavior > refuses and accepts research orders with the same words 2`] = `
+[
+  {
+    "index": 0,
+    "message": "Irrigation is already researched",
+  },
+]
+`;
+
+exports[`eras: core behavior > refuses and accepts research orders with the same words 3`] = `[]`;
+
+exports[`eras: core behavior > refuses and accepts research orders with the same words 4`] = `
+[
+  {
+    "index": 0,
+    "message": "Engineering is in the Classical era: finish the Ancient era first",
+  },
+]
+`;
+
+exports[`eras: core behavior > refuses and accepts research orders with the same words 5`] = `
+[
+  {
+    "index": 0,
+    "message": "Currency appears more than once in the research queue",
+  },
+]
+`;
+
+exports[`eras: core behavior > refuses and accepts research orders with the same words 6`] = `[]`;
+
+exports[`eras: core behavior > the research view, catalog and schedule agree 1`] = `
+{
+  "cost": 28,
+  "era": 0,
+  "era_firsts": [
+    [
+      1,
+      1,
+    ],
+  ],
+  "era_known": 2,
+  "era_name": "Ancient",
+  "era_total": 5,
+  "known": [
+    "Irrigation",
+    "BronzeWorking",
+  ],
+  "queue": [
+    "Currency",
+    "Writing",
+  ],
+  "schedule": [
+    {
+      "arrival_turn": 2,
+      "cost": 28,
+      "tech": "Currency",
+      "turns": 1,
+    },
+    {
+      "arrival_turn": 6,
+      "cost": 38,
+      "tech": "Writing",
+      "turns": 5,
+    },
+  ],
+  "turns_left": 1,
+}
+`;
+
+exports[`eras: core behavior > the research view, catalog and schedule agree 2`] = `
+[
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          24,
+        ],
+        [
+          "Tech diffusion (1 empires know it)",
+          -3,
+        ],
+      ],
+      "total": 21,
+    },
+    "era": 0,
+    "known_by": 1,
+    "researchable": false,
+    "tech": "Irrigation",
+    "turns": 1,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          26,
+        ],
+        [
+          "Tech diffusion (1 empires know it)",
+          -3,
+        ],
+      ],
+      "total": 23,
+    },
+    "era": 0,
+    "known_by": 1,
+    "researchable": false,
+    "tech": "BronzeWorking",
+    "turns": 1,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          30,
+        ],
+      ],
+      "total": 30,
+    },
+    "era": 0,
+    "known_by": 0,
+    "researchable": true,
+    "tech": "Masonry",
+    "turns": 2,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          32,
+        ],
+        [
+          "Tech diffusion (1 empires know it)",
+          -4,
+        ],
+      ],
+      "total": 28,
+    },
+    "era": 0,
+    "known_by": 1,
+    "researchable": true,
+    "tech": "Currency",
+    "turns": 1,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          38,
+        ],
+      ],
+      "total": 38,
+    },
+    "era": 0,
+    "known_by": 0,
+    "researchable": true,
+    "tech": "Writing",
+    "turns": 2,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          48,
+        ],
+      ],
+      "total": 48,
+    },
+    "era": 1,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Mathematics",
+    "turns": 3,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          48,
+        ],
+      ],
+      "total": 48,
+    },
+    "era": 1,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Engineering",
+    "turns": 3,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          56,
+        ],
+      ],
+      "total": 56,
+    },
+    "era": 1,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "IronWorking",
+    "turns": 4,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          62,
+        ],
+      ],
+      "total": 62,
+    },
+    "era": 1,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "CodeOfLaws",
+    "turns": 5,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          68,
+        ],
+      ],
+      "total": 68,
+    },
+    "era": 1,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Philosophy",
+    "turns": 5,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          120,
+        ],
+      ],
+      "total": 120,
+    },
+    "era": 2,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Feudalism",
+    "turns": 10,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          126,
+        ],
+      ],
+      "total": 126,
+    },
+    "era": 2,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Machinery",
+    "turns": 10,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          132,
+        ],
+      ],
+      "total": 132,
+    },
+    "era": 2,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Chivalry",
+    "turns": 11,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          136,
+        ],
+      ],
+      "total": 136,
+    },
+    "era": 2,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Education",
+    "turns": 11,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          140,
+        ],
+      ],
+      "total": 140,
+    },
+    "era": 2,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "CropRotation",
+    "turns": 12,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          216,
+        ],
+      ],
+      "total": 216,
+    },
+    "era": 3,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Gunpowder",
+    "turns": 19,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          224,
+        ],
+      ],
+      "total": 224,
+    },
+    "era": 3,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Metallurgy",
+    "turns": 19,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          230,
+        ],
+      ],
+      "total": 230,
+    },
+    "era": 3,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "MilitaryEngineering",
+    "turns": 20,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          238,
+        ],
+      ],
+      "total": 238,
+    },
+    "era": 3,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Banking",
+    "turns": 21,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          248,
+        ],
+      ],
+      "total": 248,
+    },
+    "era": 3,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "PrintingPress",
+    "turns": 21,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          344,
+        ],
+      ],
+      "total": 344,
+    },
+    "era": 4,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Rifling",
+    "turns": 30,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          352,
+        ],
+      ],
+      "total": 352,
+    },
+    "era": 4,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "MilitaryScience",
+    "turns": 31,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          356,
+        ],
+      ],
+      "total": 356,
+    },
+    "era": 4,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Cannonry",
+    "turns": 31,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          368,
+        ],
+      ],
+      "total": 368,
+    },
+    "era": 4,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Industrialization",
+    "turns": 32,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          376,
+        ],
+      ],
+      "total": 376,
+    },
+    "era": 4,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Railways",
+    "turns": 33,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          388,
+        ],
+      ],
+      "total": 388,
+    },
+    "era": 5,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "ReplaceableParts",
+    "turns": 34,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          394,
+        ],
+      ],
+      "total": 394,
+    },
+    "era": 5,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Combustion",
+    "turns": 35,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          402,
+        ],
+      ],
+      "total": 402,
+    },
+    "era": 5,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Steel",
+    "turns": 35,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          414,
+        ],
+      ],
+      "total": 414,
+    },
+    "era": 5,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Flight",
+    "turns": 37,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          422,
+        ],
+      ],
+      "total": 422,
+    },
+    "era": 5,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Electricity",
+    "turns": 37,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          504,
+        ],
+      ],
+      "total": 504,
+    },
+    "era": 6,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "MassMobilisation",
+    "turns": 45,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          514,
+        ],
+      ],
+      "total": 514,
+    },
+    "era": 6,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Rocketry",
+    "turns": 46,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          525,
+        ],
+      ],
+      "total": 525,
+    },
+    "era": 6,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "ArmouredWarfare",
+    "turns": 47,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          539,
+        ],
+      ],
+      "total": 539,
+    },
+    "era": 6,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "AirPower",
+    "turns": 48,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          551,
+        ],
+      ],
+      "total": 551,
+    },
+    "era": 6,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Electronics",
+    "turns": 49,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          654,
+        ],
+      ],
+      "total": 654,
+    },
+    "era": 7,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "MechanisedWarfare",
+    "turns": 58,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          670,
+        ],
+      ],
+      "total": 670,
+    },
+    "era": 7,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "CompositeArmour",
+    "turns": 60,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          686,
+        ],
+      ],
+      "total": 686,
+    },
+    "era": 7,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "GuidedMissiles",
+    "turns": 61,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          702,
+        ],
+      ],
+      "total": 702,
+    },
+    "era": 7,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "JetEngines",
+    "turns": 63,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          720,
+        ],
+      ],
+      "total": 720,
+    },
+    "era": 7,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "GreenRevolution",
+    "turns": 64,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          840,
+        ],
+      ],
+      "total": 840,
+    },
+    "era": 8,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "AutonomousSystems",
+    "turns": 75,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          862,
+        ],
+      ],
+      "total": 862,
+    },
+    "era": 8,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Robotics",
+    "turns": 77,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          884,
+        ],
+      ],
+      "total": 884,
+    },
+    "era": 8,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "FusionPower",
+    "turns": 79,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          906,
+        ],
+      ],
+      "total": 906,
+    },
+    "era": 8,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "StealthTechnology",
+    "turns": 81,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          930,
+        ],
+      ],
+      "total": 930,
+    },
+    "era": 8,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "RecursiveAi",
+    "turns": 83,
+  },
+]
+`;
+
+exports[`eras: core behavior > the research view, catalog and schedule agree 3`] = `
+[
+  "Masonry",
+  "Currency",
+  "Writing",
+]
+`;
+
+exports[`eras: core behavior > the research view, catalog and schedule agree 4`] = `
+[
+  1,
+  1,
+  1,
+]
+`;
+
+exports[`eras: core behavior > the research view, catalog and schedule agree 5`] = `
+{
+  "cost": null,
+  "era": 0,
+  "era_firsts": [
+    [
+      1,
+      1,
+    ],
+  ],
+  "era_known": 3,
+  "era_name": "Ancient",
+  "era_total": 5,
+  "known": [
+    "Irrigation",
+    "BronzeWorking",
+    "Currency",
+  ],
+  "queue": [],
+  "schedule": [],
+  "turns_left": null,
+}
+`;
+
+exports[`eras: core behavior > the research view, catalog and schedule agree 6`] = `
+[
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          24,
+        ],
+        [
+          "Tech diffusion (1 empires know it)",
+          -3,
+        ],
+      ],
+      "total": 21,
+    },
+    "era": 0,
+    "known_by": 1,
+    "researchable": false,
+    "tech": "Irrigation",
+    "turns": 7,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          26,
+        ],
+        [
+          "Tech diffusion (1 empires know it)",
+          -3,
+        ],
+      ],
+      "total": 23,
+    },
+    "era": 0,
+    "known_by": 1,
+    "researchable": false,
+    "tech": "BronzeWorking",
+    "turns": 8,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          30,
+        ],
+      ],
+      "total": 30,
+    },
+    "era": 0,
+    "known_by": 0,
+    "researchable": true,
+    "tech": "Masonry",
+    "turns": 10,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          32,
+        ],
+      ],
+      "total": 32,
+    },
+    "era": 0,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Currency",
+    "turns": 11,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          38,
+        ],
+      ],
+      "total": 38,
+    },
+    "era": 0,
+    "known_by": 0,
+    "researchable": true,
+    "tech": "Writing",
+    "turns": 13,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          48,
+        ],
+      ],
+      "total": 48,
+    },
+    "era": 1,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Mathematics",
+    "turns": 16,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          48,
+        ],
+      ],
+      "total": 48,
+    },
+    "era": 1,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Engineering",
+    "turns": 16,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          56,
+        ],
+      ],
+      "total": 56,
+    },
+    "era": 1,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "IronWorking",
+    "turns": 19,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          62,
+        ],
+      ],
+      "total": 62,
+    },
+    "era": 1,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "CodeOfLaws",
+    "turns": 21,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          68,
+        ],
+      ],
+      "total": 68,
+    },
+    "era": 1,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Philosophy",
+    "turns": 23,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          120,
+        ],
+      ],
+      "total": 120,
+    },
+    "era": 2,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Feudalism",
+    "turns": 40,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          126,
+        ],
+      ],
+      "total": 126,
+    },
+    "era": 2,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Machinery",
+    "turns": 42,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          132,
+        ],
+      ],
+      "total": 132,
+    },
+    "era": 2,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Chivalry",
+    "turns": 44,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          136,
+        ],
+      ],
+      "total": 136,
+    },
+    "era": 2,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Education",
+    "turns": 46,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          140,
+        ],
+      ],
+      "total": 140,
+    },
+    "era": 2,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "CropRotation",
+    "turns": 47,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          216,
+        ],
+      ],
+      "total": 216,
+    },
+    "era": 3,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Gunpowder",
+    "turns": 72,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          224,
+        ],
+      ],
+      "total": 224,
+    },
+    "era": 3,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Metallurgy",
+    "turns": 75,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          230,
+        ],
+      ],
+      "total": 230,
+    },
+    "era": 3,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "MilitaryEngineering",
+    "turns": 77,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          238,
+        ],
+      ],
+      "total": 238,
+    },
+    "era": 3,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Banking",
+    "turns": 80,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          248,
+        ],
+      ],
+      "total": 248,
+    },
+    "era": 3,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "PrintingPress",
+    "turns": 83,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          344,
+        ],
+      ],
+      "total": 344,
+    },
+    "era": 4,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Rifling",
+    "turns": 115,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          352,
+        ],
+      ],
+      "total": 352,
+    },
+    "era": 4,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "MilitaryScience",
+    "turns": 118,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          356,
+        ],
+      ],
+      "total": 356,
+    },
+    "era": 4,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Cannonry",
+    "turns": 119,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          368,
+        ],
+      ],
+      "total": 368,
+    },
+    "era": 4,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Industrialization",
+    "turns": 123,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          376,
+        ],
+      ],
+      "total": 376,
+    },
+    "era": 4,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Railways",
+    "turns": 126,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          388,
+        ],
+      ],
+      "total": 388,
+    },
+    "era": 5,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "ReplaceableParts",
+    "turns": 130,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          394,
+        ],
+      ],
+      "total": 394,
+    },
+    "era": 5,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Combustion",
+    "turns": 132,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          402,
+        ],
+      ],
+      "total": 402,
+    },
+    "era": 5,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Steel",
+    "turns": 134,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          414,
+        ],
+      ],
+      "total": 414,
+    },
+    "era": 5,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Flight",
+    "turns": 138,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          422,
+        ],
+      ],
+      "total": 422,
+    },
+    "era": 5,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Electricity",
+    "turns": 141,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          504,
+        ],
+      ],
+      "total": 504,
+    },
+    "era": 6,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "MassMobilisation",
+    "turns": 168,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          514,
+        ],
+      ],
+      "total": 514,
+    },
+    "era": 6,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Rocketry",
+    "turns": 172,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          525,
+        ],
+      ],
+      "total": 525,
+    },
+    "era": 6,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "ArmouredWarfare",
+    "turns": 175,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          539,
+        ],
+      ],
+      "total": 539,
+    },
+    "era": 6,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "AirPower",
+    "turns": 180,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          551,
+        ],
+      ],
+      "total": 551,
+    },
+    "era": 6,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Electronics",
+    "turns": 184,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          654,
+        ],
+      ],
+      "total": 654,
+    },
+    "era": 7,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "MechanisedWarfare",
+    "turns": 218,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          670,
+        ],
+      ],
+      "total": 670,
+    },
+    "era": 7,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "CompositeArmour",
+    "turns": 224,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          686,
+        ],
+      ],
+      "total": 686,
+    },
+    "era": 7,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "GuidedMissiles",
+    "turns": 229,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          702,
+        ],
+      ],
+      "total": 702,
+    },
+    "era": 7,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "JetEngines",
+    "turns": 234,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          720,
+        ],
+      ],
+      "total": 720,
+    },
+    "era": 7,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "GreenRevolution",
+    "turns": 240,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          840,
+        ],
+      ],
+      "total": 840,
+    },
+    "era": 8,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "AutonomousSystems",
+    "turns": 280,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          862,
+        ],
+      ],
+      "total": 862,
+    },
+    "era": 8,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "Robotics",
+    "turns": 288,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          884,
+        ],
+      ],
+      "total": 884,
+    },
+    "era": 8,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "FusionPower",
+    "turns": 295,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          906,
+        ],
+      ],
+      "total": 906,
+    },
+    "era": 8,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "StealthTechnology",
+    "turns": 302,
+  },
+  {
+    "cost": {
+      "parts": [
+        [
+          "Listed cost",
+          930,
+        ],
+      ],
+      "total": 930,
+    },
+    "era": 8,
+    "known_by": 0,
+    "researchable": false,
+    "tech": "RecursiveAi",
+    "turns": 310,
+  },
+]
+`;
+
+exports[`eras: core behavior > the research view, catalog and schedule agree 7`] = `
+[
+  "Masonry",
+  "Writing",
+]
+`;
+
+exports[`eras: core behavior > the research view, catalog and schedule agree 8`] = `
+[
+  1,
+  1,
+  1,
+]
+`;

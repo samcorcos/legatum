@@ -1,0 +1,22 @@
+[
+  {
+    "slug": "pikeman",
+    "prompt": "Revise this historical miniature for physically credible pike length. Keep same adult person, costume, two-handed braced stance and cream disc. Widen the composition around him, REDUCE figure to occupy roughly seventy percent of canvas height: helmet top at y300, boot soles y1120 on a1254 square. Body must retain slender realistic adult anatomy. The long pike runs diagonally from near x40 y1210 to x1210 y40, held in both hands around middle-left; its straight round wooden shaft has SLENDER UNIFORM DIAMETER about10 pixels, not a tapered cone or thick staff. Tiny narrow iron point at upper tip about35 pixels long, plain wooden butt. Thus weapon is visibly about twice man's height in projection and longer into depth, unmistakably a pike. Both grips wrap shaft. Whole base fits, one low warm cream disc, no rubble. No other changes; magenta background. Full miniature, no cropped shaft.",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-df82f406-362d-4e03-ad9f-64bbaadf665f.png"
+  },
+  {
+    "slug": "barbarian-pikeman",
+    "prompt": "Revise this historical miniature for physically credible pike length. Keep same adult person, costume, two-handed braced stance and cream disc. Widen the composition around him, REDUCE figure to occupy roughly seventy percent of canvas height: helmet top at y300, boot soles y1120 on a1254 square. Body must retain slender realistic adult anatomy. The long pike runs diagonally from near x40 y1210 to x1210 y40, held in both hands around middle-left; its straight round wooden shaft has SLENDER UNIFORM DIAMETER about10 pixels, not a tapered cone or thick staff. Tiny narrow iron point at upper tip about35 pixels long, plain wooden butt. Thus weapon is visibly about twice man's height in projection and longer into depth, unmistakably a pike. Both grips wrap shaft. Whole base fits, one low warm cream disc, no rubble. No other changes; magenta background. Full miniature, no cropped shaft.",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-bb78efb1-1c8c-4f4a-acb6-865b3b6c3cf2.png"
+  },
+  {
+    "slug": "phalangite",
+    "prompt": "Replace this three-person tabletop miniature with ONE full-size adult Macedonian phalangite, in the same refined painted miniature style. One soldier only: restrained bronze helmet with cheek pieces, off-white linen cuirass with short leather pteruges, muted red tunic, bronze greaves and simple sandals. Small plain round bronze shield strapped securely to LEFT forearm at left side of torso, not centred on his chest; both hands hold a single continuous long sarissa at the slope. Slender wooden shaft with tiny iron point, not a broad spearhead; weapon projects diagonally into depth, at least twice man's visible body length. Natural two-handed grip, no fingers passing through shield. Calm ready stance with a measured forward step. Figure fills about70percent canvas height, plain round warm cream stone single-step disc with soft contact shadows, no rubble. Magenta background, full square canvas and complete figure, no text, no extra people or objects.",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-1417018e-28c1-4021-840c-955ea80d7a6a.png"
+  },
+  {
+    "slug": "panzer",
+    "prompt": "Precise miniature detail edit ONLY: add correctly proportioned Panzer IV hull Schuerzen side-skirt plates to the visible hull flank. Thin overlapping rectangular metal plates on external support rails, hanging outside upper track and road-wheel tops, leaving lower wheels and track visible. Preserve existing eight small road wheels on four bogies underneath, front sprocket and rear idler, existing turret side skirts, long barrel and its two-chamber muzzle brake, cupola, proportions, orientation, paint and plain warm cream disc. No mirroring, no new pose, no changed camera, no insignia or text. This is a collectible scale model. Return same complete miniature on flat magenta background.",
+    "path": "~/.codex/generated_images/01a1e717-27d0-7121-8691-b19576180013/exec-de208321-a185-48db-81a6-15b7f5b7667f.png"
+  }
+]

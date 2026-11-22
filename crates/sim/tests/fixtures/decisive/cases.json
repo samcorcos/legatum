@@ -1,0 +1,128 @@
+[
+  {
+    "id": "germany_t33_army",
+    "pattern_id": "army_routes",
+    "engine": "playtest-8.9.23",
+    "turn": 33,
+    "seat": 0,
+    "expected": {
+      "type": "SetAutomation",
+      "unit": 2,
+      "automation": "Explore"
+    },
+    "recorded_hash": "7103319918040625112",
+    "source_save": "germany-8923-20261101/autosave.legatum"
+  },
+  {
+    "id": "germany_t17_settler",
+    "pattern_id": "settler_founding",
+    "engine": "playtest-8.9.23",
+    "turn": 17,
+    "seat": 0,
+    "expected": {
+      "unit": 21,
+      "to": {
+        "q": 21,
+        "r": 7
+      }
+    },
+    "recorded_hash": "1221353909728850782",
+    "source_save": "germany-8923-20261101/autosave.legatum"
+  },
+  {
+    "id": "swiss_t153_garrison",
+    "pattern_id": "garrison_escort",
+    "engine": "playtest-8.9.24",
+    "turn": 153,
+    "seat": 0,
+    "expected": {
+      "type": "MoveUnit",
+      "unit": 133,
+      "to": {
+        "q": 18,
+        "r": 14
+      }
+    },
+    "recorded_hash": "18033338360037780835",
+    "source_save": "swiss-win-8924-20261102/autosave.legatum"
+  },
+  {
+    "id": "swiss_t140_bomber",
+    "pattern_id": "buy_vs_hold",
+    "engine": "playtest-8.9.24",
+    "turn": 140,
+    "seat": 0,
+    "expected": {
+      "type": "BuyItem",
+      "city": 27,
+      "item": {
+        "unit": "Bomber",
+        "kind": "Unit"
+      }
+    },
+    "recorded_hash": "15570691074556831037",
+    "source_save": "swiss-win-8924-20261102/autosave.legatum"
+  },
+  {
+    "id": "swiss_t59_composite_archer",
+    "pattern_id": "buy_choice",
+    "engine": "playtest-8.9.24",
+    "turn": 59,
+    "seat": 0,
+    "expected": {
+      "type": "BuyItem",
+      "city": 1,
+      "item": {
+        "unit": "CompositeArcher",
+        "kind": "Unit"
+      }
+    },
+    "recorded_hash": "9218595831181775423",
+    "source_save": "swiss-win-8924-20261102/autosave.legatum"
+  },
+  {
+    "id": "swiss_t45_settler",
+    "pattern_id": "settler_production",
+    "engine": "playtest-8.9.24",
+    "turn": 45,
+    "seat": 0,
+    "expected": {
+      "type": "SetProduction",
+      "city": 12,
+      "item": {
+        "kind": "Unit",
+        "unit": "Settler"
+      }
+    },
+    "recorded_hash": "11395623986588203072",
+    "source_save": "swiss-win-8924-20261102/autosave.legatum"
+  },
+  {
+    "id": "swiss_t147_refuse_peace",
+    "pattern_id": "peace_response",
+    "engine": "playtest-8.9.24",
+    "turn": 147,
+    "seat": 0,
+    "expected": {
+      "type": "RespondToProposal",
+      "proposal": 28,
+      "accept": false
+    },
+    "recorded_hash": "7281461709821952035",
+    "source_save": "swiss-win-8924-20261102/autosave.legatum"
+  },
+  {
+    "id": "oathbound_t29_war",
+    "pattern_id": "war_declaration",
+    "engine": "playtest-8.6",
+    "turn": 29,
+    "seat": 0,
+    "expected": {
+      "type": "DeclareWar",
+      "against": 3,
+      "breach": false
+    },
+    "recorded_hash": "18288537570200014931",
+    "source_save": "playtest-8.6-oathbound-win.legatum"
+  }
+]

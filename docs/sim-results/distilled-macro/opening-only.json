@@ -1,0 +1,7 @@
+{
+  "schema": 1,
+  "name": "distilled-macro-opening-only",
+  "decisions": {
+    "learned_macro": 3
+  }
+}

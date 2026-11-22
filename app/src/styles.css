@@ -1,0 +1,4517 @@
+/*
+ * Game UI. Colors, faces and frames come from brand/tokens.css. Craft rules (tools/design/directions.md): square forms (round only for medallions),
+ * no drop shadows, glows or gradients on chrome, tracked uppercase labels, tabular lining numerals.
+ */
+@import './brand/tokens.css';
+
+:root {
+  /* Shared aliases for component styles. */
+  --text: var(--ink);
+  --text-2: var(--ink-2);
+  --line: var(--rule);
+  --line-2: var(--rule-2);
+  --accent-2: var(--accent-hi);
+  --panel-solid: var(--panel);
+  --ui: var(--sans);
+  --radius: 0px;
+  --shadow: none;
+  --seat: #4aa8ff;
+}
+
+* {
+  box-sizing: border-box;
+}
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.35;
+  font-feature-settings: 'lnum' 1, 'tnum' 1;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+  user-select: none;
+}
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 0;
+}
+button:disabled {
+  cursor: default;
+}
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+.muted {
+  color: var(--muted);
+}
+.neg,
+.bad {
+  color: var(--bad);
+}
+.pos,
+.good {
+  color: var(--good);
+}
+.mono {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 11px;
+}
+.lbl {
+  font: 600 var(--label-size) / 1 var(--sans);
+  letter-spacing: var(--label-track);
+  text-transform: uppercase;
+  color: var(--label-color);
+}
+.swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  vertical-align: -1px;
+  box-shadow: 0 0 0 1px var(--frame);
+}
+.kbd {
+  display: inline-block;
+  min-width: 16px;
+  margin-left: 8px;
+  padding: 3px 4px 2px;
+  font: 600 10px/1 var(--sans);
+  letter-spacing: 0.04em;
+  text-align: center;
+  color: var(--ink-2);
+  background: var(--field);
+  border: 1px solid var(--rule-2);
+  vertical-align: 1px;
+}
+.yield-icon,
+.icon {
+  vertical-align: -3px;
+}
+.resource-art-icon { display: inline-block; flex: none; object-fit: contain; vertical-align: -3px; }
+.ui-mark {
+  vertical-align: -2px;
+}
+.mask-icon,
+.faction-mark,
+.wordmark {
+  display: inline-block;
+  flex: none;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+.faction-mark {
+  vertical-align: middle;
+}
+.faction-glyph {
+  display: inline-grid;
+  place-items: center;
+  color: var(--accent);
+}
+.star {
+  display: inline-block;
+  flex: none;
+  color: var(--accent);
+}
+.deco-rule {
+  display: none;
+  flex: none;
+  color: var(--accent);
+}
+.fan {
+  display: none;
+  margin: 0 auto 4px;
+  color: var(--accent);
+}
+/* One glyph, one meaning: the red filled diamond is NEW only. "Pending until Ready" is a hollow ring with a
+   gap (an open order, not yet sent) and "needs a decision" is a round badge with a "!". */
+.pending-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-left: 8px;
+  vertical-align: 0;
+  box-sizing: border-box;
+  border: 1.5px solid var(--ink-2);
+  border-radius: 50%;
+  border-top-color: transparent;
+  transform: rotate(-30deg);
+}
+.pending-label { margin-left: 3px; font: 600 10px/1 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
+.link {
+  padding: 0 0 2px;
+  font: italic 500 15px/1 var(--display);
+  color: var(--ink);
+  border-bottom: 1px solid var(--rule-2);
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 3px 14px 1px;
+  font: 600 11px/1 var(--sans);
+  letter-spacing: var(--btn-track);
+  text-transform: uppercase;
+  color: var(--btn-ink);
+  background: var(--btn-bg);
+  border: 1px solid var(--btn-border);
+  white-space: nowrap;
+  transition: background 0.12s, color 0.12s;
+}
+@media (hover: hover) {
+  .btn:hover:not(:disabled) {
+    background: var(--panel-2);
+  }
+}
+.btn:disabled {
+  opacity: 0.45;
+}
+.btn.primary,
+.act.primary,
+.cta {
+  color: var(--primary-ink);
+  background: var(--primary-bg);
+  border-color: var(--primary-bg);
+  box-shadow: inset 0 0 0 2px var(--primary-bg), inset 0 0 0 3px var(--primary-rule);
+  clip-path: polygon(var(--btn-notch) 0, calc(100% - var(--btn-notch)) 0, calc(100% - var(--btn-notch)) var(--btn-notch), 100% var(--btn-notch), 100% calc(100% - var(--btn-notch)), calc(100% - var(--btn-notch)) calc(100% - var(--btn-notch)), calc(100% - var(--btn-notch)) 100%, var(--btn-notch) 100%, var(--btn-notch) calc(100% - var(--btn-notch)), 0 calc(100% - var(--btn-notch)), 0 var(--btn-notch), var(--btn-notch) var(--btn-notch));
+}
+@media (hover: hover) {
+  .btn.primary:hover:not(:disabled),
+  .act.primary:hover:not(:disabled),
+  .cta:not(.waiting):hover:not(:disabled) {
+    background: var(--primary-bg);
+    filter: brightness(1.08);
+  }
+}
+.btn.primary .kbd,
+.act.primary .kbd,
+.cta .kbd {
+  color: var(--primary-sub);
+  background: transparent;
+  border-color: var(--primary-rule);
+}
+.btn.quiet {
+  border-color: transparent;
+  background: none;
+  color: var(--ink-2);
+}
+@media (hover: hover) {
+  .btn.quiet:hover:not(:disabled) {
+    background: none;
+    color: var(--ink);
+  }
+}
+.btn.big {
+  flex-direction: column;
+  gap: 4px;
+  min-width: 300px;
+  min-height: 56px;
+  padding: 12px 24px 10px;
+  font: var(--display-weight) 22px/1 var(--display);
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+.btn-sub {
+  font: 600 10px/1.2 var(--sans);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.btn.primary .btn-sub {
+  color: var(--primary-sub);
+}
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  color: var(--accent);
+  border: 1px solid var(--rule-2);
+  border-radius: 4px;
+  background: var(--panel);
+  cursor: pointer;
+}
+@media (hover: hover) {
+  .icon-btn:hover {
+    border-color: var(--rule-2);
+  }
+}
+
+/* ---------- Panels ---------- */
+.panel {
+  position: relative;
+  color: var(--ink);
+  border: var(--frame-pad) solid transparent;
+  border-image: var(--frame-image);
+}
+.ph {
+  position: relative;
+  padding: 12px 12px 12px;
+  text-align: center;
+  border-bottom: 1px solid var(--rule);
+}
+.ph-kicker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font: 600 10px/1 var(--sans);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--kicker-color);
+}
+.ph-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.ph-title h3 {
+  padding-top: 2px;
+  font: var(--head-font);
+  letter-spacing: var(--head-track);
+  text-transform: var(--head-transform);
+  color: var(--head-color);
+}
+.ph-sub {
+  margin-top: 4px;
+  font: italic 400 14px/1.2 var(--display);
+  color: var(--muted);
+}
+.ph-right {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+}
+.hint {
+  padding: 0 16px 12px;
+  font: italic 400 14px/1.3 var(--display);
+  color: var(--ink-2);
+}
+.hint.warn {
+  color: var(--bad);
+}
+.order-error {
+  margin: 0 12px 12px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--bad);
+  border: 1px solid var(--bad);
+  border-left-width: 3px;
+}
+.bar {
+  display: block;
+  height: 4px;
+  background: var(--panel-3);
+  overflow: hidden;
+}
+.bar-fill {
+  height: 100%;
+}
+
+/* Heraldry frames */
+.crest {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  border-radius: 50%;
+  background: #0a1128;
+  box-shadow: 0 0 0 1px var(--frame), 0 0 0 3px var(--panel), 0 0 0 4px var(--pc);
+  overflow: hidden;
+}
+.crest img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.04);
+}
+.medallion {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  border-radius: 50%;
+  background: var(--field);
+  box-shadow: inset 0 0 0 1px var(--frame), inset 0 0 0 2px var(--field), inset 0 0 0 3px var(--pc);
+}
+
+/* ---------- Title & setup shell ---------- */
+.title-screen,
+.setup-screen {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+}
+.hex-backdrop,
+.world-backdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.backdrop-veil {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--bg) 84%, transparent);
+}
+/* Title key art: the painting covers the screen and drifts (a slow zoom plus pointer parallax,
+   transforms only). The wash lays parchment light behind the wordmark and along the foot,
+   and browns the edges like an old plate. */
+.title-art {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #3a2e1f;
+}
+.title-art-drift {
+  position: absolute;
+  inset: -12px;
+  transform: translate3d(calc(var(--px, 0) * 10px), calc(var(--py, 0) * 7px), 0);
+  transition: transform 1.2s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.title-art-drift img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 42%;
+  transform-origin: 62% 46%;
+  filter: sepia(0.16) saturate(0.9) brightness(1.03);
+  animation:
+    title-art-in 2.4s cubic-bezier(0.2, 0.7, 0.2, 1) both,
+    kenburns 90s 2.4s ease-in-out infinite alternate;
+  will-change: transform;
+}
+@keyframes title-art-in {
+  from {
+    opacity: 0;
+    transform: scale(1.06);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+}
+@keyframes kenburns {
+  from {
+    transform: scale(1.02);
+  }
+  to {
+    transform: scale(1.12) translate(-1.2%, -0.8%);
+  }
+}
+.title-art-wash {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 30% 22% at 50% 25%, rgba(247, 241, 227, 0.72), rgba(247, 241, 227, 0.3) 60%, transparent),
+    radial-gradient(ellipse 22% 38% at 50% 66%, rgba(242, 234, 216, 0.34), transparent),
+    linear-gradient(to top, rgba(230, 220, 196, 0.94), rgba(230, 220, 196, 0.5) 10%, transparent 24%),
+    linear-gradient(to bottom, rgba(242, 234, 216, 0.36), transparent 46%),
+    radial-gradient(ellipse 80% 75% at 50% 46%, transparent 58%, rgba(74, 55, 30, 0.42));
+}
+@media (prefers-reduced-motion: reduce) {
+  .title-art-drift {
+    transform: none;
+  }
+  .title-art-drift img {
+    animation: none;
+    transform: scale(1.02);
+  }
+}
+/* A double frame with diamond studs at the corners. */
+.title-frame {
+  position: absolute;
+  inset: 24px;
+  border: 1px solid var(--frame);
+  box-shadow: inset 0 0 0 4px transparent, inset 0 0 0 5px var(--rule-2);
+  pointer-events: none;
+}
+.title-frame i {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  background: var(--panel);
+  border: 1px solid var(--frame);
+}
+.title-frame i::after {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  background: var(--accent);
+  transform: rotate(45deg);
+}
+.title-frame i:nth-child(1) {
+  left: 16px;
+  top: 16px;
+}
+.title-frame i:nth-child(2) {
+  right: 16px;
+  top: 16px;
+}
+.title-frame i:nth-child(3) {
+  left: 16px;
+  bottom: 16px;
+}
+.title-frame i:nth-child(4) {
+  right: 16px;
+  bottom: 16px;
+}
+.title-inner {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start; /* the wordmark holds still while the menu below it changes */
+  padding: 0 0 88px; /* the bottom reserves the footer and a gap above it */
+  text-align: center;
+  animation: rise 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  overflow-y: auto; /* last resort, below the 700px minimum window: the whole title scrolls */
+  scrollbar-width: none;
+}
+/* The whole menu, Settings included, always shows uncut: the space above the wordmark gives way
+   first (down to 16px). A menu that scrolled inside its slip cut Settings in half at 1440x900. */
+.title-inner::before {
+  content: '';
+  flex: 0 1 clamp(40px, 13vh, 128px);
+  min-height: 16px;
+}
+.title-inner > * {
+  flex-shrink: 0;
+}
+.title-inner > .fan {
+  display: block;
+  margin-bottom: 12px;
+}
+.title-logo {
+  display: flex;
+  justify-content: center;
+  line-height: 0;
+}
+.title-kicker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 28px;
+  font: 600 13px/1 var(--sans);
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.title-kicker .deco-rule {
+  display: block;
+}
+.title-tag {
+  margin: 16px 0 40px;
+  font: italic 400 24px/1.2 var(--display);
+  color: var(--ink);
+}
+/* The menu sits on a thin paper slip (the double-rule frame) so it reads over the painting. */
+.title-menu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 28px 12px;
+  background: color-mix(in srgb, var(--panel) 92%, transparent);
+  border: var(--frame-pad) solid transparent;
+  border-image: var(--frame-image);
+  animation: rise 0.8s 0.2s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  flex-shrink: 0; /* never cut: the space above the wordmark gives way instead */
+}
+.title-menu > * {
+  flex-shrink: 0;
+}
+/* A message about the last action (an older save that won't open): body text in the menu's own
+   flow above the buttons, never over the footer. The card is only as wide as its buttons, so the
+   message wraps to that width. */
+.title-notice {
+  box-sizing: border-box;
+  width: 360px;
+  margin: 0 0 10px;
+  padding: 8px 12px;
+  text-align: left;
+  font: 500 13px/1.35 var(--sans);
+  color: var(--ink);
+  background: color-mix(in srgb, var(--bad) 7%, var(--panel));
+  border-left: 3px solid var(--bad);
+}
+.title-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.title-actions .btn.big {
+  animation: rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.title-actions .btn.big.primary {
+  min-width: 360px;
+  min-height: 80px;
+  gap: 8px;
+  margin-bottom: 16px;
+  font-size: 30px;
+}
+/* Menu items that aren't the primary action: tracked capitals, no box. */
+.title-actions .btn.big:not(.primary) {
+  min-width: 360px;
+  min-height: 0;
+  padding: 10px 16px 8px;
+  font: 600 15px/1 var(--sans);
+  letter-spacing: 0.36em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: none;
+  border-color: transparent;
+}
+@media (hover: hover) {
+  .title-actions .btn.big:not(.primary):hover:not(:disabled) {
+    color: var(--accent);
+    background: none;
+  }
+}
+.title-actions .btn.big:not(.primary) .btn-sub {
+  font: italic 400 14px/1.2 var(--display);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--muted);
+}
+.title-actions .btn.big.quiet {
+  color: var(--ink-2);
+}
+.title-actions .btn.quiet:not(.big) {
+  margin-top: 12px;
+}
+.title-settings {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--rule-2);
+  min-width: 200px;
+}
+/* Settings: a modal slip over the title, rows of label and control. */
+dialog.settings-modal {
+  position: fixed;
+  width: 440px;
+  margin: auto;
+  padding: 0;
+  text-align: left;
+  background: var(--panel);
+}
+dialog.settings-modal::backdrop {
+  background: var(--scrim);
+}
+.settings-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--rule);
+}
+.settings-head h2 {
+  font: var(--display-weight) 30px/1 var(--display);
+}
+.settings-head kbd {
+  margin-left: 8px;
+  font: 400 10px/1 var(--sans);
+}
+.settings-body {
+  padding: 4px 24px 12px;
+}
+.settings-body > .settings-row,
+.settings-body > .hint-settings {
+  justify-content: space-between;
+  min-height: 64px;
+  padding: 14px 0;
+  border-top: 1px solid var(--rule);
+}
+.settings-body > :first-child {
+  border-top: 0;
+}
+.settings-body .seg.small button {
+  min-width: 84px;
+  height: 32px;
+}
+/* The hints row reads like the others: tracked label on the left, its control on the right. */
+.settings-body .hint-settings label {
+  flex-direction: row-reverse;
+  justify-content: space-between;
+  min-height: 32px;
+  font: 600 var(--label-size) / 1 var(--sans);
+  letter-spacing: var(--label-track);
+  text-transform: uppercase;
+  color: var(--label-color);
+}
+.settings-body .hint-settings input {
+  width: 18px;
+  height: 18px;
+}
+.settings-body .hint-settings-foot {
+  padding-top: 0;
+  font-size: 12px;
+}
+.settings-body .hint-settings-foot button {
+  min-height: 32px;
+  font-size: 12px;
+}
+.title-actions .btn:nth-child(2) {
+  animation-delay: 0.06s;
+}
+.title-actions .btn:nth-child(3) {
+  animation-delay: 0.12s;
+}
+.title-actions .btn:nth-child(4) {
+  animation-delay: 0.18s;
+}
+.title-foot {
+  position: absolute;
+  left: 80px;
+  right: 80px;
+  bottom: 44px;
+  display: flex;
+  justify-content: space-between;
+  font: 600 10px/1 var(--sans);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+/* Short windows (the desktop app's minimum is 1100x700): tighten the vertical rhythm. */
+@media (max-height: 820px) {
+  .title-inner::before {
+    flex-basis: clamp(32px, 6vh, 64px); /* so the whole menu fits at the 700px minimum */
+  }
+  .title-inner > .fan {
+    display: none;
+  }
+  .title-logo .wordmark {
+    width: 396px !important; /* the Wordmark component sizes itself inline */
+    height: 84px !important;
+  }
+  .title-kicker {
+    margin-top: 20px;
+  }
+  .title-tag {
+    margin: 12px 0 24px;
+    font-size: 21px;
+  }
+  .title-actions .btn.big.primary {
+    min-height: 68px;
+    margin-bottom: 8px;
+  }
+  .title-actions .btn.big:not(.primary) {
+    padding: 8px 16px 6px;
+  }
+}
+/* The 1000x600 laptop window: tighter still, so the menu slip ends above the footer line instead
+   of running under it (playtest-6 M5). */
+@media (max-height: 920px) {
+  .title-actions .btn.big:not(.primary) { padding: 4px 16px 2px; }
+}
+/* Laptop heights up to 760px: the Scenarios entry added a row, so tighten the menu one step so
+   Quit (desktop app) still fits inside the slip. */
+@media (max-height: 760px) {
+  .title-kicker { margin-top: 12px; }
+  .title-tag { margin: 6px 0 14px; }
+  .title-settings { margin-top: 6px; padding-top: 6px; }
+}
+/* Short windows: the tagline and some button padding give their room to a message, so the menu still ends above the footer. */
+@media (max-height: 760px) {
+  .title-screen:has(.title-notice) .title-tag { display: none; }
+  .title-screen:has(.title-notice) .title-kicker { margin-bottom: 14px; }
+  .title-screen:has(.title-notice) .title-notice { margin-bottom: 8px; padding: 8px 12px; font-size: 13px; line-height: 1.35; }
+  .title-screen:has(.title-notice) .title-actions .btn.big:not(.primary) { padding-top: 3px; padding-bottom: 1px; }
+}
+@media (max-height: 660px) {
+  .title-inner { padding-bottom: 60px; }
+  .title-inner::before { flex-basis: 16px; }
+  .title-logo .wordmark {
+    width: 300px !important;
+    height: 64px !important;
+  }
+  .title-kicker { margin-top: 12px; font-size: 12px; }
+  .title-tag { margin: 8px 0 14px; font-size: 18px; }
+  .title-menu { padding: 14px 24px 8px; }
+  .title-actions .btn.big.primary { min-height: 60px; margin-bottom: 6px; }
+  .title-actions .btn.big:not(.primary) { padding: 6px 16px 4px; }
+  .title-settings { margin-top: 4px; padding-top: 4px; }
+  .title-foot { bottom: 30px; }
+  /* With a game open, Resume adds a row and the slip ran into the footer at 1000x600 (UX review,
+     2026-11-21): the tagline gives its room, as it does for a message. */
+  .title-screen:has(.title-resume) .title-tag { display: none; }
+  .title-screen:has(.title-resume) .title-kicker { margin-bottom: 14px; }
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.setup-inner {
+  position: relative;
+  max-width: 1080px;
+  margin: 0 auto;
+  height: 100%;
+  overflow: auto;
+  padding: 24px 32px 48px;
+  animation: rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.setup-top {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--frame);
+  box-shadow: 0 3px 0 -2px var(--rule-2);
+}
+.setup-top > :first-child {
+  justify-self: start;
+}
+.setup-top h2 {
+  font: var(--display-weight) 34px/1 var(--display);
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+/* Phones: centring the title between equal columns pushed it over "← Back". */
+@media (max-width: 600px) {
+  .setup-top { grid-template-columns: auto minmax(0, 1fr); gap: 8px; }
+  .setup-top > :last-child:empty { display: none; }
+  .setup-top h2 { font-size: 26px; text-align: left; }
+}
+.setup-lede {
+  max-width: 640px;
+  margin: 16px auto 24px;
+  text-align: center;
+  font: italic 400 18px/1.35 var(--display);
+  color: var(--ink-2);
+}
+.setup-lede b {
+  font-style: normal;
+  color: var(--accent);
+}
+.faction-name {
+  font: var(--display-weight) 20px/1.1 var(--display);
+}
+.faction-motto {
+  font: italic 400 14px/1.3 var(--display);
+  color: var(--muted);
+}
+.seed {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.seed input {
+  width: 220px;
+  padding: 7px 10px 5px;
+  font: 600 13px/1 var(--sans);
+  letter-spacing: 0.12em;
+  background: var(--field);
+  border: 1px solid var(--control-border);
+}
+.seed input:focus {
+  border-color: var(--accent);
+}
+.seed input.bad {
+  border-color: var(--bad);
+}
+
+/* ---------- Game layout ---------- */
+/* Named HUD/story reservations shared by the map overlays. See docs/design/celebration-slots.md. */
+.game {
+  --hud-height: calc(52px + env(safe-area-inset-top, 0px));
+  --race-top: calc(var(--hud-height) + 20px);
+  --race-width: 320px;
+  --story-left: 384px;
+  --story-right: calc(var(--race-width) + 32px);
+  --story-top: var(--race-top);
+
+  position: relative;
+  height: 100%;
+  /* clip, not hidden: a hidden box still scrolls programmatically (opening the turn report scrolled .game 78 px
+     at 1440x900 and shifted the whole HUD up), a clipped one never can. */
+  overflow: clip;
+}
+.map-wrap {
+  position: absolute;
+  inset: 0;
+}
+.map-canvas {
+  display: block;
+  touch-action: none;
+  cursor: default;
+}
+.map-canvas.is-ranged {
+  cursor: crosshair;
+}
+.map-canvas.is-select {
+  cursor: pointer;
+}
+/* A unit or city of a team at Peace: clickable, it asks whether to declare War (G2). */
+.map-canvas.is-peaceful {
+  cursor: pointer;
+}
+.peace-hint {
+  max-width: 260px;
+  padding: 10px 14px 8px;
+  line-height: 1.4;
+}
+.peace-hint .forecast-foot { padding: 4px 0 0; }
+/* Compass rose: positioned by MapCanvas (map/compass.ts); fades if panels or labels cover it. */
+.map-compass {
+  position: absolute;
+  left: -40px;
+  top: -40px;
+  width: 80px;
+  height: 80px;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  --c-ink: var(--ink);
+  --c-fill: var(--field);
+}
+.map-compass.covered {
+  opacity: 0;
+}
+.map-compass svg {
+  display: block;
+  overflow: visible;
+}
+.map-compass .c-ring,
+.map-compass .c-ring2,
+.map-compass .c-tick {
+  fill: none;
+  stroke: var(--c-ink);
+}
+.map-compass .c-ring {
+  stroke-width: 0.8;
+  opacity: 0.6;
+}
+.map-compass .c-ring2 {
+  stroke-width: 0.5;
+  opacity: 0.5;
+}
+.map-compass .c-tick {
+  stroke-width: 0.6;
+}
+.map-compass .c-ink {
+  fill: var(--c-ink);
+}
+.map-compass .c-fill {
+  fill: var(--c-fill);
+}
+.map-compass .c-edge {
+  stroke: var(--c-ink);
+  stroke-width: 0.6;
+}
+.map-compass .c-n {
+  font: 700 11px/1 var(--display);
+  fill: var(--c-ink);
+}
+/* Whose seat is planning: a rule in the seat's color under the top bar (no glow). */
+.seat-frame {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 52px;
+  height: 3px;
+  pointer-events: none;
+  background: var(--seat);
+  z-index: 6;
+}
+
+.game .topbar { height: var(--hud-height); padding-top: env(safe-area-inset-top, 0px); }
+/* Top bar */
+.research-phone-tech { display: none; }
+.population-counter { display: inline-flex; align-items: center; gap: 4px; font: 12px var(--sans); white-space: nowrap; }
+
+.topbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  background: var(--topbar-bg);
+  box-shadow: var(--topbar-rule);
+  z-index: 5;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 32px 0 24px;
+}
+.tb-stats {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  flex: 1;
+  min-width: 0;
+}
+.stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+  padding: 0 20px;
+  border-left: 1px solid var(--rule);
+  cursor: help;
+}
+.stat b {
+  padding-top: 2px;
+  font: 600 16px/1 var(--num-font);
+}
+.gold-hoard-readout { font: 600 9.5px/1.1 var(--sans); color: var(--ink-2); white-space: nowrap; }
+.faction-goal-progress { display: grid; gap: 3px; padding: 4px 8px; border-left: 3px solid var(--gilt); background: color-mix(in srgb, var(--gilt) 10%, var(--panel)); font: 600 11px/1.25 var(--sans); color: var(--ink); cursor: help; }
+.faction-goal-meter { display: block; height: 4px; overflow: hidden; border-radius: 2px; background: color-mix(in srgb, var(--gilt) 20%, var(--panel)); box-shadow: inset 0 0 0 1px var(--rule); }
+.faction-goal-meter i { display: block; height: 100%; background: var(--gilt); }
+/* Strategic supply: one chip per revealed resource after Science, spare / supplied. */
+.supplies { display: flex; align-items: center; height: 100%; }
+.supply-stat.supply-era { box-shadow: inset 0 -3px var(--gilt); }
+.supply-stat.supply-short { box-shadow: inset 0 -3px var(--bad); }
+.supply-stat.supply-era.supply-short { box-shadow: inset 0 -3px var(--bad), inset 0 3px var(--gilt); }
+.supply-stat.supply-unrevealed { --supply-ink: var(--ink-2); color: var(--ink-2); box-shadow: inset 0 -3px var(--ink-2); }
+.supply-stat.supply-unrevealed .supply-reveal-label { display: grid; font: 600 11px/1.2 var(--sans); white-space: nowrap; }
+.supply-stat.supply-unrevealed .supply-art { filter: grayscale(1); opacity: .58; }
+/* Desktop and tablet: totals keep their content width, and the research cell takes what is left
+   and truncates last. A shrinking total drew over its neighbour ("Coal 30 (0)" over "Pop."). */
+@media (min-width: 701px) {
+  .topbar .tb-stats > *, .topbar .supply-stat { flex: none; }
+  .topbar .tb-stats > .research-slot { flex: 1 1 0; min-width: 0; overflow: hidden; }
+  .topbar .research-chip { max-width: 100%; overflow: hidden; }
+  .topbar .research-chip b, .topbar .research-chip-plan { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .topbar .population-counter { padding: 0 12px; }
+  /* Compaction steps set by TopBar (TOP_BAR_COMPACTION) when the bar is crowded. */
+  /* First step: the "Pop." and "Armed" words go; the figures stay (their tooltips name them). */
+  .topbar[data-compact~='counts'] .count-label { display: none; }
+  /* The levy keeps its word (8.9.14 review: a bare "3/2" with an alert icon does not say what is full); it sheds its icon instead. */
+  .topbar[data-compact~='counts'] .levy-counter .count-label { display: inline; }
+  .topbar[data-compact~='counts'] .levy-counter .count-icon { display: none; }
+  /* The words give way to an icon, so a bare number never stands alone. */
+  .topbar .count-icon { display: none; }
+  .topbar[data-compact~='counts'] .count-icon { display: inline-block; vertical-align: -2px; margin-right: 1px; }
+  /* The icon pays for itself: the counter's padding narrows by more than the icon takes. */
+  .topbar[data-compact~='counts'] .population-counter { padding: 0 3px; gap: 2px; }
+  /* Only a shortage keeps its word once the bar sheds resource labels. */
+  .topbar[data-compact~='names'] .supply-stat:not(.supply-short) .supply-name { display: none; }
+  .topbar[data-compact~='warning'] .gold-warning .gw-long { display: none; }
+  .topbar[data-compact~='incomes'] :is(.gold-stat, .supply-stat) > :is(.pos, .muted, .supply-idle) { display: none; }
+  .topbar[data-compact~='tight'] :is(.stat, .research-chip, .tb-nav) { padding-inline: 10px; }
+  .topbar[data-compact~='tight'] .turn { padding-inline: 12px; }
+  .topbar[data-compact~='erachip'] .turn-year { display: none; }
+  .topbar[data-compact~='tight'] .brand { padding: 0 16px; }
+  /* The sidebar names the ledger too; free this label before shortening the research prompt. */
+  .topbar[data-compact~='score'] .vh-chip-label { display: none; }
+  .topbar[data-compact~='score'] .vh-chip { padding-inline: 8px; }
+  .topbar[data-compact~='brand'] .brand { display: none; }
+  /* The Switzerland' hoard readout is also in the race row and the Gold tooltip. */
+  .topbar[data-compact~='hoard'] .gold-hoard-readout { display: none; }
+  /* Keep painted art legible; narrow chips shed figures before art. */
+  .topbar[data-compact~='art'] .supply-stat .supply-art { width: 24px; height: 24px; }
+  .topbar[data-compact~='erachip'] .supply-stat b { font-size: 0; }
+  .topbar[data-compact~='erachip'] .supply-stat b::after { content: attr(data-spare); font-size: 16px; }
+  /* Four revealed supplies and a treasury warning can share a laptop bar without clipping research. */
+  .topbar[data-compact~='erachip'] .supply-stat { padding-inline: 4px; }
+  .topbar[data-compact~='erachip'] :is(.gold-stat, .science-stat, .turn) { padding-inline: 6px; }
+  /* With every resource visible, the full research prompt can use two lines before clipping. */
+  .topbar[data-compact~='erachip'] .research-chip.needs { gap: 4px; padding-inline: 4px; }
+  .topbar[data-compact~='erachip'] .research-chip.needs b { white-space: normal; font-size: 16px; line-height: 1.05; text-overflow: clip; }
+  .topbar[data-compact~='label'] .research-label { display: none; }
+  /* The city glyph is 15px wide; 4px gutters plus the border keep a 24px hit area. */
+  .topbar[data-compact~='cities'] .tb-nav-cities { padding-inline: 4px; letter-spacing: 0; }
+  .topbar[data-compact~='cities'] .tb-nav-cities .tb-label { display: none; }
+  .topbar[data-compact~='nav'] .tb-nav-tech { display: none; }
+}
+.supply-stat .icon { color: var(--supply-ink, #b4533f); }
+.supply-stat .supply-name { font-size: 13px; }
+/* Painted art at 24 px: Iron and Coal read apart without their names. */
+.supply-stat .supply-art { display: block; flex: none; object-fit: contain; }
+.supply-glyph { font: 700 12px/1 var(--num-font); color: #b4533f; }
+/* A shortage is never colour alone: the alert mark and "N idle" come with the red fraction. */
+.supply-stat.supply-short b, .supply-stat.supply-short .supply-name, .supply-stat .supply-idle { color: var(--bad); }
+.supply-stat .supply-alert, .supply-stat .supply-alert .icon { color: var(--bad); }
+.supply-stat .supply-idle { font: 700 12px/1 var(--sans); white-space: nowrap; }
+.supply-tip .supply-short-note { color: var(--bad); font-weight: 600; }
+.supply-tip .supply-idle-list ul { list-style: none; margin: 2px 0 0; padding: 0; }
+.supply-tip .supply-idle-list li { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 1px 0; }
+.supply-tip .supply-show-map { flex: none; font-size: 12px; }
+.supply-tip .supply-totals { color: var(--bad); }
+.resource-reason-link { color: var(--bad); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; font: inherit; }
+@media (max-width: 1180px) {
+  /* The icon names a healthy resource; an alert keeps its word. */
+  .topbar .supply-stat:not(.supply-short) .supply-name { display: none; }
+  .topbar .supply-stat b { font-size: 0; }
+  .topbar .supply-stat b::after { content: attr(data-spare); font-size: 16px; }
+  .topbar .supply-stat { padding-inline: 7px; gap: 4px; }
+}
+/* Four totals (Gold, Science, population, research) share a tablet-width bar:
+   tighter cells. */
+@media (min-width: 701px) and (max-width: 1180px) {
+  .topbar .brand { padding: 0 16px; }
+  .topbar .stat { padding: 0 12px; gap: 6px; }
+}
+.gold-warning {
+  max-width: 220px;
+  padding: 4px 8px;
+  border: 1px solid var(--bad);
+  border-radius: 4px;
+  /* The page background contrasts with --bad on parchment. */
+  color: var(--bg);
+  background: var(--bad);
+  font: 600 12px/1.25 var(--sans);
+}
+.gold-warning b { font-weight: 700; margin-right: 4px; }
+.production-warning,
+.tilecard-row.production-warning {
+  margin-top: 8px;
+  color: var(--bad);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.turn-review {
+  padding: 12px 16px;
+  border-top: 1px solid var(--rule);
+  color: var(--bad);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.turn-review ul {
+  margin: 8px 0 0;
+  padding-left: 16px;
+}
+.stat > span {
+  padding-top: 2px;
+  font-size: 13px;
+}
+.research-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  height: 100%;
+  padding: 0 20px;
+  border-left: 1px solid var(--rule);
+  border-right: 1px solid var(--rule);
+  min-width: 0;
+}
+@media (hover: hover) {
+  .research-chip:hover {
+    background: var(--panel-2);
+  }
+}
+.research-chip { position: relative; }
+/* Progress toward the current technology: a hairline gauge along the chip's foot. */
+.research-progress {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 5px;
+  height: 3px;
+  background: var(--panel-3);
+  box-shadow: inset 0 0 0 .5px var(--rule-2);
+  pointer-events: none;
+}
+.research-progress > span {
+  display: block;
+  height: 100%;
+  background: var(--y-science);
+}
+.research-chip b {
+  font: var(--display-weight) 18px/1 var(--display);
+  white-space: nowrap;
+}
+.research-chip .muted {
+  font-size: 12px;
+  white-space: nowrap;
+}
+.research-chip.needs b {
+  color: var(--accent);
+}
+.research-chip.needs::after {
+  content: '!';
+  display: inline-grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--panel);
+  font: 700 10px/1 var(--sans);
+  animation: blink 1.4s ease-in-out infinite;
+}
+.research-label {
+  padding-top: 2px;
+  font: 600 10px/1 var(--sans);
+  letter-spacing: var(--label-track);
+  text-transform: uppercase;
+  color: var(--label-color);
+}
+.research-prog {
+  width: 96px;
+  height: 3px;
+  background: var(--panel-3);
+}
+.research-prog span {
+  display: block;
+  height: 100%;
+  background: var(--y-science);
+}
+.tb-right {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+.turn {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 0 24px;
+  cursor: help;
+}
+.turn-label {
+  font: 600 11px/1 var(--sans);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--label-color);
+}
+.turn b {
+  font: var(--display-weight) 30px/1 var(--display);
+}
+.turn-of {
+  font: italic 400 16px/1 var(--display);
+  color: var(--ink-2);
+}
+.turn-year {
+  font: 400 14px/1 var(--display);
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.tb-nav {
+  height: 100%;
+  padding: 2px 20px 0;
+  font: 600 11px/1 var(--sans);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  border-left: 1px solid var(--rule);
+}
+@media (hover: hover) {
+  .tb-nav:hover {
+    color: var(--accent);
+    background: var(--panel-2);
+  }
+}
+.menu {
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  border-left: 1px solid var(--rule);
+}
+.menu-pop {
+  position: absolute;
+  right: 8px;
+  top: 56px;
+  min-width: 260px;
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  background: var(--tip-bg);
+  border: var(--slip-border);
+  animation: rise 0.15s ease both;
+  z-index: 40;
+}
+.menu-pop button {
+  padding: 8px 12px 6px;
+  text-align: left;
+  font-size: 14px;
+}
+@media (hover: hover) {
+  .menu-pop button:hover:not(:disabled) {
+    background: var(--panel-2);
+  }
+}
+.menu-pop button:disabled {
+  color: var(--muted);
+  cursor: default;
+}
+.menu-pop hr {
+  margin: 4px 0;
+  border: 0;
+  border-top: 1px solid var(--rule);
+}
+.menu-foot {
+  padding: 8px 12px 4px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+/* An open menu sits above every HUD overlay (the phone's VP strip and sheet share the top bar's layer). */
+.topbar:has(.menu-pop) { z-index: 30; }
+.menu-pop { max-height: calc(100dvh - 72px); overflow-y: auto; overscroll-behavior: contain; }
+.menu-advanced > summary {
+  padding: 8px 12px 6px;
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+}
+/* Narrow screens: the Look options take their own row so each name and note fits. */
+@media (max-width: 600px) {
+  .settings-row { flex-wrap: wrap; }
+  .settings-row .seg { flex: 1 0 100%; margin: 0; }
+  .settings-row .seg.small button { height: auto; min-height: 44px; flex-direction: column; padding: 6px 8px; }
+}
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+}
+.settings-row .lbl {
+  flex: none;
+}
+
+/* Docks: city and unit panels share the left; race and seats stay on the right. */
+.left-dock {
+  position: absolute;
+  left: 16px;
+  top: 72px;
+  bottom: 16px;
+  width: 352px;
+  pointer-events: none;
+  z-index: 3;
+}
+.left-dock > * {
+  pointer-events: auto;
+  animation: slideUp 0.22s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+/* Selected units share the city panel's dock and width. */
+.unit-panel {
+  position: relative;
+  width: 100%;
+  min-height: 0;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.up-head {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 12px;
+  align-items: center;
+  padding: 0 12px 0 16px;
+}
+.unit-badge {
+  grid-row: 1 / 3;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  flex: none;
+  background: var(--pc);
+  box-shadow: inset 0 0 0 1px var(--frame), inset 0 0 0 3px rgba(255, 250, 235, 0.4);
+}
+.unit-badge.civ {
+  background: var(--field);
+  box-shadow: inset 0 0 0 1px var(--frame), inset 0 0 0 4px var(--pc);
+}
+.up-title {
+  min-width: 0;
+}
+.up-kind {
+  font: var(--display-weight) 26px/1 var(--display);
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.up-owner {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--ink-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.up-owner .swatch {
+  display: none;
+}
+.up-strength-key { display: block; font: 400 12px/1.3 var(--sans); color: var(--ink-2); cursor: help; }
+.up-strength-key b { font-weight: 700; }
+.up-class {
+  cursor: help;
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+}
+/* Promotion: the same engraved enlisted badge as the map token, level and XP. */
+.up-rank {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  font: 600 11px/1.2 var(--sans);
+  color: var(--ink);
+  white-space: nowrap;
+  cursor: help;
+}
+.up-rank-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.up-rank .muted {
+  font-weight: 500;
+  font-size: 10px;
+  font-family: var(--num-font);
+}
+.up-kind-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; min-width: 0; }
+.up-rank-inline { font: 600 11px/1.2 var(--sans); color: var(--ink); white-space: nowrap; cursor: help; }
+.up-rank.elite { white-space: normal; }
+.up-rank.elite .up-rank-text { line-height: 1.05; }
+.up-rank.elite .up-rank-text > span:first-child { color: #80620d; font-size: .7rem; letter-spacing: .035em; text-transform: uppercase; }
+.rank-insignia { flex: none; }
+.tilecard-unit .rank-insignia,
+.fside-name .rank-insignia,
+.forecast-summary .rank-insignia,
+.dual-line .rank-insignia,
+.rline-main .rank-insignia { vertical-align: middle; margin-right: 4px; }
+.fside-name .rank-insignia { margin-bottom: 2px; }
+.up-status {
+  grid-column: 2;
+  margin-top: 4px;
+  font: 600 9px/1.2 var(--sans);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.up-status.pending {
+  color: var(--good);
+}
+/* A standing order (Fortify, Heal, auto-explore) is information, never the red of an order that is missing. */
+.up-status.standing {
+  color: var(--ink-2);
+}
+/* An order that won't resolve is never shown in a healthy colour: red, with the reason under it. */
+.up-status.bad {
+  color: var(--bad);
+}
+.up-status-why {
+  grid-column: 2;
+  margin: 2px 0 0;
+  font: 500 12px/1.35 var(--sans);
+  color: var(--bad);
+  text-align: left;
+}
+.up-status-why.up-pre-rule { color: var(--muted); }
+.up-status-why.up-pre-rule { min-width: 0; white-space: normal; text-align: left; overflow-wrap: anywhere; }
+.unit-panel > .up-pre-rule { grid-column: 1 / -1; padding: 0 16px 10px; }
+.up-status-why.up-lock {
+  color: var(--ink);
+  font-weight: 700;
+}
+.up-status-why.up-lock-note { color: var(--muted); font-size: 11px; }
+.up-status-why.up-lock svg, .up-status-why.up-lock img {
+  vertical-align: -2px;
+}
+.up-status-why.road {
+  color: var(--ink-2);
+  font-size: 11px;
+}
+.up-status-why.road svg, .up-status-why.road img {
+  vertical-align: -3px;
+}
+.up-resting {
+  grid-column: 2;
+  margin-top: 4px;
+  font: 500 10px/1.3 var(--sans);
+  color: var(--ink-2);
+}
+.up-stats {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  min-height: 72px;
+  padding: 0 16px;
+  border-left: 1px solid var(--rule);
+  border-right: 1px solid var(--rule);
+}
+.up-stat {
+  display: grid;
+  grid-template-columns: 64px 1fr auto;
+  gap: 8px;
+  align-items: center;
+  height: 18px;
+  cursor: help;
+}
+.up-stat .lbl {
+  font-size: 9px;
+  color: var(--muted);
+}
+.up-stat b {
+  grid-column: 3;
+  padding-top: 2px;
+  font: 600 13px/1 var(--num-font);
+}
+.up-stat .bar {
+  height: 3px;
+}
+/* An idle unit's strength is what it fights with (red); the line under it says what it lost and why. */
+.up-strength-was { grid-column: 1 / -1; margin-top: -2px; font: 500 11px/1.2 var(--sans); text-align: right; }
+/* Health reads at a glance: a taller bar with an outlined empty track (colour from healthColor). */
+.up-stat .bar.hp-bar {
+  height: 6px;
+  background: color-mix(in srgb, var(--ink) 12%, transparent);
+  box-shadow: inset 0 0 0 1px var(--rule-2);
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 16px;
+}
+/* Each action is a wrapper (button + its tooltip + any reason). The primary action takes the
+   first row; a blocked action takes a full row so its reason reads beside the button. */
+.act-wrap {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.act-wrap > .tip-trigger {
+  display: flex;
+}
+.act-wrap > .tip-trigger > .act {
+  flex: 1 1 auto;
+}
+.act-wrap.primary,
+.act-wrap.blocked {
+  flex-basis: 100%;
+}
+.act-wrap.quiet {
+  flex: 0 1 auto;
+}
+/* Fortify/Wait and Skip this turn share a row: Skip keeps its natural width, the idle order takes the rest. */
+.act-pair {
+  display: flex;
+  gap: 8px;
+  flex: 1 1 100%;
+}
+.act-pair .act-wrap {
+  flex: 1 1 0;
+}
+.act-pair .act-wrap:last-child {
+  flex: 0 0 auto;
+}
+.act-pair .act-wrap:first-child { min-width: 0; }
+.act-pair .act-wrap:first-child .act { width: 100%; min-width: 0; }
+.act-pair .act-wrap:first-child .act:not(.primary) { background: var(--panel-2); border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.act-pair .act-wrap:last-child .act { flex: none; }
+.act-reason {
+  margin: 4px 2px 0;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--ink-2);
+}
+.act-reason.compact { min-width: 0; white-space: normal; text-align: left; overflow-wrap: anywhere; }
+.act-reason b {
+  font-weight: 600;
+  color: var(--bad);
+}
+.act-needs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  margin-top: 2px;
+  color: var(--muted);
+}
+.act-needs .met > span {
+  color: var(--good);
+}
+.act-needs .unmet > span {
+  color: var(--bad);
+}
+.act {
+  flex: 1 1 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 30px;
+  padding: 3px 10px 1px;
+  font: 600 11px/1 var(--sans);
+  letter-spacing: var(--btn-track);
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--btn-ink);
+  background: var(--btn-bg);
+  border: 1px solid var(--btn-border);
+}
+.act .kbd {
+  margin-left: 6px;
+}
+@media (hover: hover) {
+  .act:hover:not(:disabled) {
+    background: var(--panel-2);
+  }
+}
+.act:disabled {
+  opacity: 0.45;
+}
+/* Disabled controls swallow pointer events in Chromium, so their explaining Tip never opened.
+   Let the pointer reach the Tip wrapper, which is the focusable trigger for disabled controls. */
+.tip-trigger button:disabled {
+  pointer-events: none;
+}
+.act.primary {
+  flex-basis: 100%;
+  min-height: 36px;
+}
+.act.quiet {
+  flex: 0 1 auto;
+  border-color: transparent;
+  background: none;
+}
+.act.danger {
+  color: color-mix(in srgb, var(--bad) 90%, var(--ink));
+}
+@media (hover: hover) {
+  /* The hover wash (panel-2) is darker than the card: a deeper red keeps AA contrast on it. */
+  .act.danger:hover:not(:disabled) { color: color-mix(in srgb, var(--bad) 70%, var(--ink)); }
+}
+.act.active {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+.act.primary.active {
+  box-shadow: inset 0 0 0 2px var(--primary-bg), inset 0 0 0 3px var(--primary-rule);
+}
+.act-stack {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  padding: 2px 0;
+}
+.act-note { font: 500 12px/1.2 var(--sans); letter-spacing: 0; text-transform: none; color: var(--ink-2); }
+.act-sub {
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  color: var(--muted);
+}
+.up-hints {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(100% + 12px);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  pointer-events: none;
+}
+.up-hints:empty {
+  display: none;
+}
+.up-hints > .hint {
+  padding: 0;
+  text-align: center;
+  font-size: 15px;
+  color: var(--ink);
+}
+.up-hints button,
+.up-hints [tabindex] {
+  pointer-events: auto;
+}
+/* The Byzantium's Heir: whose he is, who holds him, what capturing or disbanding him does. */
+.up-heir, .up-heir-confirm {
+  align-self: center;
+  margin-top: 6px;
+  max-width: 100%;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 6px 12px;
+  background: var(--panel);
+  border: 1px solid var(--frame);
+  border-left: 3px solid var(--gilt, #b88a1c);
+  box-shadow: 0 2px 8px rgba(40, 30, 10, 0.25);
+  pointer-events: auto;
+}
+.up-heir-mark { flex: none; margin-top: 1px; color: var(--ink); }
+.up-heir-line { margin: 0; font: 600 13px/1.35 var(--sans); color: var(--ink); }
+.up-heir-line + .up-heir-line { margin-top: 2px; font-weight: 500; }
+.up-heir-line.good { color: var(--good); }
+.up-heir-line.bad { color: var(--bad); }
+/* A hired Company: its seller, its countdown and what it costs in the panel head; its rule among the notes, in the stack beside the Heir note. */
+.up-company-tag { margin-top: 3px; font: 600 12px/1.3 var(--sans); color: var(--ink); }
+.up-company-tag.last { color: var(--bad); }
+.up-company-tag .ui-mark { vertical-align: -2px; }
+.up-company { align-self: center; margin-top: 6px; max-width: 100%; display: flex; gap: 8px; align-items: flex-start; padding: 6px 12px; background: var(--panel); border: 1px solid var(--frame); border-left: 3px solid var(--accent); box-shadow: 0 2px 8px rgba(40, 30, 10, 0.25); pointer-events: auto; }
+.up-company-mark { flex: none; margin-top: 1px; color: var(--ink); }
+.up-company-rule { margin: 0; font: 500 12px/1.35 var(--sans); color: var(--ink-2); }
+.up-heir-confirm { flex-direction: column; border-left-color: var(--bad); grid-column: 1 / -1; box-shadow: none; }
+.up-heir-confirm p { margin: 0; font: 500 13px/1.35 var(--sans); color: var(--ink); }
+.up-heir-confirm-row { display: flex; gap: 8px; }
+.unit-panel .order-error {
+  grid-column: 1 / -1;
+}
+
+/* City panel */
+.city-panel {
+  max-height: 100%;
+  overflow: auto;
+  /* CityPanel keeps the clicked build card in place when Now producing and Queue change height. */
+  overflow-anchor: none;
+  scrollbar-width: none;
+}
+.city-panel::-webkit-scrollbar {
+  display: none;
+}
+.cp-head {
+  padding: 20px 16px 16px;
+  text-align: center;
+}
+.cp-kicker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font: 600 10px/1 var(--sans);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--kicker-color);
+}
+.cp-name {
+  margin-top: 8px;
+  font: var(--display-weight) 44px/1 var(--display);
+  letter-spacing: 0.01em;
+}
+/* Coloured from the viewer's side: a rival city's bounty is a prize for you, your own a risk. */
+.cp-bounty {
+  white-space: nowrap;
+}
+.cp-bounty.gain {
+  color: var(--good);
+}
+.cp-bounty.risk {
+  color: var(--bad);
+}
+.cp-captive-risk { color: var(--bad); font: 600 12px/1.35 var(--sans); }
+.cp-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 6px 16px;
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+/* Whether the city fires (only walled cities do) and a Switzerland capture bounty: one quiet line
+   under the strength. */
+.cp-status {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0 14px;
+  margin-top: 6px;
+  font: 600 12px/1.3 var(--sans);
+  color: var(--ink-2);
+}
+/* An original capital's star and its one line (rule, who founded it, whether you have scored it). */
+.capital-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font: 600 12px/1.35 var(--sans);
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+.capital-note .capital-star { flex: none; margin-top: 2px; }
+.city-panel > .cp-capital { padding: 4px 14px; }
+.cp-kicker .capital-star { display: block; }
+/* Every other city's kicker: a plain dot, so the star only ever means an original capital. */
+.kicker-dot { width: 4px; height: 4px; border-radius: 50%; background: currentColor; opacity: 0.7; flex: none; }
+.cp-fire {
+  color: var(--ink-2);
+}
+.cp-fire.fires {
+  color: var(--ink);
+}
+.cp-heal {
+  color: var(--ink-2);
+}
+.cp-heal.blocked {
+  color: var(--bad);
+}
+/* A foreign city's card: where you stand with its empire, then what you can do about it. */
+.foreign-city {
+  padding: 4px 16px 16px;
+  border-top: 1px solid var(--rule);
+}
+.foreign-city p {
+  margin: 10px 0 0;
+  font: 400 13px/1.4 var(--sans);
+  color: var(--ink);
+}
+.foreign-city .empire-relation {
+  margin-right: 4px;
+  font: 600 10px/1 var(--sans);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  vertical-align: 1px;
+}
+.foreign-city .foreign-city-why {
+  color: var(--ink-2);
+}
+.foreign-city .foreign-city-prize { color: var(--good); font-weight: 700; }
+.foreign-city-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.foreign-city-buttons .btn {
+  flex: 1 1 auto;
+}
+.foreign-city.compact {
+  padding: 0 8px;
+  border-top: 0;
+}
+.foreign-city.compact p {
+  margin-top: 0;
+  line-height: 1.25;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.foreign-city.compact .foreign-city-buttons {
+  flex-wrap: nowrap;
+  margin-top: 4px;
+}
+.foreign-city.compact .foreign-city-buttons .btn {
+  min-width: 0;
+}
+.cp-meta > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.cp-meta b {
+  font: 600 14px/1 var(--num-font);
+  color: var(--ink);
+}
+.cp-meta .lbl {
+  margin-right: 4px;
+}
+.cp-pop {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  margin-right: 4px;
+  font: 700 12px/1 var(--sans);
+  color: var(--on-player);
+  background: var(--pc);
+  border: 1px solid var(--frame);
+}
+.cap {
+  color: var(--accent);
+}
+.cp-yields {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  margin: 0 10px;
+  border-top: 1px solid var(--frame);
+  border-bottom: 1px solid var(--frame);
+}
+:root .cp-yields {
+  box-shadow: 0 2px 0 -1px var(--panel), 0 3px 0 -1px var(--rule-2);
+}
+.cp-yield {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 0;
+  cursor: help;
+}
+.cp-yield + .cp-yield::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 1px;
+  background: var(--rule);
+}
+.cp-yield b {
+  font: 600 15px/1 var(--num-font);
+}
+/* Four labels share the panel width; PRODUCTION must fit a quarter of it. */
+.cp-yield-l {
+  font: 600 9px/1 var(--sans);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+@media (hover: hover) {
+  .cp-yield:hover {
+    background: var(--panel-2);
+  }
+}
+.cp-block {
+  padding: 16px 20px 0;
+}
+.cp-automation { padding: 8px 14px; border-bottom: 1px solid var(--rule); display: flex; align-items: center; flex-wrap: wrap; gap: 7px 10px; font: 600 12px/1.3 var(--sans); }
+.cp-automation label { color: var(--ink); }
+.cp-automation .kbd { margin-left: 4px; }
+.cp-automation select { min-height: 30px; border: 1px solid var(--rule-2); background: var(--panel-2); color: var(--ink); font: inherit; padding: 3px 7px; cursor: pointer; }
+.cp-automation-inline { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; font: 600 12px/1.3 var(--sans); color: var(--ink); }
+.cp-automation-inline select { min-height: 28px; border: 1px solid var(--rule-2); background: var(--panel-2); color: var(--ink); font: inherit; padding: 2px 6px; cursor: pointer; }
+.cp-automation-inline .kbd { margin-left: 2px; }
+.cp-auto-note.cp-block { padding: 4px 14px 0; }
+.cp-auto-note .cp-automation-reason { margin: 0; font: 500 12px/1.3 var(--sans); color: var(--ink-2); }
+.cp-automation-reason { flex-basis: 100%; margin: 0; color: var(--ink-2); font-weight: 500; }
+.cp-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+.cp-line .lbl {
+  color: var(--label-color);
+}
+.cp-now {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.cp-now-name {
+  font: var(--display-weight) 24px/1 var(--display);
+}
+.buy-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+.btn-buy {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+  padding: 3px 10px 1px;
+  font: 600 11px/1 var(--sans);
+  letter-spacing: var(--btn-track);
+  text-transform: uppercase;
+  color: var(--btn-ink);
+  background: var(--btn-bg);
+  border: 1px solid var(--btn-border);
+}
+@media (hover: hover) {
+  .btn-buy:hover:not(:disabled) {
+    background: var(--panel-2);
+  }
+}
+.btn-buy:disabled {
+  opacity: 0.45;
+}
+.btn-buy.active {
+  color: var(--primary-ink);
+  background: var(--primary-bg);
+  border-color: var(--primary-bg);
+}
+:root .btn-buy.active {
+  color: var(--primary-ink);
+  --y-gold: var(--primary-ink);
+}
+@media (hover: hover) {
+  :root .btn-buy.active:hover:not(:disabled) {
+    background: var(--primary-bg);
+  }
+}
+.buy-need {
+  font-size: 11px;
+  color: var(--muted);
+}
+/* Disclosures inside panels (city world wonders, research city forecasts)
+   share one treatment: a tracked label with a turning marker, not the browser default. */
+.cp-great-works > summary,
+.research-detail details > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  list-style: none;
+  cursor: pointer;
+  font: 600 10px/1.3 var(--sans);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--label-color);
+}
+.cp-great-works > summary::-webkit-details-marker,
+.research-detail details > summary::-webkit-details-marker {
+  display: none;
+}
+.cp-great-works > summary::before,
+.research-detail details > summary::before {
+  content: '';
+  flex: none;
+  border-left: 5px solid currentColor;
+  border-block: 4px solid transparent;
+  transition: transform 0.15s;
+}
+.cp-great-works[open] > summary::before,
+.research-detail details[open] > summary::before {
+  transform: rotate(90deg);
+}
+@media (hover: hover) {
+  .cp-great-works > summary:hover,
+.research-detail details > summary:hover {
+    color: var(--accent);
+  }
+}
+.cp-great-works {
+  margin: 8px 10px 0;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+.cp-great-works[open] {
+  padding-bottom: 8px;
+}
+.cp-great-works .hint {
+  padding: 0 0 6px;
+  font-size: 12px;
+  line-height: 1.35;
+}
+.cp-sub {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 20px 20px 4px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--rule);
+  font: 600 10px/1 var(--sans);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--label-color);
+}
+:root .cp-sub {
+  font: italic 600 15px/1 var(--display);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--accent);
+}
+/* Nothing queued: the panel states the decision and points at the choices. */
+.cp-choose {
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--accent);
+  border-left-width: 3px;
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+}
+.cp-choose-title {
+  font: var(--display-weight) 20px/1.15 var(--display);
+  color: var(--ink);
+}
+.cp-choose p {
+  margin-top: 4px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--ink-2);
+}
+/* Production choices are controls, not data rows: bordered cards with a trailing chevron,
+   name and one-line effect on the left, cost and turns on the right. */
+.prod-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 16px 0;
+}
+.prod {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) auto 12px;
+  grid-template-rows: auto auto;
+  column-gap: 10px;
+  row-gap: 2px;
+  align-items: center;
+  width: 100%;
+  min-height: 44px;
+  padding: 6px 10px;
+  text-align: left;
+  color: var(--ink-2);
+  background: var(--field);
+  border: 1px solid var(--rule-2);
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s, box-shadow 0.12s;
+}
+.prod > :first-child {
+  grid-row: 1 / 3;
+}
+@media (hover: hover) {
+  .prod:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: var(--panel-2);
+  }
+}
+.prod:active:not(:disabled) {
+  background: var(--panel-3);
+  transform: translateY(1px);
+}
+.prod:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+/* The chosen (or pending) build: accent frame, a tinted fill and a check in place of the chevron. */
+.prod.active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--field));
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+/* Picked this turn but not yet resolved: say so on the row itself. */
+.prod.pending /* G11: an item waiting for its strategic resource says why and when (pillar 5). */
+.prod-effect.prod-blocked { color: var(--bad); }
+.prod[aria-disabled="true"] .prod-go { color: var(--muted, inherit); }
+.prod-supply-need { display: inline-block; margin-left: 8px; white-space: nowrap; color: var(--ink); font-weight: 600; }
+.phone-build-choice .phone-action-why.prod-blocked { grid-column: 1 / -1; color: var(--bad); font: 600 12px/1.3 var(--sans); }
+.prod-effect {
+  font-style: normal;
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--accent);
+}
+.prod-name {
+  grid-column: 2;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.prod-effect {
+  grid-column: 2;
+  grid-row: 2;
+  font: italic 400 13px/1.2 var(--display);
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.prod.active .prod-name {
+  color: var(--ink);
+}
+.prod-cost,
+.prod-turns {
+  grid-column: 3;
+  text-align: right;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.prod-cost {
+  grid-row: 1;
+  color: var(--ink);
+}
+.prod-turns {
+  grid-row: 2;
+  font-size: 11px;
+  color: var(--muted);
+}
+.prod-go {
+  grid-column: 4;
+  grid-row: 1 / 3;
+  font: 600 18px/1 var(--display);
+  color: var(--accent);
+}
+/* Choosing: the options draw the eye once (a brief glow), then stay accented. */
+.prod-list.choosing .prod {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--rule-2));
+  animation: prod-invite 1.4s ease-out 0.2s 1 both;
+}
+@keyframes prod-invite {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+  60% {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 0%, transparent);
+  }
+  100% {
+    box-shadow: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .prod-list.choosing .prod {
+    animation: none;
+  }
+}
+.seg {
+  display: flex;
+  margin: 0 20px;
+  border: 1px solid var(--frame);
+}
+.seg > span {
+  flex: 1;
+  display: flex;
+}
+.seg button {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  padding-top: 2px;
+  font: 500 12px/1 var(--sans);
+  color: var(--ink-2);
+}
+.seg > span + span button,
+.seg button + button {
+  border-left: 1px solid var(--rule);
+}
+@media (hover: hover) {
+  .seg button:hover {
+    background: var(--panel-2);
+  }
+}
+@media (hover: hover) {
+  .seg button.on:hover {
+    color: var(--primary-ink);
+    background: var(--primary-bg); /* hover must not lay pale paper under the pale ink (the game menu's Look) */
+  }
+}
+.seg button.on {
+  color: var(--primary-ink);
+  background: var(--primary-bg); /* hover must not lay pale paper under the pale ink (the game menu's Look) */
+}
+.seg.small {
+  margin: 0;
+}
+.seg.small button {
+  height: 26px;
+  padding: 2px 10px 0;
+  font-size: 11px;
+}
+.cp-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 16px;
+  padding: 12px 20px 16px;
+  font-size: 12px;
+  color: var(--ink-2);
+  border-top: 1px solid var(--rule);
+}
+.cp-foot > span {
+  cursor: help;
+}
+.cp-foot .idle-building, .idle-building-note { color: var(--bad); font-weight: 600; }
+.idle-building-note { margin: 2px 0 6px; font-size: 12px; line-height: 1.35; }
+.cp-foot .lbl {
+  display: inline-block;
+  width: 72px;
+}
+
+.tip-bubble {
+  position: fixed;
+  z-index: 100;
+  max-width: min(300px, calc(100vw - 16px));
+  padding: 8px 12px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--ink);
+  background: var(--tip-bg);
+  border: var(--slip-border);
+  box-shadow: 0 6px 18px rgba(20, 16, 8, 0.18);
+  transition: opacity 0.12s;
+}
+/* A hover tooltip is read, never touched: the pointer passes straight through to the game. */
+.tip-bubble.tip-hover {
+  pointer-events: none;
+}
+.tip-bubble.tip-hover p {
+  margin: 0;
+}
+.tip-bubble.tip-hover p + p {
+  margin-top: 4px;
+}
+/* A pinned breakdown is a small popover: scrolls inside, closes with its ✕, Escape or a click outside. */
+.tip-bubble.tip-pinned {
+  max-width: min(360px, calc(100vw - 16px));
+  max-height: min(86vh, calc(100dvh - 16px));
+  overflow: auto;
+  padding: 12px 16px;
+  pointer-events: auto;
+  overscroll-behavior: contain;
+}
+.tip-close {
+  float: right;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin: -6px -10px 4px 8px;
+  font-size: 14px;
+  color: var(--ink-2);
+  background: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+@media (hover: hover) {
+  .tip-close:hover {
+    border-color: var(--rule-2);
+    color: var(--ink);
+  }
+}
+.tip-summary {
+  font-weight: 600;
+}
+/* The Science hover's source list (ScienceHoverSummary): normal weight rows, bold amounts only,
+   so a handful of sources reads as a compact list rather than one heavy headline. */
+.science-hover {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-weight: 400;
+}
+/* A label column and a right-aligned amount column, so the amounts line up and sum to Total. */
+.science-hover-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+.science-hover-row b {
+  flex: none;
+  min-width: 2.5em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--y-science);
+}
+.science-hover-row span {
+  min-width: 0;
+}
+.science-hover-total {
+  margin-top: 2px;
+  padding-top: 3px;
+  border-top: 1px solid var(--rule-2);
+  font-weight: 600;
+}
+.tip-more {
+  margin-top: 2px;
+  font: italic 400 12px/1.3 var(--display);
+  color: var(--muted);
+}
+/* A number with a breakdown behind it looks like one before it's hovered (pillar 9). */
+.tip-trigger[data-tip-rich='true'] {
+  cursor: pointer;
+}
+/* The ⓘ beside a control opens its breakdown; the control keeps its own click. */
+.tip-trigger:has(> .tip-info) {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+}
+.tip-trigger:has(> .tip-info) > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+.tip-info {
+  flex: 0 0 26px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  font-size: 15px;
+  color: var(--accent);
+  background: var(--btn-bg);
+  border: 1px solid var(--rule);
+  cursor: pointer;
+}
+@media (hover: hover) {
+  .tip-info:hover {
+    border-color: var(--accent);
+  }
+}
+.tip-info[aria-expanded='true'] {
+  border-color: var(--accent);
+}
+.bd {
+  min-width: 220px;
+}
+* + .bd,
+.bd-note .bd {
+  margin-top: 12px;
+}
+/* Titles can wrap to two lines: give them real leading. */
+.bd-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 8px;
+  margin-bottom: 4px;
+  font: var(--display-weight) 18px/1.15 var(--display);
+  border-bottom: 1px solid var(--frame);
+}
+.bd-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-height: 24px;
+  line-height: 24px;
+  font-size: 13px;
+}
+.bd-row > span:first-child {
+  flex: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.bd-row > span:first-child::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px dotted var(--rule-2);
+  transform: translateY(-5px);
+}
+.bd-row > span:last-child {
+  min-width: 24px;
+  text-align: right;
+  font-weight: 600;
+}
+.bd-total {
+  margin-top: 4px;
+  min-height: 32px;
+  line-height: 32px;
+  border-top: 1px solid var(--frame);
+  font: var(--display-weight) 18px/32px var(--display);
+}
+.bd-total > span:first-child::after {
+  border: 0;
+}
+.bd-total > span:last-child {
+  font: 600 15px/32px var(--num-font);
+}
+.bd-note {
+  margin-top: 4px;
+  font: italic 400 14px/18px var(--display);
+  color: var(--ink-2);
+}
+
+/* ---------- Victory race ---------- */
+.game .vp { top: var(--race-top); width: var(--race-width); }
+.vp {
+  position: absolute;
+  top: 72px;
+  right: 16px;
+  width: 320px;
+  max-height: calc(100% - 72px - 300px);
+  overflow: auto;
+  scrollbar-width: none;
+  z-index: 3;
+}
+/* Collapsed, the heading and the objectives link always show in full:
+   only the rows scroll when eight empires don't fit above the This Turn panel. */
+.vp:not(.open) {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.vp:not(.open) > * {
+  flex: none;
+}
+.vp:not(.open) > .vp-rows {
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.vp-rows {
+  padding: 4px 0 4px;
+}
+/* More rows below (a short window): "N more" in the footer says so and pages them. No fade over the rows: it nibbled the last whole row. */
+.vp:not(.open) > .vp-rows.scrolls {
+  box-shadow: inset 0 -1px 0 var(--rule-2);
+}
+.vp-more {
+  margin-right: 12px;
+  font: 600 11px/1 var(--sans);
+  white-space: nowrap;
+  color: var(--ink-2);
+}
+.vp-foot {
+  padding: 8px 16px 16px;
+  text-align: center;
+}
+/* Pointer targets of at least 24px (playtest-6 M6) without growing the race rows: the footer links
+   gain height inside the footer's padding, and the relation badge a transparent top and bottom
+   border, its hairline frame drawn inset so it looks as before. */
+@media (min-width: 961px) and (pointer: fine) {
+  :root .vp-foot { padding-top: 1px; }
+  .vp-foot .link { border-top: 7px solid transparent; }
+}
+/* The same footer height as before on short windows, so all eight race rows still fit. */
+@media (min-width: 961px) and (max-height: 960px) and (pointer: fine) {
+  :root .game .vp .vp-foot { padding-top: 0; padding-bottom: 7px; }
+}
+.vp-row .relation-badge {
+  border: 5px solid transparent;
+  border-inline-width: 0;
+  margin-block: -5px;
+  padding-inline: 6px;
+  background-clip: padding-box;
+  box-shadow: inset 0 0 0 1px currentColor;
+}
+.vp-row .relation-badge.alliance {
+  border-color: transparent;
+  box-shadow: inset 0 0 0 1px var(--control-border);
+}
+/* Right column (desktop and tablets): the race panel on top, the turn dock (and on wide desktops
+   the minimap) at the bottom. The turn dock takes the height it needs, up to leaving the race
+   --race-min; the race gets the rest (VpTrack publishes --dock-height), so there is never a dead
+   gap between them. When the race must scroll, the player's own row stays pinned in view. */
+@media (min-width: 961px) {
+  :root .game { --race-min: 220px; }
+  /* Short windows (the user's 1000x600 laptop): the race keeps its pinned own row and scrolls, so
+     a two-line call to action (e.g. why a unit's order fails) fits in the dock below it. */
+  @media (max-height: 700px) { :root .game { --race-min: 176px; } }
+  :root .game .seatbar {
+    max-height: calc(100% - var(--race-top) - var(--race-min) - 28px - var(--minimap-space, 0px));
+  }
+  :root .game .vp:not(.open) {
+    max-height: calc(100% - var(--race-top) - var(--dock-height, 300px) - 28px - var(--minimap-space, 0px));
+  }
+  .game .vp:not(.open) .vp-row.mine {
+    position: sticky;
+    top: 0;
+    bottom: 0;
+    z-index: 2;
+  }
+    }
+/* Short screens: eight empires fit above the This Turn panel without scrolling. */
+@media (max-height: 960px) {
+  .vp .ph {
+    padding-bottom: 8px;
+  }
+  .vp .ph-sub {
+    display: none;
+  }
+  .vp > .hint {
+    padding-bottom: 4px;
+    font-size: 13px;
+  }
+  .vp-foot {
+    padding: 4px 16px 10px;
+  }
+}
+/* Last turn's title-change chips add a line (about 20 px) under the rows; take it back from the
+   rows' and footer's padding so all eight rows still fit above the turn dock. */
+.ms-check { color: var(--gilt, #8f6f1c); }
+
+/* ---------- Seats, orders and the turn CTA ---------- */
+.seatbar {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  width: 320px;
+  z-index: 4;
+}
+/* Desktop: the turn dock stays below the race panel (overlay slots). Its header and the turn's
+   primary action (the CTA, Ready anyway) are pinned; the body between them (one row per human
+   seat, Cities, Pending orders, reviews) shrinks and scrolls, a long Cities list first, so a
+   2- or 3-human game at 1000x600 never pushes End Turn below the window (playtest-6 B1). */
+@media (min-width: 961px) {
+  .game .seatbar {
+    display: flex;
+    flex-direction: column;
+  }
+  /* .turn-details is display: contents on desktop, so its children are the flex items. */
+  .game .seatbar .turn-details > *, .game .seatbar > * { flex: none; }
+  .game .seatbar .turn-details > .turn-body {
+    display: flex;
+    flex-direction: column;
+    flex: 0 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+  .game .seatbar .turn-body > * { flex: none; }
+  /* More rows below the fold: a soft edge above the pinned action says the body scrolls. */
+  .game .seatbar .turn-body.scrolls::after {
+    content: '';
+    position: sticky;
+    bottom: 0;
+    flex: none;
+    z-index: 2; /* above the Cities list's sticky header */
+    height: 16px;
+    margin-top: -16px;
+    pointer-events: none;
+    background: linear-gradient(transparent, color-mix(in srgb, var(--ink) 22%, transparent));
+  }
+  .game .seatbar .turn-body > .city-list { flex: 0 1 auto; min-height: 44px; overflow-y: auto; overscroll-behavior: contain; }
+  /* An open list keeps room for its header and a first row: at 44px the sticky header covered every city. */
+  .game .seatbar .turn-body > .city-list[open] { min-height: 100px; }
+  .game .seatbar .city-list summary { position: sticky; top: 0; z-index: 1; background: var(--panel); }
+  .game .seatbar .city-list-items { max-height: none; }
+}
+/* Short desktop windows (the 1000x600 laptop): one compact line per seat, a tighter header and
+   CTA, so the body keeps room for the seats before it has to scroll. */
+@media (min-width: 961px) and (max-height: 760px) {
+  .game .seatbar .ph { padding-block: 8px 6px; }
+  .game .seatbar .ph-sub:not(:has(.last-turn)) { display: none; }
+  .game .seatbar .seat { min-height: 40px; padding: 4px 12px; column-gap: 8px; grid-template-columns: 24px minmax(0, 1fr) auto auto; }
+  .game .seatbar .seat > .medallion,
+  .game .seatbar .seat-select > .medallion { width: 24px !important; height: 24px !important; }
+  .game .seatbar .seat .medallion > .faction-mark { width: 16px !important; height: 16px !important; }
+  .game .seatbar .seat-name { font-size: 17px; }
+  .game .seatbar .seat-meta { margin-top: 1px; }
+  /* A local (hot-seat) row is one line: crest, name, order count, Ready toggle, key. */
+  .game .seatbar .local-seat { grid-template-rows: auto; }
+  .game .seatbar .seat-select { grid-row: 1; grid-template-columns: 24px minmax(0, max-content) auto; justify-content: start; align-items: center; }
+  .game .seatbar .seat-select > .medallion { grid-row: 1; }
+  .game .seatbar .seat-select > .seat-name { align-self: center; }
+  .game .seatbar .seat-select > .seat-meta { grid-column: 3; grid-row: 1; align-self: center; margin: 1px 0 0; white-space: nowrap; }
+  .game .seatbar .seat-select > .seat-name { min-width: 0; }
+  .game .seatbar .local-seat > .seat-readiness, .game .seatbar .local-seat > .kbd { grid-row: 1; }
+  .game .seatbar .cta { height: 56px; margin: 10px 16px 2px; gap: 4px; }
+  .game .seatbar .cta-production { height: auto; min-height: 56px; padding: 8px 12px; }
+  .game .seatbar .cta-long { height: auto; min-height: 56px; padding: 8px 12px; }
+  .game .seatbar .ready-anyway { height: 28px; margin-bottom: 2px; }
+}
+.seats {
+  display: flex;
+  flex-direction: column;
+}
+.seat {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto auto;
+  grid-template-rows: auto auto;
+  column-gap: 12px;
+  align-items: center;
+  width: 100%;
+  min-height: 60px;
+  padding: 8px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--rule);
+}
+.seat > .medallion,
+.seat > .faction-mark {
+  grid-row: 1 / 3;
+}
+.seat.on {
+  background: var(--panel-2);
+  box-shadow: inset 3px 0 0 var(--pc);
+}
+.seat-name {
+  align-self: end;
+  font: var(--display-weight) 20px/1 var(--display);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.seat-meta {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: start;
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--ink-2);
+}
+.seat-ready {
+  grid-column: 3;
+  grid-row: 1 / 3;
+  min-height: 24px;
+  padding: 4px 6px 2px;
+  font: 600 12px/1 var(--sans);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  border: 1px solid var(--rule);
+}
+.seat-ready.on {
+  color: var(--good);
+  border-color: color-mix(in srgb, var(--good) 45%, transparent);
+}
+.open-seat {
+  padding: 4px 6px;
+  font-size: 11px;
+}
+.seat > .open-seat {
+  grid-column: 2 / -1;
+  justify-self: start;
+  margin-top: 4px;
+}
+.seat > .kbd,
+.seat > span:last-child > .kbd {
+  grid-column: 4;
+  grid-row: 1 / 3;
+  margin: 0;
+}
+.orders-box {
+  border-bottom: 1px solid var(--rule);
+}
+.orders-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 40px;
+  padding: 2px 16px 0;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+.orders-toggle b {
+  color: var(--ink);
+}
+.orders-disclosure {
+  font-size: 9px;
+  color: var(--ink);
+  transition: transform 0.2s;
+}
+.orders-disclosure.open {
+  transform: rotate(90deg);
+}
+.err-count {
+  padding: 2px 6px 1px;
+  font: 600 9px/1.2 var(--sans);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--bad);
+  border: 1px solid var(--bad);
+}
+.orders-list {
+  max-height: 220px;
+  overflow: auto;
+  padding: 0 16px 12px;
+  font-size: 13px;
+}
+.order-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  border-top: 1px dotted var(--rule-2);
+}
+.order-item:first-child {
+  border-top: 0;
+}
+.order-item.bad > span {
+  color: var(--bad);
+}
+.order-item .order-error {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+.order-item .x {
+  width: 20px;
+  height: 20px;
+  color: var(--muted);
+  font-size: 16px;
+}
+@media (hover: hover) {
+  .order-item .x:hover {
+    color: var(--bad);
+  }
+}
+.cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: calc(100% - 32px);
+  height: 64px;
+  margin: 16px 16px 4px;
+}
+
+.cta:disabled {
+  opacity: 0.6;
+}
+.cta.cta-call { color: var(--ink); background: var(--panel); border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.cta.cta-call .cta-sub { color: var(--ink-2); }
+.cta.cta-call .kbd { color: var(--ink-2); border-color: var(--rule-2); }
+@media (hover: hover) { .cta.cta-call:hover:not(:disabled) { background: var(--panel-2); filter: none; } }
+.cta-label {
+  font: var(--display-weight) 22px/1 var(--display);
+}
+.cta-sub {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 3px 6px;
+  max-width: 100%;
+  font: 600 10px/1.2 var(--sans);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--primary-sub);
+}
+.cta-production {
+  height: auto;
+  min-height: 64px;
+  padding: 12px;
+}
+.cta-production .cta-sub {
+  flex-wrap: wrap;
+  justify-content: center;
+  column-gap: 8px;
+  line-height: 1.4;
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+/* The long city line wraps; the key hint stays inside the notched button instead of being cut. */
+.cta-production .cta-sub .kbd {
+  margin-left: 0;
+}
+/* A sentence (e.g. why a unit's order fails) reads as body text: sentence case, wrapping inside the
+   button, with the key hint kept whole on the last line. */
+.cta-long {
+  gap: 4px;
+  height: auto;
+  min-height: 64px;
+  padding: 10px 14px;
+}
+.cta-long .cta-label {
+  font-size: 19px;
+}
+.cta-long .cta-sub {
+  display: block;
+  max-width: 100%;
+  font: 500 13px/1.4 var(--sans);
+  letter-spacing: 0;
+  text-transform: none;
+  text-align: center;
+  overflow-wrap: anywhere;
+  color: var(--primary-ink);
+}
+.cta-long .cta-sub .kbd {
+  display: inline-block;
+  margin-left: 4px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+/* Pillar 9: while a card's own action is the primary (an attack on the rival city you clicked), the
+   turn's call to action steps back to an outlined button with the same label and key. */
+.cta.stepped,
+.cta.stepped:not(.waiting):hover:not(:disabled) {
+  color: var(--btn-ink);
+  background: var(--btn-bg);
+  filter: none;
+  box-shadow: inset 0 0 0 1px var(--btn-border);
+}
+.cta.stepped .cta-sub,
+.cta-long.stepped .cta-sub {
+  color: var(--ink-2);
+}
+.cta.stepped .kbd {
+  color: var(--ink-2);
+  border-color: var(--rule-2);
+}
+.cta.waiting {
+  color: var(--ink);
+  background: var(--panel-2);
+  box-shadow: inset 0 0 0 1px var(--rule-2);
+}
+.cta.waiting .cta-sub {
+  color: var(--muted);
+}
+.ready-anyway {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 32px;
+  margin-bottom: 4px;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+@media (hover: hover) {
+  .ready-anyway:hover {
+    color: var(--ink);
+  }
+}
+/* Secondary turn action under the CTA (observers: Resolve to the end), on the same inset. */
+.seatbar > .btn {
+  width: calc(100% - 32px);
+  margin: 4px 16px 12px;
+}
+
+/* ---------- Forecast & tile cards ---------- */
+.map-banner-tip {
+  position: absolute;
+  z-index: 21;
+  max-width: min(320px, calc(100% - 16px));
+  padding: 7px 10px;
+  color: var(--ink);
+  background: var(--tip-bg);
+  border: var(--slip-border);
+  box-shadow: 0 2px 10px #0002;
+  font: 600 11px/1.35 var(--sans);
+  pointer-events: none;
+}
+.tilecard,
+.forecast {
+  position: absolute;
+  z-index: 20;
+  color: var(--ink);
+  background: var(--tip-bg);
+  border: var(--slip-border);
+  pointer-events: none;
+  animation: pop 0.12s ease both;
+}
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+.tilecard {
+  min-width: 200px;
+  max-width: 260px;
+  padding: 12px 16px;
+  font-size: 13px;
+}
+.tilecard-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--frame);
+}
+.tilecard-head b {
+  font: var(--display-weight) 18px/1 var(--display);
+}
+.tilecard-head .muted {
+  font-size: 11px;
+}
+/* The previewed route may halt on a friend's tile (path.ts:routeRiskText). */
+.tilecard-warn,
+.route-warning {
+  margin: 0 0 8px;
+  font-weight: 600;
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--bad);
+}
+.route-note, .tilecard-warn.route-note {
+  margin: 0 0 8px;
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--ink-2);
+}
+.tilecard-yields {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+.tilecard-row {
+  padding: 2px 0;
+  color: var(--ink-2);
+}
+/* The Gold coin's side space is what keeps the full stop or comma after it visible: pulling it back (Amounts.css .amt-tight) hid the mark behind the coin in the buy-a-tile card. */
+.tilecard-row .amt-tight > .amt-icon { margin-inline-end: 0; }
+.tilecard-row.blocked {
+  margin: 4px 0 8px;
+  padding: 7px 9px;
+  border-left: 3px solid var(--bad);
+  background: color-mix(in srgb, var(--bad) 8%, var(--panel));
+  color: var(--bad);
+  font: 600 13px/1.35 var(--sans);
+}
+.tilecard-row.ruin {
+  color: var(--accent);
+}
+.tilecard-row.good {
+  color: var(--good);
+  font-weight: 600;
+  max-width: 280px;
+}
+.tilecard-row.muted {
+  font: italic 400 14px/1.3 var(--display);
+  color: var(--muted);
+}
+.forecast {
+  width: 320px;
+}
+.forecast-head {
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 12px 16px 8px;
+  border-bottom: 1px solid var(--frame);
+}
+.forecast-kind {
+  font: 600 10px/1 var(--sans);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--label-color);
+}
+.forecast-verdict {
+  font: var(--display-weight) 22px/1 var(--display);
+}
+.forecast-head.good .forecast-verdict {
+  color: var(--good);
+}
+.forecast-head.bad .forecast-verdict {
+  color: var(--bad);
+}
+/* The era tab (the one on a miniature's base) in panels and the forecast. */
+.era-tab-wrap { display: inline-flex; align-items: center; gap: 4px; vertical-align: 1px; }
+.era-tab {
+  display: inline-grid; place-items: center; min-width: 15px; height: 13px; padding: 0 3px; box-sizing: border-box;
+  border: 1px solid var(--ink); border-radius: 2px; font: 700 10px/1 var(--display); letter-spacing: .02em; font-style: normal;
+}
+.era-tab-name { font: inherit; }
+/* A newer, stronger defender: the warning line under the verdict (era-distinct units, 2026-10-11). */
+.forecast-era {
+  padding: 5px 16px;
+  border-bottom: 1px solid var(--frame);
+  font: 600 13px/1.3 var(--sans);
+  color: var(--bad);
+  background: color-mix(in srgb, var(--bad) 8%, transparent);
+}
+.forecast-sides {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 16px;
+}
+.forecast-vs {
+  font: italic 400 16px/1 var(--display);
+  color: var(--muted);
+}
+.fside.right {
+  text-align: right;
+}
+.fside-name {
+  font: var(--display-weight) 18px/1.1 var(--display);
+}
+.fside-owner {
+  font-size: 11px;
+  color: var(--muted);
+}
+.fside-str {
+  margin: 4px 0;
+  font: 600 22px/1 var(--num-font);
+}
+.hpbar {
+  display: flex;
+  height: 4px;
+  background: var(--panel-3);
+}
+.fside.right .hpbar {
+  flex-direction: row-reverse;
+}
+.hp-after {
+  background: var(--good);
+}
+.hp-lost {
+  background: var(--bad);
+  opacity: 0.6;
+}
+.fside-hp {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+.forecast-odds {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 8px 16px;
+  font-size: 12px;
+  color: var(--ink-2);
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+.forecast-odds b {
+  font: 600 18px/1 var(--num-font);
+}
+.forecast-bd {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 12px 16px;
+}
+.forecast-bd .bd {
+  min-width: 0;
+}
+.forecast-bd .bd + .bd {
+  margin-top: 0;
+}
+.forecast-bd .bd-title {
+  font-size: 15px;
+}
+.forecast-foot {
+  padding: 0 16px 8px;
+  font: italic 400 13px/1.3 var(--display);
+  color: var(--ink-2);
+}
+/* The capital point: gilt, with the VP seal, right under the header. */
+.forecast-vp { display: flex; align-items: center; gap: 8px; padding: 3px 16px; border-bottom: 1px solid var(--rule); background: color-mix(in srgb, var(--gilt) 10%, var(--panel)); font: 700 12px/1.25 var(--sans); color: color-mix(in srgb, var(--gilt) 70%, var(--ink)); }
+.forecast-vp .vh-seal.inline { position: static; flex: none; width: 22px; height: 22px; box-shadow: 0 0 0 1.5px var(--gilt); }
+.forecast-vp .vh-seal.inline b { font-size: 10px; }
+/* The shared-counter footnote is a number the player acts on: readable size and ink, not an italic aside. */
+.forecast-foot.forecast-counter { font: 500 12px/1.3 var(--sans); color: var(--ink); }
+/* Civ 6: who takes an attack on a garrisoned city, part of the headline (not a footnote). */
+.forecast-shield {
+  margin: 0 16px 8px;
+  padding-left: 8px;
+  border-left: 3px solid var(--accent);
+  font-weight: 600;
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--ink);
+}
+/* A route note (following a friend) is information: plain ink on a quiet rule, never the accent bar. */
+.forecast-shield.route-note { border-left-color: var(--rule-2); font-weight: 400; color: var(--ink-2); }
+/* The whole fight at a city (core CityAssaultForecast): the city, the garrison under it, your unit, and whether it is captured this turn.
+   Each row is a label and its HP before and after; the capture sentence is coloured and also says it in words. */
+.forecast-assault { margin: 0 16px 8px; padding: 6px 8px; border-left: 3px solid var(--accent); background: var(--paper-2, transparent); }
+.forecast-assault-title { font: 600 12px/1.25 var(--sans); color: var(--ink-2); margin-bottom: 4px; }
+.forecast-assault-row { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; line-height: 1.4; }
+.forecast-assault-name { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+.forecast-assault-hp { font: 400 13px/1.4 var(--num-font); white-space: nowrap; }
+.forecast-assault-hp em { font: italic 400 12px/1.4 var(--display); color: var(--bad); }
+.forecast-assault-hp em.carry { color: var(--ink-2); }
+.forecast-assault-capture { margin-top: 4px; font-weight: 600; font-size: 13px; line-height: 1.3; }
+.forecast-assault-capture.good { color: var(--good); }
+.forecast-assault-capture.bad { color: var(--bad); }
+/* The rows and the sides above already say what each side loses: the line of expected damage gives way to them. */
+.forecast:has(.forecast-assault) .forecast-dealt { display: none; }
+/* Siege makes a walled target easier to attack: use the positive status colour. */
+.forecast-walls { font-weight: 500; font-size: 12px; }
+.forecast-walls.good { border-left-color: var(--good); }
+/* After the attack: the tile a winner advances into (aftermath.ts). Colour follows the risk word, and
+   the word is in the sentence, so colour is never alone. */
+.forecast-aftermath { border-left-color: var(--good); }
+.forecast-aftermath[data-risk='Exposed'] { border-left-color: var(--y-production); }
+.forecast-aftermath[data-risk='Likely lost'] { border-left-color: var(--bad); }
+.forecast-aftermath.severe { margin-top: 8px; color: var(--bad); font-size: 13px; }
+.forecast-fortify { border-left-color: var(--rule-2); font-weight: 500; font-size: 12px; margin-top: 8px; }
+/* G18: the attacker could be destroyed. */
+.forecast-risk {
+  margin: 0 16px 8px;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--bad);
+}
+/* A walled city's shot, folded into the attacker's result: its share of the HP bar is hatched and
+   the split is named under the headline (playtest-6 H1). */
+.hp-fire {
+  background: repeating-linear-gradient(135deg, var(--bad) 0 3px, transparent 3px 5px);
+  opacity: 0.9;
+}
+.fside-split {
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--bad);
+}
+.forecast-strike-math {
+  font-size: 12px;
+}
+.forecast-strike summary { cursor: pointer; font: 600 12px/1.25 var(--sans); }
+.forecast-strike[open] .forecast-strike-math { display: block; margin-top: 4px; }
+/* Standing notes (visible positions, capture, pursuit): quieter, so the numbers lead. */
+.forecast-note {
+  font-size: 12px;
+  line-height: 1.25;
+}
+/* Short windows: the full card fits beside its hex inside the map (never under the window edge). */
+@media (max-height: 760px) {
+  .forecast-sides { padding: 8px 16px; }
+  .forecast-bd { padding: 8px 16px; gap: 12px; }
+  .forecast-bd .bd-total { min-height: 24px; line-height: 24px; }
+  /* The whole-fight card is the tallest: its strength tables give up a few pixels a row at short windows. */
+  .forecast:has(.forecast-assault) .forecast-bd .bd-row { min-height: 19px; line-height: 19px; }
+  .forecast:has(.forecast-assault) .forecast-bd .bd-title { padding-bottom: 4px; margin-bottom: 2px; font-size: 16px; }
+  .forecast:has(.forecast-assault) .forecast-bd .bd-total { min-height: 22px; line-height: 22px; }
+  .forecast:has(.forecast-assault) .forecast-risk { margin-bottom: 4px; }
+  /* The optional "How city fire works" fold goes first: the red city-fire row above already says what it costs. */
+  .forecast:has(.forecast-assault) details.forecast-strike { display: none; }
+  /* The plain "Walls halve this attack" line also yields: the strength table shows Walls, and the covered (green) line stays. */
+  .forecast:has(.forecast-assault) .forecast-walls:not(.good) { display: none; }
+  .forecast-foot { padding-bottom: 8px; }
+  /* Standing caveats (visible positions, capture rules, pursuit) are in the Guide; at this height
+     they would push the card past the window, so the numbers and risks keep the room. */
+  .forecast .forecast-note { display: none; }
+  .forecast-shield { margin-bottom: 4px; line-height: 1.2; }
+  /* The whole-fight block keeps its rows and its capture sentence; its heading shows only when it pools more than one attack, and the
+     line of expected damage (the rows say it) gives way. */
+  .forecast-assault { margin-bottom: 4px; padding: 3px 8px; }
+  .forecast-assault[data-attacks='1'] .forecast-assault-title { display: none; }
+  .forecast-assault-title { margin-bottom: 2px; }
+  .forecast-assault-row { line-height: 1.25; }
+  .forecast-assault-capture { margin-top: 2px; font-size: 12px; line-height: 1.2; }
+  .forecast:has(.forecast-assault) .forecast-odds { padding: 6px 16px; }
+  /* The aftermath and fortification lines are headline-level, so they stay; they buy their room with width and tighter margins. */
+  .forecast { width: 368px; }
+  .forecast-aftermath.severe, .forecast-fortify { margin-top: 4px; }
+  .forecast-strike-math { line-height: 1.2; }
+  /* A capture adds the VP line and the occupation warning to the whole fight: the warning is set smaller and the strength rows tighter. */
+  .forecast .forecast-risk[data-testid='forecast-occupation-lock'] { font-size: 12px; line-height: 1.2; padding: 2px 0; }
+  .forecast:has([data-testid='forecast-occupation-lock']):has(.forecast-assault) .forecast-bd .bd-row { min-height: 15px; line-height: 15px; }
+  /* The lock card also gives up the city-fire sentence's tail (the HP line under the bar already says the fire is included) and some padding. */
+  .forecast:has([data-testid='forecast-occupation-lock']) .forecast-included { display: none; }
+  .forecast:has([data-testid='forecast-occupation-lock']) .forecast-risk { margin-bottom: 3px; }
+  .forecast:has([data-testid='forecast-occupation-lock']) .forecast-head { padding: 6px 16px 4px; }
+  .forecast:has([data-testid='forecast-occupation-lock']) .fside-str { margin: 2px 0; }
+  .forecast:has([data-testid='forecast-occupation-lock']) .fside-hp { margin-top: 2px; }
+  .forecast:has([data-testid='forecast-occupation-lock']) .forecast-assault { margin-bottom: 2px; }
+  .forecast:has([data-testid='forecast-occupation-lock']) .forecast-sides { padding: 6px 16px; }
+  .forecast:has([data-testid='forecast-occupation-lock']) .forecast-vp { padding: 2px 16px; }
+  .forecast:has([data-testid='forecast-occupation-lock']) .forecast-counter { padding-top: 0; padding-bottom: 4px; }
+  .forecast:has([data-testid='forecast-occupation-lock']):has(.forecast-assault) .forecast-bd { padding: 6px 16px; }
+  .forecast:has([data-testid='forecast-occupation-lock']):has(.forecast-assault) .forecast-bd .bd-total { min-height: 18px; line-height: 18px; }
+  .forecast:has([data-testid='forecast-occupation-lock']):has(.forecast-assault) .forecast-odds { padding: 4px 16px; }
+}
+/* A capture card (the occupation warning shows) already states the capture and the lock, and is the tallest card: the standing notes, the
+   "How city fire works" fold and the plain Walls line (the strength table shows Walls) yield at every height so it stays whole in the window. */
+.forecast:has([data-testid='forecast-occupation-lock']) :is(.forecast-note, details.forecast-strike, .forecast-walls:not(.good)) { display: none; }
+.forecast {
+  max-height: calc(100% - 72px);
+  overflow: hidden;
+}
+/* The compact default card fits; an opened explanation remains reachable at every height. */
+.forecast.forecast:has(.forecast-strike details[open], details.forecast-strike[open]) { overflow-y: auto; scrollbar-width: thin; }
+/* The touch card's forecast headline, above Confirm (playtest-6 H2). */
+.forecast-summary {
+  display: grid;
+  gap: 2px;
+  margin: 8px 0;
+  font-size: 13px;
+}
+.forecast-summary-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+}
+.forecast-summary-line b {
+  font-family: var(--num-font);
+}
+.forecast-summary-verdict {
+  font: var(--display-weight) 18px/1 var(--display) !important;
+}
+.forecast-summary-verdict.good { color: var(--good); }
+.forecast-summary-verdict.bad { color: var(--bad); }
+.forecast-summary-fire {
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--bad);
+}
+
+/* ---------- Modals ---------- */
+.modal-back {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  background: var(--scrim);
+  animation: fade 0.18s ease both;
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+.modal {
+  position: relative;
+  max-width: calc(100% - 64px);
+  max-height: calc(100% - 96px);
+  overflow: auto;
+  color: var(--ink);
+  border: var(--frame-pad) solid transparent;
+  border-image: var(--frame-image);
+  animation: rise 0.22s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.modal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--rule);
+}
+.modal-head h2 {
+  font: var(--display-weight) 32px/1 var(--display);
+}
+.modal-head .muted {
+  margin-top: 6px;
+  font: italic 400 15px/1.3 var(--display);
+}
+.modal-foot {
+  padding: 12px 24px 20px;
+  font: italic 400 14px/1.3 var(--display);
+  border-top: 1px solid var(--rule);
+}
+.tech-modal {
+  width: 1440px;
+  max-width: calc(100% - 48px);
+  height: 864px;
+  max-height: calc(100dvh - 32px);
+  overflow: hidden;
+  background: var(--panel);
+}
+dialog.tech-modal {
+  position: fixed;
+  margin: auto;
+  padding: 0;
+  background: var(--panel);
+  /* A transformed dialog would offset the fixed-position tooltip portal. */
+  animation: fade 0.18s ease both;
+}
+dialog.tech-modal[open] {
+  display: flex;
+  flex-direction: column;
+}
+dialog.tech-modal::backdrop {
+  background: var(--scrim);
+}
+.tech-modal .modal-head {
+  flex: none;
+  padding: 12px 24px 10px;
+  align-items: center;
+}
+.tech-modal .modal-head h2 {
+  font-size: 30px;
+}
+.tech-modal .modal-head .muted {
+  margin-top: 4px;
+  font-size: 14px;
+}
+/* With no Science yet, say where it comes from and when the first arrives (A12). */
+.research-no-science {
+  max-width: 62ch;
+  margin-top: 4px;
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--accent);
+}
+.research-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.research-head-actions > span {
+  color: var(--ink-2);
+  font: italic 400 16px/1.2 var(--display);
+}
+.research-head-actions kbd {
+  margin-left: 12px;
+  font: 400 10px/1 var(--sans);
+}
+.tech-modal .modal-foot {
+  flex: none;
+  padding: 6px 24px;
+  font-size: 12px;
+}
+.research-cost-tip {
+  border-bottom: 1px dotted var(--ink-2);
+  cursor: help;
+}
+.research-unlock .muted {
+  color: var(--ink-2);
+}
+
+/* ---------- Turn report ---------- */
+.game .report { top: var(--story-top); right: var(--story-right); width: min(360px, calc(100% - var(--story-left) - var(--story-right))); }
+/* The first card holds the report. Later cards leave it a separate, scrollable space. */
+.game:has(.moment-card) .report {
+  top: calc(var(--story-top) + var(--moment-lane-height, 0px) + 8px);
+  max-height: calc(100% - var(--story-top) - var(--moment-lane-height, 0px) - 24px);
+}
+
+.report {
+  position: absolute;
+  top: 72px;
+  right: 352px;
+  width: 360px;
+  max-height: calc(100% - 88px);
+  display: flex;
+  flex-direction: column;
+  z-index: 9;
+  color: var(--ink);
+  border: var(--frame-pad) solid transparent;
+  border-image: var(--frame-image);
+  animation: slideIn 0.22s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+}
+.report-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 16px 16px 8px;
+}
+/* Phone sheet (embedded): one row, the turn stepper and a Filter control, so the events lead. */
+.report-head.compact {
+  align-items: center;
+  gap: 8px;
+  padding: 0 0 8px;
+  border-bottom: 1px solid var(--rule);
+}
+.report-head.compact .report-head-main { min-width: 0; }
+.report-head.compact .report-stepper { margin: 0; }
+/* The kicker ("Last turn", "2 turns ago") sits under the turn number. */
+.report-head.compact .report-turn { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.report-head.compact .report-kicker { font-size: 9px; letter-spacing: 0.08em; white-space: nowrap; }
+.report-filter-toggle {
+  flex: none;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+}
+.report-filters[hidden] { display: none; }
+.report-kicker {
+  font: 600 10px/1 var(--sans);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--kicker-color);
+}
+.report h3 {
+  margin-top: 6px;
+  font: var(--display-weight) 24px/1 var(--display);
+}
+.report-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 16px 12px;
+  border-bottom: 1px solid var(--rule);
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.chip {
+  padding: 4px 8px 2px;
+  font: 600 10px/1.2 var(--sans);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border: 1px solid var(--rule);
+}
+.chip.on {
+  color: var(--ink);
+  border-color: var(--frame);
+}
+.chip .chip-icon { display: inline-grid; vertical-align: middle; margin: -2px 3px 0 -3px; }
+.chip:not(.on) .chip-icon { opacity: 0.6; }
+.report-body {
+  overflow: auto;
+  padding: 8px 16px 16px;
+}
+.report-empty {
+  padding: 16px 0;
+  font: italic 400 15px/1.3 var(--display);
+}
+.report-cat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 4px;
+  font: italic 600 16px/1 var(--display);
+  color: var(--accent);
+}
+/* Star divider between the sections: the group is the divider's own box. */
+.report-sd { margin: 12px 0 0; }
+.report-sd + .report-cat { margin-top: 8px; }
+.rline {
+  padding: 5px 0 5px 0;
+  font-size: 13px;
+  color: var(--ink-2);
+  border-bottom: 1px solid color-mix(in srgb, var(--rule) 70%, transparent);
+}
+.rline.jump {
+  cursor: pointer;
+}
+@media (hover: hover) {
+  .rline.jump:hover {
+    background: var(--panel-2);
+  }
+}
+.rline.w2 {
+  color: var(--ink);
+  font-weight: 600;
+}
+.rline.good {
+  border-bottom-color: color-mix(in srgb, var(--good) 38%, transparent);
+}
+.rline.bad {
+  border-bottom-color: color-mix(in srgb, var(--bad) 38%, transparent);
+}
+.rline-text {
+  display: flex;
+  width: 100%;
+  text-align: left;
+  justify-content: space-between;
+  gap: 8px;
+}
+.rline-more {
+  color: var(--accent);
+}
+.rline-show-map, .rline-show-card { display: inline-block; margin: 2px 0 0 34px; font-size: 11px; }
+.rline-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+/* Tone is never colour alone: the line's own medallion, ringed green with a rising arrow or red with a falling one. */
+.rline-tone {
+  flex: none;
+  display: inline-grid;
+  color: var(--muted);
+}
+/* An empire crest in a line (diplomacy): its player badge hangs 7px off the crest's corner, so
+   leave that room before the text (playtest-6 M4). */
+.rline-main > .empire-mark { align-self: center; margin-right: 6px; }
+.rline-tone.good, .hp-delta.good, .chip-count.good { color: var(--good); }
+.rline-tone.bad, .hp-delta.bad, .chip-count.bad { color: var(--bad); }
+.hp-delta {
+  font-weight: 700;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.chip-count { font-weight: 700; }
+.chip-count.neutral { color: var(--muted); font-weight: 600; }
+.report-stepper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+}
+.report-turn { min-width: 4.5em; text-align: center; font: 600 13px/1 var(--sans); letter-spacing: 0.06em; }
+.report-step { min-width: 28px; min-height: 28px; font-size: 11px; }
+.report-foot {
+  padding: 8px 16px 12px;
+  font-size: 11px;
+  border-top: 1px solid var(--rule);
+}
+/* Reopen the turn report: a quiet control, never competing with the turn's primary action. In
+   This Turn it takes the header's subtitle line, so the race above keeps its room. */
+.last-turn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.ph-sub:has(.last-turn) { display: block; }
+.ph-sub .last-turn {
+  margin: -2px auto 0;
+  min-height: 22px;
+  padding: 1px 10px;
+  line-height: 1;
+  font-style: normal;
+}
+.last-turn-counts { display: inline-flex; gap: 6px; }
+.phone-sheet-head .last-turn { width: auto; margin: 0; }
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.rline-details {
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+/* Opt-in frame-rate readout (?perf=1 or Settings). */
+.perf-overlay {
+  position: fixed;
+  left: 50%;
+  top: 60px;
+  transform: translateX(-50%);
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+  font: 500 10px/1.3 ui-monospace, Menlo, monospace;
+  color: #f2ead8;
+  background: rgba(20, 16, 10, 0.78);
+  pointer-events: none;
+}
+.perf-overlay b {
+  font-size: 12px;
+}
+
+/* ---------- Loading plate ---------- */
+.loading-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(ellipse 70% 60% at 50% 46%, transparent 55%, color-mix(in srgb, var(--ink) 10%, transparent)),
+    var(--bg);
+  animation: loading-in 0.25s ease-out both;
+}
+.loading-screen::before {
+  content: '';
+  position: absolute;
+  inset: 24px;
+  border: 1px solid var(--frame);
+  box-shadow: inset 0 0 0 4px transparent, inset 0 0 0 5px var(--rule);
+  pointer-events: none;
+}
+.loading-screen.leaving {
+  animation: loading-out 0.45s ease-in both;
+  pointer-events: none;
+}
+@keyframes loading-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes loading-out {
+  to {
+    opacity: 0;
+  }
+}
+.loading-rose {
+  position: absolute;
+  width: min(760px, 86vh);
+  height: min(760px, 86vh);
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1;
+  opacity: 0.07;
+  pointer-events: none;
+}
+.loading-rose path {
+  fill: color-mix(in srgb, var(--ink) 25%, transparent);
+}
+.loading-inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 760px;
+  max-width: calc(100% - 96px);
+  text-align: center;
+  animation: rise 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+/* The progress rule: a hairline with a short ink stroke sweeping along it. */
+.loading-rule {
+  position: relative;
+  width: 320px;
+  height: 1px;
+  margin-top: 24px;
+  overflow: hidden;
+  background: var(--rule);
+}
+.loading-rule i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 30%;
+  background: linear-gradient(90deg, transparent, var(--accent) 35%, var(--accent) 65%, transparent);
+  animation: loading-sweep 2.2s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+@keyframes loading-sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(334%);
+  }
+}
+.loading-star {
+  margin-top: 20px;
+  color: var(--accent);
+  animation: spin 6s linear infinite;
+}
+.loading-task {
+  margin: 16px 0 0;
+  font: 600 11px/1 var(--sans);
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.loading-tip {
+  margin: 40px 0 0;
+  font: italic 400 19px/1.35 var(--display);
+  color: var(--ink);
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------- Game over, busy, toast ---------- */
+.gameover {
+  width: 520px;
+  padding: 32px 40px 28px;
+  text-align: center;
+}
+dialog.gameover {
+  position: fixed;
+  margin: auto;
+  background: var(--panel);
+}
+dialog.gameover::backdrop {
+  background: var(--scrim);
+}
+.gameover .wordmark {
+  margin: 0 auto 16px;
+  display: block;
+}
+.gameover h1 {
+  margin: 8px 0 8px;
+  font: var(--display-weight) 56px/1 var(--display);
+}
+.gameover.won h1 {
+  color: var(--accent);
+}
+.gameover p {
+  font: italic 400 18px/1.3 var(--display);
+  color: var(--ink-2);
+}
+.go-crest {
+  display: flex;
+  justify-content: center;
+  margin: 16px 0 8px;
+}
+.go-kicker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font: 600 10px/1 var(--sans);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--kicker-color);
+}
+.go-table {
+  margin: 20px 0 24px;
+  text-align: left;
+  border-top: 1px solid var(--frame);
+}
+.go-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 8px 6px;
+  border-bottom: 1px solid var(--rule);
+  font: 500 16px/1.1 var(--display);
+}
+.go-row b {
+  font: 600 14px/1 var(--num-font);
+}
+.go-row.mine {
+  background: var(--panel-2);
+  font-weight: 700;
+}
+.go-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 24px; /* collapses with the results table; spaces the Defeat copy from its actions */
+}
+/* Victory and Defeat (premium): the leader's engraved portrait with a ribbon beside the standings. */
+.gameover.go-premium {
+  width: min(860px, calc(100vw - 16px));
+  max-height: calc(100dvh - 16px);
+  padding: 16px 32px 16px;
+  overflow: auto;
+}
+.gameover.go-premium .wordmark {
+  margin: 0 auto 6px;
+}
+.go-grid {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 30px;
+  align-items: start;
+  margin-top: 6px;
+  text-align: left;
+}
+.go-hero {
+  --pw: 150px;
+  --ph: 188px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 12px 0 8px;
+}
+.go-hero.pair {
+  --pw: 112px;
+  --ph: 140px;
+}
+.go-hero.trio {
+  --pw: 84px;
+  --ph: 105px;
+}
+.go-portraits {
+  display: flex;
+  gap: 22px;
+}
+.go-portraits .pf {
+  margin: 0;
+}
+.pf.fallen .pf-crest {
+  filter: grayscale(1) brightness(0.85) drop-shadow(0 1px 1px rgba(43, 36, 25, 0.35));
+}
+.go-main {
+  min-width: 0;
+  padding-top: 4px;
+}
+.go-main .go-kicker {
+  justify-content: flex-start;
+}
+.go-main h1 {
+  margin: 6px 0 4px;
+  font-size: 52px;
+}
+.go-main p {
+  margin: 0;
+  font-size: 17px;
+}
+.go-main .sd {
+  margin: 10px 0 4px;
+}
+.go-main .go-table {
+  margin: 0;
+  border-top: 0;
+}
+.go-main .go-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 84px 52px;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 6px 3px;
+  min-height: 38px;
+}
+.go-who {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.go-faces {
+  display: inline-flex;
+  flex: none;
+  gap: 2px;
+}
+.go-name {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.go-name small {
+  font: 600 10px/1 var(--sans);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.go-win-star {
+  align-self: center;
+  color: var(--accent);
+}
+.go-meter {
+  height: 6px;
+  background: var(--panel-3);
+  box-shadow: inset 0 0 0 1px var(--rule);
+}
+.go-meter i {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+.go-row.win {
+  border-left: 3px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, var(--panel));
+}
+.go-row.out {
+  color: var(--muted);
+}
+.go-row.out .go-meter i {
+  background: var(--muted);
+}
+.go-main .go-row b {
+  text-align: right;
+}
+.gameover.go-premium .go-actions {
+  margin-top: 12px;
+  justify-content: flex-start;
+}
+@media (min-height: 760px) {
+  .gameover.go-premium {
+    padding: 28px 40px 24px;
+  }
+  .go-hero {
+    --pw: 200px;
+    --ph: 252px;
+  }
+  .go-hero.pair {
+    --pw: 150px;
+    --ph: 188px;
+  }
+  .go-hero.trio {
+    --pw: 104px;
+    --ph: 130px;
+  }
+  .go-main h1 {
+    font-size: 60px;
+  }
+  .go-main .go-row {
+    min-height: 44px;
+  }
+  .gameover.go-premium .go-actions {
+    margin-top: 20px;
+  }
+}
+
+.busy {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--scrim) 50%, transparent);
+}
+.busy-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  font: italic 500 18px/1 var(--display);
+  background: var(--tip-bg);
+  border: var(--slip-border);
+}
+.spinner {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  background: var(--accent);
+  clip-path: path('M7 0L8.3 5.7L14 7L8.3 8.3L7 14L5.7 8.3L0 7L5.7 5.7Z');
+  animation: spin 1.6s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes blink {
+  50% {
+    opacity: 0.3;
+  }
+}
+.toast {
+  position: absolute;
+  left: 50%;
+  bottom: 136px;
+  transform: translateX(-50%);
+  z-index: 70;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: max-content;
+  max-width: min(560px, calc(100vw - 32px));
+  padding: 10px 16px;
+  font-size: 13.5px;
+  color: var(--ink);
+  background: var(--tip-bg);
+  border: var(--slip-border);
+  border-left: 3px solid var(--bad);
+}
+.toast-message {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+.toast-close {
+  flex: none;
+  display: grid;
+  place-items: center;
+  min-width: 24px;
+  min-height: 24px;
+  padding: 0;
+  color: var(--bad);
+  background: transparent;
+  border: 1px solid var(--rule-2);
+  font: 600 18px/1 var(--body);
+  cursor: pointer;
+}
+.toast-close:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+.toast.inline {
+  position: static;
+  transform: none;
+  margin-top: 16px;
+}
+@media (min-width: 961px) {
+  .game .toast.game-error-toast {
+    /* Keep transient errors in the exposed map lane, clear of the pinned turn action. */
+    left: calc((100% + 352px - var(--race-width)) / 2);
+    bottom: 16px;
+    max-width: min(360px, calc(100vw - 352px - var(--race-width) - 64px));
+  }
+}
+.client-error-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: var(--paper);
+  color: var(--ink);
+}
+.client-error-screen > div {
+  width: min(560px, 100%);
+}
+.client-error-screen h1 {
+  margin: 0;
+  font: var(--display-weight) 32px/1.15 var(--display);
+}
+.client-error-screen .toast {
+  max-width: none;
+  margin-bottom: 20px;
+}
+
+/* Shared keyboard focus stays outside decorative notches. The map ring sits inside the viewport. */
+:root :focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+:root .btn.primary:focus-visible,
+:root .act.primary:focus-visible,
+:root .cta:focus-visible {
+  clip-path: none;
+}
+/* The map holds focus for most of a keyboard game (Return is the main key), so its ring is a thin,
+   faint hairline: a full-viewport 3px red frame read as an alarm (pre-launch UX review, 2026-11-21). */
+:root .map-canvas:focus-visible {
+  outline: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  outline-offset: -2px;
+}
+/* Esc closed this chip's explanation: the focus frame shows even when a click gave it focus. */
+:root .tip-trigger[data-esc-focus] {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+.player-badge {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--on-player);
+  border-radius: 50%;
+  color: var(--on-player);
+  font: 700 12px/1 var(--sans);
+  letter-spacing: 0;
+  vertical-align: middle;
+}
+.vp-player {
+  position: relative;
+  display: inline-flex;
+  margin-right: 8px;
+}
+.vp-player .player-badge {
+  position: absolute;
+  right: -8px;
+  bottom: -3px;
+}
+.local-seat {
+  column-gap: 8px;
+  padding: 8px 12px;
+}
+.seat-select {
+  grid-column: 1 / 3;
+  grid-row: 1 / 3;
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  column-gap: 8px;
+  text-align: left;
+}
+.seat-select > .medallion {
+  grid-row: 1 / 3;
+}
+.seat-readiness {
+  grid-column: 3;
+  grid-row: 1 / 3;
+}
+.city-list {
+  border-bottom: 1px solid var(--rule);
+  font-size: 12px;
+}
+.city-list summary {
+  padding: 12px 16px;
+  cursor: pointer;
+}
+.city-list-items {
+  max-height: 168px;
+  overflow: auto;
+  padding: 0 8px 8px;
+}
+.city-list-items button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  text-align: left;
+}
+@media (hover: hover) {
+  .city-list-items button:hover {
+    background: var(--panel-2);
+  }
+}
+.city-list-items button[aria-pressed='true'] {
+  background: var(--panel-2);
+}
+.city-list-production {
+  margin-left: auto;
+  font-size: 12px;
+}
+
+/* The production queue: its own section under "Now producing". Visible reorder and remove buttons, never only on hover.
+   The first item is the one in "Now producing", so the rows start at #2. One line a row (name, then its note and turns as one
+   unit, which wraps under a long name without a leading dot), 26 px buttons, and no scroll box inside the scrolling panel
+   (astra full review 2026-10-31, section 3; UI review of ui-density-1031). */
+.production-queue ol { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 3px; }
+.production-queue li { display: flex; align-items: center; gap: 6px; min-height: 28px; padding: 0 0 0 6px; border: 1px solid var(--rule-2); background: var(--field); }
+.queue-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.queue-count-note { font: 400 11px/1.3 var(--sans); color: var(--ink-2); }
+.queue-empty { margin: 0; font: 400 11px/1.2 var(--sans); color: var(--ink-2); }
+.queue-empty .lbl { margin-right: 4px; }
+.queue-text { flex: 1; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; min-width: 0; padding: 1px 0; }
+.queue-name { font: 600 13px/1.25 var(--sans); color: var(--ink); overflow-wrap: anywhere; }
+.queue-sub { font: 400 11px/1.25 var(--sans); color: var(--ink-2); white-space: nowrap; }
+.queue-turns { white-space: nowrap; }
+.queue-badge { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 3px; border: 1px solid var(--accent); border-radius: 50%; font-size: 11px; color: var(--ink); background: var(--field); }
+.production-queue button { display: inline-grid; place-items: center; width: 26px; height: 26px; min-width: 26px; padding: 0; border: 1px solid var(--rule-2); background: var(--panel-2); color: var(--ink); cursor: pointer; }
+.production-queue button:last-child { margin-right: 1px; }
+.production-queue button:disabled { opacity: .35; cursor: default; }
+@media (hover: hover) {
+  .production-queue button:hover:not(:disabled) { border-color: var(--accent); background: var(--field); }
+}
+.production-queue .queue-remove { color: var(--bad); }
+/* Stop the active build: the same remove button as a queue row, at the end of the Now producing line. */
+.cp-now-stop-tip { margin-left: auto; }
+.cp-now-stop { display: inline-grid; place-items: center; width: 24px; height: 24px; min-width: 24px; padding: 0; margin-left: auto; border: 1px solid var(--rule-2); background: var(--panel-2); color: var(--bad); cursor: pointer; }
+.cp-now-stop:disabled { opacity: .35; cursor: default; }
+@media (hover: hover) { .cp-now-stop:hover:not(:disabled) { border-color: var(--accent); background: var(--field); } }
+/* On a build card the order badge is pinned to the card's corner, outside the flow, so queueing never reflows the card. */
+.production-choice .prod { position: relative; }
+/* It sits in the icon column, under the icon (18px wide, then the 5px gap): sized to fit it, so it never
+   reaches the effect, cost or upkeep lines that start in the next column ("×2" over "No upkeep"). */
+.production-choice .prod .queue-badge { position: absolute; left: 5px; bottom: 5px; min-width: 18px; height: 18px; padding: 0 2px; font-size: 10px; line-height: 1; }
+.production-choice .prod .queue-badge.queue-count { padding: 0 3px; }
+.left-dock:has(.city-panel) { display: flex; flex-direction: column; }
+.left-dock > .city-panel { min-height: 0; }
+.city-panel .cp-head { padding: 6px 12px 4px; }
+.city-panel .cp-name { font-size: 28px; margin-top: 5px; }
+.city-panel .cp-meta { margin-top: 6px; gap: 4px 10px; }
+.city-panel .cp-meta > .tip-trigger { display: inline-flex; align-items: center; gap: 4px; }
+.city-panel .cp-block { padding: 8px 14px 0; }
+.city-panel .production-queue { padding-top: 2px; }
+.city-panel .production-choose-block { padding-top: 4px; }
+.city-panel .cp-line, .city-panel .cp-now { margin-bottom: 4px; }
+.city-panel .cp-now-name { font-size: 20px; }
+.cp-now-line { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; min-width: 0; }
+.cp-now-turns { flex-shrink: 0; white-space: nowrap; }
+.city-panel .cp-now-line .cp-now-name { font-size: 16px; }
+/* The sticky head is a name and three numbers on one line at every window height (1440x900 used to wrap Health onto a second
+   line and spend 110 px; astra full review 2026-10-31, section 3). */
+.city-panel .cp-head { padding-top: 4px; padding-bottom: 2px; }
+.city-panel .cp-meta { margin-top: 3px; gap: 3px 10px; font-size: 10px; flex-wrap: nowrap; }
+.city-panel .cp-meta .lbl { font-size: 9px; }
+.city-panel .cp-meta b { font-size: 12px; }
+.city-panel .cp-pop { width: 18px; height: 18px; }
+/* A taller window (over 700 px) has the room for a larger head. */
+@media (min-height: 701px) {
+  .city-panel .cp-head { padding-top: 8px; padding-bottom: 4px; }
+  .city-panel .cp-name { font-size: 32px; }
+  .city-panel .cp-meta { font-size: 11px; }
+  .city-panel .cp-meta .lbl { font-size: 10px; }
+  .city-panel .cp-meta b { font-size: 13px; }
+}
+.purchase-status button { padding: 2px 4px; }
+.city-panel .cp-sub { margin: 4px 14px 2px; padding-bottom: 3px; }
+.city-panel .prod-list { padding: 2px 10px 0; gap: 4px; }
+.cp-economy-row { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; margin: 0 14px; }
+.cp-economy { min-width: 0; }
+.cp-compare { flex: none; min-height: 24px; padding: 4px 0; font-size: 11px; white-space: nowrap; }
+.cp-compare kbd { font-size: 10px; }
+.cp-next-tile { color: var(--ink-2); font: 600 10px/1.2 var(--sans); white-space: nowrap; }
+.cp-economy > summary > span { white-space: nowrap; }
+.cp-economy > summary { cursor: pointer; color: var(--accent); font-size: 12px; padding: 2px 0; }
+/* The tile totals are gross tile yields, not income: neutral ink, never the accent red (Playtest 8 review). */
+.cp-economy > summary { color: var(--ink-2); }
+.production-choose-block .hint { font-size: 11px; line-height: 1.3; margin: 4px 0; padding: 0; }
+.production-choose-block .cp-choose-title { font-size: 18px; }
+.production-choice.picked .prod { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.production-choice .prod-name .prod-what { display: block; font-weight: 600; }
+.production-choice .prod-name .prod-where { display: block; font: 400 11px/1.3 var(--sans); color: var(--ink-2); white-space: nowrap; }
+/* A placement card's instruction wraps in a narrow nested section (world wonders at 1000x600), never truncates. */
+.production-choice .prod-name .prod-where.place-where { white-space: normal; }
+.cp-sub-note { font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--ink-3, var(--muted)); }
+.cp-buyline { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 2px 8px; margin: 3px 14px; border-block: 1px solid var(--rule); }
+.purchase-status { margin: 3px 14px; padding: 4px 0; border-block: 1px solid var(--rule); font-size: 11px; line-height: 1.35; color: var(--ink-2); }
+.cp-buyline .purchase-status { margin: 0; border: 0; }
+.purchase-status button { border: 0; background: none; color: var(--accent); text-decoration: underline; cursor: pointer; }
+.production-choice { display: grid; grid-template-columns: minmax(0, 1fr) 92px; background: var(--field); }
+.building-line { display: grid; gap: 2px; }
+.upgrade-nest { margin: 0 0 2px 10px; padding-left: 8px; border-left: 1px solid var(--rule-2); }
+.upgrade-line { display: flex; min-height: 28px; align-items: center; gap: 7px; color: var(--ink-2); font: 500 11px/1.25 var(--sans); }
+.upgrade-detail { display: inline-flex; min-width: 0; flex: 1; align-items: center; gap: 5px; cursor: help; }
+.upgrade-detail > span:last-child { min-width: 0; overflow-wrap: break-word; }
+.upgrade-detail .item-art { width: 32px; height: 32px; flex: none; }
+.upgrade-queue { flex: none; min-height: 26px; padding: 2px 6px; border: 1px solid var(--rule-2); background: var(--field); color: var(--accent); font: 600 10px/1.1 var(--sans); cursor: pointer; }
+.upgrade-queue:disabled { cursor: not-allowed; color: var(--muted); }
+.upgrade-children { margin-left: 9px; padding-left: 7px; border-left: 1px solid var(--rule); }
+.upgrade-queue:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.production-choice > .tip-trigger { min-width: 0; }
+.production-choice .prod { min-height: 56px; height: 100%; padding: 5px 6px; gap: 2px 5px; border: 1px solid var(--rule-2); grid-template-columns: 18px minmax(0, 1fr) auto; }
+.prod-icons { position: relative; display: block; width: 20px; height: 20px; }
+/* A painted miniature is 30 px wide: the slot and its grid column match, so a wide figure (Bombard, Bomber) never runs into the name. */
+.prod-icons:has(> .item-art) { width: 30px; }
+.production-choice .prod:has(> .prod-icons > .item-art) { grid-template-columns: 30px minmax(0, 1fr) auto; column-gap: 6px; }
+/* The ⓘ beside a card with a rich tooltip costs 26 px + 4 of a 300 px card; at 1000x600 a long word ("Roadworks") must still fit its name column whole. */
+.production-choice > .tip-trigger:has(> .tip-info) { gap: 2px; }
+.production-choice > .tip-trigger > .tip-info { flex-basis: 24px; }
+.cp-great-works .prod-list { padding-inline: 0; }
+.prod-icons > .resource-art-icon { position: absolute; right: -6px; bottom: -3px; width: 14px; height: 14px; border-radius: 50%; background: var(--field); }
+.production-choice .prod-go { grid-column: 3; grid-row: 1; font: 600 12px var(--sans); text-align: right; white-space: nowrap; }
+.production-choice .prod-name { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: normal; word-break: normal; font-size: 12px; }
+.production-choice .production-more .prod-effect { display: inline; font: normal 500 11px/1.3 var(--sans); letter-spacing: 0; color: var(--ink-2); white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: break-word; text-wrap: pretty; }
+.production-choice .production-blocker { grid-column: 1 / -1; padding: 5px 8px; border-inline: 1px solid var(--rule-2); font: 600 11px/1.3 var(--sans); white-space: normal; overflow-wrap: anywhere; color: var(--ink-2); }
+.production-choice .production-blocker.prod-blocked { color: var(--bad); }
+.production-choice .production-blocker.prod-unavailable { padding: 3px 8px 1px; }
+.prod-faction-rule { margin: 4px 8px 6px; color: var(--muted); font: 500 11px/1.3 var(--sans); }
+.production-choice .production-blocker .ui-mark { margin-right: 4px; vertical-align: -1px; }
+.production-choice .production-more { grid-column: 1 / -1; border-inline: 1px solid var(--rule-2); border-bottom: 1px solid var(--rule-2); min-width: 0; }
+/* More floats right on the first line and the yield wraps around it (user, 2026-10-28: no line for one short token); a long yield wraps whole, never an ellipsis. */
+.production-choice .production-more > summary { display: flow-root; list-style: none; cursor: pointer; min-height: 24px; padding: 3px 8px; font: 500 11px/18px var(--sans); }
+.production-choice .production-more > summary::-webkit-details-marker { display: none; }
+.production-choice .production-more .more-toggle { float: right; margin-left: 8px; white-space: nowrap; color: var(--accent); font: 600 11px/18px var(--sans); text-decoration: underline; text-underline-offset: 2px; }
+.production-choice .production-more .more-toggle::before { content: '▸ '; display: inline-block; white-space: pre; text-decoration: none; }
+.production-choice .production-more[open] .more-toggle::before { content: '▾ '; }
+.production-choice .production-more > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.production-choice .production-more .more-open { display: none; }
+.production-choice .production-more[open] .more-open { display: inline; }
+.production-choice .production-more[open] .more-closed { display: none; }
+.production-choice .production-more-text { padding: 0 8px 8px; color: var(--ink-2); font: 500 12px/1.4 var(--sans); white-space: normal; overflow-wrap: anywhere; }
+.production-choice.project-choice > .tip-trigger { grid-column: 1 / -1; }
+.production-choice .prod-cost { grid-column: 2; grid-row: 2; text-align: left; font-size: 10px; white-space: normal; }
+.production-choice .prod-turns { grid-column: 3; grid-row: 2; font-size: 10px; }
+/* G53: every build card shows its ongoing cost. A cost is loud (red); free or none stays quiet. */
+.production-choice .prod-upkeep { grid-column: 2 / 4; grid-row: 4; font-size: 10px; white-space: normal; }
+.prod-upkeep { text-wrap: pretty; }
+/* Raze: the idle row is the text and its button side by side; the confirm replaces it in place and lists what burns. */
+.cp-raze .raze-row { display: flex; align-items: center; gap: 8px; }
+.cp-raze .raze-row p, .cp-raze [data-testid="raze-confirm"] p { margin: 0 0 4px; font: 500 12px/1.35 var(--sans); }
+.cp-raze .raze-row p { flex: 1; min-width: 0; margin: 0; text-wrap: pretty; }
+.cp-raze .raze-row .btn { flex: none; }
+.cp-raze .raze-loses { margin: 0 0 4px; padding-left: 16px; font: 500 12px/1.35 var(--sans); }
+.cp-raze .raze-loses .raze-vp { color: var(--bad); font-weight: 700; }
+.cp-raze .raze-buttons { display: flex; gap: 8px; margin-top: 2px; }
+.btn.danger { color: var(--bad); border-color: var(--bad); }
+.btn.danger.confirm { color: #fff; background: var(--bad); }
+@media (hover: hover) { .btn.danger.confirm:hover:not(:disabled) { background: var(--bad); filter: brightness(1.12); } }
+/* A wonder card is a normal build card. Its tile and what the tile gives up are short lines under the name and wrap in the narrow dock. */
+.production-choice.wonder-site .prod-name .prod-where { white-space: normal; overflow-wrap: anywhere; }
+.production-choice .production-blocker.prod-buy-why { padding: 3px 8px 1px; font-weight: 500; }
+.cp-great-works .hint { cursor: help; }
+/* A faction piece's difference from the standard item it replaces: only the changes, green when better, the cost colour when worse. */
+.prod-vs { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; margin-top: 2px; font: 600 12px/1.3 var(--sans); }
+.prod-vs-label { color: var(--ink-2); font-weight: 500; }
+.prod-vs-item { display: inline-flex; align-items: baseline; gap: 3px; }
+.prod-vs-item.good { color: var(--good); }
+.prod-vs-item.bad { color: var(--bad); }
+.prod-vs.same { font-weight: 500; color: var(--ink-2); }
+.prod-upkeep.paid { color: var(--accent); font-weight: 600; }
+.prod-upkeep.free, .prod-upkeep.none { color: var(--muted); }
+/* The empire's Gold/turn once this unit exists, when that is negative: red (--accent, as paid upkeep, for contrast) even where the unit's own upkeep is free. */
+.prod-upkeep-after { color: var(--accent); font-weight: 600; }
+.production-secondary { display: flex; flex-direction: column; justify-content: center; align-items: stretch; border: 1px solid var(--rule-2); border-left: 0; }
+.production-secondary button { border: 0; background: none; box-shadow: none; padding: 3px; min-height: 28px; height: auto; width: 100%; font-size: 11px; color: var(--accent); cursor: pointer; }
+.production-secondary .btn-buy { justify-content: center; text-decoration: underline; text-underline-offset: 3px; }
+.production-secondary button:disabled { cursor: default; color: var(--muted); text-decoration: none; }
+/* The Queue button confirms in place, same size as before and after: nothing under the pointer moves. */
+.production-secondary .queue-add { white-space: nowrap; }
+.production-secondary .queue-add.queued { color: var(--good); font-weight: 600; text-decoration: none; }
+.production-secondary .queue-add.queued .icon { vertical-align: -1px; }
+.production-secondary .tip-trigger { display: block; }
+.production-refusal { grid-column: 1 / -1; padding: 3px 6px 5px; border-top: 1px solid var(--rule-2); color: var(--ink-2); font: 500 11px/1.25 var(--sans); }
+@media (hover: hover) {
+  .production-secondary button:hover:not(:disabled) {
+    background: var(--panel-2);
+  }
+}
+@media (max-width: 700px) {
+  .left-dock:has(.city-panel) { bottom: calc(30dvh + 32px + env(safe-area-inset-bottom)); width: calc(100vw - 32px); }
+  body:has(.city-panel) .seatbar { max-height: 30dvh; overflow: auto; bottom: max(16px, env(safe-area-inset-bottom)); }
+  .production-secondary button { min-height: 44px; }
+}
+.unit-line summary { cursor: pointer; padding: 8px 10px; border: 1px solid var(--rule-2); color: var(--accent); background: var(--field); }
+.unit-line .production-choice { margin-left: 10px; }
+/* Per-item banking: a card shows its own progress; switching says what stays banked (pillar 5). */
+.prod-progress { font-weight: 600; color: var(--ink); }
+.production-switch { margin-top: 6px; font-size: 13px; line-height: 1.4; color: var(--ink-2); }
+.production-choose { margin-top: 4px; padding: 4px 8px; border-left: 3px solid var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); font-size: 12px; line-height: 1.35; color: var(--ink); }
+.production-choose b { font-weight: 700; }
+.cp-banked { margin-top: 4px; font-size: 12px; line-height: 1.35; color: var(--ink-2); }
+.cp-banked .lbl { margin-right: 4px; }
+.cp-now-tag { font: 600 11px/1.2 var(--sans); color: var(--bad); }
+.cp-resume { margin: 6px 0 2px; }
+/* The queue's icon-button sizing (.production-queue button) must not squeeze this labelled button. */
+.production-queue .cp-resume .btn { display: inline-flex; width: auto; height: auto; min-width: 0; min-height: 28px; padding: 3px 14px 1px; color: var(--btn-ink); background: var(--btn-bg); border-color: var(--btn-border); }
+.queue-badge.queue-count { border-radius: 10px; padding: 0 5px; }
+/* Why the card just clicked can't be built. */
+.production-notice { grid-column: 1 / -1; padding: 4px 8px; border: 1px solid var(--rule-2); border-top: 0; font: 600 12px/1.35 var(--sans); }
+/* The refusal notice takes the grey reason's place, between the price row and the yield line: side borders only. */
+.production-choice > .production-notice { padding: 3px 8px 1px; border-width: 0 1px; font: 600 11px/1.3 var(--sans); }
+.production-notice.bad { color: var(--bad); }
+/* Greyed-out items (Civ 6): visibly unavailable before hover, with the reason on the card. */
+.production-choice.unavailable { background: transparent; }
+:root .production-choice.unavailable .prod,
+:root .prod-list.choosing .production-choice.unavailable .prod { cursor: not-allowed; border-style: dashed; border-color: var(--rule-2); background: transparent; box-shadow: none; animation: none; transform: none; }
+.production-choice.unavailable :is(.prod-name, .prod-cost, .prod-progress) { color: var(--muted); }
+.production-choice:is(.unavailable, .supply-blocked) .production-more .prod-effect { color: var(--muted); }
+.production-choice.unavailable .icon { opacity: 0.45; filter: grayscale(1); }
+/* Short of Iron or Coal (core `resource_blocker`): greyed out like an unavailable item, but it can still be queued behind other work. */
+:root .production-choice.supply-blocked .prod { border-style: dashed; border-color: var(--rule-2); background: transparent; box-shadow: none; }
+.production-choice.supply-blocked :is(.prod-name, .prod-cost, .prod-progress, .prod-turns) { color: var(--muted); }
+.production-choice.supply-blocked .prod-icons .icon, .production-choice.supply-blocked .prod-icons img { opacity: 0.5; filter: grayscale(1); }
+.production-choice.supply-blocked .prod-go { font-style: italic; font-weight: 400; color: var(--muted); }
+.production-choice.unavailable .prod-go { font-style: italic; font-weight: 400; color: var(--muted); white-space: normal; max-width: 64px; line-height: 1.15; }
+.production-choice.unavailable .production-secondary { border-style: dashed; border-left: 0; }
+.production-choice.unavailable .production-secondary button { cursor: not-allowed; color: var(--muted); text-decoration: none; }
+@media (hover: hover) {
+  .production-choice.unavailable .prod:hover:not(:disabled),
+  .production-choice.unavailable .production-secondary button:hover { border-color: var(--rule-2); background: transparent; }
+}
+/* Persistent research plan, shared by the top bar and research dialog. */
+.research-slot { display: flex; align-items: center; min-width: 0; height: 100%; }
+.research-slot .research-chip { min-height: 44px; }
+.research-queue-number { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; min-width: 22px; height: 22px; padding: 0 4px; border-radius: 50%; background: var(--accent); color: var(--panel); font: 600 12px/1 var(--sans); }
+@media (max-width: 900px) {
+  .research-slot { max-width: 100%; }
+}
+
+.research-chip-plan { display: flex; flex-direction: column; gap: 2px; text-align: left; min-width: 0; font-size: 12px; }
+.research-chip-plan > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.research-chip-plan small { color: var(--muted); }
+.research-chip-plan .research-queue-number { min-width: 16px; height: 16px; font-size: 10px; }
+
+/* Disabled controls stay readable: a disabled label still says what is unavailable (and often
+   why), so instead of fading the whole control, it loses its fill and emphasis and keeps muted
+   ink at full opacity (AA on every surface, e2e/contrast.spec.ts). Declared last, after every
+   variant's own colours. */
+:root :is(.btn, .act, .btn-buy, .prod, .cta):disabled {
+  opacity: 1;
+  filter: none;
+  color: var(--muted);
+  /* Clearly unavailable at a glance, without fading the label: a dashed outline over a faint
+     hatch, and a not-allowed cursor (legatum-ui: disabled must look disabled). */
+  background: repeating-linear-gradient(-45deg, transparent 0 5px, color-mix(in srgb, var(--rule) 22%, transparent) 5px 6px);
+  border-color: var(--rule-2);
+  border-style: dashed;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+:root :is(.btn, .act, .btn-buy, .prod, .cta):disabled :is(.btn-sub, .act-sub, .cta-sub, .kbd, .prod-name, .prod-cost, .prod-effect, .prod-turns) {
+  color: var(--muted);
+  background: transparent;
+  border-color: var(--rule-2);
+}
+/* Quiet controls have no box when enabled, so none when disabled either; the turn button keeps a
+   hairline so it still reads as the button it will become. */
+:root :is(.btn, .act).quiet:disabled {
+  border-color: transparent;
+}
+:root .cta:disabled {
+  box-shadow: inset 0 0 0 1px var(--rule-2);
+}
+:root .title-actions .btn.big:disabled {
+  color: var(--muted);
+}
+
+/* Hot seat hand-off: an opaque cover so the next player does not see the previous player's empire. */
+.handoff-screen { position: absolute; inset: 0; z-index: 60; display: grid; place-items: center; background: var(--bg, #1a1712); }
+.handoff-card { display: grid; justify-items: center; gap: 12px; padding: 32px 40px; background: var(--panel); border: 6px solid transparent; border-image: var(--frame-image); text-align: center; color: var(--ink); }
+.handoff-card h2 { font: var(--display-weight) 32px/1.1 var(--display); margin: 0; }
+.handoff-card p { margin: 0; color: var(--ink-2); }
+
+/* At 14px the one-line build effects clipped their key facts ("costs 1 pop"): wrap instead. */
+
+.city-panel .cp-head { position: sticky; top: 0; z-index: 3; background: var(--panel); border-bottom: 1px solid var(--rule); }
+.cp-great-works > .cp-great-works-head { display: block; margin: 0; padding: 10px 0 5px; font: 600 10px/1.3 var(--sans); letter-spacing: 0.14em; text-transform: uppercase; color: var(--label-color); }
+.cp-great-works .wonder-locked { opacity: 0.68; }
+.cp-great-works .wonder-locked .prod { grid-column: 1 / -1; min-height: 42px; cursor: not-allowed; border-style: dashed; }
+.cp-great-works .wonder-locked .prod-go { color: var(--muted); }
+.city-panel.city-placement { overflow: visible; padding: 14px 16px; max-height: none; border: 2px solid var(--gilt); box-shadow: 0 8px 32px rgba(24, 18, 8, 0.35); }
+.city-placement-kicker { margin: 0 0 7px; font: 700 11px/1.3 var(--sans); letter-spacing: 0.12em; text-transform: uppercase; color: var(--label-color); }
+.city-placement-instruction { margin: 0; font: 700 19px/1.25 var(--sans); color: var(--ink); text-wrap: pretty; }
+.city-placement-note { margin: 9px 0 12px; font: 500 12px/1.3 var(--sans); color: var(--ink-2); }
+.city-placement-cancel { min-height: 32px; padding: 5px 12px; font: 700 12px/1 var(--sans); }
+.city-placement-cancel kbd { margin-left: 6px; padding: 2px 5px; border: 1px solid currentColor; border-radius: 3px; }
+.game:has(.city-placement) .right-sidebar,
+.game:has(.city-placement) .topbar,
+.game:has(.city-placement) .map-lenses { opacity: 0.35; pointer-events: none; }
+.game:has(.city-placement) .map-wrap::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle at 50% 50%, transparent 0, transparent 115px, rgba(18, 22, 24, 0.12) 260px, rgba(18, 22, 24, 0.36) 540px); }
+/* Healing, fire and bounty sit under the sticky head and scroll away with the list, so the head stays a name and three numbers. */
+.city-panel > .cp-status { margin: 0; padding: 2px 14px; }
+.city-panel > .cp-status .cp-healing-wrap { flex: 1 1 100%; padding: 0 0 2px; }
+
+/* One live Return primary: while the unlock card owns Return, the dock's badge steps back. */
+.game:has(.moment-card.unlock) .seatbar .cta .kbd { visibility: hidden; }
+/* The painted unit miniature (assets/units) in the unit panel's badge: the figure stands on the owner's colour. */
+.unit-badge.painted {
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 78%, var(--pc) 0 38%, color-mix(in srgb, var(--pc) 30%, var(--field)) 78%);
+}
+.unit-badge.painted img {
+  display: block;
+  object-fit: contain;
+}
+.unit-badge.painted.phalangite img {
+  transform: scale(1.42);
+  transform-origin: 50% 78%;
+  filter: contrast(1.45) saturate(1.2) brightness(.9);
+}
+
+/* A unit's build card leads with its painted miniature (assets/units), a little taller than an icon. */
+.prod:has(> .item-art) {
+  grid-template-columns: 30px minmax(0, 1fr) auto 12px;
+}
+.item-art {
+  display: block;
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  margin: -3px 0;
+}
+
+/* Aircraft use the same left dock as ground units; the city holds only a hangar selector. */
+.city-hangar { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; margin: 6px 18px; padding: 5px 0; border-bottom: 1px solid var(--rule); font-size: 12px; }
+.city-hangar .btn { font-size: 11px; padding: 4px 6px; }
+.air-targets { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; }
+.air-target { width: 100%; text-align: left; padding: 5px 8px; border: 1px solid var(--rule-2); background: var(--panel); cursor: pointer; display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 8px; align-items: baseline; }
+.air-target > b { overflow-wrap: anywhere; }
+.air-where { font-size: 12px; text-align: right; }
+.air-target:hover:not(:disabled) { border-color: var(--accent); }
+.air-target:disabled { cursor: not-allowed; background: var(--field); }
+.air-forecast { grid-column: 1 / -1; font-size: 12px; color: var(--ink-2); }
+.air-target.lit { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--panel)); }
+/* This Turn: Fighters on guard are active without orders, so the dock names them. */
+.air-watch { padding: 4px 8px; border-bottom: 1px solid var(--rule); font-size: 12px; }
+.air-watch ul { list-style: none; margin: 0; padding: 0; }
+.air-watch button { display: flex; align-items: center; gap: 8px; width: 100%; padding: 4px 8px; text-align: left; min-height: 24px; }
+.air-watch .air-watch-more { padding: 2px 8px; }
+.air-watch-go { margin-left: auto; font-size: 16px; line-height: 1; color: var(--ink-2); }
+@media (hover: hover) { .air-watch button:hover { background: var(--panel-2); } }
+
+/* ---------- Tile card: the most valuable thing on the tile leads (wonder, then resource, then terrain) ---------- */
+.tilecard-lead { display: flex; align-items: center; gap: 10px; padding-bottom: 8px; margin-bottom: 6px; border-bottom: 1px solid var(--frame); }
+.tilecard-lead img { flex: none; object-fit: contain; }
+.tilecard-lead > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tilecard-lead-name { font: var(--display-weight) 20px/1.05 var(--display); }
+.tilecard-lead-kind { font: 600 10px/1.2 var(--sans); letter-spacing: 0.14em; text-transform: uppercase; color: var(--label-color); }
+.tilecard-lead-kind.strategic { color: var(--ink-2); font-weight: 700; }
+.tilecard-lead-place { font-size: 11px; }
+.tilecard-benefits { list-style: none; margin: 0 0 4px; padding: 0; display: flex; flex-direction: column; gap: 3px; font-size: 13px; line-height: 1.3; }
+.tilecard-benefits li.good { color: var(--good); font-weight: 600; }
+.tilecard-benefits li.muted { font-size: 12px; }
+.tilecard-status { padding: 2px 0 4px; color: var(--ink-2); font-size: 12.5px; line-height: 1.3; }
+.tilecard-status.bad { color: var(--bad); }
+.tilecard-terrain { margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--frame); font: var(--display-weight) 15px/1.1 var(--display); color: var(--ink-2); }
+.bd-wonder > span:first-child img { align-self: center; flex: none; }
+.bd-wonder > span:last-child { display: inline-flex; align-items: center; gap: 3px; justify-content: flex-end; }
+.cp-wonders { display: flex; flex-direction: column; gap: 2px; margin: 4px 0; }
+.cp-wonder { display: flex; align-items: center; gap: 8px; font-size: 13px; line-height: 1.2; color: var(--ink-2); }
+.cp-wonder img { flex: none; object-fit: contain; }
+.tilecard-benefits .yield-icon { margin-left: 4px; vertical-align: -2px; }
+
+.tb-nav-cities { display: inline-flex; align-items: center; gap: 6px; padding-inline: 14px; }
+.supply-tip .supply-others ul { list-style: none; margin: 2px 0 0; padding: 0; }
+
+.rival-win { display: grid; gap: 6px; }
+.rival-win-line { margin: 0; font: 600 13px/1.35 var(--sans); }
+.rival-win-line.muted { font-weight: 500; color: var(--muted); }
+.rival-win-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 2px; }
+.rival-offer { display: inline-flex; flex-direction: column; gap: 2px; }
+.rival-cost { color: var(--bad); font-weight: 600; }
+.alarm-block .rival-win, .hold-block .rival-win { margin-bottom: 14px; }

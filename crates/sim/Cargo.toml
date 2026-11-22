@@ -1,0 +1,51 @@
+[package]
+name = "legatum-sim"
+description = "Legatum headless simulation runner and engine test suites"
+edition.workspace = true
+version.workspace = true
+publish.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+legatum-core.workspace = true
+legatum-ai = { workspace = true, features = ["parallel-search"] }
+serde.workspace = true
+serde_json.workspace = true
+rayon.workspace = true
+clap.workspace = true
+# Shared game loop (Session), tape format and save JSON, so native and WASM run the same code.
+legatum-wasm = { path = "../wasm" }
+legatum-archive = { path = "../archive" }
+legatum-analysis = { path = "../analysis" }
+# Faster allocator for the native simulator only (the engine allocates heavily); WASM and the
+# app keep the system allocator. Allocation never affects results.
+mimalloc = { version = "0.1", default-features = false }
+libc = "0.2"
+
+[dev-dependencies]
+
+# These examples contain unit tests; include them in `cargo test --workspace`.
+[[example]]
+name = "blunder_audit"
+test = true
+
+[[example]]
+name = "climb_arena"
+test = true
+
+[[example]]
+name = "combat_scenarios"
+test = true
+
+[[example]]
+name = "hard_vs_human"
+test = true
+
+[[example]]
+name = "settler_scenarios"
+test = true
+
+[[example]]
+name = "teacher_render"
+test = true

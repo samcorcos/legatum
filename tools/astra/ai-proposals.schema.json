@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Legatum AI review proposals",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "review_game_id", "generated_at", "reviewed_code", "reviewed_source_digest", "comparison_basis", "games", "proposals"],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 1},
+    "review_game_id": {"type": "string", "pattern": "^[A-Za-z0-9_-]{1,128}$"},
+    "generated_at": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T"},
+    "reviewed_code": {"type": "string", "pattern": "\\S"},
+    "reviewed_source_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "comparison_basis": {"type": "string", "const": "archived_engine_commit"},
+    "games": {
+      "type": "array", "minItems": 1, "maxItems": 5,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["game_id", "engine_commit", "rules_fingerprint"],
+        "properties": {
+          "game_id": {"type": "string", "pattern": "^[A-Za-z0-9_-]{1,128}$"},
+          "engine_commit": {"type": "string", "pattern": "\\S"},
+          "rules_fingerprint": {"type": "string", "pattern": "\\S"}
+        }
+      }
+    },
+    "proposals": {
+      "type": "array", "maxItems": 60,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["kind", "description", "evidence", "expected_effect", "confidence"],
+        "properties": {
+          "kind": {"type": "string", "enum": ["new_behavior", "tunable_parameter", "exploit"]},
+          "description": {"type": "string", "pattern": "\\S"},
+          "expected_effect": {"type": "string", "pattern": "\\S"},
+          "confidence": {"type": "string", "enum": ["high", "medium", "low"]},
+          "evidence": {
+            "type": "array", "minItems": 1, "maxItems": 30,
+            "items": {
+              "type": "object", "additionalProperties": false,
+              "required": ["game_id", "player", "turns"],
+              "properties": {
+                "game_id": {"type": "string", "pattern": "^[A-Za-z0-9_-]{1,128}$"},
+                "player": {"type": "integer", "minimum": 0, "maximum": 7},
+                "turns": {"type": "array", "minItems": 1, "maxItems": 100, "uniqueItems": true, "items": {"type": "integer", "minimum": 1}}
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

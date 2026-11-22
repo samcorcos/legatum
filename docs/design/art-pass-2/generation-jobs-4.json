@@ -1,0 +1,30 @@
+[
+  {
+    "slug": "barbarian-crossbowman",
+    "kind": "unit",
+    "input": "~/.codex/generated_images/01a1e42c-cb29-7322-b867-3c0fb47c7573/exec-48b9f99f-1568-41e4-9065-f67e15cf817c.png",
+    "attempt": 2,
+    "prompt": "Small precision correction only: remove the unnecessary vertical braided rope running up the wooden crossbow tiller from the metal plate to the man's hand. Replace it with plain wood and a narrow straight empty bolt groove. Keep the ONE horizontal linen bowstring between the two curved steel bow tips unchanged. Keep foot stirrup, all hands, feet, hood, clothes, figure, standing pose, plain cream disc, lighting and transparent background exactly. No other change."
+  },
+  {
+    "slug": "building-stockexchange",
+    "kind": "unlock",
+    "input": "~/code/legatum/.claude/worktrees/lane-5/app/src/assets/unlocks/building-clearinghouse-256.png",
+    "attempt": 1,
+    "prompt": "Create a NEW painting of a Machine Age Stock Exchange c.1905, using reference ONLY for isometric camera, painterly miniature technique, upper-left lighting, neutral earth oval base, and footprint. Entirely different building: wide pale limestone Beaux-Arts exchange hall, a grand central pediment over six tall columns and broad stairs, flanked by low office wings, a long arched iron-and-glass trading-hall roof behind. Broad horizontal massing; not a two-storey Italian palazzo, not the reference facade or roof. Subtle slate blue glass and grey stone, dark interior recesses, restrained small shrubs. No text, tickers, numbers, logos, flags or sculptures shaped as people. Exquisite hand-painted historical architectural miniature, isolated on genuine transparent background, no ground outside its small oval patch. Whole building and patch in frame with 6% margin; square composition."
+  },
+  {
+    "slug": "panzer",
+    "kind": "unit",
+    "input": "~/code/legatum/.claude/worktrees/lane-5/app/src/assets/units/panzer-source.png",
+    "attempt": 1,
+    "prompt": "New historically grounded painted miniature of a German Panzer IV Ausf.H, WWII1943, at rest, no people or combat. Reference for hand-painted technique, three-quarter front camera, upper-left light and plain cream disc ONLY. Correct Panzer IV: low angular slab-sided hull, small polygonal turret with commander cupola, long75mm gun with double-baffle muzzle brake, eight SMALL road wheels per side in four paired bogies, front drive sprocket, rear idler, continuous tracks with upper return run. Four return rollers on visible side. Turret side armour shield with open gap. Omit hull side skirts so eight road wheels clearly visible. Muted dark yellow/olive field paint, subtle weathering, no insignia, text or flags. Coherent machine and suspension, realistic scale, no duplicated barrels, no invented huge five-wheel suspension. On one thin plain warm cream circular disc; transparent background. Different own painting, do not mirror or merely recolor the reference."
+  },
+  {
+    "slug": "mechanised-infantry",
+    "kind": "unit",
+    "input": "~/code/legatum/.claude/worktrees/lane-5/app/src/assets/units/mechanised-infantry-source.png",
+    "attempt": 1,
+    "prompt": "Focused base-only edit of this existing Cold War mechanised infantry miniature. Preserve the three figures, all hands, helmets, weapons and tracked vehicle exactly. Change the oversized thick pink/rose stone platform to a THIN plain smooth neutral warm cream oval disc, no pink, no veins, no decorative tiers. Reduce empty foreground depth and side margins around the figures, while every boot and tank track remains supported. Same camera, lighting and full group, genuine transparent background. Do not re-pose, mirror or change the soldiers or equipment. No text or watermark."
+  }
+]

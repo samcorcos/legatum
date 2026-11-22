@@ -1,0 +1,2171 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`G2 attack pursuit core behavior > G18: a meeting that both survive ends both moves 1`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > G18: a meeting that both survive ends both moves 2`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > G18: a meeting that both survive ends both moves 3`] = `
+[
+  {
+    "at": {
+      "q": 2,
+      "r": 5,
+    },
+    "attacker": 3,
+    "attacker_at": {
+      "q": 1,
+      "r": 5,
+    },
+    "attacker_hp_after": 69,
+    "attacker_owner": 0,
+    "attacker_roll": 118,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "damage_to_attacker": 31,
+    "damage_to_defender": 35,
+    "defender": {
+      "kind": "Unit",
+      "owner": 1,
+      "unit": 4,
+      "unit_kind": "Soldier",
+    },
+    "defender_hp_after": 65,
+    "defender_roll": 105,
+    "defender_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "meeting": true,
+    "ranged": false,
+    "type": "Battle",
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > G18: a meeting that both survive ends both moves 4`] = `
+[
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 1,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": -3,
+      "r": 10,
+    },
+  },
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 69,
+    "id": 3,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 1,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > G18: a meeting that both survive ends both moves 5`] = `
+[
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 2,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 9,
+      "r": 10,
+    },
+  },
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 65,
+    "id": 4,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 3,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > G18: a target that outruns the attacker is followed, then the order ends 1`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > G18: a target that outruns the attacker is followed, then the order ends 2`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > G18: a target that outruns the attacker is followed, then the order ends 3`] = `
+[
+  {
+    "from": {
+      "q": 1,
+      "r": 5,
+    },
+    "owner": 0,
+    "to": {
+      "q": 2,
+      "r": 5,
+    },
+    "type": "UnitMoved",
+    "unit": 3,
+  },
+  {
+    "from": {
+      "q": 3,
+      "r": 5,
+    },
+    "owner": 1,
+    "to": {
+      "q": 4,
+      "r": 5,
+    },
+    "type": "UnitMoved",
+    "unit": 4,
+  },
+  {
+    "from": {
+      "q": 2,
+      "r": 5,
+    },
+    "owner": 0,
+    "to": {
+      "q": 3,
+      "r": 5,
+    },
+    "type": "UnitMoved",
+    "unit": 3,
+  },
+  {
+    "from": {
+      "q": 4,
+      "r": 5,
+    },
+    "owner": 1,
+    "to": {
+      "q": 5,
+      "r": 5,
+    },
+    "type": "UnitMoved",
+    "unit": 4,
+  },
+  {
+    "at": {
+      "q": 3,
+      "r": 5,
+    },
+    "outcome": "Followed",
+    "owner": 0,
+    "target": 4,
+    "target_at": {
+      "q": 5,
+      "r": 5,
+    },
+    "target_kind": "Scout",
+    "target_owner": 1,
+    "type": "AttackPursuit",
+    "unit": 3,
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > G18: a target that outruns the attacker is followed, then the order ends 4`] = `
+[
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 1,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": -3,
+      "r": 10,
+    },
+  },
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 3,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 3,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > G18: a target that outruns the attacker is followed, then the order ends 5`] = `
+[
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 2,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 9,
+      "r": 10,
+    },
+  },
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 4,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 5,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > G18: a target that outruns the attacker is followed, then the order ends 6`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > G18: a target that outruns the attacker is followed, then the order ends 7`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > G18: a target that outruns the attacker is followed, then the order ends 8`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > G18: a target that outruns the attacker is followed, then the order ends 9`] = `
+[
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 1,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": -3,
+      "r": 10,
+    },
+  },
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 3,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 3,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > G18: a target that outruns the attacker is followed, then the order ends 10`] = `
+[
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 2,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 9,
+      "r": 10,
+    },
+  },
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 4,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 5,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > G18: an attack out of this turn's reach approaches, then ends 1`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > G18: an attack out of this turn's reach approaches, then ends 2`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > G18: an attack out of this turn's reach approaches, then ends 3`] = `
+[
+  {
+    "from": {
+      "q": 1,
+      "r": 5,
+    },
+    "owner": 0,
+    "to": {
+      "q": 2,
+      "r": 5,
+    },
+    "type": "UnitMoved",
+    "unit": 3,
+  },
+  {
+    "from": {
+      "q": 2,
+      "r": 5,
+    },
+    "owner": 0,
+    "to": {
+      "q": 3,
+      "r": 5,
+    },
+    "type": "UnitMoved",
+    "unit": 3,
+  },
+  {
+    "at": {
+      "q": 3,
+      "r": 5,
+    },
+    "outcome": "OutOfReach",
+    "owner": 0,
+    "target": 4,
+    "target_at": {
+      "q": 5,
+      "r": 5,
+    },
+    "target_kind": "Soldier",
+    "target_owner": 1,
+    "type": "AttackPursuit",
+    "unit": 3,
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > G18: an attack out of this turn's reach approaches, then ends 4`] = `
+[
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 1,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": -3,
+      "r": 10,
+    },
+  },
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 3,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 3,
+      "r": 5,
+    },
+  },
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 5,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 5,
+      "r": 3,
+    },
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > G18: an attack out of this turn's reach approaches, then ends 5`] = `
+[
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 2,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 9,
+      "r": 10,
+    },
+  },
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 4,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 5,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > G18: an attack out of this turn's reach approaches, then ends 6`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > G18: an attack out of this turn's reach approaches, then ends 7`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > G18: an attack out of this turn's reach approaches, then ends 8`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > G18: an attack out of this turn's reach approaches, then ends 9`] = `
+[
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 1,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": -3,
+      "r": 10,
+    },
+  },
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 3,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 3,
+      "r": 5,
+    },
+  },
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 5,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 5,
+      "r": 3,
+    },
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > G18: an attack out of this turn's reach approaches, then ends 10`] = `
+[
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 2,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 9,
+      "r": 10,
+    },
+  },
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 4,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 5,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > G18: an attack whose defender survives is one attack; the attacker needs orders 1`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > G18: an attack whose defender survives is one attack; the attacker needs orders 2`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > G18: an attack whose defender survives is one attack; the attacker needs orders 3`] = `
+[
+  {
+    "at": {
+      "q": 4,
+      "r": 5,
+    },
+    "attacker": 3,
+    "attacker_at": {
+      "q": 3,
+      "r": 5,
+    },
+    "attacker_hp_after": 51,
+    "attacker_owner": 0,
+    "attacker_roll": 118,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "damage_to_attacker": 49,
+    "damage_to_defender": 22,
+    "defender": {
+      "kind": "Unit",
+      "owner": 1,
+      "unit": 4,
+      "unit_kind": "Soldier",
+    },
+    "defender_hp_after": 78,
+    "defender_roll": 105,
+    "defender_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+        [
+          "Hills terrain",
+          5,
+        ],
+        [
+          "Fortified",
+          6,
+        ],
+      ],
+      "total": 31,
+    },
+    "meeting": false,
+    "ranged": false,
+    "type": "Battle",
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > G18: an attack whose defender survives is one attack; the attacker needs orders 4`] = `
+[
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 1,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": -3,
+      "r": 10,
+    },
+  },
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 51,
+    "id": 3,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 3,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > G18: an attack whose defender survives is one attack; the attacker needs orders 5`] = `
+[
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 2,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 9,
+      "r": 10,
+    },
+  },
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 78,
+    "id": 4,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 4,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > G18: an attack whose defender survives is one attack; the attacker needs orders 6`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > G18: an attack whose defender survives is one attack; the attacker needs orders 7`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > G18: an attack whose defender survives is one attack; the attacker needs orders 8`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > G18: an attack whose defender survives is one attack; the attacker needs orders 9`] = `
+[
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 1,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": -3,
+      "r": 10,
+    },
+  },
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 61,
+    "id": 3,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 3,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > G18: an attack whose defender survives is one attack; the attacker needs orders 10`] = `
+[
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 2,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 9,
+      "r": 10,
+    },
+  },
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 88,
+    "id": 4,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 4,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > G18: an attack whose defender survives is one attack; the attacker needs orders 11`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > G18: an attack whose defender survives is one attack; the attacker needs orders 12`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > G18: an attack whose defender survives is one attack; the attacker needs orders 13`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > G18: an attack whose defender survives is one attack; the attacker needs orders 14`] = `
+[
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 1,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": -3,
+      "r": 10,
+    },
+  },
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 71,
+    "id": 3,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 3,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > G18: an attack whose defender survives is one attack; the attacker needs orders 15`] = `
+[
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 2,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 9,
+      "r": 10,
+    },
+  },
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 98,
+    "id": 4,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 4,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > G20: declaring War at plain Peace attacks this turn 1`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > G20: declaring War at plain Peace attacks this turn 2`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > G20: declaring War at plain Peace attacks this turn 3`] = `
+[
+  {
+    "relation": {
+      "a": 0,
+      "b": 1,
+      "declarers": [
+        0,
+      ],
+      "effective_turn": 1,
+      "guarantee_until": 0,
+      "security": null,
+      "state": "War",
+      "version": 1,
+      "war_id": 1,
+    },
+    "type": "WarDeclared",
+  },
+  {
+    "at": {
+      "q": 4,
+      "r": 5,
+    },
+    "attacker": 3,
+    "attacker_at": {
+      "q": 3,
+      "r": 5,
+    },
+    "attacker_hp_after": 84,
+    "attacker_owner": 0,
+    "attacker_roll": 118,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "damage_to_attacker": 16,
+    "damage_to_defender": 64,
+    "defender": {
+      "kind": "Unit",
+      "owner": 1,
+      "unit": 4,
+      "unit_kind": "Scout",
+    },
+    "defender_hp_after": 36,
+    "defender_leaving": true,
+    "defender_roll": 105,
+    "defender_strength": {
+      "parts": [
+        [
+          "Scout",
+          5,
+        ],
+      ],
+      "total": 5,
+    },
+    "meeting": false,
+    "ranged": false,
+    "type": "Battle",
+  },
+  {
+    "from": {
+      "q": 4,
+      "r": 5,
+    },
+    "owner": 1,
+    "to": {
+      "q": 5,
+      "r": 4,
+    },
+    "type": "UnitMoved",
+    "unit": 4,
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > G20: declaring War at plain Peace attacks this turn 4`] = `
+[
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 1,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": -3,
+      "r": 10,
+    },
+  },
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 84,
+    "id": 3,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 3,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > G20: declaring War at plain Peace attacks this turn 5`] = `
+[
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 2,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 9,
+      "r": 10,
+    },
+  },
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 36,
+    "id": 4,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 5,
+      "r": 4,
+    },
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > G20: declaring War with a move onto their city marches this turn and attacks it once 1`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > G20: declaring War with a move onto their city marches this turn and attacks it once 2`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > G20: declaring War with a move onto their city marches this turn and attacks it once 3`] = `
+[
+  {
+    "relation": {
+      "a": 0,
+      "b": 1,
+      "declarers": [
+        0,
+      ],
+      "effective_turn": 1,
+      "guarantee_until": 0,
+      "security": null,
+      "state": "War",
+      "version": 1,
+      "war_id": 1,
+    },
+    "type": "WarDeclared",
+  },
+  {
+    "from": {
+      "q": 6,
+      "r": 5,
+    },
+    "owner": 0,
+    "to": {
+      "q": 7,
+      "r": 5,
+    },
+    "type": "UnitMoved",
+    "unit": 3,
+  },
+  {
+    "at": {
+      "q": 8,
+      "r": 5,
+    },
+    "attacker": 3,
+    "attacker_at": {
+      "q": 7,
+      "r": 5,
+    },
+    "attacker_hp_after": 74,
+    "attacker_owner": 0,
+    "attacker_roll": 110,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "damage_to_attacker": 26,
+    "damage_to_defender": 38,
+    "defender": {
+      "city": 0,
+      "kind": "City",
+      "owner": 1,
+    },
+    "defender_hp_after": 162,
+    "defender_roll": 102,
+    "defender_strength": {
+      "parts": [
+        [
+          "City",
+          10,
+        ],
+        [
+          "Population",
+          6,
+        ],
+      ],
+      "total": 16,
+    },
+    "meeting": false,
+    "ranged": false,
+    "type": "Battle",
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > G20: declaring War with a move onto their city marches this turn and attacks it once 4`] = `
+[
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 1,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": -3,
+      "r": 10,
+    },
+  },
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 74,
+    "id": 3,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 7,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > G20: declaring War with a move onto their city marches this turn and attacks it once 5`] = `
+[
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 2,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 9,
+      "r": 10,
+    },
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > G20: declaring War with a move onto their city marches this turn and attacks it once 6`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > G20: declaring War with a move onto their city marches this turn and attacks it once 7`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > G20: declaring War with a move onto their city marches this turn and attacks it once 8`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > G20: declaring War with a move onto their city marches this turn and attacks it once 9`] = `
+[
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 1,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": -3,
+      "r": 10,
+    },
+  },
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 84,
+    "id": 3,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 7,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > G20: declaring War with a move onto their city marches this turn and attacks it once 10`] = `
+[
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 2,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 9,
+      "r": 10,
+    },
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > G20: declaring War with a move onto their city marches this turn and attacks it once 11`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > G20: declaring War with a move onto their city marches this turn and attacks it once 12`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > G20: declaring War with a move onto their city marches this turn and attacks it once 13`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > G20: declaring War with a move onto their city marches this turn and attacks it once 14`] = `
+[
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 1,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": -3,
+      "r": 10,
+    },
+  },
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 94,
+    "id": 3,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 7,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > G20: declaring War with a move onto their city marches this turn and attacks it once 15`] = `
+[
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 2,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 9,
+      "r": 10,
+    },
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > G21: a unit attacked while pulling back takes the hit without fortify, then completes its step 1`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > G21: a unit attacked while pulling back takes the hit without fortify, then completes its step 2`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > G21: a unit attacked while pulling back takes the hit without fortify, then completes its step 3`] = `
+[
+  {
+    "at": {
+      "q": 4,
+      "r": 5,
+    },
+    "attacker": 3,
+    "attacker_at": {
+      "q": 3,
+      "r": 5,
+    },
+    "attacker_hp_after": 76,
+    "attacker_owner": 0,
+    "attacker_roll": 118,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "damage_to_attacker": 24,
+    "damage_to_defender": 47,
+    "defender": {
+      "kind": "Unit",
+      "owner": 1,
+      "unit": 4,
+      "unit_kind": "Ranger",
+    },
+    "defender_hp_after": 53,
+    "defender_leaving": true,
+    "defender_roll": 105,
+    "defender_strength": {
+      "parts": [
+        [
+          "Archer",
+          8,
+        ],
+        [
+          "Hills terrain",
+          5,
+        ],
+      ],
+      "total": 13,
+    },
+    "meeting": false,
+    "ranged": false,
+    "type": "Battle",
+  },
+  {
+    "from": {
+      "q": 4,
+      "r": 5,
+    },
+    "owner": 1,
+    "to": {
+      "q": 5,
+      "r": 5,
+    },
+    "type": "UnitMoved",
+    "unit": 4,
+  },
+  {
+    "from": {
+      "q": 5,
+      "r": 5,
+    },
+    "owner": 1,
+    "to": {
+      "q": 6,
+      "r": 5,
+    },
+    "type": "UnitMoved",
+    "unit": 4,
+  },
+  {
+    "at": {
+      "q": 3,
+      "r": 5,
+    },
+    "outcome": "LostSight",
+    "owner": 0,
+    "target": 4,
+    "target_at": null,
+    "target_kind": "Ranger",
+    "target_owner": 1,
+    "type": "AttackPursuit",
+    "unit": 3,
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > G21: a unit attacked while pulling back takes the hit without fortify, then completes its step 4`] = `
+[
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 1,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": -3,
+      "r": 10,
+    },
+  },
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 76,
+    "id": 3,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 3,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > G21: a unit attacked while pulling back takes the hit without fortify, then completes its step 5`] = `
+[
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 2,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 9,
+      "r": 10,
+    },
+  },
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 53,
+    "id": 4,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 6,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > a move onto a unit of a team at Peace names it instead of a silent bounce 1`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > a move onto a unit of a team at Peace names it instead of a silent bounce 2`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > a move onto a unit of a team at Peace names it instead of a silent bounce 3`] = `
+[
+  {
+    "at": {
+      "q": 3,
+      "r": 5,
+    },
+    "owner": 0,
+    "reason": "at Peace: B's Scout",
+    "toward": {
+      "q": 4,
+      "r": 5,
+    },
+    "type": "MoveBlocked",
+    "unit": 3,
+  },
+  {
+    "from": {
+      "q": 4,
+      "r": 5,
+    },
+    "owner": 1,
+    "to": {
+      "q": 5,
+      "r": 4,
+    },
+    "type": "UnitMoved",
+    "unit": 4,
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > a move onto a unit of a team at Peace names it instead of a silent bounce 4`] = `
+[
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 1,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": -3,
+      "r": 10,
+    },
+  },
+  {
+    "attack_target": null,
+    "goto": {
+      "q": 4,
+      "r": 5,
+    },
+    "hp": 100,
+    "id": 3,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 3,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > a move onto a unit of a team at Peace names it instead of a silent bounce 5`] = `
+[
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 2,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 9,
+      "r": 10,
+    },
+  },
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 4,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 5,
+      "r": 4,
+    },
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > a pursuit never attacks an escort it was not ordered to attack 1`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > a pursuit never attacks an escort it was not ordered to attack 2`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > a pursuit never attacks an escort it was not ordered to attack 3`] = `
+[
+  {
+    "from": {
+      "q": 2,
+      "r": 5,
+    },
+    "owner": 0,
+    "to": {
+      "q": 3,
+      "r": 5,
+    },
+    "type": "UnitMoved",
+    "unit": 3,
+  },
+  {
+    "from": {
+      "q": 4,
+      "r": 5,
+    },
+    "owner": 1,
+    "to": {
+      "q": 4,
+      "r": 4,
+    },
+    "type": "UnitMoved",
+    "unit": 4,
+  },
+  {
+    "at": {
+      "q": 3,
+      "r": 5,
+    },
+    "outcome": "Followed",
+    "owner": 0,
+    "target": 4,
+    "target_at": {
+      "q": 4,
+      "r": 4,
+    },
+    "target_kind": "Settler",
+    "target_owner": 1,
+    "type": "AttackPursuit",
+    "unit": 3,
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > a pursuit never attacks an escort it was not ordered to attack 4`] = `
+[
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 1,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": -3,
+      "r": 10,
+    },
+  },
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 3,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 3,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > a pursuit never attacks an escort it was not ordered to attack 5`] = `
+[
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 2,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 9,
+      "r": 10,
+    },
+  },
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 4,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 4,
+      "r": 4,
+    },
+  },
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 5,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 4,
+      "r": 4,
+    },
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > a target that leaves sight ends the order: no dangling route 1`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > a target that leaves sight ends the order: no dangling route 2`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > a target that leaves sight ends the order: no dangling route 3`] = `
+[
+  {
+    "from": {
+      "q": 0,
+      "r": 5,
+    },
+    "owner": 0,
+    "to": {
+      "q": 1,
+      "r": 5,
+    },
+    "type": "UnitMoved",
+    "unit": 3,
+  },
+  {
+    "from": {
+      "q": 2,
+      "r": 5,
+    },
+    "owner": 1,
+    "to": {
+      "q": 3,
+      "r": 5,
+    },
+    "type": "UnitMoved",
+    "unit": 4,
+  },
+  {
+    "from": {
+      "q": 1,
+      "r": 5,
+    },
+    "owner": 0,
+    "to": {
+      "q": 2,
+      "r": 5,
+    },
+    "type": "UnitMoved",
+    "unit": 3,
+  },
+  {
+    "from": {
+      "q": 3,
+      "r": 5,
+    },
+    "owner": 1,
+    "to": {
+      "q": 4,
+      "r": 5,
+    },
+    "type": "UnitMoved",
+    "unit": 4,
+  },
+  {
+    "from": {
+      "q": 4,
+      "r": 5,
+    },
+    "owner": 1,
+    "to": {
+      "q": 5,
+      "r": 5,
+    },
+    "type": "UnitMoved",
+    "unit": 4,
+  },
+  {
+    "at": {
+      "q": 2,
+      "r": 5,
+    },
+    "outcome": "LostSight",
+    "owner": 0,
+    "target": 4,
+    "target_at": null,
+    "target_kind": "Scout",
+    "target_owner": 1,
+    "type": "AttackPursuit",
+    "unit": 3,
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > a target that leaves sight ends the order: no dangling route 4`] = `
+[
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 1,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": -3,
+      "r": 10,
+    },
+  },
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 3,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 2,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > a target that leaves sight ends the order: no dangling route 5`] = `
+[
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 2,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 9,
+      "r": 10,
+    },
+  },
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 4,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 5,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > a target that sidesteps within reach is attacked where it ends 1`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > a target that sidesteps within reach is attacked where it ends 2`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > a target that sidesteps within reach is attacked where it ends 3`] = `
+[
+  {
+    "from": {
+      "q": 2,
+      "r": 5,
+    },
+    "owner": 0,
+    "to": {
+      "q": 3,
+      "r": 5,
+    },
+    "type": "UnitMoved",
+    "unit": 3,
+  },
+  {
+    "from": {
+      "q": 4,
+      "r": 5,
+    },
+    "owner": 1,
+    "to": {
+      "q": 4,
+      "r": 4,
+    },
+    "type": "UnitMoved",
+    "unit": 4,
+  },
+  {
+    "at": {
+      "q": 4,
+      "r": 4,
+    },
+    "attacker": 3,
+    "attacker_at": {
+      "q": 3,
+      "r": 5,
+    },
+    "attacker_hp_after": 82,
+    "attacker_owner": 0,
+    "attacker_roll": 119,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "damage_to_attacker": 18,
+    "damage_to_defender": 65,
+    "defender": {
+      "kind": "Unit",
+      "owner": 1,
+      "unit": 4,
+      "unit_kind": "Scout",
+    },
+    "defender_hp_after": 35,
+    "defender_roll": 117,
+    "defender_strength": {
+      "parts": [
+        [
+          "Scout",
+          5,
+        ],
+      ],
+      "total": 5,
+    },
+    "meeting": false,
+    "ranged": false,
+    "type": "Battle",
+  },
+  {
+    "at": {
+      "q": 3,
+      "r": 5,
+    },
+    "outcome": "Attacked",
+    "owner": 0,
+    "target": 4,
+    "target_at": {
+      "q": 4,
+      "r": 4,
+    },
+    "target_kind": "Scout",
+    "target_owner": 1,
+    "type": "AttackPursuit",
+    "unit": 3,
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > a target that sidesteps within reach is attacked where it ends 4`] = `
+[
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 1,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": -3,
+      "r": 10,
+    },
+  },
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 82,
+    "id": 3,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 3,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > a target that sidesteps within reach is attacked where it ends 5`] = `
+[
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 2,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 9,
+      "r": 10,
+    },
+  },
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 35,
+    "id": 4,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 4,
+      "r": 4,
+    },
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > war on an ally holds the attack this turn, then attacks the unit where it went 1`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > war on an ally holds the attack this turn, then attacks the unit where it went 2`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > war on an ally holds the attack this turn, then attacks the unit where it went 3`] = `
+[
+  {
+    "from": {
+      "q": 4,
+      "r": 5,
+    },
+    "owner": 1,
+    "to": {
+      "q": 5,
+      "r": 4,
+    },
+    "type": "UnitMoved",
+    "unit": 4,
+  },
+  {
+    "at": {
+      "q": 3,
+      "r": 5,
+    },
+    "outcome": "AwaitingWar",
+    "owner": 0,
+    "target": 4,
+    "target_at": {
+      "q": 5,
+      "r": 4,
+    },
+    "target_kind": "Scout",
+    "target_owner": 1,
+    "type": "AttackPursuit",
+    "unit": 3,
+  },
+  {
+    "relation": {
+      "a": 0,
+      "b": 1,
+      "declarers": [
+        0,
+      ],
+      "effective_turn": 2,
+      "guarantee_until": 0,
+      "security": null,
+      "state": "War",
+      "version": 2,
+      "war_id": 1,
+    },
+    "type": "WarDeclared",
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > war on an ally holds the attack this turn, then attacks the unit where it went 4`] = `
+[
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 1,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": -3,
+      "r": 10,
+    },
+  },
+  {
+    "attack_target": 4,
+    "goto": {
+      "q": 5,
+      "r": 4,
+    },
+    "hp": 100,
+    "id": 3,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 3,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > war on an ally holds the attack this turn, then attacks the unit where it went 5`] = `
+[
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 2,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 9,
+      "r": 10,
+    },
+  },
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 4,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 5,
+      "r": 4,
+    },
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > war on an ally holds the attack this turn, then attacks the unit where it went 6`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > war on an ally holds the attack this turn, then attacks the unit where it went 7`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > war on an ally holds the attack this turn, then attacks the unit where it went 8`] = `
+[
+  {
+    "from": {
+      "q": 4,
+      "r": 5,
+    },
+    "owner": 1,
+    "to": {
+      "q": 5,
+      "r": 4,
+    },
+    "type": "UnitMoved",
+    "unit": 4,
+  },
+  {
+    "at": {
+      "q": 3,
+      "r": 5,
+    },
+    "outcome": "AwaitingWar",
+    "owner": 0,
+    "target": 4,
+    "target_at": {
+      "q": 5,
+      "r": 4,
+    },
+    "target_kind": "Scout",
+    "target_owner": 1,
+    "type": "AttackPursuit",
+    "unit": 3,
+  },
+  {
+    "relation": {
+      "a": 0,
+      "b": 1,
+      "declarers": [
+        0,
+      ],
+      "effective_turn": 2,
+      "guarantee_until": 0,
+      "security": null,
+      "state": "War",
+      "version": 2,
+      "war_id": 1,
+    },
+    "type": "WarDeclared",
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > war on an ally holds the attack this turn, then attacks the unit where it went 9`] = `
+[
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 1,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": -3,
+      "r": 10,
+    },
+  },
+  {
+    "attack_target": 4,
+    "goto": {
+      "q": 5,
+      "r": 4,
+    },
+    "hp": 100,
+    "id": 3,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 3,
+      "r": 5,
+    },
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > war on an ally holds the attack this turn, then attacks the unit where it went 10`] = `
+[
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 2,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 9,
+      "r": 10,
+    },
+  },
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 4,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 5,
+      "r": 4,
+    },
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > war on an ally holds the attack this turn, then attacks the unit where it went 11`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > war on an ally holds the attack this turn, then attacks the unit where it went 12`] = `[]`;
+
+exports[`G2 attack pursuit core behavior > war on an ally holds the attack this turn, then attacks the unit where it went 13`] = `
+[
+  {
+    "from": {
+      "q": 3,
+      "r": 5,
+    },
+    "owner": 0,
+    "to": {
+      "q": 4,
+      "r": 4,
+    },
+    "type": "UnitMoved",
+    "unit": 3,
+  },
+  {
+    "at": {
+      "q": 5,
+      "r": 4,
+    },
+    "attacker": 3,
+    "attacker_at": {
+      "q": 4,
+      "r": 4,
+    },
+    "attacker_hp_after": 85,
+    "attacker_owner": 0,
+    "attacker_roll": 83,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "damage_to_attacker": 15,
+    "damage_to_defender": 45,
+    "defender": {
+      "kind": "Unit",
+      "owner": 1,
+      "unit": 4,
+      "unit_kind": "Scout",
+    },
+    "defender_hp_after": 55,
+    "defender_roll": 94,
+    "defender_strength": {
+      "parts": [
+        [
+          "Scout",
+          5,
+        ],
+      ],
+      "total": 5,
+    },
+    "meeting": false,
+    "ranged": false,
+    "type": "Battle",
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > war on an ally holds the attack this turn, then attacks the unit where it went 14`] = `
+[
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 1,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": -3,
+      "r": 10,
+    },
+  },
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 85,
+    "id": 3,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 4,
+      "r": 4,
+    },
+  },
+]
+`;
+
+exports[`G2 attack pursuit core behavior > war on an ally holds the attack this turn, then attacks the unit where it went 15`] = `
+[
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 100,
+    "id": 2,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 9,
+      "r": 10,
+    },
+  },
+  {
+    "attack_target": null,
+    "goto": null,
+    "hp": 55,
+    "id": 4,
+    "needs_orders": false,
+    "path": [],
+    "pos": {
+      "q": 5,
+      "r": 4,
+    },
+  },
+]
+`;

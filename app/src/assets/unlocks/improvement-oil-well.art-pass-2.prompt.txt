@@ -1,0 +1,4 @@
+2026-11-16 — Codex built-in image generation. Provisional author review; lead review pending.
+Reference images and requested edits: see docs/design/art-pass-2/generation-*.json.
+
+Repaint this early-twentieth-century oil drilling site as a stronger readable historical miniature. One tall timber derrick with coherent four-legged braced frame, visible vertical drill cable descending through centre, small adjacent engine shed, two cylindrical storage tanks and timber pipe racks. Keep realistic period machinery and no people. Solid compact neutral earth OVAL patch, broad enough under entire installation, same isometric camera, warm upper-left light, refined muted oil-painted style. Dark timber silhouette contrasts with pale ground at64px, more substantial footprint, no tiny pale scattered detached pieces. Genuine transparent background, all equipment and ground visible, no text, logos or watermarks.

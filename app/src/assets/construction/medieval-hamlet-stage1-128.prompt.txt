@@ -1,0 +1,1 @@
+Lanczos 128 px derivative of medieval-hamlet-stage1.png. See medieval-hamlet-stage1.prompt.txt for the image edit prompt.

@@ -1,0 +1,64 @@
+#!/bin/bash
+# legatum build box, first boot only (cloud-init runs user-data once per instance). Kept small: the heavy
+# toolchain setup is tools/cloud/box/bootstrap.sh, run over ssh by `tools/cloud/box.sh prepare`.
+# The idle watcher is installed here so the box can never be left running from its very first minute.
+exec > /var/log/legatum-userdata.log 2>&1
+set -x
+
+# 1. The persistent volume at /data (XFS: reflink copies make per-job cargo target dirs cheap).
+DEV=/dev/disk/by-id/nvme-Amazon_Elastic_Block_Store_${data_volume_id}
+for i in $(seq 1 60); do [ -e "$DEV" ] && break; sleep 2; done
+apt-get -o DPkg::Lock::Timeout=300 update -qq && DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Lock::Timeout=300 install -y -qq xfsprogs
+if ! blkid "$DEV" >/dev/null 2>&1; then mkfs.xfs -f -L legatum-data "$DEV"; fi
+mkdir -p /data
+grep -q ' /data ' /etc/fstab || echo "LABEL=legatum-data /data xfs defaults,noatime,nofail 0 2" >> /etc/fstab
+mount /data
+chown ubuntu:ubuntu /data
+
+# 2. ssh: only through Session Manager. sshd listens on loopback, so even the VPC cannot reach it.
+install -d -m 700 -o ubuntu -g ubuntu /home/ubuntu/.ssh
+echo "${ssh_public_key}" > /home/ubuntu/.ssh/authorized_keys
+chown ubuntu:ubuntu /home/ubuntu/.ssh/authorized_keys
+chmod 600 /home/ubuntu/.ssh/authorized_keys
+cat > /etc/ssh/sshd_config.d/10-legatum.conf <<'SSHD'
+ListenAddress 127.0.0.1
+ListenAddress ::1
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PermitRootLogin no
+AllowUsers ubuntu
+ClientAliveInterval 30
+ClientAliveCountMax 20
+SSHD
+systemctl disable --now ssh.socket 2>/dev/null || true
+systemctl enable ssh.service
+systemctl restart ssh.service
+
+# 3. Idle watcher.
+echo "${idle_minutes}" > /etc/legatum-idle-minutes
+cat > /usr/local/bin/legatum-idle-watch <<'IDLEWATCH'
+${idle_watch}
+IDLEWATCH
+chmod +x /usr/local/bin/legatum-idle-watch
+cat > /etc/systemd/system/legatum-idle-watch.service <<'UNIT'
+[Unit]
+Description=Power the build box off when idle
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/legatum-idle-watch
+UNIT
+cat > /etc/systemd/system/legatum-idle-watch.timer <<'UNIT'
+[Unit]
+Description=Check for an idle build box every minute
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=1min
+[Install]
+WantedBy=timers.target
+UNIT
+systemctl daemon-reload
+systemctl enable --now legatum-idle-watch.timer
+
+# 4. Work directories.
+install -d -o ubuntu -g ubuntu /data/jobs /data/jobs/running /data/bin
+touch /var/lib/legatum-userdata-done

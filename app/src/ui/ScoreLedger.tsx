@@ -1,0 +1,287 @@
+// The score ledger (round 3 of "Every Way to Score", design mockup): one table answers the four
+// questions a player opens this screen with. Who's winning: the empires are the columns, in rank
+// order, with their VP. How close am I: your column is gilt wherever it falls. What's my next point:
+// every way to score is a row, and your cell says held, open or not reached, with your progress
+// where only you can see it. What can I take: the world wonder rows show who builds and holds each. A row expands in place for its rule and the public facts behind it; nothing here
+// recommends a route (user, 2026-10-06).
+import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useGame } from '../store';
+import { Icon } from './bits';
+import { Amount } from './Amounts';
+import { Glyph } from './ringMedallion';
+import { CrestMedallion, Star, roman } from '../brand/ornaments';
+import { PortraitRoundel } from './premium';
+import { EraObjectives, FAMILY_ICON, Meter, VpSeal, empireVars } from './vpParts';
+import { holdWords } from './VpHoldings';
+import type { Source, VpEmpire, VpModel, VpRow } from '../vpModel';
+import { eraName } from './eraResearch';
+import type { ObjectiveFamily } from '../types';
+import './scoreLedger.css';
+
+const fmt = (n: number) => n.toLocaleString('en-US');
+
+/** A point marker: the empire's ink and the source's icon. */
+function Token({ e, icon, of, title, dim }: { e: VpEmpire; icon: string; of?: VpEmpire; title?: string; dim?: boolean }) {
+  return <span className={`sl-token${e.isMe ? ' mine' : ''}${dim ? ' dim' : ''}`} style={empireVars(e)} title={title} role="img" aria-label={title}>
+    <Glyph name={icon} size={13} />
+    {of && of.id !== e.id && <span className="sl-token-of"><CrestMedallion faction={of.faction} color={of.ink} size={11} /></span>}
+  </span>;
+}
+
+function Socket({ title, faint }: { title?: string; faint?: boolean }) {
+  return <span className={`sl-socket${faint ? ' faint' : ''}`} title={title} role="img" aria-label={title} />;
+}
+
+function WorkCell({ s, e }: { s: Source; e: VpEmpire }) {
+  const f = s.facts.find((x) => x.id === e.id);
+  if (s.owners.includes(e.id)) return <div className="sl-cell"><Token e={e} icon={s.icon} title={`${e.isMe ? 'You' : e.name}: ${f?.label ?? 'world wonder'} · +${s.vp} VP`} /><small className="sl-under">{f?.label}</small></div>;
+  if (f?.label) {
+    const [name, prog] = f.label.split(/ (?=\d)/);
+    return <div className="sl-cell"><Socket title={`${e.isMe ? 'You are' : `${e.name} is`} building the ${f.label}`} /><small className="sl-under">{name}<span className="sl-building"> {prog}</span></small></div>;
+  }
+  return <div className="sl-cell"><Socket title={`${e.isMe ? 'You have' : `${e.name} has`} no world wonder`} /></div>;
+}
+
+/** The faction goal row: each empire's own goal (and any held goal its colours score for). */
+function GoalCell({ model, e, held }: { model: VpModel; e: VpEmpire; held: boolean }) {
+  const scoring = e.held.filter((s) => s.kind === 'goal' && Boolean(s.live || s.held) === held);
+  const g = e.goal;
+  const ownGoalHere = Boolean(g.live || g.held) === held;
+  if (!ownGoalHere && !scoring.length) return <div className="sl-cell"><span className="sl-empty">—</span></div>;
+  const of = (s: Source) => model.empires.find((x) => x.id === s.only);
+  if (scoring.length) {
+    const ownScored = scoring.some((s) => s.id === g.id);
+    return <div className="sl-cell">
+      <span className="sl-tokens">{scoring.map((s) => <Token key={s.id} e={e} icon={s.icon} of={of(s)} title={`${e.isMe ? 'You' : e.name}: ${s.name} · +${s.vp} VP${s.live || s.held ? ' · held, can be lost' : ''}`} />)}{ownGoalHere && !ownScored && <Socket title={`${e.isMe ? 'Your' : `${e.name}’s`} goal: ${g.name}. ${g.rule}. ${g.holdNote ?? 'Not yet scored'}`} />}</span>
+      <small className="sl-under">{scoring.map((s) => s.name).join(', ')}</small>
+      {e.isMe && ownGoalHere && !ownScored && g.progress && <span className="sl-mini-meter" role="progressbar" aria-valuemin={0} aria-valuemax={g.progress.target} aria-valuenow={Math.min(g.progress.value, g.progress.target)} aria-label={g.progress.label}><i style={{ width: `${Math.min(100, (g.progress.value / Math.max(1, g.progress.target)) * 100)}%` }} /><b>{fmt(Math.min(g.progress.value, g.progress.target))}/{fmt(g.progress.target)}</b></span>}
+    </div>;
+  }
+  const publicLine = g.facts[0]?.label;
+  return <div className="sl-cell" title={`${e.isMe ? 'Your goal' : `${e.name}’s goal`}: ${g.name}. ${g.rule}`}>
+    <Socket title={`${e.isMe ? 'Your' : `${e.name}’s`} goal: ${g.name}. ${g.rule}. ${g.holdNote ?? 'Not yet scored'}`} />
+    <small className="sl-under">{g.name}</small>
+    {e.isMe && g.progress && <span className="sl-mini-meter" role="progressbar" aria-valuemin={0} aria-valuemax={g.progress.target} aria-valuenow={Math.min(g.progress.value, g.progress.target)} aria-label={g.progress.label}><i style={{ width: `${Math.min(100, (g.progress.value / Math.max(1, g.progress.target)) * 100)}%` }} /><b>{fmt(Math.min(g.progress.value, g.progress.target))}/{fmt(g.progress.target)}</b></span>}
+    {!e.isMe && publicLine && <small className="sl-public">{publicLine.replace(/ \(public count\)$/, '')}</small>}
+  </div>;
+}
+
+/** The capitals row: one token per original capital this empire took first, in its ink. */
+function CapitalCell({ model, e }: { model: VpModel; e: VpEmpire }) {
+  const names = model.capitals.find((c) => c.owner === e.id)?.names ?? [];
+  const who = e.isMe ? 'You' : e.name;
+  if (!names.length) return <div className="sl-cell"><Socket title={`${who} ${e.isMe ? 'have' : 'has'} taken no rival's original capital yet`} /><small className="sl-under">None yet</small></div>;
+  return <div className="sl-cell">
+    <span className="sl-tokens">{names.map((n) => <Token key={n} e={e} icon="city" title={`${who}: first capture of ${n} · +1 VP, kept for good`} />)}</span>
+    <small className="sl-under">{names.join(', ')}</small>
+  </div>;
+}
+
+function EraCell({ s, e, deck }: { s: Source; e: VpEmpire; deck: boolean }) {
+  const info = s.era!;
+  const scoredWith = info.objectives.find((o) => o.scorers.includes(e.id));
+  const who = e.isMe ? 'You' : e.name;
+  if (scoredWith) return <div className="sl-cell"><Token e={e} icon={FAMILY_ICON[scoredWith.family as ObjectiveFamily]} title={`${who} scored the ${info.eraName} ${deck ? 'Age' : 'era'} with: ${scoredWith.text}`} /></div>;
+  if (deck) return <div className="sl-cell"><Socket title={`${who} ${e.isMe ? 'have' : 'has'} not scored the ${info.eraName} Age yet`} /></div>;
+  if (info.entered.includes(e.id)) return <div className="sl-cell"><Socket title={`${who} ${e.isMe ? 'have' : 'has'} entered the ${info.eraName} era and not scored it yet`} /></div>;
+  return <div className="sl-cell"><Socket faint title={`${who} ${e.isMe ? 'have' : 'has'} not reached the ${info.eraName} era`} /></div>;
+}
+
+/** An era's status for the viewer, in one line. */
+function eraLine(s: Source, myEra: number, deck: boolean): string {
+  const e = s.era!;
+  if (deck) return e.myScored ? 'You scored this Age.' : 'Every empire sees this card the turn the first empire enters the era, and it never expires.';
+  if (e.myScored) return 'You scored this era. Its other objectives can score nothing more.';
+  if (e.myEntered) return e.era < myEra ? 'Still open to you: meet any one of the three, at any time.' : 'Open to you now: meet any one of the three.';
+  if (e.era === myEra + 1) return `Not entered yet: finish the ${eraName(myEra - 1)} era’s last technology to open it.`;
+  return 'Not reached yet.';
+}
+
+function RowDetail({ model, s, kind }: { model: VpModel; s?: Source; kind: 'work' | 'goal' | 'heldGoal' | 'capital' | 'era' }) {
+  if (kind === 'goal' || kind === 'heldGoal') {
+    return <div className="sl-detail">
+      <p className="sl-detail-rule">{kind === 'heldGoal' ? 'These faction goals score 2 VP while their condition or item is held; they can be lost.' : 'These faction goals score 2 VP once and are kept for good.'}</p>
+      <ul className="sl-goals">
+        {model.empires.filter((e) => Boolean(e.goal.live || e.goal.held) === (kind === 'heldGoal')).map((e) => {
+          const g = e.goal;
+          const done = g.owners.length > 0;
+          return <li key={e.id} className={e.isMe ? 'me' : ''} style={empireVars(e)}>
+            <CrestMedallion faction={e.faction} color={e.ink} size={18} />
+            <div>
+              <span className="sl-goal-title"><b>{e.isMe ? 'Your goal' : e.name}: {g.name}</b><VpSeal vp={g.vp} className="inline sl-seal" /></span>
+              <span className="sl-goal-rule">{g.rule}.{g.live && !g.held ? ' Lost the turn it stops holding.' : ''}</span>
+              {g.held && g.holdNote && <span className="sl-goal-note">{g.holdNote}</span>}
+              {g.heldAt && <button type="button" className="btn quiet sl-locate" onClick={() => { useGame.getState().set({ vpExpanded: false }); useGame.getState().jumpTo(g.heldAt!); }}>Show on map</button>}
+              {e.isMe && g.progress && !done && <Meter p={g.progress} color={e.ink} />}
+            </div>
+            <span className={`sl-goal-state${done ? ' done' : ''}`}>{done ? (g.held ? `Held by ${model.empires.find((x) => x.id === g.owners[0])?.name ?? 'another empire'}` : 'Done') : 'Not yet'}</span>
+          </li>;
+        })}
+      </ul>
+    </div>;
+  }
+  if (kind === 'capital') {
+    return <div className="sl-detail">
+      <p className="sl-detail-rule">+1 for each rival's first capital you take. Taking the same capital again later scores nothing more, and the point stays yours if you lose or raze the city.</p>
+      <ul className="sl-goals">
+        {model.empires.map((e) => {
+          const names = model.capitals.find((c) => c.owner === e.id)?.names ?? [];
+          return <li key={e.id} className={e.isMe ? 'me' : ''} style={empireVars(e)}>
+            <CrestMedallion faction={e.faction} color={e.ink} size={18} />
+            <div><span className="sl-goal-title"><b>{e.isMe ? 'You' : e.name}</b></span><span className="sl-goal-rule">{names.length ? names.join(', ') : 'No capital taken yet'}</span></div>
+            <span className={`sl-goal-state${names.length ? ' done' : ''}`}>{names.length} VP</span>
+          </li>;
+        })}
+      </ul>
+    </div>;
+  }
+  if (!s) return null;
+  if (kind === 'work') {
+    const building = s.facts.filter((f) => f.label && !s.owners.includes(f.id));
+    return <div className="sl-detail">
+      <p className="sl-detail-rule">{s.rule}</p>
+      <p className="sl-detail-note">Each world wonder can be completed only once. Its tile holder scores 2 VP. Capture the city or claim the tile to take those points.{building.length ? ` Known builders: ${building.map((f) => `${model.empires.find((e) => e.id === f.id)?.name} (${f.label})`).join(', ')}.` : ' No known wonder is under construction.'}</p>
+    </div>;
+  }
+  const info = s.era!;
+  return <div className={`sl-detail sl-era${info.myScored ? ' scored' : ''}`}>
+    <p className="sl-detail-rule">{eraLine(s, model.raceRules.era, !!model.deck)} <span className="sl-detail-fine">{model.deck ? `${info.myScored ? 'Every empire sees these cards the turn the first empire enters the era, and they never expire. ' : ''}Veterans counts levels your units gain in battle from now on. Capture cards count captures from now on; Humble the mighty and Breach never count capitals or wonder cities.` : 'Each objective counts only what you gain after entering the era and after your last era score.'}</span></p>
+    <EraObjectives model={model} s={s} />
+  </div>;
+}
+
+type Row = { id: string; kind: 'work' | 'goal' | 'heldGoal' | 'capital' | 'era'; name: ReactNode; rule: string; vp: number; s?: Source; numeral?: string; dim?: boolean; status?: string };
+
+/** The viewer's standing in an era, as one or two words beside its name. */
+function eraStatusWord(s: Source, myEra: number, deck: boolean): string {
+  const e = s.era!;
+  if (e.myScored) return 'scored';
+  if (deck) return 'open to every empire';
+  if (e.myEntered) return 'open to you';
+  if (e.era === myEra + 1) return 'next';
+  return e.entered.length ? '' : 'not reached yet';
+}
+
+function rowsOf(model: VpModel): { kept: Row[]; held: Row[]; eras: Row[] } {
+  const kept: Row[] = [
+    ...model.works.filter((s) => !s.live && !s.held).map((s): Row => ({ id: s.id, kind: 'work', name: s.name, rule: 'Complete a world wonder', vp: s.vp, s })),
+    { id: 'goal', kind: 'goal', name: 'Faction goals', rule: 'Kept once scored', vp: 2 },
+    { id: 'capitals-taken', kind: 'capital', name: 'Capitals taken', rule: 'First capture of each rival original capital', vp: 1 },
+  ];
+  const held: Row[] = [
+    ...model.works.filter((s) => s.live || s.held).map((s): Row => ({ id: s.id, kind: 'work', name: s.name, rule: s.rule, vp: s.vp, s })),
+    { id: 'held-goal', kind: 'heldGoal', name: 'Faction goals', rule: 'Lost when the condition or item is lost', vp: 2 },
+  ];
+  const eras: Row[] = model.eras.map((s): Row => ({
+    id: s.id, kind: 'era', name: s.era!.eraName, numeral: roman(s.era!.era), rule: '', vp: s.vp, s,
+    dim: s.era!.entered.length === 0 && s.owners.length === 0, status: eraStatusWord(s, model.raceRules.era, !!model.deck),
+  }));
+  return { kept, held, eras };
+}
+
+/** The column head: the empire, its VP, a 10-pip track, the hold countdown and decadence when they apply. */
+function ColumnHead({ row, e, span, showDecadence }: { row: VpRow; e: VpEmpire; span: number; showDecadence: boolean }) {
+  const first = row.members[0].id === e.id;
+  const shortName = e.name.replace(/^Switzerland · AI /, 'Swiss · AI ');
+  return <th scope="col" className={`sl-col${e.isMe ? ' mine' : ''}${first ? ' first' : ''}${span > 1 ? ' team' : ''}${row.isMine && span > 1 ? ' own-team' : ''}`} style={empireVars(e)}>
+    <span className="sl-rank" aria-label={`Rank ${row.rank}`}>{first ? roman(row.rank) : ''}</span>
+    <PortraitRoundel faction={e.faction} size={30} color={e.ink} />
+    <span className="sl-col-name" title={e.name}>{e.isMe ? 'You' : shortName}</span>
+    {e.aiLevel && <small className="sl-ai-level">AI · {e.aiLevel}</small>}
+    <span className="sl-col-vp"><b>{row.vp}</b><small>/{row.target} VP</small></span>
+    <span className="sl-gold" title={`${e.isMe ? 'Your' : 'Its'} treasury: every empire's Gold is public`}><Amount n={e.gold} unit="Gold" /></span>
+    {first && <span className="sl-pips" role="img" aria-label={`${row.vp} of ${row.target} VP`}>{Array.from({ length: row.target }, (_, i) => <i key={i} className={i < row.vp ? 'on' : ''} />)}</span>}
+    {first && row.hold && <span className={`sl-hold${row.isMine ? ' mine' : ''}`} title={holdWords(row)}>{row.isMine ? (span > 1 ? 'Your team wins in' : 'You win in') : 'Wins in'} {row.hold.left}</span>}
+    {showDecadence && e.decadence > 0 && <span className="sl-decadence" title={`Power ${e.power}; ${e.lead}% above the average empire. Decadence slows city growth ${e.decadence}% and cuts Production, Gold and Science ${e.decadence}%.`}>decadence −{e.decadence}%</span>}
+  </th>;
+}
+
+export function ScoreLedger({ model, turn, close, closeRef }: { model: VpModel; turn: number; close: () => void; closeRef: React.RefObject<HTMLButtonElement | null> }) {
+  const myEra = model.raceRules.era;
+  // In a World Age game the Age in focus is the newest one you have not scored: every empire can score it from the turn it begins.
+  const current = model.deck ? [...model.eras].reverse().find((s) => !s.era!.myScored) : model.eras.find((s) => s.era!.era === myEra);
+  const next = model.deck ? undefined : model.eras.find((s) => s.era!.era === myEra + 1);
+  // In a World Age game the open Age is always opened, so its cards and claims are in view. Tall windows open the era in focus (yours, or the next once yours is scored); short ones keep every row closed so the whole ledger shows.
+  const tall = typeof matchMedia === 'function' && matchMedia('(min-height: 760px)').matches;
+  const [open, setOpen] = useState<string | null>(() => (model.deck ? current?.id ?? null : tall ? (current && !current.era!.myScored ? current.id : next?.id ?? current?.id ?? null) : null));
+  const toggle = (id: string) => setOpen((o) => (o === id ? null : id));
+  const body = useRef<HTMLDivElement>(null);
+  // The ledger opens on the open Age, so its cards and claims are in view, not below the held rows.
+  useEffect(() => {
+    if (!model.deck || !current) return;
+    // The sheet's dialog opens in its own effect, which runs after this one: until then the body has no layout, so wait a frame.
+    const frame = requestAnimationFrame(() => {
+      const box = body.current;
+      const row = box?.querySelector<HTMLElement>(`[data-row="${current.id}"]`);
+      if (!box || !row) return;
+      // Scroll so the Ages heading is the first thing under the column heads.
+      const sections = [...box.querySelectorAll<HTMLElement>('tr.sl-section')].filter((t) => t.offsetTop <= row.offsetTop);
+      const top = sections.length ? sections[sections.length - 1].offsetTop : row.offsetTop;
+      box.scrollTop = Math.max(0, top - (box.querySelector('thead')?.getBoundingClientRect().height ?? 0));
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const columns = model.rows.flatMap((row) => row.members.map((e) => ({ row, e })));
+  const n = columns.length;
+  const { kept, held, eras } = rowsOf(model);
+  const target = model.rows[0]?.target ?? 10;
+
+  const renderRow = (r: Row) => {
+    const isOpen = open === r.id;
+    const cells = columns.map(({ e }) => {
+      let cell: ReactNode;
+      if (r.kind === 'work') cell = <WorkCell s={r.s!} e={e} />;
+      else if (r.kind === 'capital') cell = <CapitalCell model={model} e={e} />;
+      else if (r.kind === 'goal' || r.kind === 'heldGoal') cell = <GoalCell model={model} e={e} held={r.kind === 'heldGoal'} />;
+      else cell = <EraCell s={r.s!} e={e} deck={!!model.deck} />;
+      return <td key={e.id} className={`${e.isMe ? 'mine' : ''}${e.id === columns[0].e.id ? ' first' : ''}`} style={empireVars(e)}>{cell}</td>;
+    });
+    return <Fragment key={r.id}>
+      <tr key={r.id} className={`sl-row k-${r.kind}${isOpen ? ' open' : ''}${r.dim ? ' dim' : ''}`} data-row={r.id}>
+        <th scope="row" className="sl-label">
+          <button type="button" className="sl-row-btn" aria-expanded={isOpen} aria-controls={`sl-detail-${r.id}`} onClick={() => toggle(r.id)} title={r.rule || undefined}>
+            <span className="sl-chev" aria-hidden="true"><i className="sl-chev-fallback" /></span>
+            {r.numeral && <span className="sl-numeral">{r.numeral}</span>}
+            <span className="sl-label-text">
+              <span className="sl-name">{r.name} <VpSeal vp={r.vp} className="inline sl-seal" />{r.status && <span className="sl-status">{r.status}</span>}</span>
+              {r.rule && <span className="sl-rule">{r.rule}</span>}
+            </span>
+          </button>
+        </th>
+        {cells}
+      </tr>
+      {isOpen && <tr key={`${r.id}-detail`} className="sl-row-detail" id={`sl-detail-${r.id}`}><td colSpan={n + 1}><RowDetail model={model} s={r.s} kind={r.kind} /></td></tr>}
+    </Fragment>;
+  };
+
+  const section = (title: string, sub: string, icon: string) => <tr className="sl-section"><th scope="colgroup" colSpan={n + 1}><span className="sl-sec"><Icon name={icon} size={11} />{title}<span className="sl-sec-sub">{sub}</span></span><span className="sl-sec-rule" /></th></tr>;
+
+  return <>
+    <header className="sl-head">
+      <div>
+        <span className="sl-kick"><Star size={8} /> Victory points · turn {turn}</span>
+        <h2 id="vh-sheet-title">Every Way to Score</h2>
+      </div>
+      <p className="sl-win">The first team to hold <b>{target} VP</b> for 10 turns wins. World wonders and held goals can change hands; era and capital points stay earned.</p>
+      <button ref={closeRef} type="button" className="btn vh-close" onClick={close} aria-label="Close objectives">Close <kbd className="kbd">Esc</kbd></button>
+    </header>
+    <div className="sl-body" ref={body}>
+      <table className="sl-table" style={{ ['--cols' as string]: n }}>
+        <thead>
+          <tr className="sl-cols">
+            <th scope="col" className="sl-corner"><span className="sl-corner-text">How to score</span><span className="sl-corner-sub">The race, best first. Your column is gilt.</span></th>
+            {columns.map(({ row, e }) => <ColumnHead key={e.id} row={row} e={e} span={row.members.length} showDecadence={model.raceRules.rules.decadenceSlope > 0} />)}
+          </tr>
+        </thead>
+        <tbody>
+          {section('Kept for good', 'Faction goals +2 each · capitals taken +1 each', 'vp')}
+          {kept.map(renderRow)}
+          {section('Held', '+2 each · you lose these if you lose the city, tile or condition', 'vp')}
+          {held.map(renderRow)}
+          {section(model.deck ? 'Ages' : 'Eras', model.deck ? '+1 each, kept for good · score an Age with its one card, any time after it begins' : '+1 each, kept for good · score an era with any one of its three objectives, once you have entered it', 'milestone-six-techs')}
+          {eras.map(renderRow)}
+        </tbody>
+      </table>
+    </div>
+  </>;
+}

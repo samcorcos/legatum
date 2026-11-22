@@ -1,0 +1,110 @@
+/* The goal actions: the race panel's action row, the confirm dialog and the free-technology picker. */
+
+/* ---- the race panel's action row: its name and seal, then the one button ---- */
+.goal-action {
+  display: grid; gap: 5px; margin: 0 0 8px; padding: 6px 9px 7px;
+  background: color-mix(in srgb, var(--accent) 7%, var(--panel));
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  border-top: 3px double var(--accent);
+}
+.goal-action.ordered { border-color: var(--good); background: color-mix(in srgb, var(--good) 7%, var(--panel)); }
+.goal-action-head { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.goal-action-head h3 { margin: 0; flex: 1 1 auto; font: 700 14px/1.2 var(--serif); }
+.goal-action .vh-seal { position: static; flex: none; margin-right: 3px; }
+.goal-action-btn:not(:disabled) { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); font-weight: 700; }
+.goal-action-btn { width: 100%; min-height: 32px; white-space: nowrap; }
+.goal-action-note, .goal-action-why { margin: 0; font-size: 12px; line-height: 1.35; color: var(--muted); }
+.goal-action.blocked .goal-action-why { color: var(--ink-2); }
+.goal-action-btn:disabled { opacity: .65; cursor: not-allowed; border-style: dashed; }
+
+/* A short window (the 1000x600 laptop) shares its column with the race panel, so the row is one line: the
+   goal's icon and the one button (its name, rule, progress and key are in the hovers, and the button names the action).
+   Only a blocked reason stays, as a 12 px note. The ordered note drops out (the button already says "Cancel the order"). */
+@media (min-width: 961px) and (max-height: 700px) {
+  .goal-action { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; margin-bottom: 4px; padding: 3px 7px 4px; }
+  .goal-action-head { flex: none; }
+  .goal-action-head h3, .goal-action .vh-seal, .goal-action-progress, .goal-action-sakoku { display: none; }
+  .goal-action-btn-wrap { flex: 1 1 0; min-width: 0; }
+  .sidebar-goal-action .goal-action .goal-action-btn { min-height: 28px; padding-inline: 6px; font-size: 12px; line-height: 1.15; letter-spacing: .02em; text-transform: none; white-space: normal; text-wrap: balance; text-align: center; }
+  .goal-action-btn .kbd { display: none; }
+  .goal-action-note, .goal-action-why { flex: 1 0 100%; line-height: 1.25; }
+  .goal-action.ordered .goal-action-note { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+}
+
+/* ---- the confirm ---- */
+dialog.goal-dialog { width: min(660px, calc(100vw - 32px)); }
+.goal-dialog .cost { color: var(--bad); }
+.goal-dialog .cost b { font-weight: 700; }
+.goal-dialog .muted { color: var(--muted); }
+.goal-rows { width: 100%; margin: 8px 0 4px; border-collapse: collapse; font-size: 13px; }
+.goal-rows th, .goal-rows td { padding: 3px 10px 3px 0; text-align: left; vertical-align: baseline; border-bottom: 1px solid var(--rule); font-weight: 500; }
+.goal-rows thead th { font: 600 10px/1.3 var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--label-color); }
+.goal-rows tbody th { font-weight: 700; }
+.goal-rows td span { font-variant-numeric: tabular-nums; margin-left: 4px; color: var(--muted); }
+.goal-rows td.cost span { color: var(--ink-2); }
+.goal-dialog .goal-rows { max-height: 24dvh; display: block; overflow-y: auto; }
+.goal-dialog .goal-rows.tall { max-height: none; overflow: visible; }
+.goal-dialog .goal-rows thead, .goal-dialog .goal-rows tbody { display: table; width: 100%; table-layout: fixed; }
+.goal-dialog .goal-rows.tall th:first-child { width: 28%; }
+.goal-receivers { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 8px 0 0; padding: 0; list-style: none; max-height: none; }
+.goal-receivers li { display: flex; align-items: center; gap: 8px; margin: 0; font-weight: 600; font-size: 13px; }
+.goal-why { margin: 10px 0 0; font-weight: 600; color: var(--bad); }
+
+/* ---- a received broadcast: the prompt reuses the alarm screen (good news in gilt) ---- */
+.alarm-screen.signal { background: radial-gradient(ellipse at 50% 40%, color-mix(in srgb, var(--accent) 30%, transparent), transparent 68%), var(--scrim); }
+.alarm-screen.signal .alarm-rays { background: repeating-conic-gradient(from 6deg, #d9ac4066 0deg 5deg, transparent 5deg 20deg); }
+.alarm-screen.signal .alarm-sheet { width: min(820px, 100%); }
+.free-techs-facts { margin: 0; }
+.free-techs-facts .ui-mark { color: var(--good); }
+
+/* ---- the picker ---- */
+dialog.free-tech-picker {
+  width: min(1000px, calc(100vw - 24px)); height: min(640px, calc(100dvh - 24px)); max-height: calc(100dvh - 24px);
+  padding: 0; display: flex; flex-direction: column; overflow: hidden;
+}
+dialog.free-tech-picker:not([open]) { display: none; }
+dialog.free-tech-picker::backdrop { background: var(--scrim); }
+.ftp-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 14px 18px 10px; border-bottom: 1px solid var(--rule); }
+.ftp-head h2 { margin: 0; font: 700 20px/1.2 var(--serif); }
+.ftp-head p { margin: 2px 0 0; font-size: 13px; line-height: 1.35; color: var(--ink-2); }
+.ftp-count { display: grid; justify-items: end; gap: 4px; font-size: 12px; color: var(--ink-2); white-space: nowrap; }
+.ftp-count b { color: var(--ink); }
+.ftp-pips { display: flex; gap: 5px; }
+.ftp-pips i { width: 13px; height: 13px; border-radius: 50%; border: 2px solid var(--gilt); background: transparent; }
+.ftp-pips i.on { background: var(--gilt); }
+.ftp-body { flex: 1 1 auto; min-height: 0; overflow: auto; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; padding: 12px 18px; align-content: start; }
+.ftp-era h3 { margin: 0 0 6px; font: 700 11px/1.3 var(--sans); letter-spacing: .16em; text-transform: uppercase; color: var(--label-color); }
+.ftp-list { display: grid; gap: 6px; }
+.ftp-tech {
+  display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; grid-template-areas: 'mark name note'; column-gap: 8px; align-items: center;
+  min-height: 36px; padding: 4px 8px; text-align: left; cursor: pointer;
+  background: var(--panel); color: var(--ink); border: 1px solid var(--rule-2); border-radius: 3px;
+}
+.ftp-tech.blocked { grid-template-areas: 'mark name name' 'mark note note'; row-gap: 1px; min-height: 44px; }
+.ftp-mark { grid-area: mark; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--rule-2); font-size: 12px; }
+.ftp-name { grid-area: name; font: 700 13px/1.2 var(--serif); }
+.ftp-note { grid-area: note; font-size: 11px; line-height: 1.25; color: var(--muted); text-align: right; white-space: nowrap; }
+.ftp-tech.blocked .ftp-note { text-align: left; white-space: normal; }
+.ftp-note s { text-decoration-thickness: 1px; }
+.ftp-note em { font-style: normal; display: block; }
+.ftp-tech.open { border-color: var(--gilt); box-shadow: inset 0 0 0 1px var(--gilt); background: color-mix(in srgb, var(--gilt) 10%, var(--panel)); }
+.ftp-tech.open .ftp-mark { border-color: var(--gilt); }
+.ftp-tech.open:hover, .ftp-tech.open:focus-visible { background: color-mix(in srgb, var(--gilt) 22%, var(--panel)); }
+.ftp-tech.chosen { background: var(--ink); color: var(--panel); border-color: var(--ink); }
+.ftp-tech.chosen .ftp-note { color: inherit; }
+.ftp-tech.chosen .ftp-mark { background: var(--panel); color: var(--ink); border-color: var(--panel); }
+.ftp-tech.known, .ftp-tech.blocked { cursor: default; opacity: .62; }
+.ftp-tech.blocked { border-style: dashed; }
+.ftp-tech.full { cursor: not-allowed; opacity: .75; }
+.ftp-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 10px 18px 12px; border-top: 1px solid var(--rule); }
+.ftp-foot .btn { min-height: 44px; }
+.ftp-why { flex: 1 1 auto; font-size: 13px; color: var(--ink-2); }
+@media (max-width: 880px) { .ftp-body { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* ---- a retirement's progress in the confirm: the three veterans owed, the retired ones filled, this one marked ---- */
+.goal-pips { display: flex; gap: 8px; margin: 8px 0 2px; padding: 0; list-style: none; }
+.goal-pips li { flex: 1 1 0; padding: 4px 6px 5px; font: 600 11px/1.3 var(--sans); letter-spacing: .06em; text-transform: uppercase; text-align: center; color: var(--muted); border: 1.5px solid var(--rule-2); }
+.goal-pips li.done { background: var(--ink); border-color: var(--ink); color: var(--panel); }
+.goal-pips li.next { border-color: var(--gilt); box-shadow: inset 0 0 0 1px var(--gilt); color: var(--ink); background: color-mix(in srgb, var(--gilt) 14%, var(--panel)); }
+
+.new-fire-torches { display: flex; flex-wrap: wrap; gap: 4px; color: var(--accent); margin: 12px 0; }

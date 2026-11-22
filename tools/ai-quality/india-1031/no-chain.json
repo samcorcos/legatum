@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "name": "no-chain",
+  "faction_overrides": {
+    "India": {
+      "india_last_office_value": 0,
+      "india_diwan_commit": 0
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "existing_paintings_reviewed": 151,
+  "existing_icons_reviewed": 3,
+  "initial_painting_severity": {
+    "poor": 30,
+    "wrong": 28,
+    "fine": 86,
+    "minor": 7
+  },
+  "changed": {
+    "portrait": 3,
+    "unit": 15,
+    "unlock": 4,
+    "city": 12,
+    "era": 2,
+    "crest": 1,
+    "icon": 6,
+    "construction": 9
+  },
+  "missing_finding_families": 12,
+  "unfixed_missing_families": 4
+}

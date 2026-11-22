@@ -1,0 +1,106 @@
+/* The shared progress bar: atlas ink. A ruled vellum track, a yield-coloured fill, quarter ticks. */
+.pbar { min-width: 0; }
+.pbar-head {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 12px;
+  line-height: 1.25;
+  color: var(--ink-2);
+  margin-bottom: 2px;
+}
+.pbar-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  flex: 1 1 auto;
+  color: var(--ink);
+  font-weight: 600;
+  /* Wrap rather than truncate: a cut label ("unlocks Sett…") loses its meaning, and ellipsis can't
+     cross the nested tooltip span anyway (7a UI review). */
+  flex-wrap: wrap;
+  row-gap: 0;
+}
+.pbar-amount {
+  font-family: var(--num-font);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--ink-2);
+}
+.pbar-turns {
+  font-family: var(--num-font);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  font-weight: 700;
+  color: var(--ink);
+}
+.pbar-foot {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: 2px;
+  font-size: 12px;
+  line-height: 1.25;
+}
+.pbar-foot-left { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 0 8px; min-width: 0; color: var(--ink); }
+.pbar-foot-right { white-space: nowrap; margin-left: auto; }
+.pbar-track {
+  position: relative;
+  height: 7px;
+  background: var(--panel-3);
+  box-shadow: inset 0 0 0 1px var(--rule-2);
+  overflow: hidden;
+}
+/* Quarter ticks read like a ruled gauge, so a part-filled bar can be judged at a glance. */
+.pbar-track::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent calc(25% - .5px), var(--rule-2) calc(25% - .5px), var(--rule-2) calc(25% + .5px), transparent calc(25% + .5px),
+    transparent calc(50% - .5px), var(--rule-2) calc(50% - .5px), var(--rule-2) calc(50% + .5px), transparent calc(50% + .5px),
+    transparent calc(75% - .5px), var(--rule-2) calc(75% - .5px), var(--rule-2) calc(75% + .5px), transparent calc(75% + .5px));
+  opacity: .7;
+  pointer-events: none;
+}
+.pbar-fill {
+  height: 100%;
+  background: var(--ink-2);
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .18);
+  transition: width .3s ease;
+}
+.pbar.bad .pbar-fill { background: var(--bad); }
+.pbar.bad .pbar-turns { color: var(--bad); }
+.pbar.paused .pbar-fill { background: var(--rule-2); }
+.pbar.paused .pbar-turns { color: var(--muted); font-weight: 600; }
+.pbar.good .pbar-turns { color: var(--good); }
+@media (prefers-reduced-motion: reduce) { .pbar-fill { transition: none; } }
+
+/* City panel: growth and borders under the city's name, production below. */
+.cp-progress {
+  display: grid;
+  gap: 3px;
+  padding: 3px 14px 1px;
+}
+.cp-progress-cell { min-width: 0; }
+.cp-progress-borders { padding: 0 0 6px; }
+/* The "Now producing" caption gets its own short line above its item and the turns, so it never
+   truncates ("NOW PRODUC…", 7b review); the item and its turns share the line below. */
+.cp-production .pbar-label .cp-now-line { flex-wrap: wrap; row-gap: 0; }
+/* The item's name is the deciding fact and never truncates. */
+.cp-production .pbar-label .cp-now-line > .lbl { flex: 0 0 100%; white-space: nowrap; line-height: 1.15; }
+.cp-production .pbar-label .cp-now-line > :not(.lbl) { flex-shrink: 0; }
+.cp-resist { padding-bottom: 2px; }
+.cp-healing-wrap { padding: 2px 14px 5px; }
+.cp-healing .pbar-head { flex-wrap: wrap; margin-bottom: 3px; }
+/* The blocked reason is a sentence: let it wrap on its own line instead of clipping both sides. */
+.cp-healing .pbar-turns { white-space: normal; min-width: 0; }
+.cp-healing.paused .pbar-turns { flex: 1 1 100%; }
+.cp-production .pbar-label { display: block; white-space: nowrap; font-weight: inherit; color: inherit; }
+/* The item's name (with its site, "Yam Relay Station W") is whole or the turns drop to their own line: never a cut name beside the turns. */
+.cp-production .pbar-head { align-items: flex-end; flex-wrap: wrap; row-gap: 0; margin-bottom: 4px; font-size: inherit; }
+.cp-production .pbar-label { flex: 1 1 0; min-width: min-content; }
+.cp-production .cp-now-item { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.cp-production .pbar-turns { margin-left: auto; font-weight: inherit; color: inherit; font-family: inherit; font-size: 12px; }
+.city-panel .cp-production .cp-now-line .cp-now-name { font-size: 14px; }

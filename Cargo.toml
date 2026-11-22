@@ -1,0 +1,50 @@
+[workspace]
+resolver = "3"
+members = ["crates/core", "crates/ai", "crates/sim", "crates/wasm", "crates/server", "crates/archive", "crates/analysis"]
+
+[workspace.package]
+edition = "2024"
+version = "0.1.0"
+publish = false
+license = "MIT"
+repository = "https://github.com/samcorcos/legatum"
+
+[workspace.dependencies]
+legatum-core = { path = "crates/core" }
+legatum-ai = { path = "crates/ai" }
+serde = { version = "1", features = ["derive", "rc"] }
+serde_json = "1"
+rayon = "1"
+clap = { version = "4", features = ["derive"] }
+wasm-bindgen = "0.2"
+
+[profile.release]
+debug = false
+
+# Release-mode correctness gate used before landing; keep overflow checks enabled.
+[profile.release-checked]
+inherits = "release"
+overflow-checks = true
+debug-assertions = true
+
+# Simulation runs (`cargo build --profile sim -p legatum-sim`): release plus whole-program
+# optimization, about 10% faster games (docs/sim-results/perf). Slow to build, so tests keep
+# the plain release profile.
+[profile.sim]
+inherits = "release"
+lto = "fat"
+codegen-units = 1
+
+# Shipped browser and Tauri engine. Keep native release builds and correctness tests separate.
+[profile.wasm-release]
+inherits = "release"
+lto = "fat"
+codegen-units = 1
+
+# Opt-in faster WASM build for playtest builds (LEGATUM_PLAYTEST_PROFILE=1, see scripts/build-wasm.sh):
+# thin LTO and 16 codegen units. Same engine output, about 12% slower turns than wasm-release, a few
+# minutes less to build (docs/sim-results/perf/playtest-build-profile-1115.md). The shipped profile stays wasm-release.
+[profile.wasm-playtest]
+inherits = "wasm-release"
+lto = "thin"
+codegen-units = 16

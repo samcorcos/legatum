@@ -1,0 +1,87 @@
+{
+  "format": "legatum-scenario",
+  "version": 1,
+  "id": "war-sparta-walls",
+  "revision": 1,
+  "title": "Walls of Keystone",
+  "faction": "Sparta",
+  "seat": 0,
+  "difficulty": "Hard",
+  "minutes": 20,
+  "briefing": "Turn 51. Sparta has five cities and seven Spearmen; Germany is down to Keystone (its 6-pop capital) and Anvil, with two Spearmen and an Archer. Neither is walled yet, but Germany is working on it. You are at Peace. In the real game you declared this turn, took Anvil on turn 57, and Keystone finished its Walls mid-siege on turn 60 and still fell on turn 61, at the cost of a Spearman. Take both by turn 63.",
+  "tests": "Taking cities before and after Walls rise: speed against Germany's Walls timer, then a concentrated assault on a walled capital that accepts a loss.",
+  "objective": {
+    "summary": "Capture Anvil and Keystone, Germany's last two cities, by turn 63 and keep your own five.",
+    "turns": 12,
+    "win": [
+      {
+        "OwnCity": 6
+      },
+      {
+        "OwnCity": 4
+      }
+    ],
+    "end_on_win": true,
+    "keep": [
+      "HoldStartingCities"
+    ],
+    "score": [
+      {
+        "metric": "ObjectiveMet",
+        "weight": 300
+      },
+      {
+        "metric": "TurnsLeft",
+        "weight": 20
+      },
+      {
+        "metric": "CitiesCaptured",
+        "weight": 50
+      },
+      {
+        "metric": "StartingCitiesHeld",
+        "weight": 100
+      },
+      {
+        "metric": "CombatUnits",
+        "weight": 10
+      },
+      {
+        "metric": {
+          "CityDamage": 4
+        },
+        "weight": 1
+      },
+      {
+        "metric": {
+          "CityDamage": 6
+        },
+        "weight": 1
+      }
+    ]
+  },
+  "predictions": {
+    "good_play": "Declare and go for Keystone first while it is unwalled (it is the capital, and the Walls are coming), with Anvil second, or split three and four. Hit the city from several sides in one turn so its single counterattack is split. The 408 Gold buys two more Spearmen right away. Human result: Anvil turn 57, Keystone turn 61: 11 turns, one Spearman lost.",
+    "ai_play": "With a seven-Spearman army and Gold banked, Hard Sparta should declare quickly. I expect Anvil to fall in most runs, and both cities in about 35%, usually near the deadline; when Keystone's Walls finish before the assault, Hard often stalls outside them.",
+    "ai_score": {
+      "median": 400,
+      "low": 150,
+      "high": 750,
+      "win_percent": 35
+    }
+  },
+  "source": "A playtest game (build 8.4), replayed with the engine it was recorded on to turn 51 (every turn matched the recorded state hash), then loaded into the current rules: old technologies mapped to the seven-era tree, old units are the A2 units with the same ids, VP v2 with overreach and decadence on, and each empire's 30-turn Power window filled with its current yields so decadence applies from the first turn. The human player's units lose their orders. Built by `tools/scenarios/extract-war-states.sh` and `legatum-sim war-build`.",
+  "human": {
+    "met": true,
+    "turns": 11,
+    "units_lost": 1,
+    "cities_lost": 0,
+    "summary": "Declared on Germany on turn 51 with seven Spearmen, stole a Settler on turn 52, took Anvil on turn 57; Keystone finished its Walls on turn 60 mid-siege and fell on turn 61 at the cost of a Spearman.",
+    "game": "Playtest 8.4 (Sparta, Standard, 4 empires), engine 900d58c4"
+  },
+  "state": {
+    "encoding": "gzip-base64",
+    "hash": "4849925106283637886",
+    "data": "H4sIAAAAAAAC/+1de4+jSJL/KgjppD0to8t3Qu1fM3PzaO2Obu56r+ePUcui7awyagwewNVT26rvvpGAn2UbyuUH2KHqpso4fvmIiIyMTJKIr+6nMIN/UZjk7t1XdxhOpvDH71/d+3SWjMxoUMyyxL2jxHMfZmE2gj+l50bwG+4k5s9ikIXRnGp+K5+GX5L6noab07Qs/A/3jsGnDMrQz/AbgCaztTH90XPzYTor4Cv17G3Wztiidsar2mm72hVbrT0oK2dkrXJOl5Uz8QwfPifpl8RCSMmJNeBGL4CaviCCm7wZCY2Iw7wYWJav9LPsQnnPdpMB1TAqIlN2gdrLp3T2MIa2JrM49txPsygeRcmD7Yn7S5h9NoUL9d+n6WiQF2lmoBClvU1xzm9kJdsestRyLIpNPm933c6gbjetPsp5N9Y/8q0flWXEeGo7TRZCi3Lo3DQqwti9K7KZqZkwnWXDcZibun1V35JwYtw7932YDAuQ/pPrudDOus3TdDqLwyJKrZRXhUyXGjbN0tFsCNyxX0UT+PhoJiYB5rn/CwWWJX6OEmiZ+27lW8+1rKiLWwhsUZ6tc/DHzMxMyay5BKCQn7IwCVdL/W7+nWXFCnouGeZD6SaP8gL6aMrKSikMhnEYTSwF8NRlDWL/LgNp/xzG8QvJk32Cp1sFT6sO+7UsVdV9sv6R1h/1+kd//WNdlJ7rAZ3rAVvXg/swzueKEBZFOPy8aK+Q2xWE84V6/DAcp86HEAS2Sz30qnpUbQw2tWNFivUo2iLEHRpwoGYt2LNDOUiTboCltIZmr24sVfK3NPucj9Mp/LnDTgRin7qwreryzYYp+KYefmz+Wc6NQf2Zb3yu6fkLY8FbKwkLtisJW+jIB5MX0YNpZ0DmTRRHsiBLFmxXoO3SF7qNaRAN4l8IfVPWlPB9wuZbhc3WbQPVtQKvzW2LOYJu+/hyUhBtJwW1EOffzRP0I1mRJ983IQTzZq6Ks2LWCuM/hclnyxk7oAsz2TAKe0x7WcoDyAoqZHJjMO8XcivzL/fLuNHmW6+iwejLNUHKLTOAv5RbJTbZ3oYHLSb5f0Axye4ZXqwKVNeadEQT/pZJfMNOixdC5FCrep0Q6QtTzFTj8KT+nDHVx3WpUrU+Gy8GoNotyX0S+zZ5jOKdI3BNYLWhkJsSqxn8/0lkZTWzv8DdM0URQ4nPJxid+lWjU9Gm4Wklq18p2RfjU6h1b3xNOPow4bwfRyYejdPJ7jmPbpvz/K4MKt3o/RA7nY6iaZxOwuFTtXiN45rlwzQBG1TYT78TD1Z4cGXllcOVllcG14/1ggtaAMwI40HteZQ3i8yExdNgdbH7JcwGtQc7NeHQDIZpGo+AwfWiOUsnJb7u5bdxHJXtt50psqdaVBIoihTYXXe+rLpueWYqAVUFhmXVn0ppjQz0PasWrQQozf29AaY9zhVA1KvkMCmMGcwS4FeJzs1wlkXF01xFgKWF1ZHfwgza9QgFzvVh0TtrMhZVs+aqrXE6TtV0rWq+XvWWmunrKv7VCm21arKs2lLWtdNtHT9z7ZfqO7tQ7aXuT+Oons/C4dBMCzvQa5v3Qt395dgpR78drUujCobT/DmNwexU5u4rlB7m1bhyvwOz6cCeT2bunG8ogWb9WpZkMucxGoIJenLms8adQ/4Dvn8fPSRgrpxhmhe5o4jzE4z7vzlP6cwZh4/Gocz5S2LMyBG+M4Fy/9OuuIxzD512ijFUBnYZwGEc2eY4RZg9mOLO+SuTQPjPsYkyJ8wmT05UOJ+NmeZOen/vzHJLIf7mAKNy+9U9lDyMoZ3wxTcakD8aM2+MEyYjh5Z//pflgTOb2pLuqn4630hd1eTcA8bSVt87X9IZgM1kWjw56SxzrNXLZ8CBL1ExjhKHEccWlwN6bs5yZwyzi5Nm0KPJJCqA7cAm5y91TcR2/odkFCYPJrNfhTXOmSuH81dq+/1hg9eeEzqfwE6GT2FsS7eMK7tmuQ5U5hEWVzncjnInBES12Kq27zIz1+KlFa6N+UtjPK2lXe1V1RZ3sKqa0JxpmowGn54qB7Yy11ZJ89kU6Myo9EbsLt59lET5eEVTJ+HU6hsItfQJrHFc+mnDlbFRT8zVh2wWJYsiCpPBDiV8dv9naMLEtWMTkYhEJCIRiUhEIhKRiEQkIhGJSEQiEpGIRCQiEdkl5PcpPKtFJCIRiTYBkYhEJM7ZN4z85ywZZSFCOwn9Mc3MgXLtHfQyHEbnCJGIROQtujitzKbJ01lmT3xDRdOpseeEdxT3c2SPe+OUvh/ahkurPA/j9hxXq29/tG36QSB0nG7dcfopC/M8DpMR7oMhEpGIPLoLJFfflGtrNtuALmb13ob+NYbfN+Jg/ZLOkmKju+fzbtZBS2/sXZYm7lk4JVo0+4XuHwTqundzyRHXFr3UkPd1GIQedwadJ0Qisu+Pq07mPG0zI4fizuL7XAbax+42O12tJ7oXrWjjhx0E2sZocUIcel19V/6lEv82NmHhdm/4o7OFyNtyX45p5Trn+nTEeWFrTT18Kt9vU/fvkZzPth+jV5f2bV6AxJG8MdFBx+ptU+Zl3KTDH3kfjnyD5v63yU1WnBv6yoH7fWjjDbroWiESXas+rCDbnlbp0XbTNjQ7sNY34OoA16N5FOat7ttp7WXvNt62bWJdahfgyBsIF/Dadmggfw0Du+3YtV25HO6wva3/HfbZ0D9D5A16WYeezj3H4vAqHjRcwNO6gD/ZKW/oFOgbm7kQfSvO0Rug6BwhEt2qrm/O9//tIXbIM9Br9Z966n1dwzmYW4K+TdqvP2t+2o3fbusu7lohEp2kjm10o8N1AofrOKBzGcKLzRqX3OhCRw3fzTjJSaiTBVx5XRCS0x2lRL8JkZfzuI6/q8BPOzdf4yEwjOnTHeh17WDcjG91jj60euZ1kbcvzqXel1gXXwKJPhkiT+FZ8QOfEp0Sh34BQo9mOM/jPd3e+/pdgl7m1NAZzuGdw3U7137V6fbN0DdCZHf8MfSoENrLTcDT+1jnmAx6Gh3yHDN9t30dhB41pgtuUiESt7fO6lT1yBOjhzT1fCDcjurW6+63t5F1Yw7PWUN7nM7DxVjsiETkMfevLrhM7kxDLuUXoJN22YPvt/r+/kUeJt1eTIxbchLRtUIkulaXNP+6xRS/ab0PwRw+V9Dj+Xv0wG2/Q3GnfB60f5v/3K25hvPY3Xtw0k+36cTR0s+xYdTHeAroSyESkf3z39p4Uy/MQvfctn75WzcWr6h3GwNdOUN8rlPQ3fM9e+Gy4yNDnLsRecse1SZS70q88qozzufd4XqDeaQt88508vQwQhF6PGj3nbzTuamdd3TOdEwDPSdEIhKzVSMSvQSEntiZ6vjq4nBv6pUxGE6aUfFSr3agJ4VIRCISvVT03hB6iUegvduTvUho8Usg0YIiEpGIRORte3Id3wDBjU9EoqFAJCIRiUhE3vpGGcoTkYhEJCIRiUhEIhKRiEQkIhGJSEQiEpGIRCQiEdlr5EfP/RKNirF7J8iz5ybmz2JgixpEo/LV9vLGLImK8gaXnjuNwyeT5e7d71/dMI4ezfxl8pEZhiOTDM1garKhSQr3jlHPNX9O4zSz75x/dWMDVVMiCNSaZiNbCPG4IL7knDDGKQ28gPq+UD4QMbgZUOkzj/qCa821ABpOpeBSMsAF3Cc+ZUDCA6a4JRNKc8l0oDkR0lfEh5vwvfQFUYoTChioxWPwNZSiqKaSceVzv0YDNVPQDEl8zpTwAkI0DQLGdeATKoO6DkF9LW2DlQq02KhDSykY9wLbWM0IYcIWQLWAOngApfuKQ+FMBvClrYFB0Yz4TCimfI945COI4j4cFlFqRfV+GmZF6C5uDR7SMB6M7DGSuVwf0nhkReh7rpUT8DfKB+PZJFyKPgknpjpfAuJzKBSXfspN9mhGg2KcmbCoRPo5Ska2zmE6sy+q1KrEpJV8mlsh/gEihHrgLuXQztyYZFDMMqgJOuhaXYFvlNXJVmWpqih/vShJ5kUxsVoU9DMq34veXhiTZWlyo13+ojBtNX6afjHZYBzlRZrBoPmdQm0X+P+xPBdkwmw4HvwxMzMQz+/uD8lDlBiTRckD9PK7LE3+ZX5Ls8/V59+yqLB/rUDtx7sNmB3z+WA58oAr+TAqx+ay19rTnvL81Z+PSzpLZaGUasvLoohh0A8Kaz3K29aWhJNS1QozHFvlcd9lWfQQllrrub+EeZpARZ77/SzLoMwn2+oiis1gYiZVE0oLhZeDL+3M/vPF6G6DG1cqvC4J+Vp41U0ZITdQWW9R3Miwbo2js/SDHI0INWA7Hd9BVP6GLYJ4sSYdT2FJRki1aFXlonUYToEo3ly2fps8RrG7WsU0nc7iarFhVyN5EWaD+zQrFsgvoQ2HMG/Ersa1UUGOUj6jPeglN8grdb5SeblP5f8BN5Mnd7WKVZ0X7XUeTd6lTN5eIvRLjmA3rspa9MRRuQpTwXFcX2yev2oDd/5xe4Qa90SGxsn+chZmh1i2Why0Lrij04G1DZ2v59m+xc0Pw3HqfAhjs3N9o3F9g3S46EFbhyszpEM6dKvQJHXdJKGuoB3pmTHBWboH2ob2B/0OnF+RDumQ7qZNUsMJKr5vx/WDyYvoYfd+q8L9VqRDOqQ7mtHEXRRsPtIhHTp3Fz76gzYX6ZAOjdFNHX5sWCvT9bVydbyuXiq/D5NhMQuzJ1wsIx3S4UPD45gcvW977v04MvFonE5279DRLhsdNHNIh3S35hZ2cNTjmyxIh3TosSEd0iEdGii0TXgwEumQ7vQez1WNMrSnSHehOL6oa6hDeOnm5aMVeJ32oX4C0ZDggfqCEptmQSsVEOlrJXyPCqK5ZjQI4B+nK1kVhKaBL4kIbFYFTphNleBz5ROipdaBJwGviBZwww98InSdksHmTuAskEBLiQ81UCb9gDIBRIQG1BOKwj1OFJSuJQ1IoDwuuGA2I4Nkniac2FwNmlDBbT2Sc+FLJqBmzSmziSpYwBTUQYQnbE4HQqVPfAX0UJ/2NYGWckahIzbTBDDBVxL+CagTavQYC7hWm9kd3iWjqE1yh7Xn1ltTO3z7zmFNaR028yeQ1ewJukyeoDeSJwTz5Al8XyKGtYKq9BBqV0H0tSXJnSXp1iWphjYFryxpJ5sYe0XCiqAsi5GNwuSiMN46kUadk2Ozh/qgRBp+Q7s4bc0uUbVL72oX589bM2H8aGYjsDT55GW2i+VXL3NdsF25LuyPzXLBqp8tuS7I3kwXdFemi80kHcvMFyvpOjDxBfp1uLeECUaQDulw6YYjCumQDi0D2oObjpyNHEaLcWRjgeeQry+9Dzs8vc/pbRNaQ7RKB1ulHSG0bRrjt+YHkviK2i0kG+kCEUr9yo5pY34iNBntvDqx5zXqv5sneLKWmJ1+neyyX4d013gSE5MzId2ZkzPhYX58be0sgQYw7xLSIR06P0c0aNcXwQ1nT6S7zgM1HR3A+Jgf6fr67hDKA+m68e4aSgY1BxUJBY/iRrXoyKoBpYlahAp088ETUP43K398So0qg04pqgpqCWoJqgqqACoDCqXbMuojry5+eX3MN+ItfxihWlEbx40oGviMEd9jUqvAJ1xrRTyqhaRC+FIqopUUwhNM+zQgxAc0E4EiRAdEcCBkHvWp9CXlKoAiqA6kkMoTXHHlK62Z5oEHlQU2zpr9WY+19t3Tv8KkiGaT9vHW2N54a9w9YuQqui1yVeBt/lCxJXQV19tiV5F57Cq2ErsKw1XhBS94wQte8IKXq7jggqLPq2TSb672PJk6cvtIb17xPS9DfzB5ET2Yi2WURvl2bNTh3mwvwj90+vH1FVmCXu7GdyeaQEOYDrpnZnofJsNiFmaXCyWFk9FJhY9551Hh+mLfGulanjJDbwifaKME8bk4XvBy1ZfVwxnVjNhwNoMxFfhUMMpoIDQLAl94THOfCKpkmeZOESZ44AeaCRUwqmwiPk2oz3wfMFQRaY9t2NMakuhABsKXgpcJ8IT2mWScSB4oyUmdwk8rzXzlB0IoAvfLfH3SDwj8gqZpGijCyzq4VJTa/Hrcp7qq2Cbj822WQAl/ysCzqfpUoDgTPoeqtVBSeSoQRAnCidKB0vY0CNTHKA8IDYDQk75mhMmtR0J+MtmkCqPbdCBEs9Vdvl0nQsSbMvBRsi1LnaTtMudt5HBjZHvmNX9RmmydxK1umNzZMP32pHdkJendR0v/xWQrJ2EUCPok/7Zmn/t+lmUmGT69PMKz+OblCR6y7QSP9NTaj/b0lgM8dGvyOTY/wMMx+Rz6cbhZjMsjPLCPdJi4Hen6mKWkozqIYUyvL2WQ6FPKIDTBjcE5D3z09ZYEOp1+7IUWpKdE6F9d+EnkTWek2a0oN5BuRnXEJ0ATcGWHFnp2SBTztRwlXwsO3is2Giivt9mO17MJh04Xzf2bztVdP3t6vdWPo+bckunD20MoRTQW12IsrnXLtT+zK5oUpDutdcLtZ6TDaR7penjM6hIvg74lRoXs2RNxHMtIh3RXc+QUnS6kQ7peHMDFUYgbMTh+8Fkmjh4cFTg+rkGqqNSo1CgtFDeyHaMr4QUvPQ6YZKOvhI9m8GiyvHpZ1C9jr8ym9unJpzCDf1GY5POnI2MTPYxtWBoFj0Pi8AlgZUSfUXR/Hw1nsTUB7s9hNnJXAwu9n4ZZEbq7gwX9WhblUHce44VYi7K/0HfJKNpX5rfvHObazthwNfP2V6XT5tJX02M1JL3aVgNrrmEZbakhhNK28suoQLmxB/hdqQMmAh1wRVUgpe20jSI0iKOJjSBUGeEv0agY28BCz9W3y4BFZSQiSu0V2rZ8JcA+2Yrun8q9qoe0SOcl2UdodBFMFwqZRzoaprMC6p6kjyYfxOa+KKGr7x8tojGxKhoTe4bWULZSdc2ARd1qX93MexllabV2ur12WsVcKkNBFSFoUfIwSLORpXPfx8ZMXdsq/oIhQxvAykayKtmn2nKIN7SSNIa/+hPK8wPbKPmSVeutsqh2zJMNzWLNobRsi1QDm9YatOBT1UNRxb6C0Vi2Tc+bplrq1EbDLM42TJUN000NY20FqN8kQLkmwKCpVa3VKjisVf6aVgVgp1z2qqGv9CIZ4B4h0e211wNf1NVT2w7GGnjCSEueMHYYT3TZKH/eKGL/YrxpqDHWcqgxfuhQWwSHsw0STWxqq9BMtBTdRmvq4RWUrVGN7NFt2bMc7v8XJg+trbheRuHbacVZkxXgu80To1V/5fNmg9sbhE3TKWpNs03zm5oWtJWnv2xPFTWv3SxMWc1BaA0/bPrnbzFCem4ZLYc5bWCHaFBvv7ZLnLb2Cjako1dGG2+a/oVsy6IDeRQstc8yiVlLzZtsgGirM1wc1iq+DKO5MOC80SuRbS04l62bta7Kc42ysvsSJYvdh+d/A+W0thJtLgIA"
+  }
+}

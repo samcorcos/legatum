@@ -1,0 +1,29 @@
+/* Victory points dialog shell and top-bar VP chip. Ledger styles live in scoreLedger.css. */
+dialog.vh-sheet {
+  position: fixed; margin: auto; padding: 0; overflow: hidden; color: var(--ink); background: var(--panel);
+  width: min(1400px, calc(100% - 16px)); max-height: min(880px, calc(100% - 16px));
+  border: var(--slip-border); box-shadow: 0 0 0 3px var(--panel), 0 0 0 4px var(--rule-2), 0 18px 40px rgba(40, 28, 10, 0.35);
+  animation: fade 0.18s ease both;
+}
+dialog.vh-sheet[open] { display: flex; flex-direction: column; }
+dialog.vh-sheet::backdrop { background: var(--scrim); }
+.vh-close { flex: none; }
+
+/* ---------- Top-bar chip ---------- */
+.vh-chip { display: inline-flex; align-items: center; gap: 7px; }
+.vh-chip-icon { color: var(--gilt); }
+.vh-chip-me { display: inline-flex; align-items: baseline; font: 700 16px/1 var(--num-font, var(--sans)); letter-spacing: 0; color: var(--ink); }
+.vh-chip-me b { font: inherit; }
+.vh-chip-me small { font: 600 11px/1 var(--sans); color: var(--muted); }
+.vh-chip-lead { display: inline-flex; align-items: center; gap: 3px; font: 600 12px/1 var(--sans); letter-spacing: 0; color: var(--ink-2); }
+
+/* Hold countdowns on the VP chip. */
+.vh-chip.holding { box-shadow: inset 0 -3px 0 var(--bad); }
+.vh-chip.holding.mine { box-shadow: inset 0 -3px 0 var(--gilt); }
+.vh-chip-hold { display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 3px; color: var(--panel); background: var(--bad); font: 700 11px/1.2 var(--sans); letter-spacing: 0; white-space: nowrap; }
+.vh-chip.mine .vh-chip-hold, .vh-chip-outcome.mine { background: var(--gilt); }
+.vh-chip-hold .medallion { background: var(--panel); }
+@media (prefers-reduced-motion: no-preference) {
+  .vh-chip.holding .vh-chip-hold { animation: vh-hold-pulse 1.6s ease-in-out infinite; }
+}
+@keyframes vh-hold-pulse { 50% { opacity: 0.72; } }

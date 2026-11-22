@@ -1,0 +1,6 @@
+Use the built-in image generation tool to create ONE image, and nothing else; do not write code or edit files. After it is generated, reply with only the saved file path.
+
+Edit the attached miniature painting. Keep the figure, face, headband, feather, spear and his right hand holding it, kilt and belt, the leather bracer on the left wrist, bare feet, the plain cream stone base, the camera, size, lighting and the flat pure magenta background EXACTLY the same. Change only:
+1. Remove the bow and its string completely, and remove the leather strap across his chest that carried it, leaving his bare chest and clean magenta background where the bow was.
+2. Redraw the tall cowhide shield on his left arm as a perfectly symmetrical shape: two straight parallel vertical sides, a semicircular rounded top, and a straight flat bottom edge with small rounded corners, like a tall arched window. Keep its cowhide brown-and-cream pattern and woven rim, its height and its position on the left arm; the left forearm and bracer stay behind it as now.
+No text, no extra objects.

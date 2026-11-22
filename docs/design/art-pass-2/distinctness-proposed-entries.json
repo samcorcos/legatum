@@ -1,0 +1,92 @@
+[
+  {
+    "set": "unlock-art",
+    "a": "building-pyramids",
+    "b": "building-stockexchange",
+    "why": "Independent paintings: stepped pyramid masses and sandy complex versus a broad classical exchange facade with a curved glass trading-hall roof. Shared light stone and ground oval drive the 64 px colour metric; shape and subject remain different. No recolour."
+  },
+  {
+    "set": "unlock-art",
+    "a": "building-walls-rome",
+    "b": "improvement-saltpetre-works",
+    "why": "Independent subjects: low rectangular Roman palisade/tent grid versus a dark pitched nitrary shed with tubs and furnace. Shared earth oval is deliberate; no copied architecture."
+  },
+  {
+    "set": "units-miniature",
+    "a": "arquebusier",
+    "b": "trench-infantry",
+    "why": "Both now stand as the requested set requires. Red slashed Renaissance doublet/morion and matchlock versus long blue WWI coat/Adrian helmet and bayoneted rifle. Gist alone flags their upright silhouettes; do not restore action poses."
+  },
+  {
+    "set": "units-miniature",
+    "a": "barbarian-crossbowman",
+    "b": "trench-infantry",
+    "why": "Upright hooded medieval crossbow carrier with low horizontal prod versus blue-coated WWI rifleman with tall bayonet. Own bodies and equipment; common standing silhouette is intentional."
+  },
+  {
+    "set": "units-miniature",
+    "a": "settler",
+    "b": "trench-infantry",
+    "why": "Woman with shawl, travel pack and staff versus helmeted blue-coated WWI rifleman. Gist flags vertical staff/rifle and upright body; no copied painting."
+  },
+  {
+    "set": "units-miniature",
+    "a": "arquebusier",
+    "b": "reislaufer",
+    "why": "Morion and slashed doublet with complete gun/stock versus feathered beret and pike. Same historical standing-figure convention, independently painted. This is the closest red-clothed pair: confirm at map size before adding."
+  },
+  {
+    "set": "units-miniature",
+    "a": "reislaufer",
+    "b": "trench-infantry",
+    "why": "Renaissance feathered cap, slashed clothes and pike versus WWI helmet, long coat and rifle. Upright silhouette overlap is expected; no pose workaround."
+  },
+  {
+    "set": "units-miniature",
+    "a": "arquebusier",
+    "b": "barbarian-crossbowman",
+    "why": "Morion and red slashed doublet with upright firearm versus plain brown hooded brigand and low horizontal crossbow prod. Gist-only resemblance from required standing bodies."
+  },
+  {
+    "set": "units-miniature",
+    "a": "barbarian-crossbowman",
+    "b": "settler",
+    "why": "Hooded brigand holding a crossbow with horizontal prod near feet versus shawled traveller with tall staff and pack. Both brown standing figures; confirm the small prod/pack cues in map context before adding."
+  },
+  {
+    "set": "units-miniature",
+    "a": "legionary",
+    "b": "settler",
+    "why": "Rectangular red scutum, segmentata and Roman helmet versus layered shawl/pack and staff. Both upright, but independent and visibly different subject masses."
+  },
+  {
+    "set": "units-miniature",
+    "a": "crossbowman",
+    "b": "gaesatae",
+    "why": "Grounded tall rectangular pavise and low crossbow versus forward oval shield and thrusting spear. Independent equipment and poses; similar overall occupied box is not a copied silhouette."
+  },
+  {
+    "set": "units-miniature",
+    "a": "arquebusier",
+    "b": "settler",
+    "why": "Red slashed doublet/morion and grounded firearm versus shawled traveller with staff/pack. Shared upright stance; different headgear, garment masses and held object."
+  },
+  {
+    "set": "units-miniature",
+    "a": "arquebusier",
+    "b": "byzantine-heir",
+    "why": "Short red slashed clothes and morion versus long purple mantle, circlet and banner staff. Gist alone overweights the upright shaft and standing body."
+  },
+  {
+    "set": "units-miniature",
+    "a": "autonomous-armour",
+    "b": "mechanised-infantry",
+    "why": "Low unmanned olive tracked vehicle with sensor turret versus tan multi-person mechanised group and vehicle. Shared broad base footprint; distinctly different contents. Group readability is separately still a poor-art finding."
+  },
+  {
+    "set": "units-miniature",
+    "a": "cataphract",
+    "b": "peltast",
+    "why": "Standing armoured horse/rider with vertical lance versus approved on-foot javelin thrower with crescent shield. Very different subject and colours; coarse gist is a false resemblance. No mirroring or pose evasion."
+  }
+]

@@ -1,0 +1,37 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`core forecast starvation and population unlocks alike (0 stored Food) 1`] = `
+[
+  {
+    "item": {
+      "kind": "Unit",
+      "unit": "Settler",
+    },
+    "population": 2,
+  },
+]
+`;
+
+exports[`core forecast starvation and population unlocks alike (4 stored Food) 1`] = `
+[
+  {
+    "item": {
+      "kind": "Unit",
+      "unit": "Settler",
+    },
+    "population": 2,
+  },
+]
+`;
+
+exports[`core forecast starvation and population unlocks alike (9 stored Food) 1`] = `
+[
+  {
+    "item": {
+      "kind": "Unit",
+      "unit": "Settler",
+    },
+    "population": 2,
+  },
+]
+`;

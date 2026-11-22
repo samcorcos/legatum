@@ -1,0 +1,33 @@
+dialog.end-turn-confirmation {
+  width: min(520px, calc(100vw - 32px));
+  max-width: calc(100vw - 32px);
+  max-height: calc(100dvh - 48px);
+  padding: 24px;
+  background: var(--panel);
+}
+.end-turn-confirmation::backdrop { background: var(--scrim); }
+.end-turn-confirmation p { line-height: 1.5; }
+.end-turn-confirmation ul { max-height: 35dvh; overflow-y: auto; padding-left: 24px; }
+.end-turn-confirmation li { margin: 8px 0; }
+.end-turn-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+.end-turn-actions .btn { min-height: 44px; }
+.end-turn-confirmation { position: relative; }
+.end-turn-confirmation h2 { padding-right: 40px; }
+.end-turn-close { position: absolute; top: 16px; right: 16px; }
+/* Declare War prompt (G2) as a decision card. */
+.war-prompt-head { display: flex; align-items: center; gap: 12px; margin: 0 0 8px; }
+.war-prompt-for-you { margin-top: 12px; }
+.war-prompt-label { font: 600 10px/1.3 var(--sans); letter-spacing: 0.14em; text-transform: uppercase; color: var(--label-color); }
+.war-prompt-for-you ul { max-height: none; margin: 4px 0 0; padding-left: 20px; }
+.war-prompt-for-you li { margin: 4px 0; line-height: 1.4; }
+.war-prompt-disabled { display: flex; flex-direction: column; gap: 3px; max-width: 100%; }
+.war-prompt-disabled p { margin: 0; font-size: 13px; line-height: 1.3; }
+/* The target's leader beside the decision: engraved portrait (crest pinned) over a red ribbon. */
+dialog.war-prompt { width: min(600px, calc(100vw - 32px)); }
+.war-prompt-grid { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 22px; align-items: start; }
+.war-prompt-hero { --pw: 100px; --ph: 125px; display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 4px 4px 0 6px; }
+.war-prompt-hero.pair { --pw: 76px; --ph: 95px; }
+.war-prompt-portraits { display: flex; gap: 16px; }
+.war-prompt-portraits .pf { margin: 0; }
+.war-prompt-main { min-width: 0; }
+.war-prompt-hero .rb-text { padding: 5px 16px 4px; letter-spacing: 0.14em; }

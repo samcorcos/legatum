@@ -1,0 +1,172 @@
+/* The score ledger (ScoreLedger.tsx): one table, empires across, ways to score down. Classes are
+   namespaced sl-. `--oc`/`--oi` are an empire's colour and its ink on parchment (vpParts.css). */
+
+dialog.vh-sheet.sl-sheet { width: min(1180px, calc(100% - 16px)); }
+dialog.vh-sheet.sl-sheet[open] { display: flex; flex-direction: column; }
+
+/* ---------- Head ---------- */
+.sl-head { display: flex; flex: none; align-items: center; gap: 22px; padding: 9px 18px 8px; border-bottom: 1px solid var(--rule-2); }
+.sl-head h2 { margin: 2px 0 0; font: 600 22px/1 var(--display); color: var(--ink); white-space: nowrap; }
+.sl-kick { display: inline-flex; align-items: center; gap: 5px; color: var(--accent); font: 700 9.5px/1 var(--sans); letter-spacing: 0.14em; text-transform: uppercase; }
+.sl-win { flex: 1; margin: 0; font: 500 11.5px/1.35 var(--sans); color: var(--ink-2); }
+.sl-win b { color: var(--ink); }
+.sl-head .vh-close { flex: none; }
+
+/* ---------- Body and table ---------- */
+.sl-body { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 0 14px 10px; }
+.sl-table { width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; }
+.sl-table col.label { width: 236px; }
+.sl-table th, .sl-table td { padding: 0; vertical-align: middle; text-align: left; }
+.sl-table > thead th { position: sticky; top: 0; z-index: 5; background: var(--panel); }
+.sl-body { isolation: isolate; }
+.sl-corner { width: 236px; padding: 10px 8px 6px 4px !important; vertical-align: bottom !important; }
+.sl-corner-text { display: block; font: 700 10.5px/1.2 var(--sans); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink); }
+.sl-corner-sub { display: block; margin-top: 3px; font: 400 10.5px/1.3 var(--sans); color: var(--muted); }
+
+/* Column heads: the empire, its VP, the pips. */
+.sl-col { padding: 8px 4px 6px !important; border-bottom: 1px solid var(--rule-2); text-align: center !important; }
+.sl-col > * { display: block; margin: 0 auto; }
+.sl-col .pf-roundel { margin-bottom: 3px; }
+.sl-rank { height: 11px; font: 600 10px/1 var(--display); color: var(--accent); }
+.sl-col-name { font: 600 12.5px/1.1 var(--display); color: var(--ink); max-width: 100%; overflow-wrap: normal; }
+.sl-ai-level { font: 600 10px/1.2 var(--sans); color: var(--ink-2); white-space: nowrap; }
+.sl-col-vp { margin-top: 2px; font: 700 20px/1 var(--num-font, var(--sans)); color: var(--ink); }
+.sl-col-vp small { font: 600 10.5px/1 var(--sans); color: var(--muted); }
+.sl-pips { display: flex !important; justify-content: center; gap: 2px; margin-top: 4px; }
+.sl-pips i { width: 6px; height: 6px; border-radius: 1px; box-shadow: inset 0 0 0 1px var(--rule-2); }
+.sl-pips i.on { background: var(--oi); box-shadow: inset 0 0 0 1px var(--oi); }
+.sl-col.team .sl-pips { gap: 1px; }
+.sl-col.team .sl-pips i { width: 4px; }
+.sl-col.mine .sl-pips i.on { background: var(--gilt); box-shadow: inset 0 0 0 1px var(--gilt); }
+.sl-hold { display: inline-block !important; margin-top: 4px; padding: 1px 6px; border-radius: 3px; color: var(--panel); background: var(--bad); font: 700 10px/1.3 var(--sans); white-space: nowrap; }
+.sl-hold.mine { background: var(--gilt); }
+.sl-gold { margin-top: 2px; font: 600 10.5px/1.2 var(--sans); color: var(--ink-2); white-space: nowrap; }
+.sl-decadence { margin-top: 3px; font: 600 9.5px/1.2 var(--sans); color: var(--bad); white-space: nowrap; }
+
+/* Your column is gilt, top to bottom. */
+.sl-col.mine, .sl-table td.mine { background: color-mix(in srgb, var(--gilt) 9%, var(--panel)); }
+.sl-col.mine { box-shadow: inset 0 2px 0 var(--gilt); }
+.sl-col.mine .sl-col-name { color: var(--gilt); }
+.sl-col.own-team.first .sl-col-vp b { color: var(--gilt); }
+.sl-table td.mine { box-shadow: inset 1px 0 0 color-mix(in srgb, var(--gilt) 45%, transparent), inset -1px 0 0 color-mix(in srgb, var(--gilt) 45%, transparent); }
+
+/* Section rows. */
+.sl-section th { padding: 9px 4px 3px !important; }
+.sl-section th > * { display: inline-block; vertical-align: middle; }
+.sl-sec { display: inline-flex !important; align-items: baseline; gap: 7px; font: 700 10.5px/1.2 var(--sans); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink); white-space: nowrap; }
+.sl-sec .icon { align-self: center; color: var(--accent); }
+.sl-sec-sub { font: 500 11px/1.2 var(--sans); letter-spacing: 0; text-transform: none; color: var(--muted); }
+.sl-sec-rule { width: calc(100% - 2px); height: 1px; margin-top: 3px; background: linear-gradient(to right, var(--rule-2), var(--rule) 60%, transparent); }
+
+/* Rows. */
+.sl-row td, .sl-row .sl-label { border-bottom: 1px solid var(--rule); }
+.sl-row td { height: 34px; text-align: center; }
+.sl-row.dim td, .sl-row.dim .sl-name, .sl-row.dim .sl-rule { opacity: 0.55; }
+.sl-row.open .sl-label, .sl-row.open td { border-bottom-color: transparent; }
+.sl-row.open .sl-label { background: color-mix(in srgb, var(--panel-3) 45%, var(--panel)); }
+.sl-label { padding: 0 !important; }
+.sl-row-btn { display: flex; width: 100%; align-items: center; gap: 6px; padding: 5px 6px 5px 2px; border: 0; border-radius: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.sl-row-btn:hover { background: color-mix(in srgb, var(--panel-3) 55%, var(--panel)); }
+.sl-row-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.sl-chev { display: grid; place-items: center; flex: none; width: 12px; color: var(--muted); transition: transform 0.15s ease; }
+.sl-row.open .sl-chev { transform: rotate(90deg); }
+.sl-chev-fallback { display: block; width: 0; height: 0; border-top: 4px solid transparent; border-bottom: 4px solid transparent; border-left: 5px solid var(--muted); }
+.sl-numeral { display: grid; place-items: center; flex: none; width: 20px; height: 20px; border-radius: 50%; font: 600 10px/1 var(--display); color: var(--ink-2); box-shadow: inset 0 0 0 1px var(--rule-2); }
+.sl-label-text { display: grid; gap: 1px; min-width: 0; }
+.sl-name { display: flex; align-items: center; gap: 5px; font: 600 14px/1.1 var(--display); color: var(--ink); white-space: nowrap; }
+.sl-rule { font: 400 10.5px/1.25 var(--sans); color: var(--muted); }
+.sl-status { margin-left: 2px; font: italic 500 10.5px/1 var(--sans); color: var(--muted); }
+.sl-row.k-era td { height: 30px; }
+.sl-row.k-capital .sl-rule { display: none; }
+.sl-row.k-era .sl-row-btn { padding-top: 3px; padding-bottom: 3px; }
+.vh-seal.inline.sl-seal { position: static; flex: none; width: 19px; height: 19px; padding: 0; box-shadow: inset 0 0 0 1px var(--gilt); }
+.vh-seal.inline.sl-seal b { font-size: 10px; }
+
+/* Cells. */
+.sl-cell { display: inline-grid; justify-items: center; gap: 2px; max-width: 100%; padding: 3px 2px; }
+.sl-num { font: 700 12.5px/1 var(--num-font, var(--sans)); color: var(--ink-2); }
+.sl-bar { display: block; width: 56px; height: 3px; border-radius: 1px; background: var(--panel-3); overflow: hidden; }
+.sl-bar i { display: block; height: 100%; background: var(--oi); }
+td.mine .sl-bar i { background: var(--gilt); }
+
+.sl-token { position: relative; display: inline-grid; place-items: center; flex: none; width: 22px; height: 22px; border-radius: 50%; color: var(--panel); background: var(--oi); box-shadow: 0 0 0 1.5px var(--panel), 0 0 0 2.5px var(--oi), 0 1px 2px rgba(40, 28, 10, 0.3); }
+.sl-token.mine { background: var(--gilt); box-shadow: 0 0 0 1.5px var(--panel), 0 0 0 2.5px var(--gilt), 0 1px 3px rgba(110, 80, 20, 0.35); }
+.sl-token-of { position: absolute; right: -6px; bottom: -4px; display: grid; place-items: center; width: 13px; height: 13px; border-radius: 50%; background: var(--panel); box-shadow: 0 0 0 1px var(--oi); }
+.sl-token-of .medallion { background: transparent; box-shadow: none; }
+.sl-tokens { display: inline-flex; gap: 6px; }
+.sl-socket { display: inline-block; box-sizing: border-box; width: 18px; height: 18px; border-radius: 50%; border: 1.5px dashed var(--rule-2); background: color-mix(in srgb, var(--panel-3) 40%, transparent); }
+.sl-socket.faint { border-style: dotted; border-color: var(--rule); background: transparent; opacity: 0.7; }
+.sl-under { display: block; max-width: 100%; font: 500 9.5px/1.15 var(--sans); color: var(--ink-2); text-align: center; overflow-wrap: normal; }
+.sl-building { color: var(--muted); }
+.sl-public { display: block; font: 400 9px/1.15 var(--sans); color: var(--muted); }
+.sl-mini-meter { position: relative; display: block; width: 64px; height: 10px; border-radius: 2px; background: var(--panel-3); overflow: hidden; }
+.sl-mini-meter i { position: absolute; inset: 0 auto 0 0; background: color-mix(in srgb, var(--gilt) 55%, var(--panel)); }
+.sl-mini-meter b { position: relative; display: block; font: 700 8.5px/10px var(--num-font, var(--sans)); color: var(--ink); text-align: center; }
+
+/* Expanded row. */
+.sl-row-detail td { padding: 0 8px 10px 20px; border-bottom: 1px solid var(--rule); background: color-mix(in srgb, var(--panel-3) 45%, var(--panel)); }
+.sl-detail { display: grid; gap: 6px; padding: 4px 6px 2px; }
+.sl-detail-cols { grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 16px; align-items: start; }
+.sl-detail-rule { margin: 0; font: 500 12px/1.35 var(--sans); color: var(--ink); }
+.sl-detail-fine { font-weight: 400; color: var(--muted); }
+.sl-detail-note { margin: 3px 0 0; font: 400 11px/1.35 var(--sans); color: var(--ink-2); }
+.sl-era .vh-objs { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.sl-era .vh-objs.single { grid-template-columns: minmax(0, 1fr); }
+.sl-era.scored .vh-obj:not(.mine) { opacity: 0.5; }
+
+/* The goals list: one line per empire. */
+.sl-goals { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 18px; margin: 0; padding: 0; list-style: none; }
+.sl-goals li { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; align-items: start; gap: 8px; padding: 3px 0; border-bottom: 1px solid var(--rule); }
+.sl-goals li.me { background: color-mix(in srgb, var(--gilt) 9%, transparent); }
+.sl-goals li > div { display: grid; gap: 1px; min-width: 0; }
+.sl-goal-title { display: flex; align-items: center; gap: 6px; }
+.sl-goals b { font: 600 12px/1.2 var(--sans); color: var(--ink); }
+.sl-goal-rule { font: 400 10.5px/1.3 var(--sans); color: var(--ink-2); }
+.sl-goal-note { font: italic 400 10px/1.2 var(--sans); color: var(--muted); }
+.sl-locate { justify-self: start; margin-top: 2px; }
+.sl-goal-state { font: 700 9px/1.2 var(--sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding-top: 3px; }
+.sl-goal-state.done { color: var(--oi); }
+
+/* Short windows (the user's 1000x600 laptop): the whole ledger shows without scrolling. The row rules move to their
+   tooltips and the expanded row, the heads lose the rank numeral, and every row is a little tighter. */
+@media (max-height: 700px) {
+  .sl-head { padding: 2px 14px; gap: 14px; }
+  .sl-head h2 { font-size: 18px; }
+  .sl-win { font-size: 10.5px; }
+  .sl-body { padding-bottom: 0; }
+  .sl-col { padding-top: 2px !important; padding-bottom: 2px !important; }
+  .sl-col .pf-roundel { --rs: 22px !important; margin-bottom: 1px; }
+  .sl-rank { display: none !important; }
+  .sl-col-name { font-size: 11.5px; }
+  .sl-col-vp { font-size: 16px; margin-top: 1px; }
+  .sl-pips { margin-top: 2px; }
+  .sl-pips i { width: 5px; height: 5px; }
+  .sl-col.team .sl-pips i { width: 3px; }
+  .sl-decadence { margin-top: 1px; font-size: 9px; }
+  .sl-corner { padding-top: 2px !important; padding-bottom: 2px !important; }
+  .sl-corner-sub { margin-top: 1px; }
+  .sl-section th { height: 20px; padding-top: 1px !important; padding-bottom: 0 !important; border-bottom: 1px solid var(--rule-2); }
+  .sl-sec-rule { display: none !important; }
+  .sl-row td { height: 27px; }
+  .sl-row.k-title td { height: 23px; }
+  .sl-row.k-title .sl-rule { display: none; }
+  /* The section heads carry the short rules; rows still open for the full explanation. */
+  .sl-row.k-work .sl-rule, .sl-row.k-goal .sl-rule, .sl-row.k-heldGoal .sl-rule, .sl-row.k-capital .sl-rule { display: none; }
+  .sl-row.k-work .sl-token, .sl-row.k-goal .sl-token, .sl-row.k-heldGoal .sl-token, .sl-row.k-capital .sl-token { width: 18px; height: 18px; }
+  .sl-row.k-goal .sl-mini-meter, .sl-row.k-heldGoal .sl-mini-meter { height: 8px; }
+  .sl-row.k-goal .sl-mini-meter b, .sl-row.k-heldGoal .sl-mini-meter b { line-height: 8px; }
+  .sl-row.k-title .sl-row-btn, .sl-row.k-era .sl-row-btn { padding-top: 1px; padding-bottom: 1px; }
+  .sl-row.k-era td { height: 19px; }
+  .sl-row.k-era .sl-cell { padding-top: 0; padding-bottom: 0; }
+  .sl-row.k-era .sl-token { width: 16px; height: 16px; }
+  .sl-row.k-era .sl-socket { width: 14px; height: 14px; }
+  .sl-numeral { width: 16px; height: 16px; font-size: 9px; }
+  .sl-name { font-size: 13px; }
+  .sl-rule { font-size: 10px; }
+  .sl-cell { padding: 2px 2px; gap: 1px; }
+  .sl-bar { height: 2px; }
+  .sl-under { font-size: 9px; line-height: 1.1; }
+  .sl-corner, .sl-table col.label { width: 212px; }
+  .sl-detail .vh-objs { gap: 6px; }
+}
+

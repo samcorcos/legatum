@@ -1,0 +1,243 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Sakoku core behavior > closes, blocks war and Alliances, counts publicly and holds the VP after 30 turn ends, as core does 1`] = `
+[
+  {
+    "player": 0,
+    "type": "SakokuClosed",
+  },
+]
+`;
+
+exports[`Sakoku core behavior > closes, blocks war and Alliances, counts publicly and holds the VP after 30 turn ends, as core does 2`] = `
+[
+  1,
+  null,
+]
+`;
+
+exports[`Sakoku core behavior > closes, blocks war and Alliances, counts publicly and holds the VP after 30 turn ends, as core does 3`] = `
+[
+  1,
+  null,
+]
+`;
+
+exports[`Sakoku core behavior > closes, blocks war and Alliances, counts publicly and holds the VP after 30 turn ends, as core does 4`] = `
+[
+  {
+    "index": 0,
+    "message": "You have closed the country (Sakoku): it can't declare war. Reopen it first",
+  },
+  {
+    "index": 1,
+    "message": "P0 has closed the country (Sakoku): a closed country can't join an Alliance",
+  },
+]
+`;
+
+exports[`Sakoku core behavior > closes, blocks war and Alliances, counts publicly and holds the VP after 30 turn ends, as core does 5`] = `
+[
+  {
+    "index": 0,
+    "message": "P0 has closed the country (Sakoku): a closed country can't join an Alliance",
+  },
+]
+`;
+
+exports[`Sakoku core behavior > closes, blocks war and Alliances, counts publicly and holds the VP after 30 turn ends, as core does 6`] = `
+[
+  "You have closed the country (Sakoku): it can't declare war. Reopen it first",
+  "You have closed the country (Sakoku): it can't declare war. Reopen it first",
+  "No Alliance to leave",
+  "Peace offers require War",
+  "P0 has closed the country (Sakoku): a closed country can't join an Alliance",
+]
+`;
+
+exports[`Sakoku core behavior > closes, blocks war and Alliances, counts publicly and holds the VP after 30 turn ends, as core does 7`] = `
+[
+  [
+    {
+      "kind": "FactionGoal",
+      "of": 0,
+    },
+    2,
+  ],
+]
+`;
+
+exports[`Sakoku core behavior > closes, blocks war and Alliances, counts publicly and holds the VP after 30 turn ends, as core does 8`] = `
+{
+  "done": true,
+  "label": "The country has stayed closed: holding",
+  "live": true,
+  "target": 30,
+  "value": 30,
+}
+`;
+
+exports[`Sakoku core behavior > closes, blocks war and Alliances, counts publicly and holds the VP after 30 turn ends, as core does 9`] = `
+{
+  "broadcast": null,
+  "free_techs": null,
+  "retire": null,
+  "sakoku": {
+    "blocker": null,
+    "closed": true,
+    "holding": true,
+    "target": 30,
+    "turns": 30,
+  },
+  "swarm": null,
+  "wild": null,
+}
+`;
+
+exports[`Sakoku core behavior > keeps foreign units out of a closed country at Peace, and out of research discounts 1`] = `[]`;
+
+exports[`Sakoku core behavior > keeps foreign units out of a closed country at Peace, and out of research discounts 2`] = `
+[
+  [
+    1,
+    {
+      "q": 8,
+      "r": 4,
+    },
+  ],
+]
+`;
+
+exports[`Sakoku core behavior > keeps the VP while an enemy unit stands in the land 1`] = `
+{
+  "done": true,
+  "label": "The country has stayed closed: holding",
+  "live": true,
+  "target": 30,
+  "value": 30,
+}
+`;
+
+exports[`Sakoku core behavior > keeps the VP while an enemy unit stands in the land 2`] = `
+{
+  "broadcast": null,
+  "free_techs": null,
+  "retire": null,
+  "sakoku": {
+    "blocker": null,
+    "closed": true,
+    "holding": true,
+    "target": 30,
+    "turns": 31,
+  },
+  "swarm": null,
+  "wild": null,
+}
+`;
+
+exports[`Sakoku core behavior > reopening loses the VP and restarts the count, identically 1`] = `[]`;
+
+exports[`Sakoku core behavior > shows a legacy scenario the vow and nobody else, the same way 1`] = `
+{
+  "broadcast": null,
+  "free_techs": null,
+  "retire": null,
+  "sakoku": {
+    "blocker": null,
+    "closed": false,
+    "holding": false,
+    "target": 30,
+    "turns": 0,
+  },
+  "swarm": null,
+  "wild": null,
+}
+`;
+
+exports[`Sakoku core behavior > shows a legacy scenario the vow and nobody else, the same way 2`] = `
+{
+  "broadcast": null,
+  "free_techs": null,
+  "retire": null,
+  "sakoku": null,
+  "swarm": null,
+  "wild": null,
+}
+`;
+
+exports[`Sakoku core behavior > shows a legacy scenario the vow and nobody else, the same way 3`] = `
+{
+  "done": false,
+  "label": "Not closed yet · 0 of 30 turns",
+  "live": true,
+  "target": 30,
+  "value": 0,
+}
+`;
+
+exports[`Sakoku core behavior > shows a legacy scenario the vow and nobody else, the same way 4`] = `
+[
+  null,
+  null,
+]
+`;
+
+exports[`Sakoku core behavior > validates the vow the same way: Alliance, riders, other factions 1`] = `[]`;
+
+exports[`Sakoku core behavior > validates the vow the same way: Alliance, riders, other factions 2`] = `
+[
+  {
+    "index": 0,
+    "message": "Only an empire with Sakoku can close the country",
+  },
+]
+`;
+
+exports[`Sakoku core behavior > validates the vow the same way: Alliance, riders, other factions 3`] = `
+[
+  {
+    "index": 0,
+    "message": "The country is already open",
+  },
+]
+`;
+
+exports[`Sakoku core behavior > validates the vow the same way: Alliance, riders, other factions 4`] = `
+[
+  {
+    "index": 1,
+    "message": "A closed country can't declare war: close it on a turn without a declaration",
+  },
+]
+`;
+
+exports[`Sakoku core behavior > validates the vow the same way: Alliance, riders, other factions 5`] = `
+[
+  {
+    "index": 0,
+    "message": "You haven't met this empire yet: offers need contact first (see one of their units, cities or borders)",
+  },
+  {
+    "index": 1,
+    "message": "A closed country can't join an Alliance: close it on a turn without signing one",
+  },
+]
+`;
+
+exports[`Sakoku core behavior > validates the vow the same way: Alliance, riders, other factions 6`] = `
+[
+  {
+    "index": 1,
+    "message": "That action is already ordered this turn",
+  },
+]
+`;
+
+exports[`Sakoku core behavior > validates the vow the same way: Alliance, riders, other factions 7`] = `
+[
+  {
+    "index": 0,
+    "message": "Leave your Alliance with P1 first: a closed country can't be allied",
+  },
+]
+`;

@@ -1,0 +1,427 @@
+[
+  {
+    "id": "playtest-8.3-switzerland-win",
+    "source": "playtest-8.3-switzerland-win.legatum",
+    "setup": {
+      "seed": 7996239807468428,
+      "width": 40,
+      "height": 26,
+      "players": [
+        {
+          "name": "Player 1",
+          "faction": "Switzerland",
+          "team": 0,
+          "is_human": true
+        },
+        {
+          "name": "AI 2",
+          "faction": "Mongols",
+          "team": 1,
+          "is_human": false,
+          "difficulty": "Hard",
+          "search": true
+        }
+      ],
+      "speed": "Standard",
+      "turn_limit": null,
+      "barbarians": true
+    },
+    "human_seat": 0,
+    "human": {
+      "cities_t30": 2,
+      "cities_t50": 4,
+      "vp_t60": 8,
+      "vp_t100": null,
+      "win_turn": 91,
+      "win_type": "vp_hold"
+    }
+  },
+  {
+    "id": "playtest-8.4-sparta-win",
+    "source": "playtest-8.4-sparta-win.legatum",
+    "setup": {
+      "seed": 5792497936169552,
+      "width": 40,
+      "height": 26,
+      "players": [
+        {
+          "name": "Player 1",
+          "faction": "Sparta",
+          "team": 0,
+          "is_human": true
+        },
+        {
+          "name": "AI 2",
+          "faction": "India",
+          "team": 1,
+          "is_human": false,
+          "difficulty": "Hard",
+          "search": true
+        },
+        {
+          "name": "AI 3",
+          "faction": "Byzantium",
+          "team": 2,
+          "is_human": false,
+          "difficulty": "Hard",
+          "search": true
+        },
+        {
+          "name": "AI 4",
+          "faction": "Germany",
+          "team": 3,
+          "is_human": false,
+          "difficulty": "Hard",
+          "search": true
+        }
+      ],
+      "speed": "Standard",
+      "turn_limit": null,
+      "barbarians": true
+    },
+    "human_seat": 0,
+    "human": {
+      "cities_t30": 2,
+      "cities_t50": 5,
+      "vp_t60": 7,
+      "vp_t100": null,
+      "win_turn": 61,
+      "win_type": "elimination"
+    }
+  },
+  {
+    "id": "playtest-8.4-japan-win",
+    "source": "playtest-8.4-japan-win.legatum",
+    "setup": {
+      "seed": 8165050069796095,
+      "width": 40,
+      "height": 26,
+      "players": [
+        {
+          "name": "Player 1",
+          "faction": "India",
+          "team": 0,
+          "is_human": true
+        },
+        {
+          "name": "AI 2",
+          "faction": "Switzerland",
+          "team": 1,
+          "is_human": false,
+          "difficulty": "Hard",
+          "search": true
+        },
+        {
+          "name": "AI 3",
+          "faction": "India",
+          "team": 2,
+          "is_human": false,
+          "difficulty": "Hard",
+          "search": true
+        },
+        {
+          "name": "AI 4",
+          "faction": "Byzantium",
+          "team": 3,
+          "is_human": false,
+          "difficulty": "Hard",
+          "search": true
+        }
+      ],
+      "speed": "Standard",
+      "turn_limit": null,
+      "barbarians": true
+    },
+    "human_seat": 0,
+    "human": {
+      "cities_t30": 3,
+      "cities_t50": 6,
+      "vp_t60": 6,
+      "vp_t100": 6,
+      "win_turn": 162,
+      "win_type": "vp_hold"
+    }
+  },
+  {
+    "id": "playtest-8.4-celts-win",
+    "source": "playtest-8.4-celts-win.legatum",
+    "setup": {
+      "seed": 8590218284315437,
+      "width": 40,
+      "height": 26,
+      "players": [
+        {
+          "name": "Player 1",
+          "faction": "Celts",
+          "team": 0,
+          "is_human": true
+        },
+        {
+          "name": "AI 2",
+          "faction": "Sparta",
+          "team": 1,
+          "is_human": false,
+          "difficulty": "Hard",
+          "search": true
+        },
+        {
+          "name": "AI 3",
+          "faction": "Athens",
+          "team": 2,
+          "is_human": false,
+          "difficulty": "Hard",
+          "search": true
+        },
+        {
+          "name": "AI 4",
+          "faction": "Switzerland",
+          "team": 3,
+          "is_human": false,
+          "difficulty": "Hard",
+          "search": true
+        }
+      ],
+      "speed": "Standard",
+      "turn_limit": null,
+      "barbarians": true
+    },
+    "human_seat": 0,
+    "human": {
+      "cities_t30": 4,
+      "cities_t50": 5,
+      "vp_t60": 6,
+      "vp_t100": 7,
+      "win_turn": 149,
+      "win_type": "vp_hold"
+    }
+  },
+  {
+    "id": "playtest-8.5-mongols-win",
+    "source": "playtest-8.5-mongols-win.legatum",
+    "setup": {
+      "seed": 874654782136188,
+      "width": 40,
+      "height": 26,
+      "players": [
+        {
+          "name": "Player 1",
+          "faction": "Mongols",
+          "team": 0,
+          "is_human": true
+        },
+        {
+          "name": "AI 2",
+          "faction": "Mongols",
+          "team": 1,
+          "is_human": false,
+          "difficulty": "Hard",
+          "search": true
+        },
+        {
+          "name": "AI 3",
+          "faction": "Sparta",
+          "team": 2,
+          "is_human": false,
+          "difficulty": "Hard",
+          "search": true
+        },
+        {
+          "name": "AI 4",
+          "faction": "Athens",
+          "team": 3,
+          "is_human": false,
+          "difficulty": "Hard",
+          "search": true
+        }
+      ],
+      "speed": "Standard",
+      "turn_limit": null,
+      "barbarians": true
+    },
+    "human_seat": 0,
+    "human": {
+      "cities_t30": 2,
+      "cities_t50": 5,
+      "vp_t60": 7,
+      "vp_t100": 9,
+      "win_turn": 123,
+      "win_type": "vp_hold"
+    }
+  },
+  {
+    "id": "playtest-8.5-switzerland-win",
+    "source": "playtest-8.5-switzerland-win.legatum",
+    "setup": {
+      "seed": 5468583503244302,
+      "width": 40,
+      "height": 26,
+      "players": [
+        {
+          "name": "Player 1",
+          "faction": "Switzerland",
+          "team": 0,
+          "is_human": true
+        },
+        {
+          "name": "AI 2",
+          "faction": "Athens",
+          "team": 1,
+          "is_human": false,
+          "difficulty": "Hard",
+          "search": true
+        },
+        {
+          "name": "AI 3",
+          "faction": "Switzerland",
+          "team": 2,
+          "is_human": false,
+          "difficulty": "Hard",
+          "search": true
+        },
+        {
+          "name": "AI 4",
+          "faction": "India",
+          "team": 3,
+          "is_human": false,
+          "difficulty": "Hard",
+          "search": true
+        }
+      ],
+      "speed": "Standard",
+      "turn_limit": null,
+      "barbarians": true
+    },
+    "human_seat": 0,
+    "human": {
+      "cities_t30": 3,
+      "cities_t50": 5,
+      "vp_t60": 6,
+      "vp_t100": 9,
+      "win_turn": 110,
+      "win_type": "vp_hold"
+    }
+  },
+  {
+    "id": "playtest-8.6-germany-loss",
+    "source": "playtest-8.6-germany-loss.legatum",
+    "setup": {
+      "seed": 8657891372967061,
+      "width": 40,
+      "height": 26,
+      "players": [
+        {
+          "name": "Player 1",
+          "faction": "Germany",
+          "team": 0,
+          "is_human": true
+        },
+        {
+          "name": "AI 2",
+          "faction": "Sparta",
+          "team": 1,
+          "is_human": false,
+          "difficulty": "Hard",
+          "search": true
+        },
+        {
+          "name": "AI 3",
+          "faction": "Athens",
+          "team": 2,
+          "is_human": false,
+          "difficulty": "Hard",
+          "search": true
+        },
+        {
+          "name": "AI 4",
+          "faction": "Switzerland",
+          "team": 3,
+          "is_human": false,
+          "difficulty": "Hard",
+          "search": true
+        }
+      ],
+      "speed": "Standard",
+      "turn_limit": null,
+      "barbarians": true
+    },
+    "human_seat": 0,
+    "human": {
+      "cities_t30": 2,
+      "cities_t50": 3,
+      "vp_t60": 3,
+      "vp_t100": null,
+      "win_turn": null,
+      "win_type": null
+    },
+    "recorded_winner": {
+      "seat": 2,
+      "faction": "Athens",
+      "cities_t30": 3,
+      "cities_t50": 4,
+      "cities_t80": 6,
+      "vp_t60": 4,
+      "vp_t80": 10,
+      "final_vp": 10,
+      "titles": [
+        "LargestEconomy",
+        "StrongestArmy",
+        "MostAdvanced"
+      ],
+      "win_turn": 88,
+      "win_type": "vp_hold"
+    }
+  },
+  {
+    "id": "playtest-8.6-sparta-win",
+    "source": "playtest-8.6-sparta-win.legatum",
+    "setup": {
+      "seed": 6813926672671224,
+      "width": 40,
+      "height": 26,
+      "players": [
+        {
+          "name": "Player 1",
+          "faction": "Sparta",
+          "team": 0,
+          "is_human": true
+        },
+        {
+          "name": "AI 2",
+          "faction": "India",
+          "team": 1,
+          "is_human": false,
+          "difficulty": "Hard",
+          "search": true
+        },
+        {
+          "name": "AI 3",
+          "faction": "Byzantium",
+          "team": 2,
+          "is_human": false,
+          "difficulty": "Hard",
+          "search": true
+        },
+        {
+          "name": "AI 4",
+          "faction": "Germany",
+          "team": 3,
+          "is_human": false,
+          "difficulty": "Hard",
+          "search": true
+        }
+      ],
+      "speed": "Standard",
+      "turn_limit": null,
+      "barbarians": true
+    },
+    "human_seat": 0,
+    "human": {
+      "cities_t30": 1,
+      "cities_t50": 4,
+      "vp_t60": 7,
+      "vp_t100": null,
+      "win_turn": 84,
+      "win_type": "elimination"
+    }
+  }
+]

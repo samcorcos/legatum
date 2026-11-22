@@ -1,0 +1,24 @@
+.city-borders {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 8px;
+  margin: 2px 14px;
+  line-height: 1;
+}
+.city-borders-button { min-height: 18px; padding: 1px 8px 0; font-size: 10.5px; letter-spacing: 0.04em; }
+/* A building city: one full-width row of normal button height under "Tiles N worked · M owned". */
+.city-borders.wide { margin: 4px 14px 6px; }
+.city-borders-button.wide { flex: 1 1 100%; min-height: 26px; padding: 3px 10px; font-size: 11px; }
+.city-borders-button.wide:disabled { flex: 0 0 auto; min-width: 42%; }
+/* The reason a button is disabled sits beside it in sentence case, free to wrap. */
+.city-borders-reason { flex: 1 1 0; min-width: 8em; font: 11px/1.25 var(--sans); letter-spacing: 0; text-transform: none; color: var(--ink-2); }
+.city-borders-buy { display: flex; flex: 1 1 100%; flex-wrap: wrap; align-items: center; gap: 4px 8px; padding: 4px 6px; border: 1px solid var(--rule-2); background: var(--field); }
+.city-borders-queued { flex: 1 1 100%; font: 12px/1.25 var(--sans); }
+.city-borders-buy > .cost-chip { margin-right: auto; }
+.city-borders-buy > .btn { padding-block: 1px; margin-left: auto; }
+.city-borders .hint { font-size: 10.5px; line-height: 1.2; flex: 1 0 100%; }
+.city-borders .hint.bad { color: var(--bad, #9a3322); }
+/* In the Units heading's row (an idle city) the button must not make the row taller. */
+.cp-sub .city-borders-button { margin: -4px 0 -2px; font-family: var(--sans); font-style: normal; }
+.cp-sub .city-borders-reason { margin: -4px 0 -2px 6px; flex: 0 1 auto; }

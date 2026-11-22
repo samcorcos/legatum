@@ -1,0 +1,204 @@
+/* M1 tablet controls. Hover rules in styles/lobby/lan/Guide only change decoration;
+   explanations use Tip, and selecting research traces the same prerequisite path. */
+:root .touch-only { display: none; }
+.map-touch-card {
+  position: absolute;
+  z-index: 10;
+  left: 50%;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  width: min(320px, calc(100% - 32px));
+  max-height: calc(50% - 32px);
+  overflow: auto;
+  color: var(--ink);
+  background: var(--tip-bg);
+  border: var(--slip-border);
+  padding: 12px;
+}
+.map-touch-card.at-top { top: 72px; bottom: auto; max-height: calc(50% - 88px); }
+.map-touch-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.map-touch-card p { margin: 8px 0; font-size: 13px; }
+.map-touch-card .confirm-order { width: 100%; }
+.map-touch-card .forecast, .map-touch-card .tilecard {
+  position: static;
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  margin-top: 12px;
+  pointer-events: auto;
+  animation: none;
+}
+.map-touch-card .forecast { max-height: none; overflow: visible; }
+.map-touch-card .bd { min-width: 0; }
+.map-context-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+
+/* The former center command bar had only 288px at 1024 wide. Use the left dock
+   at smaller widths and let long panels scroll without imposing a page minimum. */
+@media (max-width: 1280px) {
+  .topbar .brand { padding: 0 12px; }
+  .topbar .stat, .topbar .research-chip { padding-inline: 10px; }
+  .topbar .research-chip { flex: 1; }
+  .research-chip b { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .research-prog { display: none; }
+  .left-dock { width: min(320px, calc(100vw - 32px)); }
+  .left-dock .unit-panel { position: static; width: 100%; display: block; max-height: 100%; overflow: auto; padding-top: 12px; }
+  .left-dock .unit-panel .up-stats { display: flex; height: auto; margin-top: 12px; border: 0; }
+  /* HP across the top, the other stats two to a row: a Ranged unit's five stats leave room for its whole Upgrade button in the short window. */
+  .game .left-dock .unit-panel .up-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 20px; }
+  .game .left-dock .unit-panel .up-stats > .up-stat:first-child { grid-column: 1 / -1; }
+  .game .left-dock .unit-panel .up-stats > .up-stat:not(:first-child) { grid-template-columns: auto 1fr; gap: 8px; }
+  .game .left-dock .unit-panel .up-stats > .up-stat:not(:first-child) b { grid-column: 2; text-align: right; }
+  /* Docked in the left column, the unit notes are a section of the panel, not a stack floating
+     above it (which sat above the dock's top edge, off screen). */
+  .left-dock .up-hints { position: static; gap: 6px; padding: 0 16px 12px; pointer-events: auto; }
+  .left-dock .up-hints > .hint { text-align: left; font-size: 13px; }
+  .report { right: 16px; width: min(360px, calc(100vw - 32px)); }
+}
+
+@media (pointer: coarse) {
+  :where(span.tip-trigger) { display: inline-block; }
+  :root .touch-only { display: block; }
+  :root .mouse-only { display: none; }
+  /* Include explanations, disclosures, disabled controls and native selectors. */
+  :root :is(button, select, input:not([type='checkbox']):not([type='radio']), summary, a[href], [data-tip-static='true']) {
+    min-width: 44px;
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+  :root :is(input[type='checkbox'], input[type='radio']) { width: 24px; height: 24px; }
+  :root label:has(> input[type='checkbox']), :root label:has(> input[type='radio']) { min-height: 44px; }
+  :root .tip-trigger[data-tip-control='true'] { display: flex; align-items: stretch; }
+  .tip-trigger[data-tip-control='true'] > :first-child { flex: 1; min-width: 0; }
+  :root .tip-info { flex: 0 0 44px; border: 1px solid var(--rule); color: var(--accent); background: var(--panel); font-size: 20px; }
+  .tip-trigger[data-tip-static='true'] { cursor: pointer; }
+  .tip-bubble { -webkit-user-select: text; user-select: text; }
+  .tip-bubble .bd { min-width: 0; }
+  .topbar { padding-inline: env(safe-area-inset-left) env(safe-area-inset-right); }
+  .topbar .brand { padding-inline: 12px; }
+  .topbar .research-chip { flex: 1; gap: 8px; }
+  .topbar .research-prog, .research-chip .muted { display: none; }
+  .research-chip b { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .research-chip { flex-wrap: wrap; align-content: center; }
+  .left-dock { width: min(320px, calc(100vw - 32px)); display: flex; flex-direction: column; align-items: stretch; }
+  .selection-close { flex: none; align-self: flex-start; margin-bottom: 8px; background: var(--panel); }
+  .left-dock > .panel { min-height: 0; overflow: auto; }
+  .left-dock .unit-panel { position: static; display: block; width: 100%; padding-top: 12px; }
+  .left-dock .unit-panel .up-stats { display: flex; height: auto; margin-top: 12px; border: 0; }
+  .up-stat { height: auto; }
+  .left-dock .up-hints { position: static; gap: 6px; padding: 0 16px 12px; pointer-events: auto; }
+  .left-dock .up-hints > .hint { text-align: left; font-size: 12px; }
+  .actions { gap: 8px; padding: 12px; }
+  .act-wrap { max-width: 100%; }
+  .act { white-space: normal; }
+  .seatbar { max-height: calc(55% - 16px); overflow: auto; bottom: max(16px, env(safe-area-inset-bottom)); }
+  .vp:not(.open) { max-height: calc(45% - 88px); }
+  :root .touch-turn-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px; position: sticky; bottom: 0; background: var(--panel); z-index: 1; }
+  .touch-turn-controls .btn { padding: 12px 8px; min-height: 52px; }
+  :root .seatbar > .ready-anyway { display: none; }
+  .seatbar > .cta.ready, .seatbar > .cta.waiting { display: none; }
+  .city-list-items { max-height: 200px; }
+  .cp-meta { flex-wrap: wrap; }
+  .cp-yields { flex-wrap: wrap; }
+  .cp-yield { flex: 1 0 44px; }
+  .lobby-touch-note { font-size: 11px; font-weight: 400; line-height: 1.4; margin-top: 4px; }
+  .menu-pop { max-height: calc(100dvh - 64px); overflow: auto; }
+  .seat-remove { width: 44px; }
+  .lobby-inner { padding-inline: 20px; }
+  .lobby-body { grid-template-columns: minmax(0, 1fr); }
+  .faction-menu { max-width: calc(100vw - 40px); }
+  .map-canvas { -webkit-touch-callout: none; }
+  .toast { min-height: 44px; }
+}
+
+@media (pointer: coarse) and (max-width: 1100px) {
+  .topbar .brand { display: none; }
+  .topbar .tb-nav { padding-inline: 8px; }
+  .topbar .stat { padding-inline: 12px; }
+  .lobby-card { padding-inline: 12px; }
+}
+
+@media (pointer: coarse) and (min-width: 861px) {
+  .seat-row { grid-template-columns: 4px 140px minmax(90px, 1fr) 180px 98px 108px 44px; }
+}
+
+/* Tablet production owns two rows: Build + its explanation, then Queue / Buy + its
+   explanation. The desktop's 76px Buy column cannot also hold a 44px touch target. */
+@media (pointer: coarse) and (min-width: 700px) and (max-width: 1280px) {
+  .production-choice { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .production-secondary { flex-direction: row; gap: 8px; border: 0; }
+  .production-secondary > * { flex: 1; min-width: 0; }
+}
+
+/* Above the compact race strip, keep the race and turn dock in separate slots.
+   Reserve a real row for each touch control: generic Tip flex styling must not
+   replace the race grid, or its controls paint outside the short desktop rows. */
+@media (pointer: coarse) and (min-width: 961px) and (max-width: 1280px) {
+  :root .game .vp .vp-row { min-height: 44px; padding: 4px 8px; }
+  .game .vp .vp-foot { flex-wrap: wrap; gap: 8px; }
+}
+
+/* Large tablets (iPad Pro landscape): the same two-column race footer, and no race subtitle, so
+   eight touch-height rows fit above the turn dock. */
+@media (pointer: coarse) and (min-width: 1281px) {
+  .game .vp .vp-foot { flex-wrap: wrap; gap: 8px; padding-bottom: 8px; }
+}
+
+/* Phone HUD: five bounded controls, never competing flex children. Extra totals live in tips. */
+@media (max-width: 700px) {
+  .topbar .brand, .topbar .tb-nav, .topbar .turn-of,
+  .topbar .population-counter { display: none; }
+  .topbar .tb-stats { display: flex; flex: 1; min-width: 0; }
+  .topbar .gold-stat { flex: 1 1 auto; }
+  .topbar .science-stat { flex: 0 0 44px; }
+  .topbar .research-slot { flex: 0 1 92px; }
+  .topbar .gold-hoard-readout { display: none; }
+  /* Every resource keeps its own 44 px tap target in a second top-bar row. */
+  .topbar .supplies { position: absolute; top: 52px; left: 0; right: 0; height: 44px; overflow-x: auto; overflow-y: hidden; border-top: 1px solid var(--rule); background: var(--topbar-bg); }
+  .topbar .supplies .supply-stat { height: 44px; min-width: 44px; padding: 0 7px; border-left: 1px solid var(--rule); flex: none; flex-wrap: nowrap; }
+  .topbar .supplies .supply-stat b { font-size: 0; }
+  .topbar .supplies .supply-stat b::after { content: attr(data-spare); font-size: 13px; }
+  .topbar .supply-stat > .pos, .topbar .supply-stat > .muted, .topbar .supply-stat > .supply-idle { display: none; }
+  .topbar .gold-warn-mark { font-size: 11px; color: var(--bad); }
+  .topbar .gold-stat-warn b { color: var(--bad); }
+  .topbar .stat { padding: 0 5px; gap: 4px; min-width: 0; flex-wrap: wrap; align-content: center; justify-content: center; }
+  .topbar .stat b { font-size: 13px; }
+  .topbar .stat > span { font-size: 11px; }
+  .topbar .gold-stat > .pos, .topbar .gold-stat > .neg { display: none; }
+  .topbar .gold-warning { position: absolute; top: var(--hud-height, 52px); left: 8px; z-index: 10; font-size: 10px; }
+  .topbar .research-slot { min-width: 0; width: 100%; }
+  .topbar .research-chip { width: 100%; padding: 0 6px; gap: 2px; justify-content: center; flex-wrap: nowrap; flex-direction: column; }
+  .topbar .research-chip b, .topbar .research-chip-plan, .topbar .research-chip.needs::after { display: none; }
+  .topbar .research-label { font-size: 9px; letter-spacing: .05em; }
+  .topbar .research-phone-tech { display: block; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font: 600 11px/1.2 var(--sans); color: var(--ink); }
+  .topbar .research-chip.needs .research-label { color: var(--accent); }
+  .topbar .tb-right { flex: 0 0 auto; min-width: 0; }
+  .topbar .turn { padding: 0 6px; gap: 2px; flex-direction: column; align-items: center; justify-content: center; min-width: 46px; height: 100%; }
+  .topbar .turn-label { font-size: 9px; letter-spacing: .04em; }
+  .topbar .turn b { font: 600 20px/1 var(--num-font); }
+  .topbar .menu { padding: 0 4px; }
+  .topbar .menu > button { padding: 4px 6px; min-width: 48px; letter-spacing: .04em; }
+  .topbar .net { position: absolute; right: 8px; top: var(--hud-height, 52px); font-size: 10px; }
+  .topbar .invite-chip { display: none; }
+}
+
+/* Compact game overlay reservations, independent of celebration component styling. */
+@media (max-width: 1280px) { .game { --story-left: 352px; } }
+@media (max-width: 960px) {
+  .game { --race-top: calc(var(--hud-height) + 8px); --race-width: calc(100% - 16px); --story-left: 8px; --story-right: 8px; --story-top: calc(var(--race-top) + 108px); }
+  .game .vp { right: 8px; }
+  .game .vp:not(.open) { height: 100px; max-height: 100px; border-width: 2px; }
+  .game .vp:not(.open) > .ph, .game .vp:not(.open) > .hint { display: none; }
+  .game .vp:not(.open) .vp-rows { display: grid; grid-template-columns: repeat(var(--vp-teams), minmax(0, 1fr)); padding: 0; flex: none; overflow: visible; }
+  .game .vp:not(.open) .vp-row { display: grid; justify-items: center; min-width: 0; min-height: 48px; padding: 3px 2px; grid-template-columns: 1fr; grid-template-rows: 22px 17px; row-gap: 2px; border: 0; }
+  .game .vp:not(.open) .vp-label, .game .vp:not(.open) .vhc-holds, .game .vp:not(.open) .vhc-nobody, .game .vp:not(.open) .vhc-head { display: none; }
+  .game .vp:not(.open) .vhc-who { grid-area: 1 / 1; justify-content: center; }
+  .game .vp:not(.open) .vp-num { grid-area: 2 / 1; text-align: center; font-size: 10px; white-space: nowrap; }
+  .game .vp:not(.open) .vp-num b { font: 600 13px/1 var(--num-font); }
+  .game .vp:not(.open) .vp-foot { padding: 0; }
+  .game .vp:not(.open) .vp-foot .link { min-height: 44px; }
+  .game .first-game-hint, .game .report { width: calc(100% - 16px); }
+  .game .first-game-hint { top: var(--story-top); left: var(--story-left); transform: none; }
+  .game .report { max-height: calc(100% - var(--story-top) - 16px); }
+  .game .left-dock { top: var(--story-top); }
+  .game:has(.moment-card) .left-dock { top: calc(var(--story-top) + var(--moment-lane-height, 0px) + 8px); }
+}

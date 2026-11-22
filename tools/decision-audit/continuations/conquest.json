@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "name": "audit-conquest",
+  "decisions": {
+    "campaign_commit": 1000,
+    "campaign_persist": 70,
+    "focus_fire": 250,
+    "war_siege": 80,
+    "production_military_percent": 200,
+    "research_military_percent": 200,
+    "research_economy_percent": 40,
+    "conquest_nearby_weight": 80,
+    "strike_eagerness": 60,
+    "buy_hold": 0
+  }
+}

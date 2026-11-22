@@ -1,0 +1,78 @@
+/* A city under attack, in This Turn: the loudest thing in the dock. Never colour alone: a siege
+   icon, signed HP numbers, a hatched "lost last turn" segment and words carry it too. */
+.siege-alerts { display: flex; flex-direction: column; gap: 8px; padding: 6px 10px 0; margin-bottom: 6px; }
+.siege-card {
+  --siege: var(--bad);
+  display: grid;
+  gap: 4px;
+  padding: 7px 10px 8px;
+  border: 2px solid var(--siege);
+  border-left-width: 6px;
+  background: color-mix(in srgb, var(--siege) 9%, var(--panel));
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.35;
+}
+.siege-card.approach { --siege: var(--y-production); }
+.siege-head { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.siege-mark {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--siege);
+  color: #fffaf0;
+  box-shadow: 0 0 0 2px var(--panel), 0 0 0 3px var(--siege);
+}
+.siege-title { margin: 0; font: 700 17px/1.1 var(--display); color: var(--ink); min-width: 0; overflow-wrap: anywhere; }
+.siege-hp { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 2px 8px; }
+.siege-bar { grid-column: 1 / -1; position: relative; height: 10px; border: 1.5px solid var(--ink); background: var(--panel-3); overflow: hidden; }
+/* HP lost last turn: a hatch beyond the fill, so the loss reads without colour. */
+.siege-lostbar { position: absolute; inset: 0 auto 0 0; background: repeating-linear-gradient(135deg, var(--siege) 0 2px, transparent 2px 5px); opacity: 0.75; }
+.siege-fillbar { position: absolute; inset: 0 auto 0 0; background: var(--siege); border-right: 1.5px solid var(--ink); }
+.siege-num { font: 700 16px/1 var(--num-font); font-variant-numeric: tabular-nums; }
+.siege-of { font-weight: 600; font-size: 12px; color: var(--ink-2); margin-left: 2px; }
+.siege-lost { justify-self: end; color: var(--siege); font: 700 13px/1 var(--num-font); font-variant-numeric: tabular-nums; }
+.siege-foot { display: flex; align-items: flex-end; justify-content: space-between; gap: 6px; }
+.siege-who { color: var(--ink-2); font-size: 12px; line-height: 1.3; min-width: 0; }
+.siege-forecast-tip { display: block; }
+.siege-forecast { display: flex; align-items: flex-start; gap: 6px; color: var(--siege); font-weight: 700; font-size: 14px; line-height: 1.25; }
+.siege-forecast .icon { margin-top: 2px; flex: none; }
+.siege-card.holding .siege-forecast, .siege-card.quiet .siege-forecast { color: var(--ink); }
+.siege-go { flex: none; min-height: 28px; padding: 3px 8px; border-color: var(--siege); font-weight: 700; white-space: nowrap; }
+.siege-rest { display: grid; gap: 4px; }
+.siege-rest .link { text-align: left; color: var(--bad); }
+.siege-compact-facts, .siege-go-short, .siege-empire, .siege-approach-time, .siege-compact-who { display: none; }
+
+/* At the 1000x600 laptop size the race panel needs four rows. Keep the deciding siege facts
+   together in two compact lines so the goal action below the dock body remains visible. */
+@media (max-height: 640px) {
+  .siege-alerts { gap: 4px; padding: 4px 8px 0; margin-bottom: 3px; }
+  .siege-card { position: relative; gap: 2px; padding: 4px 7px; }
+  .siege-head { gap: 5px; min-height: 18px; }
+  .siege-mark { width: 18px; height: 18px; }
+  .siege-title { font-size: 13px; line-height: 1.15; }
+  .siege-empire, .siege-approach-time { display: inline; flex: none; color: var(--ink-2); font-size: 11px; line-height: 1.1; white-space: nowrap; }
+  .siege-hp, .siege-forecast, .siege-who { display: none; }
+  .siege-foot { min-height: 20px; align-items: center; }
+  .siege-card.attack .siege-foot { position: absolute; right: 7px; bottom: 4px; min-height: 0; }
+  .siege-compact-who { display: none; }
+  .siege-compact-facts { display: block; min-width: 0; margin: 0; padding-right: 31px; color: var(--ink-2); font-size: 10px; font-weight: 600; line-height: 1.2; white-space: normal; overflow-wrap: anywhere; }
+  .siege-compact-facts b { color: var(--ink); font-variant-numeric: tabular-nums; }
+  .siege-go { min-height: 20px; padding: 1px 5px; font-size: 10px; }
+  .siege-go-full { display: none; }
+  .siege-go-short { display: inline; }
+  .siege-card.approach .siege-title { flex: none; }
+}
+
+/* The map-side pulse and the banner ring are drawn on the canvas; the panel card only breathes
+   when the visitor allows motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .siege-card.now .siege-mark { animation: siege-ping 1.8s ease-out infinite; }
+}
+@keyframes siege-ping {
+  0% { box-shadow: 0 0 0 2px var(--panel), 0 0 0 3px var(--siege), 0 0 0 3px color-mix(in srgb, var(--siege) 55%, transparent); }
+  70%, 100% { box-shadow: 0 0 0 2px var(--panel), 0 0 0 3px var(--siege), 0 0 0 11px transparent; }
+}

@@ -1,0 +1,730 @@
+{
+  "first": 137,
+  "last": 156,
+  "seat": 0,
+  "turns": {
+    "137": [
+      {
+        "to": {
+          "q": 4,
+          "r": 13
+        },
+        "type": "MoveUnit",
+        "unit": 88
+      },
+      {
+        "city": 7,
+        "queue": [
+          {
+            "kind": "Unit",
+            "unit": "AssaultTrooper"
+          },
+          {
+            "kind": "Unit",
+            "unit": "AssaultTrooper"
+          },
+          {
+            "kind": "Unit",
+            "unit": "AssaultTrooper"
+          }
+        ],
+        "type": "SetProductionQueue"
+      },
+      {
+        "city": 29,
+        "queue": [
+          {
+            "building": "Walls",
+            "kind": "Building"
+          },
+          {
+            "building": "Market",
+            "kind": "Building"
+          },
+          {
+            "building": "Laboratory",
+            "kind": "Building"
+          },
+          {
+            "building": "Workshop",
+            "kind": "Building"
+          },
+          {
+            "building": "Granary",
+            "kind": "Building"
+          }
+        ],
+        "type": "SetProductionQueue"
+      },
+      {
+        "techs": [
+          "Cannonry",
+          "Industrialization",
+          "Rifling",
+          "MilitaryScience",
+          "Railways"
+        ],
+        "type": "SetResearchQueue"
+      }
+    ],
+    "138": [
+      {
+        "city": 29,
+        "item": {
+          "kind": "Unit",
+          "unit": "Arquebusier"
+        },
+        "type": "BuyItem"
+      },
+      {
+        "type": "SleepUnit",
+        "unit": 2
+      },
+      {
+        "target": {
+          "q": 3,
+          "r": 12
+        },
+        "type": "RangedAttack",
+        "unit": 88
+      }
+    ],
+    "139": [
+      {
+        "to": {
+          "q": 5,
+          "r": 12
+        },
+        "type": "MoveUnit",
+        "unit": 88
+      },
+      {
+        "target": {
+          "q": 15,
+          "r": 8
+        },
+        "type": "RangedAttack",
+        "unit": 122
+      },
+      {
+        "type": "SleepUnit",
+        "unit": 2
+      }
+    ],
+    "140": [
+      {
+        "target": {
+          "q": 16,
+          "r": 8
+        },
+        "type": "RangedAttack",
+        "unit": 122
+      },
+      {
+        "target": {
+          "q": 6,
+          "r": 10
+        },
+        "type": "RangedAttack",
+        "unit": 88
+      }
+    ],
+    "141": [
+      {
+        "to": {
+          "q": 5,
+          "r": 13
+        },
+        "type": "MoveUnit",
+        "unit": 88
+      },
+      {
+        "to": {
+          "q": 14,
+          "r": 8
+        },
+        "type": "MoveUnit",
+        "unit": 122
+      },
+      {
+        "type": "SleepUnit",
+        "unit": 2
+      },
+      {
+        "accept": true,
+        "proposal": 11,
+        "type": "RespondToProposal"
+      }
+    ],
+    "142": [
+      {
+        "accept": true,
+        "proposal": 12,
+        "type": "RespondToProposal"
+      },
+      {
+        "type": "SkipUnit",
+        "unit": 88
+      },
+      {
+        "target": {
+          "q": 13,
+          "r": 7
+        },
+        "type": "RangedAttack",
+        "unit": 122
+      }
+    ],
+    "143": [
+      {
+        "target": {
+          "q": 13,
+          "r": 7
+        },
+        "type": "RangedAttack",
+        "unit": 122
+      },
+      {
+        "type": "SkipUnit",
+        "unit": 88
+      }
+    ],
+    "144": [
+      {
+        "type": "UpgradeUnit",
+        "unit": 88
+      },
+      {
+        "type": "UpgradeUnit",
+        "unit": 122
+      }
+    ],
+    "145": [
+      {
+        "target": {
+          "q": 13,
+          "r": 7
+        },
+        "type": "RangedAttack",
+        "unit": 122
+      },
+      {
+        "to": {
+          "q": 4,
+          "r": 13
+        },
+        "type": "MoveUnit",
+        "unit": 88
+      }
+    ],
+    "146": [
+      {
+        "target": {
+          "q": 3,
+          "r": 13
+        },
+        "type": "RangedAttack",
+        "unit": 88
+      },
+      {
+        "path": [
+          {
+            "q": 13,
+            "r": 8
+          },
+          {
+            "q": 13,
+            "r": 7
+          }
+        ],
+        "to": {
+          "q": 13,
+          "r": 7
+        },
+        "type": "MoveUnitPath",
+        "unit": 122
+      },
+      {
+        "city": 1,
+        "queue": [
+          {
+            "building": "Hydroponics",
+            "kind": "Building"
+          }
+        ],
+        "type": "SetProductionQueue"
+      }
+    ],
+    "147": [
+      {
+        "path": [
+          {
+            "q": 12,
+            "r": 7
+          },
+          {
+            "q": 11,
+            "r": 7
+          },
+          {
+            "q": 10,
+            "r": 8
+          }
+        ],
+        "to": {
+          "q": 10,
+          "r": 8
+        },
+        "type": "MoveUnitPath",
+        "unit": 122
+      },
+      {
+        "path": [
+          {
+            "q": 3,
+            "r": 16
+          },
+          {
+            "q": 3,
+            "r": 15
+          },
+          {
+            "q": 4,
+            "r": 14
+          }
+        ],
+        "to": {
+          "q": 4,
+          "r": 14
+        },
+        "type": "MoveUnitPath",
+        "unit": 129
+      },
+      {
+        "path": [
+          {
+            "q": 5,
+            "r": 12
+          },
+          {
+            "q": 6,
+            "r": 11
+          }
+        ],
+        "to": {
+          "q": 6,
+          "r": 11
+        },
+        "type": "MoveUnitPath",
+        "unit": 88
+      }
+    ],
+    "148": [
+      {
+        "path": [
+          {
+            "q": 6,
+            "r": 12
+          },
+          {
+            "q": 5,
+            "r": 13
+          }
+        ],
+        "to": {
+          "q": 5,
+          "r": 13
+        },
+        "type": "MoveUnitPath",
+        "unit": 88
+      },
+      {
+        "path": [
+          {
+            "q": 9,
+            "r": 9
+          },
+          {
+            "q": 9,
+            "r": 10
+          }
+        ],
+        "to": {
+          "q": 9,
+          "r": 10
+        },
+        "type": "MoveUnitPath",
+        "unit": 122
+      },
+      {
+        "path": [
+          {
+            "q": 5,
+            "r": 13
+          },
+          {
+            "q": 5,
+            "r": 12
+          }
+        ],
+        "to": {
+          "q": 5,
+          "r": 12
+        },
+        "type": "MoveUnitPath",
+        "unit": 129
+      }
+    ],
+    "149": [
+      {
+        "type": "UpgradeSiege",
+        "unit": 88
+      },
+      {
+        "type": "UpgradeSiege",
+        "unit": 122
+      },
+      {
+        "type": "UpgradeSiege",
+        "unit": 129
+      },
+      {
+        "accept": false,
+        "proposal": 13,
+        "type": "RespondToProposal"
+      }
+    ],
+    "150": [
+      {
+        "target": {
+          "q": 5,
+          "r": 11
+        },
+        "type": "RangedAttack",
+        "unit": 88
+      },
+      {
+        "path": [
+          {
+            "q": 8,
+            "r": 10
+          },
+          {
+            "q": 7,
+            "r": 11
+          }
+        ],
+        "to": {
+          "q": 7,
+          "r": 11
+        },
+        "type": "MoveUnitPath",
+        "unit": 122
+      },
+      {
+        "type": "SleepUnit",
+        "unit": 129
+      }
+    ],
+    "151": [
+      {
+        "path": [
+          {
+            "q": 6,
+            "r": 11
+          },
+          {
+            "q": 5,
+            "r": 11
+          }
+        ],
+        "to": {
+          "q": 5,
+          "r": 11
+        },
+        "type": "MoveUnitPath",
+        "unit": 122
+      },
+      {
+        "path": [
+          {
+            "q": 5,
+            "r": 12
+          },
+          {
+            "q": 4,
+            "r": 12
+          }
+        ],
+        "to": {
+          "q": 4,
+          "r": 12
+        },
+        "type": "MoveUnitPath",
+        "unit": 88
+      },
+      {
+        "path": [
+          {
+            "q": 4,
+            "r": 12
+          },
+          {
+            "q": 3,
+            "r": 12
+          }
+        ],
+        "to": {
+          "q": 3,
+          "r": 12
+        },
+        "type": "MoveUnitPath",
+        "unit": 129
+      }
+    ],
+    "152": [
+      {
+        "target": {
+          "q": 3,
+          "r": 11
+        },
+        "type": "RangedAttack",
+        "unit": 88
+      },
+      {
+        "target": {
+          "q": 4,
+          "r": 10
+        },
+        "type": "RangedAttack",
+        "unit": 122
+      },
+      {
+        "to": {
+          "q": 3,
+          "r": 11
+        },
+        "type": "MoveUnit",
+        "unit": 129
+      },
+      {
+        "city": 15,
+        "queue": [
+          {
+            "building": "Autoworks",
+            "kind": "Building"
+          }
+        ],
+        "type": "SetProductionQueue"
+      }
+    ],
+    "153": [
+      {
+        "target": {
+          "q": 3,
+          "r": 11
+        },
+        "type": "RangedAttack",
+        "unit": 88
+      },
+      {
+        "to": {
+          "q": 3,
+          "r": 11
+        },
+        "type": "MoveUnit",
+        "unit": 129
+      },
+      {
+        "target": {
+          "q": 4,
+          "r": 11
+        },
+        "type": "RangedAttack",
+        "unit": 122
+      }
+    ],
+    "154": [
+      {
+        "city": 18,
+        "queue": [
+          {
+            "building": "Market",
+            "kind": "Building"
+          },
+          {
+            "building": "Workshop",
+            "kind": "Building"
+          },
+          {
+            "building": "Hydroponics",
+            "kind": "Building"
+          }
+        ],
+        "type": "SetProductionQueue"
+      },
+      {
+        "path": [
+          {
+            "q": 3,
+            "r": 12
+          },
+          {
+            "q": 2,
+            "r": 12
+          },
+          {
+            "q": 2,
+            "r": 11
+          }
+        ],
+        "to": {
+          "q": 2,
+          "r": 11
+        },
+        "type": "MoveUnitPath",
+        "unit": 88
+      },
+      {
+        "path": [
+          {
+            "q": 5,
+            "r": 10
+          },
+          {
+            "q": 4,
+            "r": 10
+          }
+        ],
+        "to": {
+          "q": 4,
+          "r": 10
+        },
+        "type": "MoveUnitPath",
+        "unit": 122
+      },
+      {
+        "type": "SleepUnit",
+        "unit": 129
+      },
+      {
+        "path": [
+          {
+            "q": 6,
+            "r": 12
+          },
+          {
+            "q": 7,
+            "r": 12
+          },
+          {
+            "q": 8,
+            "r": 11
+          },
+          {
+            "q": 9,
+            "r": 10
+          },
+          {
+            "q": 10,
+            "r": 9
+          },
+          {
+            "q": 11,
+            "r": 8
+          }
+        ],
+        "to": {
+          "q": 11,
+          "r": 8
+        },
+        "type": "MoveUnitPath",
+        "unit": 137
+      }
+    ],
+    "155": [
+      {
+        "target": {
+          "q": 3,
+          "r": 10
+        },
+        "type": "RangedAttack",
+        "unit": 122
+      },
+      {
+        "type": "SkipUnit",
+        "unit": 88
+      }
+    ],
+    "156": [
+      {
+        "to": {
+          "q": 2,
+          "r": 10
+        },
+        "type": "MoveUnit",
+        "unit": 88
+      },
+      {
+        "to": {
+          "q": 4,
+          "r": 9
+        },
+        "type": "MoveUnit",
+        "unit": 122
+      },
+      {
+        "path": [
+          {
+            "q": 3,
+            "r": 16
+          },
+          {
+            "q": 3,
+            "r": 15
+          },
+          {
+            "q": 4,
+            "r": 14
+          },
+          {
+            "q": 5,
+            "r": 13
+          },
+          {
+            "q": 5,
+            "r": 12
+          },
+          {
+            "q": 5,
+            "r": 11
+          },
+          {
+            "q": 5,
+            "r": 10
+          },
+          {
+            "q": 5,
+            "r": 9
+          }
+        ],
+        "to": {
+          "q": 5,
+          "r": 9
+        },
+        "type": "MoveUnitPath",
+        "unit": 139
+      },
+      {
+        "city": 1,
+        "queue": [
+          {
+            "building": "Autoworks",
+            "kind": "Building"
+          }
+        ],
+        "type": "SetProductionQueue"
+      }
+    ]
+  }
+}

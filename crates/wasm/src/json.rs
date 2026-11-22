@@ -1,0 +1,248 @@
+//! JSON helpers for the JavaScript boundary. 64-bit integers cross into JavaScript as decimal
+//! strings (JS numbers lose precision above 2^53), so the setup seed is written as a string and
+//! accepted as either a string or a number. Core types stay unchanged.
+
+use legatum_core::{GameSetup, GameState};
+use serde_json::Value;
+
+/// Maximum UTF-8 bytes in an engine save or setup before allocating a JSON tree.
+/// Keep in sync with app/src/platform/saveLimits.ts for the outer save envelope.
+pub const MAX_SAVE_BYTES: usize = 64 * 1024 * 1024;
+
+pub(crate) fn check_json_size(json: &str) -> Result<(), String> {
+    if json.len() > MAX_SAVE_BYTES {
+        return Err(format!(
+            "Save exceeds the {} MiB limit",
+            MAX_SAVE_BYTES / 1024 / 1024
+        ));
+    }
+    Ok(())
+}
+
+/// Rewrite `obj[key]` from a decimal string to a JSON number, if it is a string.
+fn seed_from_string(obj: &mut Value, key: &str) -> Result<(), String> {
+    if let Some(v) = obj.get_mut(key)
+        && let Some(s) = v.as_str()
+    {
+        let n: u64 = s
+            .trim()
+            .parse()
+            .map_err(|_| format!("{key} must be a decimal u64, got {s:?}"))?;
+        *v = Value::from(n);
+    }
+    Ok(())
+}
+
+/// Rewrite `obj[key]` from a JSON number to a decimal string.
+fn seed_to_string(obj: &mut Value, key: &str) {
+    if let Some(v) = obj.get_mut(key)
+        && let Some(n) = v.as_u64()
+    {
+        *v = Value::from(n.to_string());
+    }
+}
+
+/// Parse a `GameSetup` whose `seed` is a JSON number or a decimal string.
+pub fn setup_from_value(mut v: Value) -> Result<GameSetup, String> {
+    seed_from_string(&mut v, "seed")?;
+    let setup: GameSetup =
+        serde_json::from_value(v).map_err(|e| format!("invalid GameSetup: {e}"))?;
+    legatum_core::validation::check_setup(&setup)?;
+    Ok(setup)
+}
+
+pub fn parse_setup(json: &str) -> Result<GameSetup, String> {
+    check_json_size(json)?;
+    let v: Value = serde_json::from_str(json).map_err(|e| format!("invalid JSON: {e}"))?;
+    setup_from_value(v)
+}
+
+/// A `GameSetup` as JSON with the seed as a decimal string.
+pub fn setup_to_value(setup: &GameSetup) -> Value {
+    let mut v = serde_json::to_value(setup).expect("setup serializes");
+    seed_to_string(&mut v, "seed");
+    v
+}
+
+/// Full state JSON for saves, with the setup seed as a decimal string. Treat it as opaque in
+/// JavaScript: other 64-bit words (explored-tile bitsets) are still JSON numbers.
+pub fn state_to_json(state: &GameState) -> String {
+    let mut v = serde_json::to_value(state).expect("state serializes");
+    v["save_version"] = Value::from(legatum_core::RULES_VERSION);
+    if let Some(setup) = v.get_mut("setup") {
+        seed_to_string(setup, "seed");
+    }
+    v.to_string()
+}
+
+pub fn parse_state(json: &str) -> Result<GameState, String> {
+    parse_state_with_version(json, true)
+}
+
+/// Scenario re-encoding may read an older rules version to stamp it with the new one.
+/// Gameplay and save loading always call `parse_state`, which keeps the version check.
+pub fn parse_state_for_rehash(json: &str) -> Result<GameState, String> {
+    parse_state_with_version(json, false)
+}
+
+fn parse_state_with_version(json: &str, check_version: bool) -> Result<GameState, String> {
+    check_json_size(json)?;
+    let mut v: Value = serde_json::from_str(json).map_err(|e| format!("invalid JSON: {e}"))?;
+    let version = v.get("save_version").and_then(Value::as_u64);
+    if check_version && version != Some(u64::from(legatum_core::RULES_VERSION)) {
+        return Err(format!(
+            "incompatible rules version: saved {:?}, current {}",
+            version,
+            legatum_core::RULES_VERSION
+        ));
+    }
+    if let Some(setup) = v.get_mut("setup") {
+        seed_from_string(setup, "seed")?;
+    }
+    let state: GameState =
+        serde_json::from_value(v).map_err(|e| format!("invalid saved game: {e}"))?;
+    legatum_core::validation::check_state(&state)?;
+    Ok(state)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn oversized_save_is_rejected_before_json_parsing() {
+        let oversized = " ".repeat(MAX_SAVE_BYTES + 1);
+        assert!(
+            parse_state(&oversized)
+                .unwrap_err()
+                .contains("64 MiB limit")
+        );
+        assert!(
+            crate::Game::from_save_json(&oversized)
+                .err()
+                .unwrap()
+                .contains("64 MiB limit")
+        );
+    }
+
+    #[test]
+    fn numeric_extremes_name_the_bad_field() {
+        let state = legatum_core::new_game(&GameSetup::all_ai(3));
+        let mut save: Value = serde_json::from_str(&state_to_json(&state)).unwrap();
+        for (value, field) in [(i32::MAX, "Gold"), (-1, "Gold")] {
+            save["players"][0]["gold"] = value.into();
+            assert!(parse_state(&save.to_string()).unwrap_err().contains(field));
+        }
+        save["players"][0]["gold"] = 0.into();
+        save["players"][0]["science_stored"] = (-1).into();
+        assert!(
+            parse_state(&save.to_string())
+                .unwrap_err()
+                .contains("stored Science")
+        );
+    }
+
+    #[test]
+    fn damaged_structure_names_what_is_wrong() {
+        let state = legatum_core::new_game(&GameSetup::all_ai(3));
+        let save: Value = serde_json::from_str(&state_to_json(&state)).unwrap();
+        type Damage = fn(&mut Value);
+        let cases: [(&str, Damage, &str); 3] = [
+            (
+                "turn",
+                |v| v["turn"] = 0.into(),
+                "turn number is out of range",
+            ),
+            (
+                "tiles",
+                |v| {
+                    v["map"]["tiles"].as_array_mut().unwrap().pop();
+                },
+                "tiles but its size needs",
+            ),
+            (
+                "players",
+                |v| {
+                    v["players"].as_array_mut().unwrap().pop();
+                },
+                "players but its setup lists",
+            ),
+        ];
+        for (name, damage, expected) in cases {
+            let mut damaged = save.clone();
+            damage(&mut damaged);
+            let error = parse_state(&damaged.to_string()).unwrap_err();
+            assert!(
+                error.starts_with("The save is damaged: ") && error.contains(expected),
+                "{name}: {error}"
+            );
+        }
+    }
+
+    #[test]
+    fn current_save_round_trips() {
+        let state = legatum_core::new_game(&GameSetup::all_ai(3));
+        let save = state_to_json(&state);
+        assert!(save.contains(&format!("\"save_version\":{}", legatum_core::RULES_VERSION)));
+        assert_eq!(parse_state(&save).unwrap(), state);
+    }
+
+    #[test]
+    fn rules_48_saves_round_trip_and_a_version_47_save_is_refused() {
+        // Rules 47: held shots at fallen cities; 48: Egypt's Nile and its Grow project. The save
+        // shape only gains the project value, so a city growing on the Nile round-trips at 48,
+        // and a 47 save is refused rather than migrated.
+        assert_eq!(legatum_core::RULES_VERSION, 48);
+        let mut setup = GameSetup::all_ai(3);
+        setup.players[0].faction = legatum_core::Faction::Egypt;
+        let mut state = legatum_core::new_game(&setup);
+        let owner = legatum_core::PlayerId(0);
+        let city = state
+            .cities
+            .values()
+            .find(|c| c.owner == owner)
+            .expect("an Egyptian capital")
+            .id;
+        let grow = legatum_core::ProductionItem::Project {
+            project: legatum_core::IndustryProject::Grow,
+        };
+        let mut events = Vec::new();
+        legatum_core::rules::cities::apply_city_orders(
+            &mut state,
+            owner,
+            &[legatum_core::Order::SetProduction { city, item: grow }],
+            &mut events,
+        );
+        assert_eq!(state.cities[&city].producing, Some(grow), "{events:?}");
+        let save = state_to_json(&state);
+        assert!(save.contains("\"save_version\":48"));
+        assert!(save.contains("\"Grow\""));
+        assert_eq!(parse_state(&save).unwrap(), state);
+        let mut old: Value = serde_json::from_str(&save).unwrap();
+        old["save_version"] = Value::from(47);
+        assert!(
+            parse_state(&old.to_string())
+                .unwrap_err()
+                .contains("incompatible rules version: saved Some(47), current 48")
+        );
+    }
+
+    #[test]
+    fn different_rules_version_is_refused_before_decoding() {
+        let state = legatum_core::new_game(&GameSetup::all_ai(3));
+        let mut save: Value = serde_json::from_str(&state_to_json(&state)).unwrap();
+        save["save_version"] = Value::from(legatum_core::RULES_VERSION - 1);
+        save["players"] = Value::Null;
+        assert!(
+            parse_state(&save.to_string())
+                .unwrap_err()
+                .contains("incompatible rules version")
+        );
+        save.as_object_mut().unwrap().remove("save_version");
+        assert!(
+            parse_state(&save.to_string())
+                .unwrap_err()
+                .contains("incompatible rules version")
+        );
+    }
+}

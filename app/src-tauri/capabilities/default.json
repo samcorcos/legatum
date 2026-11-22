@@ -1,0 +1,40 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "The bundled UI: the app's own commands (declared in build.rs), user-selected saves, app autosave, and game history scoped at startup to the archive directory",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "core:window:allow-close",
+    "allow-archive-stage",
+    "allow-archive-commit",
+    "allow-scenario-save-run",
+    "allow-scenario-dropins",
+    "allow-training-start",
+    "allow-training-poll",
+    "allow-training-log-append",
+    "allow-why-log-append",
+    "allow-online-host-start",
+    "allow-online-host-stop",
+    "allow-online-info",
+    "dialog:allow-save",
+    "dialog:allow-open",
+    "fs:allow-write-file",
+    {
+      "identifier": "fs:allow-stat",
+      "allow": [{ "path": "$APPDATA/autosave.legatum" }]
+    },
+    {
+      "identifier": "fs:allow-read-text-file",
+      "allow": [{ "path": "$APPDATA/autosave.legatum" }]
+    },
+    {
+      "identifier": "fs:allow-write-text-file",
+      "allow": [{ "path": "$APPDATA/autosave.legatum" }]
+    },
+    {
+      "identifier": "fs:allow-mkdir",
+      "allow": [{ "path": "$APPDATA" }]
+    }
+  ]
+}

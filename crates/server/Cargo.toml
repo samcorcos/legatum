@@ -1,0 +1,34 @@
+[package]
+name = "legatum-server"
+description = "Legatum LAN host: serves the web UI and runs the authoritative multiplayer game"
+edition.workspace = true
+version.workspace = true
+publish.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+legatum-core.workspace = true
+# Reuse the native Session, AI seeding, and lossless save/setup JSON boundary.
+legatum-wasm = { path = "../wasm" }
+legatum-archive = { path = "../archive" }
+serde.workspace = true
+serde_json.workspace = true
+clap.workspace = true
+axum = { version = "0.8", features = ["ws"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "net", "sync", "signal", "time"] }
+tower-http = { version = "0.6", features = ["fs"] }
+if-addrs = "0.14"
+getrandom = "0.3"
+futures-util = { version = "0.3", features = ["sink"] }
+# Online relay client: one outbound tunnel (ws:// or wss://) and the room announcement POST.
+# rustls with ring and bundled webpki roots, so no system TLS library or C toolchain is needed.
+tokio-tungstenite = { version = "0.28", features = ["rustls-tls-webpki-roots"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls-webpki-roots"] }
+# Pin the crypto provider explicitly so another crate enabling aws-lc-rs cannot make rustls panic.
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
+webpki-roots = "1"
+
+[dev-dependencies]
+tempfile = "3"
+tokio = { version = "1", features = ["test-util"] }

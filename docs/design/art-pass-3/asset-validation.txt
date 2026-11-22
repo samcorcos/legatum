@@ -1,0 +1,1 @@
+372 PNG assets decoded at expected RGBA dimensions. All 16 wall/stage masters have transparent ring centres. Downscaled centre alpha at most 2/255 (Lanczos ringing).

@@ -1,0 +1,267 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`WASM promotion behavior > wasm matches the fixtureClient exactly 1`] = `
+{
+  "forecastAfter": {
+    "attacker_hp": 72,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+        [
+          "Level 1: +10%",
+          2,
+        ],
+        [
+          "Wounded",
+          -2,
+        ],
+      ],
+      "total": 20,
+    },
+    "defender_hp": 75,
+    "defender_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+        [
+          "Wounded",
+          -2,
+        ],
+      ],
+      "total": 18,
+    },
+    "expected_damage_to_attacker": 27,
+    "expected_damage_to_defender": 31,
+    "loss_chance": 0,
+    "ranged": false,
+    "win_chance": 0,
+  },
+  "forecastBefore": {
+    "attacker_hp": 100,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "defender_hp": 100,
+    "defender_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+      ],
+      "total": 20,
+    },
+    "expected_damage_to_attacker": 29,
+    "expected_damage_to_defender": 29,
+    "loss_chance": 0,
+    "ranged": false,
+    "win_chance": 0,
+  },
+  "ids": {
+    "enemy": 6,
+    "ranger": 5,
+    "soldier": 4,
+  },
+  "lines": [
+    "Your Spearman attacked Byzantium's Spearman at this tile, from 1 tile W: defender −25 HP, attacker −28 HP (72 HP left). Needs orders.",
+    "Your Spearman was promoted to level 1 (+10% strength)",
+  ],
+  "melee": [
+    {
+      "at": {
+        "q": 5,
+        "r": 4,
+      },
+      "attacker": 4,
+      "attacker_at": {
+        "q": 4,
+        "r": 4,
+      },
+      "attacker_hp_after": 72,
+      "attacker_owner": 0,
+      "attacker_roll": 84,
+      "attacker_strength": {
+        "parts": [
+          [
+            "Spearman",
+            20,
+          ],
+        ],
+        "total": 20,
+      },
+      "damage_to_attacker": 28,
+      "damage_to_defender": 25,
+      "defender": {
+        "kind": "Unit",
+        "owner": 1,
+        "unit": 6,
+        "unit_kind": "Soldier",
+      },
+      "defender_hp_after": 75,
+      "defender_roll": 95,
+      "defender_strength": {
+        "parts": [
+          [
+            "Spearman",
+            20,
+          ],
+        ],
+        "total": 20,
+      },
+      "meeting": false,
+      "ranged": false,
+      "type": "Battle",
+    },
+    {
+      "at": {
+        "q": 4,
+        "r": 4,
+      },
+      "level": 1,
+      "owner": 0,
+      "type": "UnitPromoted",
+      "unit": 4,
+      "unit_kind": "Soldier",
+    },
+  ],
+  "mine": [
+    {
+      "hp": 82,
+      "id": 4,
+      "level": 1,
+      "xp": 17,
+      "xp_next": 46,
+    },
+    {
+      "hp": 100,
+      "id": 5,
+      "level": 0,
+      "xp": 3,
+      "xp_next": 16,
+    },
+    {
+      "hp": 52,
+      "id": 6,
+      "level": 0,
+      "xp": null,
+      "xp_next": null,
+    },
+  ],
+  "shot": [
+    {
+      "at": {
+        "q": 5,
+        "r": 4,
+      },
+      "attacker": 5,
+      "attacker_at": {
+        "q": 4,
+        "r": 3,
+      },
+      "attacker_hp_after": 100,
+      "attacker_owner": 0,
+      "attacker_roll": 86,
+      "attacker_strength": {
+        "parts": [
+          [
+            "Archer (ranged)",
+            15,
+          ],
+        ],
+        "total": 15,
+      },
+      "damage_to_attacker": 0,
+      "damage_to_defender": 23,
+      "defender": {
+        "kind": "Unit",
+        "owner": 1,
+        "unit": 6,
+        "unit_kind": "Soldier",
+      },
+      "defender_hp_after": 52,
+      "defender_roll": 0,
+      "defender_strength": {
+        "parts": [
+          [
+            "Spearman",
+            20,
+          ],
+          [
+            "Wounded",
+            -2,
+          ],
+        ],
+        "total": 18,
+      },
+      "meeting": false,
+      "ranged": true,
+      "type": "Battle",
+    },
+  ],
+  "shotForecast": {
+    "attacker_hp": 100,
+    "attacker_strength": {
+      "parts": [
+        [
+          "Archer (ranged)",
+          15,
+        ],
+      ],
+      "total": 15,
+    },
+    "defender_hp": 75,
+    "defender_strength": {
+      "parts": [
+        [
+          "Spearman",
+          20,
+        ],
+        [
+          "Wounded",
+          -2,
+        ],
+      ],
+      "total": 18,
+    },
+    "expected_damage_to_attacker": 0,
+    "expected_damage_to_defender": 26,
+    "loss_chance": 0,
+    "ranged": true,
+    "win_chance": 0,
+  },
+  "theirs": [
+    {
+      "hp": 82,
+      "id": 4,
+      "level": 1,
+      "xp": null,
+      "xp_next": null,
+    },
+    {
+      "hp": 100,
+      "id": 5,
+      "level": 0,
+      "xp": null,
+      "xp_next": null,
+    },
+    {
+      "hp": 52,
+      "id": 6,
+      "level": 0,
+      "xp": 5,
+      "xp_next": 16,
+    },
+  ],
+}
+`;

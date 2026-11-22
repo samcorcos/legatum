@@ -1,0 +1,85 @@
+{
+  "format": "legatum-scenario",
+  "version": 1,
+  "id": "sparta-before-the-walls",
+  "revision": 1,
+  "title": "Before the Walls",
+  "faction": "Sparta",
+  "seat": 0,
+  "difficulty": "Hard",
+  "minutes": 10,
+  "briefing": "Turn 28. You are Sparta. You have just taken both Mongol cities, and your five Hoplites stand around Karakorum and Sarai. Dyrrachium, the Byzantine capital, lies 9 tiles north of Karakorum. It has no military unit inside and no Walls yet, but it is building them. Two barbarian Spearmen stand two tiles from it, and the walled town of Nicomedia is 4 tiles further east. You are at Peace with Byzantium and have 140 Gold. Take Dyrrachium within 12 turns, keeping your own cities.",
+  "tests": "Can you take Byzantium's capital with five Hoplites before its Walls go up?",
+  "objective": {
+    "summary": "Take Dyrrachium by turn 40, keeping your own cities.",
+    "turns": 12,
+    "win": [
+      {
+        "OwnCity": 3
+      }
+    ],
+    "end_on_win": true,
+    "keep": [
+      "HoldStartingCities"
+    ],
+    "score": [
+      {
+        "metric": "ObjectiveMet",
+        "weight": 300
+      },
+      {
+        "metric": "TurnsLeft",
+        "weight": 20
+      },
+      {
+        "metric": "CitiesCaptured",
+        "weight": 50
+      },
+      {
+        "metric": "StartingCitiesHeld",
+        "weight": 100
+      },
+      {
+        "metric": "CombatUnits",
+        "weight": 10
+      },
+      {
+        "metric": {
+          "CityDamage": 3
+        },
+        "weight": 1
+      }
+    ]
+  },
+  "predictions": {
+    "good_play": "",
+    "ai_play": "",
+    "ai_score": {
+      "median": 0,
+      "low": 0,
+      "high": 0,
+      "win_percent": 0
+    }
+  },
+  "source": "Cut from state.json at turn 28: the position before that turn's orders, a save replayed on the engine it was recorded on (every turn checked against the recorded hash). Every empire is a Hard AI except the seat; its AI memory starts fresh and the seat's standing orders are cleared. Built by `tools/scenarios/cut.sh`.",
+  "baseline": {
+    "runs": 50,
+    "difficulty": "Hard",
+    "median": 370,
+    "p10": 370,
+    "p90": 370,
+    "win_percent": 0,
+    "measured_at": "2026-11-08T02:13:54Z"
+  },
+  "lab": {
+    "question": "Can you take Byzantium's capital with five Hoplites before its Walls go up?",
+    "blurb": "Turn 28. Byzantium's capital is empty and building Walls, nine tiles north of your army.",
+    "era": 1,
+    "order": 2
+  },
+  "state": {
+    "encoding": "gzip-base64",
+    "hash": "17374426524357033139",
+    "data": "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"
+  }
+}

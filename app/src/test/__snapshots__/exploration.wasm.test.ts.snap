@@ -1,0 +1,250 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`WASM agree on fog-safe decisions, moves, ruin finds, and stopping 1`] = `
+[
+  {
+    "from": {
+      "q": 1,
+      "r": 4,
+    },
+    "owner": 0,
+    "to": {
+      "q": 2,
+      "r": 4,
+    },
+    "type": "UnitMoved",
+    "unit": 0,
+  },
+  {
+    "from": {
+      "q": 2,
+      "r": 4,
+    },
+    "owner": 0,
+    "to": {
+      "q": 3,
+      "r": 4,
+    },
+    "type": "UnitMoved",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`WASM agree on fog-safe decisions, moves, ruin finds, and stopping 2`] = `
+[
+  {
+    "from": {
+      "q": 3,
+      "r": 4,
+    },
+    "owner": 0,
+    "to": {
+      "q": 4,
+      "r": 4,
+    },
+    "type": "UnitMoved",
+    "unit": 0,
+  },
+  {
+    "from": {
+      "q": 4,
+      "r": 4,
+    },
+    "owner": 0,
+    "to": {
+      "q": 5,
+      "r": 4,
+    },
+    "type": "UnitMoved",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`WASM agree on fog-safe decisions, moves, ruin finds, and stopping 3`] = `
+[
+  {
+    "from": {
+      "q": 5,
+      "r": 4,
+    },
+    "owner": 0,
+    "to": {
+      "q": 6,
+      "r": 4,
+    },
+    "type": "UnitMoved",
+    "unit": 0,
+  },
+  {
+    "at": {
+      "q": 6,
+      "r": 4,
+    },
+    "owner": 0,
+    "reward": {
+      "amount": 25,
+      "kind": "Science",
+      "research": null,
+    },
+    "type": "RuinExplored",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`WASM agree on fog-safe decisions, moves, ruin finds, and stopping 4`] = `
+[
+  {
+    "from": {
+      "q": 6,
+      "r": 4,
+    },
+    "owner": 0,
+    "to": {
+      "q": 7,
+      "r": 4,
+    },
+    "type": "UnitMoved",
+    "unit": 0,
+  },
+  {
+    "from": {
+      "q": 7,
+      "r": 4,
+    },
+    "owner": 0,
+    "to": {
+      "q": 8,
+      "r": 4,
+    },
+    "type": "UnitMoved",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`WASM agree on fog-safe decisions, moves, ruin finds, and stopping 5`] = `
+[
+  {
+    "from": {
+      "q": 8,
+      "r": 4,
+    },
+    "owner": 0,
+    "to": {
+      "q": 9,
+      "r": 4,
+    },
+    "type": "UnitMoved",
+    "unit": 0,
+  },
+  {
+    "from": {
+      "q": 9,
+      "r": 4,
+    },
+    "owner": 0,
+    "to": {
+      "q": 10,
+      "r": 4,
+    },
+    "type": "UnitMoved",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`WASM agree on fog-safe decisions, moves, ruin finds, and stopping 6`] = `
+[
+  {
+    "from": {
+      "q": 10,
+      "r": 4,
+    },
+    "owner": 0,
+    "to": {
+      "q": 11,
+      "r": 4,
+    },
+    "type": "UnitMoved",
+    "unit": 0,
+  },
+  {
+    "from": {
+      "q": 11,
+      "r": 4,
+    },
+    "owner": 0,
+    "to": {
+      "q": 12,
+      "r": 4,
+    },
+    "type": "UnitMoved",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`WASM agree on fog-safe decisions, moves, ruin finds, and stopping 7`] = `
+[
+  {
+    "at": {
+      "q": 12,
+      "r": 4,
+    },
+    "owner": 0,
+    "reason": "Complete",
+    "type": "AutomationStopped",
+    "unit": 0,
+  },
+]
+`;
+
+exports[`automated rest retains normal fortification and healing in both engines 1`] = `
+[
+  80,
+  6,
+  "Explore",
+]
+`;
+
+exports[`blocked auto-explore stop preserves fortification and requests orders in both engines 1`] = `
+[
+  {
+    "q": 1,
+    "r": 4,
+  },
+  80,
+  6,
+  undefined,
+  true,
+]
+`;
+
+exports[`complete auto-explore stop preserves fortification and requests orders in both engines 1`] = `
+[
+  {
+    "q": 1,
+    "r": 4,
+  },
+  80,
+  6,
+  undefined,
+  true,
+]
+`;
+
+exports[`manual auto-explore stop preserves fortification and requests orders in both engines 1`] = `
+[
+  {
+    "q": 1,
+    "r": 4,
+  },
+  80,
+  6,
+  undefined,
+  true,
+]
+`;

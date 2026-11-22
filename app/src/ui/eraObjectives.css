@@ -1,0 +1,142 @@
+/* Era objectives (EraObjectives.tsx): "how you win" and the three objectives of an era with live progress.
+   `eo-` classes are shared by the race panel's block, the era-up takeover and the research screen. */
+
+/* ---------- The three objectives ---------- */
+.eo-lines { display: grid; gap: 3px; margin: 0; padding: 0; list-style: none; }
+.eo-line { display: grid; grid-template-columns: 58px minmax(0, 1fr) auto; column-gap: 6px; align-items: baseline; }
+.eo-fam { font: 700 11.5px/1.5 var(--sans); letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-2); white-space: nowrap; }
+.eo-text { font: 500 12.5px/1.25 var(--sans); color: var(--ink); overflow-wrap: anywhere; }
+.eo-num { font: 500 12px/1.25 var(--sans); color: var(--ink-2); white-space: nowrap; text-align: right; font-variant-numeric: lining-nums tabular-nums; }
+.eo-num b { font: 700 14px/1 var(--num-font); color: var(--ink); font-style: normal; }
+.eo-num.met, .eo-num.scored { font-weight: 700; }
+.eo-num.met { color: var(--good); }
+.eo-num.scored { color: #7a5a12; }
+.eo-scored-by { grid-column: 2 / 4; font: 500 11px/1.2 var(--sans); color: var(--ink-2); overflow-wrap: normal; }
+.eo-account { grid-column: 2 / 4; font: 500 11px/1.2 var(--sans); color: var(--ink-2); }
+.eo-restart { margin: 3px 0 0; font: 600 11px/1.25 var(--sans); color: var(--ink); }
+.eo-line.idle { opacity: .55; }
+.eo-next-reveal { display: block; margin: 3px 7px; color: var(--ink-2); font: 500 10.5px/1.25 var(--sans); }
+.eo-bar { grid-column: 2 / 4; height: 4px; margin-top: 1px; overflow: hidden; background: color-mix(in srgb, var(--ink-2) 22%, transparent); }
+.eo-bar i { display: block; height: 100%; background: var(--gilt); }
+.eo-line.met .eo-bar i { background: var(--good); }
+.eo-line.scored .eo-bar i { background: var(--gilt); }
+.eo-lines.preview .eo-bar i { background: color-mix(in srgb, var(--ink-2) 70%, transparent); }
+.eo-lines.preview .eo-text { color: var(--ink-2); }
+/* The bar beside the text (wide places: the research screen): one row per objective. */
+.eo-lines.inline .eo-line { grid-template-columns: 56px minmax(0, 1fr) 84px minmax(46px, auto); align-items: center; }
+.eo-lines.inline .eo-bar { grid-column: 3; grid-row: 1; height: 5px; margin: 0; }
+.eo-lines.inline .eo-num { grid-column: 4; grid-row: 1; }
+
+/* The race panel's rows: the family is an icon, one line each, and the progress is the fill behind the line. */
+.eo-lines.compact { gap: 2px; }
+.eo-lines.compact .eo-line { position: relative; isolation: isolate; grid-template-columns: 16px minmax(0, 1fr) auto; align-items: center; column-gap: 6px; padding: 2px 6px 2px 5px; background: color-mix(in srgb, var(--ink-2) 9%, transparent); }
+.eo-lines.compact .eo-fam { display: flex; align-items: center; justify-content: center; color: var(--ink-2); }
+.eo-lines.compact .eo-text { font-size: 12.5px; }
+.eo-lines.compact .eo-bar { position: absolute; inset: 0; z-index: -1; height: auto; margin: 0; background: transparent; }
+.eo-lines.compact .eo-bar i { background: color-mix(in srgb, var(--gilt) 38%, transparent); }
+.eo-lines.compact .eo-line.met .eo-bar i { background: color-mix(in srgb, var(--good) 28%, transparent); }
+.eo-lines.compact .eo-line.scored .eo-bar i { background: color-mix(in srgb, var(--gilt) 50%, transparent); }
+.eo-lines.compact.preview .eo-bar i { background: color-mix(in srgb, var(--ink-2) 16%, transparent); }
+
+/* ---------- The race panel's block ---------- */
+.era-hud {
+  flex: none; margin: 0 8px; padding: 0 0 6px; box-sizing: border-box;
+  border: 1px solid var(--ink); box-shadow: 0 0 0 1px color-mix(in srgb, var(--gilt) 70%, transparent);
+  background: color-mix(in srgb, var(--gilt) 12%, var(--panel));
+}
+.era-hud.st-preview { box-shadow: none; background: color-mix(in srgb, var(--gilt) 6%, var(--panel)); }
+.era-hud > :not(.eo-win) { margin-inline: 9px; }
+/* "How you win" is a band of ink with the count towards the target: the one thing on this panel that says what the game is for. */
+.eo-win { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 3px 9px; margin: 0 0 4px; background: var(--ink); color: var(--panel); }
+.eo-win h4 { margin: 0; font: 700 12px/1.3 var(--sans); letter-spacing: 0.16em; text-transform: uppercase; color: #f0d58a; }
+.eo-vp { font: 500 12px/1.2 var(--sans); color: rgb(243 234 214 / 0.85); white-space: nowrap; }
+.eo-vp b { font: 700 16px/1 var(--num-font); color: #fff; }
+/* The band is also the control that opens and compacts the block. */
+.eo-win h4 { margin-right: auto; }
+.eo-toggle { display: inline-grid; place-items: center; flex: none; width: 22px; height: 20px; margin: -2px -5px -2px 0; padding: 0; border: 1px solid rgb(243 234 214 / 0.45); border-radius: 0; background: transparent; color: #f0d58a; cursor: pointer; }
+.eo-toggle:hover, .eo-toggle:focus-visible { border-color: #f0d58a; background: rgb(243 234 214 / 0.14); }
+/* The compact block's one line: the era in focus and its objective nearest done; the fill behind it is the progress. */
+.eo-glance { position: relative; isolation: isolate; box-sizing: border-box; width: calc(100% - 18px); display: grid; grid-template-columns: 16px minmax(0, 1fr) auto; grid-template-areas: "tag tag num" "fam text text"; align-items: center; column-gap: 6px; row-gap: 1px; padding: 3px 6px; border: 1px solid var(--rule-2); background: color-mix(in srgb, var(--ink-2) 9%, transparent); color: var(--ink); text-align: left; cursor: pointer; font: inherit; }
+.eo-glance:hover, .eo-glance:focus-visible { border-color: var(--accent); }
+.eo-glance .eo-fill { position: absolute; inset: 0; z-index: -1; overflow: hidden; }
+.eo-glance .eo-fill i { display: block; height: 100%; background: color-mix(in srgb, var(--gilt) 38%, transparent); }
+.eo-glance.met .eo-fill i { background: color-mix(in srgb, var(--good) 28%, transparent); }
+.era-hud.st-preview .eo-glance .eo-fill i { background: color-mix(in srgb, var(--ink-2) 16%, transparent); }
+.eo-g-tag { grid-area: tag; font: 700 12px/1.25 var(--sans); color: var(--ink-2); }
+.eo-glance .eo-fam { grid-area: fam; display: flex; align-items: center; color: var(--ink-2); }
+.eo-glance .eo-text { grid-area: text; min-width: 0; font: 500 12.5px/1.2 var(--sans); }
+.eo-glance .eo-num { grid-area: num; }
+.era-hud.compact { padding-bottom: 5px; }
+/* The era in focus is already scored: the band alone, with the era it kept in the middle (a check and its name). */
+.era-hud.band-only { padding-bottom: 0; }
+.era-hud.band-only .eo-win { margin-bottom: 0; }
+.eo-scored { display: inline-flex; align-items: center; gap: 3px; flex: 0 1 auto; min-width: 14px; margin-right: 4px; overflow: hidden; font: 600 12px/1.2 var(--sans); color: #f0d58a; white-space: nowrap; cursor: help; }
+.eo-scored .ui-mark { flex: none; }
+.eo-scored-w { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+/* The band stays one line whatever the numbers: its title never wraps and the tag gives way first. */
+.eo-win h4 { flex: none; white-space: nowrap; }
+.era-hud.compact .eo-win { margin-bottom: 4px; }
+.eo-parts { display: flex; flex-wrap: wrap; gap: 0 14px; margin-block: 0 4px; padding: 0 0 4px; list-style: none; border-bottom: 1px solid var(--rule-2); font: 500 12px/1.3 var(--sans); color: var(--ink-2); }
+.eo-part > span { display: inline-flex; align-items: center; gap: 4px; cursor: help; white-space: nowrap; }
+.eo-part b { font: 700 12.5px/1 var(--num-font); color: var(--ink); font-variant-numeric: lining-nums tabular-nums; }
+.eo-era + .eo-era { margin-top: 5px; padding-top: 4px; border-top: 1px dashed var(--rule-2); }
+.eo-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0 8px; margin-bottom: 3px; }
+.eo-head h5 { margin: 0; display: flex; align-items: center; gap: 4px; font: 700 14.5px/1.2 var(--display); font-variant-numeric: lining-nums; color: var(--ink); }
+.eo-rule { font: italic 400 12px/1.2 var(--sans); color: var(--ink-2); white-space: nowrap; }
+.eo-rule-link { font-size: 12px; font-style: italic; white-space: nowrap; }
+.eo-sub { margin: 0 0 3px; font: 400 12px/1.3 var(--sans); color: var(--ink-2); }
+.eo-sub.inline { margin: 0; text-align: right; }
+.eo-note { margin: 4px 0 0; font: 400 12px/1.3 var(--sans); color: var(--ink-2); }
+.eo-note.older { margin-top: 3px; }
+.eo-note .link { font-size: 12px; }
+.era-hud.st-scored .eo-head h5 { color: #7a5a12; }
+
+/* Short windows (the 1000x600 laptop): the same words, tighter. */
+@media (max-height: 700px) {
+  .era-hud { padding-bottom: 4px; }
+  .eo-win { margin-bottom: 3px; padding-block: 2px; }
+  .eo-parts { margin-bottom: 3px; padding-bottom: 3px; }
+  .eo-lines { gap: 2px; }
+  .eo-sub { margin-bottom: 2px; line-height: 1.25; }
+  .eo-note { margin-top: 2px; line-height: 1.25; }
+  .eo-head h5 { font-size: 14px; }
+}
+
+/* ---------- The research screen's era header ---------- */
+.era-objectives-research { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 10px; margin: 0 0 8px; }
+.eor-col { min-width: 0; padding: 5px 12px 7px; box-sizing: border-box; border: 1px solid var(--ink); border-top-width: 3px; box-shadow: 0 0 0 1px color-mix(in srgb, var(--gilt) 70%, transparent); background: color-mix(in srgb, var(--gilt) 12%, var(--panel)); }
+.eor-col.next { border-color: var(--rule-2); box-shadow: none; background: color-mix(in srgb, var(--gilt) 5%, var(--panel)); }
+.eor-col h4 { margin: 0 0 3px; font: 700 14.5px/1.25 var(--display); font-variant-numeric: lining-nums; color: var(--ink); }
+.eor-col h4 small { margin-left: 6px; font: 500 12px/1.3 var(--sans); color: var(--ink-2); }
+.eor-col .eo-sub { margin: 0; }
+.eor-col .eo-lines { gap: 3px; }
+
+/* ---------- A squeezed race panel, opened by choice: the block shrinks itself (VpTrack.tsx sets data-level until your row and one more are whole) ---------- */
+/* 1: the next era is its one-line heading, and the "earlier era still open" line goes (it is a link in the heading). */
+.era-hud:is([data-level="1"], [data-level="2"]) :is(.eo-next .eo-lines, .eo-note.older) { display: none; }
+/* 2: no entry note; a first-era preview says "no objective in Ancient" in its heading instead. */
+.era-hud[data-level="2"] .eo-note:not(.older) { display: none; }
+/* 3: the sources line and the next era go too (the sheet has both): an opened block that still crowds the rows is the era's heading and its three lines. */
+.era-hud[data-level="3"] :is(.eo-parts, .eo-note, .eo-next) { display: none; }
+.eo-rule.short { display: none; }
+.era-hud[data-level="2"] .eo-rule.short { display: inline; }
+.era-hud[data-level="2"] .eo-rule:has(+ .eo-rule.short) { display: none; }
+
+/* The race rows come first when they cannot all show: VpTrack.tsx sets data-aside on the panel, and the Nobody-yet row (on the objectives sheet) step aside. */
+.vp[data-aside] .vhc-nobody { display: none; }
+
+/* ---------- The research header on a short window: both eras on a line each, no bars, so the first cards keep their buttons ---------- */
+@media (max-height: 700px) {
+  .era-objectives-research { margin-bottom: 6px; }
+  .eor-col { padding-block: 3px 4px; }
+  .eor-col .eo-lines.inline { display: flex; flex-wrap: wrap; gap: 0 12px; }
+  .eor-col .eo-lines.inline .eo-line { display: inline-flex; align-items: baseline; gap: 5px; }
+  .eor-col .eo-lines.inline .eo-fam { display: none; }
+  .eor-col .eo-lines.inline .eo-bar { display: none; }
+  .eor-col .eo-lines.inline .eo-num { text-align: left; }
+  /* The first era's header keeps the instruction and drops the aside: a card's name, art and buttons need the room. */
+  .eor-col .eo-by-design { display: none; }
+  /* The first era has no objective: its column is one line, and the next era's three fit on one line beside it. The Next column says how far away they are. */
+  .era-objectives-research.no-obj { grid-template-columns: 190px minmax(0, 1fr); }
+  .era-objectives-research.no-obj .eor-col.current .eo-sub { display: none; }
+}

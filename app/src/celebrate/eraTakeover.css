@@ -1,0 +1,144 @@
+/*
+ * The era-up takeover (EraUpTakeover.tsx). Base styles are the settled state; every animation runs "backwards"
+ * from a hidden state, so under reduced motion (.moment-lane.reduced * { animation: none }) the scene just stands
+ * finished. Whole sequence is under 3 s; Return, Esc or Continue close it at any moment.
+ */
+.moment-lane:has(.era-takeover) { z-index: 80; }
+.era-takeover {
+  --et-gold: #e6c36e; --et-paper: #f3ead6; --et-night: #150f08;
+  position: fixed; inset: 0; z-index: 1; display: grid; grid-template-rows: minmax(0, 1fr) auto auto; overflow: hidden;
+  background: var(--et-night); color: var(--ink); pointer-events: auto; text-align: left;
+  animation: et-in 520ms ease-out backwards;
+}
+.et-art { position: absolute; inset: 0; animation: et-art-in 1400ms 80ms ease-out backwards; }
+.et-art img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 40%; transform-origin: 62% 46%; animation: et-drift 7000ms ease-out both; user-select: none; }
+/* A warm night over the painting: lighter where the art is the point, darker where text sits. */
+.et-wash { position: absolute; inset: 0; pointer-events: none; background:
+  linear-gradient(180deg, rgb(21 15 8 / .6) 0, rgb(21 15 8 / .1) 20%, rgb(21 15 8 / .12) 34%, rgb(21 15 8 / .62) 52%, rgb(21 15 8 / .9) 74%, rgb(21 15 8 / .96) 100%),
+  radial-gradient(ellipse at 50% 34%, transparent 30%, rgb(21 15 8 / .5) 100%); }
+.et-glow { position: absolute; left: 50%; top: 14%; width: min(80vw, 760px); aspect-ratio: 2; transform: translate(-50%, -50%); pointer-events: none;
+  background: radial-gradient(ellipse, rgb(236 196 108 / .55), rgb(236 196 108 / .12) 45%, transparent 70%); animation: et-glow 2200ms 300ms ease-out backwards; }
+.et-motes { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.et-motes span { position: absolute; bottom: 14%; border-radius: 50%; background: radial-gradient(circle, #fff3c8, rgb(236 196 108 / .0) 70%); opacity: 0; animation: et-mote 4200ms ease-out backwards; }
+
+.et-head::before { content: ''; position: absolute; z-index: -1; inset: -14% 0 -10%; pointer-events: none; background: radial-gradient(ellipse closest-side at 50% 50%, rgb(21 15 8 / .7), rgb(21 15 8 / .4) 60%, transparent 100%); }
+.et-head { position: relative; isolation: isolate; align-self: center; display: grid; justify-items: center; gap: 6px; padding: 28px 24px 4px; text-align: center; color: var(--et-paper); text-shadow: 0 2px 14px rgb(0 0 0 / .65), 0 0 2px rgb(0 0 0 / .6); }
+.et-seal { position: relative; margin-bottom: 10px; display: grid; place-items: center; width: 58px; height: 58px; border-radius: 50%; color: var(--ink);
+  background: radial-gradient(circle at 38% 30%, #f6e6b4, #d2a94c 70%); border: 2px solid #5a4217; box-shadow: 0 0 0 3px rgb(243 234 214 / .85), 0 0 0 4px #5a4217, 0 6px 22px rgb(0 0 0 / .5); text-shadow: none;
+  animation: et-seal-in 900ms 340ms cubic-bezier(.2, 1.4, .4, 1) backwards; }
+.et-rays { position: absolute; inset: -34px; border-radius: 50%; pointer-events: none; z-index: -1; background: repeating-conic-gradient(rgb(236 196 108 / .5) 0deg 5deg, transparent 5deg 15deg); mask-image: radial-gradient(circle, #000 28%, transparent 70%); -webkit-mask-image: radial-gradient(circle, #000 28%, transparent 70%); animation: et-spin 60s linear infinite, et-fade 900ms 500ms ease-out backwards; }
+.et-numeral { font: 700 24px/1 var(--display); letter-spacing: .02em; }
+.et-kicker { font: 700 12.5px/1.4 var(--sans); letter-spacing: .2em; text-transform: uppercase; color: var(--et-paper); text-shadow: 0 0 3px #000, 0 1px 2px #000, 0 2px 14px rgb(0 0 0 / .8); animation: et-rise 600ms 900ms ease-out backwards; }
+.et-title { margin: 0; font: 700 clamp(34px, 8.2vh, 68px)/1.05 var(--display); letter-spacing: .04em; text-wrap: balance; animation: et-title 1100ms 1000ms cubic-bezier(.2, .7, .2, 1) backwards; }
+.et-rule { color: var(--et-gold); display: flex; align-items: center; gap: 10px; animation: et-rise 500ms 1700ms ease-out backwards; }
+.et-rule::before, .et-rule::after { content: ''; width: clamp(48px, 9vw, 120px); height: 1px; background: linear-gradient(90deg, transparent, var(--et-gold)); }
+.et-rule::after { transform: scaleX(-1); }
+
+.et-changes { position: relative; display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; margin: 0 clamp(14px, 3vw, 44px); }
+.et-col { min-width: 0; padding: 9px 12px 10px; background: color-mix(in srgb, var(--panel) 95%, transparent); border: 1px solid var(--frame); outline: 1px solid rgb(243 234 214 / .55); outline-offset: -4px; box-shadow: 0 8px 26px rgb(0 0 0 / .45); animation: et-rise 650ms ease-out backwards; }
+.et-col:nth-child(1) { animation-delay: 1900ms; } .et-col:nth-child(2) { animation-delay: 2030ms; } .et-col:nth-child(3) { animation-delay: 2160ms; }
+.et-col h3 { margin: 0 0 6px; font: 700 11.5px/1.3 var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+.et-col h3 span { display: block; margin-top: 1px; font-weight: 500; letter-spacing: .04em; text-transform: none; color: var(--ink-2); font-size: 11px; }
+.et-col ul { margin: 0; padding: 0; list-style: none; }
+.et-new ul { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; }
+.et-new li { display: flex; align-items: center; gap: 6px; min-width: 0; font: 600 12px/1.2 var(--sans); }
+.et-ico { flex: none; display: grid; place-items: center; width: 26px; height: 26px; border: 1px solid var(--rule); background: var(--panel-2); border-radius: 50%; }
+.et-new li.unit .et-ico { border-color: var(--accent); }
+/* A painted unlock stands on the parchment like a piece on the table, a little larger than the ringed glyph. */
+.et-piece { flex: none; display: block; width: 40px; height: 40px; margin: -6px -2px; object-fit: contain; }
+.et-more { color: var(--ink-2); font-weight: 500; }
+.et-techlist { margin: 6px 0 0; font: 400 12px/1.4 var(--sans); color: var(--ink-2); }
+.et-new ul + .et-techlist { margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--rule); }
+.et-new .sr-only, .era-takeover .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+/* The objectives are the hero of the card: how you win. Wider, a gilt frame, bigger type, and your progress on each. */
+.et-changes.has-hero { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1.3fr) minmax(0, 1fr); }
+@media (min-width: 1300px) { .et-changes.has-hero { grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr) minmax(0, 1fr); } }
+.et-col.et-obj { padding: 11px 16px 13px; border: 2px solid var(--gilt); outline-color: rgb(230 195 110 / .7); background: color-mix(in srgb, var(--gilt) 14%, var(--panel)); box-shadow: 0 0 0 1px rgb(21 15 8 / .6), 0 0 26px rgb(236 196 108 / .35), 0 8px 26px rgb(0 0 0 / .45); }
+.et-obj h3 { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 3px; }
+.et-obj .et-obj-title { display: block; margin: 0; font: 700 clamp(18px, 3vh, 27px)/1.15 var(--display); font-variant-numeric: lining-nums; letter-spacing: .02em; text-transform: none; color: var(--ink); }
+.et-obj .et-obj-sub { margin: 0 0 8px; font: 400 12.5px/1.35 var(--sans); color: var(--ink-2); }
+.et-obj .eo-scored-by { font-size: 12px; }
+.et-obj .et-age + .et-age { margin-top: 8px; }
+.et-obj .et-age h4 { margin: 0 0 3px; font: 700 12px/1.2 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: #7a5a12; }
+.et-obj .eo-lines { gap: 8px; }
+.et-obj .eo-line { grid-template-columns: 66px minmax(0, 1fr) auto; column-gap: 8px; }
+.et-obj .eo-fam { font-size: 12px; letter-spacing: .08em; color: #7a5a12; }
+.et-obj .eo-text { font: 600 clamp(14px, 1.9vh, 16px)/1.3 var(--sans); }
+.et-obj .eo-num { font-size: 13px; }
+.et-obj .eo-num b { font-size: clamp(17px, 2.4vh, 21px); }
+.et-obj .eo-bar { height: 7px; margin-top: 3px; }
+.et-obj .vh-seal { transform: scale(1.2); transform-origin: right center; }
+.et-board p { margin: 4px 0 0; font: 400 12px/1.35 var(--sans); color: var(--ink-2); }
+.et-sprites { display: flex; align-items: flex-end; justify-content: center; gap: 4px; }
+.et-sprites figure { margin: 0; display: grid; justify-items: center; min-width: 0; opacity: .8; }
+.et-sprites figure.now { opacity: 1; }
+.et-sprites img { display: block; width: clamp(64px, 11vh, 98px); max-width: 100%; height: auto; filter: drop-shadow(0 3px 3px rgb(40 28 10 / .35)); user-select: none; }
+.et-sprites figcaption { font: 700 11px/1.2 var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); }
+.et-sprites .now figcaption { color: var(--accent); }
+.et-arrow { align-self: center; font: 400 20px/1 var(--display); color: var(--accent); margin-top: -10px; }
+
+/* The controls are there from the first moments: only the panels above them take their time. */
+.et-foot { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 10px clamp(14px, 3vw, 44px) 14px; color: var(--et-paper); animation: et-rise 400ms 350ms ease-out backwards; }
+.et-rule-line { margin: 0; font: 400 12.5px/1.4 var(--sans); max-width: 78ch; text-shadow: 0 1px 8px rgb(0 0 0 / .7); }
+.et-rule-line b { color: var(--et-gold); font-weight: 700; }
+.et-buttons { flex: none; display: flex; align-items: center; gap: 10px; }
+.et-foot .btn.quiet { color: var(--et-paper); border-color: rgb(243 234 214 / .55); background: rgb(21 15 8 / .5); }
+/* The one primary: filled gilt with ink text (the global notched primary clips box-shadows, so the glow is a drop-shadow). */
+.et-foot .btn.primary { min-height: 44px; padding-inline: 26px; font-size: 15px; color: var(--ink); border-color: #5a4217; background: linear-gradient(180deg, #f4dc94, #d6ae52); filter: drop-shadow(0 0 6px rgb(236 196 108 / .6)) drop-shadow(0 4px 10px rgb(0 0 0 / .5)); }
+.et-foot .btn.primary:hover:not(:disabled) { background: linear-gradient(180deg, #f8e4a8, #e0b95e); filter: drop-shadow(0 0 9px rgb(236 196 108 / .85)) drop-shadow(0 4px 10px rgb(0 0 0 / .5)); }
+.et-foot .btn.primary .kbd { color: var(--ink); border-color: rgb(43 36 25 / .55); background: transparent; }
+
+/* A short window keeps the names whole: one column, never a word broken mid-way. */
+@media (max-height: 700px) { .et-new ul { grid-template-columns: 1fr; } }
+@media (max-height: 640px) {
+  .et-head { padding-top: 14px; gap: 4px; }
+  .et-seal { width: 46px; height: 46px; }
+  .et-numeral { font-size: 20px; }
+  .et-title { font-size: clamp(30px, 7.6vh, 56px); }
+  .et-col { padding: 7px 10px 8px; }
+  .et-col h3 { margin-bottom: 4px; }
+  .et-new ul { gap: 3px 8px; }
+  .et-ico { width: 24px; height: 24px; }
+  .et-col.et-obj { padding-block: 8px 9px; }
+  .et-obj .eo-lines { gap: 5px; }
+  .et-obj .et-obj-sub { margin-bottom: 5px; }
+  .et-sprites img { width: clamp(60px, 14vh, 92px); }
+  .et-foot { padding-block: 8px 10px; }
+}
+
+@keyframes et-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes et-art-in { from { opacity: 0; filter: brightness(.35) saturate(.7); } to { opacity: 1; filter: none; } }
+@keyframes et-drift { from { transform: scale(1.1); } to { transform: scale(1); } }
+@keyframes et-glow { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.5); } 45% { opacity: 1; } 100% { opacity: .55; transform: translate(-50%, -50%) scale(1); } }
+@keyframes et-seal-in { from { opacity: 0; transform: scale(.3) rotate(-24deg); } to { opacity: 1; transform: none; } }
+@keyframes et-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes et-spin { to { transform: rotate(360deg); } }
+@keyframes et-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes et-title { from { opacity: 0; letter-spacing: .34em; filter: blur(7px); transform: translateY(8px); } to { opacity: 1; letter-spacing: .04em; filter: none; transform: none; } }
+@keyframes et-mote { 0% { opacity: 0; transform: translate(0, 0); } 20% { opacity: .9; } 100% { opacity: 0; transform: translate(var(--sway), calc(var(--rise) * -1)); } }
+
+/*
+ * The cinematic layer (moments-fx, 2026-10-24): the painting is laid in as an ink wash spreading up from the horizon,
+ * then the scene moves in depth: the painting pans one way while the glow and the motes drift the other (parallax), and
+ * the rule under the title is drawn out from its star. All under the same 3 s and skippable at once.
+ */
+.et-art { -webkit-mask-image: radial-gradient(ellipse at 50% 70%, #000 52%, transparent 70%); mask-image: radial-gradient(ellipse at 50% 70%, #000 52%, transparent 70%);
+  -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: 50% 70%; mask-position: 50% 70%; -webkit-mask-size: 320% 320%; mask-size: 320% 320%;
+  animation: et-art-in 1400ms 80ms ease-out backwards, et-ink-wash 1700ms 40ms cubic-bezier(.35, .55, .3, 1) backwards; }
+.et-art img { animation: et-drift 7000ms ease-out both, et-pan 9000ms ease-out both; }
+.et-glow { animation: et-glow 2200ms 300ms ease-out backwards, et-counter 9000ms ease-out both; }
+.et-motes { animation: et-counter-far 9000ms ease-out both; }
+.et-rule::before, .et-rule::after { animation: et-draw 700ms 1750ms cubic-bezier(.3, .7, .3, 1) backwards; }
+.et-rule::before { transform-origin: 100% 50%; }
+.et-rule::after { transform-origin: 0 50%; animation-name: et-draw-flip; }
+@keyframes et-ink-wash { from { -webkit-mask-size: 0% 0%; mask-size: 0% 0%; } to { -webkit-mask-size: 320% 320%; mask-size: 320% 320%; } }
+@keyframes et-pan { from { translate: 2.2% 0.8%; } to { translate: 0 0; } }
+@keyframes et-counter { from { translate: -3% 0; } to { translate: 0 0; } }
+@keyframes et-counter-far { from { transform: translateX(-5%); } to { transform: none; } }
+@keyframes et-draw { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes et-draw-flip { from { transform: scaleX(0); } to { transform: scaleX(-1); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .era-takeover, .era-takeover * { animation: none !important; transition: none !important; }
+}
+.moment-lane.reduced .era-takeover *::after, .era-takeover.reduced *, .era-takeover.reduced *::before, .era-takeover.reduced *::after { animation: none !important; }

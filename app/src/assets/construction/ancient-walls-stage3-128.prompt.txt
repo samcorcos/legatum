@@ -1,0 +1,1 @@
+Lanczos 128 px derivative of ancient-walls-stage3.png. See the master prompt.

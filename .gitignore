@@ -1,0 +1,38 @@
+target/
+node_modules/
+.DS_Store
+.vite/
+*.tsbuildinfo
+__pycache__/
+app/dist/
+app/src/wasm-pkg/
+crates/wasm/pkg/
+app/src-tauri/target/
+app/src-tauri/gen/
+app/test-results/
+app/test-results-webkit/
+app/playwright-report/
+/test-results/
+# Simulation output is large; keep it out of git or store it gzipped.
+docs/sim-results/*.json
+.env
+
+# Local agent and tooling state: worktrees, per-machine settings, queues, review output, hook state.
+.claude/worktrees/
+.claude/settings.local.json
+.claude/hooks/.last-*
+.progress/
+.reviews/
+# Owner-specific scrub patterns for the public-export scans (see .private.example/).
+.private/
+# Credentials, keys and Terraform state never belong in git.
+.env.*
+!.env.example
+*.pem
+*.p8
+*.p12
+*.tfvars
+!example.tfvars
+*.tfstate
+*.tfstate.*
+.terraform/
