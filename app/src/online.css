@@ -333,3 +333,22 @@ div.seat {
   font: 600 13px/1.2 var(--sans);
   color: var(--ink);
 }
+
+/* The short-window sidebar is narrow: the status chip takes its own row so the player's name keeps its width. */
+@media (min-width: 961px) and (max-height: 760px) {
+  .game .seatbar .seats > .seat {
+    grid-template-columns: 36px minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+  }
+  .game .seatbar .seats > .seat > .seat-meta {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .game .seatbar .seats > .seat > .seat-ready {
+    grid-column: 2;
+    grid-row: 3;
+    justify-self: start;
+    margin-top: 4px;
+  }
+}
