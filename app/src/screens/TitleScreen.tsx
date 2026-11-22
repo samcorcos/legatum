@@ -8,6 +8,8 @@ import { HintSettings } from '../ui/FirstGameHints';
 import { HapticsSettings } from '../ui/HapticsSettings';
 import { SoundSettings } from '../ui/SoundSettings';
 import { CombatFxSettings } from '../ui/CombatFxSettings';
+import { cleanRoomName } from '../net/roomName';
+import { retryLine, retryWouldFail } from '../net/browserHost';
 import { DEFAULT_PLAYER_NAME, MAX_PLAYER_NAME, rememberPlayerName, savedPlayerName } from '../platform/online';
 import { TitleArt } from './TitleArt';
 import { usePerfOverlay } from '../ui/PerfOverlay';
@@ -144,6 +146,7 @@ function MultiplayerMenu({ onBack }: { onBack: () => void }) {
   const openSetup = useGame((s) => s.openSetup);
   const error = useGame((s) => s.error);
   const online = useGame((s) => s.online);
+  const refusal = useGame((s) => s.hostRefusal);
   // Online play: Host Game runs the game in this tab and opens its game room. A build with no relay has
   // no game list, so it offers hot seat only.
   const [hosting, setHosting] = useState<'idle' | 'starting' | 'failed'>('idle');
@@ -152,6 +155,14 @@ function MultiplayerMenu({ onBack }: { onBack: () => void }) {
   const busy = hosting === 'starting' || resuming === 'starting';
   const [hostError, setHostError] = useState<string | null>(null);
   const [name, setName] = useState(() => savedPlayerName() ?? DEFAULT_PLAYER_NAME);
+  // The game list drops symbols and emoji; say so before the name is used.
+  const typed = name.trim();
+  const shown = cleanRoomName(typed);
+  const listedAs = typed && shown !== typed ? (shown ? `Shown in the game list as “${shown}”.` : 'The game list will show “Game” and four characters.') : null;
+  // After a refusal that pressing Host Game again cannot fix, Host Game is not the next action: Join Game is.
+  const hostCannotRetry = hosting === 'failed' && !!refusal && retryWouldFail(refusal.kind);
+  const hostPrimary = hosting === 'failed' && !views && !hostCannotRetry;
+  const joinPrimary = !views && !busy && resuming !== 'failed' && !hostPrimary;
   const hostOnline = async () => {
     const who = name.trim().slice(0, MAX_PLAYER_NAME) || DEFAULT_PLAYER_NAME;
     rememberPlayerName(who);
@@ -192,9 +203,11 @@ function MultiplayerMenu({ onBack }: { onBack: () => void }) {
         {online?.relay ? (
           <>
             <label className="host-name">
-              <span>Your name in the game list</span>
+              {/* The note replaces the label while it shows, so it adds no height to a menu that is already tight. */}
+              {listedAs === null ? <span>Your name in the game list</span> : <span className="host-name-note">{listedAs}</span>}
               <input
                 className="lobby-input"
+                aria-label="Your name in the game list"
                 value={name}
                 maxLength={MAX_PLAYER_NAME}
                 disabled={busy}
@@ -202,11 +215,11 @@ function MultiplayerMenu({ onBack }: { onBack: () => void }) {
                 onKeyDown={(e) => { if (e.key === 'Enter' && !busy) void hostOnline(); }}
               />
             </label>
-            <button className={`btn big ${hosting === 'failed' && !views ? 'primary' : ''}`} disabled={busy} onClick={hostOnline}>
+            <button className={`btn big ${hostPrimary ? 'primary' : ''}`} disabled={busy} onClick={hostOnline}>
               Host Game
               <span className="btn-sub">
                 {hosting === 'starting' ? <><span className="spinner" /> Opening your game…</>
-                  : hosting === 'failed' ? 'Try again' : 'Open a game that others can find and join'}
+                  : hosting === 'failed' ? (refusal ? retryLine(refusal.kind, refusal.retryAfterS) : 'Try again') : 'Open a game that others can find and join'}
               </span>
             </button>
             <button className={`btn big ${resuming === 'failed' && !views ? 'primary' : ''}`} disabled={busy} onClick={hostFromSave}>
@@ -216,7 +229,7 @@ function MultiplayerMenu({ onBack }: { onBack: () => void }) {
                   : resuming === 'failed' ? 'Try again' : 'Carry on an online game from its save file'}
               </span>
             </button>
-            <button className={`btn big ${!views && hosting === 'idle' && resuming === 'idle' ? 'primary' : ''}`} disabled={busy} onClick={() => goto('online')}>
+            <button className={`btn big ${joinPrimary ? 'primary' : ''}`} disabled={busy} onClick={() => goto('online')}>
               Join Game
               <span className="btn-sub">See the games that are open now</span>
             </button>

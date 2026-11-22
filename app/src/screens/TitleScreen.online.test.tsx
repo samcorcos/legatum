@@ -4,6 +4,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { TitleScreen } from './TitleScreen';
 import { useGame } from '../store';
+import { RelayRefusal } from '../net/browserHost';
 
 vi.mock('./TitleArt', () => ({ TitleArt: () => null }));
 
@@ -108,4 +109,43 @@ it('no disabled button is primary while a game is opening', async () => {
   await act(async () => must(/^Host Game/).click());
   expect(must(/^Host Game/).textContent).toContain('Opening your game');
   expect(host.querySelectorAll('button.primary:disabled').length).toBe(0);
+});
+
+it.each([
+  ['too_fast', 300, 'Try again in 5 minutes', false],
+  ['too_fast', null, 'Try again in a few minutes', false],
+  ['too_many', null, 'Close one of your games first', false],
+  ['closed', null, 'Paused for now', false],
+  ['full', null, 'Try again', true],
+  ['offline', null, 'Try again', true],
+  ['other', null, 'Try again', true],
+] as const)('after a %s refusal (wait %s) Host Game says "%s" and is primary: %s', async (kind, wait, line, retryable) => {
+  hosting(async () => {
+    const refusal = new RelayRefusal(kind, 'x', wait);
+    useGame.setState({ hostRefusal: refusal });
+    return refusal.message;
+  });
+  await act(async () => must(/^Host Game/).click());
+  await flush();
+  expect(must(/^Host Game/).textContent).toContain(line);
+  expect(must(/^Host Game/).classList.contains('primary')).toBe(retryable);
+  expect(must(/^Join Game/).classList.contains('primary')).toBe(!retryable);
+  expect(host.querySelectorAll('button.primary:disabled').length).toBe(0);
+});
+
+it('the name note replaces the label, so it adds no height', async () => {
+  const input = host.querySelector<HTMLInputElement>('.host-name input')!;
+  const type = async (v: string) => {
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(input, v);
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+  };
+  const label = () => host.querySelector('.host-name > span')!;
+  expect(label().textContent).toBe('Your name in the game list');
+  await type('Ada \u{1F600}');
+  expect(label().textContent).toBe('Shown in the game list as “Ada”.');
+  await type('\u{1F600}\u{1F600}');
+  expect(label().textContent).toBe('The game list will show “Game” and four characters.');
+  expect(host.querySelectorAll('.host-name > span').length).toBe(1);
 });

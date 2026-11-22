@@ -766,7 +766,10 @@ dialog.settings-modal::backdrop {
   /* With a game open, Resume adds a row and the slip ran into the footer at 1000x600 (UX review,
      2026-11-21): the tagline gives its room, as it does for a message. */
   .title-screen:has(.title-resume) .title-tag { display: none; }
-  .title-screen:has(.title-resume) .title-kicker { margin-bottom: 14px; }
+  /* ...and its kicker line too: the Multiplayer menu (name box, three online buttons) with Resume still ended 2 px
+     below the footer, and with a notice a row more (UI review of PR #21, 2026-11-22). */
+  .title-screen:has(.title-resume) .title-kicker { display: none; }
+  .title-actions .btn.big.primary.title-resume { min-height: 52px; margin-bottom: 2px; }
 }
 @keyframes rise {
   from {
@@ -4017,6 +4020,10 @@ dialog.gameover::backdrop {
   position: static;
   transform: none;
   margin-top: 16px;
+}
+/* On the Join screen the notice sits between the lede and the seats. */
+.join > .toast.inline {
+  margin: 4px 0 12px;
 }
 @media (min-width: 961px) {
   .game .toast.game-error-toast {
