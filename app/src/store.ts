@@ -53,6 +53,7 @@ import {
 import { StagingClient, type StagingState } from './staging';
 import { rememberPlayerName, online, type OnlineInfo } from './platform/online';
 import { hostingRecord, startHosting, stopHosting } from './net/hosting';
+import { RelayRefusal } from './net/browserHost';
 import { HOST_AWAY, HOST_OFFLINE, connectionFirst, roomBase } from './platform/relayLobby';
 import { checkSaveText } from './platform/saveLimits';
 import { abandonGameHistory, recordGameHistory } from './platform/archive';
@@ -748,10 +749,19 @@ export const useGame = create<State>((set, get) => {
   };
 
   /** The host learns when guests cannot reach its game, and when a game history could not be kept. */
+  /** The relay's last refusal to list this tab's room again, shown instead of the plain "reconnecting" note. */
+  let hostRefusal: string | null = null;
   const hostingEvents = () => ({
     tunnel: (state: string) => {
-      if (state === 'reconnecting') set({ error: HOST_OFFLINE });
-      else if (get().error === HOST_OFFLINE) set({ error: null });
+      if (state === 'reconnecting') set({ error: hostRefusal ?? HOST_OFFLINE });
+      else if (state === 'open' && (get().error === HOST_OFFLINE || get().error === hostRefusal)) {
+        hostRefusal = null;
+        set({ error: null });
+      } else if (get().error === HOST_OFFLINE) set({ error: null });
+    },
+    refused: (r: RelayRefusal) => {
+      hostRefusal = r.message;
+      set({ error: r.message });
     },
     error: (message: string) => set({ error: message }),
   });
@@ -1177,8 +1187,8 @@ export const useGame = create<State>((set, get) => {
       set({ error: null });
       try {
         await startHosting(relay, { name, build: info.build, rules_version: info.rules_version, protocol: info.protocol }, null, hostingEvents());
-      } catch {
-        return 'Could not open your game. Check your internet connection and try again.';
+      } catch (e) {
+        return e instanceof RelayRefusal ? e.message : 'Could not open your game. Check your internet connection and try again.';
       }
       rememberSeat(null);
       const status = await fetchStatus();

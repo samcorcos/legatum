@@ -8,6 +8,7 @@ import { HintSettings } from '../ui/FirstGameHints';
 import { HapticsSettings } from '../ui/HapticsSettings';
 import { SoundSettings } from '../ui/SoundSettings';
 import { CombatFxSettings } from '../ui/CombatFxSettings';
+import { cleanRoomName } from '../net/roomName';
 import { DEFAULT_PLAYER_NAME, MAX_PLAYER_NAME, rememberPlayerName, savedPlayerName } from '../platform/online';
 import { TitleArt } from './TitleArt';
 import { usePerfOverlay } from '../ui/PerfOverlay';
@@ -149,6 +150,10 @@ function MultiplayerMenu({ onBack }: { onBack: () => void }) {
   const [hosting, setHosting] = useState<'idle' | 'starting' | 'failed'>('idle');
   const [hostError, setHostError] = useState<string | null>(null);
   const [name, setName] = useState(() => savedPlayerName() ?? DEFAULT_PLAYER_NAME);
+  // The game list drops symbols and emoji; say so before the name is used.
+  const typed = name.trim();
+  const shown = cleanRoomName(typed);
+  const listedAs = typed && shown !== typed ? (shown ? `Shown in the game list as “${shown}”.` : 'Shown in the game list as “Game” with a number.') : null;
   const hostOnline = async () => {
     const who = name.trim().slice(0, MAX_PLAYER_NAME) || DEFAULT_PLAYER_NAME;
     rememberPlayerName(who);
@@ -182,6 +187,7 @@ function MultiplayerMenu({ onBack }: { onBack: () => void }) {
                 onChange={(e) => setName(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter' && hosting !== 'starting') void hostOnline(); }}
               />
+              {listedAs !== null && <span className="host-name-note">{listedAs}</span>}
             </label>
             <button className={`btn big ${hosting === 'failed' && !views ? 'primary' : ''}`} disabled={hosting === 'starting'} onClick={hostOnline}>
               Host Game

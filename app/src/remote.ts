@@ -161,6 +161,14 @@ export interface SocketLike {
 export type SocketFactory = (url: string) => SocketLike;
 
 /** `taken`: another window joined this seat; we stop reconnecting until the player chooses to rejoin. */
+/** Relay close codes (infra/relay/src/shared.ts): 1013 = too many connections from this address to this game, 4029 = sending too fast. */
+const CLOSE_TOO_MANY_FROM_ADDRESS = 1013;
+const CLOSE_TOO_FAST = 4029;
+const TOO_FAST_PAUSE_MS = 30_000;
+export const MSG_TOO_MANY_WINDOWS = 'Too many windows from your connection are in this game. Close one, then join again.';
+export const MSG_TOO_FAST = 'Too much was sent too quickly. Pausing for 30 seconds, then reconnecting.';
+export const MSG_STILL_TOO_FAST = 'Still too much sent too quickly. Wait a minute, then join the game again.';
+
 export type ConnState = 'connecting' | 'open' | 'reconnecting' | 'closed' | 'taken';
 
 export interface RemoteEvents {
@@ -277,6 +285,8 @@ export class RemoteClient implements GameClient {
   private stopped = false;
   /** Only an explicit `seat_taken` error identifies a displaced socket. */
   private takeoverSocket: SocketLike | null = null;
+  /** The one pause-and-retry after the relay closed this socket for sending too fast has been used. */
+  private rateRetried = false;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private pingTimer: ReturnType<typeof setInterval> | null = null;
   private listeners: Partial<RemoteEvents> = {};
@@ -380,7 +390,7 @@ export class RemoteClient implements GameClient {
     sock.onerror = () => {
       // onclose follows; reconnect happens there.
     };
-    sock.onclose = () => {
+    sock.onclose = (ev) => {
       if (this.socket !== sock) return;
       this.socket = null;
       if (this.pingTimer) this.timers.stop(this.pingTimer);
@@ -391,7 +401,28 @@ export class RemoteClient implements GameClient {
         this.setState('taken');
         return;
       }
-      if (!this.stopped) this.scheduleReconnect();
+      if (this.stopped) return;
+      const { code, reason } = ev as { code?: number; reason?: string };
+      if (code === CLOSE_TOO_MANY_FROM_ADDRESS && /too many connections/i.test(reason ?? '')) {
+        // Retrying cannot help until one of this connection's other windows leaves.
+        this.stopped = true;
+        this.listeners.error?.(MSG_TOO_MANY_WINDOWS, 'too_many_connections');
+        this.setState('closed');
+        return;
+      }
+      if (code === CLOSE_TOO_FAST) {
+        if (this.rateRetried) {
+          this.stopped = true;
+          this.listeners.error?.(MSG_STILL_TOO_FAST, 'too_fast');
+          this.setState('closed');
+          return;
+        }
+        this.rateRetried = true;
+        this.listeners.error?.(MSG_TOO_FAST, 'too_fast');
+        this.scheduleReconnect(TOO_FAST_PAUSE_MS);
+        return;
+      }
+      this.scheduleReconnect();
     };
   }
 
@@ -400,13 +431,13 @@ export class RemoteClient implements GameClient {
     return Math.min(8000, 500 * 2 ** Math.max(0, attempt - 1));
   }
 
-  private scheduleReconnect() {
+  private scheduleReconnect(delayMs?: number) {
     this.attempts++;
     this.setState('reconnecting');
     this.reconnectTimer = this.timers.set(() => {
       this.reconnectTimer = null;
       if (!this.stopped) this.open();
-    }, this.backoffMs(this.attempts));
+    }, delayMs ?? this.backoffMs(this.attempts));
   }
 
   private send(msg: ClientMsg): boolean {
@@ -444,6 +475,7 @@ export class RemoteClient implements GameClient {
         this.pingTimer = this.timers.every(() => this.send({ type: 'ping' }), 20000);
         break;
       case 'view': {
+        this.rateRetried = false;
         if (this.awaitingView && this.welcomeOrders === null) break;
         const turn = this.pendingTurn;
         this.pendingTurn = null;

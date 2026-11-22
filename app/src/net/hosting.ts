@@ -4,7 +4,7 @@
 import { setLocalEndpoint } from '../remote';
 import { recordGameHistory } from '../platform/archive';
 import { loadWasmModule } from '../wasmClient';
-import { BrowserHost, type HostEngine, type RoomAnnounce, type RoomKey, type TunnelState } from './browserHost';
+import { BrowserHost, type HostEngine, type RelayRefusal, type RoomAnnounce, type RoomKey, type TunnelState } from './browserHost';
 
 /** Per tab: a reload resumes hosting the same room; another tab or a new visit does not. */
 const HOSTING_KEY = 'legatum.online.hosting';
@@ -58,6 +58,8 @@ function keepSave(save: string) {
 
 export interface HostingEvents {
   tunnel?(state: TunnelState): void;
+  /** The relay would not list the room again after forgetting it; hosting keeps trying. */
+  refused?(refusal: RelayRefusal): void;
   /** A game history could not be kept. */
   error?(message: string): void;
 }
@@ -83,6 +85,7 @@ export async function startHosting(relay: string, announce: RoomAnnounce, resume
     engine,
     room: resume?.room ?? null,
     onSave: keepSave,
+    onRefused: (r) => events.refused?.(r),
     onRecording: (json) => void recordGameHistory(json).catch((e) => {
       console.warn('game history', e);
       events.error?.('Could not save this game to your history.');
