@@ -44,8 +44,8 @@ async function openSettings(page: Page) {
  */
 const GALLERY = `
   <div class="title-menu" style="animation:none"><div class="title-actions">
-    <button class="btn big primary">Single Player<span class="btn-sub">Five AI empires</span></button>
-    <button class="btn big primary" disabled>Single Player<span class="btn-sub">Five AI empires</span></button>
+    <button class="btn big primary">Single Player<span class="btn-sub">One to seven AI empires</span></button>
+    <button class="btn big primary" disabled>Single Player<span class="btn-sub">One to seven AI empires</span></button>
     <button class="btn big">Multiplayer<span class="btn-sub">Hot seat or network</span></button>
     <button class="btn big" disabled>Continue<span class="btn-sub">No autosave yet</span></button>
     <button class="btn big quiet">Load Game…</button>

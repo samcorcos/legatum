@@ -117,7 +117,7 @@ function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
         <ResumeButton />
         <button className={`btn big ${newGamePrimary ? 'primary' : ''}`} onClick={() => openSetup('solo')}>
           Single Player
-          <span className="btn-sub">You against five AI empires</span>
+          <span className="btn-sub">You against one to seven AI empires</span>
         </button>
         <button className="btn big" onClick={onMultiplayer}>
           Multiplayer
