@@ -28,6 +28,7 @@ This file holds the current rules, one line each. The user's words, dates, as-bu
 - A background failure (upload, save, network) is a small corner notice, never a card over a decision (2026-11-07).
 - Online: an action that ends a shared game says so and asks first, with the label branching on host or guest; status text is written from the viewer's role; durability text matches the storage behind it (no "saved" for a tab-lifetime copy) (co-op review, 2026-11-22).
 - Big moments get a full interstitial: war declared on you, entering an era, the end of the game; a rival closing on victory and a city under attack are never a surprise (user, 2026-10-08, 2026-11-11).
+- A menu action that can fail shows its busy and failed state on the control the player pressed, never on a neighbour. A flow that resumes a shared game says who still has to come back, and how.
 
 ## No hidden math (pillar 5)
 

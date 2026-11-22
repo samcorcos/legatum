@@ -1,5 +1,5 @@
 import { soundHooksForMoments } from './celebrate/feedback';
-import { loadErrorMessage, olderRulesMessage, saveHasCurrentRules } from './saveErrors';
+import { DAMAGED_SAVE_MESSAGE, loadErrorMessage, olderRulesMessage, saveHasCurrentRules } from './saveErrors';
 import { RULES } from './data';
 import { buildLabel } from './buildLabel';
 import { momentsForTurn, type Moment } from './celebrate/moments';
@@ -52,7 +52,7 @@ import {
 } from './remote';
 import { StagingClient, type StagingState } from './staging';
 import { rememberPlayerName, online, type OnlineInfo } from './platform/online';
-import { hostingRecord, startHosting, stopHosting } from './net/hosting';
+import { hostedGameSave, hostingRecord, startHosting, stopHosting } from './net/hosting';
 import { HOST_AWAY, HOST_OFFLINE, connectionFirst, roomBase } from './platform/relayLobby';
 import { checkSaveText } from './platform/saveLimits';
 import { abandonGameHistory, recordGameHistory } from './platform/archive';
@@ -148,6 +148,8 @@ export interface SaveFile {
   game: string;
   rulesVersion?: number;
   playtest?: string;
+  /** Written by an online host's "Save to file": the game has human seats, and can be hosted again. */
+  online?: true;
   /** Coach questions: the toggle and what was already asked (app-side; never part of the game state). */
   why?: WhyMemory;
 }
@@ -298,6 +300,8 @@ interface State {
   hostNewGame(setup: GameSetup): Promise<void>;
   /** Open an online game in this tab and go to its game room. Resolves to an error message, or null. */
   hostOnline(name: string): Promise<string | null>;
+  /** Host a game from a save file in this tab: guests join from the list and take their seats again. Resolves to an error message, or null. */
+  hostOnlineFromSave(name: string, save: SaveFile): Promise<string | null>;
   joinSeat(seat: Seat, name: string): void;
   /** Online play: join a hosted game from the lobby list as a guest. Resolves to an error message, or null. */
   joinOnline(relay: string, room: string): Promise<string | null>;
@@ -400,6 +404,33 @@ export function saveFile(client: GameClient, views: PlayerView[]): SaveFile {
     playtest: buildLabel,
     ...(useGame.getState().why.enabled ? { why: useGame.getState().why } : {}),
   };
+}
+
+/**
+ * The online host's save file: the same envelope and engine save as a solo game, marked `online`.
+ * `game` is the host engine's own save, so Host from a save and Load from file both read it.
+ */
+export function onlineSaveFile(game: string, views: PlayerView[]): SaveFile {
+  const view = views[0];
+  return {
+    format: 'legatum-save',
+    version: 1,
+    client: 'wasm',
+    savedAt: new Date().toISOString(),
+    turn: view.turn,
+    names: view.players.filter((p) => p.is_human).map((p) => p.name),
+    game,
+    rulesVersion: RULES.saveVersion,
+    playtest: buildLabel,
+    online: true,
+  };
+}
+
+/** The host's current game as save-file text, or null when this tab hosts no game. */
+export function hostedSaveText(): string | null {
+  const { views } = useGame.getState();
+  const game = hostedGameSave();
+  return game && views?.length ? JSON.stringify(onlineSaveFile(game, views)) : null;
 }
 
 function parseAutosave(raw: string | null): SaveFile | null {
@@ -1187,6 +1218,36 @@ export const useGame = create<State>((set, get) => {
         return 'Could not open your game. Try again.';
       }
       set({ net: { status, mySeat: null, seats: status.seats, conn: 'closed' }, screen: 'setup', setupMode: 'host' });
+      return null;
+    },
+
+    hostOnlineFromSave: async (name, save) => {
+      const info = get().online;
+      if (!info?.relay) return 'This version has no online play.';
+      if (save.client !== 'wasm' || typeof save.game !== 'string') return 'This save cannot be hosted.';
+      try {
+        checkSaveText(save.game);
+        if (!saveHasCurrentRules(save.game)) return olderRulesMessage(save.playtest);
+      } catch (e) {
+        return loadErrorMessage(e, save.playtest);
+      }
+      set({ error: null });
+      try {
+        await startHosting(info.relay, { name, build: info.build, rules_version: info.rules_version, protocol: info.protocol }, null, hostingEvents(), save.game);
+      } catch (e) {
+        const message = e instanceof Error ? e.message : String(e);
+        return /cannot resume/i.test(message) ? DAMAGED_SAVE_MESSAGE : 'Could not open your game. Check your internet connection and try again.';
+      }
+      rememberSeat(null);
+      const status = await fetchStatus();
+      if (!status) {
+        stopHosting();
+        return 'Could not open your game. Try again.';
+      }
+      // Seats keep their saved names and are open for guests. The host takes seat 0 for itself, as in a new game.
+      set({ net: { status, mySeat: null, seats: status.seats, conn: 'closed' } });
+      if (status.has_game) get().joinSeat(0, status.seats[0]?.name || name);
+      else set({ screen: 'setup', setupMode: 'host' });
       return null;
     },
 
