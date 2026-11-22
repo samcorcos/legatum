@@ -114,7 +114,9 @@ lacking them. They may lead to follow-up commits or requests.
 4. **Saves carry a rules version.** Any change to the rules or to the serialized state bumps
    `legatum_core::RULES_VERSION` (`crates/core/src/lib.rs`). A save from another version is refused with
    a clear message; there are no migrations. The hosted site keeps each earlier build for 30 days at
-   `v/<id>/` (`docs/ops/releasing.md`), so a game opens in the build with its rules. Current-version fixtures in
+   `v/<id>/` (`docs/ops/releasing.md`), so a game opens in the build with its rules. The one exception to the
+   bump is optional client telemetry in the archive (`frame_times`, `turn_times`): a default-empty field that no
+   state hash reads and that old saves lack can be added without a bump. Current-version fixtures in
    `crates/wasm/tests/fixtures/saves/` guard the round trip.
 5. **No hidden maths, no AI bonuses.** A number shown to a player should open into a breakdown. An AI
    seat at Easy, Normal or Hard plans from its own `PlayerView` and plays under the same rules as a

@@ -3,6 +3,7 @@ import { celebrationFrame, type MapCelebration } from '../celebrate/mapEffect';
 // draws it and then the per-frame layers: movement reach, hover, lettering, routes, selection,
 // unit tokens and city banners. Tokens, banners and text are drawn in screen space so they stay
 // crisp at any zoom.
+import { noteMapDraw } from '../frameTelemetry';
 import type { CityBuildFocus, CityView, Faction, Hex, PlayerView, UnitKind, UnitView } from '../types';
 import { growthProgress, productionProgress } from '../cityProgress';
 import type { GoalPreview } from '../goalActions';
@@ -22,7 +23,7 @@ import { BANNER_BOTTOM, CITY_UNIT_DROP, HEX_SIZE, K, PIP_HALF, sealRadius, bound
 import { computeLabels, type MapLabel } from './labels';
 import { reachTiles } from './reach';
 import type { MapCue, ReportArrow } from './cues';
-import { drawSiegeBadge, drawSiegeBar, drawSiegeRing, drawSiegeSealRing, SIEGE_BAR_GAP, SIEGE_BAR_H } from './siegeMark';
+import { drawSiegeBadge, drawSiegeBar, drawSiegeRing, drawSiegeSealRing, SIEGE_BAR_GAP, SIEGE_BAR_H, siegeRingBox, siegeSealRingBox } from './siegeMark';
 import type { SiegeLevel } from '../siege';
 import { miniatureImage } from '../unitArt';
 import { siegePropFor, siegePropImage, siegePropRect, type SiegeProp } from '../siegeProps';
@@ -46,10 +47,10 @@ import { drawClosedLand } from './sakokuLand';
 import { drawHallBadge, drawHallLand, hallBadgeAt, hallSites } from './courierHall';
 import { drawWonderArt, drawWonderBadges } from './wonderArt';
 import { deathPos, hpAt, type CombatPlan, type FxGhost } from './combatFx';
-import { aircraftPassProgress, drawCombatFx, drawSiegeAmbient } from './combatFxDraw';
+import { aircraftPassProgress, drawCombatFx, drawSiegeAmbient, siegeAmbientBox } from './combatFxDraw';
 import { smoulderVisible } from './smoulder';
 import type { March, MomentHold, MomentPlan } from './momentFx';
-import { drawChimneySmoke, drawWaterGlints, type IdleView } from './idleLife';
+import { drawChimneySmoke, drawWaterGlints, idleBoxes, type IdleView } from './idleLife';
 import { drawLandmarks, landmarkBoxes, landmarksOf } from './landmarks';
 import { drawConstructionSites } from './constructionFx';
 import { constructionStage, sitesOf, type ConstructionSite } from './constructionSites';
@@ -150,6 +151,8 @@ export interface RenderInput {
   moments?: { plan: MomentPlan; t: number; hold: MomentHold } | null;
   /** Map animations on: damaged cities smoulder and burn (combatFxDraw.ts drawSiegeAmbient), on this clock (ms). */
   ambientT?: number | null;
+  /** Idle life's clock (idleLife.ts), when it differs from `time`: an idle tick advances only idle life. */
+  idleT?: number;
   seatColor: string;
   /** The scenario objective's cities, ringed even in fog. */
   scenarioTargets?: ScenarioTarget[];
@@ -237,7 +240,7 @@ const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI'
 const roman = (n: number) => ROMAN[n - 1] ?? String(n);
 
 // ---- performance probe (read by tests and the perf script via window.legatumMap.perf) ----
-export const perf = { frames: 0, drawMs: 0, maxMs: 0, workMs: 0, buildMs: 0, updateMs: 0, measureFrames: false, fxFrames: 0, fxMs: 0, fxMaxMs: 0, momentFrames: 0, momentMs: 0, momentMaxMs: 0, reset() { this.frames = 0; this.drawMs = 0; this.maxMs = 0; this.workMs = 0; this.fxFrames = 0; this.fxMs = 0; this.fxMaxMs = 0; this.momentFrames = 0; this.momentMs = 0; this.momentMaxMs = 0; } };
+export const perf = { frames: 0, partialFrames: 0, drawMs: 0, maxMs: 0, workMs: 0, buildMs: 0, updateMs: 0, measureFrames: false, fxFrames: 0, fxMs: 0, fxMaxMs: 0, momentFrames: 0, momentMs: 0, momentMaxMs: 0, reset() { this.frames = 0; this.partialFrames = 0; this.drawMs = 0; this.maxMs = 0; this.workMs = 0; this.fxFrames = 0; this.fxMs = 0; this.fxMaxMs = 0; this.momentFrames = 0; this.momentMs = 0; this.momentMaxMs = 0; } };
 
 // ---- movement reach for the selected unit ----
 
@@ -255,7 +258,7 @@ const NO_SIEGE: ReadonlyMap<number, SiegeLevel> = new Map();
 // ---- main draw ----
 
 /** Draw a frame, returning visible label bounds and whether terrain needs another frame. */
-export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending: boolean; labelRects: Rect[]; bannerRects: Rect[]; bannerHits: { city: CityView; rect: Rect; cover: Rect; parts: Rect[]; far: boolean }[]; liftedHits: { hex: Hex; rect: Rect }[]; idle: boolean; ring: SelectionRing | null } {
+export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending: boolean; labelRects: Rect[]; bannerRects: Rect[]; bannerHits: { city: CityView; rect: Rect; cover: Rect; parts: Rect[]; far: boolean }[]; liftedHits: { hex: Hex; rect: Rect }[]; idle: boolean; ring: SelectionRing | null; ambient: Rect[] } {
   const t0 = performance.now();
   const { view, cam, width: w, height: h, dpr } = inp;
   const look: LookId = 'atlas';
@@ -274,7 +277,8 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   const fxNow = inp.fx;
   const cityHp = (c: CityView) => (fxNow ? hpAt(fxNow.plan, `c${c.id}`, fxNow.t) : undefined) ?? c.hp;
   const idleView: IdleView | null = inp.idle ? { toScreen: (p) => worldToScreen(cam, w, h, p.x, p.y), hexPx, far: isFar(hexPx), w, h, dpr } : null;
-  let idleLive = idleView ? drawWaterGlints(ctx, view, inp.time, idleView) : 0;
+  const idleT = inp.idleT ?? inp.time;
+  let idleLive = idleView ? drawWaterGlints(ctx, view, idleT, idleView) : 0;
   const siege = inp.siege ?? NO_SIEGE;
   // A captured city's banner keeps its old owner until it flips (momentFx.ts).
   const held = moments?.hold.cityOwner;
@@ -319,7 +323,7 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   drawConstructionSites(ctx, view, toScreen, hexPx, w, h, dpr, moments?.hold.sites, fixedLandmarkBoxes, oldSites, new Set(activeSites.map((b) => b.city)));
   // A town being founded or growing, walls going up, land changing hands: drawn into the land, under everything else.
   if (moments && momentView) drawMomentGround(ctx, moments.plan, moments.t, momentView);
-  if (idleView) idleLive += drawChimneySmoke(ctx, view, inp.time, idleView, moments ? (tile) => moments.hold.towns.has(tile) : undefined);
+  if (idleView) idleLive += drawChimneySmoke(ctx, view, idleT, idleView, moments ? (tile) => moments.hold.towns.has(tile) : undefined);
   if (inp.lensTiles?.length) drawLens(ctx, inp.lensTiles, cam, w, h, view.width, dpr, look);
   // Overlays draw over the lens tint, so a lens never hides them: owned land first, then the yield icons on top of both.
   if (inp.borderTiles?.length) drawOwnerOverlay(ctx, inp.borderTiles, cam, w, h, view.width, dpr, look, 'tint', ownerWashScale(inp.lens));
@@ -746,7 +750,7 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   }
 
   // Path preview with turn markers.
-  if (inp.path && selUnit) drawRoute(ctx, inp, S, look, S2, selUnit);
+  const routeBox = inp.path && selUnit ? drawRoute(ctx, inp, S, look, S2, selUnit) : null;
   if (inp.path && inp.pathRisk) drawRouteRisk(ctx, S, S2(inp.pathRisk), hexPx);
   if (inp.pathUnreachable) {
     const p = S2(inp.pathUnreachable);
@@ -806,12 +810,17 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   }
 
   // A damaged city burns for the whole turn: smoke and fires over its art, under banners and units.
+  // Each box is what a clipped ambient frame repaints (MapCanvas: smoke and siege rings move without a full redraw).
+  const ambient: Rect[] = [];
+  // The route's dashes march on the pulse clock, so selection-pulse frames repaint its box too.
+  if (routeBox) ambient.push(routeBox);
   if (inp.ambientT != null) {
     for (const c of view.cities) {
       if (!smoulderVisible(c, cityHp(c), cam, w, h)) continue;
       const damage = 1 - cityHp(c) / c.max_hp;
       const cp = S2(c.pos);
       drawSiegeAmbient(ctx, cp, damage, c.id * 97 + 5, inp.ambientT, hexPx);
+      ambient.push(siegeAmbientBox(cp, hexPx));
     }
   }
 
@@ -947,7 +956,8 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
     if (city) {
       if (!level) continue;
       const rad = sealRadius(hexPx);
-      drawSiegeSealRing(ctx, city.x, city.y, rad, level, inp.time, inp.reducedMotion);
+      drawSiegeSealRing(ctx, city.x, city.y, rad, level, inp.pulseTime ?? inp.time, inp.reducedMotion);
+      ambient.push(siegeSealRingBox(city.x, city.y, rad));
       drawSiegeBadge(ctx, city.x + rad * 0.85, city.y - rad * 0.85, 8, dpr);
     } else {
       const motion = bannerMotion?.get(c.id);
@@ -960,7 +970,8 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
         const barY = r.y + r.h + SIEGE_BAR_GAP;
         drawSiegeBar(ctx, x, barY, Math.min(Math.max(r.w - 8, 64), 128), hpNow, c.max_hp, FONTS[look].sans);
         if (meters.length) drawBannerMeters(ctx, look, meters, x, barY + SIEGE_BAR_H + 4, dpr);
-        drawSiegeRing(ctx, cover, level, inp.time, inp.reducedMotion);
+        drawSiegeRing(ctx, cover, level, inp.pulseTime ?? inp.time, inp.reducedMotion);
+        ambient.push(siegeRingBox(cover));
         drawSiegeBadge(ctx, cover.x + cover.w, cover.y, 11, dpr);
       } else {
         if (meters.length) drawBannerMeters(ctx, look, meters, x, r.y + r.h + (c.visible && hpNow < c.max_hp ? 6 : 1), dpr);
@@ -1220,6 +1231,7 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
     performance.measure('legatum:mapDraw', { start: t0, end: t0 + ms });
   perf.frames++;
   perf.drawMs += ms;
+  noteMapDraw(ms);
   perf.workMs += terrain.lastWorkMs;
   perf.maxMs = Math.max(perf.maxMs, ms);
   // City banners, so hover cards can keep clear of them (a card over your own city's banner hides it).
@@ -1233,7 +1245,7 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
       return { city: b.c, rect, cover: b.cover, parts, far: !!b.far };
     }),
     liftedHits,
-    idle: idleLive > 0, ring };
+    idle: idleLive > 0, ring, ambient };
 }
 
 /** A scenario target: a double ring around the city's hex (red to take or contain, ink to hold)
@@ -1429,6 +1441,23 @@ export function ringClipRect(ring: SelectionRing, dpr: number, pad = 2): { x: nu
   return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
 }
 
+/** Where idle life paints at `t` (CSS px), for the view as the camera shows it: what an idle tick repaints. */
+export function idleClipBoxes(view: PlayerView, cam: Camera, w: number, h: number, t: number): Rect[] {
+  const hexPx = HEX_SIZE * cam.zoom;
+  return idleBoxes(view, t, { toScreen: (p) => worldToScreen(cam, w, h, p.x, p.y), hexPx, far: isFar(hexPx), w, h, dpr: 1 });
+}
+
+/** The device-pixel boxes an ambient-only frame repaints: the selection ring's, then each smoke column's and siege ring's, kept on the canvas. */
+export function ambientClipRects(ring: SelectionRing | null, ambient: readonly Rect[], dpr: number, pad = 2): { x: number; y: number; w: number; h: number }[] {
+  const out = ring ? [ringClipRect(ring, dpr, pad)] : [];
+  for (const r of ambient) {
+    const x0 = Math.max(0, Math.floor(r.x * dpr) - pad), y0 = Math.max(0, Math.floor(r.y * dpr) - pad);
+    const x1 = Math.ceil((r.x + r.w) * dpr) + pad, y1 = Math.ceil((r.y + r.h) * dpr) + pad;
+    if (x1 > x0 && y1 > y0) out.push({ x: x0, y: y0, w: x1 - x0, h: y1 - y0 });
+  }
+  return out;
+}
+
 function drawSelection(ctx: CanvasRenderingContext2D, _look: LookId, S: MapStyle, x: number, y: number, hexPx: number, pulse: number) {
   const r = selectionRadius(hexPx);
   ctx.save();
@@ -1525,9 +1554,9 @@ function drawRoute(
   look: LookId,
   P: (h: Hex) => { x: number; y: number },
   unit: UnitView,
-) {
+): Rect | null {
   const path = inp.path!;
-  if (!path.length) return;
+  if (!path.length) return null;
   const color = inp.pathAttack ? S.ink.attack : S.ink.route;
   const pts = [P(unit.pos), ...path.map((st) => P(st.hex))];
   const last = pts[pts.length - 1];
@@ -1560,7 +1589,7 @@ function drawRoute(
   ctx.lineWidth = 2;
   if (S.ink.routeDash) {
     ctx.setLineDash(S.ink.routeDash);
-    ctx.lineDashOffset = -inp.time / 60;
+    ctx.lineDashOffset = -(inp.pulseTime ?? inp.time) / 60;
   }
   ctx.stroke();
   ctx.setLineDash([]);
@@ -1592,4 +1621,10 @@ function drawRoute(
     ctx.textBaseline = 'alphabetic';
   }
   ctx.restore();
+  if (!S.ink.routeDash) return null;
+  // Everything the route draws: the line and its shadow, and the turn roundels (radius 11).
+  const pad = 14;
+  const xs = pts.map((p) => p.x), ys = pts.map((p) => p.y);
+  const x0 = Math.min(...xs) - pad, y0 = Math.min(...ys) - pad;
+  return { x: x0, y: y0, w: Math.max(...xs) + pad - x0, h: Math.max(...ys) + pad - y0 };
 }

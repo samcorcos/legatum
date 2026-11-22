@@ -516,7 +516,9 @@ fn three_way_neutral_claimant_is_undamaged_and_blocks_occupation() {
 }
 
 #[test]
-fn peaceful_claimants_bounce_across_classes_and_neutral_occupants_block() {
+fn peaceful_claimants_never_fight_the_stronger_enters_and_neutral_occupants_block() {
+    // Units of teams at Peace claiming one tile: the stronger moves in, the other stays put,
+    // and nobody fights or captures (Sam, 2026-11-22). Equal strength is drawn by seed.
     for civilian in [false, true] {
         let mut s = game(&[0, 1]);
         let a = spawn_unit(&mut s, PlayerId(0), UnitKind::Soldier, h(4, 4));
@@ -549,8 +551,15 @@ fn peaceful_claimants_bounce_across_classes_and_neutral_occupants_block() {
                 ),
             ],
         );
-        assert_eq!(next.units[&a].pos, s.units[&a].pos);
-        assert_eq!(next.units[&b].pos, s.units[&b].pos);
+        let entered: Vec<_> = [a, b]
+            .into_iter()
+            .filter(|u| next.units[u].pos == h(5, 4))
+            .collect();
+        assert_eq!(entered.len(), 1, "exactly one enters");
+        if civilian {
+            assert_eq!(entered, [a], "the Spearman is stronger than the Settler");
+            assert_eq!(next.units[&b].owner, PlayerId(1), "never captured");
+        }
         assert!(
             !events
                 .iter()

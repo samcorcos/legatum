@@ -98,6 +98,18 @@ export function drawSiegeRing(ctx: CanvasRenderingContext2D, rect: SiegeRect, le
   ctx.restore();
 }
 
+/** The most a breathing banner ring covers (CSS px): its widest pad plus half its halo stroke. */
+export function siegeRingBox(rect: SiegeRect): SiegeRect {
+  const pad = 8 + 3.5;
+  return { x: rect.x - pad, y: rect.y - pad, w: rect.w + 2 * pad, h: rect.h + 2 * pad };
+}
+
+/** The most a breathing seal ring covers (CSS px). */
+export function siegeSealRingBox(cx: number, cy: number, r: number): SiegeRect {
+  const rr = r + 8 + 3.5;
+  return { x: cx - rr, y: cy - rr, w: 2 * rr, h: 2 * rr };
+}
+
 /** The same ring, round, for a city zoomed out to its seal. */
 export function drawSiegeSealRing(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number, level: SiegeLevel, time: number, reduced: boolean) {
   const k = breath(time, level, reduced);

@@ -185,13 +185,14 @@ describe.skipIf(!available)('movement WASM behavior', () => {
     const { reports } = play(s, [{ 0: [{ type: 'MoveUnitPath', unit: u.id, to: neighbors(middle)[3], path: [middle, neighbors(middle)[3]] }] }]);
     expect(reports[0]).toContainEqual(expect.objectContaining({ type: 'OrderFailed', player: 0 }));
   });
-  it('neutral arrivals of different unit classes bounce instead of stacking', () => {
+  it('neutral arrivals never stack or fight: the stronger side moves in (rules 51)', () => {
     const s = fixture(); for (const r of s.diplomacy!.relations) r.state = 'Peace';
     const a = mover(s, 0, 'Soldier', neighbors(middle)[0], middle);
     const b = mover(s, 1, 'Settler', neighbors(middle)[3], middle);
     const { core, reports } = play(s);
-    expect(reports[0]).toContainEqual(expect.objectContaining({ type: 'Bounce', tile: middle, units: [a.id, b.id] }));
-    expect(core.view(0).units.find((u) => u.id === a.id)!.pos).toEqual(a.pos);
+    expect(reports[0].some((e) => e.type === 'Bounce' || e.type === 'Battle' || e.type === 'SettlerCaptured')).toBe(false);
+    expect(core.view(0).units.find((u) => u.id === a.id)!.pos).toEqual(middle);
+    expect(core.view(1).units.find((u) => u.id === b.id)!.pos).toEqual(b.pos);
   });
   it.each(['enemy', 'city', 'civilian', 'friend', 'settler'] as const)('repaths confirmed routes around %s through save/load', (blocker) => {
     const s = fixture(); const u = mover(s, 0, blocker === 'settler' ? 'Settler' : 'Soldier', fromOffset(3, 4), fromOffset(7, 4));

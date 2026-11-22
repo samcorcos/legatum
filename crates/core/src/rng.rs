@@ -19,8 +19,10 @@ pub mod purpose {
     pub const TILE_CONTEST: u64 = 10;
     pub const ERA_FIRST: u64 = 11;
     pub const WONDER_RACE: u64 = 12;
+    /// Units of teams not at war, equally strong, stepping onto one tile (Sam, 2026-11-22).
+    pub const UNIT_CONTEST: u64 = 13;
     /// Which AI teams start allied (`GameSetup::ai_alliance_pairs`).
-    pub const AI_ALLIANCES: u64 = 13;
+    pub const AI_ALLIANCES: u64 = 14;
 }
 
 /// `items` in a seeded random order, the same for the same `(seed, parts)` whatever order they

@@ -1,0 +1,594 @@
+{
+ "generated": "2026-11-22T17:05:05.267Z",
+ "ink": "#2b2419",
+ "owner": "#4a74a8",
+ "sets": {
+  "resources": {
+   "kind": "colour",
+   "crop": "inner",
+   "focus": null,
+   "sizes": [
+    14,
+    24,
+    32
+   ],
+   "ids": [
+    "cattle",
+    "coal",
+    "copper",
+    "iron",
+    "niter",
+    "oil",
+    "silicon",
+    "stone",
+    "wheat"
+   ]
+  },
+  "units-miniature": {
+   "kind": "colour",
+   "crop": "full",
+   "focus": null,
+   "sizes": [
+    45
+   ],
+   "ids": [
+    "archer",
+    "arquebusier",
+    "artillery",
+    "autonomous-armour",
+    "barbarian-archer",
+    "barbarian-crossbowman",
+    "barbarian-musketman",
+    "barbarian-pikeman",
+    "barbarian-scout",
+    "barbarian-spearman",
+    "biplane",
+    "bomber",
+    "byzantine-heir",
+    "cataphract",
+    "cavalry",
+    "composite-archer",
+    "crossbowman",
+    "cuirassier",
+    "drone-swarm",
+    "eagle-warrior",
+    "field-cannon",
+    "fighter",
+    "gaesatae",
+    "horseman",
+    "howitzer",
+    "hunter-killer",
+    "infantry",
+    "jet-bomber",
+    "jet-fighter",
+    "keshig",
+    "knight",
+    "landship",
+    "legionary",
+    "main-battle-tank",
+    "mechanised-infantry",
+    "medjay",
+    "musketman",
+    "panzer",
+    "peltast",
+    "phalangite",
+    "pikeman",
+    "reislaufer",
+    "rifleman",
+    "rocket-artillery",
+    "scout",
+    "settler",
+    "spartan-hoplite",
+    "spearman",
+    "stealth-bomber",
+    "stealth-fighter",
+    "tagmatic-soldier",
+    "tank",
+    "trench-infantry",
+    "war-elephant"
+   ]
+  },
+  "units-roundel": {
+   "kind": "colour",
+   "crop": "full",
+   "focus": "ink",
+   "sizes": [
+    16,
+    24
+   ],
+   "ids": [
+    "archer+arquebusier+composite-archer+crossbowman",
+    "artillery+field-cannon",
+    "autonomous-armour+tank",
+    "biplane",
+    "bomber",
+    "byzantine-heir",
+    "cataphract",
+    "cavalry",
+    "cuirassier",
+    "drone-swarm",
+    "eagle-warrior",
+    "fighter",
+    "gaesatae",
+    "horseman",
+    "howitzer",
+    "hunter-killer",
+    "infantry+musketman+pikeman+rifleman+spartan-hoplite+spearman+tagmatic-soldier",
+    "jet-bomber",
+    "jet-fighter",
+    "keshig",
+    "knight",
+    "landship",
+    "legionary",
+    "main-battle-tank",
+    "mechanised-infantry",
+    "medjay",
+    "panzer",
+    "peltast",
+    "phalangite",
+    "reislaufer",
+    "rocket-artillery",
+    "scout+settler",
+    "stealth-bomber",
+    "stealth-fighter",
+    "trench-infantry",
+    "war-elephant"
+   ]
+  },
+  "unit-icons": {
+   "kind": "mono",
+   "crop": "full",
+   "focus": null,
+   "sizes": [
+    16,
+    24
+   ],
+   "ids": [
+    "unit-arquebusier",
+    "unit-artillery",
+    "unit-assaulttrooper",
+    "unit-autonomousarmour",
+    "unit-biplane",
+    "unit-bomber",
+    "unit-cataphract",
+    "unit-cavalry",
+    "unit-compositearcher",
+    "unit-cuirassier",
+    "unit-drone",
+    "unit-eaglewarrior",
+    "unit-fieldcannon",
+    "unit-fighter",
+    "unit-gaesatae",
+    "unit-heir",
+    "unit-horseman",
+    "unit-howitzer",
+    "unit-hunterkiller",
+    "unit-infantry",
+    "unit-jetbomber",
+    "unit-jetfighter",
+    "unit-keshig",
+    "unit-knight",
+    "unit-landship",
+    "unit-legionary",
+    "unit-mainbattletank",
+    "unit-marksman",
+    "unit-mechanisedinfantry",
+    "unit-medjay",
+    "unit-oathbearer",
+    "unit-panzer",
+    "unit-peltast",
+    "unit-phalangite",
+    "unit-ranger",
+    "unit-reislaufer",
+    "unit-rifleman",
+    "unit-rocketartillery",
+    "unit-scout",
+    "unit-settler",
+    "unit-soldier",
+    "unit-stealthbomber",
+    "unit-stealthfighter",
+    "unit-tagmatic",
+    "unit-tank",
+    "unit-trenchinfantry",
+    "unit-trooper",
+    "unit-warelephant"
+   ]
+  },
+  "building-icons": {
+   "kind": "mono",
+   "crop": "full",
+   "focus": null,
+   "sizes": [
+    16,
+    24
+   ],
+   "ids": [
+    "building-airdefence",
+    "building-autoworks",
+    "building-broodhall",
+    "building-castle",
+    "building-castrum",
+    "building-clearinghouse",
+    "building-college",
+    "building-courierhall",
+    "building-customsbastion",
+    "building-eiffeltower",
+    "building-foundry",
+    "building-granary",
+    "building-hagiasophia",
+    "building-hydroponics",
+    "building-imperialdiwan",
+    "building-inferencecore",
+    "building-iterreactor",
+    "building-laboratory",
+    "building-listeninghouse",
+    "building-machineshop",
+    "building-market-india",
+    "building-market",
+    "building-planetaryfoundry",
+    "building-pyramids",
+    "building-relay-uplink",
+    "building-roadworks",
+    "building-royalgranary",
+    "building-starfort",
+    "building-stockexchange",
+    "building-supermarket",
+    "building-walls",
+    "building-warshrine",
+    "building-workshop",
+    "building-worldexchange"
+   ]
+  },
+  "improvement-icons": {
+   "kind": "mono",
+   "crop": "full",
+   "focus": null,
+   "sizes": [
+    16,
+    24
+   ],
+   "ids": [
+    "effect-insight",
+    "improvement-farm",
+    "improvement-mine",
+    "improvement-oilwell",
+    "improvement-pasture",
+    "improvement-quarry",
+    "improvement-quartzmine",
+    "improvement-saltpeterworks"
+   ]
+  },
+  "yield-icons": {
+   "kind": "mono",
+   "crop": "full",
+   "focus": null,
+   "sizes": [
+    16,
+    20
+   ],
+   "ids": [
+    "vp",
+    "yield-food",
+    "yield-gold",
+    "yield-production",
+    "yield-science"
+   ]
+  },
+  "ui-marks": {
+   "kind": "mono",
+   "crop": "full",
+   "focus": null,
+   "sizes": [
+    16,
+    24
+   ],
+   "ids": [
+    "capital",
+    "city",
+    "fortify",
+    "mark-autofire",
+    "mark-found",
+    "mark-heal",
+    "mark-invalid",
+    "mark-lock",
+    "mark-move",
+    "mark-skip",
+    "mark-sleep",
+    "ruin",
+    "ui-alert",
+    "ui-camp",
+    "ui-check",
+    "ui-chevron-down",
+    "ui-chevron-up",
+    "ui-cross",
+    "ui-random",
+    "ui-sakoku",
+    "ui-siege",
+    "ui-trend-down",
+    "ui-trend-up"
+   ]
+  },
+  "title-milestone-icons": {
+   "kind": "mono",
+   "crop": "full",
+   "focus": null,
+   "sizes": [
+    24,
+    32
+   ],
+   "ids": [
+    "milestone-relay-uplink",
+    "milestone-six-techs",
+    "milestone-twenty-population",
+    "title-most-advanced",
+    "title-most-populous",
+    "title-strongest-army"
+   ]
+  },
+  "faction-glyphs": {
+   "kind": "mono",
+   "crop": "full",
+   "focus": null,
+   "sizes": [
+    16,
+    24
+   ],
+   "ids": [
+    "glyph-athens",
+    "glyph-aztecs",
+    "glyph-byzantium",
+    "glyph-celts",
+    "glyph-egypt",
+    "glyph-germany",
+    "glyph-india",
+    "glyph-mongols",
+    "glyph-rome",
+    "glyph-sparta",
+    "glyph-switzerland"
+   ]
+  },
+  "faction-seals": {
+   "kind": "mono",
+   "crop": "full",
+   "focus": null,
+   "sizes": [
+    40,
+    56
+   ],
+   "ids": [
+    "seal-athens",
+    "seal-aztecs",
+    "seal-byzantium",
+    "seal-celts",
+    "seal-egypt",
+    "seal-germany",
+    "seal-india",
+    "seal-mongols",
+    "seal-rome",
+    "seal-sparta",
+    "seal-switzerland"
+   ]
+  },
+  "reward-emblems": {
+   "kind": "mono",
+   "crop": "full",
+   "focus": null,
+   "sizes": [
+    24
+   ],
+   "ids": [
+    "emblem-camp",
+    "emblem-captured",
+    "emblem-founded",
+    "emblem-greatwork",
+    "emblem-growth",
+    "emblem-hall",
+    "emblem-milestone",
+    "emblem-ruin",
+    "emblem-tech"
+   ]
+  },
+  "city-art": {
+   "kind": "colour",
+   "crop": "full",
+   "focus": null,
+   "sizes": [
+    48
+   ],
+   "ids": [
+    "ancient-city",
+    "ancient-hamlet",
+    "ancient-metropolis",
+    "ancient-town",
+    "classical-city",
+    "classical-hamlet",
+    "classical-metropolis",
+    "classical-town",
+    "contemporary-city",
+    "contemporary-hamlet",
+    "contemporary-metropolis",
+    "contemporary-town",
+    "future-city",
+    "future-hamlet",
+    "future-metropolis",
+    "future-town",
+    "industrial-city",
+    "industrial-hamlet",
+    "industrial-metropolis",
+    "industrial-town",
+    "machine-city",
+    "machine-hamlet",
+    "machine-metropolis",
+    "machine-town",
+    "medieval-city",
+    "medieval-hamlet",
+    "medieval-metropolis",
+    "medieval-town",
+    "modern-city",
+    "modern-hamlet",
+    "modern-metropolis",
+    "modern-town",
+    "renaissance-city",
+    "renaissance-hamlet",
+    "renaissance-metropolis",
+    "renaissance-town"
+   ]
+  },
+  "city-marks": {
+   "kind": "colour",
+   "crop": "full",
+   "focus": null,
+   "sizes": [
+    24
+   ],
+   "ids": [
+    "city-mark",
+    "hamlet-mark",
+    "metropolis-mark",
+    "town-mark"
+   ]
+  },
+  "map-features": {
+   "kind": "colour",
+   "crop": "full",
+   "focus": null,
+   "sizes": [
+    32
+   ],
+   "ids": [
+    "b-camp",
+    "b-ruin",
+    "mark-camp",
+    "mark-ruin"
+   ]
+  },
+  "natural-wonders": {
+   "kind": "colour",
+   "crop": "full",
+   "focus": null,
+   "sizes": [
+    32,
+    48
+   ],
+   "ids": [
+    "giants-causeway",
+    "grand-canyon",
+    "great-barrier-reef",
+    "ha-long-bay",
+    "iguazu-falls",
+    "mount-fuji",
+    "uluru",
+    "victoria-falls"
+   ]
+  },
+  "portraits-people": {
+   "kind": "colour",
+   "crop": "full",
+   "focus": null,
+   "sizes": [
+    48
+   ],
+   "ids": [
+    "people-athens",
+    "people-aztecs",
+    "people-byzantium",
+    "people-celts",
+    "people-egypt",
+    "people-germany",
+    "people-india",
+    "people-mongols",
+    "people-rome",
+    "people-sparta",
+    "people-switzerland"
+   ]
+  },
+  "era-art": {
+   "kind": "colour",
+   "crop": "full",
+   "focus": null,
+   "sizes": [
+    64
+   ],
+   "ids": [
+    "ancient",
+    "classical",
+    "contemporary",
+    "future",
+    "industrial",
+    "machine",
+    "medieval",
+    "modern",
+    "renaissance"
+   ]
+  },
+  "unlock-art": {
+   "kind": "colour",
+   "crop": "full",
+   "focus": null,
+   "sizes": [
+    64
+   ],
+   "ids": [
+    "building-airdefence",
+    "building-autoworks",
+    "building-broodhall",
+    "building-castle",
+    "building-clearinghouse",
+    "building-college",
+    "building-courierhall",
+    "building-eiffeltower",
+    "building-engine",
+    "building-granary",
+    "building-granary-egypt",
+    "building-hagiasophia",
+    "building-hydroponics",
+    "building-imperialdiwan",
+    "building-inferencecore",
+    "building-iterreactor",
+    "building-laboratory",
+    "building-laboratory-athens",
+    "building-machineshop",
+    "building-machineshop-germany",
+    "building-market",
+    "building-market-india",
+    "building-planetaryfoundry",
+    "building-pyramids",
+    "building-relayuplink",
+    "building-roadworks",
+    "building-starfort",
+    "building-stockexchange",
+    "building-supermarket",
+    "building-walls",
+    "building-walls-rome",
+    "building-walls-switzerland",
+    "building-warshrine",
+    "building-workshop",
+    "building-worldexchange",
+    "effect-codeoflaws-buy",
+    "effect-codeoflaws-claim",
+    "effect-fusionpower",
+    "effect-irrigation",
+    "effect-machinery",
+    "effect-mathematics",
+    "effect-metallurgy",
+    "effect-militaryengineering",
+    "effect-printingpress",
+    "effect-quantumcomputing",
+    "effect-railways",
+    "effect-recursiveai",
+    "effect-recursiveai-map",
+    "improvement-deep-mine",
+    "improvement-deep-quarry",
+    "improvement-farm",
+    "improvement-irrigated-farm",
+    "improvement-mine",
+    "improvement-oil-well",
+    "improvement-pasture",
+    "improvement-quarry",
+    "improvement-quartz-mine",
+    "improvement-ranch",
+    "improvement-saltpetre-works"
+   ]
+  }
+ }
+}

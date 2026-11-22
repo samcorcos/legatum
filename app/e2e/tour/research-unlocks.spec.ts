@@ -9,6 +9,7 @@ import { researchFixture } from '../../src/test/researchFixture';
 import { eraTechs } from '../../src/data';
 import { momentsForTurn } from '../../src/celebrate/moments';
 import { contextFromViews, formatEvents } from '../../src/format';
+import { withWorldAges } from '../../src/test/vpV2Fixture';
 import { SIZES, loadFixture, shot, type GameWindow } from './helpers';
 
 // Each test starts from its own save, so tests can run on separate workers.
@@ -115,6 +116,26 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
       await expect(normalHover).toContainText('Buildings');
       await shot(p, size, '65-science-hover-faction');
     } finally { await context.close(); }
+  });
+
+  test('the World Age box on the research screen: before any Age, and with Ages open', async ({ page }) => {
+    test.setTimeout(120_000);
+    await loadFixture(page, coreFixture(researchFixture('India')), 2);
+    await page.locator('.topbar .research-chip').click();
+    const box = page.locator('dialog.tech-modal').getByTestId('research-objectives');
+    await box.scrollIntoViewIfNeeded();
+    await expect(box).toHaveClass(/\bno-obj\b/);
+    await expect(box).toContainText('No Age has begun');
+    await page.mouse.move(5, size.height / 2);
+    await shot(page, size, '90a-research-world-age-none');
+    await page.evaluate((view) => {
+      const store = (window as unknown as GameWindow).legatum, s = store.getState();
+      store.setState({ views: s.views!.map((x, i) => (i === s.seat ? view : x)) });
+    }, await page.evaluate(() => { const s = (window as unknown as GameWindow).legatum.getState(); return structuredClone(s.views![s.seat]); }).then(withWorldAges));
+    await expect(box).not.toHaveClass(/\bno-obj\b/);
+    await box.scrollIntoViewIfNeeded();
+    await page.mouse.move(5, size.height / 2);
+    await shot(page, size, '90b-research-world-age-open');
   });
 
   test('eras: the research screen with a forecast, the era-up card and a rival\'s era notice', async ({ page }) => {

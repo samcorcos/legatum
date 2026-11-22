@@ -211,8 +211,10 @@ function decides what an attack on a hostile city's tile damages:
   that fought the garrison). The two attacking sides never fight each other over the city tile
   (the old meeting engagement at an empty 0-HP city between two of its enemies is gone; a unit
   on the owner's side still meets an attacker there as before). An exact tie in force between
-  the strongest sides bounces everyone: "<other> brought equal force (N each), so nobody took the
-  city". The assault forecast does not show rival force yet. Tests:
+  the strongest sides is drawn by seed, turn and tile (rules 51, Sam 2026-11-22: "in that case,
+  random"; it used to bounce everyone; `rng::purpose::UNIT_CONTEST`, as for peaceful contests on
+  open ground, movement.md): the losers read "<winner> brought equal force (N each) and won the
+  draw for the city". The assault forecast does not show rival force yet. Tests:
   `rules/rival_assault_tests.rs`.
 - **Garrison moving out the same turn:** during the ranged phase it is still shielded. In a
   movement round where it steps out while an attacker steps in, a city with HP takes the hit and

@@ -12,6 +12,7 @@ import {
   formatEvents,
   MOVE_STOPPED_PREFIX,
   PEACE_BLOCK_PREFIX,
+  OUTMATCHED_PREFIX,
   TARGET_GONE,
   groupLines,
   movementPaths,
@@ -280,6 +281,14 @@ describe('event formatting', () => {
     const l = formatEvent({ type: 'MoveBlocked', unit: 7, owner: 0, at: { q: 1, r: 1 }, toward: { q: 2, r: 1 },
       reason: `${PEACE_BLOCK_PREFIX}Saint Veyra's Scout` }, ctx);
     expect(l).toMatchObject({ category: 'orders', weight: 2, text: "Your Spearman couldn't enter this tile: Saint Veyra's Scout is there and you're at Peace" });
+  });
+
+  it('a unit outmatched for a tile by a stronger unit at Peace says who moved in and both strengths', () => {
+    const l = formatEvent({ type: 'MoveBlocked', unit: 7, owner: 0, at: { q: 1, r: 1 }, toward: { q: 2, r: 1 },
+      reason: `${OUTMATCHED_PREFIX}Saint Veyra's Hoplite is stronger (28 against 20) and moved in` }, ctx);
+    expect(l).toMatchObject({ category: 'orders', weight: 2, tone: 'neutral',
+      text: "Your Spearman couldn't enter this tile: Saint Veyra's Hoplite is stronger (28 against 20) and moved in" });
+    expect(l.details[0]).toContain('keeps its order');
   });
 
   it('G2: attack pursuit outcomes say plainly what happened', () => {
