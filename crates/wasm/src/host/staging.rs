@@ -333,7 +333,8 @@ impl Room {
             });
         };
         let occupant = self.occupants[slot].as_ref();
-        let owns = occupant.is_some_and(|o| crate::credentials::matches(Some(&o.token), token));
+        let owns =
+            occupant.is_some_and(|o| crate::host::credentials::matches(Some(&o.token), token));
         if occupant.is_some() && !owns && !local {
             return Err(RoomError {
                 code: if occupant.is_some_and(|o| o.connection.is_some()) {
@@ -359,7 +360,7 @@ impl Room {
         let token = if owns {
             occupant.expect("credential owner").token.clone()
         } else {
-            crate::credentials::token().map_err(|_| RoomError {
+            crate::host::credentials::token().map_err(|_| RoomError {
                 code: "credential_failed",
                 message: "Cannot create seat credential.",
             })?

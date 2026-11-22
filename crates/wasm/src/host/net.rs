@@ -1,0 +1,339 @@
+//! The host's connections as the transport sees them: open one, hand it each text message,
+//! close it, tick the clock, and drain what to write. The browser host (`app/src/browserHost.ts`)
+//! drives this over the relay tunnel and the host's own in-tab connection; the tests drive it
+//! directly. Times are milliseconds on any monotonic clock the caller chooses.
+use super::{ConnectionId, Host, Status, Summary, outbox, protocol::ClientMessage, staging};
+use crate::history::CHECKPOINT_TURNS;
+use serde::Serialize;
+use std::collections::BTreeMap;
+
+/// An unseated connection must take a staging seat or join the game within this time.
+/// Pings and repeated watches never extend it.
+pub const PRE_JOIN_TIMEOUT_MS: f64 = 30_000.0;
+/// A guest that sends nothing for this long is closed. Clients ping every 20 s; the margin
+/// covers background tabs, whose timers browsers slow to about once a minute.
+pub const SILENCE_TIMEOUT_MS: f64 = 120_000.0;
+/// Guests at once (the relay's own cap per room is the same).
+pub const MAX_GUESTS: usize = 8;
+/// Largest guest message, as on the relay.
+pub const MAX_GUEST_MESSAGE: usize = 64 * 1024;
+
+struct Link {
+    receiver: outbox::Receiver,
+    /// The host's own UI in this tab; everyone else is a guest through the relay.
+    local: bool,
+    last_seen: f64,
+    joined: bool,
+    join_deadline: f64,
+}
+
+/// What to write to one connection.
+#[derive(Debug, PartialEq, Eq, Serialize)]
+pub struct Outgoing {
+    pub conn: ConnectionId,
+    pub texts: Vec<String>,
+    /// The host is done with this connection: write `texts`, then close it. It is already
+    /// forgotten here; do not call [`NetHost::disconnect`] for it.
+    pub close: bool,
+}
+
+/// Why the room could not start, with the protocol's error code when there is one.
+#[derive(Debug, Serialize)]
+pub struct StartError {
+    pub code: Option<&'static str>,
+    pub message: String,
+}
+
+pub struct NetHost {
+    host: Host,
+    links: BTreeMap<ConnectionId, Link>,
+    /// Connections ended by `tick`, reported by the next `drain`.
+    closed: Vec<ConnectionId>,
+}
+
+impl NetHost {
+    /// A host with no game, or one resuming the browser's saved copy of an online game.
+    pub fn new(save: Option<&str>) -> Result<Self, String> {
+        Self::with_checkpoints(save, CHECKPOINT_TURNS)
+    }
+
+    /// As [`NetHost::new`], handing over the game's history every `checkpoint_turns` turns.
+    pub fn with_checkpoints(save: Option<&str>, checkpoint_turns: u32) -> Result<Self, String> {
+        Ok(Self {
+            host: guarded(|| Host::new(save, checkpoint_turns))?,
+            links: BTreeMap::new(),
+            closed: Vec::new(),
+        })
+    }
+
+    /// Admits a connection. Guests are limited to [`MAX_GUESTS`], all connections to 32.
+    pub fn connect(&mut self, local: bool, now: f64) -> Result<ConnectionId, String> {
+        if !local && self.links.values().filter(|l| !l.local).count() >= MAX_GUESTS {
+            return Err("The game is full".into());
+        }
+        let (sender, receiver) = outbox::channel();
+        let id = guarded(|| self.host.connect(sender, local))?;
+        self.links.insert(
+            id,
+            Link {
+                receiver,
+                local,
+                last_seen: now,
+                joined: false,
+                join_deadline: now + PRE_JOIN_TIMEOUT_MS,
+            },
+        );
+        Ok(id)
+    }
+
+    /// One text message from a connection. A bad message is answered with an `error`.
+    pub fn receive(&mut self, conn: ConnectionId, text: &str, now: f64) {
+        let Some(link) = self.links.get_mut(&conn) else {
+            return;
+        };
+        link.last_seen = now;
+        let result = if text.len() > MAX_GUEST_MESSAGE {
+            Err("Message too large".to_owned())
+        } else {
+            match serde_json::from_str::<ClientMessage>(text) {
+                Ok(message) => guarded(|| self.host.message(conn, message)),
+                Err(error) => Err(format!("Invalid message: {error}")),
+            }
+        };
+        if let Err(message) = result {
+            self.host.send(
+                conn,
+                &super::protocol::ServerMessage::Error {
+                    code: None,
+                    message,
+                },
+            );
+        }
+    }
+
+    /// The transport lost the connection.
+    pub fn disconnect(&mut self, conn: ConnectionId) {
+        if self.links.remove(&conn).is_some() {
+            let _ = guarded(|| {
+                self.host.disconnect(conn);
+                Ok(())
+            });
+        }
+    }
+
+    /// Ends connections past their join deadline or silent for too long.
+    pub fn tick(&mut self, now: f64) {
+        self.track_admission(now);
+        let expired: Vec<_> = self
+            .links
+            .iter()
+            .filter(|(_, l)| {
+                (!l.joined && now >= l.join_deadline)
+                    || (!l.local && now - l.last_seen >= SILENCE_TIMEOUT_MS)
+            })
+            .map(|(&id, _)| id)
+            .collect();
+        for id in expired {
+            self.disconnect(id);
+            // The transport learns of it from `drain`: an empty, closing delivery.
+            self.closed.push(id);
+        }
+    }
+
+    /// Everything to write now, connection by connection. Closing a connection can change
+    /// what others see (seats, the room), so this repeats until nothing is left.
+    pub fn drain(&mut self, now: f64) -> Vec<Outgoing> {
+        let mut out: Vec<Outgoing> = std::mem::take(&mut self.closed)
+            .into_iter()
+            .map(|conn| Outgoing {
+                conn,
+                texts: Vec::new(),
+                close: true,
+            })
+            .collect();
+        loop {
+            self.track_admission(now);
+            let mut closed = Vec::new();
+            for (&conn, link) in &self.links {
+                let drained = link.receiver.drain();
+                if drained.closed {
+                    closed.push(conn);
+                }
+                if drained.closed || !drained.texts.is_empty() {
+                    match out.iter_mut().find(|o| o.conn == conn) {
+                        Some(o) => {
+                            o.texts.extend(drained.texts);
+                            o.close |= drained.closed;
+                        }
+                        None => out.push(Outgoing {
+                            conn,
+                            texts: drained.texts,
+                            close: drained.closed,
+                        }),
+                    }
+                }
+            }
+            if closed.is_empty() {
+                return out;
+            }
+            for conn in closed {
+                self.disconnect(conn);
+            }
+        }
+    }
+
+    /// A seat gained restarts nothing; a seat lost starts a fresh join deadline.
+    fn track_admission(&mut self, now: f64) {
+        for link in self.links.values_mut() {
+            if let Some(joined) = link.receiver.admitted() {
+                if link.joined && !joined {
+                    link.join_deadline = now + PRE_JOIN_TIMEOUT_MS;
+                }
+                link.joined = joined;
+            }
+        }
+    }
+
+    pub fn status(&self, is_local: bool) -> Status {
+        self.host.status(is_local)
+    }
+
+    pub fn summary(&self) -> Summary {
+        self.host.summary()
+    }
+
+    /// Starts a game from a setup (humans first). Everyone connected must rejoin.
+    pub fn new_game(&mut self, setup_json: &str) -> Result<(), String> {
+        guarded(|| self.host.new_game(crate::json::parse_setup(setup_json)?))
+    }
+
+    /// Loads an opaque save string as the online game.
+    pub fn load_game(&mut self, save: &str) -> Result<(), String> {
+        guarded(|| self.host.load_game(save))
+    }
+
+    /// Opens the staging room, or changes its settings.
+    pub fn configure_staging(&mut self, config_json: &str) -> Result<(), String> {
+        guarded(|| {
+            let config: staging::StagingConfig =
+                serde_json::from_str(config_json).map_err(|e| format!("Invalid room: {e}"))?;
+            self.host.configure_staging(config)
+        })
+    }
+
+    pub fn close_staging(&mut self) {
+        let _ = guarded(|| {
+            self.host.close_staging();
+            Ok(())
+        });
+    }
+
+    /// Starts the room's game; `not_ready` or `no_room` when it cannot start yet.
+    pub fn start_staging(&mut self) -> Result<(), StartError> {
+        if let Err(e) = self.host.staging_can_start() {
+            return Err(StartError {
+                code: Some(e.code),
+                message: e.message.into(),
+            });
+        }
+        guarded(|| self.host.start_staging()).map_err(|message| StartError {
+            code: None,
+            message,
+        })
+    }
+
+    /// The live game's save, once per change.
+    pub fn take_save(&mut self) -> Option<String> {
+        self.host.take_save()
+    }
+
+    /// Game histories (archive recordings as JSON) to keep, oldest first.
+    pub fn take_recordings(&mut self) -> Vec<String> {
+        self.host.take_recordings()
+    }
+
+    /// The live game's save, for the host's own copy on demand.
+    pub fn save_game(&self) -> Result<String, String> {
+        self.host.save_game()
+    }
+}
+
+fn guarded<T>(f: impl FnOnce() -> Result<T, String>) -> Result<T, String> {
+    crate::guard(f)
+}
+
+/// [`NetHost`] for JavaScript (`app/src/browserHost.ts`): JSON strings in and out, connection
+/// ids as numbers, times from `performance.now()`.
+#[wasm_bindgen::prelude::wasm_bindgen]
+pub struct BrowserHost(NetHost);
+
+#[wasm_bindgen::prelude::wasm_bindgen]
+impl BrowserHost {
+    /// A host with no game, or one resuming a saved online game.
+    #[wasm_bindgen::prelude::wasm_bindgen(constructor)]
+    pub fn new(save: Option<String>) -> Result<BrowserHost, wasm_bindgen::JsError> {
+        crate::js(NetHost::new(save.as_deref()).map(Self))
+    }
+
+    pub fn connect(&mut self, local: bool, now: f64) -> Result<u32, wasm_bindgen::JsError> {
+        crate::js(self.0.connect(local, now).map(|id| id as u32))
+    }
+
+    pub fn receive(&mut self, conn: u32, text: &str, now: f64) {
+        self.0.receive(conn.into(), text, now);
+    }
+
+    pub fn disconnect(&mut self, conn: u32) {
+        self.0.disconnect(conn.into());
+    }
+
+    pub fn tick(&mut self, now: f64) {
+        self.0.tick(now);
+    }
+
+    /// `[{conn, texts, close}]`, see [`Outgoing`].
+    pub fn drain(&mut self, now: f64) -> String {
+        serde_json::to_string(&self.0.drain(now)).expect("outgoing serializes")
+    }
+
+    pub fn status(&self, is_local: bool) -> String {
+        serde_json::to_string(&self.0.status(is_local)).expect("status serializes")
+    }
+
+    pub fn summary(&self) -> String {
+        serde_json::to_string(&self.0.summary()).expect("summary serializes")
+    }
+
+    pub fn new_game(&mut self, setup_json: &str) -> Result<(), wasm_bindgen::JsError> {
+        crate::js(self.0.new_game(setup_json))
+    }
+
+    pub fn load_game(&mut self, save: &str) -> Result<(), wasm_bindgen::JsError> {
+        crate::js(self.0.load_game(save))
+    }
+
+    pub fn configure_staging(&mut self, config_json: &str) -> Result<(), wasm_bindgen::JsError> {
+        crate::js(self.0.configure_staging(config_json))
+    }
+
+    pub fn close_staging(&mut self) {
+        self.0.close_staging();
+    }
+
+    /// `""` once started, else the [`StartError`] as JSON.
+    pub fn start_staging(&mut self) -> String {
+        match self.0.start_staging() {
+            Ok(()) => String::new(),
+            Err(e) => serde_json::to_string(&e).expect("errors serialize"),
+        }
+    }
+
+    pub fn take_save(&mut self) -> Option<String> {
+        self.0.take_save()
+    }
+
+    /// A JSON array of recording JSON strings.
+    pub fn take_recordings(&mut self) -> String {
+        serde_json::to_string(&self.0.take_recordings()).expect("strings serialize")
+    }
+}
