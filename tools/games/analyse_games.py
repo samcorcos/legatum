@@ -357,8 +357,9 @@ def review(game_dir: Path, log) -> str:
             if p.returncode == 0 and out.exists() and out.stat().st_size > 200:
                 return "Luna (Codex)"
         if engine == "claude" and shutil.which("claude"):
-            p = run(["claude", "-p", "--model", "haiku", "--allowedTools", "Read,Grep,Glob",
-                     "--add-dir", str(game_dir), prompt], log, check=False, cwd=game_dir)
+            # The prompt goes on stdin: a variadic flag before it would swallow it as an argument.
+            p = run(["claude", "-p", "--model", "haiku", "--allowedTools", "Read,Grep,Glob"], log, check=False,
+                    cwd=game_dir, input=prompt)
             if p.returncode == 0 and len(p.stdout) > 200:
                 out.write_text(p.stdout)
                 return "Haiku (Claude Code)"
@@ -386,8 +387,10 @@ def analyse_game(home: Path, base: str, token: str, key: str, entry: dict, kind:
             tape_path = game_dir / "tape.json"
             tape_path.write_text(json.dumps(record["tape"]))
             dump_dir = game_dir / "dump"
-            p = run([str(bins["game_dump"]), str(tape_path), str(dump_dir)], log, check=False)
-            replay_note = (p.stdout.strip().splitlines() or ["ran"])[-1] if p.returncode == 0 else f"game_dump failed ({p.returncode})"
+            # game_dump replays from the tape's setup; a partial recording (initial_state) has no events from it.
+            p = run(["true"], log) if record.get("initial_state") else run([str(bins["game_dump"]), str(tape_path), str(dump_dir)], log, check=False)
+            replay_note = ("partial recording: no event replay" if record.get("initial_state") else
+                           (p.stdout.strip().splitlines() or ["ran"])[-1] if p.returncode == 0 else f"game_dump failed ({p.returncode})")
             if (dump_dir / "events.jsonl").exists():
                 events = [json.loads(line) for line in (dump_dir / "events.jsonl").open()]
                 (dump_dir / "events.jsonl").replace(game_dir / "events.jsonl")
