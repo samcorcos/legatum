@@ -7,7 +7,7 @@ Helper programs around the engine. Everything here is optional for building and 
 | `tools/sim/` | Simulation, combat and pacing runs, and `repin.sh`, which regenerates the pinned determinism tapes and hashes after an intended rule change. |
 | `tools/analysis/` | Balance, strategy-diversity and human-playbook analysis. |
 | `tools/scenarios/` | Extract, cut, compare and show saved game states and scenarios. |
-| `tools/art/` | Unit-art distinctness checks and derivative generation. |
+| `tools/art/` | Unit-art distinctness checks and derivative generation; `fetch-sources.py` fetches the art masters kept outside git (`sources-manifest.json`). |
 | `tools/audio/` | Build the shipped audio from raw downloads: trim, loudness-normalise, encode, write credits. |
 | `scripts/build-wasm.sh` | Build the engine as WASM for the web UI. |
 | `scripts/build-mac-app.sh`, `scripts/build-ios-sim.sh` | Build the macOS app and the iOS Simulator app. |

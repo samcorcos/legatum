@@ -11,10 +11,14 @@ For every slug below:
 - `<slug>-card.png` is the 64 px build-card thumbnail, cropped to the figure's upper body so a tall figure fills the 30 px card slot (`tools/art/unit-derivatives.py --card`; `--panel` rebuilds the panel portrait from the source).
 - `<slug>-panel.png` is a 512 px transparent full-figure portrait crop for the unit panel.
 - `<slug>-roundel.svg` is the high-contrast far-zoom mark. Its disc fill and rim use `currentColor` for the owner colour; the class silhouette remains ink coloured. The outer plate is parchment. The silhouette is ink only and clipped inside the rim (scaled 0.86, clip radius 18.3), so no weapon crosses the owner ring.
-- `<slug>-source.png` retains the source raster used to make those files. Spearman, Tank, and Drone Swarm carry over the A exploration raster. Archer and Horseman were regenerated because their study crops contained clipped neighboring fragments. Newly generated sources are retained at full returned size.
+- `<slug>-source.png` retains the source raster used to make those files. It is kept outside git (archived; see "Where the source rasters live" below): `python3 tools/art/fetch-sources.py app/src/assets/units/<slug>-source.png` brings one back. Spearman, Tank, and Drone Swarm carry over the A exploration raster. Archer and Horseman were regenerated because their study crops contained clipped neighboring fragments. Newly generated sources are retained at full returned size.
 - `prompts/<slug>.prompt.txt` records the subject and shared production prompt.
 
 Bases are painted neutral pale stone, with no faction colour baked in. The renderer can apply an owner-colour wash to the base while retaining its painted highlights and stone texture. No separate base layer is required for this convention. The roundel repeats the owner cue with both a coloured disc wash and coloured rim, while its silhouette is independent of colour. Silhouette shapes are deliberately distinct across foot melee, bows, guns, mounted units, siege, aircraft, drones and civilians so class recognition does not depend on colour vision.
+
+## Where the source rasters live
+
+The `*-source.png` files are not in the repository. `tools/art/sources-manifest.json` lists each one (path, byte size, sha256) and `tools/art/fetch-sources.py` downloads them from the archive named by `LEGATUM_ART_SOURCES_URL`, verifying every hash (`--all` fetches every missing file). `unit-derivatives.py --panel` and `air-plan.py drone` fetch a missing source on their own. To add a new unit's master: run `unit-art.py` (it writes the source beside the derivatives), run `python3 tools/art/fetch-sources.py --add app/src/assets/units/<slug>-source.png`, upload the file to the archive at the same path, and commit the manifest, not the file. The app bundles only the derivatives, so a build, the tests and the gates never need a source. The mentions of a `-source` file in the sections below describe how the files were made.
 
 ## Subjects
 
