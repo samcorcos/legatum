@@ -188,12 +188,13 @@ mod tests {
     }
 
     #[test]
-    fn rules_49_saves_round_trip_and_a_version_48_save_is_refused() {
+    fn rules_50_saves_round_trip_and_a_version_49_save_is_refused() {
         // Rules 47: held shots at fallen cities; 48: Egypt's Nile and its Grow project. The save
         // shape only gains the project value, so a city growing on the Nile round-trips at 48,
         // and a 47 save is refused rather than migrated. Rules 49: Egypt starts knowing the Bronze
-        // Working it skips; the save shape is unchanged, and a 48 save is refused.
-        assert_eq!(legatum_core::RULES_VERSION, 49);
+        // Working it skips; the save shape is unchanged, and a 48 save is refused. Rules 50: a
+        // rival capital's VP is held, so `Player::capitals_taken` is gone, and a 49 save is refused.
+        assert_eq!(legatum_core::RULES_VERSION, 50);
         let mut setup = GameSetup::all_ai(3);
         setup.players[0].faction = legatum_core::Faction::Egypt;
         let mut state = legatum_core::new_game(&setup);
@@ -216,7 +217,8 @@ mod tests {
         );
         assert_eq!(state.cities[&city].producing, Some(grow), "{events:?}");
         let save = state_to_json(&state);
-        assert!(save.contains("\"save_version\":49"));
+        assert!(save.contains("\"save_version\":50"));
+        assert!(!save.contains("capitals_taken"));
         assert!(
             state
                 .player(owner)
@@ -226,11 +228,11 @@ mod tests {
         assert!(save.contains("\"Grow\""));
         assert_eq!(parse_state(&save).unwrap(), state);
         let mut old: Value = serde_json::from_str(&save).unwrap();
-        old["save_version"] = Value::from(48);
+        old["save_version"] = Value::from(49);
         assert!(
             parse_state(&old.to_string())
                 .unwrap_err()
-                .contains("incompatible rules version: saved Some(48), current 49")
+                .contains("incompatible rules version: saved Some(49), current 50")
         );
     }
 
