@@ -2,6 +2,13 @@
 
 Newest first. One entry per non-obvious finding: what we learned, the evidence, and what we changed. Correct or delete entries that turn out to be wrong.
 
+## 2026-11-22: Engine robustness review: save references, aircraft upgrade Gold, save/hash allocations (`claude/review-engine-robustness`)
+
+- **Stale city and unit ids are legal in a valid save.** Camp rosters (pruned at the next `plan_turn`), Hall/Diwan/captive records, memories, supply records and air sightings can name a city or unit that has since fallen; every reader uses `.get`. So `validation::check_references` checks those only against `next_city_id`/`next_unit_id`; player ids, teams and tiles must be real (barbarians allowed where they can appear: threat owners, `attack_revealed_to`, chronicle). Requiring existence would refuse real saves.
+- **The review's barbarian capture panic is not reachable:** movement never puts a barbarian into `captures_city` (`movement.rs`, "Barbarians besiege cities but never take them"). `capture_city` now returns early for a barbarian captor anyway.
+- **Aircraft upgrades are paid in the ranged phase, after unit upgrades and city purchases, in aircraft-id order** (not list order). Validation now checks them against the city validator's projected state (`cities::validate_city_orders_projected`) in that same order, applying each.
+- **A random-number save fuzzer found no panics even with the new reference checks switched off** (3,000 cases, 40-turn game): the id fields that panic are mostly absent (`None`) in ordinary saves, so only the targeted mutation test (`validation::tests`) exercises them.
+
 ## 2026-11-22: Egypt's tiles still showed Production: the Nile lives on city totals, not tiles (`claude/project-thread-h0s4wd`)
 
 - **Cause.** Core applies the Nile in `economy::nile` to a city's totals, so every per-tile number (`economy::owner_tile_yields`, the view's `next_claim.yields`, `improvement_preview.gain`) is the plain tile yield. The app's map yield icons, tile card, "Next tile" claim and improvement cards read those and showed Egypt Production it never gets, and Food at half its real value.
