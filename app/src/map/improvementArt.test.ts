@@ -20,5 +20,5 @@ it('ships a painted form for every resource improvement and every visible upgrad
 it('uses paintings at normal zoom and the existing badge tier farther out', () => {
   expect(improvementDetail(22)).toBe('art');
   expect(improvementDetail(21.9)).toBe('badge');
-  expect(improvementSize(45)).toBeLessThan(84); // smaller than the standard city miniature
+  expect(improvementSize(45)).toBeLessThan(92); // smaller than the standard city miniature (CITY_WORLD)
 });

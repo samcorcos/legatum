@@ -89,7 +89,7 @@ const MARGIN = 96;
 /** Padding (device px) around the band/veil scratch so blurs don't fade at chunk seams. */
 const PAD = 72;
 /** World size of a city sprite's 512 px canvas (its ground oval is 93% of it: about a hex and a quarter wide, as Civ cities spill past their tile) and how far below the hex centre the oval's middle sits: low enough that the screen-space banner above the hex does not hide the roofs. */
-export const CITY_WORLD = 84;
+export const CITY_WORLD = 92;
 export const CITY_DROP = 18;
 
 const TERRAIN_IDX: Record<Terrain, number> = {
@@ -400,7 +400,32 @@ export class TerrainCache {
 
   private terrainColor(i: number): string {
     const t = this.tiles[i].terrain!;
-    return jitter(this.style.pal[t], (rnd(i % this.w, Math.floor(i / this.w), 9) - 0.5) * 0.08);
+    // A lone peak or small group stands on the land around it: its hex takes the commonest open
+    // neighbour's ground colour, so no grey hex shows round the painted peak (a hex-shaped sticker).
+    const ground = this.loneRock(i) ? this.footTerrain(i) : t;
+    return jitter(this.style.pal[ground], (rnd(i % this.w, Math.floor(i / this.w), 9) - 0.5) * 0.08);
+  }
+
+  /** A mountain tile of an organic range too small for the range wash (a lone peak or a group of up to SMALL_REGION). */
+  private loneRock(i: number): boolean {
+    const R = this.regions;
+    if (!R || this.tiles[i].terrain !== 'Mountains') return false;
+    const r = R.id[i];
+    return r >= 0 && R.size[r] <= SMALL_REGION;
+  }
+
+  /** The commonest explored land terrain round a tile that is not a painted feature (ties to the first found), else Plains. */
+  private footTerrain(i: number): Terrain {
+    const n = new Map<Terrain, number>();
+    for (let e = 0; e < 6; e++) {
+      const j = neighborIndex(i, e, this.w, this.h);
+      const t = j >= 0 && this.tiles[j].explored ? this.tiles[j].terrain : null;
+      if (!t || isWater(t) || organicKind(t)) continue;
+      n.set(t, (n.get(t) ?? 0) + 1);
+    }
+    let best: Terrain = 'Plains', most = 0;
+    for (const [t, k] of n) if (k > most) { best = t; most = k; }
+    return best;
   }
 
   private softPool = new Map<string, AnyCanvas>();
@@ -942,8 +967,8 @@ export class TerrainCache {
         this.drawOrganic(g, tiles, s);
         this.drawGrid(g, tiles, px);
       }
-      const waiting = traceCityArt(() => this.drawTowns(g, tiles, s));
-      ch.awaits = waiting.size ? waiting : null;
+      // Remembered towns sit under the fog wash with their land; towns in sight are drawn after the territory tint (below).
+      const waiting = traceCityArt(() => this.drawTowns(g, tiles, s, false));
       // 10. Fog: desaturate and wash explored-but-unseen hexes.
       const fog = new Path2D();
       let anyFog = false;
@@ -968,6 +993,10 @@ export class TerrainCache {
       }
       // 11. Current territory above the fog tint; the later hatch still marks unseen land.
       this.drawTerritory(g, tiles, x0, y0, s, px);
+      // Towns in sight above the territory tint: under it a town came out paler than the farms round it (improvements are
+      // drawn later, in screen space), and at a 0.18 seat-colour tint a grown city read as a few grey roofs.
+      for (const k of traceCityArt(() => this.drawTowns(g, tiles, s, true))) waiting.add(k);
+      ch.awaits = waiting.size ? waiting : null;
       // 12. Fog hatch and the edge of current vision.
       if (anyFog) {
         const hatch = this.pattern(g, `hatch:${S.fog.hatch}`, () => hatchTile(S.fog.hatch, Math.round(6 * this.dpr), 1));
@@ -1188,7 +1217,7 @@ export class TerrainCache {
         const x0 = cx + a[0] * HEX_SIZE, y0 = cy + a[1] * HEX_SIZE, x1 = cx + b[0] * HEX_SIZE, y1 = cy + b[1] * HEX_SIZE;
         p.moveTo(x0, y0);
         p.lineTo(x1, y1);
-        if (this.plans && (organicKind(t.terrain) || organicKind(this.tiles[nb].terrain))) { art.moveTo(x0, y0); art.lineTo(x1, y1); }
+        if (this.plans && this.casedEdge(i, nb)) { art.moveTo(x0, y0); art.lineTo(x1, y1); }
       }
     }
     g.lineWidth = px;
@@ -1207,6 +1236,15 @@ export class TerrainCache {
       g.stroke(art);
       g.lineCap = 'butt';
     }
+  }
+
+  /** Whether a shared edge gets the cased grid line: it touches a wood, hills or a range, except where a lone peak or small
+   * group meets open ground (there the peak stands clear of its edge, and a full cased outline cut it out as a hex sticker). */
+  private casedEdge(i: number, j: number): boolean {
+    const a = organicKind(this.tiles[i].terrain), b = organicKind(this.tiles[j].terrain);
+    if (!a && !b) return false;
+    if (a && b) return true;
+    return !this.loneRock(a ? i : j);
   }
 
   private drawGlyphs(g: Ctx2D, tiles: number[], s: number) {
@@ -1455,12 +1493,12 @@ export class TerrainCache {
    * (the same threshold as the seals) the shared far mark replaces the detailed sprite. A sprite that is still
    * decoding is simply skipped: the cache repaints when it arrives, so a town never falls back to a cube.
    */
-  private drawTowns(g: Ctx2D, tiles: number[], s: number) {
+  private drawTowns(g: Ctx2D, tiles: number[], s: number, inSight: boolean) {
     const far = isFar(HEX_SIZE * this.chunkZoom);
     for (const i of tiles) {
       const ci = this.cityAt.get(i);
       const t = this.tiles[i];
-      if (!ci || !t.explored || this.hold.towns.has(i)) continue;
+      if (!ci || !t.explored || this.hold.towns.has(i) || t.visible !== inSight) continue;
       const era = this.hold.era.get(i) ?? this.ownerEra.get(ci.owner) ?? 0;
       const tier = cityTier(this.hold.pop.get(i) ?? ci.population);
       g.save();
