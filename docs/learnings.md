@@ -2,6 +2,12 @@
 
 Newest first. One entry per non-obvious finding: what we learned, the evidence, and what we changed. Correct or delete entries that turn out to be wrong.
 
+## 2026-11-22: Merged-tour fixes: two Returns, a stale engine string, a cut warning (`ui-tour/fix`)
+
+- A moment card owns Return in a capture-phase key handler, so the dock's Return never fired, but the dock still drew a filled primary with its own Return chip: two primaries on screen. The dock now reads `useCelebration()` and `pendingAlarms` and steps back (`SeatBar.tsx` `returnOwned`).
+- A player-visible string in `crates/core` (the barbarian `MoveBlocked` reason) reaches the turn report, so a copy-lint rule that bans it fails `textArtifacts.test.tsx` until the WASM engine is rebuilt (`scripts/build-wasm.sh`): copying `wasm-pkg` from another worktree tests the old string. Scenario briefings in `scenarios/lab/*.json` are in the same corpus.
+- The city panel's red production warning appears at Ready, after the panel already scrolled to the build list, so it sat half under the sticky head; scrolling is now re-checked when the warning's text changes (`revealBelowStickyHead`). The research queue's third empty slot was scrolled out of the 1000x600 band because every slot took `minmax(244px, 1fr)`; empty slots now size to their content.
+
 ## 2026-11-22: A hover tooltip stuck over a scrolled list (`ui-tour/moments`)
 
 - `Tip`'s capture-phase scroll listener stays attached until React re-renders. When the browser sends the pointer's leave and the list's scroll in the same frame, the leave closed the tip and the still-attached listener (seeing a non-hover mode) took its "pinned: follow the trigger" branch and set a position again, so the bubble came back and stuck. Scroll and resize handlers now do nothing once the tip is closed, and the bubble is hidden whenever its mode is null. Reproduced only in a real browser (a wheel over a scrolling list); `Tip.scroll.test.tsx` replays the same-frame order.
