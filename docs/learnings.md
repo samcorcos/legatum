@@ -2,6 +2,10 @@
 
 Newest first. One entry per non-obvious finding: what we learned, the evidence, and what we changed. Correct or delete entries that turn out to be wrong.
 
+## 2026-11-22: The new-era card reopened the research screen after research was picked (`claude/project-thread-fuxj51`)
+
+- **A held card's "Choose research" was frozen when the turn's story was planned.** `eraUpCardFor` and `unlockCardFor` read `research.queue`/`current` from the view after the turn; a research pick is a pending `SetResearchQueue` order, not in the view until the next turn resolves. The held card also waits behind any open dialog (`useDialogOpen` in `MomentLane.tsx`), so a player who opened the research screen quickly, picked, then met the era takeover still saw "Choose research", and Return reopened the screen. `celebrate/researchSettled.ts` now re-checks `effectiveResearchQueue` over the pending orders when the card shows and turns that primary into Continue (or keeps Show for an unlock).
+
 ## 2026-11-22: Engine robustness review: save references, aircraft upgrade Gold, save/hash allocations (`claude/review-engine-robustness`)
 
 - **Save validation may only refuse what would index out of bounds: player ids (into `players`) and tiles (into the map).** Team, city and unit references are stale in ordinary play (a razed Hall city, pruned camp rosters, memories, supply records, relations of a team whose empires are gone) and every reader uses `.get` or a member filter; no code indexes by a team id. A first version also refused stale team references and stale city/unit ids (those named by Hall records, camp rosters, memories and the like) and was wrong: it refused the app's Hall and Broadcast fixtures and an analysis test (`hall.wasm.test.ts`, `actions.wasm.test.ts`, `analysis/tests/rules.rs`). `save_fuzz.rs` now round-trips three full all-Hard games through `parse_state` every 5 turns.
