@@ -41,7 +41,9 @@ for (const file of walk(root)) {
     const dir = relative(root, dirname(file));
     const target = join(root, resolveRef(raw, dir ? dir + '/' : ''));
     checked++;
-    if (!existsSync(target) || statSync(target).isDirectory()) missing.push(`${relative(root, file)} -> ${raw}`);
+    // A folder (the site root "/") is served by its index.html.
+    const served = existsSync(target) && statSync(target).isDirectory() ? join(target, 'index.html') : target;
+    if (!existsSync(served)) missing.push(`${relative(root, file)} -> ${raw}`);
   }
 }
 
