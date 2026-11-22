@@ -137,7 +137,7 @@ div.seat {
   text-transform: none;
 }
 .host-name .host-name-note {
-  font: 400 13px/1.35 var(--sans);
+  font: 400 12px/11px var(--sans);
   letter-spacing: 0;
   text-transform: none;
   color: var(--ink-2);

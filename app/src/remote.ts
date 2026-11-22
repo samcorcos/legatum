@@ -165,9 +165,9 @@ export type SocketFactory = (url: string) => SocketLike;
 const CLOSE_TOO_MANY_FROM_ADDRESS = 1013;
 const CLOSE_TOO_FAST = 4029;
 const TOO_FAST_PAUSE_MS = 30_000;
-export const MSG_TOO_MANY_WINDOWS = 'Too many people on your internet connection have joined this game. Close any extra windows, then join again.';
+export const MSG_TOO_MANY_WINDOWS = 'Too many people on your internet connection have joined this game. Close any extra windows, then pick your seat again.';
 export const MSG_TOO_FAST = 'You are sending too much, too fast. Pausing for 30 seconds, then reconnecting.';
-export const MSG_STILL_TOO_FAST = 'You are still sending too much, too fast. Wait a minute, then join the game again.';
+export const MSG_STILL_TOO_FAST = 'You are still sending too much, too fast. Wait a minute, then pick your seat again.';
 
 export type ConnState = 'connecting' | 'open' | 'reconnecting' | 'closed' | 'taken';
 

@@ -283,6 +283,8 @@ interface State {
   net: NetState | null;
   /** A build with online play: the relay and version to match; null otherwise. */
   online: OnlineInfo | null;
+  /** Why the game server last refused to list this tab's game (null when it did not); the title menu branches its Host Game button on it. */
+  hostRefusal: RelayRefusal | null;
   /** The online staging room: the room as last broadcast, and this browser's seat in it. */
   staging: StagingState | null;
   stagingSeat: number | null;
@@ -792,7 +794,7 @@ export const useGame = create<State>((set, get) => {
     },
     refused: (r: RelayRefusal) => {
       hostRefusal = r.message;
-      set({ error: r.message });
+      set({ error: r.message, hostRefusal: r });
     },
     error: (message: string) => set({ error: message }),
   });
@@ -1120,6 +1122,7 @@ export const useGame = create<State>((set, get) => {
     lastHash: null,
     net: null,
     online: null,
+    hostRefusal: null,
     staging: null,
     stagingSeat: null,
     stagingConnected: false,
@@ -1215,10 +1218,11 @@ export const useGame = create<State>((set, get) => {
       const relay = get().online?.relay;
       if (!relay) return 'This version has no online play.';
       const info = get().online!;
-      set({ error: null });
+      set({ error: null, hostRefusal: null });
       try {
         await startHosting(relay, { name, build: info.build, rules_version: info.rules_version, protocol: info.protocol }, null, hostingEvents());
       } catch (e) {
+        if (e instanceof RelayRefusal) set({ hostRefusal: e });
         return e instanceof RelayRefusal ? e.message : 'Could not open your game. Check your internet connection and try again.';
       }
       rememberSeat(null);
