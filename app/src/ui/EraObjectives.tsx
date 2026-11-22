@@ -189,9 +189,11 @@ export function EraObjectivesResearch({ view }: { view: PlayerView }) {
       : <div className={`eor-col current age st-${focus.state}`} data-testid="research-objectives-current">
         <RingMedallion icon={`era-numeral:${eraNumeral(focus.era - 1)}`} tone={focus.state === 'scored' ? 'gilt' : 'hollow'} size={46} className="eor-seal" />
         <div className="eor-body">
-          <h4>{focus.state === 'scored' ? <>{focus.name} Age: 1 VP scored</> : <>{focus.name} Age: score 1 VP</>}</h4>
+          <header className="eor-head">
+            <h4>{focus.state === 'scored' ? <>{focus.name} Age: 1 VP scored</> : <>{focus.name} Age: score 1 VP</>}</h4>
+            {focus.era < ERA_COUNT && <p className="eo-sub eor-next" data-testid="research-objectives-next">The next Age begins when any empire enters the {eraName(focus.era)} era.</p>}
+          </header>
           <ObjectiveRows lines={focus.lines} inline accounting view={view} era={focus.era} />
-          {focus.era < ERA_COUNT && <p className="eo-sub eor-next" data-testid="research-objectives-next">The next Age begins when any empire enters the {eraName(focus.era)} era.</p>}
         </div>
       </div>}
   </section>;

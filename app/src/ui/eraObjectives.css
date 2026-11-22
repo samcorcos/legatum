@@ -115,7 +115,8 @@
 .eor-col .eor-seal.rm { --tone: var(--gilt); box-shadow: 0 0 0 2px var(--panel), 0 0 0 3.5px var(--gilt); }
 .eor-col .eor-seal.rm.hollow { color: var(--ink); background: var(--panel); box-shadow: inset 0 0 0 3px var(--panel), inset 0 0 0 4px color-mix(in srgb, var(--gilt) 70%, transparent), 0 0 0 2px var(--panel), 0 0 0 3.5px var(--gilt); }
 .eor-col.st-scored .eor-seal.rm { background: var(--gilt); color: var(--panel); }
-.eor-col .eor-next { margin-top: 3px; color: var(--ink-2); }
+.eor-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0 16px; }
+.eor-col .eor-next { color: var(--ink-2); text-align: right; }
 .eor-col.age .eo-lines { max-width: 680px; }
 .eor-col .eo-sub { margin: 0; }
 .eor-col .eo-lines { gap: 3px; }
