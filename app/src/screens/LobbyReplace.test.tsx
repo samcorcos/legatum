@@ -34,7 +34,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-const saveSomething = () => writeAutosave({ campaign: 'old', turn: 42, savedAt: '2026-11-22T10:00:00Z', label: 'Ann & Bo', text: '{}' });
+const saveSomething = () => writeAutosave({ campaign: 'old', turn: 42, savedAt: '2026-11-22T10:00:00Z', label: 'Ann & Bo', faction: 'Athens', text: '{}' });
 const startButton = () => host.querySelector<HTMLButtonElement>('.lobby-go')!;
 const dialog = () => host.querySelector<HTMLDialogElement>('[data-testid="replace-game"]');
 const dialogButton = (name: string) => [...dialog()!.querySelectorAll('button')].find((b) => b.textContent === name)!;
@@ -53,7 +53,8 @@ it('asks once before a new game replaces a saved one, with one primary action', 
   expect(startGame).not.toHaveBeenCalled();
   expect(dialog()).not.toBeNull();
   expect(dialog()!.querySelector('h2')!.textContent).toBe('Replace your saved game?');
-  expect(dialog()!.textContent).toContain('Ann & Bo, turn 42');
+  expect(dialog()!.textContent).toContain('Athens, turn 42. Starting a new game replaces it.');
+  expect(dialog()!.textContent).toContain('To keep it, choose Go back, then Continue, then Menu → Save to file.');
   expect(dialog()!.querySelectorAll('.btn.primary')).toHaveLength(1);
   expect(dialogButton('Start new game').classList.contains('primary')).toBe(true);
   expect(document.activeElement).toBe(dialogButton('Go back'));

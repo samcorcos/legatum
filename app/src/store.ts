@@ -482,7 +482,7 @@ function writeAutosave(client: GameClient, views: PlayerView[]) {
     const save = saveFile(client, views);
     const contents = JSON.stringify(save);
     checkSaveText(contents);
-    void keepAutosave({ campaign: game, turn: save.turn, savedAt: save.savedAt, label: save.names.join(' & '), text: contents })
+    void keepAutosave({ campaign: game, turn: save.turn, savedAt: save.savedAt, label: save.names.join(' & '), faction: views[0].players.filter((p) => p.is_human).map((p) => p.faction).join(' & '), text: contents })
       .then(() => { if (useGame.getState().autosaveNotice) useGame.getState().set({ autosaveNotice: false }); })
       .catch(failed);
   } catch {

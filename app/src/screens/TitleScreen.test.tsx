@@ -163,7 +163,7 @@ it('Load Game asks before a chosen file replaces a saved game, and loads at once
   await show(<TitleScreen />);
   await press(loadButton());
   expect(dialog()).not.toBeNull();
-  expect(dialog()!.textContent).toContain('The game in the file takes its place');
+  expect(dialog()!.textContent).toContain('Loading this file replaces it');
   expect(useGame.getState().screen).not.toBe('game');
   const buttons = [...dialog()!.querySelectorAll('button')];
   await press(buttons.find((b) => b.textContent === 'Go back')!);

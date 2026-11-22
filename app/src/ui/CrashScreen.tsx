@@ -86,7 +86,7 @@ export async function readAutosaveText(): Promise<{ text: string; turn: number |
   return newest ? { text: newest.text, turn: newest.turn } : null;
 }
 
-/** "Load the previous turn": hide the newest slot, so the one before it is what Continue offers after the reload. */
+/** "Reload on the previous turn": hide the newest slot, so the one before it is what Continue offers after the reload. */
 async function stepBack(): Promise<void> {
   const [newest] = await readAutosaves();
   if (!newest) return;
@@ -252,9 +252,12 @@ export function CrashCard({ error, kind = 'crash', handlers }: { error: unknown;
   const hasSave = !!saved?.any;
   const engine = kind === 'engine';
   const heading = engine ? 'The game could not load' : 'Something went wrong';
+  const goBack = !engine && !!saved?.again && saved.earlier;
   const sentence = engine
     ? 'The game did not finish loading. Check your connection, then reload the page.'
-    : hasSave
+    : goBack
+      ? 'The game hit the same error again. Choose Reload on the previous turn, then Continue, to go back one turn.'
+      : hasSave
       ? 'The game hit an error. Your last finished turn is saved in this browser. Reload, then choose Continue.'
       : 'The game hit an error. Reload to start again.';
 
@@ -262,7 +265,7 @@ export function CrashCard({ error, kind = 'crash', handlers }: { error: unknown;
     <main className="crash-screen">
       <div
         ref={cardRef}
-        className="crash-card"
+        className={`crash-card${goBack ? ' wide' : ''}`}
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="crash-title"
@@ -279,9 +282,9 @@ export function CrashCard({ error, kind = 'crash', handlers }: { error: unknown;
             Reload <span className="kbd">Return</span>
           </button>
           {hasSave && <button type="button" className="btn" onClick={() => void onSave()}>Save to file</button>}
-          {saved?.again && saved.earlier && <button type="button" className="btn" onClick={() => void act.previous()}>Load the previous turn</button>}
-          <button type="button" className="btn" onClick={() => void onCopy()}>Copy error details</button>
+          {goBack && <button type="button" className="btn" onClick={() => void act.previous()}>Reload on the previous turn</button>}
         </div>
+        <p className="crash-more"><button type="button" className="btn quiet" onClick={() => void onCopy()}>Copy error details</button></p>
         <div role="status">
           {saveNote && <p className="crash-note">{saveNote}</p>}
           {copyNote && <p className="crash-note">{copyNote}</p>}

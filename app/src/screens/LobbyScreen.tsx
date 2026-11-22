@@ -146,7 +146,7 @@ export function LobbyScreen() {
     checking.current = true;
     void listAutosaves().then(([newest]) => {
       checking.current = false;
-      if (newest) setReplacing({ label: newest.label, turn: newest.turn });
+      if (newest) setReplacing({ label: newest.faction || newest.label, turn: newest.turn });
       else startGame(setup, { training: lobby.training === true });
     });
   };

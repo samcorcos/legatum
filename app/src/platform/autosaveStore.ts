@@ -21,6 +21,8 @@ export interface AutosaveRecord {
   savedAt: string;
   /** What the title screen calls the game, e.g. the players' names. */
   label: string;
+  /** The human players' peoples, e.g. "Athens": what the replace question calls the game. Absent in older saves. */
+  faction?: string;
   /** The save file's text, exactly as Save to file writes it. */
   text: string;
 }

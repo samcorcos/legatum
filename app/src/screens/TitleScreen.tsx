@@ -115,7 +115,7 @@ function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
   const [chosen, setChosen] = useState<{ save: SaveFile; saved: { label: string; turn: number } } | null>(null);
   const askThenLoad = async (save: SaveFile) => {
     const [newest] = await listAutosaves();
-    if (newest) setChosen({ save, saved: { label: newest.label, turn: newest.turn } });
+    if (newest) setChosen({ save, saved: { label: newest.faction || newest.label, turn: newest.turn } });
     else await loadSave(save, true);
   };
   // While a message shows, starting a new game is the way forward, so it takes the primary slot.

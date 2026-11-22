@@ -55,6 +55,8 @@ export const BANNED: CopyRule[] = [
   { pattern: /\bPurple-Born\b|\bPorphyrogennetos\b/i, reason: 'the Heir has one player-facing name', instead: 'Heir to the Throne or the Heir', source: true },
   { pattern: /\bSleep \(F\)|\bSleep\b.{0,60}\b(?:works for military and civilian|keeps? a unit|is the primary on a unit|takes? a unit out of the order cycle)\b/i, reason: 'units use Fortify (military) or Wait (civilians) for this order', instead: 'Fortify or Wait' },
   { pattern: /\b(Unlocks? (an? )?(Embassy|Academy)|Build an? (Embassy|Academy))\b/i, reason: 'removed buildings must not appear as live unlocks or build choices', instead: 'describe the remaining technology effect and Great Library route', source: true },
+  { pattern: /\bgame menu\b/i, reason: 'the menu is called Menu (UI review, 2026-11-22)', instead: '"Menu → Save to file"', source: true },
+  { pattern: /takes its place once/i, reason: 'a replaced game is replaced, not "given a place" (plain-language review, 2026-11-22)', instead: '"Starting a new game replaces it."', source: true },
   { pattern: /\bcomplete pairs?\b/i, reason: 'integer maths read aloud', instead: '"+1 Gold for every 2 population"', source: true },
   { pattern: /\bGold held\b|\bheld adds\b/i, reason: '"held" for Gold is bookkeeping', instead: '"in your treasury"', source: true },
   { pattern: /\brounded (down|up)\b|\brounds (down|up)\b|\bround(ing)? down\b/i, reason: 'rounding is implementation detail', instead: 'state the number the player gets, or "about"', source: true },

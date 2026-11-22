@@ -189,12 +189,13 @@ it('offers the previous turn only the second time the card shows for the same tu
   };
   await again();
   expect(button('Save to file')).toBeDefined();
-  expect(button('Load the previous turn')).toBeUndefined();
+  expect(button('Reload on the previous turn')).toBeUndefined();
   const reload = await again();
-  expect(button('Load the previous turn')).toBeDefined();
+  expect(button('Reload on the previous turn')).toBeDefined();
+  expect(host.querySelector('#crash-text')!.textContent).toBe('The game hit the same error again. Choose Reload on the previous turn, then Continue, to go back one turn.');
   expect(host.querySelectorAll('.btn.primary')).toHaveLength(1);
   expect(button('Reload')!.classList.contains('primary')).toBe(true);
-  await act(async () => { button('Load the previous turn')!.click(); await new Promise((r) => setTimeout(r, 500)); });
+  await act(async () => { button('Reload on the previous turn')!.click(); await new Promise((r) => setTimeout(r, 500)); });
   expect(reload).not.toHaveBeenCalled(); // the default handler reloads the page itself
   expect(JSON.parse(localStorage.getItem('legatum.autosave.skipped.v1')!)).toEqual(['c:8']);
   expect((await readAutosaveText())!.turn).toBe(7);
@@ -204,18 +205,18 @@ it('does not offer the previous turn for a different turn, with only one slot, o
   await put([rec(8, 2)]);
   sessionStorage.setItem('legatum.crash.v1', JSON.stringify({ turn: 8, count: 1 }));
   await show(<CrashCard error={new Error('x')} handlers={{ reload: vi.fn() }} />);
-  expect(button('Load the previous turn')).toBeUndefined(); // second time, but nothing earlier to load
+  expect(button('Reload on the previous turn')).toBeUndefined(); // second time, but nothing earlier to load
   act(() => root.unmount());
   root = createRoot(host);
   await put([rec(7, 1)]);
   sessionStorage.setItem('legatum.crash.v1', JSON.stringify({ turn: 3, count: 5 }));
   await show(<CrashCard error={new Error('x')} handlers={{ reload: vi.fn() }} />);
-  expect(button('Load the previous turn')).toBeUndefined(); // another turn: the count starts again
+  expect(button('Reload on the previous turn')).toBeUndefined(); // another turn: the count starts again
   act(() => root.unmount());
   root = createRoot(host);
   sessionStorage.setItem('legatum.crash.v1', JSON.stringify({ turn: 8, count: 5 }));
   await show(<CrashCard error={new Error('x')} kind="engine" handlers={{ reload: vi.fn() }} />);
-  expect(button('Load the previous turn')).toBeUndefined();
+  expect(button('Reload on the previous turn')).toBeUndefined();
 });
 
 it('the details carry the error, build and browser, and nothing from the game', () => {
