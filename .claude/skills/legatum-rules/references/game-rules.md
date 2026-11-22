@@ -39,8 +39,8 @@ preference of `Training` or the older `HardSearch`, and a lobby or online room w
 `search` flag, read as Hard and start a game without the flag (`levelOf`, `levelFields`,
 `readDifficultyPreference`, `app/src/staging.ts`). Nothing changed in the core, the save shape or
 the hashes: a save or tape recorded with Training still loads, is labelled Training in Diplomacy
-and the race, and keeps running its battle study. The server relays the `search` flag unchanged
-(`crates/server/src/staging.rs`); it offers no picker of its own.
+and the race, and keeps running its battle study. The online host relays the `search` flag unchanged
+(`crates/wasm/src/host/staging.rs`); it offers no picker of its own.
 
 **Training (2026-11-07):** replaced "Hard + Search" and is saved as the same `PlayerSetup::search`
 flag on a Hard AI seat (no rules change, no save-shape change). A Training seat
