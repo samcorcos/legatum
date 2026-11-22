@@ -6,7 +6,7 @@
 
 **Top priority (2026-10-27): the AI war plan,** `plans/ai-war.md` (checklist `plans/ai-war.prd.json`, log `plans/ai-war-progress.txt`).
 
-**Review plan (approved 2026-10-18):** the checklist for the 13 Codex code reviews is `docs/status/review-plan-2026-10-18.md` (decisions, Codex queue and hold list, every Claude item with its done-when). Claude-owned items are under "Review plan (approved 2026-10-18)" below.
+**Review plan (approved 2026-10-18):** the checklist for the 13 Codex code reviews is `docs/archive/review-plan-2026-10-18.md` (decisions, Codex queue and hold list, every Claude item with its done-when). Claude-owned items are under "Review plan (approved 2026-10-18)" below.
 
 This is the active work queue as of 2026-10-20. Parked work that landed and dated plans are preserved in `docs/status/archive/2026-10.md`. Open user decisions are in `docs/status/tracker.md`, under "Waiting on the user".
 
@@ -74,7 +74,7 @@ Built and committed, not landed. Worktree pool-5, tip `045f633d4` (master merged
 
 ## Review plan (approved 2026-10-18)
 
-The full checklist, decisions and accuracy notes are in `docs/status/review-plan-2026-10-18.md`. Codex items are queued in `.progress/astra-queue/` (pending now, hold with release conditions). The Claude-owned items are below; tick them in the plan file, not here. Run at most about 4 Claude agents at once, Opus only where marked.
+The full checklist, decisions and accuracy notes are in `docs/archive/review-plan-2026-10-18.md`. Codex items are queued in `.progress/astra-queue/` (pending now, hold with release conditions). The Claude-owned items are below; tick them in the plan file, not here. Run at most about 4 Claude agents at once, Opus only where marked.
 
 ### Retire the former TypeScript client engine (staged)
 
@@ -133,7 +133,7 @@ The full checklist, decisions and accuracy notes are in `docs/status/review-plan
 ### Rules simplicity (approved 2026-10-18: one-sentence test)
 
 - **CL31** (Claude Opus): Faction one-sentence pass: Sakoku, Sparta, Switzerland, Celts, then goals. Decision approved 2026-10-18: each faction ability and price must be one idea in about 30 words; bundles are split or cut. Japan (Tokyo-dense), Byzantium (Mercenary Companies), Mongols (Workshop siege unlock) and Germany (move rule) are already in flight; apply the test to them when they land. For Sakoku, Sparta (promotions, desertion, healing, slow rest), Switzerland (tolls+interest, upkeep+treasury loss), Celts/Celts (concealment vs ambush, territory damage) and the eight faction goals, write for each: current promise list, shortest honest sentence, what must be cut. One page per faction for the user; no mechanic changes land without his playtest sign-off. Copy edits after he decides are Luna tasks. The Keshig sheet line (charge or shoot, not both) can go with the Mongol pass. Start after: Germany, Military Engineer landed (they edit factionSheets.ts). Done when: Eight one-page proposals delivered and either decided or parked in the tracker; sheet text matches the rules.
-- **CL36** (Claude Opus): Add the 2026-10-18 decisions to the design doc decisions log. CLAUDE.md requires every design decision in the Claude Doc decisions log in the same turn. Add rows for D1-D13 in `docs/status/review-plan-2026-10-18.md` through the docs connector. Done when: One row per decision exists in the design doc.
+- **CL36** (Claude Opus): Add the 2026-10-18 decisions to the design doc decisions log. CLAUDE.md requires every design decision in the Claude Doc decisions log in the same turn. Add rows for D1-D13 in `docs/archive/review-plan-2026-10-18.md` through the docs connector. Done when: One row per decision exists in the design doc.
 
 
 ## 2. Waiting on a user decision, then build
@@ -251,7 +251,7 @@ User, 2026-10-18: the weekly Claude quota is used up, and extra credits have a h
 
 **Branch:** `claude/ci-speed` (worktree `.claude/worktrees/ci-speed`, tip f56daf0e4, master merged in at 11583bd29). **Not landed**: its last box verifies failed only on master's own breakage (fmt in `crates/ai/src/campaign*.rs`/`plan_tests.rs`/`winchance.rs`, two `legatum-ai plan_tests` failures, the `athens-next-points` scenario vitest, and `tools/cloud/box/tests/test-slot-queue.sh` exiting 1 on the box), plus a vitest timeout.
 **Landed already:** CQ12 (4d02761c9, `tools/ops/pw-workers.sh`). **On the branch, done:** CH25 tour split (`app/e2e/tour/*.spec.ts`, 124 tests = old 124, tsc ok, titles identical); CL23 `--profile fast|extended|release` in `verify-branch.sh`/`verify-remote.sh`, `tools/astra/extended-rust-tests.txt`, `.config/nextest.toml`, the parallel opening-league test (test step 147 s median to 26-61 s); CL24 `tools/ops/pw-summary.py` plus one bounded `--last-failed` rerun for transport errors only; CL25 reward-emblems (140/140 over 5 repeats; a warm dev server and pinned moment cards); CL6 `astra/wasm-cache-key-narrow` merged and `app-wasm|app-build|app-server` no longer skip on a gate-cache hit; CL19 sweep recorded in `docs/ops/test-gate-timings.md` (box never quiet: Chromium wall flat 12-48 workers, failures grow; WebKit best at 8, 16 breaks); `check.sh` runs WebKit natively on the box; `--shards N|auto` sharding (shards 1 and 2 of 3 passed: 189 tests, 740 s at 2 workers).
-**Left:** (1) get master green or verify with `--no-cache` against a green master, then rerun `tools/cloud/verify-remote.sh claude/ci-speed --tools-from-branch --app --profile fast` and `--profile extended --shards 3`; (2) land with `git merge --ff-only claude/ci-speed` in the main checkout (merge master first); (3) tick CL6, CL19, CL23, CL24, CL25, CH25 in `docs/status/review-plan-2026-10-18.md` with the landing commit; (4) investigate `test-slot-queue.sh` rc 1 on the box (CH23); (5) the before/after wall-clock table (fast 739 s measured with queue wait before the vitest fix; baseline full `--app` verify still unmeasured: medians in `docs/ops/test-gate-timings.md`).
+**Left:** (1) get master green or verify with `--no-cache` against a green master, then rerun `tools/cloud/verify-remote.sh claude/ci-speed --tools-from-branch --app --profile fast` and `--profile extended --shards 3`; (2) land with `git merge --ff-only claude/ci-speed` in the main checkout (merge master first); (3) tick CL6, CL19, CL23, CL24, CL25, CH25 in `docs/archive/review-plan-2026-10-18.md` with the landing commit; (4) investigate `test-slot-queue.sh` rc 1 on the box (CH23); (5) the before/after wall-clock table (fast 739 s measured with queue wait before the vitest fix; baseline full `--app` verify still unmeasured: medians in `docs/ops/test-gate-timings.md`).
 **Exact next step:** `cd .claude/worktrees/ci-speed && git merge master`, then the fast verify above; if green, ff-merge.
 
 ## Handoff: EU4 wars follow-up (branch `claude/eu4-wars-2`, not verified, not landed; 2026-10-18)

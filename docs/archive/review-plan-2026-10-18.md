@@ -1,3 +1,5 @@
+> Archived 2026-11-22: kept for history; it no longer describes the project.
+
 # Review plan, 2026-10-18
 
 Thirteen Codex code reviews of the whole repo (`.reviews/astra-review-*.md`, read at master `bc68d6f79`) were triaged on 2026-10-18. This file is the durable checklist. **Tick a box only when the "done when" line is true, and write the landing commit next to it.** The user approved every group C recommendation on 2026-10-18 ("I accept all of your recommendations"), so section 1 is decided, not proposed.

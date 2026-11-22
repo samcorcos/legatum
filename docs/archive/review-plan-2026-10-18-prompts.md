@@ -1,3 +1,5 @@
+> Archived 2026-11-22: kept for history; it no longer describes the project.
+
 # Review plan prompts, 2026-10-18
 
 Copies of the Codex queue prompts for `docs/status/review-plan-2026-10-18.md`, so the work is not lost if `.progress/astra-queue/` is cleaned. To requeue one: write it to `.progress/astra-queue/pending/<name>.md` with the header `mode: write`, `name:`, `model:`, `effort:`, a blank line, then the prompt.
