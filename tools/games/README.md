@@ -17,8 +17,10 @@ Every 15 minutes (launchd, `io.legatum.game-analysis`), `analyse_games.py poll`:
    - still in progress but idle for 6 hours with new turns since its last report: a checkpoint report;
    - fewer than 10 turns: skipped; a game that fails 3 times on the same upload is left for a person. If the reviewer itself is down (a trivial canary call fails too, e.g. the Claude login expired), the failure does not count against the game: the run stops and you get one notification (`reviewer_down` in the ledger) until a review works again.
 4. For each game, in `reports/<game id>/`:
-   - `facts.md`: standings, wars, expansion, losses, key events, the AI incident detector and the coach
-     questions with the player's answers. The replay uses the engine the game was played on: `game_dump` and
+   - `facts.md`: standings, wars, expansion, losses, key events, the AI incident detector, any rewinds
+     (the player went back to an earlier turn; the upload holds only the kept line) and the coach
+     questions with the player's answers. `coach_answers` and `rewinds` exist only in the upload copy and are
+     stripped before the engine reads a record. The replay uses the engine the game was played on: `game_dump` and
      `legatum-analyze` are built at the game's `engine_commit` and cached in `engine/bin/<commit>`.
    - `review.md`: a short coach-style triage written by Haiku (Claude Code) from `review_prompt.md` with
      `facts.md` pasted in, headed as untrusted model output.

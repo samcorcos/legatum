@@ -261,6 +261,11 @@ def frame_summary(frames: list[dict]) -> str | None:
             f"map draw mean {draw_mean:.1f} ms")
 
 
+# Keys the website adds to the uploaded copy only; the engine's Recording denies unknown fields, so they are
+# stripped before any record goes back to the engine.
+UPLOAD_ONLY_KEYS = ("coach_answers", "rewinds")
+
+
 def build_facts(record: dict, events: list[dict] | None = None, narrative: str | None = None,
                 replay_note: str = "not replayed") -> str:
     m = record["metadata"]
@@ -388,6 +393,18 @@ def build_facts(record: dict, events: list[dict] | None = None, narrative: str |
             L.append("Other rare events: " + ", ".join(f"{k} ×{n}" for k, n in rare))
         L.append("")
 
+    rewinds = [r for r in (record.get("rewinds") or []) if isinstance(r, dict)]
+    if rewinds:
+        L.append("## Rewinds")
+        L.append("")
+        L.append("The player went back to an earlier turn; the abandoned turns are not in the tape or these numbers.")
+        L.append("")
+        for r in rewinds[:50]:
+            L.append(f"- {clip(r.get('at'), 25)}: from T{clip(r.get('from_turn'), 6)} back to T{clip(r.get('to_turn'), 6)}")
+        if len(rewinds) > 50:
+            L.append(f"- … and {len(rewinds) - 50} more")
+        L.append("")
+
     answers = record.get("coach_answers") or []
     L.append("## Coach questions and the player's answers")
     L.append("")
@@ -493,7 +510,7 @@ def analyse_game(home: Path, base: str, token: str, key: str, entry: dict, kind:
                 events = [json.loads(line) for line in (dump_dir / "events.jsonl").open()]
                 (dump_dir / "events.jsonl").replace(game_dir / "events.jsonl")
                 shutil.rmtree(dump_dir, ignore_errors=True)  # snaps are large; re-run game_dump to get them back
-            engine_record = {k: v for k, v in record.items() if k != "coach_answers"}
+            engine_record = {k: v for k, v in record.items() if k not in UPLOAD_ONLY_KEYS}
             archive = game_dir / "archive.json"
             archive.write_text(json.dumps(engine_record))
             a = run([str(bins["analyze"]), str(archive), "--out", str(game_dir / "ai-analysis")], log, check=False, timeout=600)
