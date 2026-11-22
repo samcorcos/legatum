@@ -2,7 +2,7 @@
 
 Save: `~/LegatumRuns/bug-saves/sparta-win-20261027.legatum`. Engine `a58e80856` (tag `playtest-8.9.13`), 48x32 map, 5 empires, every AI Hard. Replayed at the tag with 0 hash mismatches in 125 turns. The AI plan trace matches all 284 recorded AI order lists. The what-ifs are 28 branches of 32 runs, run locally (runner and data in `~/LegatumRuns/coach-tools/coach-8913-sparta/`).
 
-![VP race and cities owned](2026-10-27-sparta-review.png)
+VP race and cities owned (archived outside the repository)
 
 ## Coach's verdict
 

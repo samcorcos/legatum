@@ -19,6 +19,7 @@ Current rules only, one line each with the date and who. Detail, the user's full
 - Never land on a red verify, even under time pressure; a fixed red still needs a green verify before the merge (2026-10-24, 2026-11-07).
 - One code landing at a time; re-gate the merged result when both sides changed crates (2026-11-07, 2026-10-06).
 - Never amend or force-push a branch another agent may have merged; add a commit (2026-10-06).
+- Never share one `CARGO_TARGET_DIR` between git worktrees, even serially: cargo judges freshness by file mtime, so a worktree whose files are older than the last build counts as up to date and runs another branch's test binaries. For serial CI on many branches use one worktree and `git checkout --detach origin/<branch>` per run; for concurrent agents, one private target dir per worktree. A CI log with no "Compiling" lines for a branch that changes Rust is a red flag (2026-11-22).
 - Commit with explicit paths, never `-a` or `add -A`; never `git stash` (shared across worktrees): use a WIP commit (2026-10-18, 2026-10-06).
 - Every rules or save-shape change bumps `crates/core/src/lib.rs::RULES_VERSION`; saves from other versions are refused with the load-screen message; no migrations or grandfathering (designer, 2026-10-31). Batch rule changes under one version per batch (user, 2026-11-11, freeze lifted).
 - A new `GameState` field changes every scenario hash: re-encode scenarios in the same branch (`rehash_scenarios`) (2026-10-22).
@@ -34,6 +35,7 @@ Current rules only, one line each with the date and who. Detail, the user's full
 - Two-player online game: both open the web build, Multiplayer; the host's tab runs the game and must stay open; both need the same build (2026-11-22).
 - Local Playwright runs need a build made for the e2e relay: `LEGATUM_RELAY_URL=http://127.0.0.1:8787 scripts/build-web.sh` (`--skip-wasm` to reuse the engine); online tests start `infra/relay` under `wrangler dev` (2026-11-22).
 - After every playtest he finishes, run `legatum-game-coach` on a copy of the save (user, 2026-10-17).
+- Uploaded web games (with his coach answers) are triaged automatically by `tools/games/analyse_games.py` (`tools/games/README.md`); `legatum-game-coach` still does the full review, starting from that report (user, 2026-11-22).
 
 ## Working with the user
 

@@ -260,6 +260,22 @@ describe('the tech unlock card', () => {
     expect(unlock()).not.toBeNull();
   });
 
+  it('research picked while it waits behind the research screen drops Choose research, so Return does not reopen it', async () => {
+    await unlockCelebrationFixture(false, false); render();
+    const dialog = document.body.appendChild(document.createElement('dialog'));
+    await act(async () => { dialog.setAttribute('open', ''); await Promise.resolve(); });
+    expect(unlock()).toBeNull();
+    const tech = useGame.getState().views![0].research.available[0].tech;
+    act(() => useGame.setState({ orders: [[{ type: 'SetResearchQueue', techs: [tech] }]] }));
+    await act(async () => { dialog.removeAttribute('open'); await Promise.resolve(); });
+    dialog.remove();
+    expect(unlock()?.textContent).not.toContain('No research is set.');
+    expect(buttons()).toEqual(['Continue Return']);
+    key('Enter');
+    expect(unlock()).toBeNull();
+    expect(useGame.getState().techOpen).toBe(false);
+  });
+
   it('waits out an open dialog instead of hiding behind it, and Esc is left to the dialog', async () => {
     await unlockCelebrationFixture(); render();
     const dialog = document.body.appendChild(document.createElement('dialog'));

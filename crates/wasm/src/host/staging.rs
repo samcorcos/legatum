@@ -71,15 +71,12 @@ pub struct StagingSeat {
     pub search: bool,
 }
 
-/// The rule experiment a host can switch on in the lobby (the other `RuleExperiments`
-/// stay CLI-only). It defaults off, and a room without the field means off.
+/// Rule experiments a host can switch on in the lobby. None remain since World Ages became the
+/// only Age system (rules 50); the field stays so a room from an older client, which may still
+/// send `objectives_deck`, parses (unknown fields are ignored).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(default)]
-pub struct StagingRules {
-    /// World Ages: `RuleExperiments::objectives_deck`.
-    #[serde(skip_serializing_if = "std::ops::Not::not")]
-    pub objectives_deck: bool,
-}
+pub struct StagingRules {}
 
 impl StagingRules {
     fn is_default(&self) -> bool {
@@ -482,10 +479,7 @@ impl Room {
             players,
             legacy_all_war: false,
             barbarians: self.config.barbarians,
-            rule_experiments: legatum_core::experiments::RuleExperiments {
-                objectives_deck: self.config.rule_experiments.objectives_deck,
-                ..Default::default()
-            },
+            rule_experiments: legatum_core::experiments::RuleExperiments::default(),
         }
     }
 }
@@ -561,7 +555,7 @@ mod faction_tests {
     }
 
     #[test]
-    fn each_lobby_switch_reaches_the_games_rule_experiments_and_defaults_off() {
+    fn an_older_rooms_world_ages_switch_is_ignored_and_rules_stay_default() {
         let room = |rules: serde_json::Value| {
             let mut config: StagingConfig = serde_json::from_value(serde_json::json!({
                 "seed": "5", "width": 24, "height": 20,
@@ -582,10 +576,12 @@ mod faction_tests {
             legatum_core::experiments::RuleExperiments::default()
         );
         assert!(off.config.rule_experiments.is_default());
-        let ages = room(serde_json::json!({"objectives_deck": true})).setup();
-        assert!(ages.rule_experiments.objectives_deck);
-        // A guest sees the host's choice in the public settings.
-        let guest = room(serde_json::json!({"objectives_deck": true}));
-        assert!(guest.state(false).config.rule_experiments.objectives_deck);
+        // World Ages is the only Age system: an older client's switch parses and changes nothing.
+        let ages = room(serde_json::json!({"objectives_deck": true}));
+        assert!(ages.config.rule_experiments.is_default());
+        assert_eq!(
+            ages.setup().rule_experiments,
+            legatum_core::experiments::RuleExperiments::default()
+        );
     }
 }

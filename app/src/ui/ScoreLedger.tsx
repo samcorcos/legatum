@@ -14,7 +14,6 @@ import { PortraitRoundel } from './premium';
 import { EraObjectives, FAMILY_ICON, Meter, VpSeal, empireVars } from './vpParts';
 import { holdWords } from './VpHoldings';
 import type { Source, VpEmpire, VpModel, VpRow } from '../vpModel';
-import { eraName } from './eraResearch';
 import type { ObjectiveFamily } from '../types';
 import './scoreLedger.css';
 
@@ -66,35 +65,31 @@ function GoalCell({ model, e, held }: { model: VpModel; e: VpEmpire; held: boole
   </div>;
 }
 
-/** The capitals row: one token per original capital this empire took first, in its ink. */
+/** The capitals row: one token per rival first capital this empire holds now, in its ink. */
 function CapitalCell({ model, e }: { model: VpModel; e: VpEmpire }) {
   const names = model.capitals.find((c) => c.owner === e.id)?.names ?? [];
   const who = e.isMe ? 'You' : e.name;
-  if (!names.length) return <div className="sl-cell"><Socket title={`${who} ${e.isMe ? 'have' : 'has'} taken no rival's original capital yet`} /><small className="sl-under">None yet</small></div>;
+  if (!names.length) return <div className="sl-cell"><Socket title={`${who} ${e.isMe ? 'hold' : 'holds'} no rival's first capital`} /><small className="sl-under">None held</small></div>;
   return <div className="sl-cell">
-    <span className="sl-tokens">{names.map((n) => <Token key={n} e={e} icon="city" title={`${who}: first capture of ${n} · +1 VP, kept for good`} />)}</span>
+    <span className="sl-tokens">{names.map((n) => <Token key={n} e={e} icon="city" title={`${who} ${e.isMe ? 'hold' : 'holds'} ${n} · 1 VP while ${e.isMe ? 'you hold' : 'it holds'} it`} />)}</span>
     <small className="sl-under">{names.join(', ')}</small>
   </div>;
 }
 
-function EraCell({ s, e, deck }: { s: Source; e: VpEmpire; deck: boolean }) {
+function EraCell({ s, e }: { s: Source; e: VpEmpire }) {
   const info = s.era!;
-  const scoredWith = info.objectives.find((o) => o.scorers.includes(e.id));
   const who = e.isMe ? 'You' : e.name;
-  if (scoredWith) return <div className="sl-cell"><Token e={e} icon={FAMILY_ICON[scoredWith.family as ObjectiveFamily]} title={`${who} scored the ${info.eraName} ${deck ? 'Age' : 'era'} with: ${scoredWith.text}`} /></div>;
-  if (deck) return <div className="sl-cell"><Socket title={`${who} ${e.isMe ? 'have' : 'has'} not scored the ${info.eraName} Age yet`} /></div>;
-  if (info.entered.includes(e.id)) return <div className="sl-cell"><Socket title={`${who} ${e.isMe ? 'have' : 'has'} entered the ${info.eraName} era and not scored it yet`} /></div>;
-  return <div className="sl-cell"><Socket faint title={`${who} ${e.isMe ? 'have' : 'has'} not reached the ${info.eraName} era`} /></div>;
+  // One check for the token and the row's status word: has this empire scored the Age (`info.scored`)?
+  // The card it used names the token; a save whose card is no longer drawn gets the Age's own mark.
+  if (!info.scored.includes(e.id)) return <div className="sl-cell"><Socket title={`${who} ${e.isMe ? 'have' : 'has'} not scored the ${info.eraName} Age yet`} /></div>;
+  const scoredWith = info.objectives.find((o) => o.scorers.includes(e.id));
+  if (!scoredWith) return <div className="sl-cell"><Token e={e} icon={s.icon} title={`${who} scored the ${info.eraName} Age`} /></div>;
+  return <div className="sl-cell"><Token e={e} icon={FAMILY_ICON[scoredWith.family as ObjectiveFamily]} title={`${who} scored the ${info.eraName} Age with: ${scoredWith.text}`} /></div>;
 }
 
-/** An era's status for the viewer, in one line. */
-function eraLine(s: Source, myEra: number, deck: boolean): string {
-  const e = s.era!;
-  if (deck) return e.myScored ? 'You scored this Age.' : 'Every empire sees this card the turn the first empire enters the era, and it never expires.';
-  if (e.myScored) return 'You scored this era. Its other objectives can score nothing more.';
-  if (e.myEntered) return e.era < myEra ? 'Still open to you: meet any one of the three, at any time.' : 'Open to you now: meet any one of the three.';
-  if (e.era === myEra + 1) return `Not entered yet: finish the ${eraName(myEra - 1)} era’s last technology to open it.`;
-  return 'Not reached yet.';
+/** An Age's status for the viewer, in one line. */
+function eraLine(s: Source): string {
+  return s.era!.myScored ? 'You scored this Age.' : 'Every empire sees this card the turn the first empire enters the era, and it never expires.';
 }
 
 function RowDetail({ model, s, kind }: { model: VpModel; s?: Source; kind: 'work' | 'goal' | 'heldGoal' | 'capital' | 'era' }) {
@@ -122,13 +117,13 @@ function RowDetail({ model, s, kind }: { model: VpModel; s?: Source; kind: 'work
   }
   if (kind === 'capital') {
     return <div className="sl-detail">
-      <p className="sl-detail-rule">+1 for each rival's first capital you take. Taking the same capital again later scores nothing more, and the point stays yours if you lose or raze the city.</p>
+      <p className="sl-detail-rule">Hold a rival's first capital: 1 VP while you hold it. You lose the point if anyone takes the city or you raze it. The Celts keep the point of a capital they sack.</p>
       <ul className="sl-goals">
         {model.empires.map((e) => {
           const names = model.capitals.find((c) => c.owner === e.id)?.names ?? [];
           return <li key={e.id} className={e.isMe ? 'me' : ''} style={empireVars(e)}>
             <CrestMedallion faction={e.faction} color={e.ink} size={18} />
-            <div><span className="sl-goal-title"><b>{e.isMe ? 'You' : e.name}</b></span><span className="sl-goal-rule">{names.length ? names.join(', ') : 'No capital taken yet'}</span></div>
+            <div><span className="sl-goal-title"><b>{e.isMe ? 'You' : e.name}</b></span><span className="sl-goal-rule">{names.length ? names.join(', ') : 'No rival capital held'}</span></div>
             <span className={`sl-goal-state${names.length ? ' done' : ''}`}>{names.length} VP</span>
           </li>;
         })}
@@ -144,37 +139,34 @@ function RowDetail({ model, s, kind }: { model: VpModel; s?: Source; kind: 'work
     </div>;
   }
   const info = s.era!;
+  // The capital and wonder exception belongs only to the two capture cards.
+  const captureCard = info.objectives.some((o) => o.kind === 'HumbleTheMighty' || o.kind === 'Breach');
   return <div className={`sl-detail sl-era${info.myScored ? ' scored' : ''}`}>
-    <p className="sl-detail-rule">{eraLine(s, model.raceRules.era, !!model.deck)} <span className="sl-detail-fine">{model.deck ? `${info.myScored ? 'Every empire sees these cards the turn the first empire enters the era, and they never expire. ' : ''}Veterans counts levels your units gain in battle from now on. Capture cards count captures from now on; Humble the mighty and Breach never count capitals or wonder cities.` : 'Each objective counts only what you gain after entering the era and after your last era score.'}</span></p>
+    <p className="sl-detail-rule">{eraLine(s)} <span className="sl-detail-fine">{`${info.myScored ? 'Every empire sees this card the turn the first empire enters the era, and it never expires. ' : ''}Each card counts only what you do after its Age begins.${captureCard ? ' Humble the mighty and Breach never count capitals or wonder cities.' : ''}`}</span></p>
     <EraObjectives model={model} s={s} />
   </div>;
 }
 
 type Row = { id: string; kind: 'work' | 'goal' | 'heldGoal' | 'capital' | 'era'; name: ReactNode; rule: string; vp: number; s?: Source; numeral?: string; dim?: boolean; status?: string };
 
-/** The viewer's standing in an era, as one or two words beside its name. */
-function eraStatusWord(s: Source, myEra: number, deck: boolean): string {
-  const e = s.era!;
-  if (e.myScored) return 'scored';
-  if (deck) return 'open to every empire';
-  if (e.myEntered) return 'open to you';
-  if (e.era === myEra + 1) return 'next';
-  return e.entered.length ? '' : 'not reached yet';
+/** The viewer's standing in an Age, as one or two words beside its name. */
+function eraStatusWord(s: Source): string {
+  return s.era!.myScored ? 'scored' : 'open to every empire';
 }
 
 function rowsOf(model: VpModel): { kept: Row[]; held: Row[]; eras: Row[] } {
   const kept: Row[] = [
     ...model.works.filter((s) => !s.live && !s.held).map((s): Row => ({ id: s.id, kind: 'work', name: s.name, rule: 'Complete a world wonder', vp: s.vp, s })),
     { id: 'goal', kind: 'goal', name: 'Faction goals', rule: 'Kept once scored', vp: 2 },
-    { id: 'capitals-taken', kind: 'capital', name: 'Capitals taken', rule: 'First capture of each rival original capital', vp: 1 },
   ];
   const held: Row[] = [
     ...model.works.filter((s) => s.live || s.held).map((s): Row => ({ id: s.id, kind: 'work', name: s.name, rule: s.rule, vp: s.vp, s })),
     { id: 'held-goal', kind: 'heldGoal', name: 'Faction goals', rule: 'Lost when the condition or item is lost', vp: 2 },
+    { id: 'capitals-held', kind: 'capital', name: 'Rival capitals', rule: "Hold a rival's first capital: 1 VP while you hold it", vp: 1 },
   ];
   const eras: Row[] = model.eras.map((s): Row => ({
     id: s.id, kind: 'era', name: s.era!.eraName, numeral: roman(s.era!.era), rule: '', vp: s.vp, s,
-    dim: s.era!.entered.length === 0 && s.owners.length === 0, status: eraStatusWord(s, model.raceRules.era, !!model.deck),
+    dim: s.era!.entered.length === 0 && s.owners.length === 0, status: eraStatusWord(s),
   }));
   return { kept, held, eras };
 }
@@ -197,18 +189,15 @@ function ColumnHead({ row, e, span, showDecadence }: { row: VpRow; e: VpEmpire; 
 }
 
 export function ScoreLedger({ model, turn, close, closeRef }: { model: VpModel; turn: number; close: () => void; closeRef: React.RefObject<HTMLButtonElement | null> }) {
-  const myEra = model.raceRules.era;
-  // In a World Age game the Age in focus is the newest one you have not scored: every empire can score it from the turn it begins.
-  const current = model.deck ? [...model.eras].reverse().find((s) => !s.era!.myScored) : model.eras.find((s) => s.era!.era === myEra);
-  const next = model.deck ? undefined : model.eras.find((s) => s.era!.era === myEra + 1);
-  // In a World Age game the open Age is always opened, so its cards and claims are in view. Tall windows open the era in focus (yours, or the next once yours is scored); short ones keep every row closed so the whole ledger shows.
-  const tall = typeof matchMedia === 'function' && matchMedia('(min-height: 760px)').matches;
-  const [open, setOpen] = useState<string | null>(() => (model.deck ? current?.id ?? null : tall ? (current && !current.era!.myScored ? current.id : next?.id ?? current?.id ?? null) : null));
+  // The Age in focus is the newest one you have not scored: every empire can score it from the turn it begins. It opens
+  // with the ledger, so its card is in view.
+  const current = [...model.eras].reverse().find((s) => !s.era!.myScored);
+  const [open, setOpen] = useState<string | null>(() => current?.id ?? null);
   const toggle = (id: string) => setOpen((o) => (o === id ? null : id));
   const body = useRef<HTMLDivElement>(null);
   // The ledger opens on the open Age, so its cards and claims are in view, not below the held rows.
   useEffect(() => {
-    if (!model.deck || !current) return;
+    if (!current) return;
     // The sheet's dialog opens in its own effect, which runs after this one: until then the body has no layout, so wait a frame.
     const frame = requestAnimationFrame(() => {
       const box = body.current;
@@ -233,7 +222,7 @@ export function ScoreLedger({ model, turn, close, closeRef }: { model: VpModel; 
       if (r.kind === 'work') cell = <WorkCell s={r.s!} e={e} />;
       else if (r.kind === 'capital') cell = <CapitalCell model={model} e={e} />;
       else if (r.kind === 'goal' || r.kind === 'heldGoal') cell = <GoalCell model={model} e={e} held={r.kind === 'heldGoal'} />;
-      else cell = <EraCell s={r.s!} e={e} deck={!!model.deck} />;
+      else cell = <EraCell s={r.s!} e={e} />;
       return <td key={e.id} className={`${e.isMe ? 'mine' : ''}${e.id === columns[0].e.id ? ' first' : ''}`} style={empireVars(e)}>{cell}</td>;
     });
     return <Fragment key={r.id}>
@@ -262,7 +251,7 @@ export function ScoreLedger({ model, turn, close, closeRef }: { model: VpModel; 
         <span className="sl-kick"><Star size={8} /> Victory points · turn {turn}</span>
         <h2 id="vh-sheet-title">Every Way to Score</h2>
       </div>
-      <p className="sl-win">The first team to hold <b>{target} VP</b> for 10 turns wins. World wonders and held goals can change hands; era and capital points stay earned.</p>
+      <p className="sl-win">The first team to hold <b>{target} VP</b> for 10 turns wins. World wonders, rival capitals and goals can be lost; Age points stay earned.</p>
       <button ref={closeRef} type="button" className="btn vh-close" onClick={close} aria-label="Close objectives">Close <kbd className="kbd">Esc</kbd></button>
     </header>
     <div className="sl-body" ref={body}>
@@ -274,11 +263,11 @@ export function ScoreLedger({ model, turn, close, closeRef }: { model: VpModel; 
           </tr>
         </thead>
         <tbody>
-          {section('Kept for good', 'Faction goals +2 each · capitals taken +1 each', 'vp')}
+          {section('Kept for good', 'Faction goals +2 each', 'vp')}
           {kept.map(renderRow)}
-          {section('Held', '+2 each · you lose these if you lose the city, tile or condition', 'vp')}
+          {section('Held', 'World wonders and goals +2 each · rival capitals +1 each · you lose these if you lose the city, tile or condition', 'vp')}
           {held.map(renderRow)}
-          {section(model.deck ? 'Ages' : 'Eras', model.deck ? '+1 each, kept for good · score an Age with its one card, any time after it begins' : '+1 each, kept for good · score an era with any one of its three objectives, once you have entered it', 'milestone-six-techs')}
+          {section('Ages', '+1 each, kept for good · score an Age with its one card, any time after it begins', 'milestone-six-techs')}
           {eras.map(renderRow)}
         </tbody>
       </table>

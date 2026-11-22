@@ -125,7 +125,7 @@ Moved verbatim from `game-rules.md` on 2026-11-22, in the original order; the or
 - **Strategy biases** (`crates/ai/src/strategy.rs:Strategy::ALL`) are Rush, Wide, Science,
   Turtle, and Economic. The scripted planner no longer reserves growth investments for a
   compact-city plan (`crates/ai/src/investment.rs`, `crates/ai/src/production.rs`,
-  `crates/ai/src/research.rs`). Era objectives are scored from gains after entering each era
+  `crates/ai/src/research.rs`). Age cards are scored from gains after the Age begins
   (`crates/core/src/objectives.rs::update`).
   Observed strategy telemetry uses classifier version 2 with Rush, Wide, Science,
   Turtle, Economic, and Generalist labels (`crates/sim/src/diversity.rs:CLASSIFIER_VERSION,Archetype::ACTIVE,classify`).
@@ -189,7 +189,7 @@ Moved verbatim from `game-rules.md` on 2026-11-22, in the original order; the or
   `military_purchase_available`); resting units leave ring 1 when a city has fewer than two
   spawn tiles (`military.rs::rest`); a held Swiss hoard bounds readiness and frontline buys
   while its points keep the team at target (`production.rs::live_goal_floor`); a racing team
-  uses city growth and conquest to advance era objectives; one point short,
+  uses city growth and conquest to advance Age cards; one point short,
   rival cities whose capture scores a point join the campaign candidates (`plan.rs`).
   **Late capture value (2026-11-01, gene `late_capture_value`, Hard; AI only):** a feasible
   campaign scores the change in its own chance to complete a ten-turn VP hold and the rival's
@@ -271,7 +271,7 @@ Moved verbatim from `game-rules.md` on 2026-11-22, in the original order; the or
   leader past 45% of its target (2026-10-04, The Courier King).
 - **The Celtic sack, priced (2026-10-23, coach review of the user's 8.9.7 Celts win; AI only, no rule change; genes `sack_price` 1, `sack_commit` 1, `sack_loss_percent` 60).** Until now every city-attack path returned early for Celts, so the AI Celts sacked 10 cities in 2,048 seats on the 8.9.7 tag (the user sacked six in one game). The gates are deleted (the list above) and a capture by the Celts is priced as what it is, from public information only (`victory.rs::sacks`, `sack_vp_denied`, `plan.rs::price_campaign`, `opportunity.rs::strike`, `crowns.rs::objective_capture_value`):
   - **What the Celts gain:** the Gold the sack pays (population × 60 since 2026-11-06, previously × 30; `opportunity.rs::sack_gold_value`; before 2026-11-03 population × 25 plus a quarter of an estimated treasury), turned into the army it would buy (`plan.rs::gold_as_army`), and a "capture" objective if the city completes one. They gain **no** city, population, land, output, supply deposit, "four cities" or "20 population" milestone or title: none of `conquest_victory_value`'s keep terms, and no "Own N cities" or land count is credited by `objective_capture_value`.
-  - **What the victim loses:** the city, its people, land and public output share (as for any capture), **and its VP**: the held faction goal the city props up (Swiss hoard, Germany Ruhr Foundries, the Heir, the Hall, a closed Japan's vow; `victory.rs::sack_vp_denied`). Era objectives and milestones already scored are permanent and the progress a sack sets back on an unscored one is private to its owner, so neither counts.
+  - **What the victim loses:** the city, its people, land and public output share (as for any capture), **and its VP**: the held faction goal the city props up (Swiss hoard, Germany Ruhr Foundries, the Heir, the Hall, a closed Japan's vow; `victory.rs::sack_vp_denied`). Age cards and milestones already scored are permanent and the progress a sack sets back on an unscored one is private to its owner, so neither counts.
   - **A strike's worth (Production):** a kept city is worth `city_keep_value` to its captor; a sacked one is worth `sack_loss_percent` of that (the victim's lost output) plus the Gold term; the race, hold and last-city terms (what the victim loses) are unchanged.
   - **`sack_commit`:** a new Celtic Contain war needs a funded siege route to a named city with at least `contain_min_odds` capture odds (the Sparta's `contain_commit`).
   - **Also lifted for the Celts:** `scout_front`, `diplomacy::border_raid_opportunity` and the "never sieges" test of `diplomatic_campaign` (Germany kept these gates until the 2026-11-05 rework), `peace_would_be_broken`, `second_front_temperament` (now 0). `war_siege` now includes the Celts; `siege_exempt` 1 restores the earlier exclusion for a comparison arm.

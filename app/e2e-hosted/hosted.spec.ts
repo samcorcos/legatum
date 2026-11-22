@@ -86,6 +86,39 @@ const empire = (page: Page) => page.evaluate(() => {
   };
 });
 
+const ENGINE = /\/assets\/legatum_bg-[\w-]+\.wasm$/;
+
+test('a slow engine download shows the loading plate, then the title', async ({ page, baseURL }) => {
+  const problems = watch(page, new URL(baseURL!).origin);
+  // Hold the engine until the plate has been seen, so the check never races a fast connection.
+  let release!: () => void;
+  const held = new Promise<void>((resolve) => { release = resolve; });
+  await page.route(ENGINE, async (route) => { await held; await route.continue(); });
+  await page.goto('/');
+  const plate = page.getByTestId('boot-plate');
+  await expect(plate).toBeVisible();
+  await expect(plate).toContainText('LEGATUM');
+  await expect(plate).toContainText('Loading the game…');
+  release();
+  await expect(page.getByRole('heading', { name: 'Legatum', exact: true })).toBeVisible({ timeout: 60_000 });
+  await expect(plate).toHaveCount(0);
+  expect(problems).toEqual([]);
+});
+
+test('an engine that cannot download shows Reload, never a blank page', async ({ page }) => {
+  await page.route(ENGINE, (route) => route.abort());
+  await page.goto('/');
+  const card = page.getByTestId('crash-screen');
+  await expect(card).toBeVisible({ timeout: 60_000 });
+  await expect(card.getByRole('heading', { name: 'The game could not load' })).toBeVisible();
+  const reload = card.getByRole('button', { name: /^Reload/ });
+  await expect(reload).toBeFocused();
+  // With the connection back, Return reloads into the game.
+  await page.unroute(ENGINE);
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('heading', { name: 'Legatum', exact: true })).toBeVisible({ timeout: 60_000 });
+});
+
 test('a visitor plays: title, a people, turns, a second city, save and load, with no server', async ({ page, baseURL, request }) => {
   test.setTimeout(300_000);
   const problems = watch(page, new URL(baseURL!).origin);
@@ -207,10 +240,64 @@ test('a visitor plays: title, a people, turns, a second city, save and load, wit
   const file = await (await download).path();
   expect(readFileSync(file, 'utf8')).toContain('"legatum-save"');
 
-  // The autosave survives a reload: Continue returns to the same turn with both cities.
+  // Orders entered this turn survive a reload: they are kept a moment after each change, beside the autosave.
+  await clear(page);
+  await page.evaluate((id) => (window as unknown as GameWindow).legatum.getState().select({ kind: 'city', id }, true), (await empire(page)).capital!);
+  const choices = page.locator('.city-panel .production-choice:not(.unavailable) .prod');
+  const orders = () => page.evaluate(() => JSON.stringify((window as unknown as GameWindow).legatum.getState().orders[0]));
+  for (let i = (await choices.count()) - 1; i >= 0 && (await orders()) === '[]'; i--) await choices.nth(i).click();
+  const entered = await orders();
+  expect(entered, 'an order was entered this turn').not.toBe('[]');
+  await expect.poll(() => page.evaluate(() => new Promise<boolean>((resolve) => {
+    const open = indexedDB.open('legatum-autosave-v1');
+    open.onerror = () => resolve(false);
+    open.onsuccess = () => {
+      const db = open.result;
+      const get = db.transaction('orders').objectStore('orders').get('current');
+      get.onsuccess = () => { db.close(); resolve(!!get.result?.text); };
+      get.onerror = () => { db.close(); resolve(false); };
+    };
+  })), { message: 'the pending orders are saved' }).toBe(true);
+
+  // The autosave survives a reload: Continue returns to the same turn with both cities, and the orders.
   await page.reload();
   const resume = page.getByRole('button', { name: /^Continue/ });
   await expect(resume).toBeEnabled();
+  await expect(resume).toContainText(`turn ${turn}`);
+  await resume.click();
+  await expect(page.getByTestId('turn-number')).toHaveText(String(turn), { timeout: 60_000 });
+  expect((await empire(page)).cities).toBe(2);
+  expect(await orders(), 'the orders entered before the reload are still there').toBe(entered);
+  await endTurn(page);
+
+  // A newest save that will not open is skipped: Continue offers the turn before it.
+  await expect(page.getByTestId('turn-number')).toHaveText(String(turn + 1));
+  await expect.poll(() => page.evaluate(() => new Promise<number>((resolve) => {
+    const open = indexedDB.open('legatum-autosave-v1');
+    open.onsuccess = () => {
+      const db = open.result;
+      const all = db.transaction('saves').objectStore('saves').getAll();
+      all.onsuccess = () => { db.close(); resolve((all.result as unknown[]).length); };
+    };
+  })), { message: 'the new turn is saved beside the old one' }).toBeGreaterThan(1);
+  await page.evaluate(() => new Promise<void>((resolve, reject) => {
+    const open = indexedDB.open('legatum-autosave-v1');
+    open.onerror = () => reject(open.error);
+    open.onsuccess = () => {
+      const db = open.result;
+      const tx = db.transaction('saves', 'readwrite');
+      const store = tx.objectStore('saves');
+      const all = store.getAll();
+      all.onsuccess = () => {
+        const newest = (all.result as { turn: number }[]).sort((a, b) => b.turn - a.turn)[0];
+        store.put({ ...newest, text: '{"format":"legatum-save"' });
+      };
+      tx.oncomplete = () => { db.close(); resolve(); };
+      tx.onerror = () => reject(tx.error);
+    };
+  }));
+  await page.reload();
+  await expect(page.locator('.title-notice')).toContainText(`Your latest save (turn ${turn + 1}) could not be opened. Continue opens turn ${turn} instead.`);
   await expect(resume).toContainText(`turn ${turn}`);
   await resume.click();
   await expect(page.getByTestId('turn-number')).toHaveText(String(turn), { timeout: 60_000 });

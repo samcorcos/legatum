@@ -26,6 +26,11 @@ This file holds the current rules, one line each. The user's words, dates, as-bu
 - Invalid choices are greyed out with the reason next to them, in one line, where the price would be; never accept an order that will fail (offer "Declare war on X?" instead); a broken order is the next decision ("Fix order").
 - A card held until the player acts closes only by its own controls; acting on a decision card closes it; a card that announces a finished mechanic offers the next idle decision as a button.
 - A background failure (upload, save, network) is a small corner notice, never a card over a decision (2026-11-07).
+- A held card's call to action follows live state when it shows, not the state when it was planned (PR #32, 2026-11-22).
+- Never a blank page: a boot plate before React mounts, and one full-screen crash card with Reload as the primary (`ui/CrashScreen.tsx`). Saves never fail silently: a failed write shows one notice whose action is Save to file; replacing a saved game asks once with focus on the safe choice (2026-11-22).
+- A confirm dialog opens on the safe choice and Esc means the safe choice; a dialog Esc closes also shows a visible close control; a button's label says what the click does (2026-11-22 reviews).
+- A refusal from the game server is a short plain notice with one next step, never "relay", "socket" or a code; offer a retry only when it can work (relay review, 2026-11-22).
+- A new order kind goes into `ORDER_KINDS` (`app/src/orderDecoding.ts`) in the same change, with a tour shot of the pending-orders line (PR 31 review, 2026-11-22).
 - Online: an action that ends a shared game says so and asks first, with the label branching on host or guest; status text is written from the viewer's role; durability text matches the storage behind it (no "saved" for a tab-lifetime copy) (co-op review, 2026-11-22).
 - Big moments get a full interstitial: war declared on you, entering an era, the end of the game; a rival closing on victory and a city under attack are never a surprise (user, 2026-10-08, 2026-11-11).
 - A menu action that can fail shows its busy and failed state on the control the player pressed, never on a neighbour. A flow that resumes a shared game says who still has to come back, and how.
@@ -106,7 +111,7 @@ Every word a player reads (sheets, cards, the Guide, tooltips, breakdowns, repor
 | Walls | the building only (Castle and Star Fort upgrade it); "walled city" is fine | walls (lowercase) for city HP |
 | military unit | any unit that fights; say "except Scouts" when a rule leaves them out | armed unit, regiment, troops |
 | VP | victory points (the Guide spells it out once) | victory points elsewhere |
-| era objectives | the three ways to score an era's 1 VP | era goals |
+| World Age card | the Age's one card, worth 1 VP (rules 50; "era objectives" is retired) | era objectives, era goals |
 | decadence | the cut to a leader's yields | lead penalty |
 | at Peace, at War, Alliance | treaty states, capitalised | at peace, at war |
 | supply | the Iron or Coal your deposits give; each building or unit that needs it uses 1 while it exists ("Iron 5 / 6") | stockpile, stored Iron/Coal, Iron per turn, Coal per turn |
@@ -125,7 +130,7 @@ Every word a player reads (sheets, cards, the Guide, tooltips, breakdowns, repor
 | --- | --- |
 | `references/feedback-rules-1.md` | You need the user's exact words or as-built details for a rule above (first half: Escape, sheets, lists, map, sound, goals, orders, forecasts, banners, faction selection) |
 | `references/feedback-rules-2.md` | The same for the second half (unlock cards, disabled reasons, menus, rewards, tour, overlays, Settle lens, premium tiers, lobby, VP surfaces, alarms, diplomacy, aircraft, end of game) |
-| `references/process-and-screens.md` | Working on a specific screen as built: research, era objectives, Settle lens, overlays, Cities overview, race panel, unlock hovercards, piece comparison, Siege, Byzantium screens |
+| `references/process-and-screens.md` | Working on a specific screen as built: research, era objectives and World Age cards, Settle lens, overlays, Cities overview, race panel, unlock hovercards, piece comparison, Siege, Byzantium screens |
 | `references/review-findings-2026-10.md` | Checking what an October UI review already ruled (8.9.6 to train-1101, Mercenary Companies) |
 | `references/review-findings-2026-11.md` | Checking what a November UI review already ruled (train-1103 to the game-upload notice) |
 | `references/plain-language-examples.md` | Rewriting player text (before/after table), the copy lint, the Scenario Lab screen |

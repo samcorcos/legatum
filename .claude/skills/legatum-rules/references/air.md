@@ -20,13 +20,13 @@ Moved verbatim from `game-rules.md` on 2026-11-22, in the original order; the or
 | Mill (`Hydroponics`) | 200 | +3 Food | Feudalism |
 | University (`College`) | 240 | +4 Science | Education |
 | Castle (was Citadel) | 240 | +5 city strength (Walls tier 2; still fires) | Chivalry |
-| Star Fort | 320 | +5 more city strength (Walls tier 3) | Military Engineering |
+| Star Fort | 320 | +5 more city strength (Walls tier 3) | Machinery (rules 50; was Military Engineering) |
 | Forge (`MachineShop`) | 320 | +3 Production; uses 1 Iron (idle without it) | Iron Working |
 | Stock Exchange (`StockExchange`) | 360 | +6 Gold (the Gold line's third tier, after Market and Bank); population 8; uses no resource (it keeps the Bank's Niter) | Electricity |
 | Research Lab (`InferenceCore`) | 360 | +6 Science | Electronics |
 | Factory (`Autoworks`) | 440 | +5 Production; adds 1 Coal and keeps the Forge's Iron (idle without either) | Industrialization |
-| Pyramids (Masonry, Ancient) | 240 | +1 Production | World wonder, +2 held VP |
-| Great Library (`RelayUplink`, Philosophy, Classical) | 600 | — | World wonder, +2 held VP; needs a Library in its city |
+| Pyramids (Masonry, Ancient) | 360 (rules 50; was 240) | +1 Production | World wonder, +2 held VP |
+| Great Library (`RelayUplink`, Philosophy, Classical) | 400 (rules 50; was 600) | — | World wonder, +2 held VP; needs a Library in its city |
 | Hagia Sophia (Machinery, Medieval) | 400 | +2 Science | World wonder, +2 held VP |
 | Grand Bazaar (`WorldExchange`, Banking, Renaissance) | 600 | — | World wonder, +2 held VP; needs two Banks, including one in its city |
 | Royal Arsenal (`PlanetaryFoundry`, Ballistics, Industrial) | 600 | — | World wonder, +2 held VP; needs a Factory in its city |

@@ -39,7 +39,8 @@ games_url="${games_url%/}"
 if [ -n "$games_url" ] && ! [[ "$games_url" =~ ^https://[A-Za-z0-9.-]+$ ]]; then
   echo "LEGATUM_GAMES_URL must be an https origin such as https://legatum-games.example.workers.dev" >&2; exit 1
 fi
-VITE_LEGATUM_RELAY_URL="$relay" VITE_LEGATUM_GAMES_URL="$games_url" npm run build
+# Bundled PNG art is served as WebP on the website (app/vite-plugin-webp.ts). LEGATUM_WEBP=0 keeps PNG.
+LEGATUM_WEBP="${LEGATUM_WEBP:-1}" VITE_LEGATUM_RELAY_URL="$relay" VITE_LEGATUM_GAMES_URL="$games_url" npm run build
 
 cp hosted/404.html dist/
 if [ -z "$relay" ]; then

@@ -2,7 +2,7 @@
 
 Save: `~/LegatumRuns/bug-saves/athens-win-bombers-20261027.legatum`. Engine `a58e80856` (tag `playtest-8.9.13`), 5 empires, every AI Hard. Replayed at the tag with 0 hash mismatches in 177 turns. The AI plan trace (`p881_trace`) matches all 696 recorded AI order lists. The what-ifs are 59 branches of 32 runs, run locally (runner and data in `~/LegatumRuns/coach-tools/coach-8913-athens/`).
 
-![VP race and army size](2026-10-27-athens-bombers-review.png)
+VP race and army size (archived outside the repository)
 
 ## Coach's verdict
 

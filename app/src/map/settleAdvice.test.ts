@@ -100,3 +100,13 @@ describe('an illegal tile says why, naming the empire or city', () => {
     expect(blockerText(view, 'FailedBefore')).toMatch(/unseen city/);
   });
 });
+
+describe('an Egyptian Settler hears about Food alone', () => {
+  it('never mentions Production', () => {
+    for (const food of [0, 20, 60, 200]) {
+      const text = landClause({ food, production: 0, gold: 0, science: 0 }, 'Egypt');
+      expect(text).not.toContain('Production');
+      expect(text).toMatch(/Food nearby$/);
+    }
+  });
+});

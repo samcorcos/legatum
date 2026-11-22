@@ -1,0 +1,16 @@
+/* The autosave notice: over the top of the map like the decision notice, clear of the side panels. */
+.toast.save-notice {
+  top: 76px;
+  bottom: auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px 12px;
+  left: calc(var(--story-left, 16px) + (100% - var(--story-left, 16px) - var(--story-right, 16px)) / 2);
+  max-width: min(560px, calc(100% - var(--story-left, 16px) - var(--story-right, 16px) - 16px));
+  width: max-content;
+  border-left-color: var(--accent);
+  font-size: 14px;
+}
+.toast.save-notice .toast-message { flex: 1 1 240px; }
+.toast.save-notice .btn { min-height: 32px; padding: 4px 12px; }
+.toast.save-notice .toast-close { color: var(--ink); }

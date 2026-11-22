@@ -32,43 +32,44 @@ const hud = (o: V2Options, open = true) => {
 const rows = (el: Element) => [...el.querySelectorAll('[data-testid=era-objective]')].map((l) => [l.getAttribute('data-family'), l.querySelector('.eo-num')?.textContent]);
 
 describe('the compact block (the default)', () => {
-  it('is the band and one line: your VP, and the era in focus with the objective nearest done and what it scores', () => {
-    const el = hud({ era: 2, scored: [], progress: { '2:0': [6, 9], '2:1': [3, 4], '2:2': [0, 1] } }, false);
+  it('is the band and one line: your VP, and the Age in focus with its card nearest done and what it scores', () => {
+    const el = hud({ era: 2, scored: [], progress: { '3:0': [6, 14], '3:1': [30, 40], '3:2': [0, 1] } }, false);
     expect(el.getAttribute('data-open')).toBe('false');
     expect(el.querySelector('.eo-win h4')?.textContent).toBe('How you win');
     expect(el.querySelectorAll('[data-testid=era-objective]')).toHaveLength(0);
     const line = el.querySelector('[data-testid=era-glance]')!;
-    expect(line.querySelector('.eo-g-tag')?.textContent).toMatch(/^1 VP (each )?in Classical$/);
-    // Expand 3/4 is nearest done (75%, against 67% and 0%).
-    expect(line.querySelector('[data-testid=era-glance-text]')?.textContent).toMatch(/4 cities/);
-    expect(line.querySelector('.eo-num')?.textContent).toBe('3/4');
+    // The newest Age you have not scored leads: the rival began the Medieval Age, and it is open to you too.
+    expect(line.querySelector('.eo-g-tag')?.textContent).toMatch(/^Age of Medieval · 1 VP( each)?$/);
+    // Population 30/40 is nearest done (75%, against 43% and 0%).
+    expect(line.querySelector('.eo-num')?.textContent).toBe('30/40');
   });
 
-  it('previews Classical in the first era, and a scored era reads as scored', () => {
-    expect(hud({ era: 1, scored: [] }, false).querySelector('.eo-g-tag')?.textContent).toMatch(/^Next: 1 VP (each )?in Classical$/);
+  it('before any Age begins it previews Classical', () => {
+    act(() => setEraHudOpen(false));
+    const view = { ...withV2(base, { era: 1, scored: [] }), eras: [], objective_progress: [] };
+    act(() => root.render(<EraObjectivesHud view={view} model={buildVpModel(view)} />));
+    expect(host.querySelector('[data-testid=era-hud]')?.getAttribute('data-state')).toBe('preview');
   });
 
-  it('an era already scored is the band alone: nothing left to do this era, so no second line, and the band names the era it kept', () => {
-    const el = hud({ era: 3, scored: [3] }, false);
+  it('with every begun Age scored it is the band alone, and the band names the Age it kept', () => {
+    const el = hud({ era: 3, scored: [2, 3] }, false);
     expect(el.querySelector('[data-testid=era-glance]')).toBeNull();
     expect(el.classList.contains('band-only')).toBe(true);
     expect([...el.children].map((c) => c.tagName)).toEqual(['HEADER']);
-    expect(el.querySelector('.eo-win h4')?.textContent).toBe('How you win');
     expect(el.querySelector('[data-testid=how-you-win-vp]')?.textContent).toMatch(/of \d+ VP$/);
     const tag = el.querySelector('[data-testid=era-scored-tag]')!;
-    // A short fixed word, never the era's name (a long name such as Renaissance would wrap the band); the name is in the tooltip and the screen-reader text.
-    expect(tag.querySelector('.eo-scored-w')?.textContent).toBe('Era scored');
-    const era = withV2(base, { era: 3 }).eras!.find((e) => e.era === 3)!.name;
-    expect(tag.getAttribute('title')).toBe(`${era}: 1 VP scored, kept for good`);
-    expect(tag.querySelector('.sr-only')?.textContent).toContain(era);
-    // The band's button still opens every objective.
-    expect(el.querySelector('[data-testid=era-hud-toggle]')?.getAttribute('title')).toMatch(/1 VP scored, kept for good\. Show every era objective/);
+    // A short fixed word, never the Age's name (a long name such as Renaissance would wrap the band); the name is in the tooltip and the screen-reader text.
+    expect(tag.querySelector('.eo-scored-w')?.textContent).toBe('Age scored');
+    expect(tag.getAttribute('title')).toBe('Medieval: 1 VP scored, kept for good');
+    expect(tag.querySelector('.sr-only')?.textContent).toContain('Medieval');
+    // The band's button still opens every card.
+    expect(el.querySelector('[data-testid=era-hud-toggle]')?.getAttribute('title')).toMatch(/1 VP scored, kept for good\. Show every Age card/);
     act(() => el.querySelector<HTMLElement>('[data-testid=era-hud-toggle]')!.click());
     expect(el.getAttribute('data-open')).toBe('true');
     expect(el.classList.contains('band-only')).toBe(false);
   });
 
-  it('an era still to score keeps its one line (the stake stays visible) and no scored tag', () => {
+  it('an Age still to score keeps its one line (the stake stays visible) and no scored tag', () => {
     const el = hud({ era: 3, scored: [] }, false);
     expect(el.querySelector('[data-testid=era-glance]')).not.toBeNull();
     expect(el.querySelector('[data-testid=era-scored-tag]')).toBeNull();
@@ -76,7 +77,7 @@ describe('the compact block (the default)', () => {
   });
 
   it('opens on a click of the line or the band button, and compacts again', () => {
-    const el = hud({ era: 2, scored: [] }, false);
+    const el = hud({ era: 3, scored: [2] }, false);
     act(() => el.querySelector<HTMLElement>('[data-testid=era-glance]')!.click());
     expect(el.getAttribute('data-open')).toBe('true');
     expect(el.querySelectorAll('[data-testid=era-objective]')).toHaveLength(3);
@@ -85,16 +86,14 @@ describe('the compact block (the default)', () => {
   });
 });
 
-describe('the era objectives block in the race panel', () => {
-  it('in the first era it previews Classical and says plainly that the Ancient era has no objective', () => {
-    const el = hud({ era: 1, scored: [] });
+describe('the World Ages block in the race panel', () => {
+  it('before any Age begins it previews Classical and says when the first Age begins', () => {
+    act(() => setEraHudOpen(true));
+    const view = { ...withV2(base, { era: 1, scored: [] }), eras: [], objective_progress: [] };
+    act(() => root.render(<EraObjectivesHud view={view} model={buildVpModel(view)} />));
+    const el = host.querySelector<HTMLElement>('[data-testid=era-hud]')!;
     expect(el.getAttribute('data-state')).toBe('preview');
-    expect(el.querySelector('[data-testid=era-hud-current] h5')?.textContent).toBe('Next era: 1 VP each in Classical');
-    expect(el.querySelectorAll('[data-testid=era-objective]')).toHaveLength(3);
-    // An era you have not entered counts nothing yet, whatever the family (the core counts gains after entry).
-    expect(rows(el)).toEqual([['Build', '0/9'], ['Expand', '0/4'], ['Fight', '0/1']]);
-    expect(el.querySelector('[data-testid=era-entry-note]')?.textContent).toContain('No objective in the Ancient era');
-    expect(el.querySelector('[data-testid=era-entry-note]')?.textContent).toMatch(/Finish its \d+ technologies \(\d+ known\) to open these/);
+    expect(el.querySelector('[data-testid=era-entry-note]')?.textContent).toContain('No Age has begun. The first begins when any empire enters the Classical era');
   });
 
   it('leads with how you win: your VP, the target and where it comes from', () => {
@@ -102,22 +101,21 @@ describe('the era objectives block in the race panel', () => {
     const n = buildVpModel(withV2(base, { era: 3 })).rows.find((r) => r.isMine)!.members.length;
     expect(el.querySelector('.eo-win h4')?.textContent).toBe('How you win');
     expect(el.querySelector('[data-testid=how-you-win-vp]')?.textContent).toMatch(/of \d+ VP$/);
-    expect([...el.querySelectorAll('.eo-part')].map((p) => p.textContent?.replace(/\s+/g, ' ').trim())).toEqual([`Eras 2/${6 * n}`, `Faction 0/${2 * n}`, 'World wonder 0']);
+    expect([...el.querySelectorAll('.eo-part')].map((p) => p.textContent?.replace(/\s+/g, ' ').trim())).toEqual([`Ages 2/${6 * n}`, `Faction 0/${2 * n}`, 'World wonder 0']);
   });
 
-  it('mid-era it shows the three objectives titled "Score 1 VP in <era>" with live progress and a bar each', () => {
-    const el = hud({ era: 2, scored: [], progress: { '2:0': [6, 9], '2:1': [3, 4], '2:2': [0, 1] } });
+  it('an open Age shows its card titled "Score 1 VP in the <Age> Age" with live progress and a bar each', () => {
+    const el = hud({ era: 3, scored: [2], progress: { '3:0': [6, 14], '3:1': [30, 40], '3:2': [0, 1] } });
     expect(el.getAttribute('data-state')).toBe('open');
-    expect(el.querySelector('[data-testid=era-hud-current] h5')?.textContent).toBe('Score 1 VP each in Classical');
-    expect(el.querySelector('[data-testid=era-hud-current] .eo-rule')?.textContent).toBe('any one of three');
-    expect(rows(el)).toEqual([['Build', '6/9'], ['Expand', '3/4'], ['Fight', '0/1']]);
+    expect(el.querySelector('[data-testid=era-hud-current] h5')?.textContent).toMatch(/^Score 1 VP( each)? in the Medieval Age$/);
+    expect(el.querySelector('[data-testid=era-hud-current] .eo-rule')?.textContent).toBe('never expires');
+    expect(rows(el)).toEqual([['Expand', '6/14'], ['Expand', '30/40'], ['Fight', '0/1']]);
     const bars = [...el.querySelectorAll<HTMLElement>('[role=progressbar]')];
-    expect(bars.map((b) => b.getAttribute('aria-valuenow'))).toEqual(['6', '3', '0']);
+    expect(bars.map((b) => b.getAttribute('aria-valuenow'))).toEqual(['6', '30', '0']);
     expect(bars[1].querySelector('i')?.style.width).toBe('75%');
-    expect(el.querySelector('[data-testid=era-entry-note]')).toBeNull();
   });
 
-  it('shows the baseline, total, starting turn and other open era that will restart', () => {
+  it('shows the baseline, total, starting turn and other open Age that will restart', () => {
     const view = withV2(base, { era: 3, scored: [], progress: { '3:1': [40, 40] } });
     view.objective_accounting = [{ era: 3, slot: 1, baseline: 9, total: 49, counting_since_turn: 112, restart_eras: [2] }];
     act(() => setEraHudOpen(true));
@@ -131,51 +129,38 @@ describe('the era objectives block in the race panel', () => {
     expect(host.querySelector('[data-testid=era-count-restart]')?.textContent).toContain('your Classical progress goes back to zero');
   });
 
-  it('a met objective reads Met, and a scored era shows the VP taken and the next era previewed', () => {
-    const met = hud({ era: 2, scored: [], progress: { '2:0': [6, 9], '2:1': [4, 4], '2:2': [0, 1] } });
+  it('a met card reads Met, and a scored Age shows the VP taken', () => {
+    const met = hud({ era: 3, scored: [2], progress: { '3:0': [6, 14], '3:1': [40, 40], '3:2': [0, 1] } });
     expect(met.querySelector('.eo-line.met .eo-num')?.textContent).toContain('Met');
-    const scored = hud({ era: 3, scored: [3] });
+    const scored = hud({ era: 3, scored: [2, 3] });
     expect(scored.getAttribute('data-state')).toBe('scored');
-    expect(scored.querySelector('[data-testid=era-hud-current] h5')?.textContent).toBe('Medieval: 1 VP scored');
-    expect(scored.querySelector('[data-testid=era-hud-next] h5')?.textContent).toBe('Next era: 1 VP each in Renaissance');
-    expect(scored.querySelectorAll('[data-testid=era-hud-next] [data-testid=era-objective]')).toHaveLength(3);
-    expect(scored.querySelector('[data-testid=era-hud-next] .eo-rule')?.textContent).toMatch(/^after \d+ more technologies?$/);
-    expect(scored.querySelector('[data-testid=era-entry-note]')).toBeNull();
-    // The earlier era you left unscored is a link in the scored line, to the sheet.
-    expect(scored.querySelector('[data-testid=era-older]')?.textContent).toBe('Classical still open');
+    expect(scored.querySelector('[data-testid=era-hud-current] h5')?.textContent).toBe('Medieval Age: 1 VP scored');
+    expect(scored.querySelector('[data-testid=era-hud-next]')).toBeNull();
   });
 
-  it('an earlier era you have not scored is a link to the sheet', () => {
-    const el = hud({ era: 3, scored: [3] });
-    act(() => el.querySelector<HTMLButtonElement>('button[data-testid=era-older]')!.click());
+  it('an earlier Age you have not scored is a link to the sheet, with its card below', () => {
+    const el = hud({ era: 3, scored: [] });
+    expect(el.querySelector('[data-testid=era-older]')?.textContent).toContain('Classical is still open to score');
+    act(() => el.querySelector<HTMLButtonElement>('[data-testid=era-older] button')!.click());
     expect(useGame.getState().vpExpanded).toBe(true);
-    // While the current era is open the same fact is a line under its objectives.
-    const open = hud({ era: 3, scored: [] });
-    expect(open.querySelector('[data-testid=era-older]')?.textContent).toContain('Classical is still open to score');
-  });
-
-  it('is not drawn when no era objectives are available', () => {
-    const view = { ...withV2(base, { era: 2 }), eras: [], objective_progress: [] };
-    act(() => root.render(<EraObjectivesHud view={view} model={buildVpModel(view)} />));
-    expect(host.querySelector('[data-testid=era-hud]')).toBeNull();
+    expect(el.querySelector('.eo-older h5')?.textContent).toBe('Classical still open');
   });
 });
 
 describe('the research screen header', () => {
-  const research = (o: V2Options) => { const view = withV2(base, o); act(() => root.render(<EraObjectivesResearch view={view} />)); return host.querySelector<HTMLElement>('[data-testid=research-objectives]')!; };
+  const research = (view: PlayerView) => { act(() => root.render(<EraObjectivesResearch view={view} />)); return host.querySelector<HTMLElement>('[data-testid=research-objectives]')!; };
 
-  it('shows this era’s objectives with progress beside the next era’s preview', () => {
-    const el = research({ era: 2, scored: [] });
-    expect(el.querySelector('[data-testid=research-objectives-current] h4')?.textContent).toContain('Score 1 VP this era');
-    expect(rows(el.querySelector('[data-testid=research-objectives-current]')!)).toEqual([['Build', '6/9'], ['Expand', '2/4'], ['Fight', '0/1']]);
-    expect(el.querySelector('[data-testid=research-objectives-next] h4')?.textContent).toContain('Next: Medieval era');
-    expect(el.querySelectorAll('[data-testid=research-objectives-next] [data-testid=era-objective]')).toHaveLength(3);
+  it('shows the card of the Age in focus with progress, and when the next Age begins', () => {
+    const el = research(withV2(base, { era: 3, scored: [2] }));
+    expect(el.querySelector('[data-testid=research-objectives-current] h4')?.textContent).toContain('Score 1 VP this Age');
+    expect(rows(el.querySelector('[data-testid=research-objectives-current]')!)).toEqual([['Expand', '6/14'], ['Expand', '11/40'], ['Fight', '0/1']]);
+    expect(el.querySelector('[data-testid=research-objectives-next] h4')?.textContent).toBe('Next: Renaissance Age');
   });
 
-  it('in the first era it says there is no objective and previews Classical', () => {
-    const el = research({ era: 1, scored: [] });
-    expect(el.querySelector('[data-testid=research-objectives-current] h4')?.textContent).toContain('no objective');
-    expect(el.querySelector('[data-testid=research-objectives-next] h4')?.textContent).toContain('Next: Classical era');
-    expect(el.querySelectorAll('[data-testid=era-objective]')).toHaveLength(3);
+  it('before any Age begins it says so and when the first one does', () => {
+    const el = research({ ...withV2(base, { era: 1, scored: [] }), eras: [], objective_progress: [] });
+    expect(el.querySelector('[data-testid=research-objectives-current] h4')?.textContent).toBe('No Age has begun');
+    expect(el.textContent).toContain('The first Age begins when any empire enters the Classical era');
+    expect(el.querySelector('[data-testid=research-objectives-next]')).toBeNull();
   });
 });

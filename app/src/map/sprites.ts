@@ -722,7 +722,7 @@ export interface BannerSpec {
   name: string;
   pop: number | null;
   color: string;
-  /** The original-capital star, kept for the whole game: its ink and whether the viewer's team has scored it. */
+  /** The original-capital star, kept for the whole game: its ink and whether the viewer holds its 1 VP now. */
   capital: CapitalStar | null;
   selected: boolean;
   glyph: string | null;
@@ -875,7 +875,7 @@ const STAR = (g: CanvasRenderingContext2D, x: number, y: number, r: number, wais
   g.fill();
 };
 
-/** An original capital's star: filled in the founder's ink, or hollow (outlined, plate inside) once the viewer's team has scored it. */
+/** An original capital's star: filled in the founder's ink, or hollow (outlined, plate inside) while the viewer holds its 1 VP. */
 function drawCapitalStar(g: CanvasRenderingContext2D, star: CapitalStar, x: number, y: number, r: number, plate: string, filledWaist = 0.19) {
   if (!star.scored) { g.fillStyle = star.ink; STAR(g, x, y, r, filledWaist); return; }
   g.fillStyle = plate; STAR(g, x, y, r, 0.4);

@@ -7,12 +7,16 @@
 --card   <slug>-card.png: 64 x 64, a build-card thumbnail cropped to the figure (UI review 2026-10-11: tall figures drawn
          whole in a 30 px card slot were about 24 px tall). The crop is a square around the figure's upper body: the base is
          cut away, so a standing man fills the slot; wide subjects are cut to a square about the figure's mass.
-Needs Pillow.
+Needs Pillow. A `<slug>-source.png` kept outside git is fetched first (tools/art/fetch-sources.py, LEGATUM_ART_SOURCES_URL).
 """
 import argparse
 import glob
 import os
+import sys
 from PIL import Image
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import artsources
 
 UNITS = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'app', 'src', 'assets', 'units')
 
@@ -30,6 +34,9 @@ def fit(img, box, size, bottom=True):
 
 def panel(slug):
     src = os.path.join(UNITS, f'{slug}-source.png')
+    # An archived source (tools/art/sources-manifest.json) is fetched when missing; a unit with no source yet uses its 256.
+    if not os.path.exists(src) and artsources.rel(src) in artsources.manifest_entries():
+        artsources.ensure_or_exit(src)
     img = Image.open(src if os.path.exists(src) else os.path.join(UNITS, f'{slug}-256.png')).convert('RGBA')
     fit(img, 476, 512).save(os.path.join(UNITS, f'{slug}-panel.png'), optimize=True)
 

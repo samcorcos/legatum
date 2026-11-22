@@ -1,0 +1,2705 @@
+{
+ "comment": "Art masters kept outside git. Each file is fetched into its original path by tools/art/fetch-sources.py from the base URL in LEGATUM_ART_SOURCES_URL. Add new masters with fetch-sources.py --add.",
+ "files": [
+  {
+   "path": "app/src/assets/art/people-athens.png",
+   "bytes": 1817757,
+   "sha256": "0e1cbc24588d804ef73527d7dda4592faaab26a67ba0fec79a7c7ae979ef9c65"
+  },
+  {
+   "path": "app/src/assets/art/people-aztecs.png",
+   "bytes": 2011577,
+   "sha256": "1181483274578cad5c8ebb04b990c9acfbad7ad42bdbcb9a00eb47e745ae73b7"
+  },
+  {
+   "path": "app/src/assets/art/people-byzantium.png",
+   "bytes": 1755946,
+   "sha256": "abaad2f5ef95df71d5166f966af1f053a4c25ac7b223c520bf0058cd0c6c6335"
+  },
+  {
+   "path": "app/src/assets/art/people-celts.png",
+   "bytes": 1687883,
+   "sha256": "cae3af74598952e75db5e6393945b2d70e07d68da6127330bc6b74a4aacfb9e3"
+  },
+  {
+   "path": "app/src/assets/art/people-egypt.png",
+   "bytes": 1545576,
+   "sha256": "ca29e07c1bd3e30bb1c8a85f5122dcb57d7cacfdfe811f6d706e3bf512224216"
+  },
+  {
+   "path": "app/src/assets/art/people-germany.png",
+   "bytes": 2002947,
+   "sha256": "77a386dbc5579f1fef33072e3e3395098de3bef2ee595d72c5fb4d4d29c27cbd"
+  },
+  {
+   "path": "app/src/assets/art/people-india.png",
+   "bytes": 2053367,
+   "sha256": "7c297ed832833683e7a820a3073f1e3d0eca7ae54779d0260c251b8fe04e7751"
+  },
+  {
+   "path": "app/src/assets/art/people-mongols.png",
+   "bytes": 1820662,
+   "sha256": "b3343e9bc49cef988a6c85cad18e8b65e149b04d0f62359c79c2f71508eb5db1"
+  },
+  {
+   "path": "app/src/assets/art/people-rome.png",
+   "bytes": 1672146,
+   "sha256": "054ce28f9e6486b9f450d1ee05e53ae6b653173bfb4c6fd8d7aa9d30562d66c4"
+  },
+  {
+   "path": "app/src/assets/art/people-sparta.png",
+   "bytes": 1781254,
+   "sha256": "1812226033e2c40879e2c907088c1fc24947de123d37f86e05981e5fad82e832"
+  },
+  {
+   "path": "app/src/assets/art/people-switzerland.png",
+   "bytes": 1794163,
+   "sha256": "73ce4bd79f69d4e9af1d2cc5dc523e1cd434edf8ec2bfa2f8b391945cfceee34"
+  },
+  {
+   "path": "app/src/assets/art/title-keyart-c-road-at-dawn.png",
+   "bytes": 5503492,
+   "sha256": "8e7b107a645e9ea6d7181df35ea16081f7a505d0d14bddcd6438dc7891e345e9"
+  },
+  {
+   "path": "app/src/assets/units/archer-source.png",
+   "bytes": 798635,
+   "sha256": "f459f80268880a53ae5a0e787d1efa3e8fd054ab25761a21fb9b0eaedcbd9563"
+  },
+  {
+   "path": "app/src/assets/units/arquebusier-source.png",
+   "bytes": 935099,
+   "sha256": "2924c9ff99ca4b3d87c6b1087aeb9dcbb77dd3e92518650e7df47956c9dbd935"
+  },
+  {
+   "path": "app/src/assets/units/artillery-source.png",
+   "bytes": 1227353,
+   "sha256": "79e6214375571d39d469cf3da8de61bdc53463c8757ca49beddb0d6b46ce7bf8"
+  },
+  {
+   "path": "app/src/assets/units/autonomous-armour-source.png",
+   "bytes": 1788395,
+   "sha256": "78ada4467157fe6bdc42439a2763875adeb02fd9ec16769ac878c37bbec77a94"
+  },
+  {
+   "path": "app/src/assets/units/barbarian-archer-source.png",
+   "bytes": 927695,
+   "sha256": "b7658686ed888b8b41d83f70fb923b0443bbe2579835be921aaf10796e7a8777"
+  },
+  {
+   "path": "app/src/assets/units/barbarian-crossbowman-source.png",
+   "bytes": 862410,
+   "sha256": "2b080b992d7588bf0b2fd2e58b39980191e7bc8bec731f64d4dd307d16fc7a1c"
+  },
+  {
+   "path": "app/src/assets/units/barbarian-musketman-source.png",
+   "bytes": 1480923,
+   "sha256": "d0176998a54ab86dc0e48c72daeeb62b3c7151b635fc1563ef47722c65213e0f"
+  },
+  {
+   "path": "app/src/assets/units/barbarian-pikeman-source.png",
+   "bytes": 665094,
+   "sha256": "c631f924306bd54e1102773732965fc6502697638cad135ce732fe851dab3338"
+  },
+  {
+   "path": "app/src/assets/units/barbarian-scout-source.png",
+   "bytes": 1712176,
+   "sha256": "312ac24a1df7b2711164c28fa5034520c4eb7bc0d0f9249d186fbd7906724da0"
+  },
+  {
+   "path": "app/src/assets/units/barbarian-spearman-source.png",
+   "bytes": 1517974,
+   "sha256": "e109e81b4483fd33a5c2049d854ba30303fbf6502188e59d7468523a931f7a81"
+  },
+  {
+   "path": "app/src/assets/units/biplane-source.png",
+   "bytes": 1149983,
+   "sha256": "953fab2d741eceb7b5b38083fda9c49ca62d9033b2d4f5c05c45858dbdd002dc"
+  },
+  {
+   "path": "app/src/assets/units/bomber-source.png",
+   "bytes": 932681,
+   "sha256": "47106fc167e7e68ffc9115594314529107ff20fb57ccf54bf95c63153af220c5"
+  },
+  {
+   "path": "app/src/assets/units/byzantine-heir-source.png",
+   "bytes": 1095122,
+   "sha256": "51c290aaed056a9f2e709b6a0dd18d1e9f74014ded26c20f9d13a3fb9d61d671"
+  },
+  {
+   "path": "app/src/assets/units/cataphract-source.png",
+   "bytes": 991406,
+   "sha256": "0ef4c7973c1f57456474a5f2f420e2581014ce85fda6ed1e41d87542ab4a93e1"
+  },
+  {
+   "path": "app/src/assets/units/cavalry-source.png",
+   "bytes": 1094532,
+   "sha256": "8e7d0af4f826eef42d714ea74d6c3a6124788cf26525293477716b39e47b6503"
+  },
+  {
+   "path": "app/src/assets/units/composite-archer-source.png",
+   "bytes": 1268442,
+   "sha256": "03e04d8a0a5ef29086547d08f86a21a2d5d6ec48ab6f7ffcfc7815944541bb21"
+  },
+  {
+   "path": "app/src/assets/units/crossbowman-source.png",
+   "bytes": 1310157,
+   "sha256": "ac004a0720b138425ddac08fa05b31ad5ac88d6056fdbd355de9cc1e8c26b6e4"
+  },
+  {
+   "path": "app/src/assets/units/cuirassier-source.png",
+   "bytes": 1201003,
+   "sha256": "222020040e35f82b1cc2735352e4ecbff2003fc7c7b6f76362c858c5b90902d4"
+  },
+  {
+   "path": "app/src/assets/units/drone-swarm-source.png",
+   "bytes": 912093,
+   "sha256": "95a547b19dc18fbeacff1b445fe763da6297fa186ac3ab8b63ed037fa7f59e1b"
+  },
+  {
+   "path": "app/src/assets/units/eagle-warrior-source.png",
+   "bytes": 1138371,
+   "sha256": "f63f6dd7e224676ae242fc1a09c2bf7db617ad616afc5081925a94466cec5b8f"
+  },
+  {
+   "path": "app/src/assets/units/field-cannon-source.png",
+   "bytes": 1541809,
+   "sha256": "785af7ebc6937daa05b5058253ebf95c874a17e41b97256f08f97204572df96a"
+  },
+  {
+   "path": "app/src/assets/units/fighter-source.png",
+   "bytes": 897677,
+   "sha256": "163fba3d423c807a57a072149f360a3dba56decba99d34c32275f61cbdfc5686"
+  },
+  {
+   "path": "app/src/assets/units/gaesatae-source.png",
+   "bytes": 1148556,
+   "sha256": "13f2e4a220929d1dd2650c85a88b92e44fd688efaa4f2fbdcbce3d873bc9b3c2"
+  },
+  {
+   "path": "app/src/assets/units/horseman-source.png",
+   "bytes": 1039831,
+   "sha256": "2ac821809abe4459ebca61431afe0b42cf8b692f695dd0ecb4a3d4228c2e6117"
+  },
+  {
+   "path": "app/src/assets/units/howitzer-source.png",
+   "bytes": 1612917,
+   "sha256": "a76063180283caccb73a37aeda45f52e9e8e090c99d4489349aed0e3d65624f5"
+  },
+  {
+   "path": "app/src/assets/units/hunter-killer-source.png",
+   "bytes": 1374994,
+   "sha256": "9960cdc2841cc8a7b3ebcbefbe42e76acb482f6f023fb95aa5d62070f561343b"
+  },
+  {
+   "path": "app/src/assets/units/infantry-source.png",
+   "bytes": 651222,
+   "sha256": "276440388ab4b6a8d190087bc3dcc162d043a015877c0ef1186c21bfabc78b5c"
+  },
+  {
+   "path": "app/src/assets/units/jet-bomber-source.png",
+   "bytes": 665343,
+   "sha256": "fcb9b7a0053d8ac23b5ca6e7fd366917eb81d2777b27149fc5dfc16456ea6bc1"
+  },
+  {
+   "path": "app/src/assets/units/jet-fighter-source.png",
+   "bytes": 851093,
+   "sha256": "03a722a0159a71fce16f0956ad69de44e8ab086a9f3fc6b3f219db72acbde2ed"
+  },
+  {
+   "path": "app/src/assets/units/keshig-source.png",
+   "bytes": 1473885,
+   "sha256": "2bef79b824c92118bd1d84632608d373aeed5d1c4b92bc8850574961b1780723"
+  },
+  {
+   "path": "app/src/assets/units/knight-source.png",
+   "bytes": 1041224,
+   "sha256": "3cf74ad1166efb7809022d6a97650c39de9bcf1043398c76bfab0d74f381fa66"
+  },
+  {
+   "path": "app/src/assets/units/landship-source.png",
+   "bytes": 1345602,
+   "sha256": "9cf69b954d7b47efa01e4ec2e4f0fc7eacc039927e02f04faf57384185bbe789"
+  },
+  {
+   "path": "app/src/assets/units/legionary-source.png",
+   "bytes": 980892,
+   "sha256": "d8c36a3524f5393084fceb01e3dba32d28b170763051560c5ceaf24d5833d237"
+  },
+  {
+   "path": "app/src/assets/units/main-battle-tank-source.png",
+   "bytes": 959780,
+   "sha256": "503e194fc5caeac59dab7159a2093d8ff95b64aad9c1e9a2a4918c896c7e8af1"
+  },
+  {
+   "path": "app/src/assets/units/mechanised-infantry-source.png",
+   "bytes": 1270272,
+   "sha256": "19a29066947c82f6e18602da61610e5b671d4a4cd01b37941dd75e6def837873"
+  },
+  {
+   "path": "app/src/assets/units/medjay-source.png",
+   "bytes": 776335,
+   "sha256": "b29dad48b177ff6caab48d42cf7e2b0e152a7b74ca003635c5c9b19dd27df084"
+  },
+  {
+   "path": "app/src/assets/units/musketman-source.png",
+   "bytes": 1100389,
+   "sha256": "875085991dfdf55896b0f33ea00e1e7fe69dfc4973bc6eaefa4a5272849fe61d"
+  },
+  {
+   "path": "app/src/assets/units/panzer-source.png",
+   "bytes": 1587774,
+   "sha256": "8cde89751262870f8af89df7972d8915ee1a0a081c25774f5009c1f70d59e6b7"
+  },
+  {
+   "path": "app/src/assets/units/peltast-source.png",
+   "bytes": 1323232,
+   "sha256": "55b12a644804769c2d863e693bd73fa460e4b3c283b0cd30b512fa484aea8794"
+  },
+  {
+   "path": "app/src/assets/units/phalangite-source.png",
+   "bytes": 748690,
+   "sha256": "761a40ceec831c7cb8cba83854eae0f05a6373d592f9e5abbd70991ee826c119"
+  },
+  {
+   "path": "app/src/assets/units/pikeman-source.png",
+   "bytes": 667133,
+   "sha256": "d8a3411648dcb165684a321008b1215c5e5cb0d28b124ac44a08a2dd8c8fcaf5"
+  },
+  {
+   "path": "app/src/assets/units/reislaufer-source.png",
+   "bytes": 757234,
+   "sha256": "dd45bf57b3beb24c9d51c357715fcfa2330155ca87d4907f8e227c3da15afdb9"
+  },
+  {
+   "path": "app/src/assets/units/rifleman-source.png",
+   "bytes": 922456,
+   "sha256": "9ce80aa6961b1af05b1f8dd53d48a3c76556c0239139987c8dda3ecbd487a027"
+  },
+  {
+   "path": "app/src/assets/units/rocket-artillery-source.png",
+   "bytes": 1560472,
+   "sha256": "b6ebf91d87c289c05ac345edbc2b61327b9392bdfb77b3358edc8fb1151c3462"
+  },
+  {
+   "path": "app/src/assets/units/scout-source.png",
+   "bytes": 1268722,
+   "sha256": "4b260460ddaad1ea2acf48068888efd3a8ef540db5c79a53c90057cca016f9ec"
+  },
+  {
+   "path": "app/src/assets/units/settler-source.png",
+   "bytes": 1133227,
+   "sha256": "8a5977c245ce2e898fe7df2fd5361d6b95175a46eb2990fd15d3b0282ab53f45"
+  },
+  {
+   "path": "app/src/assets/units/spartan-hoplite-source.png",
+   "bytes": 918642,
+   "sha256": "7b6e3443b6bd90c2c2aacdde4a1c1533a42ac4a3a1daffddfe9fa08e6ce357fd"
+  },
+  {
+   "path": "app/src/assets/units/spearman-source.png",
+   "bytes": 782562,
+   "sha256": "193d19f8b2b75f0c22e6c7a117b7d1d2f293be50721881fd7d97795b27b8d318"
+  },
+  {
+   "path": "app/src/assets/units/stealth-bomber-source.png",
+   "bytes": 791873,
+   "sha256": "0d730849c657e19ed9a5e31223990607fdfd5b316f10c98007bbf7fb9ae03aa0"
+  },
+  {
+   "path": "app/src/assets/units/stealth-fighter-source.png",
+   "bytes": 1101831,
+   "sha256": "318d0a41906a797305ec7a0b53173896fc5a36dbc1dc0f077571a785e446686f"
+  },
+  {
+   "path": "app/src/assets/units/tagmatic-soldier-source.png",
+   "bytes": 1057698,
+   "sha256": "d8e540730798e8d46b44da2c95a7fef2a891ba7d6f521faf9549e00256358cc4"
+  },
+  {
+   "path": "app/src/assets/units/tank-source.png",
+   "bytes": 1539833,
+   "sha256": "7e68210e5ca4952aed21adb3aba47ea9f10de3013192ef272b287f8a0c28399d"
+  },
+  {
+   "path": "app/src/assets/units/trench-infantry-source.png",
+   "bytes": 966453,
+   "sha256": "0e02c9988361e2f563dcbb76a0f5d9dfb69832b66a457011302058048a7f9aa9"
+  },
+  {
+   "path": "app/src/assets/units/war-elephant-source.png",
+   "bytes": 1660799,
+   "sha256": "ba648e2a651130dce9f6668f2bddc818c9ac3cb4f1764c967541dd8ad55ced82"
+  },
+  {
+   "path": "docs/design/art-pass-2/all-portraits-48.png",
+   "bytes": 78245,
+   "sha256": "39046cd87fc16fa0d1829ba0e59c8bed4b07e632dbf7c4ae4c873a47027f8367"
+  },
+  {
+   "path": "docs/design/art-pass-2/before/arquebusier.png",
+   "bytes": 57059,
+   "sha256": "0a832211a384dce8e4137fd381d77a8632cb25bc678e7e720ace9a87fd39dfb4"
+  },
+  {
+   "path": "docs/design/art-pass-2/before/barbarian-crossbowman.png",
+   "bytes": 60621,
+   "sha256": "7261bf95f6a80ac3693162f9d44e01248f4de9db4f7edbd80fc76812d5e09de9"
+  },
+  {
+   "path": "docs/design/art-pass-2/before/barbarian-pikeman.png",
+   "bytes": 41114,
+   "sha256": "c6b4649cbe11cceefdbd6dd0b9d604d7a2ae60344ff49a32e87eb1371ca73114"
+  },
+  {
+   "path": "docs/design/art-pass-2/before/barbarian-spearman.png",
+   "bytes": 78924,
+   "sha256": "d17a0ba566b4e429986801a1e78c8bf62553296b760f288a023cf4897260bc6f"
+  },
+  {
+   "path": "docs/design/art-pass-2/before/biplane.png",
+   "bytes": 61176,
+   "sha256": "952442d719b12929076ac446f7768af8fec654f526b8cb33256e85deb50123ac"
+  },
+  {
+   "path": "docs/design/art-pass-2/before/building-stockexchange-icon.png",
+   "bytes": 6262,
+   "sha256": "dfc8f4f8813bff0f4c96888891d0ddc264746a0d66327c1412d99697a5daeded"
+  },
+  {
+   "path": "docs/design/art-pass-2/before/building-stockexchange.png",
+   "bytes": 106249,
+   "sha256": "c413c0ae1c5d84ded6c74baeda2802450110ebe06ed13481aea162c259cf947e"
+  },
+  {
+   "path": "docs/design/art-pass-2/before/cataphract.png",
+   "bytes": 47650,
+   "sha256": "408f50ee79c1ccf1f166499d8efef0c95cc4204d2c616fb858ce279a7bb7e141"
+  },
+  {
+   "path": "docs/design/art-pass-2/before/crest-aztecs.png",
+   "bytes": 40791,
+   "sha256": "e97d41a19f7ca244b2522f90d8840b042c5b77b6f1d9ddee90fe7e7ec63a35a1"
+  },
+  {
+   "path": "docs/design/art-pass-2/before/crossbowman.png",
+   "bytes": 71936,
+   "sha256": "032246221364d848b2e69d7a9a992cb51e6e79a25fc7e52a40214b4a843e1157"
+  },
+  {
+   "path": "docs/design/art-pass-2/before/horseman.png",
+   "bytes": 55905,
+   "sha256": "2f54a70a75b592effd4bc15e9cb5277ea5ad337c05791ad214eb0289c59df65c"
+  },
+  {
+   "path": "docs/design/art-pass-2/before/hunter-killer.png",
+   "bytes": 78706,
+   "sha256": "3b2762ba190c919ea635be551d11a5fb52d6ac32593fbdf1a37e719aae80f7f6"
+  },
+  {
+   "path": "docs/design/art-pass-2/before/improvement-oil-well.png",
+   "bytes": 62879,
+   "sha256": "4302227e6f86d03f12962981b174bdf4425f958fa7fba0b1c2a706b5be3bf3b7"
+  },
+  {
+   "path": "docs/design/art-pass-2/before/improvement-oilwell-icon.png",
+   "bytes": 352,
+   "sha256": "c1ee821b2cb8b074d6b6492662bf35db174cee159ec3b615a787e6e4235c8e5f"
+  },
+  {
+   "path": "docs/design/art-pass-2/before/improvement-quartz-mine.png",
+   "bytes": 90372,
+   "sha256": "bb4cb11e295a8d9c8b1c9c86c0cd8a4b2aaf15a6caa8d8d5ec3ea3916356ef57"
+  },
+  {
+   "path": "docs/design/art-pass-2/before/improvement-quartzmine-icon.png",
+   "bytes": 352,
+   "sha256": "c1ee821b2cb8b074d6b6492662bf35db174cee159ec3b615a787e6e4235c8e5f"
+  },
+  {
+   "path": "docs/design/art-pass-2/before/improvement-saltpeterworks-icon.png",
+   "bytes": 352,
+   "sha256": "c1ee821b2cb8b074d6b6492662bf35db174cee159ec3b615a787e6e4235c8e5f"
+  },
+  {
+   "path": "docs/design/art-pass-2/before/improvement-saltpetre-works.png",
+   "bytes": 75424,
+   "sha256": "228901bd810f5306350f534821e7de4eb52e3edf79a50bfe6d81242fd6fd22b5"
+  },
+  {
+   "path": "docs/design/art-pass-2/before/jet-fighter.png",
+   "bytes": 40645,
+   "sha256": "46113af41758885e918f1bd219bd874a603491ca8192720c22c9f4d685c01ba9"
+  },
+  {
+   "path": "docs/design/art-pass-2/before/legionary.png",
+   "bytes": 48086,
+   "sha256": "676d97e2f9ee11d0803261e8faa12d8500af57d5722537e14f4ad92829b8861e"
+  },
+  {
+   "path": "docs/design/art-pass-2/before/mechanised-infantry.png",
+   "bytes": 100933,
+   "sha256": "cc51d12786175e9333c0b3164826b0bb4370eee734e2cdeb750db12adf7357d6"
+  },
+  {
+   "path": "docs/design/art-pass-2/before/medjay.png",
+   "bytes": 41528,
+   "sha256": "111fb8790ad3d4b2c9fe4535743c81de70db37ca16a39268b753ced4bf78cf61"
+  },
+  {
+   "path": "docs/design/art-pass-2/before/panzer.png",
+   "bytes": 77158,
+   "sha256": "9036212b655f7f19c241d3686a880b52e1d3cfa400c3bd11619163c2d5b629d4"
+  },
+  {
+   "path": "docs/design/art-pass-2/before/trench-infantry.png",
+   "bytes": 81134,
+   "sha256": "0bec27e1cc6c992892f58e852a9a829ae81c9e2f7c11d6fe3c71de15bf72d8eb"
+  },
+  {
+   "path": "docs/design/art-pass-2/before/unit-fighter-icon.png",
+   "bytes": 8739,
+   "sha256": "3b46a6c71694e68be18d0b12e72c0d6b4408bb901b46a61934282198806c55ef"
+  },
+  {
+   "path": "docs/design/art-pass-2/before/unit-panzer-icon.png",
+   "bytes": 2681,
+   "sha256": "c731a0c3d1a935162cea702f8ffe793faeddbdd383334cb0c4ca120dbfeb9cb9"
+  },
+  {
+   "path": "docs/design/art-pass-2/distinctness-flagged.png",
+   "bytes": 76829,
+   "sha256": "f4829cd813044040b5bffd7e9568143dc8e0cf8910cd9c549d19ec918998781d"
+  },
+  {
+   "path": "docs/design/art-pass-2/distinctness-review-02.png",
+   "bytes": 101720,
+   "sha256": "999a8fa9a62a52c1b0a162de376842901515ad36bb98d628bc5ad68db006a535"
+  },
+  {
+   "path": "docs/design/art-pass-2/distinctness-review-03.png",
+   "bytes": 120622,
+   "sha256": "da286beb22edf8e9d1420d37dc4fb29a8e05b7560aebdc14b4059fef78330bff"
+  },
+  {
+   "path": "docs/design/art-pass-2/icons-review.png",
+   "bytes": 55949,
+   "sha256": "69ffd1254f782e53e48db102a111378c698a4b1738ad6cd5908e7d281f634566"
+  },
+  {
+   "path": "docs/design/art-pass-2/inspection/drone-swarm.jpg",
+   "bytes": 66490,
+   "sha256": "1d0cc99e363026d38a5dd66d05940e736ef9ddc96497b8c5a717d6fe870876da"
+  },
+  {
+   "path": "docs/design/art-pass-2/inspection/spearman.jpg",
+   "bytes": 64612,
+   "sha256": "2ee47a712549ffe20ce005231291a0a39ac32e1cf5a53609ee171d8a090c9ce4"
+  },
+  {
+   "path": "docs/design/art-pass-2/inspection/unlocks-08.jpg",
+   "bytes": 120549,
+   "sha256": "08fcbe632e6c1822982d969f680b49ad7a443b17966a648cf585abd3643b2477"
+  },
+  {
+   "path": "docs/design/art-pass-2/pairs/arquebusier.png",
+   "bytes": 106709,
+   "sha256": "9c438d24ac1f72ea359f8e59101bc2df7a4c8154ab0a497d3660394da214d205"
+  },
+  {
+   "path": "docs/design/art-pass-2/pairs/barbarian-crossbowman.png",
+   "bytes": 104794,
+   "sha256": "abaa15a3e77d3901987319cdea97d137a7575578080362c9cbb036b6f5d5ca23"
+  },
+  {
+   "path": "docs/design/art-pass-2/pairs/barbarian-pikeman.png",
+   "bytes": 73570,
+   "sha256": "596baba1d9e16a5a4bebb418404207a08b57f4c7e53bda139c74c8f19f409a00"
+  },
+  {
+   "path": "docs/design/art-pass-2/pairs/biplane.png",
+   "bytes": 117357,
+   "sha256": "e34e2301a5e18c14b49bfce5653bb8683d6c908695a09c0290aa0ade06bab714"
+  },
+  {
+   "path": "docs/design/art-pass-2/pairs/building-stockexchange-icon.png",
+   "bytes": 23035,
+   "sha256": "821beb86ff03bf646cd428fe57857b3f5d3a1ab537e375bca3ae0a9b16276034"
+  },
+  {
+   "path": "docs/design/art-pass-2/pairs/cataphract.png",
+   "bytes": 98688,
+   "sha256": "1809623ab312876bbec698bb37ad23dbef3d68608d9d5fa5b24d2c767051fae7"
+  },
+  {
+   "path": "docs/design/art-pass-2/pairs/horseman.png",
+   "bytes": 109669,
+   "sha256": "c046657c17a0f0a893d2bdd25df655e38bc375d16d853d9aba173c740dce8ec6"
+  },
+  {
+   "path": "docs/design/art-pass-2/pairs/improvement-oil-well.png",
+   "bytes": 112767,
+   "sha256": "99266cf936dabb513a552fce5218b7f69d0ec865bf3662134b8dd1725f467eae"
+  },
+  {
+   "path": "docs/design/art-pass-2/pairs/improvement-oilwell-icon.png",
+   "bytes": 16871,
+   "sha256": "ed99d4f248cd4b4ecd9c00269cf251ed8cb63f2399a1bb947aaedb947afdc8e1"
+  },
+  {
+   "path": "docs/design/art-pass-2/pairs/improvement-quartzmine-icon.png",
+   "bytes": 18405,
+   "sha256": "31ed26d4dfaa22d2763c5f5468d2090f6b135bcece411381e831b36c57e546c1"
+  },
+  {
+   "path": "docs/design/art-pass-2/pairs/improvement-saltpeterworks-icon.png",
+   "bytes": 17428,
+   "sha256": "6ca39b95415662433d07dcf4dc0c6ad13f3b0b7ff29e2431ceed36aabebd9571"
+  },
+  {
+   "path": "docs/design/art-pass-2/pairs/jet-fighter.png",
+   "bytes": 84087,
+   "sha256": "905a3c0eeeecb3300f21d89da73978265e97ad674bf6aff5b1a125135a0a5bc9"
+  },
+  {
+   "path": "docs/design/art-pass-2/pairs/legionary.png",
+   "bytes": 97874,
+   "sha256": "0b300374ed0307f0bdd23023c84a42715c7e2851a74f1abf38b770d4099fa307"
+  },
+  {
+   "path": "docs/design/art-pass-2/pairs/medjay.png",
+   "bytes": 86134,
+   "sha256": "712cdf41f4a872e5379f3aafe33c6a792e42606eb5e4557cc4d3044466cdf2f8"
+  },
+  {
+   "path": "docs/design/art-pass-2/pairs/unit-fighter-icon.png",
+   "bytes": 24401,
+   "sha256": "816c421c0a722f1b0f01da304c7ad093c916f482e4c850b572eeeb9d42bf11bb"
+  },
+  {
+   "path": "docs/design/art-pass-2/pairs/unit-panzer-icon.png",
+   "bytes": 19013,
+   "sha256": "4672bb732cca49b87af4766801ef164eba07703fe26fb4e0012a66198891f806"
+  },
+  {
+   "path": "docs/design/art-pass-2/vector-after/building-stockexchange-icon.png",
+   "bytes": 1845,
+   "sha256": "23000c00e550e2e3d6d0fa81433ad6346f4abbd45172b8aee38b419d4001744e"
+  },
+  {
+   "path": "docs/design/art-pass-2/vector-after/improvement-oilwell-icon.png",
+   "bytes": 3328,
+   "sha256": "c37365ef94e2ba313aff39f988773b84a502afda1205406efeaaf3ae4193ce95"
+  },
+  {
+   "path": "docs/design/art-pass-2/vector-after/improvement-quartzmine-icon.png",
+   "bytes": 3826,
+   "sha256": "b62ca576c2b08276c2f4be48f51fa70eee602396b74e746322eeb2ca97c3fde1"
+  },
+  {
+   "path": "docs/design/art-pass-2/vector-after/improvement-saltpeterworks-icon.png",
+   "bytes": 2454,
+   "sha256": "63cc4187e9afb664380de7ae02bf235cf9097c27cd7c06702463d47260f66a2d"
+  },
+  {
+   "path": "docs/design/art-pass-2/vector-after/unit-fighter-icon.png",
+   "bytes": 3612,
+   "sha256": "44c71342d7e3968e1b8bbd965af3ead402e22b3c1923e7ef069ab56b62575c0c"
+  },
+  {
+   "path": "docs/design/art-pass-2/vector-after/unit-panzer-icon.png",
+   "bytes": 3684,
+   "sha256": "4a0d49c5bde63ff0a813a06d00137483c1ed3b2a61f2f268ce9b3664176e86b6"
+  },
+  {
+   "path": "docs/design/art-pass-3/distinctness-pairs.png",
+   "bytes": 76829,
+   "sha256": "f4829cd813044040b5bffd7e9568143dc8e0cf8910cd9c549d19ec918998781d"
+  },
+  {
+   "path": "docs/design/camp-ruin-art/a-camp-128.png",
+   "bytes": 24743,
+   "sha256": "cf32f8844c2d88baaa668c40ed3bc349cf0def5577e620d1dd8bc5b75dbc24ad"
+  },
+  {
+   "path": "docs/design/camp-ruin-art/a-camp-64.png",
+   "bytes": 7321,
+   "sha256": "6e7c01a28b69c88efff77a802c94478dbe74b6b3e67cac871dedaae6ac992094"
+  },
+  {
+   "path": "docs/design/camp-ruin-art/a-camp-remembered-128.png",
+   "bytes": 24513,
+   "sha256": "aafe82778064fe6b41c1df598c5ce0344c9605c00981f26d19430036bfb5db3c"
+  },
+  {
+   "path": "docs/design/camp-ruin-art/a-camp-remembered-64.png",
+   "bytes": 7236,
+   "sha256": "eb115f586c5c9712dd45c6ff907ec7a59653759f3b1cc0bf8e06dbf5af4800a9"
+  },
+  {
+   "path": "docs/design/camp-ruin-art/a-ruin-128.png",
+   "bytes": 24067,
+   "sha256": "6b7b040bb9203edb98b053cdd2e36f53780c2eb8afdc5747f8a4e195899530e8"
+  },
+  {
+   "path": "docs/design/camp-ruin-art/a-ruin-64.png",
+   "bytes": 7129,
+   "sha256": "27c8a390c63ae1d5819d5de488ab35a9253b7ab1183397963dd74012dbf4fb4d"
+  },
+  {
+   "path": "docs/design/camp-ruin-art/a-ruin-remembered-128.png",
+   "bytes": 23800,
+   "sha256": "0cb8f42a6c05ebcfa345ea6ee5392d877540edb2ddcc138495b4faf2cb427d73"
+  },
+  {
+   "path": "docs/design/camp-ruin-art/a-ruin-remembered-64.png",
+   "bytes": 7053,
+   "sha256": "5c08db8ba11d8383664fac957d5b6a4b6290b33756c29be81373571633f38bc6"
+  },
+  {
+   "path": "docs/design/camp-ruin-art/b-camp-128.png",
+   "bytes": 27113,
+   "sha256": "04669aad5073aa4b3218a567e095a13a2df239c36bcab8798620c76c3144e433"
+  },
+  {
+   "path": "docs/design/camp-ruin-art/b-camp-64.png",
+   "bytes": 7859,
+   "sha256": "9c05e069de559e7edb468471b1e8dc99963da354bc675ba0db50f6d21950e1e1"
+  },
+  {
+   "path": "docs/design/camp-ruin-art/b-camp-remembered-128.png",
+   "bytes": 26763,
+   "sha256": "7e84c723b11d5330ebb198809535c66375fff168a452a7ef1945f395e73857be"
+  },
+  {
+   "path": "docs/design/camp-ruin-art/b-camp-remembered-64.png",
+   "bytes": 7746,
+   "sha256": "7702d935d2cd5f37fbb6f27409d7aa17ef9c1b476f6816a8553af485a029b5fd"
+  },
+  {
+   "path": "docs/design/camp-ruin-art/b-ruin-128.png",
+   "bytes": 28513,
+   "sha256": "c9ad16bf10970b0af2cbb685d6d08009c696b4d6c99539d0ce5dcbeec1fcf5b6"
+  },
+  {
+   "path": "docs/design/camp-ruin-art/b-ruin-64.png",
+   "bytes": 8277,
+   "sha256": "1f837b89e7291be25a10dc7b6b207c49404414bb0fb8088e7f99b3ccb9f5ef31"
+  },
+  {
+   "path": "docs/design/camp-ruin-art/b-ruin-remembered-128.png",
+   "bytes": 27997,
+   "sha256": "9ff2f09fce4aaab2cb700add47b98ef80684bfe2aeb251991055457dd2343c17"
+  },
+  {
+   "path": "docs/design/camp-ruin-art/b-ruin-remembered-64.png",
+   "bytes": 8117,
+   "sha256": "fa392e630db6f8921be7bccdbf3c6cbe3b821c5e60c83fd2b5f74bca2f882642"
+  },
+  {
+   "path": "docs/design/camp-ruin-art/c-camp-128.png",
+   "bytes": 22952,
+   "sha256": "b37da9ba04ade000e9470afb999d30056c03a0a6ce1da2996635b110f199eefb"
+  },
+  {
+   "path": "docs/design/camp-ruin-art/c-camp-64.png",
+   "bytes": 6651,
+   "sha256": "eb4c179d98a87f7a39bd445eae2a2e672759e7a4b9da3570a9f2ba022fcffdcf"
+  },
+  {
+   "path": "docs/design/camp-ruin-art/c-camp-remembered-128.png",
+   "bytes": 22727,
+   "sha256": "ed05a3cb23dbd52c36a6ea07f69aa7c66bdc759ce15018b772588c74b286483a"
+  },
+  {
+   "path": "docs/design/camp-ruin-art/c-camp-remembered-64.png",
+   "bytes": 6582,
+   "sha256": "ae51f80cc5b870170248b6d9e5356177852fb62fabc5f6847d33e39d594e2431"
+  },
+  {
+   "path": "docs/design/camp-ruin-art/c-ruin-128.png",
+   "bytes": 22768,
+   "sha256": "01a117b2fee91b7a11185ceb47fd53067f1c4902090833ec6e5fc1b2f4fb3398"
+  },
+  {
+   "path": "docs/design/camp-ruin-art/c-ruin-64.png",
+   "bytes": 6695,
+   "sha256": "7cd51f255374be9dd2906a4554e3bc8752c54dcc889ec0dacfc849c046d98223"
+  },
+  {
+   "path": "docs/design/camp-ruin-art/c-ruin-remembered-128.png",
+   "bytes": 22384,
+   "sha256": "96e496c63dfeb4ac4655ae9fbd03d04b7b7d4e06bb35a2f82b5f4e2f5d06604b"
+  },
+  {
+   "path": "docs/design/camp-ruin-art/c-ruin-remembered-64.png",
+   "bytes": 6590,
+   "sha256": "4c3d56ee61baca299dcc7f1bc327814c807703e9f1ad5c2d997cc31d6b6dd60a"
+  },
+  {
+   "path": "docs/design/camp-ruin-art/mark-camp-128.png",
+   "bytes": 642,
+   "sha256": "020a10e81a063a4552b54f77641a93cfa8a93594763e2c5894f39ca71738dc28"
+  },
+  {
+   "path": "docs/design/camp-ruin-art/mark-camp-512.png",
+   "bytes": 36508,
+   "sha256": "36ce5563612a82e74876197dbbd6367736ed25635744707a9488c6e98b8e55c7"
+  },
+  {
+   "path": "docs/design/camp-ruin-art/mark-camp-64.png",
+   "bytes": 2529,
+   "sha256": "ed836e4c3530c1ace2247d7113100c20f52eb333981013ac36e41350b06079e1"
+  },
+  {
+   "path": "docs/design/camp-ruin-art/mark-camp-remembered-128.png",
+   "bytes": 645,
+   "sha256": "88144986930ccd4938dd2b6d6a0a6f8e3e2015836aa6b3d07d1b190d69caceb1"
+  },
+  {
+   "path": "docs/design/camp-ruin-art/mark-camp-remembered-512.png",
+   "bytes": 34597,
+   "sha256": "3e4bfd7f1737b42625c7515ed83d0412355a2902c5f1c2d6afa034378d1636d8"
+  },
+  {
+   "path": "docs/design/camp-ruin-art/mark-camp-remembered-64.png",
+   "bytes": 2479,
+   "sha256": "60f60fccd3caef53978cd83f1356f6ba4a29a6a33ae62d2a21ae363795c86637"
+  },
+  {
+   "path": "docs/design/camp-ruin-art/mark-ruin-128.png",
+   "bytes": 512,
+   "sha256": "7c497ff227707e7cc6dcda8a0bc7af2ae2db1c3169156ea0b590dd6e006747ce"
+  },
+  {
+   "path": "docs/design/camp-ruin-art/mark-ruin-512.png",
+   "bytes": 33407,
+   "sha256": "0439ded23b6a13a9326d7d54eb379cf3ed51d277c81bf256b67198f4ba86ad2d"
+  },
+  {
+   "path": "docs/design/camp-ruin-art/mark-ruin-64.png",
+   "bytes": 2300,
+   "sha256": "6c5f6db416b5de83cd5292e228eb5c860d2eab1b91cd6646b8ee0ed17bcc3dd5"
+  },
+  {
+   "path": "docs/design/camp-ruin-art/mark-ruin-remembered-128.png",
+   "bytes": 515,
+   "sha256": "8e4d1a63afcb41c513cf5e69154e879b44bbcb3fbcda515b00ce27ea08bbcb45"
+  },
+  {
+   "path": "docs/design/camp-ruin-art/mark-ruin-remembered-512.png",
+   "bytes": 32316,
+   "sha256": "b9075318055321e99f31b8cd2592749269c9f6c3fb380f08501eb0b5bd081c82"
+  },
+  {
+   "path": "docs/design/camp-ruin-art/mark-ruin-remembered-64.png",
+   "bytes": 2286,
+   "sha256": "647c2f01984a9f1d404bd16c92800f64b1c13e70bcf9423efa99b062451f841d"
+  },
+  {
+   "path": "docs/design/city-art/assets/a-city-128.png",
+   "bytes": 27694,
+   "sha256": "a4a6d2b7c0571c5900b4fee481b8801a28767d40d337df3b1b847751feca3269"
+  },
+  {
+   "path": "docs/design/city-art/assets/a-city-64.png",
+   "bytes": 7636,
+   "sha256": "b24c135952515878108791dc6533e93793394852a178dae08f0d4e857aafc7b3"
+  },
+  {
+   "path": "docs/design/city-art/assets/a-hamlet-128.png",
+   "bytes": 18354,
+   "sha256": "2017cb6a03fe0f91ec962ac18546024ffe7232d3dea2070513bcaf965f641f90"
+  },
+  {
+   "path": "docs/design/city-art/assets/a-hamlet-64.png",
+   "bytes": 5155,
+   "sha256": "a284e5fba1c2a6fbbdc87b2ceccf5926591fc308c729d2be22c1383f2b7edeaf"
+  },
+  {
+   "path": "docs/design/city-art/assets/a-metropolis-128.png",
+   "bytes": 33747,
+   "sha256": "2e696aec6d39f0fdcdd8fdd6b34e652cbb536539f2ed1f30508d88409403f4c9"
+  },
+  {
+   "path": "docs/design/city-art/assets/a-metropolis-64.png",
+   "bytes": 9195,
+   "sha256": "685c0e9cdf4c01d16da687424057429b451c519a45513441c0788658a1986031"
+  },
+  {
+   "path": "docs/design/city-art/assets/a-town-128.png",
+   "bytes": 22788,
+   "sha256": "4e1f906f9bfa97aea31bd5e7bf4bad663bf5dee574336ee38f98daf07ca2cb8b"
+  },
+  {
+   "path": "docs/design/city-art/assets/a-town-64.png",
+   "bytes": 6401,
+   "sha256": "abd819b7c13051559d0418fbc6d709b56046c6e6e0cd079e066474bdc623e226"
+  },
+  {
+   "path": "docs/design/city-art/assets/b-city-128.png",
+   "bytes": 26871,
+   "sha256": "b556e1f21086ff33e8637c60fde2cc09a97cfaacce69e042591731a2b715e71c"
+  },
+  {
+   "path": "docs/design/city-art/assets/b-city-64.png",
+   "bytes": 7475,
+   "sha256": "ac462e6e3862f782a541f52009bdf9582b1b18f2d3e36b4560a67c010edf02d1"
+  },
+  {
+   "path": "docs/design/city-art/assets/b-hamlet-128.png",
+   "bytes": 17458,
+   "sha256": "ce69a7f7b5c1a90c6f2e709b267702f45a8d7d5d5db20864ed00cf0745b7adf0"
+  },
+  {
+   "path": "docs/design/city-art/assets/b-hamlet-64.png",
+   "bytes": 4940,
+   "sha256": "1a32d00629c15c65db68c06e281f646048476c4fda12084d2f6cdaae582ef388"
+  },
+  {
+   "path": "docs/design/city-art/assets/b-metropolis-128.png",
+   "bytes": 34643,
+   "sha256": "d24322af2b0d527a07a811c4113e4476afa6fdc0f5065b4ca06defa6b51ac286"
+  },
+  {
+   "path": "docs/design/city-art/assets/b-metropolis-64.png",
+   "bytes": 9506,
+   "sha256": "2773a27c1566992adbc2edfe2e22618182110aeaed3189e7736691a3547da90d"
+  },
+  {
+   "path": "docs/design/city-art/assets/b-metropolis-ancient-128.png",
+   "bytes": 24080,
+   "sha256": "6a85fc1580505cecb9809ceddf7c4de51a8b7e149c55003e5a118841e8cfe4bd"
+  },
+  {
+   "path": "docs/design/city-art/assets/b-metropolis-ancient-64.png",
+   "bytes": 6746,
+   "sha256": "8e89a40ed51909898cf628b26a56eb369792575802df86a4251105fad1ee0748"
+  },
+  {
+   "path": "docs/design/city-art/assets/b-metropolis-classical-128.png",
+   "bytes": 25915,
+   "sha256": "3c80cad9e07958c30d00b6dcf46b30da3b63e95631814989c9a7fb507b7e0197"
+  },
+  {
+   "path": "docs/design/city-art/assets/b-metropolis-classical-64.png",
+   "bytes": 7169,
+   "sha256": "bc62dcc5bbf43314054a70294200fa0076e88431867e13dde36506837041a315"
+  },
+  {
+   "path": "docs/design/city-art/assets/b-metropolis-industrial-128.png",
+   "bytes": 26720,
+   "sha256": "288fd855a7a943605ee6a02c81c3bb9d06567759e7ad27f24cef7d3ce365228d"
+  },
+  {
+   "path": "docs/design/city-art/assets/b-metropolis-industrial-64.png",
+   "bytes": 7561,
+   "sha256": "e1aebe21eeaf59689e27685469a95badac64f7173927186b7e006782ff12a0ca"
+  },
+  {
+   "path": "docs/design/city-art/assets/b-metropolis-medieval-128.png",
+   "bytes": 25880,
+   "sha256": "d58c29926f10182a2c8afc7f62caf7449243381b8077f3be1f88acb0d0e39986"
+  },
+  {
+   "path": "docs/design/city-art/assets/b-metropolis-medieval-64.png",
+   "bytes": 7209,
+   "sha256": "41e366b8d6480d73ab60da18f2aef04e8c89b98e87c976926e0abebceec9e6d9"
+  },
+  {
+   "path": "docs/design/city-art/assets/b-metropolis-modern-128.png",
+   "bytes": 25989,
+   "sha256": "aab9a0a45c8da527d8a3477de950b81e7d839a07765f1816cc8b7caa22415b9b"
+  },
+  {
+   "path": "docs/design/city-art/assets/b-metropolis-modern-64.png",
+   "bytes": 7397,
+   "sha256": "cf39692320d02d83933edef6978ba08a11e87f92e4ddec34767353eb6bab5a5f"
+  },
+  {
+   "path": "docs/design/city-art/assets/b-metropolis-renaissance-128.png",
+   "bytes": 26192,
+   "sha256": "d750780d4b0c9b27304c41d680e6e25e40c19f30a1d0eeb0c0a87ca650b74d3b"
+  },
+  {
+   "path": "docs/design/city-art/assets/b-metropolis-renaissance-64.png",
+   "bytes": 7341,
+   "sha256": "bda41824113e24a57b6fcaf98768f7636356c11c6be2db7e29eee6fb198e6026"
+  },
+  {
+   "path": "docs/design/city-art/assets/b-town-128.png",
+   "bytes": 25570,
+   "sha256": "96929b30b78939c0356dd686c79da86d33c08320a3af5561561958547bc7bf24"
+  },
+  {
+   "path": "docs/design/city-art/assets/b-town-64.png",
+   "bytes": 7155,
+   "sha256": "08f8f127129dc43063f8e0ee88addce28c29619f438ddde8738d242807c6d0bd"
+  },
+  {
+   "path": "docs/design/city-art/assets/c-city-128.png",
+   "bytes": 25507,
+   "sha256": "bb62852a0207770394c3a838c7551de5c3100e756e1d531a292103613f00f3cf"
+  },
+  {
+   "path": "docs/design/city-art/assets/c-city-64.png",
+   "bytes": 7061,
+   "sha256": "2a88a9b71d8c9c65f542c9e56fe842a31967a5f6dc5ec97c380400d80277dd58"
+  },
+  {
+   "path": "docs/design/city-art/assets/c-hamlet-128.png",
+   "bytes": 13246,
+   "sha256": "cb9e35b505542014d531b767bf213e632906aaf3a20b219e771e8a2832022f7d"
+  },
+  {
+   "path": "docs/design/city-art/assets/c-hamlet-64.png",
+   "bytes": 3772,
+   "sha256": "9b3eae77211ed692467bc7a3cfc727b207c1ae50f9d97514f282f8251943fdfe"
+  },
+  {
+   "path": "docs/design/city-art/assets/c-metropolis-128.png",
+   "bytes": 37753,
+   "sha256": "dafe6e67498bea88c21489b9a7efb1aed8efedb255180a79d99201941df606b6"
+  },
+  {
+   "path": "docs/design/city-art/assets/c-metropolis-64.png",
+   "bytes": 10142,
+   "sha256": "62649bc848fa7fbacc7201ed15824d44b2be19bca8c8366fc8f9402723962a49"
+  },
+  {
+   "path": "docs/design/city-art/assets/c-town-128.png",
+   "bytes": 21942,
+   "sha256": "9d5ab8da18ff1af2359922c2b0e7496f59252522e391f1be041c7184ab5a3c51"
+  },
+  {
+   "path": "docs/design/city-art/assets/c-town-64.png",
+   "bytes": 6088,
+   "sha256": "a09fd99a475790c6469584dfbcd7dde8bac7ea22091ecea6ad06dc4ffa6c53fb"
+  },
+  {
+   "path": "docs/design/combat-fx/combat-fx-v2.mp4",
+   "bytes": 7120080,
+   "sha256": "f99e81dec26410c86c28d3772a28cb3a644a2a854132d31e575808a46d7180c1"
+  },
+  {
+   "path": "docs/design/construction/clips/found63.mp4",
+   "bytes": 5213903,
+   "sha256": "9755abb1571a5c87850221737476df19a0a51eaf8672fb4610eab14a3a176527"
+  },
+  {
+   "path": "docs/design/construction/clips/walls63.mp4",
+   "bytes": 489277,
+   "sha256": "a1108b794ba83f6220b7d0d6498cc22a3721c201f3211b5115004654f8cd4c94"
+  },
+  {
+   "path": "docs/design/construction/clips/wonder151.mp4",
+   "bytes": 3805917,
+   "sha256": "5b873f929de9766cffb47734d464c629cfb9392e1b7079c64ee5a7c681662aa9"
+  },
+  {
+   "path": "docs/design/historical-factions/portraits-greek-48px.png",
+   "bytes": 120610,
+   "sha256": "95664095c98f6e798a49599c41b6d50dd22d8cbd53aaf8975cd3f9b01fd83563"
+  },
+  {
+   "path": "docs/design/improvements-painted/deep-mine-far-detail.png",
+   "bytes": 113647,
+   "sha256": "918b30239e0403cc2aa84de479dd6c4ceccd6352f1a3a42a417b22d69fae9bd2"
+  },
+  {
+   "path": "docs/design/improvements-painted/deep-quarry-far-detail.png",
+   "bytes": 113670,
+   "sha256": "63d2fb9448e18d7a5e1b1f6c3a69bd8b4e588667ab1bf662a3232afe9195c91e"
+  },
+  {
+   "path": "docs/design/improvements-painted/farm-far-detail.png",
+   "bytes": 113539,
+   "sha256": "815e133231e425f85d8fc2b58b03dcd226b9ee653acb7306fd02e618bd7f37f8"
+  },
+  {
+   "path": "docs/design/improvements-painted/irrigated-farm-far-detail.png",
+   "bytes": 113539,
+   "sha256": "815e133231e425f85d8fc2b58b03dcd226b9ee653acb7306fd02e618bd7f37f8"
+  },
+  {
+   "path": "docs/design/improvements-painted/mine-far-detail.png",
+   "bytes": 113647,
+   "sha256": "918b30239e0403cc2aa84de479dd6c4ceccd6352f1a3a42a417b22d69fae9bd2"
+  },
+  {
+   "path": "docs/design/improvements-painted/oil-well-far-detail.png",
+   "bytes": 113509,
+   "sha256": "212a202211e95e71f82eaba831bda293958f7fe67456cd8dcae0c3545883de4b"
+  },
+  {
+   "path": "docs/design/improvements-painted/pasture-far-detail.png",
+   "bytes": 113488,
+   "sha256": "32b2c7c66c37453d387ea66d60a765f9e61283768da2f36e80e33927d514d465"
+  },
+  {
+   "path": "docs/design/improvements-painted/quarry-far-detail.png",
+   "bytes": 113670,
+   "sha256": "63d2fb9448e18d7a5e1b1f6c3a69bd8b4e588667ab1bf662a3232afe9195c91e"
+  },
+  {
+   "path": "docs/design/improvements-painted/quartz-mine-far-detail.png",
+   "bytes": 113643,
+   "sha256": "a9edc2354f2ec2732618210a9ed2db6cdf23e1eea3970ffeeb99d42f17be9009"
+  },
+  {
+   "path": "docs/design/improvements-painted/ranch-far-detail.png",
+   "bytes": 113488,
+   "sha256": "32b2c7c66c37453d387ea66d60a765f9e61283768da2f36e80e33927d514d465"
+  },
+  {
+   "path": "docs/design/improvements-painted/saltpetre-works-far-detail.png",
+   "bytes": 113478,
+   "sha256": "cc66077c5d7af94e078dc6400f9c8013323a31e13de1a583b20e7aad6d38504c"
+  },
+  {
+   "path": "docs/design/insignia/sparta-level-6-far-detail.png",
+   "bytes": 76799,
+   "sha256": "a11cd954a715ddf3d3c2d1be73294c0d80ddf3335babd396174894b083f63e92"
+  },
+  {
+   "path": "docs/design/insignia/sparta-level-6-normal-detail.png",
+   "bytes": 66240,
+   "sha256": "50126379785b2540e1e4b6f5289dda76029e79dc8556a29e71ebdd81f092c55c"
+  },
+  {
+   "path": "docs/design/moment-vignettes/mockups/a-1000x600.png",
+   "bytes": 45330,
+   "sha256": "960eff2b0bf77a7578de311c21cf8ea1d03117227a3501831a3ec7a0d1348165"
+  },
+  {
+   "path": "docs/design/moment-vignettes/mockups/a-1440x900.png",
+   "bytes": 54215,
+   "sha256": "6c8ca5bab1e051b6b546567d3b24f40cc8539cddad5db4cf7150893e4b8cad74"
+  },
+  {
+   "path": "docs/design/moments-fx/capture-lugano-t200.mp4",
+   "bytes": 1213518,
+   "sha256": "9c396c9a89fcef5fc2f6953e66b2aa33a6e0ce2ed63a3bdb5d681a904eb9220c"
+  },
+  {
+   "path": "docs/design/moments-fx/era-takeover-industrial-t151.mp4",
+   "bytes": 719071,
+   "sha256": "c6825c5d5fab7ba24417897e413e33dd7688dc08c38bf74b9cea63a5d4a52db7"
+  },
+  {
+   "path": "docs/design/moments-fx/tech-unlock-card-t151.mp4",
+   "bytes": 395763,
+   "sha256": "a32cf6c5e3c9b1283754fc5541020b212a56e123ff51b9b7464b74c815b51fe2"
+  },
+  {
+   "path": "docs/design/natural-wonders/assets/giants-causeway-a-128.png",
+   "bytes": 27850,
+   "sha256": "fa91c2d2fdd9ba7b050f1cc5dc2066dc8f5701121ebfb9e6f9cc83f802fe6e54"
+  },
+  {
+   "path": "docs/design/natural-wonders/assets/giants-causeway-a-64.png",
+   "bytes": 7682,
+   "sha256": "bff94807026669a6357701f6db0ae5b093b15711dfccb4d8537e7def28a4b97d"
+  },
+  {
+   "path": "docs/design/natural-wonders/assets/giants-causeway-b-128.png",
+   "bytes": 33695,
+   "sha256": "5779ce450ef99f2220d171f4762dc1a5d2040348a319ea2c2108cfab32f732de"
+  },
+  {
+   "path": "docs/design/natural-wonders/assets/giants-causeway-b-64.png",
+   "bytes": 9643,
+   "sha256": "f892c6e63b0030f907f4ad20213f1e3633197f3e577fa31aa5b76d597b2b16d0"
+  },
+  {
+   "path": "docs/design/natural-wonders/assets/grand-canyon-a-128.png",
+   "bytes": 29484,
+   "sha256": "eba91be5cd66b9e2e5f6823d2d09812da5ea25068f97090965da5c6a6520d4f5"
+  },
+  {
+   "path": "docs/design/natural-wonders/assets/grand-canyon-a-64.png",
+   "bytes": 8100,
+   "sha256": "a8f5e6bf9f95927ab194e99b0e0f8088257a8854e887a0c6dd5baad10641e7d5"
+  },
+  {
+   "path": "docs/design/natural-wonders/assets/grand-canyon-b-128.png",
+   "bytes": 30506,
+   "sha256": "8ea8318b21b12468bc003e11a103a28a321e2e1083626d54e27265a25f3547ea"
+  },
+  {
+   "path": "docs/design/natural-wonders/assets/grand-canyon-b-64.png",
+   "bytes": 8735,
+   "sha256": "078dd283e6339c8e963412c48a44b4f2e1cf45423375bc003ca2cdb1577ee21a"
+  },
+  {
+   "path": "docs/design/natural-wonders/assets/great-barrier-reef-a-128.png",
+   "bytes": 29204,
+   "sha256": "a964de9234eb7691e618d5a2500b0ebde0b29476989f4f51ee68e75b5c53366e"
+  },
+  {
+   "path": "docs/design/natural-wonders/assets/great-barrier-reef-a-64.png",
+   "bytes": 7989,
+   "sha256": "7dd398cfa0e9fddef84c5622b6cf3b4ee6ec38ee61d54325dc94e0c8ceab1ac8"
+  },
+  {
+   "path": "docs/design/natural-wonders/assets/great-barrier-reef-b-128.png",
+   "bytes": 32860,
+   "sha256": "26a126291df59de9b508ac01b293ac5da485050a21ba583cad2debb15bfb6778"
+  },
+  {
+   "path": "docs/design/natural-wonders/assets/great-barrier-reef-b-64.png",
+   "bytes": 9384,
+   "sha256": "0b1e73ae603646c994804940ad197638631695d527d2953ce7ad2bbeef76d8bc"
+  },
+  {
+   "path": "docs/design/natural-wonders/assets/ha-long-bay-a-128.png",
+   "bytes": 26463,
+   "sha256": "e0f09eb757720e6064fd9a90a78a4fc84de915d79dc52d57e6b504bb09f6d12d"
+  },
+  {
+   "path": "docs/design/natural-wonders/assets/ha-long-bay-a-64.png",
+   "bytes": 7430,
+   "sha256": "1a0ddd057cf9a683418ce5e77aab459dd62230434f9657c93f643b90200133a5"
+  },
+  {
+   "path": "docs/design/natural-wonders/assets/ha-long-bay-b-128.png",
+   "bytes": 27718,
+   "sha256": "c92c1b00e084401adcfed4abe7ef8a45859d35d6477dadaf716f49767000a8b7"
+  },
+  {
+   "path": "docs/design/natural-wonders/assets/ha-long-bay-b-64.png",
+   "bytes": 8211,
+   "sha256": "32c7d8b7bd7cfb733bbe872e0f0e5147ecb1358bb3d885685684db5c9f843a8a"
+  },
+  {
+   "path": "docs/design/natural-wonders/assets/iguazu-falls-a-128.png",
+   "bytes": 30378,
+   "sha256": "5f7056298ddb76ab3b3358e57d7eafd034c7a6b26e9ca9164a5b9bd272fdd7fc"
+  },
+  {
+   "path": "docs/design/natural-wonders/assets/iguazu-falls-a-64.png",
+   "bytes": 8382,
+   "sha256": "0458498a9d4d65859fa8dbb48a4f0a2d4608b4530825949df8a729f1311b2962"
+  },
+  {
+   "path": "docs/design/natural-wonders/assets/iguazu-falls-b-128.png",
+   "bytes": 34793,
+   "sha256": "d6b79249e7c411337a393a15d66ee08ab7ad2b869920b2df28ec2feb22a81e8c"
+  },
+  {
+   "path": "docs/design/natural-wonders/assets/iguazu-falls-b-64.png",
+   "bytes": 10221,
+   "sha256": "05daf6dd43d69ce614adc3442a65a6278a71b37eb55c040b106a55c675cc046e"
+  },
+  {
+   "path": "docs/design/natural-wonders/assets/mount-fuji-a-128.png",
+   "bytes": 20733,
+   "sha256": "386a9b6771198d4c167314f2b8b46e4adec424c8ee6c5ca53186a56080e657b8"
+  },
+  {
+   "path": "docs/design/natural-wonders/assets/mount-fuji-a-64.png",
+   "bytes": 5783,
+   "sha256": "212f6fc242b4170f2fe7a609e2f271352c482ce0961daacbbf5275d11904d47a"
+  },
+  {
+   "path": "docs/design/natural-wonders/assets/mount-fuji-b-128.png",
+   "bytes": 14247,
+   "sha256": "706a9061101256484c3f124e22da0a371634dd3c7d2282d8cd4f142880aef7be"
+  },
+  {
+   "path": "docs/design/natural-wonders/assets/mount-fuji-b-64.png",
+   "bytes": 4456,
+   "sha256": "7c30de0c76bbb4f46d5c67786e0a43ee1583d6f8c2483a3082303ac5d394e5a2"
+  },
+  {
+   "path": "docs/design/natural-wonders/assets/uluru-a-128.png",
+   "bytes": 17359,
+   "sha256": "4d4523993405060541b0cd3c4953ba70ab1350efd4069ad0cc362c83a762756e"
+  },
+  {
+   "path": "docs/design/natural-wonders/assets/uluru-a-64.png",
+   "bytes": 4843,
+   "sha256": "c4ddb03730decd874c20d21dbd547a5e63e81772b45622ccacff316afa5d3f37"
+  },
+  {
+   "path": "docs/design/natural-wonders/assets/uluru-b-128.png",
+   "bytes": 17714,
+   "sha256": "4a1c03658f881a4d37b268aae66ca0fbe32310c0eb76d2d3f5d4cf9d2b24b58f"
+  },
+  {
+   "path": "docs/design/natural-wonders/assets/uluru-b-64.png",
+   "bytes": 5277,
+   "sha256": "01e71a8bb1388ef363724f26151de7b663acb4ca7e9a0bed4d199c286056156c"
+  },
+  {
+   "path": "docs/design/natural-wonders/assets/victoria-falls-a-128.png",
+   "bytes": 29695,
+   "sha256": "4aa5bb71be5593defe1542ef8490980f6e3eb870c4f9ec5ecec0ec6ce5ee1af6"
+  },
+  {
+   "path": "docs/design/natural-wonders/assets/victoria-falls-a-64.png",
+   "bytes": 8187,
+   "sha256": "37e40762d25722e7292d29c529a14df0cba260850347fa2aeeb0f9fad6f88950"
+  },
+  {
+   "path": "docs/design/natural-wonders/assets/victoria-falls-b-128.png",
+   "bytes": 30071,
+   "sha256": "55203f8bf1485aa1e990983cf742cf6d41f86c563b297d3144f85f72398e4ba8"
+  },
+  {
+   "path": "docs/design/natural-wonders/assets/victoria-falls-b-64.png",
+   "bytes": 8645,
+   "sha256": "d82e61eee00622ea5659863f2e4a73501320af2f551fbba413ca3b22f4231c43"
+  },
+  {
+   "path": "docs/design/natural-wonders/in-game/1000x600-borders-crop.png",
+   "bytes": 92383,
+   "sha256": "cb193ea635ab16499f3b67b0b85ab9681cf7a9b911b1d41e917bd82abdf5b174"
+  },
+  {
+   "path": "docs/design/natural-wonders/in-game/1000x600-default-crop.png",
+   "bytes": 92907,
+   "sha256": "6fb62305afaded27c96396bb4b1750d60d814f355f49a1c5393713feaa8b8f3f"
+  },
+  {
+   "path": "docs/design/natural-wonders/in-game/1000x600-discovery-crop.png",
+   "bytes": 91935,
+   "sha256": "7a7d9003179d5996bc736fdb9f27e7fb2eac61dab52a5adbfb2891d53c190201"
+  },
+  {
+   "path": "docs/design/natural-wonders/in-game/1000x600-movement-crop.png",
+   "bytes": 89639,
+   "sha256": "dff70901a5bd2d0a418d379513ada16c02ff937b8bc7e172da730b5788bc7615"
+  },
+  {
+   "path": "docs/design/natural-wonders/in-game/1000x600-resources-crop.png",
+   "bytes": 88903,
+   "sha256": "51bc23fe44e9df1a1725ea1ba95c1713c49796e04ab3859e8fb45c534e3307c7"
+  },
+  {
+   "path": "docs/design/natural-wonders/in-game/1000x600-settle-crop.png",
+   "bytes": 90878,
+   "sha256": "b7bb0a27e974daaed5df7d0778dd46f5a4c919b4a1b1398b6d18a856e60da219"
+  },
+  {
+   "path": "docs/design/natural-wonders/in-game/1000x600-threat-crop.png",
+   "bytes": 91935,
+   "sha256": "7a7d9003179d5996bc736fdb9f27e7fb2eac61dab52a5adbfb2891d53c190201"
+  },
+  {
+   "path": "docs/design/natural-wonders/in-game/1000x600-yields-crop.png",
+   "bytes": 97129,
+   "sha256": "ac0a66e743b2e5954fb73714e6767e9281268be291034d7031b3dbed1a7e5b8a"
+  },
+  {
+   "path": "docs/design/natural-wonders/in-game/1440x900-borders-crop.png",
+   "bytes": 92795,
+   "sha256": "bf9d600704cbfb25a980b9d93dc6c4b4e9bf06accbfb7d59706ab89fd237f6a0"
+  },
+  {
+   "path": "docs/design/natural-wonders/in-game/1440x900-default-crop.png",
+   "bytes": 93418,
+   "sha256": "36543ac44b968fb2c4021e4ff98da94f8b20bc3a96d471540a697eb94c827b5b"
+  },
+  {
+   "path": "docs/design/natural-wonders/in-game/1440x900-discovery-crop.png",
+   "bytes": 92358,
+   "sha256": "e7c94adb6161c911bd1c3209647e2e295d3cff9bc94bb94d3960ca40686ede86"
+  },
+  {
+   "path": "docs/design/natural-wonders/in-game/1440x900-movement-crop.png",
+   "bytes": 90250,
+   "sha256": "373d4aede76406825ed0bc24fb6d49cd6baa8ad586aed988f54f2b83921116d6"
+  },
+  {
+   "path": "docs/design/natural-wonders/in-game/1440x900-resources-crop.png",
+   "bytes": 89272,
+   "sha256": "54c167cbb98ad7b341a6415cb2f59f8f4190b30bb431c0b0cdfa55645565f18a"
+  },
+  {
+   "path": "docs/design/natural-wonders/in-game/1440x900-settle-crop.png",
+   "bytes": 91425,
+   "sha256": "85d0bfe22c0013432aa215cb4a2c29fb0ac134a1140911ee2597646413277ac9"
+  },
+  {
+   "path": "docs/design/natural-wonders/in-game/1440x900-threat-crop.png",
+   "bytes": 92358,
+   "sha256": "e7c94adb6161c911bd1c3209647e2e295d3cff9bc94bb94d3960ca40686ede86"
+  },
+  {
+   "path": "docs/design/natural-wonders/in-game/1440x900-yields-crop.png",
+   "bytes": 97614,
+   "sha256": "4237e0eac80db9e2287abcd95e95f97db40527b867588d788c52ce4b333f5579"
+  },
+  {
+   "path": "docs/design/resource-art/era-resources/niter-improvement-map.png",
+   "bytes": 87103,
+   "sha256": "0499bc3ebdd7e362105459caccedfb3ac01ebe626df108b4cc3d3ac7f1203bf1"
+  },
+  {
+   "path": "docs/design/resource-art/era-resources/niter-medallion-map.png",
+   "bytes": 54060,
+   "sha256": "4e2b0e57c407981d9e15cbb74dde2dbe55f7509338932a479ac5d8c3d211df74"
+  },
+  {
+   "path": "docs/design/resource-art/era-resources/oil-improvement-map.png",
+   "bytes": 83404,
+   "sha256": "acae9bb145b1c5e56e7e5e19478a9476ae90ad11d78177a3d16d6541ef2cf333"
+  },
+  {
+   "path": "docs/design/resource-art/era-resources/oil-medallion-map.png",
+   "bytes": 54128,
+   "sha256": "e10f80b19230fc44a2c3649c055cede2a546099995cbef0d9d68ce770009bfad"
+  },
+  {
+   "path": "docs/design/resource-art/era-resources/silicon-improvement-map.png",
+   "bytes": 91436,
+   "sha256": "3f2e30c38cc8cc9213b5fe065cf5138e566475c08eb99952ce8e553843c29a04"
+  },
+  {
+   "path": "docs/design/resource-art/era-resources/silicon-medallion-map.png",
+   "bytes": 53208,
+   "sha256": "160d1bca7da927f3a256f10de1377fdce0f7d918ff67e006145889637ac937c2"
+  },
+  {
+   "path": "docs/design/resource-art/illuminated/cattle-32.png",
+   "bytes": 2843,
+   "sha256": "d02cbe40bc1ed048709f00931cf90f657ad5ca7c7d1a1515871aa5f7ef405de1"
+  },
+  {
+   "path": "docs/design/resource-art/illuminated/cattle-64.png",
+   "bytes": 10615,
+   "sha256": "53b352a7f83cd8c74f0333db0c0bc7ac572e143c05e300567ef372bd68afb38e"
+  },
+  {
+   "path": "docs/design/resource-art/illuminated/coal-32.png",
+   "bytes": 2873,
+   "sha256": "398946e51313895d097ef73526fd2e9c7ece2a504e747f7bb998f9b347c32efd"
+  },
+  {
+   "path": "docs/design/resource-art/illuminated/coal-64.png",
+   "bytes": 10370,
+   "sha256": "e2db0d1367ac4e3e57a7d9f453a3e26855f10e911d12f5c6732a9d568d9d22a5"
+  },
+  {
+   "path": "docs/design/resource-art/illuminated/copper-32.png",
+   "bytes": 2920,
+   "sha256": "1b169021f62a27e2069919c9991ea745d1eea39013e9c7f2ca846f6671e804a9"
+  },
+  {
+   "path": "docs/design/resource-art/illuminated/copper-64.png",
+   "bytes": 10880,
+   "sha256": "3ab6ed5f3b2930e0c4ea87d37c7a83dd4940dd74ce3ca21f788b70baaacb5296"
+  },
+  {
+   "path": "docs/design/resource-art/illuminated/iron-32.png",
+   "bytes": 2871,
+   "sha256": "6f59ef6013923c1470ea0fbd18778627f68e1ebf4ee2cb56788eb5de0b26e0c7"
+  },
+  {
+   "path": "docs/design/resource-art/illuminated/iron-64.png",
+   "bytes": 10553,
+   "sha256": "f8057ae3efce4ea421501fba50ff82b4fa1d1ffaba9f26b23f2c194f8a782b73"
+  },
+  {
+   "path": "docs/design/resource-art/illuminated/stone-32.png",
+   "bytes": 2764,
+   "sha256": "0a50cd9149b19b9030a35e93647252d65a828e241ed44a294756293e20edd243"
+  },
+  {
+   "path": "docs/design/resource-art/illuminated/stone-64.png",
+   "bytes": 10180,
+   "sha256": "e78f89d49156a972bf0c219cac12bf0c3a650ce48c20e731d6ded39b5a0e9335"
+  },
+  {
+   "path": "docs/design/resource-art/illuminated/wheat-32.png",
+   "bytes": 2871,
+   "sha256": "a989337843fb26dbdfa18b933213961532e0689cfad62cb41bfd9354eb22070d"
+  },
+  {
+   "path": "docs/design/resource-art/illuminated/wheat-64.png",
+   "bytes": 11060,
+   "sha256": "8626b0fa94a9ff85acda238305919bced5b93bfe37ef6fe99ea4813b49c7e13a"
+  },
+  {
+   "path": "docs/design/resource-art/iron-coal-review-2026-10-11.png",
+   "bytes": 61234,
+   "sha256": "c246c21f3aa6631574a99edce2767d9f50994d4c523cc8b9262626df475d7eee"
+  },
+  {
+   "path": "docs/design/resource-art/natural-objects/cattle-256.png",
+   "bytes": 111994,
+   "sha256": "2f8e81e3e222eaf6c51727597dc3b4168efab3705f270eb3ba9edd8f6afa6edf"
+  },
+  {
+   "path": "docs/design/resource-art/natural-objects/cattle-32.png",
+   "bytes": 2661,
+   "sha256": "39cf18f7ea3e18ac45e55c415867bfdc5f29ac6c9683036f0082c1d59d80eeba"
+  },
+  {
+   "path": "docs/design/resource-art/natural-objects/cattle-64.png",
+   "bytes": 8691,
+   "sha256": "a0fbcbe3ca157f721b5941348626b18dc6d6b4daf07ca3ca6e0c338502da89a8"
+  },
+  {
+   "path": "docs/design/resource-art/natural-objects/coal-256.png",
+   "bytes": 110562,
+   "sha256": "015f1952a138f2edea293f1088dda6b323d32e68e2cec1bae069d90163a3ce99"
+  },
+  {
+   "path": "docs/design/resource-art/natural-objects/coal-32.png",
+   "bytes": 2495,
+   "sha256": "b75890bc434b28540577ab04c73d2e29be9a2ce7c11cda325a28f8edc8264181"
+  },
+  {
+   "path": "docs/design/resource-art/natural-objects/coal-64.png",
+   "bytes": 8163,
+   "sha256": "383df94f9d592075c9bf12a0e405e83632d5b020c2f08a7333bcf8cbf15c64f6"
+  },
+  {
+   "path": "docs/design/resource-art/natural-objects/copper-32.png",
+   "bytes": 2714,
+   "sha256": "f2e9367cf7c6cc7b72373f200361d08e9202144a557de7a3e4ce5723f1311364"
+  },
+  {
+   "path": "docs/design/resource-art/natural-objects/copper-64.png",
+   "bytes": 9484,
+   "sha256": "af71c404b76478c9faec23c54083b756ba670bcf368911d3414c23f53907a335"
+  },
+  {
+   "path": "docs/design/resource-art/natural-objects/iron-256.png",
+   "bytes": 102992,
+   "sha256": "73a46fb8fcb235a87efb637031b145fe55582142a11b81001e89935ee3310774"
+  },
+  {
+   "path": "docs/design/resource-art/natural-objects/iron-32.png",
+   "bytes": 2274,
+   "sha256": "e8a22d7e53431824db3e3d895d785c08f54627364aa8008993a54237425b64f1"
+  },
+  {
+   "path": "docs/design/resource-art/natural-objects/iron-64.png",
+   "bytes": 7337,
+   "sha256": "b3836dc7b2dd8f98f6bf2a22e95e0649cb6083b3a0d09d42fdf5df5c841bdd2d"
+  },
+  {
+   "path": "docs/design/resource-art/natural-objects/stone-32.png",
+   "bytes": 2652,
+   "sha256": "05d3f8aee86c0a6742a2380c71232f9e13c6e9984e899d4a3afd9ca95ae077f4"
+  },
+  {
+   "path": "docs/design/resource-art/natural-objects/stone-64.png",
+   "bytes": 9259,
+   "sha256": "bb3f29d4a804fd28dcec576a50eb23e403d0dbe377a82120489e6656f72fcbb8"
+  },
+  {
+   "path": "docs/design/resource-art/natural-objects/wheat-256.png",
+   "bytes": 104877,
+   "sha256": "fd7f17a4dca0c68ede082da11dfe703a0c04733cffbb523f4f98a9d026cf1cb3"
+  },
+  {
+   "path": "docs/design/resource-art/natural-objects/wheat-32.png",
+   "bytes": 2293,
+   "sha256": "895bf6d6a91e03b0c74c643e9705449e936c9ff7f866aa563d2a187b5281ac49"
+  },
+  {
+   "path": "docs/design/resource-art/natural-objects/wheat-64.png",
+   "bytes": 7690,
+   "sha256": "966885b4765e66d2a14db1a2b9976824944ada8a314605547d1c11ba7630871d"
+  },
+  {
+   "path": "docs/design/resource-art/painted-medallions/cattle-256.png",
+   "bytes": 120514,
+   "sha256": "14a5be704bd3f5c07247886b6c5ee458a83bf45f10646190eb2ff1de4693ef3e"
+  },
+  {
+   "path": "docs/design/resource-art/painted-medallions/cattle-32.png",
+   "bytes": 2957,
+   "sha256": "9c682dc8f94efc0b56435fe61622a87126b9a7ce629166e10e8f61096f5a2b88"
+  },
+  {
+   "path": "docs/design/resource-art/painted-medallions/cattle-64.png",
+   "bytes": 10018,
+   "sha256": "6acce6cb1f998f0bd64cb892b3defcdd4d7066f7329da66d9b6a9fbd833366c7"
+  },
+  {
+   "path": "docs/design/resource-art/painted-medallions/coal-256.png",
+   "bytes": 115950,
+   "sha256": "b69597e74fc4d20a8c02c057b7e1ed7e3a94756ed41f1ba206a35aef3a95192e"
+  },
+  {
+   "path": "docs/design/resource-art/painted-medallions/coal-32.png",
+   "bytes": 2832,
+   "sha256": "c2ce8a867bc73e834ad4458e420b324abf19fc6b5c2769a31321f35fa4b2679c"
+  },
+  {
+   "path": "docs/design/resource-art/painted-medallions/coal-64.png",
+   "bytes": 9581,
+   "sha256": "c274619a5c0a002788b31a90575e3641fa7b6f8a69317ccfc0d7f0637cd5787a"
+  },
+  {
+   "path": "docs/design/resource-art/painted-medallions/copper-32.png",
+   "bytes": 2841,
+   "sha256": "ab8a8f953007978771e73f121f51e3c2b675f1fb19d2ae210595b87d3c319868"
+  },
+  {
+   "path": "docs/design/resource-art/painted-medallions/copper-64.png",
+   "bytes": 9961,
+   "sha256": "b2ca9eaf9dd81eda2ffa50059066971b84a27a74ed14f1b0128f857df8b9c6bb"
+  },
+  {
+   "path": "docs/design/resource-art/painted-medallions/iron-256.png",
+   "bytes": 118459,
+   "sha256": "16857c1fc231504ccfaedf93bc5fb3ec9247400b238cff70c15dae18cccd91f0"
+  },
+  {
+   "path": "docs/design/resource-art/painted-medallions/iron-32.png",
+   "bytes": 2828,
+   "sha256": "02a44c754870b861c6b95c0aa8377bda8bdd3d7df750fe2a6eb88712e3171a9e"
+  },
+  {
+   "path": "docs/design/resource-art/painted-medallions/iron-64.png",
+   "bytes": 9577,
+   "sha256": "d495735fdc3d180a577adf034fdb3017b3d0eaba89445ed716ddc483c661f130"
+  },
+  {
+   "path": "docs/design/resource-art/painted-medallions/stone-256.png",
+   "bytes": 118875,
+   "sha256": "cab52eff8420f406e84fcd84c467da9c25b5d297280fe0f454f92e6274553721"
+  },
+  {
+   "path": "docs/design/resource-art/painted-medallions/stone-32.png",
+   "bytes": 2866,
+   "sha256": "94700f3b0255581f8c02c6aefb248f809cf158d16eae3670cae9e8d4fe5fe988"
+  },
+  {
+   "path": "docs/design/resource-art/painted-medallions/stone-64.png",
+   "bytes": 9616,
+   "sha256": "70b80703e7e92e1156091d398b31a9f30228f2439174fa8d540645298191a66e"
+  },
+  {
+   "path": "docs/design/resource-art/painted-medallions/wheat-32.png",
+   "bytes": 2957,
+   "sha256": "739edf7570041bc4d822c9e1130ecb373e39251b0d5e6a41cb26b34d8ee26618"
+  },
+  {
+   "path": "docs/design/resource-art/painted-medallions/wheat-64.png",
+   "bytes": 10288,
+   "sha256": "7b73f9f7240db811766ebf4c6ec0464b3bd7030008351f74c3fcd7e1ec2d0e20"
+  },
+  {
+   "path": "docs/design/terrain-art/round3/units-after-desert-1000x600-far.jpg",
+   "bytes": 92633,
+   "sha256": "9eecde3a9926a98a61aa5d0ec7e6f56a8096f8bdf880cbddec02ffb771a58177"
+  },
+  {
+   "path": "docs/design/terrain-art/round3/units-after-desert-1000x600-normal.jpg",
+   "bytes": 104525,
+   "sha256": "8c437179811156ce6483e5dbcff14d9a886e7339a0d2a4eaafb2ead455b8c4e3"
+  },
+  {
+   "path": "docs/design/terrain-art/round3/units-after-desert-1440x900-far.jpg",
+   "bytes": 92644,
+   "sha256": "c3072cd0dd6a3b3f03ad524a61a63aba8fecc2124aba9d0a27de66baf52d50e9"
+  },
+  {
+   "path": "docs/design/terrain-art/round3/units-after-desert-1440x900-normal.jpg",
+   "bytes": 104533,
+   "sha256": "c04cb72367bd837edfa35f542e9039fa22e6cf933585498471a4b0870bfdff12"
+  },
+  {
+   "path": "docs/design/terrain-art/round3/units-after-forest-1000x600-far.jpg",
+   "bytes": 110026,
+   "sha256": "5a9568b7f01d49b5a0823e5bf1edbf990b024ab9c1dba040dec34f7f09e29631"
+  },
+  {
+   "path": "docs/design/terrain-art/round3/units-after-forest-1440x900-far.jpg",
+   "bytes": 110048,
+   "sha256": "17f9ca3a85854dd7976e70830e417f062ab7407cbe0fc0a25f54d06784ad94b6"
+  },
+  {
+   "path": "docs/design/terrain-art/round3/units-after-grassland-1000x600-far.jpg",
+   "bytes": 102836,
+   "sha256": "2ee0aab162069ee7f6cf8b25e86dd3e1f29c6d49f5f2718d31befeeb90b172cc"
+  },
+  {
+   "path": "docs/design/terrain-art/round3/units-after-grassland-1000x600-normal.jpg",
+   "bytes": 98934,
+   "sha256": "a00afecbaf543e65b5be5e76b71dc9bab215ad4c38ac4dc64f86f495d0837e1e"
+  },
+  {
+   "path": "docs/design/terrain-art/round3/units-after-grassland-1440x900-far.jpg",
+   "bytes": 102803,
+   "sha256": "6735312a136446728c3dc694de5ee60ddddb1437f33bce6b6fc2c576a422c82a"
+  },
+  {
+   "path": "docs/design/terrain-art/round3/units-after-grassland-1440x900-normal.jpg",
+   "bytes": 98900,
+   "sha256": "a2635c50c21b4b97a37024392d51ecbd0053790567918474d21b9d14f3ee9a36"
+  },
+  {
+   "path": "docs/design/terrain-art/round3/units-after-hills-1000x600-far.jpg",
+   "bytes": 108427,
+   "sha256": "a377abb7551adc1dda5e5840fbe4852cf2f8abb0180fec8f71c15e69e6809e62"
+  },
+  {
+   "path": "docs/design/terrain-art/round3/units-after-hills-1000x600-normal.jpg",
+   "bytes": 114570,
+   "sha256": "5c41492d9c011a53d3c571cf4df401e84486e5846dfc51ef6d4351dd9736cdfa"
+  },
+  {
+   "path": "docs/design/terrain-art/round3/units-after-hills-1440x900-far.jpg",
+   "bytes": 108417,
+   "sha256": "53c7e79627a88c9c36136439f23106e4332b2084a90e98facfdd2bd442e138af"
+  },
+  {
+   "path": "docs/design/terrain-art/round3/units-after-hills-1440x900-normal.jpg",
+   "bytes": 114610,
+   "sha256": "0ba2423a22e52ce1ef43ee884a9a8cfb1536ba3611f262c4918fa08aa1bb0512"
+  },
+  {
+   "path": "docs/design/terrain-art/round3/units-after-mountains-1000x600-far.jpg",
+   "bytes": 111288,
+   "sha256": "9db2466f2d745606cbd2822cbf29e2555e5cb16ecb5084e6b4ae35838f397db6"
+  },
+  {
+   "path": "docs/design/terrain-art/round3/units-after-mountains-1440x900-far.jpg",
+   "bytes": 111258,
+   "sha256": "97a72f622e9062e95fec5ff5f2d5009e5908bead09f5dd67318caeecd093a6ad"
+  },
+  {
+   "path": "docs/design/terrain-art/round3/units-before-desert-1000x600-far.jpg",
+   "bytes": 89853,
+   "sha256": "4f5eee2a786e0d401c2b6361d9c2c2d9a98bde6892fc71ff011bc8880504a73f"
+  },
+  {
+   "path": "docs/design/terrain-art/round3/units-before-desert-1000x600-normal.jpg",
+   "bytes": 104198,
+   "sha256": "a9232c838a114b4524550ba32fd0e61fd97325b2a42e5e21c0443efe8875169e"
+  },
+  {
+   "path": "docs/design/terrain-art/round3/units-before-desert-1440x900-far.jpg",
+   "bytes": 89873,
+   "sha256": "4941498435a76f254e5066a6e8dfff8b7f69e854d7d0a2e50022c0ca3893ae5a"
+  },
+  {
+   "path": "docs/design/terrain-art/round3/units-before-desert-1440x900-normal.jpg",
+   "bytes": 104221,
+   "sha256": "649a5d76cd7085b46ce3a8a43126ebff0bbdb5f3afd5019dc0c7bc4a66dd8607"
+  },
+  {
+   "path": "docs/design/terrain-art/round3/units-before-forest-1000x600-far.jpg",
+   "bytes": 101297,
+   "sha256": "c9e6d2bd77cf565d7428bcafe8c83af0d941164cdbd8f81b26c6d7c5b10c9273"
+  },
+  {
+   "path": "docs/design/terrain-art/round3/units-before-forest-1440x900-far.jpg",
+   "bytes": 101299,
+   "sha256": "7c40e67add34bee7b0612e1dad97a609dc309b6505bfc7880e921c700fac74e3"
+  },
+  {
+   "path": "docs/design/terrain-art/round3/units-before-grassland-1000x600-far.jpg",
+   "bytes": 101340,
+   "sha256": "a9622b7bca4277c2b639f4e772549babe38052b8bb56ad2649e9ca2762391584"
+  },
+  {
+   "path": "docs/design/terrain-art/round3/units-before-grassland-1000x600-normal.jpg",
+   "bytes": 98445,
+   "sha256": "bd47d00deb463548b1c4c75cc7a391f6085ee8cabb62134fdcd5e1e1fa8ab287"
+  },
+  {
+   "path": "docs/design/terrain-art/round3/units-before-grassland-1440x900-far.jpg",
+   "bytes": 101338,
+   "sha256": "35d8f59f260bb27e1d7a20961ee374807868686a98da52fe02fc49d31e0b13b8"
+  },
+  {
+   "path": "docs/design/terrain-art/round3/units-before-grassland-1440x900-normal.jpg",
+   "bytes": 98396,
+   "sha256": "8d1c301f426db3595f4807cc2e4dc4a45b345278114c4482ffcebe1123fdbf80"
+  },
+  {
+   "path": "docs/design/terrain-art/round3/units-before-hills-1000x600-far.jpg",
+   "bytes": 98818,
+   "sha256": "4ec8a4304cbf6af07606407cf045f1e5e86e44a260a84f01cf9b95351dac1d7c"
+  },
+  {
+   "path": "docs/design/terrain-art/round3/units-before-hills-1000x600-normal.jpg",
+   "bytes": 107831,
+   "sha256": "00c7c4b5c06c0f8eee7209e4fc13f3143fc4971e46f85a4a4a9b5fce1e1f6344"
+  },
+  {
+   "path": "docs/design/terrain-art/round3/units-before-hills-1440x900-far.jpg",
+   "bytes": 98825,
+   "sha256": "7f32c5862cc4ea3893ce58565249005d8bad0eaa16b9d9de0220fc8020c531ca"
+  },
+  {
+   "path": "docs/design/terrain-art/round3/units-before-hills-1440x900-normal.jpg",
+   "bytes": 107925,
+   "sha256": "1e3eab85c0a97fe2fdeb7741d10bc77c9db14577fb07762b01a44d858bc348e8"
+  },
+  {
+   "path": "docs/design/terrain-art/round3/units-before-mountains-1000x600-far.jpg",
+   "bytes": 106780,
+   "sha256": "f20345147b1fcd7212816524e07150893423057f16dfd197094317d0519451e7"
+  },
+  {
+   "path": "docs/design/terrain-art/round3/units-before-mountains-1440x900-far.jpg",
+   "bytes": 106787,
+   "sha256": "964e9cdb277b70622e4e041c18d3525bb7c709f21a80f26269f961a4c53d2bfd"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/A/forests/128/forest-mixed-01.png",
+   "bytes": 18503,
+   "sha256": "5676f16a48351b1a37b93d3fa51baeca2fc83d0fdaf991950e3b7db58a077aa2"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/A/forests/128/forest-mixed-02.png",
+   "bytes": 18545,
+   "sha256": "8b4d0feab1f2a38c55f75d3f6de48eabf682b1511eed3152ab3a561715dd5136"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/A/forests/128/forest-mixed-03.png",
+   "bytes": 17939,
+   "sha256": "7fe011cd1fc520b81073eafc1d86dd70b3d7590c4dc80867787e0bc63943745c"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/A/forests/128/forest-tundra-conifers.png",
+   "bytes": 13290,
+   "sha256": "5a59a42453aaa4898bca83c0f534ff428ba1e5bb74e727eefb6d70462ee0e41f"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/A/forests/64/forest-mixed-01.png",
+   "bytes": 5230,
+   "sha256": "34a36cea063d8e4e614c9f2247e1dfe071a1a2794cf13f6e85c413f81686dc18"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/A/forests/64/forest-mixed-02.png",
+   "bytes": 4968,
+   "sha256": "aa0f98d2d887812dfeded7ce755028055c505b11cf9b1b53cd7861c6da188efb"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/A/forests/64/forest-mixed-03.png",
+   "bytes": 5194,
+   "sha256": "9856a656c5c5e26854f3f712a5a13630fa9379bd0bfdbf3b874db10af6b34041"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/A/forests/64/forest-tundra-conifers.png",
+   "bytes": 3935,
+   "sha256": "e94560f28077c419806c9dce5a882badb537f3176c639283d95459d409f92cec"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/A/hills/128/downs-01.png",
+   "bytes": 11121,
+   "sha256": "27e715823bae188bab7259ae3a83ac222ec56628b76f204b47c26047f31fc20a"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/A/hills/128/downs-02.png",
+   "bytes": 12334,
+   "sha256": "4c629420f731b547e39fc3a9c488dbc57cb661631d42b856de91ccd1156e6cf6"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/A/hills/128/downs-03.png",
+   "bytes": 11654,
+   "sha256": "d767b28a58c539b093f28a71d6fe03411748b690260e968b714751f1ccb93883"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/A/hills/128/downs-04.png",
+   "bytes": 10035,
+   "sha256": "1e689c24d3cecacd7501b01002898551d700d9814dd543d7c3a141d592aa5144"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/A/hills/512/downs-04.png",
+   "bytes": 107340,
+   "sha256": "fc30a0e1a92e10649ee4474be613766480e0c4d81456950d995de2e48bf950f3"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/A/hills/64/downs-01.png",
+   "bytes": 3815,
+   "sha256": "3c2954bb9010aa8b1507d55ca0d5ea7264c03e220f56e8209c4e4a3f3858455f"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/A/hills/64/downs-02.png",
+   "bytes": 4108,
+   "sha256": "7af28839f65d7c660b933e685c2af659c024031d317f42872d34946d702e8491"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/A/hills/64/downs-03.png",
+   "bytes": 4217,
+   "sha256": "5ab0161020dfa74d050efa3038cb9dee3e7ad9cb95ef693d63353685839323c2"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/A/hills/64/downs-04.png",
+   "bytes": 3801,
+   "sha256": "053b13774b67f6ca7349413c43c1d6d35e27f801ac9215b068993696881622be"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/A/mountains/128/mountain-01.png",
+   "bytes": 17465,
+   "sha256": "6080e3941968b1335f609ca496d71eecc890d2a7d4d70aadec90bbfc9fbf85b4"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/A/mountains/128/mountain-02.png",
+   "bytes": 18226,
+   "sha256": "084b252f03a01b701271759df699f5f0b6ae82b209f3188a1002922b7fac0310"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/A/mountains/128/mountain-03.png",
+   "bytes": 15555,
+   "sha256": "7b7c09f1f080d59eb703dafafc64ecb968232e295da1b4be6161da74703fe9e9"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/A/mountains/128/mountain-04.png",
+   "bytes": 17328,
+   "sha256": "ecc4b2a7d1873729e7e71a4f5832fe9ee9413506f25ac6d10a4124e94594295c"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/A/mountains/64/mountain-01.png",
+   "bytes": 5905,
+   "sha256": "346fdfea450d6f897029702de23dcc5f452156b964ed48bb52712df40ccbef97"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/A/mountains/64/mountain-02.png",
+   "bytes": 5962,
+   "sha256": "d49c857fe357318a889ab69ed7941649ab5db92c0ff08d86983c61aa146d70c6"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/A/mountains/64/mountain-03.png",
+   "bytes": 5278,
+   "sha256": "1cf7adf2a4f18339ca14befc30560a4c622db842dad6e286e002000891af06da"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/A/mountains/64/mountain-04.png",
+   "bytes": 5882,
+   "sha256": "53526be70545f0413099636715f963c8eb899352d67a9ad99c9b5d62577ec2c4"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/B/forests/128/forest-mixed-01.png",
+   "bytes": 14638,
+   "sha256": "1b22fd5f599429b5340ae6c9b668e67013e91ff8b0258cde6049cac785657da7"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/B/forests/128/forest-mixed-02.png",
+   "bytes": 14956,
+   "sha256": "9ccbc2ac6d1ea4ef190b41ddc5327ce6ef2cc1aea34ea690d1c5a756c21d8af0"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/B/forests/128/forest-mixed-03.png",
+   "bytes": 14644,
+   "sha256": "263474083d740e0d4e7ead1d81030b563349f43b9f3771097e2f47927a3a593c"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/B/forests/128/forest-tundra-conifers.png",
+   "bytes": 13684,
+   "sha256": "a4ea6b05bbfaf3730e3f69209ea810accebe03f3abfc1a67e09db65404e97a59"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/B/forests/64/forest-mixed-01.png",
+   "bytes": 4657,
+   "sha256": "fe4b6c8f9b908050eabcd17b74f020d99581c7664243403b020eb740f506ea40"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/B/forests/64/forest-mixed-02.png",
+   "bytes": 4801,
+   "sha256": "a6d80eb0b1e64e82ab5d4951f0b32ec5b0ea2e42dda0efa01e772db2ab7e36da"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/B/forests/64/forest-mixed-03.png",
+   "bytes": 4796,
+   "sha256": "e46e26b9b0647c973902add9442db1b93b02f02ee1112ea45943d3672de9f9ef"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/B/forests/64/forest-tundra-conifers.png",
+   "bytes": 4113,
+   "sha256": "437b0e6c5425b57d6e2bc32178971e6e9eb9dc45553097542ae7d47ae1698801"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/B/hills/128/downs-01.png",
+   "bytes": 9704,
+   "sha256": "c04ef7375c763128d3351829649e48380ddd77457c69592d398a8d7f4aa8a7ba"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/B/hills/128/downs-02.png",
+   "bytes": 11672,
+   "sha256": "75df527d830605efb6b1abcaba96b06d965c55cf639e575d108d1cce515aa2d7"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/B/hills/128/downs-03.png",
+   "bytes": 11082,
+   "sha256": "c486f9ccad0cf8fb76cacfc002b324ad68bf122f23f1eed33dafacbf9ddfbf50"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/B/hills/128/downs-04.png",
+   "bytes": 10577,
+   "sha256": "ec27b4d8c21deeb52f9d742d3731e0fa241cf8d21e2b1bff75407a4f51e0920b"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/B/hills/512/downs-01.png",
+   "bytes": 104420,
+   "sha256": "e4335190a243f5b8c55a25a5d194b5643ad966b0fde4980741890298bedc6d93"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/B/hills/512/downs-04.png",
+   "bytes": 112006,
+   "sha256": "6cac95756e3612952606ad0ba9476efc11b80276a43185eba3349323491bf284"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/B/hills/64/downs-01.png",
+   "bytes": 3689,
+   "sha256": "1c60b36917a98868cf8761941cf1920299b270715e90903cfdb9c472df9af011"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/B/hills/64/downs-02.png",
+   "bytes": 4088,
+   "sha256": "9eb9690bd7ca061dee0cf3d53c0b3448575453456e444ea1a680534d3d796c19"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/B/hills/64/downs-03.png",
+   "bytes": 4184,
+   "sha256": "4d16d6f54d2e21d8a28dcef3dbef8d5ba93acb856d182b49501995ac896413cf"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/B/hills/64/downs-04.png",
+   "bytes": 4193,
+   "sha256": "90a4cf2716fdafd578ed6e0be863ac90f31565cd9ab5087a5a6b29bd5914aaae"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/B/mountains/128/mountain-01.png",
+   "bytes": 11257,
+   "sha256": "2ba5012753973074b14465fcc7b9cbc19e95848639b0e4f01a848b64984af8af"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/B/mountains/128/mountain-02.png",
+   "bytes": 10649,
+   "sha256": "9b233e8e2b65356e0b46420aa2c23fc9a236dd4ed0b98b3202c481c63034e3fb"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/B/mountains/128/mountain-03.png",
+   "bytes": 11020,
+   "sha256": "a75fb618254ab49ed9eacfbd02cf8cd61695b0c6d72c214a01c37037a164f64f"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/B/mountains/128/mountain-04.png",
+   "bytes": 12240,
+   "sha256": "419ca8dc99646cbe4667be7ce66b46393bb52da50ba5054f4a956fe30df0f274"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/B/mountains/64/mountain-01.png",
+   "bytes": 3965,
+   "sha256": "7868c2bc94f2b8640aea934704d9c097d34bfdd1c4b9d16f5691b959d1a7d96f"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/B/mountains/64/mountain-02.png",
+   "bytes": 3803,
+   "sha256": "a19125cf29d8fd4e78623fd84717d45635390576746f58fbed76ea08b4f6f638"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/B/mountains/64/mountain-03.png",
+   "bytes": 3841,
+   "sha256": "5d0dab7e5136ebf2b86758d48a7174d29693044ee9f076f2433b9df0839ae8d1"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/B/mountains/64/mountain-04.png",
+   "bytes": 4209,
+   "sha256": "c7746d07319bbb7121202ebef5d47e033433ae7340db35c2250117c8afb2d942"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/far/downs-1.png",
+   "bytes": 1939,
+   "sha256": "edf4d5a9f521e5d5298154bf4f3c12678bc851a571a46f3a30c54ec0581cc2b4"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/far/downs-2.png",
+   "bytes": 1813,
+   "sha256": "1bef6e98952b72be9b8d11bd8b8d670c7f2bf77a533c7b6d05dc54fe00f8beec"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/far/downs-3.png",
+   "bytes": 1939,
+   "sha256": "edf4d5a9f521e5d5298154bf4f3c12678bc851a571a46f3a30c54ec0581cc2b4"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/far/downs-4.png",
+   "bytes": 1813,
+   "sha256": "1bef6e98952b72be9b8d11bd8b8d670c7f2bf77a533c7b6d05dc54fe00f8beec"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/far/forest-1.png",
+   "bytes": 2820,
+   "sha256": "b108928c8ec878b489bde456df5e180eb4771c5eeae35eb9e36552d1b557712e"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/far/forest-2.png",
+   "bytes": 2852,
+   "sha256": "5f95c650749b740b80824157e9af4f505cc5764a1b2841cff37b8fc7a71127de"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/far/forest-3.png",
+   "bytes": 2674,
+   "sha256": "83e0f223ee460ff50210c313be4c2adc50c174c95a0b36fdfd9f768aed131cf5"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/far/forest-4.png",
+   "bytes": 2509,
+   "sha256": "f478fd539cf223077ff4451a3944d886e88a1e907f586f80a224e64ca9686f99"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/far/mountain-1.png",
+   "bytes": 1446,
+   "sha256": "97d975a84cdf9907ccb812b81681f14f0e79c00c17ce430964eaa04f8a45b718"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/far/mountain-2.png",
+   "bytes": 1566,
+   "sha256": "b27248d61b396897ef2e30b25e82644adabbacdfcfa64e4a6f452b78f031fff9"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/far/mountain-3.png",
+   "bytes": 1626,
+   "sha256": "b4934dd43b4256b445781d4c1db0144f169a4da261fa46fc691b2b4675a10202"
+  },
+  {
+   "path": "docs/design/terrain-art/sprites/far/mountain-4.png",
+   "bytes": 1571,
+   "sha256": "832a3f799cbc75316255ad738a09b3477ee876fd7e6a16c49b15d984143a00d0"
+  },
+  {
+   "path": "docs/design/unit-art/assets/a-archer-256.png",
+   "bytes": 50492,
+   "sha256": "e6609ff22f61035b81b6f77adbe7498543e8b782438ca9da47d6fa76c566722d"
+  },
+  {
+   "path": "docs/design/unit-art/assets/a-archer-48.png",
+   "bytes": 3553,
+   "sha256": "121a0f486cd14bb04e384aff429a9885df24d5480758eabc06ca3a69112a0e97"
+  },
+  {
+   "path": "docs/design/unit-art/assets/a-archer-64.png",
+   "bytes": 5382,
+   "sha256": "28f5617e07a5db1a41a026bfb4bce974724d39bce1fa6a0862b3f9e284817444"
+  },
+  {
+   "path": "docs/design/unit-art/assets/a-drone-swarm-256.png",
+   "bytes": 56346,
+   "sha256": "3e5a738a6652e222ab336a5d79212b5a67ab6e0acc89a15a5fcde05e72642a2a"
+  },
+  {
+   "path": "docs/design/unit-art/assets/a-drone-swarm-48.png",
+   "bytes": 3710,
+   "sha256": "4f0cb500e0924ac01d70a188f111e4ede93731179b4bf35f624a751cb7d52741"
+  },
+  {
+   "path": "docs/design/unit-art/assets/a-drone-swarm-64.png",
+   "bytes": 5698,
+   "sha256": "8a6fc1625311f8e3f518107baf0f82eb178d8a400734553547ed303e59c3df57"
+  },
+  {
+   "path": "docs/design/unit-art/assets/a-horseman-256.png",
+   "bytes": 63106,
+   "sha256": "c32849a3c365157344ff30fc2e2625089b686617e67802c4e60a6d840c56687d"
+  },
+  {
+   "path": "docs/design/unit-art/assets/a-horseman-48.png",
+   "bytes": 3819,
+   "sha256": "7b235a3ca4483106038bed05a68728b454414570343ba24d46a7b619a50081c7"
+  },
+  {
+   "path": "docs/design/unit-art/assets/a-horseman-64.png",
+   "bytes": 6089,
+   "sha256": "9ff24e36584762d33fd7802766d5be7e3806e229ca74d764e8ed184d2caf05fe"
+  },
+  {
+   "path": "docs/design/unit-art/assets/a-spearman-256.png",
+   "bytes": 41773,
+   "sha256": "1176f8a1b4da9ed48809b93c904b95d14bc05d5547c7b3562e499ec3e8bc99c5"
+  },
+  {
+   "path": "docs/design/unit-art/assets/a-spearman-48.png",
+   "bytes": 2626,
+   "sha256": "123dbbaf9f1381d0b2d1c427ddce04dadbfdf608d7bd83e454ce1280aa30ce3c"
+  },
+  {
+   "path": "docs/design/unit-art/assets/a-spearman-64.png",
+   "bytes": 4019,
+   "sha256": "3eda771f5b51a969dac4bdc457a47e0c9746b4c8ab488d538303c1994ba43954"
+  },
+  {
+   "path": "docs/design/unit-art/assets/a-tank-256.png",
+   "bytes": 76652,
+   "sha256": "33a0195c71ce18ebd7d4102ce35751f362b282859eea9f007428f8b5551f91c6"
+  },
+  {
+   "path": "docs/design/unit-art/assets/a-tank-48.png",
+   "bytes": 3964,
+   "sha256": "eec5acdc41a1c5deeb8984985dcc7ee843c25f32d16178e4735c7b313aea7f03"
+  },
+  {
+   "path": "docs/design/unit-art/assets/a-tank-64.png",
+   "bytes": 6405,
+   "sha256": "1ef7ad7cd774fb16ebd5868364e01a1d02ad4b29b77310a0914b70de9baf3d63"
+  },
+  {
+   "path": "docs/design/unit-art/assets/b-archer-256.png",
+   "bytes": 102535,
+   "sha256": "5e0016155e5b49ca7fbcb12b4842ad2441b591b17beb14d8924ccdf09424a1dd"
+  },
+  {
+   "path": "docs/design/unit-art/assets/b-archer-48.png",
+   "bytes": 5269,
+   "sha256": "3265f5a399091f37cfb492c52b848d856ee39040283be06db12abab9cfd64a65"
+  },
+  {
+   "path": "docs/design/unit-art/assets/b-archer-64.png",
+   "bytes": 8577,
+   "sha256": "09f29a99cb08e849edfd490c745e9c9fa8d52b715a91daea4c1093aa729d760c"
+  },
+  {
+   "path": "docs/design/unit-art/assets/b-drone-swarm-256.png",
+   "bytes": 94222,
+   "sha256": "1962f8a64bd5a5ba305be5fe73521fb0bb73e1c47833eda2e7a85cdc37188cbf"
+  },
+  {
+   "path": "docs/design/unit-art/assets/b-drone-swarm-48.png",
+   "bytes": 5046,
+   "sha256": "4df872a8ca9c93755d78c7874513d14f9c3d4306744cb45a59ca6f8a669cd645"
+  },
+  {
+   "path": "docs/design/unit-art/assets/b-drone-swarm-64.png",
+   "bytes": 8185,
+   "sha256": "cb5bb7de27ee169800783cec25e478c01e8c4448593dc055b17c6d43a988ca75"
+  },
+  {
+   "path": "docs/design/unit-art/assets/b-horseman-256.png",
+   "bytes": 114215,
+   "sha256": "42ee70f494db43ecc7d2fe221703c78c15d2c905af86be62d0b4cfc0ac74c4fb"
+  },
+  {
+   "path": "docs/design/unit-art/assets/b-horseman-48.png",
+   "bytes": 5621,
+   "sha256": "55c4f66fc99d175ef049694e7f38ce44fdc0bbd4c3ac68dd25d9e57afefffa94"
+  },
+  {
+   "path": "docs/design/unit-art/assets/b-horseman-64.png",
+   "bytes": 9304,
+   "sha256": "105877f4ac9ec85d2463ec0d0f12f0df1b859cca75319d5360ca6ee139013797"
+  },
+  {
+   "path": "docs/design/unit-art/assets/b-spearman-256.png",
+   "bytes": 103550,
+   "sha256": "9c258060af0a7c7b1e75c6ce2553ba8c3b22a95f315bdb5f7f29d7db3f8f2048"
+  },
+  {
+   "path": "docs/design/unit-art/assets/b-spearman-48.png",
+   "bytes": 5081,
+   "sha256": "ba8f28dd5dacca37cc06296409650be727dd4095326d5ea4b1dec9277970c658"
+  },
+  {
+   "path": "docs/design/unit-art/assets/b-spearman-64.png",
+   "bytes": 8299,
+   "sha256": "bb8211a3302c0ebb6a371d5fcf474a99320fae8a0713d04f0d8bfdda3ef37864"
+  },
+  {
+   "path": "docs/design/unit-art/assets/b-tank-256.png",
+   "bytes": 104597,
+   "sha256": "9d84684ad7a246f09d22b0a4c457f861d6baf53b9beccfd7b84cf6b956e716c8"
+  },
+  {
+   "path": "docs/design/unit-art/assets/b-tank-48.png",
+   "bytes": 5019,
+   "sha256": "bef6aad1e1bd972c68beb791a81856e97dade2b6aa476231b3380f829767e938"
+  },
+  {
+   "path": "docs/design/unit-art/assets/b-tank-64.png",
+   "bytes": 8281,
+   "sha256": "4d3085c25fc4dd6ca4dea8572e28dfdb1ec94ad0702f2fd6aa6909dbf9f9c2a8"
+  },
+  {
+   "path": "docs/design/unit-art/assets/c-archer-256.png",
+   "bytes": 111835,
+   "sha256": "b944acbfa2ed285f1901fd0338a8d523e1e44e48d6cfe7c34fdc3407cbf366ed"
+  },
+  {
+   "path": "docs/design/unit-art/assets/c-archer-48.png",
+   "bytes": 5722,
+   "sha256": "63e6b22a3cbb726bc5c906c7f39996018d1585ea403d4ce2a50f224b10b9c57e"
+  },
+  {
+   "path": "docs/design/unit-art/assets/c-archer-64.png",
+   "bytes": 9260,
+   "sha256": "d7d635e09fa73939150fb1c1adfdf2354e4dc57f297eed978f5d1c3b0075446a"
+  },
+  {
+   "path": "docs/design/unit-art/assets/c-drone-swarm-256.png",
+   "bytes": 104470,
+   "sha256": "4b83a1c31dd14175e1cd1d1243e26fe66db20a689272db17c918687dd7a4b324"
+  },
+  {
+   "path": "docs/design/unit-art/assets/c-drone-swarm-48.png",
+   "bytes": 5552,
+   "sha256": "bdd8643dc299ac58342e55be429f29b5991357810dcb9ba0448c7c954fd739d2"
+  },
+  {
+   "path": "docs/design/unit-art/assets/c-drone-swarm-64.png",
+   "bytes": 8916,
+   "sha256": "8e299deff466550058a2e4ba1880360913110a3627051d776505a04c25974b1a"
+  },
+  {
+   "path": "docs/design/unit-art/assets/c-horseman-256.png",
+   "bytes": 112602,
+   "sha256": "7dcda19efd7a7b1c88478a989746947628f4e911d91beae42b95c4dfe4d48dc6"
+  },
+  {
+   "path": "docs/design/unit-art/assets/c-horseman-48.png",
+   "bytes": 5675,
+   "sha256": "894d2a2a87dd714ba5d9589674a62b67459a872903aad7a2f5872c2a85c877d7"
+  },
+  {
+   "path": "docs/design/unit-art/assets/c-horseman-64.png",
+   "bytes": 9312,
+   "sha256": "54b86fdc98910f5877186447ece0f7b1cb3c0e2f458b2cff47d6b9678ff3974b"
+  },
+  {
+   "path": "docs/design/unit-art/assets/c-spearman-256.png",
+   "bytes": 111126,
+   "sha256": "bf5eaeb6e2bfc6bc7f42bdc9ce33403cffd6cdf2ee3932a61b1988e77569e20e"
+  },
+  {
+   "path": "docs/design/unit-art/assets/c-spearman-48.png",
+   "bytes": 5577,
+   "sha256": "d8631357450c5bf588a229684609b019acbd3d8c67b6e1e1fe136b067eb2a139"
+  },
+  {
+   "path": "docs/design/unit-art/assets/c-spearman-64.png",
+   "bytes": 9026,
+   "sha256": "2d9a131d71db1e25419f7c8f3bbc386383dbf2a6c8de67f43abd16d407bb7be0"
+  },
+  {
+   "path": "docs/design/unit-art/assets/c-tank-256.png",
+   "bytes": 109963,
+   "sha256": "7eaa890d2d06fb82e3b43cea3c018baf0f0e9acbf90375c6a0933f655e9637ab"
+  },
+  {
+   "path": "docs/design/unit-art/assets/c-tank-48.png",
+   "bytes": 5453,
+   "sha256": "f52c2db60f054314ad7f24e5bd0c9dd5cb67cdc8b26021e028278d453b85aac2"
+  },
+  {
+   "path": "docs/design/unit-art/assets/c-tank-64.png",
+   "bytes": 8871,
+   "sha256": "d86138a4b3dde2b432e82a7a9ed1c6d80e1096ad6bed67a9138ebc386198c9c7"
+  },
+  {
+   "path": "docs/design/unit-art/era-distinct/1000x600/a-base-far.jpg",
+   "bytes": 121456,
+   "sha256": "4756f28e68d7c6371d8bbdf7ee6306b75e5ea269b68523e9a4da683527e51d8d"
+  },
+  {
+   "path": "docs/design/unit-art/era-distinct/1000x600/b-numeral-far.jpg",
+   "bytes": 121544,
+   "sha256": "47d3a0fa757f5b9a56697be6d762e985d6dacca193ed31ba7a0a4664dc2b1424"
+  },
+  {
+   "path": "docs/design/unit-art/era-distinct/1000x600/d-strength-far.jpg",
+   "bytes": 122366,
+   "sha256": "f9255b4c423613de541991e1a11c898db4998c1f38f20112e2acd9c14a81ffc1"
+  },
+  {
+   "path": "docs/design/unit-art/era-distinct/1000x600/f-numeral-strength-far.jpg",
+   "bytes": 122389,
+   "sha256": "cc3d54280e59af103f576d36bda97e9f06e52f133964d447f57d39c21a3f8e3d"
+  },
+  {
+   "path": "docs/design/unit-art/era-distinct/1000x600/sil-a-base-far.jpg",
+   "bytes": 121435,
+   "sha256": "69e1fe0382634e4d85267fdbe8d328f22186e2d7094cfb044466208e4633d345"
+  },
+  {
+   "path": "docs/design/unit-art/era-distinct/1000x600/sil-b-numeral-far.jpg",
+   "bytes": 121511,
+   "sha256": "2b6d72af8127a8e154e67af5d4dd134b69f2d4d6bd2e3604d210c505f3422526"
+  },
+  {
+   "path": "docs/design/unit-art/era-distinct/1000x600/sil-d-strength-far.jpg",
+   "bytes": 122354,
+   "sha256": "f4cfdbf9ba202f71e6948a3c6afa2ddb8626675414576051c88cd9ed0f3361ef"
+  },
+  {
+   "path": "docs/design/unit-art/era-distinct/1000x600/sil-f-numeral-strength-far.jpg",
+   "bytes": 122407,
+   "sha256": "a4688780a6e8eaca6dbc85edc7ba2e5e3101f2c85a721acea87bd7a7b77fe779"
+  },
+  {
+   "path": "docs/design/unit-art/repaint/siege-props-melee.png",
+   "bytes": 64607,
+   "sha256": "70458c808a3df934676c1652ff0f815d0ee5669156285fc20cd9c4b472564781"
+  },
+  {
+   "path": "docs/design/unit-art/repaint/siege-props-ranged.png",
+   "bytes": 73113,
+   "sha256": "7a4593a92f7852ce87daeea2e991d1a05023d29aa06ece76217a4fac11958ed5"
+  },
+  {
+   "path": "docs/design/unit-art/repaint/unit-repaint-phalangite.png",
+   "bytes": 58048,
+   "sha256": "f9d686675ce7582b19e53de9fb0d317a28bd1035e914b4dbd7fe4c1b1b752b9f"
+  },
+  {
+   "path": "docs/design/unit-art/samples/cataphract-256.png",
+   "bytes": 47650,
+   "sha256": "408f50ee79c1ccf1f166499d8efef0c95cc4204d2c616fb858ce279a7bb7e141"
+  },
+  {
+   "path": "docs/design/unit-art/samples/cataphract-48.png",
+   "bytes": 2843,
+   "sha256": "488f81b78d74b0523c8c4c3dd6984c4f905ed9611e29c1385d1e7e7a194607aa"
+  },
+  {
+   "path": "docs/design/unit-art/samples/cataphract-64.png",
+   "bytes": 4441,
+   "sha256": "3ffda3eeb223d0104888014a231c0dfcf32882948144179758659c829151affc"
+  },
+  {
+   "path": "docs/design/unit-art/samples/composite-archer-256.png",
+   "bytes": 67169,
+   "sha256": "1266294216632c9cc35567340d9ebbbf3928a066a1f30ad6e882fd40b465de7b"
+  },
+  {
+   "path": "docs/design/unit-art/samples/composite-archer-48.png",
+   "bytes": 3962,
+   "sha256": "5412c9e1331e53e1a0ed2aac5695dd8fd9e9efc0c0ed8a53115f643597a8c00d"
+  },
+  {
+   "path": "docs/design/unit-art/samples/composite-archer-64.png",
+   "bytes": 6347,
+   "sha256": "b3a09fa500f0c66da583396417aa93f96bd9e68157f03a456c866016afae7db1"
+  },
+  {
+   "path": "docs/design/unit-art/samples/cuirassier-256.png",
+   "bytes": 58995,
+   "sha256": "a43ae0575e2f76d8f0faafa88876152e5cfe28ab49a76e8fbb17950af3ac7c91"
+  },
+  {
+   "path": "docs/design/unit-art/samples/cuirassier-48.png",
+   "bytes": 3738,
+   "sha256": "011c8a34a98aad9f2ebfe2199bdb0564bdc5d5e4b0a8d7513db0af2d952aa1b2"
+  },
+  {
+   "path": "docs/design/unit-art/samples/cuirassier-64.png",
+   "bytes": 5853,
+   "sha256": "8851e25ccd0d2106386be90b5df45b0d4da92e272fa0dc0a82e12e133b3bf417"
+  },
+  {
+   "path": "docs/design/unit-art/samples/phalangite-256.png",
+   "bytes": 40709,
+   "sha256": "52eca7fe0f9a5157850345e8a265a4a4165da93f1054bcda8dc3a49429fcc9d1"
+  },
+  {
+   "path": "docs/design/unit-art/samples/phalangite-48.png",
+   "bytes": 2508,
+   "sha256": "00bf8ce8b42246ac88609bf7cad933e964210effb372fbb500c58ca60eef9d40"
+  },
+  {
+   "path": "docs/design/unit-art/samples/phalangite-64.png",
+   "bytes": 3909,
+   "sha256": "bc243320e2dfd1f270c893f4bf1ee7ae403d128621f3a6b0d02f27713b7f7441"
+  },
+  {
+   "path": "docs/design/unit-art/samples/pikeman-256.png",
+   "bytes": 32877,
+   "sha256": "b83471144406252a470f605f1bbd6904557f6c8b45968ca12d277002d1566cf3"
+  },
+  {
+   "path": "docs/design/unit-art/samples/pikeman-48.png",
+   "bytes": 2380,
+   "sha256": "34fed378f0c2a083a7eb4a7fa8dce247f2b3e6086a307a1bd024ff2ee9be09d5"
+  },
+  {
+   "path": "docs/design/unit-art/samples/pikeman-64.png",
+   "bytes": 3642,
+   "sha256": "2626d1dfc95ac23e6f69c9292038f956386c43d9f7e578db568f869415b3ddeb"
+  },
+  {
+   "path": "docs/design/unlock-art/samples/a-irrigation-128.png",
+   "bytes": 28772,
+   "sha256": "037c57da18642d1b25323a035047732e234c33f2514b976af5cd2035efebc6ce"
+  },
+  {
+   "path": "docs/design/unlock-art/samples/a-irrigation-256.png",
+   "bytes": 103264,
+   "sha256": "05446452348834204eea631e757bcc09159e7f18f2f74279a5f12f71b4758169"
+  },
+  {
+   "path": "docs/design/unlock-art/samples/a-library-128.png",
+   "bytes": 27742,
+   "sha256": "5cc2f1e237360a8c14e3692e6a7ede4b4960d5a74d6d757af4cc094e34057f9d"
+  },
+  {
+   "path": "docs/design/unlock-art/samples/a-library-256.png",
+   "bytes": 99351,
+   "sha256": "486c94e7ab48fcbed77aa2626d8bd88e8db62d449c0d6497047feef5203ba56f"
+  },
+  {
+   "path": "docs/design/unlock-art/samples/a-market-128.png",
+   "bytes": 29166,
+   "sha256": "e52e8d7eb999d3c5784f06a3d833dddae893af73f3bfcc387bb8698de60bfdf2"
+  },
+  {
+   "path": "docs/design/unlock-art/samples/a-market-256.png",
+   "bytes": 103490,
+   "sha256": "c618affd31c865b5ada1c2d6ab339b023436d854f3dfba14f11fb4e023b9ea0d"
+  },
+  {
+   "path": "docs/design/unlock-art/samples/a-walls-128.png",
+   "bytes": 25011,
+   "sha256": "4efd96fe0669a4ad2778acc36a36a452dc3096710b09d273dd247fa0fcf70dc3"
+  },
+  {
+   "path": "docs/design/unlock-art/samples/a-walls-256.png",
+   "bytes": 89656,
+   "sha256": "fa34d549dbfa665edc1a67fe1c5e10594c549b4afd3f9522b6260254e9f15420"
+  },
+  {
+   "path": "docs/design/unlock-art/samples/a-workshop-128.png",
+   "bytes": 29053,
+   "sha256": "8b675795fec73509eec4598a09c7c2e92b949b678f7ae4238553e2da4c299a9d"
+  },
+  {
+   "path": "docs/design/unlock-art/samples/a-workshop-256.png",
+   "bytes": 104994,
+   "sha256": "2d6279e63c87b8e575f3ae64f74230e8e4662b219788d4d35560027bf721fc22"
+  },
+  {
+   "path": "docs/design/unlock-art/samples/b-irrigation-128.png",
+   "bytes": 36694,
+   "sha256": "bd1a403a8ebfcbda29987b3c4b21fb4eb0cad8626266a4aedd3a2e7956f420c0"
+  },
+  {
+   "path": "docs/design/unlock-art/samples/b-library-128.png",
+   "bytes": 34410,
+   "sha256": "0ecc793b9a6727f84aed43541afcadb2aa6f7d126d141eaa11602bc8fb76468a"
+  },
+  {
+   "path": "docs/design/unlock-art/samples/b-library-256.png",
+   "bytes": 120835,
+   "sha256": "cf6867a2c9e766ae476675bbb5ccbe986fefce870bb8b38f22fa13e82e583e01"
+  },
+  {
+   "path": "docs/design/unlock-art/samples/b-market-128.png",
+   "bytes": 34433,
+   "sha256": "c126bf20fe97e9acd3060a85a62acf0a15db8cc1b8df872b9c6e14ca4aad3b32"
+  },
+  {
+   "path": "docs/design/unlock-art/samples/b-market-256.png",
+   "bytes": 121839,
+   "sha256": "219c6f9d800a9b1976f0f265a5565d154660e0f61c0c3f574c7788a291d1cb71"
+  },
+  {
+   "path": "docs/design/unlock-art/samples/b-walls-128.png",
+   "bytes": 35807,
+   "sha256": "ddf862e5d9bb0a9d4085e45aafd70066c115b3015a1d474106e8e15f6e6e7073"
+  },
+  {
+   "path": "docs/design/unlock-art/samples/b-workshop-128.png",
+   "bytes": 37397,
+   "sha256": "4d9cd699bd1c688844b15cec6286caccb37d906fe5b8762bf83dfb81dee5ed83"
+  },
+  {
+   "path": "docs/design/unlock-art/samples/c-irrigation-180.png",
+   "bytes": 52396,
+   "sha256": "52a0130f6900f089eb300c82609f10a626a79f6c81f09c275381a2b7beeb8ab5"
+  },
+  {
+   "path": "docs/design/unlock-art/samples/c-library-180.png",
+   "bytes": 47085,
+   "sha256": "18134ed80c7b8cdd4c53185e552613b887744e6988d8626a06fe8bc449ea31e3"
+  },
+  {
+   "path": "docs/design/unlock-art/samples/c-market-180.png",
+   "bytes": 49124,
+   "sha256": "dfaa67ac357093e4f38db9e0e25cc81af127cf6b15be3457a528d6a8a167dc1f"
+  },
+  {
+   "path": "docs/design/unlock-art/samples/c-walls-180.png",
+   "bytes": 49090,
+   "sha256": "09dc222b709ccc79f0b9236f6aba766dc182996f248b2e445d7030fb7d401e9d"
+  },
+  {
+   "path": "docs/design/unlock-art/samples/c-workshop-180.png",
+   "bytes": 48296,
+   "sha256": "91ec293c40c280acd8ccde99d96339e92f4dd7ac15c8ff9a3d13dc1e2e26c9f0"
+  },
+  {
+   "path": "docs/playtests/2026-10-27-athens-bombers-review.png",
+   "bytes": 156124,
+   "sha256": "1cd785c15ba9430231f78b51b57e2a9dbac0ce003e278eb4192fcafa8c9a6d1b"
+  },
+  {
+   "path": "docs/playtests/2026-10-27-sparta-review.png",
+   "bytes": 141183,
+   "sha256": "bf7eaaad2084387db0a33689b753668481dbbc4c941c0e75f9bc587f0af8814b"
+  },
+  {
+   "path": "docs/playtests/2026-10-28-swiss-review.png",
+   "bytes": 175118,
+   "sha256": "4e3600a28589021cdb248bae3ba024b1a460e6b6553d460ab4d55fd48d0b8a7c"
+  },
+  {
+   "path": "docs/playtests/2026-10-30-mongols-review.png",
+   "bytes": 149437,
+   "sha256": "34a1c620aaca0e276180161a336366e7f4589bfded9b7e80249ae968f20106fa"
+  },
+  {
+   "path": "docs/playtests/reviews/2026-10-17-8.9.2-sparta-t87.png",
+   "bytes": 131956,
+   "sha256": "f739d1a361416c75d9f4eb2033b66ed57bad42a13a7abf535b3bcb241dd0c1f2"
+  },
+  {
+   "path": "docs/playtests/reviews/2026-10-17-8.9.2-switzerland.png",
+   "bytes": 300595,
+   "sha256": "4048136ded7f4a41fe67c546a070c25c7c38d675edecdba4981445050381bd6f"
+  },
+  {
+   "path": "docs/playtests/reviews/2026-10-18-8.9.4-sparta.png",
+   "bytes": 172764,
+   "sha256": "b0a40a6611a5918ee9a7a7737fbf3cd8c458e85920a7e90ea9704f21b8a2375c"
+  },
+  {
+   "path": "docs/playtests/reviews/2026-10-18-8.9.4-switzerland.png",
+   "bytes": 154002,
+   "sha256": "b5625ab360597655242b2006ebf23173bc81c1ee962398e6c58269f2b75b006a"
+  },
+  {
+   "path": "docs/playtests/reviews/2026-10-18-8.9.5-athens.png",
+   "bytes": 170974,
+   "sha256": "21da10cddf3aec2649704556d77c4691fa2b1d2ea0d12a2e8b078ae9016c7656"
+  },
+  {
+   "path": "docs/playtests/reviews/2026-10-20-8.9.6-athens.png",
+   "bytes": 175687,
+   "sha256": "e474b8c43c1a7490ab66d09c70e6e9757f39ee80edfd5778af466c78922089f6"
+  },
+  {
+   "path": "docs/playtests/reviews/2026-10-20-8.9.6-switzerland.png",
+   "bytes": 204748,
+   "sha256": "13f5b41a1516244575db31d9ee74122c48a6e8e5db9908d5ad5d09a8119f4b76"
+  },
+  {
+   "path": "docs/playtests/reviews/2026-10-22-8.9.7-celts.png",
+   "bytes": 219091,
+   "sha256": "2b82bdcbb3ab163c8c10d819be4257fed2723acba5f17775c462701cf8594d50"
+  },
+  {
+   "path": "docs/playtests/reviews/2026-10-22-japans-century.png",
+   "bytes": 208887,
+   "sha256": "894f0e79921480f6dc3daee6a6cde3467a69dd9b40f23b112bb3a6d34af2acf3"
+  },
+  {
+   "path": "docs/playtests/reviews/2026-11-01-8.9.22-aztecs-2.png",
+   "bytes": 191607,
+   "sha256": "49a82351d192d9a3554942f767b6408dabec8da91175b10bd7dbb2ffa0cca497"
+  },
+  {
+   "path": "docs/playtests/reviews/2026-11-01-8.9.22-aztecs.png",
+   "bytes": 192363,
+   "sha256": "0750fa145dcafdcfd49196fd7b8b49a08c6b085ad436d75f1991a7dd99c35da2"
+  },
+  {
+   "path": "docs/playtests/reviews/2026-11-01-8.9.23-germany-start.png",
+   "bytes": 113134,
+   "sha256": "00261c29d3743093bc94f633d8713df1dfcdc16d41104b5dfd84576bfe16242c"
+  },
+  {
+   "path": "docs/playtests/reviews/2026-11-02-8.9.24-swiss.png",
+   "bytes": 221297,
+   "sha256": "21f3eba3a20d57d437af9cfbd0ba6762908049e8523bfd74af63d84782a223f0"
+  },
+  {
+   "path": "docs/playtests/reviews/2026-11-03-8.9.25-celts.png",
+   "bytes": 148487,
+   "sha256": "9e4e88401d6c024211cd62c5094bdb8a4da2f14e84000b46fd59204024e4b9f0"
+  },
+  {
+   "path": "docs/playtests/reviews/2026-11-03-8.9.25-india-start.png",
+   "bytes": 143009,
+   "sha256": "1fc08ad92208c90405a613dcff23b25be18df02b5de3ff3b8f524a313793c996"
+  },
+  {
+   "path": "docs/playtests/reviews/2026-11-05-8.9.25-india.png",
+   "bytes": 162367,
+   "sha256": "e6ac4bb3e29f5a8af53b7e56f56ed3ee1ac3b4f06e7b499c69fe55c10ee85811"
+  },
+  {
+   "path": "docs/playtests/reviews/2026-11-06-8.9.25-mongols.png",
+   "bytes": 104977,
+   "sha256": "a88d8753109849f15f9ea5af21828acc75a5ce9e47cca62a6a2c218da307498f"
+  },
+  {
+   "path": "docs/playtests/reviews/2026-11-07-8.9.26-celts.png",
+   "bytes": 140414,
+   "sha256": "b6b1938356ce1078f3cf30f09276ae850eae96ff00de78cf6ba4692d2186733e"
+  },
+  {
+   "path": "docs/playtests/reviews/2026-11-07-8.9.26-sparta.png",
+   "bytes": 103973,
+   "sha256": "410128afa0b748677904cec79a0b866b728b7d788ea853c92a6fca28fadbb7ed"
+  },
+  {
+   "path": "docs/playtests/reviews/2026-11-07-8.9.26-switzerland-win.png",
+   "bytes": 173953,
+   "sha256": "6f46e49fb06d023d9c7c2befd5eded81622b0eb2e7bf97b141b052f610e6511c"
+  },
+  {
+   "path": "docs/playtests/reviews/2026-11-07-8.9.26-switzerland.png",
+   "bytes": 113161,
+   "sha256": "93080aff3268323e31b9a867725d563c1b65a35bfea1bbf7a8359329e9437049"
+  },
+  {
+   "path": "docs/playtests/reviews/2026-11-07-8.9.27-germany.png",
+   "bytes": 245480,
+   "sha256": "d7cf46c173aef785971acc0c8dc8697fa6bc6a7d6089eb82eefcda86ca1d92b4"
+  },
+  {
+   "path": "docs/playtests/reviews/2026-11-08-8.9.29-aztecs.png",
+   "bytes": 181485,
+   "sha256": "5a756dfafe039857344f0e736b810491025ae87fece578c341e9f5bce73aa505"
+  },
+  {
+   "path": "docs/playtests/reviews/2026-11-11-switzerland-review.png",
+   "bytes": 137619,
+   "sha256": "814a8ceeec48eda1f48bd153097a8bafc190c22479aa597db64c49aa5ab151a9"
+  },
+  {
+   "path": "docs/playtests/reviews/2026-11-15-8.9.40-byzantium.png",
+   "bytes": 67073,
+   "sha256": "9acbd2e91da5cb3c6afff17914f27be4dfbabd5ba4fd24e066e2182632d9776b"
+  },
+  {
+   "path": "docs/playtests/reviews/2026-11-15-8.9.43-germany.png",
+   "bytes": 134970,
+   "sha256": "20d9434d8ef0406300c05cc148f3a2b97e9a60c0906acc60556589dce2d1c047"
+  },
+  {
+   "path": "docs/playtests/reviews/2026-11-15-8.9.47-athens-abandoned.png",
+   "bytes": 160652,
+   "sha256": "9993aa47ce24fc9b30fb55ef88da043d3ad2db3a9a2a457d34d7b8628a8aeef2"
+  },
+  {
+   "path": "docs/playtests/reviews/2026-11-15-8.9.47-athens-win.png",
+   "bytes": 225269,
+   "sha256": "2319a6e1feb93bada0f3614a1b087dee01965aa35bee26dfeb1fea06b705c62c"
+  },
+  {
+   "path": "docs/playtests/reviews/2026-11-20-8.9.72-switzerland-win.png",
+   "bytes": 145566,
+   "sha256": "ab82d02fe3f8ceda92ed75febcac0b0e2f3a0d8f834c6cd75718044d95224be3"
+  },
+  {
+   "path": "docs/playtests/training-questions-shots/question-card-1000x600.png",
+   "bytes": 328246,
+   "sha256": "42f876a909bee7b61468843419bc74fd758cf1d7731ebec16ff1088dd8737cd1"
+  },
+  {
+   "path": "docs/playtests/training-questions-shots/setup-toggle-1000x600.png",
+   "bytes": 76715,
+   "sha256": "168e2355495451da20d4be901ef3886a74e9ffb50ccfb748386516f09fb6bbe6"
+  }
+ ]
+}

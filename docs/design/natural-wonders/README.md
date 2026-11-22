@@ -25,57 +25,57 @@ Each source is a transparent square PNG master. The B (ink-and-wash) masters car
 
 `Mount Fuji in Japan, immediately recognizable symmetrical snow-capped volcanic cone, rising above a low dark band of Japanese pines and foothills.`
 
-- [A painted master](assets/mount-fuji-a-512.png) · [128 px](assets/mount-fuji-a-128.png) · [64 px](assets/mount-fuji-a-64.png)
-- [B ink-and-wash master](assets/mount-fuji-b-512.png) · [128 px](assets/mount-fuji-b-128.png) · [64 px](assets/mount-fuji-b-64.png)
+- [A painted master](assets/mount-fuji-a-512.png) · 128 px (archived outside the repository) · 64 px (archived outside the repository)
+- [B ink-and-wash master](assets/mount-fuji-b-512.png) · 128 px (archived outside the repository) · 64 px (archived outside the repository)
 
 ### 2. Victoria Falls
 
 `Victoria Falls in southern Africa, a broad immense curtain of white water spans a basalt cliff, deep green river gorge and a subtle veil of mist; distinctive horizontal falls.`
 
-- [A painted master](assets/victoria-falls-a-512.png) · [128 px](assets/victoria-falls-a-128.png) · [64 px](assets/victoria-falls-a-64.png)
-- [B ink-and-wash master](assets/victoria-falls-b-512.png) · [128 px](assets/victoria-falls-b-128.png) · [64 px](assets/victoria-falls-b-64.png)
+- [A painted master](assets/victoria-falls-a-512.png) · 128 px (archived outside the repository) · 64 px (archived outside the repository)
+- [B ink-and-wash master](assets/victoria-falls-b-512.png) · 128 px (archived outside the repository) · 64 px (archived outside the repository)
 
 ### 3. Grand Canyon
 
 `The Grand Canyon in Arizona, monumental layered red and ochre canyon walls receding toward the horizon, Colorado River far below; stepped canyon silhouette.`
 
-- [A painted master](assets/grand-canyon-a-512.png) · [128 px](assets/grand-canyon-a-128.png) · [64 px](assets/grand-canyon-a-64.png)
-- [B ink-and-wash master](assets/grand-canyon-b-512.png) · [128 px](assets/grand-canyon-b-128.png) · [64 px](assets/grand-canyon-b-64.png)
+- [A painted master](assets/grand-canyon-a-512.png) · 128 px (archived outside the repository) · 64 px (archived outside the repository)
+- [B ink-and-wash master](assets/grand-canyon-b-512.png) · 128 px (archived outside the repository) · 64 px (archived outside the repository)
 
 ### 4. Giant's Causeway
 
 `The Giant's Causeway in Northern Ireland, dense dark basalt hexagonal columns descend in broad steps into the sea; unmistakable geometric coastal formation.`
 
-- [A painted master](assets/giants-causeway-a-512.png) · [128 px](assets/giants-causeway-a-128.png) · [64 px](assets/giants-causeway-a-64.png)
-- [B ink-and-wash master](assets/giants-causeway-b-512.png) · [128 px](assets/giants-causeway-b-128.png) · [64 px](assets/giants-causeway-b-64.png)
+- [A painted master](assets/giants-causeway-a-512.png) · 128 px (archived outside the repository) · 64 px (archived outside the repository)
+- [B ink-and-wash master](assets/giants-causeway-b-512.png) · 128 px (archived outside the repository) · 64 px (archived outside the repository)
 
 ### 5. Uluru
 
 `Uluru in central Australia, one great rounded red sandstone monolith rising alone from flat ochre desert with sparse scrub; unmistakable solitary dome silhouette.`
 
-- [A painted master](assets/uluru-a-512.png) · [128 px](assets/uluru-a-128.png) · [64 px](assets/uluru-a-64.png)
-- [B ink-and-wash master](assets/uluru-b-512.png) · [128 px](assets/uluru-b-128.png) · [64 px](assets/uluru-b-64.png)
+- [A painted master](assets/uluru-a-512.png) · 128 px (archived outside the repository) · 64 px (archived outside the repository)
+- [B ink-and-wash master](assets/uluru-b-512.png) · 128 px (archived outside the repository) · 64 px (archived outside the repository)
 
 ### 6. Ha Long Bay
 
 `Ha Long Bay in Vietnam, dense steep limestone karst islands rise vertically from a calm jade sea, distant layered islands; iconic karst seascape.`
 
-- [A painted master](assets/ha-long-bay-a-512.png) · [128 px](assets/ha-long-bay-a-128.png) · [64 px](assets/ha-long-bay-a-64.png)
-- [B ink-and-wash master](assets/ha-long-bay-b-512.png) · [128 px](assets/ha-long-bay-b-128.png) · [64 px](assets/ha-long-bay-b-64.png)
+- [A painted master](assets/ha-long-bay-a-512.png) · 128 px (archived outside the repository) · 64 px (archived outside the repository)
+- [B ink-and-wash master](assets/ha-long-bay-b-512.png) · 128 px (archived outside the repository) · 64 px (archived outside the repository)
 
 ### 7. Iguazu Falls
 
 `Iguazu Falls on the Argentina-Brazil border, broad white cascades step over dark basalt into a lush subtropical forest gorge, soft spray; iconic jungle falls.`
 
-- [A painted master](assets/iguazu-falls-a-512.png) · [128 px](assets/iguazu-falls-a-128.png) · [64 px](assets/iguazu-falls-a-64.png)
-- [B ink-and-wash master](assets/iguazu-falls-b-512.png) · [128 px](assets/iguazu-falls-b-128.png) · [64 px](assets/iguazu-falls-b-64.png)
+- [A painted master](assets/iguazu-falls-a-512.png) · 128 px (archived outside the repository) · 64 px (archived outside the repository)
+- [B ink-and-wash master](assets/iguazu-falls-b-512.png) · 128 px (archived outside the repository) · 64 px (archived outside the repository)
 
 ### 8. Great Barrier Reef
 
 `The Great Barrier Reef off Queensland, Australia, clear shallow sea with visible branching coral heads, turquoise lagoons and reef islets; iconic living reef pattern.`
 
-- [A painted master](assets/great-barrier-reef-a-512.png) · [128 px](assets/great-barrier-reef-a-128.png) · [64 px](assets/great-barrier-reef-a-64.png)
-- [B ink-and-wash master](assets/great-barrier-reef-b-512.png) · [128 px](assets/great-barrier-reef-b-128.png) · [64 px](assets/great-barrier-reef-b-64.png)
+- [A painted master](assets/great-barrier-reef-a-512.png) · 128 px (archived outside the repository) · 64 px (archived outside the repository)
+- [B ink-and-wash master](assets/great-barrier-reef-b-512.png) · 128 px (archived outside the repository) · 64 px (archived outside the repository)
 
 ## Shared style prompts
 

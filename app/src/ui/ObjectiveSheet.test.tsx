@@ -55,8 +55,9 @@ it('shows all score sources in rank ordered columns, with the viewer gilt', () =
   expect(sheet().querySelectorAll('.sl-row.k-work')).toHaveLength(1);
   expect(sheet().querySelectorAll('.sl-row.k-goal')).toHaveLength(1);
   expect(sheet().querySelectorAll('.sl-row.k-heldGoal')).toHaveLength(1);
-  expect(sheet().querySelectorAll('.sl-row.k-era')).toHaveLength(6);
-  expect(sheet().querySelectorAll('.sl-row-detail')).toHaveLength(0);
+  // The Ages that have begun; the newest one you have not scored opens with the ledger.
+  expect(sheet().querySelectorAll('.sl-row.k-era')).toHaveLength(2);
+  expect(sheet().querySelectorAll('.sl-row-detail')).toHaveLength(1);
 });
 
 it('opens one row at a time with the public numbers, rule and era progress', () => {
@@ -66,7 +67,7 @@ it('opens one row at a time with the public numbers, rule and era progress', () 
   act(() => row('era-2').querySelector<HTMLButtonElement>('button')!.click());
   expect(sheet().querySelector('#sl-detail-GreatWork')).toBeNull();
   expect(sheet().querySelectorAll('#sl-detail-era-2 .vh-obj')).toHaveLength(3);
-  expect(row('era-2').querySelector('.sl-token')?.getAttribute('title')).toMatch(/scored the Classical era/);
+  expect(row('era-2').querySelector('.sl-token')?.getAttribute('title')).toMatch(/scored the Classical Age/);
 });
 
 it('shows team VP over its first member and hold turns in that head', () => {
@@ -82,5 +83,20 @@ it('shows team VP over its first member and hold turns in that head', () => {
   expect(mine[0].querySelector('.sl-col-vp')!.textContent).toBe(`${team.target}/${team.target} VP`);
   expect(mine[0].querySelector('.sl-hold')!.textContent).toContain('Your team wins in 6');
   for (const other of mine.slice(1)) expect(other.querySelector('.sl-col-vp')!.textContent).toBe(`${team.target}/${team.target} VP`);
+});
+
+it('an Age scored with a card no longer drawn shows a token beside "scored", never an empty socket', () => {
+  // A turn-203 save: you scored Age II with a card whose slot is gone; the status word and the token use one check.
+  const view = structuredClone(useGame.getState().views![0]);
+  view.eras = view.eras.map((ev) => ev.era === 2
+    ? { ...ev, objectives: ev.objectives.slice(0, 1), scored_by: ev.scored_by.map((s) => s.player === view.me ? { ...s, slot: 7 } : s) }
+    : ev);
+  useGame.setState({ views: [view] });
+  act(() => root.render(<ObjectiveSheet />));
+  const era2 = row('era-2');
+  expect(era2.textContent).toContain('scored');
+  const mine = era2.querySelector('.sl-token.mine')!;
+  expect(mine.getAttribute('aria-label')).toBe('You scored the Classical Age');
+  expect(era2.querySelector('.sl-socket[aria-label^="You"]')).toBeNull();
 });
 

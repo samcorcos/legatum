@@ -20,6 +20,8 @@ import { DeclareWarPrompt } from '../ui/DeclareWarPrompt';
 import { GoalActionDialog, useGoalActionKey } from '../ui/GoalActions';
 import { FreeTechPicker, FreeTechsPrompt } from '../ui/FreeTechs';
 import { DecisionNotice } from '../ui/DecisionNotice';
+import { SaveNotice } from '../ui/SaveNotice';
+import { TurnFailureDialog } from '../ui/TurnFailureDialog';
 import { EraNotice } from '../ui/EraNotice';
 import { AgeBanner } from '../ui/AgeBanner';
 import { TurnReport } from '../ui/TurnReport';
@@ -106,6 +108,8 @@ export function GameScreen() {
       <GoalActionDialog />
       <FreeTechPicker />
       <DecisionNotice />
+      <SaveNotice />
+      <TurnFailureDialog />
       <EraNotice />
       <AgeBanner />
       <TechPanel />

@@ -3,7 +3,7 @@
 import { FACTIONS } from './data';
 import { MAX_PLAYERS, factionChoiceIndex, teamTarget } from './gameSetup';
 import { colorFactions } from './theme';
-import type { AiDifficulty, Faction, GameSetup, PlayerSetup, RuleSwitches } from './types';
+import type { AiDifficulty, Faction, GameSetup, PlayerSetup } from './types';
 
 /** solo: you + AIs · hotseat: several humans on this computer · host: humans join over the network. */
 export type LobbyMode = 'solo' | 'hotseat' | 'host';
@@ -26,15 +26,6 @@ export interface Slot {
   search?: boolean;
 }
 
-/** The rule experiment a host can switch on in the lobby (core `RuleExperiments`); it defaults off. */
-export type LobbyRules = Pick<RuleSwitches, 'objectives_deck'>;
-
-/** The switches that are on, or undefined when none is, so default games and rooms keep their old shape. */
-export function activeRules(r: LobbyRules | undefined): LobbyRules | undefined {
-  const on: LobbyRules = { ...(r?.objectives_deck ? { objectives_deck: true } : {}) };
-  return Object.keys(on).length ? on : undefined;
-}
-
 export interface Lobby {
   mode: LobbyMode;
   preset: PresetId;
@@ -43,8 +34,6 @@ export interface Lobby {
   turnLimit: number | null;
   /** Barbarian camps (core `GameSetup::barbarians`). On for new games; missing reads as on. */
   barbarians?: boolean;
-  /** Rule experiments, off unless the host switches them on; missing reads as off. */
-  rule_experiments?: LobbyRules;
   seed: string;
   /** Default for new AI seats; setting it applies to every AI seat. */
   difficulty: AiDifficulty;
@@ -437,6 +426,5 @@ export function buildSetup(l: Lobby): GameSetup {
     return p;
   });
   const size = mapDimensions(l.mapSize);
-  return { seed: l.seed, width: size.width, height: size.height, players, turn_limit: l.turnLimit, barbarians: l.barbarians !== false,
-    ...(activeRules(l.rule_experiments) ? { rule_experiments: activeRules(l.rule_experiments) } : {}) };
+  return { seed: l.seed, width: size.width, height: size.height, players, turn_limit: l.turnLimit, barbarians: l.barbarians !== false };
 }

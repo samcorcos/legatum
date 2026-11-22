@@ -57,6 +57,12 @@ def main(argv):
     parts = sorted(os.path.join(rules_dir, f) for f in os.listdir(rules_dir)
                    if f.endswith(".md") and f != "game-rules.md")
     ok &= compare("rules", git_lines(ref, f"{RULES}/game-rules.md", 6), file_lines(parts))
+    # A merge that auto-merges master's one-file log into the digest silently re-inflates it (it happened once).
+    for path, limit in (("docs/learnings.md", 30_000), (f"{RULES}/game-rules.md", 5_000)):
+        size = os.path.getsize(os.path.join(ROOT, path))
+        if size > limit:
+            print(f"{path} is {size} bytes (limit {limit}): restore the digest or stub, then re-run the split")
+            ok = False
     return 0 if ok else 1
 
 

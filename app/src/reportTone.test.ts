@@ -152,8 +152,20 @@ const CASES: Record<Event['type'], [string, Event, Tone][]> = {
     ['you earned a free technology', ev({ type: 'AthensCityCaptured', city: 1, from: 2, to: 0 }), 'good'],
   ],
   CapitalTaken: [
-    ['your permanent point', ev({ type: 'CapitalTaken', captor: 0, capital: 5, name: 'Rome' }), 'good'],
-    ['rival permanent point', ev({ type: 'CapitalTaken', captor: 2, capital: 5, name: 'Rome' }), 'neutral'],
+    ['your held point', ev({ type: 'CapitalTaken', captor: 0, capital: 5, name: 'Rome' }), 'good'],
+    ['rival held point', ev({ type: 'CapitalTaken', captor: 2, capital: 5, name: 'Rome' }), 'neutral'],
+  ],
+  CapitalSacked: [
+    ['you sacked a capital', ev({ type: 'CapitalSacked', captor: 0, capital: 5, name: 'Rome' }), 'good'],
+    ['a rival sacked a capital', ev({ type: 'CapitalSacked', captor: 2, capital: 5, name: 'Rome' }), 'neutral'],
+  ],
+  GoldGiven: [
+    ['you gave a teammate Gold', ev({ type: 'GoldGiven', from: 0, to: 1, amount: 40 }), 'neutral'],
+    ['a teammate gave you Gold', ev({ type: 'GoldGiven', from: 1, to: 0, amount: 40 }), 'good'],
+  ],
+  CapitalLost: [
+    ['your held point lost', ev({ type: 'CapitalLost', player: 0, capital: 5, name: 'Rome' }), 'bad'],
+    ['rival held point lost', ev({ type: 'CapitalLost', player: 2, capital: 5, name: 'Rome' }), 'neutral'],
   ],
   SpartaConquest: [['your regiments healed', ev({ type: 'SpartaConquest', city: 1, player: 0, units_healed: 2 }), 'good']],
   SpartaKillHeal: [['your regiments healed by a kill', ev({ type: 'SpartaKillHeal', player: 0, unit: 9, victim_owner: 2, unit_kind: 'Ranger', hp_healed: 100 }), 'good']],

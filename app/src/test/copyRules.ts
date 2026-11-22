@@ -36,7 +36,7 @@ export const BANNED: CopyRule[] = [
   { pattern: /\bunknown owner\b|\boff the map\b/i, reason: 'engine validation detail in a load failure (UI review, 2026-11-10)', instead: 'This save file is damaged and can\'t be loaded. Your save file is kept; ...' },
   { pattern: /\bat the defen[cs]e ratio\b|\bscaled by the ratio\b/i, reason: 'the pooled city overflow rule was replaced by a per-hit carry in rules 27 (UI review, 2026-11-11)', instead: '"The hit that empties the city\'s HP carries on to the garrison with the part of its damage the city did not absorb. Later hits strike the garrison in full."', source: true },
   { pattern: /\bPlayerId\b/, reason: 'engine identifier', instead: 'seat number' },
-  { pattern: /first capture of it/i, reason: 'the original-capital rule said it as a count of captures (UI review, 2026-11-05)', instead: '"Capture it to score +1 VP, kept for good. Each empire scores it once."', source: true },
+  { pattern: /first capture of it/i, reason: 'the original-capital rule said it as a count of captures (UI review, 2026-11-05)', instead: '"Hold it to score 1 VP."', source: true },
   { pattern: /\bbinds? (allies|you)\b/i, reason: 'unclear diplomacy effect', instead: 'changes how wars work' },
   { pattern: /(?:^|\s)Live ·/, reason: 'internal VP label', instead: 'Held only while you lead' },
   { pattern: /\bsuperseded\b/i, reason: 'engine report term', instead: 'dropped' },
@@ -55,6 +55,8 @@ export const BANNED: CopyRule[] = [
   { pattern: /\bPurple-Born\b|\bPorphyrogennetos\b/i, reason: 'the Heir has one player-facing name', instead: 'Heir to the Throne or the Heir', source: true },
   { pattern: /\bSleep \(F\)|\bSleep\b.{0,60}\b(?:works for military and civilian|keeps? a unit|is the primary on a unit|takes? a unit out of the order cycle)\b/i, reason: 'units use Fortify (military) or Wait (civilians) for this order', instead: 'Fortify or Wait' },
   { pattern: /\b(Unlocks? (an? )?(Embassy|Academy)|Build an? (Embassy|Academy))\b/i, reason: 'removed buildings must not appear as live unlocks or build choices', instead: 'describe the remaining technology effect and Great Library route', source: true },
+  { pattern: /\bgame menu\b/i, reason: 'the menu is called Menu (UI review, 2026-11-22)', instead: '"Menu → Save to file"', source: true },
+  { pattern: /takes its place once/i, reason: 'a replaced game is replaced, not "given a place" (plain-language review, 2026-11-22)', instead: '"Starting a new game replaces it."', source: true },
   { pattern: /\bcomplete pairs?\b/i, reason: 'integer maths read aloud', instead: '"+1 Gold for every 2 population"', source: true },
   { pattern: /\bGold held\b|\bheld adds\b/i, reason: '"held" for Gold is bookkeeping', instead: '"in your treasury"', source: true },
   { pattern: /\brounded (down|up)\b|\brounds (down|up)\b|\bround(ing)? down\b/i, reason: 'rounding is implementation detail', instead: 'state the number the player gets, or "about"', source: true },
@@ -118,6 +120,9 @@ export const BANNED: CopyRule[] = [
   { pattern: /\bgross Gold\b/i, reason: 'an accounting word (8.9.23 UI review: "half their gross Gold")', instead: '"half the Gold they make"', source: true },
   { pattern: /\bresting defense\b/i, reason: 'American spelling of a rule name; the game uses British spelling (8.9.23 UI review)', instead: '"resting defence"', source: true },
   { pattern: /\bstays banked in [A-Z]/, reason: 'bookkeeping word order for what a city keeps (8.9.23 UI review: "Granary progress 12 stays banked in Astra")', instead: '"Astra keeps the 12 Production already put into the Granary."', source: true },
+  { pattern: /\bwindows from your connection\b/i, reason: 'awkward, and the others may be other people on the same network (relay messages review)', instead: '"people on your internet connection"', source: true },
+  { pattern: /\bsent too quickly\b|\btoo much (?:was )?sent\b/i, reason: 'passive network talk with no subject (relay messages review)', instead: '"You are sending too much, too fast."', source: true },
+  { pattern: /“Game” with a number/, reason: 'the default name is "Game" and four characters, not a number (relay messages review)', instead: '"The game list will show “Game” and four characters."', source: true },
 ];
 
 /**

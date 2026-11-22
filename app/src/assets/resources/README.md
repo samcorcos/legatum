@@ -4,7 +4,7 @@ Chosen by the designer on 2026-10-10: use the painted-medallion set for Wheat, C
 
 Each resource has prepared 256 px, 64 px, and 32 px PNGs. The map uses the appropriate source for the device-pixel output size and caches a high-quality downscale. UI surfaces use the 64 px image at their requested display size. The strategic red hairline remains over the painted frame; at far map zoom the existing high-contrast bonus/strategic category marks remain in place. Their palette and the Resources lens key are shared through `map/style.ts`.
 
-The original six were adopted from `docs/design/resource-art/painted-medallions/` on branch `astra/resource-art-variants`. That exploration README contains their generation prompt, preparation notes, and contact-sheet comparison. The shipped raster files live here so app builds do not depend on design-document paths.
+The original six were adopted from the painted-medallions folder of docs/design/resource-art (its images are archived outside the repository) on branch `astra/resource-art-variants`. That exploration README contains their generation prompt, preparation notes, and contact-sheet comparison. The shipped raster files live here so app builds do not depend on design-document paths.
 
 ## Niter, Oil, and Silicon provenance
 

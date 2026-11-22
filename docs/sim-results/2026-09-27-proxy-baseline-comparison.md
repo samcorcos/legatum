@@ -2,7 +2,7 @@
 
 300 games per difficulty; seeds 700001–700300; one Proxy versus seven independent AI teams; balanced seat/faction rotation; no turn limit; safety cap 1,200. All runs use `--determinism` and the hash-verified master incident detector.
 
-Source: `31b8eaf53cd9f6bd52d26fad3a097d899d03afe1`, clean checkout for every run. See [runner and metric definitions](../ai-proxy-benchmark.md). These are the baseline **before** the +2 capital Science change (`41694da`) and scout/garrison tactics changes (`d712784`), which landed on master during the work. The final branch merges those changes and strategy-diversity reporting; reproducing these hashes requires the recorded source revision.
+Source: `31b8eaf53cd9f6bd52d26fad3a097d899d03afe1`, clean checkout for every run. See [runner and metric definitions](../archive/ai-proxy-benchmark.md). These are the baseline **before** the +2 capital Science change (`41694da`) and scout/garrison tactics changes (`d712784`), which landed on master during the work. The final branch merges those changes and strategy-diversity reporting; reproducing these hashes requires the recorded source revision.
 
 | Metric | Seven Easy | Seven Normal | Seven Hard |
 | --- | ---: | ---: | ---: |

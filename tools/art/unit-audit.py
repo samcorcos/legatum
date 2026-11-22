@@ -22,6 +22,8 @@ import numpy as np
 from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+import artsources  # noqa: E402
 UNITS = os.path.join(HERE, '..', '..', 'app', 'src', 'assets', 'units')
 ICONS = os.path.join(HERE, '..', '..', 'app', 'src', 'assets', 'icons')
 N = 128
@@ -107,10 +109,14 @@ def main():
     suffixes = ['256.png', '64.png', '48.png', 'card.png', 'panel.png', 'source.png', 'roundel.svg']
     print('\nByte-identical assets across slugs (same suffix):')
     dup = {}
+    archived = artsources.manifest_entries()
     for s in slugs:
         for suf in suffixes:
             p = os.path.join(UNITS, f'{s}-{suf}')
-            if os.path.exists(p):
+            if not os.path.exists(p) and artsources.rel(p) in archived:
+                # An archived source needs no download: the manifest already holds its sha256.
+                dup.setdefault((suf, archived[artsources.rel(p)]['sha256']), []).append(s)
+            elif os.path.exists(p):
                 key = hashlib.sha256(norm_svg(open(p).read()).encode()).hexdigest() if suf == 'roundel.svg' else sha(p)
                 dup.setdefault((suf, key), []).append(s)
     for (suf, _), group in dup.items():

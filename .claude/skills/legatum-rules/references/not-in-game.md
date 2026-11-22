@@ -39,6 +39,7 @@ Moved verbatim from `game-rules.md` on 2026-11-22, in the original order; the or
 | Sight from an aircraft away from its base | **Absent** — every aircraft sees 4 tiles around its city (`add_air_sight`) and a Recon shows 2 tiles around a tile for one turn (`add_recon_sight`), but there is no sight along a flight, no patrol and no automatic reconnaissance |
 | Manual tile-worker assignment | **Absent** — a city works every tile it owns within 3 hexes (§3) |
 | Luxury resources / amenities | **Absent** — luxuries are planned as flavour tiles only, like natural wonders (user 2026-10-22); no empire-wide rule |
+| Gifts of anything but Gold, or Gold to a non-teammate | **Absent** — only `Order::GiveGold` to a living teammate (§5 "Co-op Gold gifts", `rules/gifts.rs::validate_gifts`) |
 | Resource trade or stockpile | **Absent** — supply only (§3); resource-specific objectives were rejected (user 2026-10-22) |
 | A conquest requirement for winning by VP | **Absent**: no rule demands a captured city for the ten-turn VP hold (§6). A separate win by capitals exists: the only team still holding an original capital of its own wins (rules 37, §6) |
 | A turn-limit winner backstop | **Absent by default** — no turn limit; the 1,200-turn simulation safety cap names no winner (§6) |

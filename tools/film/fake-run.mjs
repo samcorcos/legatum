@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Stand-in evolution run: writes a small run log in the exact docs/ai-evolution-log.md contract,
+// Stand-in evolution run: writes a small run log in the exact docs/archive/ai-evolution-log.md contract,
 // built from REAL simulated games, so the dashboard panel, the morning report and the film can be
 // developed before tools/evolve exists. Nothing here evolves: each "generation" is a real
 // legatum-sim batch whose AI difficulty steps Easy -> Normal -> Hard (with a Proxy-capable

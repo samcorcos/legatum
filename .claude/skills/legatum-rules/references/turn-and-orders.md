@@ -26,6 +26,17 @@ retirements beyond what completes the goal are refused), resolution is `apply_ac
 city orders (spending free picks first), and `PlayerView.actions` (`ActionsView`: `swarm`, `sakoku`, `broadcast`,
 `free_techs`, `retire`, `wild`) says what is available, why not, and previews it.
 
+**Co-op Gold gifts (rules 50, Sam 2026-11-22; `Order::GiveGold{to,amount}`, `rules/gifts.rs`).** An empire gives Gold to a
+living teammate (same team, not itself, not Barbarians). Validation (`validate_gifts`): each gift at least 1, all of a
+turn's gifts together at most the giver's Gold at the start of the turn ("you have N Gold to give"). Timing: gifts move
+in `resolve_turn` right after `apply_actions`, i.e. after every empire's city orders (purchases) and actions and before
+ranged fire, movement, city growth, income and upkeep. A gift is capped at the Gold the giver has left then, so its own
+purchases this turn are paid first; with nothing left it fails with an `OrderFailed` ("Gold gift not given: no Gold left
+after this turn's purchases"). A gift to someone no longer a living teammate at resolution fails the same way. Order:
+player id, then the giver's order list. `Event::GoldGiven{from,to,amount}` is visible to the team only. The teammate
+spends it from next turn. The AI never issues it (`ai/src/fixture.rs` panics on one). UI: "Your team" section of the
+diplomacy panel (`app/src/ui/GiveGold.tsx`), with a forecast of both treasuries.
+
 **One order per unit per turn.** A unit is marked `acted` after its order; a second order for it is
 rejected. The UI never offers a multi-step per-unit queue. A unit that attacked stays where it fought (a melee winner that kills advances into the
 defender's tile, §4) and needs new orders next turn (`rules/units.rs::validate_unit_order`: "already has an order this turn (one per unit)"; Guide combat entry, `app/src/ui/GuideContent.tsx`).
