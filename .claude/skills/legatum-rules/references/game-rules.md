@@ -1218,7 +1218,7 @@ There is no capture requirement for winning by VP
   design and measured, not enforced): the 10-turn VP hold is the ordinary VP win rule. Holding the last original capital also wins (rules 37, below). Turn-limit
   ranking applies only if a game explicitly configures one; the 1,200-turn simulation safety cap
   does not award a winner (designer, 2026-11-01: no turn-limit backstop for late stalemates).
-  `tools/sim/objective-deck-report.py` (written for the deck-against-era cohorts) tracks winners with zero captured rival cities.
+  The deck-against-era report script (`tools/sim/objective-deck-report.py`) was deleted with the era arm on 2026-11-22; its last results are in `docs/sim-results/objectives/deck-2026-11-01.md`.
 - **Target:** the solo target per team member (a pair needs two members' worth), held 10 turns at Standard
   (hold rules below unchanged). The solo target uses the earnable era, goal and world wonder points plus one, at most 10
   (`RuleExperiments::solo_vp_target`): with nine eras (as with seven or eight) that is 10 solo and 20 for a pair, the user's rule

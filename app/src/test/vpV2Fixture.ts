@@ -4,6 +4,9 @@
 import { decadencePercent, decadenceRules } from '../data';
 import type { EraView, ObjectiveProgress, PlayerView, RuleSwitches } from '../types';
 
+// NOT A REAL GAME SHAPE: a real World Ages game draws ONE card per Age. Each Age here deliberately carries three cards
+// (slots 0, 1, 2) so the list, the sheet and the "which card scored" paths are tested with more than one line; the
+// tests count on it. Use `withWorldAges` (below) for a one-card-per-Age view.
 const V2_ERAS: EraView[] = [
   {
     era: 2, name: 'Classical', entered_by: [], scored_by: [],
