@@ -392,16 +392,12 @@ export function cityFireStatus(view: PlayerView, city: CityView): { fires: boole
   return { fires: true, text: `${wall}: fires at units within 2 tiles` };
 }
 
-/** Each empire's first 2 military units are free; every extra costs 1 Gold/turn, 3 for the
- * Switzerland. Scouts and civilians never cost upkeep and never use a free slot. One rule, one wording: the production picker, unit panel
- * and Guide all describe upkeep this way. */
-const FREE_MILITARY_UNITS = 2;
-
-/** A production card's upkeep line, for a unit not yet built (legatum-ui: "every build card
+/** Each empire's first 2 military units are free (core `FREE_MILITARY_UNITS`); every extra costs 1 Gold/turn, 3 for Switzerland. Scouts and civilians never cost upkeep.
+ * A production card's upkeep line, for a unit not yet built (legatum-ui: "every build card
  * shows its ongoing cost"). Undefined `upkeep` means a Scout or civilian (Settlers included): no upkeep. */
 export function upkeepText(upkeep?: UpkeepPreview | null): string {
   if (!upkeep) return 'No upkeep';
-  if (upkeep.free) return `Upkeep: free · ${upkeep.free_slots_left} of ${FREE_MILITARY_UNITS} slots left`;
+  if (upkeep.free) return `Upkeep: free (${upkeep.free_slots_left === 1 ? '1 more free unit' : `${upkeep.free_slots_left} more free units`})`;
   return `Upkeep: −${upkeep.rate} Gold/turn`;
 }
 
@@ -1501,7 +1497,7 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
  * line ("moved 3 hexes to x,y").
  */
 /**
- * A core order refusal in the words a player reads: "Astra can't train a Spearman: your levies are full (3 of 2)."
+ * A core order refusal in the words a player reads: "Astra can't train a Spearman: you already have 3 / 2 military units."
  * Other reasons keep core's wording after the contraction.
  */
 export function plainOrderError(message: string): string {
@@ -1510,7 +1506,7 @@ export function plainOrderError(message: string): string {
   const [, city, item, why] = m;
   const levy = /^Levies full: (\d+) of (\d+)$/.exec(why);
   const article = /^[AEIOU]/.test(item) ? 'an' : 'a';
-  if (levy) return `${city} can't train ${article} ${item}: your levies are full (${levy[1]} of ${levy[2]}).`;
+  if (levy) return `${city} can't train ${article} ${item}: you already have ${levy[1]} / ${levy[2]} military units.`;
   return `${city} can't build ${item}: ${plainBlocker(why)}.`;
 }
 

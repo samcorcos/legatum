@@ -140,7 +140,7 @@ for (const size of SIZES) {
       for (let i = 0; i < 8 && (await store(page, (s) => s.selection?.id)) !== 901; i++) { await page.keyboard.press('Enter'); await page.waitForTimeout(150); }
       const fighter = plane(page, 901);
       await expect(fighter).toHaveAttribute('data-air-state', 'guard');
-      await expect(fighter).toContainText('Awaiting orders · on guard over 4 tiles around Waypost Seven');
+      await expect(fighter).toContainText('Needs orders · on guard over 4 tiles around Waypost Seven');
       await expect(fighter.getByRole('button')).toHaveText(['Stay on guardF', 'Skip this turnSpace', 'Rebase…R']);
       await expect(fighter.getByRole('button', { name: /Rebase/ })).toBeDisabled();
       // The map rings what they cover: the Bomber's 8, the Fighter's strike 5 and guard 4, widest first, each labelled.

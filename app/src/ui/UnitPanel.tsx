@@ -111,7 +111,7 @@ export function UnitPanel({ unit, view, peek = false }: { unit: UnitView; view: 
       : released ? `${releasedFrom} is secure, needs orders`
       : standing === 'Sleep' || standing === 'Heal' ? sleepOrderText(unit, standing === 'Heal')
       : standing === 'AutoFire' ? 'Auto-fire: holding this city and shooting visible enemies in range'
-      : mine && !over ? locked ? '' : healedLastTurn ? 'Healed to full, needs orders' : 'Awaiting orders' : '';
+      : mine && !over ? locked ? '' : healedLastTurn ? 'Healed to full, needs orders' : 'Needs orders' : '';
   // An order that won't resolve: its reason, as a sentence, under the unit's status.
   const broken = mine && errs.length > 0;
   const why = errs.map((m) => `${m.charAt(0).toUpperCase()}${m.slice(1)}${/[.!?]$/.test(m) ? '' : '.'}`).join(' ');

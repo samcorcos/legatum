@@ -21,7 +21,7 @@ describe('faction content and setup', () => {
     const legionary = itemDescription(FACTION_PIECES.Byzantium.item, 'Byzantium');
     expect(legionary).toContain('162 Production');
     expect(legionary).toContain('84 Gold');
-    expect(legionary).toContain('36 melee');
+    expect(legionary).toContain('36 strength');
   });
   it('has complete unique-piece, rule, goal, weakness and heraldry data for every stable ID', () => {
     expect(FACTIONS).toEqual(['Switzerland', 'India', 'Byzantium', 'Germany', 'Celts', 'Mongols', 'Sparta', 'Athens', 'Aztecs', 'Egypt', 'Rome']);
@@ -69,7 +69,7 @@ describe('faction content and setup', () => {
   it('shows the simulation-adjusted strengths and the requested cost and movement limits', () => {
     expect(FACTION_INFO.Germany.unique).toContain('320 Production, +6 Production');
     expect(FACTION_INFO.Germany.ability).toContain('Industry project instead of building');
-    expect(FACTION_INFO.Sparta.unique).toContain('20 melee');
+    expect(FACTION_INFO.Sparta.unique).toContain('20 strength');
     expect(FACTION_INFO.Sparta.ability).toContain('Spartan Veteran');
     expect(FACTION_INFO.Sparta.goal).toContain('+2 VP once, kept for good');
     expect(FACTION_INFO.Sparta.goal).toContain('retire them there');

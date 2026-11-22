@@ -218,10 +218,10 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
           <span className="lbl">Strength</span>
           <b>{city.strength}</b>
         </Tip>
-        <Tip content={`City health. ${CITY_HEAL_RULE}`}>
-          <span className="lbl">Health</span>
+        <Tip content={`City HP. ${CITY_HEAL_RULE}`}>
+          <span className="lbl">HP</span>
           <b>{city.hp}</b>
-          <span className="muted">/{city.max_hp}</span>
+          <span className="muted"> / {city.max_hp}</span>
         </Tip>
       </div>}
     </div>
@@ -373,7 +373,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     : growth?.state === 'resisting' ? 'Paused'
     : growth?.state === 'starving' ? `−1 population in ${growth.turns}`
     : growth?.state === 'growing' ? `${growth.turns} turn${growth.turns === 1 ? '' : 's'}`
-    : growth?.state === 'shortage' ? 'Short of Food' : 'Stagnant';
+    : growth?.state === 'shortage' ? 'Short of Food' : 'Not growing';
   const growthDecadence = d.growth_breakdown?.parts.find(([label]) => isDecadenceLine(label));
   const growthTip = (
     <div className="bd">
@@ -764,7 +764,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     const other = view.cities.find((c) => c.owner === view.me && c.id !== city.id && c.detail && [c.detail.producing, ...(c.detail.production_queue ?? [])].some((item) => item?.kind === 'Wonder'));
     if (other) return `A world wonder is already being built or queued in ${other.name}.`;
     const tech = BUILDING_STATS[building].requires;
-    if (tech && !view.research.known.includes(tech)) return `Research ${TECH_NAME[tech]} first.`;
+    if (tech && !view.research.known.includes(tech)) return `Needs ${TECH_NAME[tech]}.`;
     const required = greatWorkRequirement(building);
     if (required) {
       if (!d.buildings.includes(required[0])) return `Build ${baseItemName({ kind: 'Building', building: required[0] })} in this city first.`;

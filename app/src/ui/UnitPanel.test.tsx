@@ -52,7 +52,7 @@ async function soldier({ tech, owned, gold, spare = 3 }: { tech: boolean; owned:
 }
 
 it.each([
-  [{ tech: false, owned: true, gold: 500 }, 'Research Mathematics first', ['Mathematics ✗', 'in your territory ✓', '60 Gold ✓', 'Iron supply: needs 1 spare, you have 3 ✓']],
+  [{ tech: false, owned: true, gold: 500 }, 'Needs Mathematics', ['Mathematics ✗', 'in your territory ✓', '60 Gold ✓', 'Iron supply: needs 1 spare, you have 3 ✓']],
   [{ tech: true, owned: false, gold: 500 }, 'Move into your territory', ['Mathematics ✓', 'in your territory ✗', '60 Gold ✓', 'Iron supply: needs 1 spare, you have 3 ✓']],
   // The playtest bug: owned territory, the tech, 59 Gold used to say "Only inside your territory".
   [{ tech: true, owned: true, gold: 59 }, 'Needs 60 Gold (you have 59)', ['Mathematics ✓', 'in your territory ✓', '60 Gold ✗', 'Iron supply: needs 1 spare, you have 3 ✓']],
@@ -147,19 +147,22 @@ it('puts Gold and supply costs beside the benefit, keeping the treasury forecast
   expect(row.querySelector('.improve-supply .amt-iron .amt-icon')).not.toBeNull();
 });
 
-it('shares one resource reason between Upgrade and Siege and links both disabled controls to it', async () => {
+it('gives Upgrade and Siege each their Iron reason and links both disabled controls to it', async () => {
   const { view, unit, client } = await soldier({ tech: true, owned: true, gold: 500, spare: 0 });
   unit.siege_offer = { price: { total: 160, parts: [] }, blocker: `Siege: ${NO_IRON[0].toLowerCase()}${NO_IRON.slice(1)}` };
   useGame.setState({ client, views: [view], humans: [0], orders: [[]], errors: [[]], seat: 0 });
   act(() => root.render(<UnitPanel unit={unit} view={view} />));
   const reasons = container.querySelectorAll('.improve-reason');
-  expect(reasons).toHaveLength(1);
-  expect(reasons[0].textContent).toBe('Iron supply: needs 1; all 6 in use. Get another deposit or build a Mine (+1).');
+  expect(reasons).toHaveLength(2);
+  expect(reasons[0].textContent).toBe('Upgrade needs 1 Iron. All 6 of your Iron are in use: claim another Iron deposit or build a Mine (+1).');
+  expect(reasons[1].textContent).toBe('Siege needs 1 Iron. All 6 of your Iron are in use: claim another Iron deposit or build a Mine (+1).');
   expect(reasons[0].querySelector('.resource-reason-link')?.getAttribute('aria-label')).toBe('Open Iron supply');
-  for (const button of container.querySelectorAll<HTMLButtonElement>('.improve-row button.act')) {
+  const buttons = [...container.querySelectorAll<HTMLButtonElement>('.improve-row button.act')];
+  expect(buttons.length).toBeGreaterThan(0);
+  buttons.forEach((button, i) => {
     expect(button.disabled).toBe(true);
-    expect(button.getAttribute('aria-describedby')).toContain(reasons[0].id);
-  }
+    expect(button.getAttribute('aria-describedby')).toContain(reasons[Math.min(i, 1)].id);
+  });
 });
 
 it('does not compact unrelated engine refusals or call reserved/idle supply in use', async () => {
@@ -168,7 +171,8 @@ it('does not compact unrelated engine refusals or call reserved/idle supply in u
   view.supply![0].held = ['Forge in Kyoto'];
   expect(improvementReason(NO_IRON, 'Iron', view)).toContain('reserved for construction');
   view.supply![0].idle = ['Pikeman'];
-  expect(improvementReason(NO_IRON, 'Iron', view)).toContain('needs 6, supplies 6');
+  expect(improvementReason(NO_IRON, 'Iron', view)).toContain('You have 6 Iron for 6 needs: claim another Iron deposit or build a Mine (+1).');
+  expect(improvementReason(`Siege: ${NO_IRON[0].toLowerCase()}${NO_IRON.slice(1)}`, 'Iron', view)).toMatch(/^Siege needs 1 Iron\. You have 6 Iron for 6 needs: /);
 });
 
 it('computes promotion-aware upgrade gains and preserves a lost bow in the visible effect', async () => {
@@ -249,7 +253,7 @@ it('a unit locked in a captured city says it is the garrison once, and offers no
   expect(container.querySelectorAll('[data-testid="occupation-lock"]')).toHaveLength(1);
   expect(container.querySelector('[data-testid="occupation-lock"]')!.textContent).toMatch(/^\s*Garrisoning .+: holding the city down until Peace with /);
   expect(container.querySelector('[data-testid="occupation-lock-note"]')!.textContent).toMatch(/people will not accept your rule while .+ still fights\. This unit cannot leave or disband\.$/);
-  expect(container.textContent).not.toContain('Awaiting orders');
+  expect(container.textContent).not.toContain('Needs orders');
   for (const label of ['Move', 'Disband', 'Fortify', 'Skip', 'Auto-explore']) expect(labels.some((l) => l.startsWith(label)), label).toBe(false);
   expect(container.textContent!.match(/holding/g)).toHaveLength(1);
 });
@@ -486,11 +490,11 @@ it('after the game ends the panel shows the unit but awaits no orders and offers
   const { view, unit, client } = await soldier({ tech: true, owned: true, gold: 500 });
   useGame.setState({ client, views: [view], humans: [0], orders: [[]], errors: [[]], seat: 0 });
   act(() => root.render(<UnitPanel unit={unit} view={view} />));
-  expect(container.textContent).toContain('Awaiting orders');
+  expect(container.textContent).toContain('Needs orders');
   expect(container.querySelector('.actions')).not.toBeNull();
   const done: PlayerView = { ...view, finished: true, winner: view.team };
   act(() => root.render(<UnitPanel unit={unit} view={done} />));
-  expect(container.textContent).not.toContain('Awaiting orders');
+  expect(container.textContent).not.toContain('Needs orders');
   expect(container.querySelector('.actions')).toBeNull();
   expect(container.textContent).toContain('Strength');
 });

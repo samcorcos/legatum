@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import type { Breakdown, Faction, PlayerView, Resource, UnitKind, UnitView } from '../types';
 import { builtInSiege, FACTION_INFO, MONGOL_SIEGE_REASON, itemName, SIEGE_RULE, SIEGE_USES_IRON, TECH_NAME, UNIT_STATS, unitClass, unitStatsFor } from '../data';
 import { siegeTier } from '../combat';
-import { aWorks, fixClause, supplyPerMine } from '../resources';
+import { aWorks, fixClause, supplyPerMine, withArticle } from '../resources';
 import { strengthBonus } from '../promotion';
 import { siegeSelected, upgradeSelected } from '../commands';
 import { isCompany } from '../company';
@@ -26,11 +26,13 @@ export function improvementReason(reason: string | null, resource: Resource | nu
   const occupied = `No ${resource} to spare: all ${s.supplied.total} of your ${resource} are in use.`;
   const siegePrefix = (text: string) => `Siege: ${text[0].toLowerCase()}${text.slice(1)}`;
   if (reason !== noSupply && reason !== siegePrefix(noSupply) && !reason.startsWith(occupied) && !reason.startsWith(siegePrefix(occupied))) return reason;
-  const state = !s.supplied.total ? 'none supplied'
-    : (s.idle?.length ?? 0) ? `needs ${s.used.total}, supplies ${s.supplied.total}`
-    : (s.held?.length ?? 0) ? `${s.supplied.total} supplied, none spare; ${(s.held?.length ?? 0)} reserved for construction`
-    : `all ${s.supplied.total} in use`;
-  return `${resource} supply: needs 1; ${state}. Get another deposit or build ${aWorks(resource)} (+${supplyPerMine(faction)}).`;
+  const subject = reason.startsWith('Siege: ') ? 'Siege' : 'Upgrade';
+  const fix = `claim ${s.supplied.total ? `another ${resource}` : withArticle(resource)} deposit or build ${aWorks(resource)} (+${supplyPerMine(faction)})`;
+  const state = !s.supplied.total ? `You have no ${resource}`
+    : (s.idle?.length ?? 0) ? `You have ${s.supplied.total} ${resource} for ${s.used.total} needs`
+    : (s.held?.length ?? 0) ? `You have ${s.supplied.total} ${resource}, none spare (${s.held?.length ?? 0} reserved for construction)`
+    : `All ${s.supplied.total} of your ${resource} are in use`;
+  return `${subject} needs 1 ${resource}. ${state}: ${fix}.`;
 }
 
 export function upgradeGain(unit: UnitView, faction: Faction, to: UpgradeCheck['to']): string {
@@ -69,7 +71,7 @@ export function UnitImprovements({ unit, view, check, primary, pending, gold, si
       effect={`${upgradeGain(unit, faction, check.to)}${castrumHeal ? ` · +${castrumHeal} HP from Castrum` : ''}`} icon="ui-trend-up" hotkey="U" cost={check.cost} resource={check.need}
       primary={primary === 'upgrade'} active={pending === 'UpgradeUnit'} blocked={!!check.blocker} reasonId={upgradeReasonId} onClick={upgradeSelected}
       tip={<>
-        <p>{unitStatsFor(faction, check.to).moves} moves · {unitStatsFor(faction, check.to).strength} Strength before promotions{unitStatsFor(faction, check.to).ranged > 0 && ` · ${unitStatsFor(faction, check.to).ranged} ranged, range ${unitStatsFor(faction, check.to).range}`}.</p>
+        <p>{unitStatsFor(faction, check.to).moves} moves · {unitStatsFor(faction, check.to).strength} strength before promotions{unitStatsFor(faction, check.to).ranged > 0 && ` · ${unitStatsFor(faction, check.to).ranged} ranged · range ${unitStatsFor(faction, check.to).range}`}.</p>
         <p>{castrumHeal ? `Castrum restores ${castrumHeal} HP, to ${unit.hp + castrumHeal}/100, once for this upgrade order.` : 'Keeps its HP and promotions.'} Can act again next turn.</p>
         {!!unit.upgrade_steps?.length && <p>Upgrade path: {unit.upgrade_steps.map((step) => itemName({ kind: 'Unit', unit: step }, faction)).join(' → ')}. Each step’s Gold price is included.</p>}
         {unit.siege && builtInSiege(check.to) && <p>Its Siege is built in from then on, so the Iron the bought Siege used is freed.</p>}
@@ -94,7 +96,7 @@ export function UnitImprovements({ unit, view, check, primary, pending, gold, si
         </span>)}</span>
     </p>}
     {reasons.map((reason, i) => <p className="act-reason improve-reason" id={`${id}-${i}`} key={reason}>
-      {reasons.length > 1 || (upgradeChecklist && reason === siegeWhy) || (!!upgradeWhy !== !!siegeWhy && !!check && !!offer) ? <b>{reason === upgradeWhy && !upgradeChecklist ? 'Upgrade' : 'Siege'}: </b> : null}
+      {reasons.length > 1 || (upgradeChecklist && reason === siegeWhy) || (!!upgradeWhy !== !!siegeWhy && !!check && !!offer) ? !/^(Siege|Upgrade) needs /.test(reason) && <b>{reason === upgradeWhy && !upgradeChecklist ? 'Upgrade' : 'Siege'}: </b> : null}
       {((reason === upgradeWhy && check?.need && reason.includes(check.need)) || (reason === siegeWhy && SIEGE_USES_IRON && reason.includes('Iron')))
         ? <ResourceReason text={reason} resource={reason === upgradeWhy && check?.need ? check.need : 'Iron'} />
         : <Amounts text={reason} />}
@@ -162,7 +164,7 @@ export function upgradeCheck(unit: UnitView, view: PlayerView, gold: number, res
     ...(cost !== null ? [{ label: `${cost} Gold`, met: affordable }] : []),
     ...(need ? [{ label: `${need} supply: needs 1 spare, you have ${spare > 0 ? spare : 'none'}`, met: hasSupply }] : []),
   ];
-  const blocker = !hasTech ? `Research ${TECH_NAME[tech!]} first`
+  const blocker = !hasTech ? `Needs ${TECH_NAME[tech!]}`
     : !inTerritory ? 'Move into your territory'
     : cost !== null && !affordable ? `Needs ${cost} Gold (${goldOnHand(gold, view)})`
     : supplyBlocker;

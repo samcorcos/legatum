@@ -254,7 +254,7 @@ export function Tip({
   const hoverBody = isRich ? (
     <>
       {autoSummary && <div className="tip-summary">{withAmounts(autoSummary)}</div>}
-      <div className="tip-more">{controlTip ? 'ⓘ for the full breakdown' : 'Click for the full breakdown'}</div>
+      {controlTip && <div className="tip-more">ⓘ for the full breakdown</div>}
     </>
   ) : withAmounts(content);
 

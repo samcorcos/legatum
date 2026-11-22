@@ -103,7 +103,7 @@ for (const size of SIZES) test.describe(`occupation lock ${size.name}`, () => {
     await expect(card.getByTestId('occupation-lock-note')).toContainText('people will not accept your rule while');
     await expect(card.locator('.up-status')).toHaveText('Fortified until woken');
     for (const name of [/^Move/, /^Disband/, /^Fortify/, /^Skip/]) await expect(card.getByRole('button', { name })).toHaveCount(0);
-    await expect(card).not.toContainText('Awaiting orders');
+    await expect(card).not.toContainText('Needs orders');
     // It is never in the queue, and nothing it could be asked is pending.
     expect(await page.evaluate((id) => { const s = (window as unknown as GameWindow).legatum.getState(), v = s.views![s.seat]; const u = v.units.find((x) => x.id === id)!; return [u.standing_order, !!u.needs_orders]; }, held.unit)).toEqual(['Sleep', false]);
     // The card fits the window: nothing scrolls.

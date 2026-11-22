@@ -481,16 +481,16 @@ const UNIQUE_PIECE: Record<Exclude<Faction, 'Aztecs' | 'Celts'>, UniquePiece> & 
   India: { name: 'Revenue Office', replaces: 'Market', cost: 60, effect: '+3 Gold; non-capital cities remit half the Gold they make', requires: 'Currency', rules: ['Only India can build the Imperial Diwan after every owned city has one.'] },
   // The Tagmatic Soldier is the Pikeman plus 4 design strength on the era curve, read from the stats so a retuned curve follows (a getter, as the Keshig's).
   get Byzantium(): UniquePiece {
-    return { name: 'Tagmatic Soldier', replaces: 'Pikeman', cost: 162, effect: `${unitStatsFor('Byzantium', 'Trooper').strength} melee, 2 moves`, requires: 'Feudalism', rules: ['Phalangite upgrade costs 84 Gold.'] };
+    return { name: 'Tagmatic Soldier', replaces: 'Pikeman', cost: 162, effect: `${unitStatsFor('Byzantium', 'Trooper').strength} strength, 2 moves`, requires: 'Feudalism', rules: ['Phalangite upgrade costs 84 Gold.'] };
   },
   Germany: { name: 'Ruhr Foundry', replaces: 'Forge', cost: 320, effect: '+6 Production', requires: 'Iron Working', rules: [], other: ['Upgrades a Workshop in a city of 4 or more. Needs Iron.'] },
   Celts: null,
   // The Keshig's numbers are the Cataphract's plus the bow, read from the stats so a retuned bow follows (a getter: `unitStatsFor` needs constants declared further down).
   get Mongols(): UniquePiece {
     const s = unitStatsFor('Mongols', KESHIG_KIND);
-    return { name: 'Keshig', replaces: 'Cataphract', cost: s.cost, effect: `${s.strength} melee, ${s.ranged} ranged at range ${s.range}, ${s.moves} moves`, rules: [] };
+    return { name: 'Keshig', replaces: 'Cataphract', cost: s.cost, effect: `${s.strength} strength, ${s.ranged} ranged · range ${s.range}, ${s.moves} moves`, rules: [] };
   },
-  Sparta: { name: 'Spartan Hoplite', replaces: 'Spearman', cost: 80, effect: '20 melee, 2 moves', rules: [], other: ['Military units trained at the Agoge start one level higher.'] },
+  Sparta: { name: 'Spartan Hoplite', replaces: 'Spearman', cost: 80, effect: '20 strength, 2 moves', rules: [], other: ['Military units trained at the Agoge start one level higher.'] },
   Athens: { name: 'Lyceum', replaces: 'Library', cost: 70, effect: '+6 Science', requires: 'Writing', rules: [] },
   Egypt: { name: 'Royal Granary', replaces: 'Granary', cost: 50, effect: '+3 Food total', rules: [] },
   Rome: { name: 'Castrum', replaces: 'Walls', cost: 100, effect: '+10 city strength', requires: 'Masonry', rules: ['Upgrading a melee unit in this city restores 50 HP, up to full health.'] },
@@ -503,7 +503,7 @@ export const costYield = (faction: Faction): 'Food' | 'Production' => (faction =
 export const costInFactionYield = (faction: Faction, cost: number): number =>
   faction === 'Egypt' ? Math.ceil((cost * 100) / Math.max(1, RULES.egyptNileBuildPercent)) : cost;
 const piecePrice = (faction: Faction, p: UniquePiece): string => `${costInFactionYield(faction, p.cost)} ${costYield(faction)}`;
-const requiresSentence = (p: UniquePiece): string[] => p.requires ? [`Requires ${p.requires}.`] : [];
+const requiresSentence = (p: UniquePiece): string[] => p.requires ? [`Needs ${p.requires}.`] : [];
 const uniquePieceText = (p: UniquePiece, faction?: Faction): string =>
   [`${p.lead ?? `${p.name} replaces ${p.replaces}`}: ${faction ? piecePrice(faction, p) : `${p.cost} Production`}, ${p.effect}.`, ...requiresSentence(p), ...p.rules, ...(p.other ?? [])].join(' ');
 /** The unique piece's line without its numbers: what it replaces, its price (in Food for Egypt), the technology it needs and its rules. For a surface whose faction lines already say the numbers. */
@@ -548,7 +548,7 @@ const CARD_TEXT: Partial<Record<Faction, Partial<Record<string, string>>>> = {
     'u:Cataphract': `Also shoots, at range ${RULES.keshig.range} with no return fire; a shot cannot take a city. Replaces Cataphract.`,
   },
   Sparta: {
-    'u:Soldier': '20 melee, 2 moves. Replaces Spearman.',
+    'u:Soldier': '20 strength, 2 moves. Replaces Spearman.',
     'b:WarShrine': 'Units trained here start at level 2, and veterans retire here for Honour the Veterans.',
   },
 };
@@ -890,7 +890,7 @@ export function itemDescription(item: ProductionItem, faction?: Faction): string
   if (faction === 'Mongols' && item.kind === 'Building' && buildingFamily(item.building) === 'Market') return `${BUILDING_STATS[item.building].blurb}. ${MONGOLS_MARKET_NOTE}`;
   if (item.kind === 'Unit') {
     const stats = unitStatsFor(faction ?? 'India', item.unit);
-    return `${stats.strength} melee${stats.ranged ? `, ${stats.ranged} ranged at range ${stats.range}` : ''}, ${stats.moves} moves. ${UNIT_STATS[item.unit].blurb}`;
+    return `${stats.strength} strength${stats.ranged ? `, ${stats.ranged} ranged · range ${stats.range}` : ''}, ${stats.moves} moves. ${UNIT_STATS[item.unit].blurb}`;
   }
   const successor = BUILDING_KINDS.find((b) => BUILDING_STATS[b].predecessor === item.building);
   if (successor) {
@@ -1021,7 +1021,7 @@ export function specialUnitEdge(faction: Faction): string {
     case 'Switzerland': return `+${n.reislauferMountedPercent}% against mounted units, on top of the usual bonus`;
     case 'Germany': return `+${n.panzerMoves - plain.moves} move`;
     case 'Sparta': return `+${HOPLITE_PHALANX_STRENGTH} strength beside another Hoplite`;
-    case 'Mongols': return `${own.ranged} ranged at range ${own.range}: shoots or charges each turn`;
+    case 'Mongols': return `${own.ranged} ranged · range ${own.range}: shoots or charges each turn`;
     case 'Byzantium': return `+${own.strength - plain.strength} strength, +${own.cost - plain.cost} Production`;
     case 'Rome': return 'A city it founds starts at population 2';
   }

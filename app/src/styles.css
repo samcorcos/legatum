@@ -1019,9 +1019,7 @@ dialog.settings-modal::backdrop {
   /* Compaction steps set by TopBar (TOP_BAR_COMPACTION) when the bar is crowded. */
   /* First step: the "Pop." and "Armed" words go; the figures stay (their tooltips name them). */
   .topbar[data-compact~='counts'] .count-label { display: none; }
-  /* The levy keeps its word (8.9.14 review: a bare "3/2" with an alert icon does not say what is full); it sheds its icon instead. */
-  .topbar[data-compact~='counts'] .levy-counter .count-label { display: inline; }
-  .topbar[data-compact~='counts'] .levy-counter .count-icon { display: none; }
+  /* The levy keeps its soldier icon beside the figure (its tooltip names it), so "3 / 2" never stands alone. */
   /* The words give way to an icon, so a bare number never stands alone. */
   .topbar .count-icon { display: none; }
   .topbar[data-compact~='counts'] .count-icon { display: inline-block; vertical-align: -2px; margin-right: 1px; }

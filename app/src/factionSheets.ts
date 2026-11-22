@@ -77,7 +77,7 @@ const SPECIAL_BUILDINGS: Partial<Record<Faction, BuildingKind[]>> = {
 /** Rules a card must state because its numbers cannot: the Agoge's levels (the Yam and Diwan are told by the goal block). */
 const BUILDING_RULE: Partial<Record<BuildingKind, string>> = { WarShrine: BUILDING_STATS.WarShrine.summary };
 
-const requiresText = (tech: TechId | null): string[] => tech ? [`Requires ${TECH_NAME[tech]}.`] : [];
+const requiresText = (tech: TechId | null): string[] => tech ? [`Needs ${TECH_NAME[tech]}.`] : [];
 
 const sheetCard = (faction: Faction, item: ProductionItem, text: string[]): SheetCard => {
   const against = pieceAgainst(faction, item);
