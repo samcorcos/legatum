@@ -8,6 +8,8 @@
 export interface Env {
   GAMES: R2Bucket;
   ALLOWED_ORIGINS: string;
+  /** Secret (`wrangler secret put READ_TOKEN`) for the private read API the analysis job on the developer's Mac uses. Unset = no read API. */
+  READ_TOKEN?: string;
 }
 
 /** A 300-turn game is a few hundred KB gzipped; this bounds what a stranger can store per request. */
@@ -114,9 +116,46 @@ async function putGame(request: Request, env: Env, id: string): Promise<Response
   return json({ stored: key });
 }
 
+/** Constant-time comparison of the bearer token with the secret. */
+export function tokenMatches(header: string | null, secret: string | undefined): boolean {
+  if (!secret || secret.length < 32 || !header?.startsWith("Bearer ")) return false;
+  const given = new TextEncoder().encode(header.slice(7));
+  const want = new TextEncoder().encode(secret);
+  let diff = given.length ^ want.length;
+  for (let i = 0; i < want.length; i++) diff |= want[i]! ^ (given[i] ?? 0);
+  return diff === 0;
+}
+
+const KEY_RE = /^games\/\d{4}-\d{2}\/web-\d{13}-[0-9a-f]{16}-[0-9a-f]{16}\.json\.gz$/;
+
+/**
+ * Private read API for the analysis job (tools/games): `GET /v1/read/games?cursor=` lists the stored games with
+ * their metadata, `GET /v1/read/games/<key>` returns one record (still gzipped). Bearer token only, no browser
+ * origin, so no page can read other players' games.
+ */
+async function readApi(request: Request, env: Env, path: string): Promise<Response> {
+  if (!tokenMatches(request.headers.get("Authorization"), env.READ_TOKEN)) return json({ error: "not found" }, 404);
+  if (request.method !== "GET") return json({ error: "method not allowed" }, 405);
+  if (path === "/v1/read/games") {
+    const cursor = new URL(request.url).searchParams.get("cursor") ?? undefined;
+    const page = await env.GAMES.list({ prefix: "games/", cursor, limit: 1000, include: ["customMetadata"] });
+    return json({
+      games: page.objects.map((o) => ({ key: o.key, size: o.size, etag: o.etag, uploaded: o.uploaded.toISOString(), ...o.customMetadata })),
+      cursor: page.truncated ? page.cursor : null,
+    });
+  }
+  const key = decodeURIComponent(path.slice("/v1/read/games/".length));
+  if (!path.startsWith("/v1/read/games/") || !KEY_RE.test(key)) return json({ error: "not found" }, 404);
+  const object = await env.GAMES.get(key);
+  if (!object) return json({ error: "not found" }, 404);
+  // Sent as stored (gzip bytes), not re-encoded, so the reader gunzips it itself.
+  return new Response(object.body, { headers: { "content-type": "application/gzip", "etag": object.httpEtag, "cache-control": "no-store" } });
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+    if (url.pathname.startsWith("/v1/read/")) return readApi(request, env, url.pathname);
     const origin = request.headers.get("Origin");
     const match = /^\/v1\/games\/([^/]+)$/.exec(url.pathname);
     if (!originAllowed(origin, env.ALLOWED_ORIGINS)) return json({ error: "origin not allowed" }, 403);

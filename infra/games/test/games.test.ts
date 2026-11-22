@@ -1,6 +1,6 @@
 import { env as workerEnv, exports } from "cloudflare:workers";
 import { describe, expect, it } from "vitest";
-import { checkRecord, originAllowed, type Env } from "../src/index";
+import { checkRecord, originAllowed, tokenMatches, type Env } from "../src/index";
 
 const env = workerEnv as unknown as Env;
 
@@ -79,5 +79,36 @@ describe("record check", () => {
     expect(checkRecord(ID, swapped)).toBe("seat names must be the defaults");
     expect(checkRecord("web-other", record())).toBe("game id does not match the address");
     expect(typeof checkRecord(ID, record())).toBe("object");
+  });
+});
+
+describe("private read API", () => {
+  const TOKEN = "t".repeat(40);
+  const withToken = (e: Env) => { e.READ_TOKEN = TOKEN; };
+  const read = (path: string, token = TOKEN) => call(path, { headers: { Authorization: `Bearer ${token}` } });
+
+  it("lists and returns stored games for the token holder only", async () => {
+    withToken(env);
+    expect((await put(record())).status).toBe(200);
+    const key = `games/2026-11/${ID}.json.gz`;
+    const list = await read("/v1/read/games");
+    expect(list.status).toBe(200);
+    const body = await list.json() as { games: { key: string; outcome: string; turns: string }[]; cursor: string | null };
+    expect(body.games.find((g) => g.key === key)).toMatchObject({ outcome: "abandoned", turns: "145" });
+    expect(body.cursor).toBeNull();
+    const got = await read(`/v1/read/games/${encodeURIComponent(key)}`);
+    expect(got.status).toBe(200);
+    const text = await new Response((await got.blob()).stream().pipeThrough(new DecompressionStream("gzip"))).text();
+    expect(JSON.parse(text).metadata.game_id).toBe(ID);
+    expect((await read("/v1/read/games", "x".repeat(40))).status).toBe(404);
+    expect((await call("/v1/read/games", { headers: { Origin: ORIGIN } })).status).toBe(404);
+    expect((await read("/v1/read/games/games%2F..%2Fsecret")).status).toBe(404);
+  });
+
+  it("is off without a long enough secret", () => {
+    expect(tokenMatches(`Bearer ${"a".repeat(40)}`, undefined)).toBe(false);
+    expect(tokenMatches("Bearer short", "short")).toBe(false);
+    expect(tokenMatches(`Bearer ${"a".repeat(40)}`, "a".repeat(40))).toBe(true);
+    expect(tokenMatches(`Bearer ${"a".repeat(41)}`, "a".repeat(40))).toBe(false);
   });
 });
