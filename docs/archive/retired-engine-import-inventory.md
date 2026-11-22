@@ -1,3 +1,5 @@
+> Archived 2026-11-22: kept for history; it no longer describes the project.
+
 # TypeScript engine retirement inventory
 
 This is the complete import inventory from `master` at the start of the retirement. A path appears once, even if it imported several engine modules. All listed imports have been removed. `app/src/mock/` itself contained 86 files: 35 implementation and fixture support files, 36 parity tests and 15 direct unit tests.

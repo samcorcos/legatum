@@ -1,3 +1,5 @@
+> Archived 2026-11-22: kept for history; it no longer describes the project.
+
 # AI evolution run log (contract)
 
 The evolution run (`tools/evolve/`, Astra task `ai-evolution`) writes this log. The dashboard's Evolution panel, the morning report and the film pipeline (`tools/film/`) only read it. Change it here first, then both sides.

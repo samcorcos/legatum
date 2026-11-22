@@ -1,4 +1,4 @@
-"""Writers for the run log contract in docs/ai-evolution-log.md.
+"""Writers for the run log contract in docs/archive/ai-evolution-log.md.
 
 Whole files are replaced atomically (temp file + rename); JSONL lines are appended with one
 O_APPEND write each, so readers tailing a live run see whole lines (and skip a torn last one).

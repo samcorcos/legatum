@@ -1,3 +1,5 @@
+> Archived 2026-11-22: kept for history; it no longer describes the project.
+
 # TypeScript mock retirement: test coverage audit
 
 The retirement removes 15 mock-only test files from `app/src/mock` (100 direct `it` declarations, some parameterized). Those cases exercised the deleted TypeScript implementation. The live engine is the Rust core compiled to WASM. This inventory records where the behavior is checked after retirement.

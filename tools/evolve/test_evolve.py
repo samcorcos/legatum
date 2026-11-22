@@ -1,7 +1,7 @@
 """Tests for the evolution harness: python3 -m unittest discover -s tools/evolve -p 'test_*.py'
 
 The end-to-end tests drive the real harness against a fake simulator and a fake Claude CLI
-(no Rust build, no model call) and check the run log against docs/ai-evolution-log.md, then
+(no Rust build, no model call) and check the run log against docs/archive/ai-evolution-log.md, then
 load it with the film/dashboard reader (tools/film/lib/runlog.mjs) when node is available.
 """
 

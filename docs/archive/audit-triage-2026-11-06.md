@@ -1,3 +1,5 @@
+> Archived 2026-11-22: kept for history; it no longer describes the project.
+
 # Audit triage, 2026-11-06
 
 Triage of the eight Codex whole-game audits of 2026-11-05 (`.reviews/astra-audit-{core-debt,ai-debt,app-debt,player-text,tooling-docs,art-graphics,game-improvements,held-tasks}.md`) into action. The designer asked for tech debt worth fixing, art and animation improvements, and anything else that makes the game better, with quality over volume.

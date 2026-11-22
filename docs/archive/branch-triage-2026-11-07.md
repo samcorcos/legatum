@@ -1,3 +1,5 @@
+> Archived 2026-11-22: kept for history; it no longer describes the project.
+
 # Stale `astra/*` branch triage, 2026-11-07
 
 Read-only triage. Nothing deleted, no tags created. The lead decides.
