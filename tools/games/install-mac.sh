@@ -48,7 +48,7 @@ cat > "$plist" <<EOF
   <key>Nice</key><integer>10</integer>
   <key>EnvironmentVariables</key>
   <dict>
-    <key>PATH</key><string>$HOME/.cargo/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    <key>PATH</key><string>$HOME/.local/bin:$HOME/.cargo/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
   </dict>
   <key>StandardOutPath</key><string>$home/logs/launchd.out</string>
   <key>StandardErrorPath</key><string>$home/logs/launchd.err</string>
