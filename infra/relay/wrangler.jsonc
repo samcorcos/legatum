@@ -14,5 +14,13 @@
     // new_sqlite_classes: SQLite-backed Durable Objects, the only kind the Workers Free plan allows.
     { "tag": "v1", "new_sqlite_classes": ["Lobby", "Room"] }
   ],
+  // Tunables (README "Limits and kill switch"). Strings, as Worker vars are; a bad value falls back to the default.
+  "vars": {
+    "LOBBY_OPEN": "1", // "0" refuses new rooms with 503; running rooms carry on
+    "MAX_ROOMS": "64", // rooms on the whole relay
+    "MAX_ROOMS_PER_IP": "2", // live rooms per client address
+    "ROOM_CREATES_PER_10_MIN": "6", // room creations per client address in any 10 minutes
+    "MAX_GUESTS_PER_IP": "4" // guest sockets per client address in one room
+  },
   "observability": { "enabled": false }
 }

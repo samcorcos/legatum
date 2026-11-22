@@ -26,7 +26,7 @@ describe('LAN order reconciliation in the store', () => {
       }
     });
     useGame.setState(useGame.getInitialState(), true);
-    const status = { mode: 'server' as const, has_game: true, turn: 5, seats: [], lan_urls: [], is_local: false };
+    const status = { mode: 'server' as const, has_game: true, turn: 5, seats: [], is_local: false };
     useGame.setState({ lan: { status, mySeat: null, seats: [], conn: 'closed' } });
     useGame.getState().joinSeat(1, 'Ben');
     sockets[0].open();

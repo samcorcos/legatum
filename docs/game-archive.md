@@ -2,7 +2,7 @@
 
 Legatum records full owner histories so balance analysis does not depend on replaying an old
 engine. Native storage defaults to `~/LegatumData/archive`. `LEGATUM_ARCHIVE` overrides the
-default, and `--archive-dir <directory>` overrides the environment in the simulator, server,
+default, and `--archive-dir <directory>` overrides the environment in the simulator
 and Mac app. Archive roots inside **any Git checkout** are rejected, including symlink aliases.
 The archive is private local data, outside the repository; the native apps and the LAN host never upload it. The one upload is the hosted web build's: with `LEGATUM_GAMES_URL` set it sends each game's recording, every seat renamed to its default (`Recording::anonymized`, replayed so the hashes still match), to the R2 bucket behind `infra/games` (see `infra/games/README.md` and the README's Privacy section).
 
@@ -10,7 +10,6 @@ The archive is private local data, outside the repository; the native apps and t
 export PATH="$HOME/.cargo/bin:/opt/homebrew/bin:$PATH"
 cargo run --release -p legatum-sim -- --games 100 --archive
 cargo run --release -p legatum-sim -- --games 100 --archive --archive-dir /path/to/archive
-cargo run --release -p legatum-server -- --archive-checkpoint-turns 5
 scripts/archive-stats
 scripts/archive-stats --csv /tmp/legatum-analysis
 cargo run --release -p legatum-sim -- --replay ~/LegatumData/archive/2026/09/<game_id>.tape.json.zst
@@ -58,7 +57,7 @@ Metadata fields:
 | --- | --- |
 | `schema_version`, `game_id` | Envelope version and collision-resistant, path-safe identity |
 | `created_at`, `finished_at` | RFC3339 UTC timestamps; finish is null while in progress |
-| `source` | `human-local`, `human-hotseat`, `lan`, or `sim`; server Host games use `lan` |
+| `source` | `human-local`, `human-hotseat`, `lan`, or `sim`; online Host games use `lan` (`history::Source::Lan`, a historical name) |
 | `speed`, `map`, `seed` | Economic speed, generator plus width/height, decimal-string u64 seed |
 | `seats` | Player id, entered name, faction, team, difficulty, human flag, final/current VP and held titles |
 | `winner`, `outcome` | Winning **team id**, or null; `vp`, `elimination`, `turn-limit`, `draw`, `stalled`, `panic`, `abandoned`, or `in-progress` |
@@ -109,13 +108,10 @@ online, at the next checkpoint, or through **Retry history archive** in the game
 The current game can be exported even if browser storage is denied/full; failures surface in
 the existing error UI. Do not clear browser storage before exporting undelivered histories.
 
-When served by `legatum-server`, the app sends JSON to `POST /api/archive`. The route uses the
-same explicit Host/Origin allowlist and JSON content-type requirement as other server APIs.
-Loopback TCP peers may write; LAN peers must present an existing seat/staging token in
-`Authorization: Bearer …`. The token is transport-only. Requests have the existing 16 MiB body
-limit; native decompression is bounded at 64 MiB. LAN games themselves are recorded by the
-authoritative server, never reconstructed from player views. A LAN visitor without a seat
-credential retains local games for export until an authorized upload is possible.
+There is no archive upload route any more (the native `legatum-server` and its `POST /api/archive` are gone,
+2026-11-22). An online game's host is the engine in the host's browser tab (`crates/wasm/src/host`); it hands its
+checkpoints and final history to that tab, which files them like a local game (`app/src/net/hosting.ts`,
+`recordGameHistory`).
 
 On Mac, `tauri-plugin-fs` writes the compressed payload under the resolved archive root.
 Native commands prepare checksum-enabled zstd and finalize the staged file/index under the

@@ -3,18 +3,16 @@ import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { readAutosave, useGame, type SaveFile } from '../store';
 import { pickSaveFile } from '../ui/GameMenu';
 import { DecoRule, Fan, Wordmark } from '../brand/ornaments';
-import { InviteLink } from '../ui/InviteLink';
 import { openGuide } from '../ui/guideState';
 import { HintSettings } from '../ui/FirstGameHints';
 import { HapticsSettings } from '../ui/HapticsSettings';
 import { SoundSettings } from '../ui/SoundSettings';
 import { CombatFxSettings } from '../ui/CombatFxSettings';
 import { canQuit, quitApp } from '../tauri';
-import { DEFAULT_PLAYER_NAME, MAX_PLAYER_NAME, online as onlineApi, openHostedWindow, rememberPlayerName, savedPlayerName } from '../platform/online';
+import { DEFAULT_PLAYER_NAME, MAX_PLAYER_NAME, rememberPlayerName, savedPlayerName } from '../platform/online';
 import { TitleArt } from './TitleArt';
 import { usePerfOverlay } from '../ui/PerfOverlay';
 import { buildLabel } from '../buildLabel';
-import { HOSTED, SOURCE_URL } from '../platform/hosted';
 import { PRIVACY_URL, uploadsGames } from '../platform/gameUpload';
 import { isOlderVersionMessage, olderAutosaveMessage, saveHasCurrentRules } from '../saveErrors';
 import { MIN_SEATS } from '../lobby';
@@ -26,9 +24,7 @@ const unreadableAutosaves = new Set<string>();
 
 /** Main menu: Single Player, Multiplayer (Hot Seat, Host Game, Join Game), Continue, Load Game. */
 export function TitleScreen() {
-  const lan = useGame((s) => s.lan);
-  // Someone who opened a host's network address came to join: start on the multiplayer menu.
-  const [menu, setMenu] = useState<'main' | 'multi'>(lan && !lan.status.is_local ? 'multi' : 'main');
+  const [menu, setMenu] = useState<'main' | 'multi'>('main');
   return (
     <div className="title-screen">
       <TitleArt />
@@ -55,9 +51,7 @@ export function TitleScreen() {
       </div>
       <div className="title-foot">
         <span>{buildLabel}</span>
-        <span>
-          {lan ? `Network game server · ${lan.status.is_local ? 'this computer is the host' : 'connected to a host'}` : 'Explore · expand · build · compete'}
-        </span>
+        <span>Explore · expand · build · compete</span>
       </div>
     </div>
   );
@@ -124,7 +118,8 @@ function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
         </button>
         <button className="btn big" onClick={onMultiplayer}>
           Multiplayer
-          <span className="btn-sub">{HOSTED ? 'Hot seat on this computer' : online?.relay ? 'Hot seat on this computer, or a game online' : 'Hot seat on this computer, or a game on your network'}</span>
+          <span className="btn-sub">{online?.relay ? 'Hot seat on this computer, or a game online' : 'Hot seat on this computer'}</span>
+
         </button>
         <button className={`btn big ${continuePrimary ? 'primary' : ''}`} disabled={!auto || !!busy || olderAuto || unreadableAuto} onClick={() => auto && continueAuto(auto)}>
           {olderAuto ? 'Saved game (older version)' : unreadableAuto ? 'Saved game (unreadable)' : 'Continue'}
@@ -158,72 +153,38 @@ function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
 }
 
 function MultiplayerMenu({ onBack }: { onBack: () => void }) {
-  const lan = useGame((s) => s.lan);
   const views = useGame((s) => s.views);
   const goto = useGame((s) => s.goto);
   const openSetup = useGame((s) => s.openSetup);
-  const refresh = useGame((s) => s.refreshStatus);
   const error = useGame((s) => s.error);
   const online = useGame((s) => s.online);
-  const st = lan?.status;
-  // Online play from the desktop app: starting a game opens it in this window. A build with no relay
-  // has no lobby to list a game in, so it shows the network-game buttons instead.
+  // Online play: Host Game runs the game in this tab and opens its game room. A build with no relay has
+  // no game list, so it offers hot seat only.
   const [hosting, setHosting] = useState<'idle' | 'starting' | 'failed'>('idle');
+  const [hostError, setHostError] = useState<string | null>(null);
   const [name, setName] = useState(() => savedPlayerName() ?? DEFAULT_PLAYER_NAME);
   const hostOnline = async () => {
     const who = name.trim().slice(0, MAX_PLAYER_NAME) || DEFAULT_PLAYER_NAME;
     rememberPlayerName(who);
     setHosting('starting');
-    try {
-      const game = await onlineApi().hostStart(who);
-      openHostedWindow(game.url);
-    } catch {
+    setHostError(null);
+    const failure = await useGame.getState().hostOnline(who);
+    if (failure) {
+      setHostError(failure);
       setHosting('failed');
     }
   };
 
-  // Poll while waiting for the host, and keep seat info fresh.
-  const onLan = !!st;
-  const hasGame = !!st?.has_game;
-  useEffect(() => {
-    if (!onLan) return;
-    const t = setInterval(() => refresh(), hasGame ? 4000 : 2000);
-    return () => clearInterval(t);
-  }, [refresh, onLan, hasGame]);
-
-  const hostSub = HOSTED
-    ? 'Not available on this website'
-    : !st
-    ? 'Start the network host on this computer first'
-    : !st.is_local
-      ? 'Only the host computer can start a network game'
-      : st.has_game
-        ? 'Replaces the current network game'
-        : 'Players on your network join your game';
-  // Staging room (servers that implement it report `staging`): an open room takes precedence.
-  const room = st?.staging ?? null;
-  const openSeats = room ? room.config.seats.filter((s, i) => s.kind === 'open' && !room.occupants[i]?.connected).length : 0;
-  const canJoin = !!room || !!st?.has_game;
-  const joinSub = HOSTED
-    ? 'Not available on this website'
-    : !st
-    ? "Open the host's network address in your browser"
-    : room
-      ? `Game room open · ${openSeats} open seat${openSeats === 1 ? '' : 's'}`
-      : st.has_game
-        ? `Turn ${st.turn} · ${st.seats.map((s) => s.name).join(' & ')}`
-        : 'Waiting for the host to start a game…';
-
   return (
     <>
-      <TitleNotice error={error ?? (hosting === 'failed' ? 'Could not open your game. Check your internet connection and try again.' : null)} />
+      <TitleNotice error={error ?? hostError} />
       <div className="title-actions">
         <ResumeButton />
         <button className="btn big" onClick={() => openSetup('hotseat')}>
           Hot Seat
           <span className="btn-sub">Several players take turns planning on this computer</span>
         </button>
-        {online?.relay && !st ? (
+        {online?.relay ? (
           <>
             <label className="host-name">
               <span>Your name in the game list</span>
@@ -249,38 +210,12 @@ function MultiplayerMenu({ onBack }: { onBack: () => void }) {
             </button>
           </>
         ) : (
-          <>
-            <button className="btn big" disabled={!st?.is_local} onClick={() => openSetup('host')}>
-              Host Game
-              <span className="btn-sub">{hostSub}</span>
-            </button>
-            <button className={`btn big ${canJoin && !views ? 'primary' : ''}`} disabled={!canJoin} onClick={() => goto(room ? 'staging' : 'join')}>
-              Join Game
-              <span className="btn-sub">{joinSub}</span>
-            </button>
-          </>
-        )}
-        {st && !canJoin && !st.is_local && (
-          <div className="waiting-host">
-            <div className="spinner" />
-            Waiting for the host to start a game…
-          </div>
-        )}
-        {HOSTED && (
-          <p className="title-hosted-note">
-            A network game needs the host program running on one player’s computer.{' '}
-            <a href={SOURCE_URL} target="_blank" rel="noreferrer">How to host a game</a>
-          </p>
+          <p className="title-hosted-note">This version has no online play. Hot seat still works.</p>
         )}
         <button className="btn quiet" onClick={onBack}>
           ← Back
         </button>
       </div>
-      {st?.is_local && st.lan_urls.length > 0 && (
-        <div className="title-invite">
-          <InviteLink urls={st.lan_urls} />
-        </div>
-      )}
     </>
   );
 }

@@ -1,7 +1,9 @@
 // The hosted web build ("Play in your browser"), played the way a visitor gets it: app/dist from
 // scripts/build-web.sh on a static server with no backend (serve.mjs). Everything a visitor can
 // reach must work without a server: any console error, failed request, request to another host or
-// request for the game server's /api or /ws fails the test.
+// request for the game server's /api or /ws fails the test. A build with LEGATUM_GAMES_URL also sends each
+// game to that upload Worker (src/platform/gameUpload.ts): the test answers those itself, so a test game never
+// lands in the real bucket, and checks that the game was sent.
 import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
 import { dismissInterstitials, endPlanning } from '../e2e/turnActions';
@@ -12,6 +14,9 @@ type GameWindow = Window & {
   legatum: typeof useGame;
   legatumMap: { toScreen(hex: Hex): { x: number; y: number }; redraw(): void };
 };
+
+/** The game-upload Worker the build under test was built with, if any (scripts/build-web.sh). */
+const gamesOrigin = process.env.LEGATUM_GAMES_URL ? new URL(process.env.LEGATUM_GAMES_URL).origin : null;
 
 const version = (JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as { version: string }).version;
 
@@ -26,6 +31,7 @@ function watch(page: Page, origin: string) {
   page.on('request', (request) => {
     const url = new URL(request.url());
     if (url.protocol === 'data:' || url.protocol === 'blob:') return;
+    if (url.origin === gamesOrigin) return;
     if (url.origin !== origin) problems.push(`request to another host: ${request.url()}`);
     else if (/^\/(api|ws)(\/|$)/.test(url.pathname)) problems.push(`request for the game server: ${url.pathname}`);
   });
@@ -113,6 +119,17 @@ test('an engine that cannot download shows Reload, never a blank page', async ({
 test('a visitor plays: title, a people, turns, a second city, save and load, with no server', async ({ page, baseURL, request }) => {
   test.setTimeout(300_000);
   const problems = watch(page, new URL(baseURL!).origin);
+  const uploads: string[] = [];
+  if (gamesOrigin) {
+    await page.route(`${gamesOrigin}/**`, (route) => {
+      if (route.request().method() === 'PUT') uploads.push(new URL(route.request().url()).pathname);
+      return route.fulfill({
+        status: route.request().method() === 'OPTIONS' ? 204 : 200,
+        headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'PUT, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' },
+        body: route.request().method() === 'OPTIONS' ? '' : '{}',
+      });
+    });
+  }
 
   // The host: security headers, the engine's MIME type, a real 404, the link-preview card.
   const index = await request.get('/');
@@ -236,4 +253,5 @@ test('a visitor plays: title, a people, turns, a second city, save and load, wit
   expect((await empire(page)).cities).toBe(2);
 
   expect(problems, 'no console errors, failed requests, or requests beyond the static files').toEqual([]);
+  if (gamesOrigin) expect(uploads.length, 'the game was sent to the upload Worker').toBeGreaterThan(0);
 });

@@ -30,7 +30,7 @@ beforeEach(() => {
   useGame.setState(useGame.getInitialState(), true);
   const seats = [{ seat: 0, player: 0, name: 'Ada', faction: 'India' as const, connected: false, reserved: false, ready: false, orders: 0 }];
   useGame.setState({ screen: 'join', lan: {
-    status: { mode: 'server', has_game: true, turn: 1, seats, lan_urls: [], is_local: false },
+    status: { mode: 'server', has_game: true, turn: 1, seats, is_local: false },
     mySeat: null, seats, conn: 'closed',
   } });
   act(() => root.render(<JoinScreen />));

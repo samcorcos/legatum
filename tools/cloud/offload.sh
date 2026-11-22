@@ -2,13 +2,13 @@
 # Run one heavy command on the cloud build box instead of this Mac, then apply the files it changed. Used by the
 # Codex lanes (tools/astra/runner.sh) so builds, tests and repins do not drain the laptop's battery.
 #
-#   tools/cloud/offload.sh [--prep none|wasm|dist|server] [--artifact PATH]... -- <command...>
+#   tools/cloud/offload.sh [--prep none|wasm|dist|web] [--artifact PATH]... -- <command...>
 #
 # The command runs on the box in a fresh slot checkout of this worktree (HEAD plus uncommitted and untracked
 # files), in the same sub-directory, with output and exit code streamed back. Afterwards every non-ignored file the
 # command added, changed or deleted is written back into this worktree (repin's fixtures and pins.json, a rewritten
 # Cargo.lock). Git-ignored outputs (wasm-pkg, dist, test-results, target/) come back only when named with --artifact.
-#   --prep wasm|dist|server  the box rebuilds app/src/wasm-pkg (and app/dist, and the release server) first when stale
+#   --prep wasm|dist|web  the box rebuilds app/src/wasm-pkg (and app/dist, and for web the e2e web dist) first when stale
 #   --artifact PATH          also copy this git-ignored path back (relative to the worktree root); repeatable
 #
 # It runs the command LOCALLY at low priority (nice -n 15, and in the build-slot FIFO for cargo), and never fails the caller
@@ -30,7 +30,7 @@ while [ $# -gt 0 ]; do
     *) echo "offload: unknown option $1" >&2; exit 2;;
   esac
 done
-[ "${#cmd[@]}" -gt 0 ] || { echo "usage: offload.sh [--prep none|wasm|dist|server] [--artifact PATH]... -- <command...>" >&2; exit 2; }
+[ "${#cmd[@]}" -gt 0 ] || { echo "usage: offload.sh [--prep none|wasm|dist|web] [--artifact PATH]... -- <command...>" >&2; exit 2; }
 
 lcmd=("${cmd[@]}") # what runs here; cmd is rewritten for the box below
 runs="${LEGATUM_RUNS:-$HOME/LegatumRuns}"
