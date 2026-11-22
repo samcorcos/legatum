@@ -415,11 +415,13 @@ currencies, every trade-off priced in Gold). Saves from another rules version do
 (`validation::MAX_GOLD`, `rules/cities.rs::pay_gold`, `validation::credit_gold`). A city stops
 growing at population 1,000; stored Food, Production, and Science stop at 1,000,000
 (`validation::MAX_POPULATION`, `validation::MAX_STORED`). Save loading rejects negative or
-out-of-range amounts with the affected field named (`validation::check_state`), and refuses every
-reference that cannot exist (2026-11-22, `validation::check_references`): a player id past the seats, a team that is
-not seated, a tile off the map, a city or unit id above `next_city_id`/`next_unit_id`; all fail as "The save is
-damaged: ...". A city or unit id that has merely fallen is legal (camp rosters, memories, Hall and Diwan records,
-supply records and air sightings are pruned or read with `.get`), so it is checked only against its id counter.
+out-of-range amounts with the affected field named (`validation::check_state`), and refuses the references
+that rules would index with (2026-11-22, `validation::check_references` and `check_state`): a player id past the seats,
+a tile off the map, an entity whose own id does not match its key or is above `next_city_id`/`next_unit_id`, a map
+tile naming a missing city, an aircraft in a missing city, a winner or VP hold naming an unseated team; all fail as
+"The save is damaged: ...". Stale references load: a team id in relations, chronicle or memories of a team with no
+empire left, and a city or unit id that has merely fallen (a razed Hall or Diwan city, camp rosters, memories, supply
+records and air sightings are pruned or read with `.get`, never indexed), because real games produce them.
 The save is parsed once and the same JSON tree is decoded into the state (`wasm::session::from_save_json`,
 `json::state_from_value`); `GameState::hash` streams the JSON into FNV-1a with the same bytes and hash as before. These bounds
 leave ordinary game pacing unchanged while keeping long-run arithmetic within range.
