@@ -1,5 +1,6 @@
 import { spawn } from 'node:child_process';
-import { access, readFile } from 'node:fs/promises';
+import { access, mkdtemp, readFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test as base, expect, type BrowserContext, type Page } from '@playwright/test';
@@ -54,7 +55,9 @@ export const testWithFailingRequests = base.extend<{}, { serverURL: string; rela
       throw new Error('The relay needs its packages: (cd infra/relay && npm ci).');
     }
     const port = new URL(E2E_RELAY).port;
-    const proc = spawn(join(dir, 'node_modules/.bin/wrangler'), ['dev', '--port', port, '--ip', '127.0.0.1'], {
+    // A fresh relay state per run: rooms a crashed earlier run left behind would show twice in the game list.
+    const state = await mkdtemp(join(tmpdir(), 'legatum-relay-'));
+    const proc = spawn(join(dir, 'node_modules/.bin/wrangler'), ['dev', '--port', port, '--ip', '127.0.0.1', '--persist-to', state], {
       cwd: dir,
       env: { ...process.env, WRANGLER_SEND_METRICS: 'false', CI: '1' },
       stdio: ['ignore', 'pipe', 'pipe'],

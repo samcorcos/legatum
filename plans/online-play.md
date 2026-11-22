@@ -59,6 +59,9 @@ them as opaque numbers and strings.
 Limits (relay): at most 64 rooms, 8 guest sockets per room, 64 KiB per guest-to-host message, 1 MiB per
 host-to-guest message, room id 10+ and host key 32+ random URL-safe characters. A room is deleted 120 s after
 its host tunnel drops without returning, and immediately on a `bye` frame. Use the WebSocket Hibernation API.
+Since the relay hardening (2026-11-22) it also caps rooms and creations per client address, guest sockets per address,
+message rates (close 4029), cleans room names and has a `LOBBY_OPEN` kill switch; `infra/relay/README.md` ("Limits and
+kill switch") holds the numbers.
 
 ### Tunnel frames (host <-> relay), binary
 

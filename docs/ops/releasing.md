@@ -53,6 +53,8 @@ scripts/build-web.sh
 cd app && npm run e2e:hosted
 ```
 
+When the build has `LEGATUM_GAMES_URL`, the hosted test answers requests to that Worker itself (no test game reaches the real bucket) and fails if no upload was sent. To check that path locally, build with any URL, for example `LEGATUM_GAMES_URL=https://legatum-games.example.workers.dev scripts/build-web.sh`, then run `npm run e2e:hosted`.
+
 ## Third-party licence notices
 
 Every distributed build carries `THIRD_PARTY_LICENSES.txt`, written by `tools/release/third-party-licenses.mjs`

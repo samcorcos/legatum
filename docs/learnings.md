@@ -21,6 +21,13 @@ Newest first. One entry per non-obvious finding: what we learned, the evidence, 
 - **Reload resume lives in `sessionStorage`, per tab.** The host keeps its room key and latest save (`legatum.online.hosting`, `legatum.online.save`); a guest keeps its room (`legatum.online.room`). A new tab never takes over a game. A save too large for `sessionStorage` silently loses only the reload resume.
 - **Vitest's `runAllTimersAsync` never ends while an interval runs.** The staging keepalive made one lobby test loop 10,000 timers; that test now advances a fixed 60 s.
 - **The e2e suite now runs on the static build and the real relay.** `e2e/fixtures.ts` serves `app/dist` with its own `_headers` (CSP included), and the `relay` fixture starts `infra/relay` under `wrangler dev` on 127.0.0.1:8787. The build must be made for that relay (`LEGATUM_RELAY_URL=http://127.0.0.1:8787 scripts/build-web.sh`), because the relay URL and CSP are baked in. wrangler runs workerd as a child process, so the fixture kills the whole process group.
+## 2026-11-22: Relay lobby limits (`claude/review-relay-hardening`)
+
+- **A Room cannot see WebSocket protocol pings.** The Workers runtime answers them without waking the Durable Object, so a host liveness check needs app-level frames (the browser host's kind-6 `PING`). The 60 s heartbeat applies only to a host that has sent at least one.
+- **Awaiting an RPC inside `webSocketMessage` lets the next frame overtake the current one.** Heartbeat reports to the Lobby are fire-and-forget (`ctx.waitUntil`).
+- **Limits live in the Worker, not the dashboard:** 2 live rooms and 6 creations per 10 minutes per hashed IP, per-socket message and byte buckets sized from a real turn (8 guests, chunked multi-MiB views), `LOBBY_OPEN=0` as a kill switch. Raw IPs are never stored.
+- **Not done:** the client still shows one generic message for a refused room and ignores guest close codes 1013 and 4029 (`app/src/net/browserHost.ts`, `app/src/remote.ts`).
+
 ## 2026-11-22: Egypt's tiles still showed Production: the Nile lives on city totals, not tiles (`claude/project-thread-h0s4wd`)
 
 - **Cause.** Core applies the Nile in `economy::nile` to a city's totals, so every per-tile number (`economy::owner_tile_yields`, the view's `next_claim.yields`, `improvement_preview.gain`) is the plain tile yield. The app's map yield icons, tile card, "Next tile" claim and improvement cards read those and showed Egypt Production it never gets, and Food at half its real value.
