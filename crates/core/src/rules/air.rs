@@ -111,15 +111,23 @@ pub fn lose_city_aircraft(state: &mut GameState, city: CityId, events: &mut Vec<
 
 /// Check `player`'s air orders. The caller projects valid same-turn surprise wars into `state`
 /// before checking strikes, as it does for ranged attacks.
+///
+/// Upgrades are checked against `economy`, the state after this list's valid unit and city
+/// orders (`validate_orders` in `rules`): resolution pays for them in the ranged phase, after
+/// unit upgrades and city purchases, in aircraft-id order. Each valid upgrade is applied to
+/// `economy` in that same order, so the Gold and supply a second upgrade sees are what is left
+/// after the first, and an order resolution would refuse is refused here.
 pub fn validate_orders(
     state: &GameState,
     player: PlayerId,
     orders: &[Order],
+    mut economy: GameState,
 ) -> Vec<crate::orders::OrderError> {
     let mut errors = Vec::new();
     let mut acted = BTreeSet::new();
     let mut rebased_into: BTreeMap<CityId, usize> = BTreeMap::new();
     let mut vision = None;
+    let mut upgrades: Vec<(UnitId, Option<UnitKind>, usize)> = Vec::new();
     for (index, order) in orders.iter().enumerate() {
         let plane = match order {
             Order::AirStrike { plane, .. }
@@ -150,7 +158,10 @@ pub fn validate_orders(
             }
             Order::AirRecon { target, .. } => validate_recon(state, player, plane, *target),
             Order::UpgradeAircraft { to, .. } => {
-                validate_upgrade(state, player, plane, *to).map(|_| ())
+                // Resolution takes the first order for each aircraft, so this one holds it.
+                acted.insert(plane);
+                upgrades.push((plane, *to, index));
+                continue;
             }
             _ => unreachable!(),
         };
@@ -159,6 +170,21 @@ pub fn validate_orders(
         } else {
             acted.insert(plane);
         }
+    }
+    if !upgrades.is_empty() {
+        upgrades.sort();
+        for (plane, via, index) in upgrades {
+            match validate_upgrade(&economy, player, plane, via) {
+                Ok((to, cost)) => {
+                    economy.player_mut(player).gold -= cost;
+                    if let Some(a) = find_mut(&mut economy, plane) {
+                        a.kind = to;
+                    }
+                }
+                Err(message) => errors.push(crate::orders::OrderError { index, message }),
+            }
+        }
+        errors.sort_by_key(|e| e.index);
     }
     errors
 }
@@ -598,6 +624,15 @@ mod tests {
         let a = city(&mut s, 0, hex(3, 4), 3);
         let b = city(&mut s, 1, hex(7, 4), 3);
         (s, a, b)
+    }
+
+    /// The air check alone, with nothing else in the order list spending first.
+    fn validate_orders(
+        s: &GameState,
+        player: PlayerId,
+        orders: &[Order],
+    ) -> Vec<crate::orders::OrderError> {
+        super::validate_orders(s, player, orders, s.clone())
     }
 
     fn strike(plane: UnitId, at: Hex) -> BTreeMap<PlayerId, Vec<Order>> {
@@ -1507,6 +1542,107 @@ mod tests {
         );
         let upgraded = find(&next, plane).unwrap();
         assert_eq!((upgraded.kind, upgraded.xp), (UnitKind::StealthFighter, 50));
+    }
+
+    /// Two Fighters in `a` that can each upgrade to a Stealth Fighter, with Silicon for both.
+    fn two_fighters_ready_for_stealth() -> (GameState, CityId, UnitId, UnitId, i32) {
+        let (mut s, a, _b) = arena();
+        base_new(&mut s, a, UnitKind::Fighter);
+        base_new(&mut s, a, UnitKind::Fighter);
+        let (p1, p2) = (s.aircraft[0].id, s.aircraft[1].id);
+        s.player_mut(P0).techs.extend([
+            TechId::JetEngines,
+            TechId::StealthTechnology,
+            TechId::AutonomousSystems,
+        ]);
+        let silicon = crate::resources::Resource::Silicon;
+        for h in hex(3, 4).neighbors() {
+            if crate::resources::spare(&s, P0, silicon, None) >= 2 {
+                break;
+            }
+            let t = s.map.get_mut(h).unwrap();
+            t.resource = Some(silicon);
+            t.improved = true;
+            t.owner = Some(P0);
+            t.city = Some(a);
+        }
+        assert!(crate::resources::spare(&s, P0, silicon, None) >= 2);
+        let (to, price) = upgrade_price(&s, P0, p1, None).unwrap();
+        assert_eq!(to, UnitKind::StealthFighter);
+        assert_eq!(upgrade_price(&s, P0, p2, None).unwrap().1, price);
+        (s, a, p1, p2, price)
+    }
+
+    #[test]
+    fn a_second_aircraft_upgrade_is_checked_against_the_gold_the_first_leaves() {
+        let (mut s, _a, p1, p2, price) = two_fighters_ready_for_stealth();
+        s.player_mut(P0).gold = 2 * price - 1;
+        let up = |plane| Order::UpgradeAircraft { plane, to: None };
+        // Resolution pays in aircraft-id order, so the lower id is upgraded whatever the list
+        // order, and the other order is the one refused.
+        let os = vec![up(p2), up(p1)];
+        let errors = crate::validate_orders(&s, P0, &os);
+        assert_eq!(errors.len(), 1, "{errors:?}");
+        assert_eq!(errors[0].index, 0);
+        assert!(errors[0].message.contains("Not enough Gold"), "{errors:?}");
+        let (next, events) = resolve_tactical_turn(&s, &orders(0, os));
+        assert_eq!(find(&next, p1).unwrap().kind, UnitKind::StealthFighter);
+        assert_eq!(find(&next, p2).unwrap().kind, UnitKind::Fighter);
+        assert!(
+            events
+                .iter()
+                .any(|e| matches!(e, Event::OrderFailed { .. }))
+        );
+        // With Gold for both, both pass.
+        s.player_mut(P0).gold = 2 * price;
+        assert!(crate::validate_orders(&s, P0, &[up(p2), up(p1)]).is_empty());
+        // With Silicon for only one, the second is refused for supply.
+        let silicon = crate::resources::Resource::Silicon;
+        let spare_base = city(&mut s, 0, hex(8, 8), 2);
+        while crate::resources::spare(&s, P0, silicon, None) > 1 {
+            base_new(&mut s, spare_base, UnitKind::StealthFighter);
+        }
+        let os = vec![up(p1), up(p2)];
+        let errors = crate::validate_orders(&s, P0, &os);
+        assert_eq!(errors.len(), 1, "{errors:?}");
+        assert_eq!(errors[0].index, 1);
+        let (next, _) = resolve_tactical_turn(&s, &orders(0, os));
+        assert_eq!(find(&next, p1).unwrap().kind, UnitKind::StealthFighter);
+        assert_eq!(find(&next, p2).unwrap().kind, UnitKind::Fighter);
+    }
+
+    #[test]
+    fn an_aircraft_upgrade_sees_the_gold_a_city_purchase_spent() {
+        let (mut s, a, p1, _p2, price) = two_fighters_ready_for_stealth();
+        let buy = Order::BuyItem {
+            city: a,
+            item: ProductionItem::Unit {
+                unit: UnitKind::Scout,
+            },
+        };
+        s.player_mut(P0).gold = 10_000;
+        let (buy_errors, after) = super::super::cities::validate_city_orders_projected(
+            &s,
+            P0,
+            std::slice::from_ref(&buy),
+        );
+        assert!(buy_errors.is_empty(), "{buy_errors:?}");
+        let cost = 10_000 - after.player(P0).gold;
+        assert!(cost > 0);
+        let up = Order::UpgradeAircraft {
+            plane: p1,
+            to: None,
+        };
+        s.player_mut(P0).gold = cost + price - 1;
+        assert!(crate::validate_orders(&s, P0, std::slice::from_ref(&up)).is_empty());
+        let errors = crate::validate_orders(&s, P0, &[buy.clone(), up.clone()]);
+        assert_eq!(errors.len(), 1, "{errors:?}");
+        assert_eq!(errors[0].index, 1);
+        assert!(errors[0].message.contains("Not enough Gold"), "{errors:?}");
+        let (next, _) = crate::resolve_turn(&s, &orders(0, vec![buy.clone(), up.clone()]));
+        assert_eq!(find(&next, p1).unwrap().kind, UnitKind::Fighter);
+        s.player_mut(P0).gold = cost + price;
+        assert!(crate::validate_orders(&s, P0, &[buy, up]).is_empty());
     }
 
     #[test]
