@@ -110,7 +110,7 @@ it('touch turn controls omit Return hints for both pending decisions and a compl
   const city = client.view(0).cities[0];
   act(() => useGame.getState().editOrders(() => [
     { type: 'SkipUnit', unit: 0 }, { type: 'SkipUnit', unit: 4 },
-    { type: 'SetProduction', city: city.id, item: { kind: 'Unit', unit: 'Soldier' } },
+    { type: 'SetProduction', city: city.id, item: { kind: 'Unit', unit: 'Spearman' } },
     { type: 'SetResearch', tech: 'BronzeWorking' },
   ]));
   expect(host.querySelector('.cta-label')?.textContent).toBe('End turn');
@@ -260,7 +260,7 @@ it('counts the selected last unit and city until their decisions are actually ha
   expect(useGame.getState().selection).toEqual({ kind: 'city', id: city.id });
   expect(useGame.getState().techOpen).toBe(false);
   act(() => useGame.getState().editOrders((orders) => [...orders,
-    { type: 'SetProduction', city: city.id, item: { kind: 'Unit', unit: 'Soldier' } }]));
+    { type: 'SetProduction', city: city.id, item: { kind: 'Unit', unit: 'Spearman' } }]));
   expect(label()).toBe('Choose research');
   act(() => useGame.getState().editOrders((orders) => [...orders, { type: 'SetResearch', tech: 'BronzeWorking' }]));
   expect(label()).toBe('End turn');
@@ -290,7 +290,7 @@ it('the phone Next button goes where its label says, even with the last unit sel
   act(() => next().click());
   const city = client.view(0).cities[0];
   expect(useGame.getState().selection).toEqual({ kind: 'city', id: city.id });
-  act(() => useGame.getState().editOrders((orders) => [...orders, { type: 'SetProduction', city: city.id, item: { kind: 'Unit', unit: 'Soldier' } }]));
+  act(() => useGame.getState().editOrders((orders) => [...orders, { type: 'SetProduction', city: city.id, item: { kind: 'Unit', unit: 'Spearman' } }]));
   expect(next().textContent).toBe('Next: Research');
   act(() => next().click());
   expect(useGame.getState().techOpen).toBe(true);

@@ -20,7 +20,7 @@ export function combinedAssaultFixture() {
   f.units.find((u) => u.id === setup.garrison)!.hp = 10;
   const free = neighbors(open.pos).find((h) => f.terrain[tileIndex(h, f.width, f.height)] === 'Plains'
     && !f.units.some((u) => hexEq(u.pos, h)) && !f.cities.some((c) => hexEq(c.pos, h)))!;
-  const second = spawnUnit(f, 0, 'Soldier', free, false);
+  const second = spawnUnit(f, 0, 'Spearman', free, false);
   refreshVision(f);
   return { ...setup, second: second.id };
 }

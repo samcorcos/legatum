@@ -156,7 +156,7 @@ fn after_the_capture() -> GameState {
 fn the_captor_holds_the_city_instead_of_being_disbanded() {
     let state = after_the_capture();
     let orders = brain_orders(&state, MONGOLS);
-    // Archived: DisbandUnit for u25 (the captor in Hymnal) and both Rangers, to cover a
+    // Archived: DisbandUnit for u25 (the captor in Hymnal) and both Archers, to cover a
     // 3-Gold deficit. The deficit is structural (Gold 0, -3 a turn), so leaving it to the
     // engine would cost the costliest unit this turn and again every turn after
     // (campaign funding, 2026-10-04). The AI covers it itself with its least useful units,

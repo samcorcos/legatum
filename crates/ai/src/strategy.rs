@@ -74,7 +74,7 @@ impl Strategy {
             ProductionItem::Building { building } | ProductionItem::Wonder { building, .. } => {
                 let family = data::building_family(building);
                 let preferred = match self {
-                    Self::Science => matches!(family, BuildingKind::Laboratory),
+                    Self::Science => matches!(family, BuildingKind::Library),
                     Self::Turtle => family == BuildingKind::Walls || data::is_great_work(building),
                     Self::Economic => family == BuildingKind::Market,
                     _ => false,
@@ -175,7 +175,7 @@ mod tests {
         let view = ViewBuilder::new(20, 20)
             .known_techs(&[TechId::Irrigation, TechId::BronzeWorking])
             .city(1, ME, off(5, 5), 3)
-            .unit(2, ME, UnitKind::Soldier, off(5, 5))
+            .unit(2, ME, UnitKind::Spearman, off(5, 5))
             .build();
         let mut choices = std::collections::BTreeSet::new();
         for strategy in Strategy::ALL {

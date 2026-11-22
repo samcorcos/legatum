@@ -14,7 +14,7 @@
 //! VP margin and rises steeply once a projection takes it below the target. The chance is then that hold's completion, plus the logit
 //! share of whatever probability no hold completes.
 //!
-//! Plans compare projected features ("one more city, two fewer Soldiers, a shorter runway")
+//! Plans compare projected features ("one more city, two fewer Spearmen, a shorter runway")
 //! in the same units, so a war, a peace and a purchase are priced in one currency. The
 //! weights are fitted on completed sim games and checked on held-out seeds
 //! (`crates/sim/examples/winchance_fit.rs`). Integer math only: weights, shares and the

@@ -458,7 +458,7 @@ pub(crate) fn determinize_with(
             .into_iter()
             .collect();
         if kinds.is_empty() {
-            kinds.push(UnitKind::Soldier);
+            kinds.push(UnitKind::Spearman);
         }
         let mut spots: Vec<Hex> = Vec::new();
         let mut homes: Vec<&City> = state.cities.values().filter(|c| c.owner == p.id).collect();
@@ -1042,9 +1042,9 @@ pub fn chance_in_with(state: &GameState, me: PlayerId, decisions: &crate::Decisi
 const ECONOMY_BUILDINGS: [BuildingKind; 5] = [
     BuildingKind::Workshop,
     BuildingKind::Market,
-    BuildingKind::MachineShop,
-    BuildingKind::Clearinghouse,
-    BuildingKind::Autoworks,
+    BuildingKind::Forge,
+    BuildingKind::Bank,
+    BuildingKind::Factory,
 ];
 
 /// Give rival cities economy buildings (only those their sampled technology allows) until

@@ -12,7 +12,7 @@ pub const MIN_SITE_SCORE: i32 = 60;
 pub const MAX_SITE_DISTANCE: i32 = 10;
 
 const RELAY: ProductionItem = ProductionItem::Building {
-    building: BuildingKind::RelayUplink,
+    building: BuildingKind::GreatLibrary,
 };
 
 /// Empire-wide counts, updated as idle cities pick items so later cities see earlier picks.
@@ -31,7 +31,7 @@ fn is_military_unit(item: ProductionItem) -> bool {
     matches!(
         item,
         ProductionItem::Unit {
-            unit: UnitKind::Soldier | UnitKind::Ranger | UnitKind::Trooper
+            unit: UnitKind::Spearman | UnitKind::Archer | UnitKind::Pikeman
         }
     )
 }
@@ -51,7 +51,7 @@ impl Planner<'_> {
             match u.kind {
                 UnitKind::Settler => tally.settler_pipeline += 1,
                 UnitKind::Scout => tally.scouts += 1,
-                UnitKind::Ranger => {
+                UnitKind::Archer => {
                     tally.army += 1;
                     tally.rangers += 1;
                 }
@@ -89,7 +89,7 @@ impl Planner<'_> {
                         unit: UnitKind::Scout,
                     } => tally.scouts += 1,
                     ProductionItem::Unit {
-                        unit: UnitKind::Ranger,
+                        unit: UnitKind::Archer,
                     } => {
                         tally.army += 1;
                         tally.rangers += 1;
@@ -180,8 +180,8 @@ impl Planner<'_> {
         let early = self.view().turn < 40;
         match opt.item {
             ProductionItem::Unit { unit } => match unit {
-                UnitKind::Marksman
-                | UnitKind::AssaultTrooper
+                UnitKind::Crossbowman
+                | UnitKind::Musketman
                 | UnitKind::Horseman
                 | UnitKind::Knight
                 | UnitKind::Cavalry
@@ -192,7 +192,7 @@ impl Planner<'_> {
                 | UnitKind::HunterKiller
                 | UnitKind::FieldCannon
                 | UnitKind::Artillery
-                | UnitKind::Drone
+                | UnitKind::CombatDrone
                 | UnitKind::Fighter
                 | UnitKind::Bomber
                 | UnitKind::StealthFighter
@@ -209,9 +209,9 @@ impl Planner<'_> {
                 | UnitKind::JetFighter
                 | UnitKind::JetBomber
                 | UnitKind::Howitzer
-                | UnitKind::Landship
+                | UnitKind::EarlyTank
                 | UnitKind::Biplane
-                | UnitKind::Heir => 0,
+                | UnitKind::HeirToTheThrone => 0,
                 UnitKind::Settler => {
                     let pop_ok =
                         c.population >= 2 || d.turns_to_grow.is_some_and(|g| g <= opt.turns);
@@ -235,13 +235,13 @@ impl Planner<'_> {
                         0
                     }
                 }
-                UnitKind::Soldier | UnitKind::Ranger | UnitKind::Trooper => {
+                UnitKind::Spearman | UnitKind::Archer | UnitKind::Pikeman => {
                     let kind_bonus = match unit {
-                        UnitKind::Trooper => 150,
-                        // Rangers defend: favored under threat and as a third of the army.
-                        UnitKind::Ranger if threatened => 100,
-                        UnitKind::Ranger if t.rangers * 3 < t.army + 1 => 40,
-                        UnitKind::Ranger => -40,
+                        UnitKind::Pikeman => 150,
+                        // Archers defend: favored under threat and as a third of the army.
+                        UnitKind::Archer if threatened => 100,
+                        UnitKind::Archer if t.rangers * 3 < t.army + 1 => 40,
+                        UnitKind::Archer => -40,
                         _ => 0,
                     };
                     if undefended {
@@ -258,26 +258,26 @@ impl Planner<'_> {
                     return 0;
                 }
                 match building {
-                    BuildingKind::Hydroponics
-                    | BuildingKind::MachineShop
-                    | BuildingKind::WarShrine
-                    | BuildingKind::InferenceCore
-                    | BuildingKind::College
-                    | BuildingKind::Clearinghouse
+                    BuildingKind::Mill
+                    | BuildingKind::Forge
+                    | BuildingKind::Agoge
+                    | BuildingKind::ResearchLab
+                    | BuildingKind::University
+                    | BuildingKind::Bank
                     | BuildingKind::StockExchange
                     | BuildingKind::Supermarket
                     | BuildingKind::AirDefence
                     | BuildingKind::StarFort
-                    | BuildingKind::Autoworks
+                    | BuildingKind::Factory
                     | BuildingKind::Castle
-                    | BuildingKind::CourierHall
+                    | BuildingKind::YamRelayStation
                     | BuildingKind::ImperialDiwan
                     | BuildingKind::Roadworks
                     | BuildingKind::Pyramids
                     | BuildingKind::HagiaSophia
                     | BuildingKind::EiffelTower
-                    | BuildingKind::IterReactor => 0,
-                    BuildingKind::BroodHall => {
+                    | BuildingKind::IterFusionReactor => 0,
+                    BuildingKind::RiceStorehouse => {
                         let india = if self.faction == Faction::India {
                             80
                         } else {
@@ -295,7 +295,7 @@ impl Planner<'_> {
                         };
                         80 + k.economy * 3 + toll
                     }
-                    BuildingKind::Laboratory => 80 + k.science * 4,
+                    BuildingKind::Library => 80 + k.science * 4,
                     BuildingKind::Walls => {
                         let border = ctx.enemy_cities.iter().any(|e| e.pos.distance(c.pos) <= 8);
                         if threatened {
@@ -306,8 +306,8 @@ impl Planner<'_> {
                             20
                         }
                     }
-                    BuildingKind::PlanetaryFoundry | BuildingKind::WorldExchange => 0,
-                    BuildingKind::RelayUplink => {
+                    BuildingKind::RoyalArsenal | BuildingKind::GrandBazaar => 0,
+                    BuildingKind::GreatLibrary => {
                         let best_producer = ctx
                             .own_cities
                             .iter()

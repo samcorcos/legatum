@@ -1,0 +1,1 @@
+Lanczos 256 px derivative of building-royalarsenal-stage3.png. See building-royalarsenal-stage3.prompt.txt for the image edit prompt.

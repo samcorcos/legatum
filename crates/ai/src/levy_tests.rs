@@ -61,7 +61,7 @@ fn the_army_it_wants_never_exceeds_the_cap() {
 #[test]
 fn a_city_building_an_armed_unit_at_the_cap_switches_to_something_else() {
     let soldier = ProductionItem::Unit {
-        unit: UnitKind::Soldier,
+        unit: UnitKind::Spearman,
     };
     let mut v = byzantium(4, 4);
     for c in v.cities.iter_mut().filter(|c| c.detail.is_some()) {
@@ -84,7 +84,7 @@ fn a_city_building_an_armed_unit_at_the_cap_switches_to_something_else() {
         !matches!(set[0], ProductionItem::Unit { unit } if legatum_core::data::pays_upkeep(unit)),
         "{set:?}"
     );
-    // Under the cap the same city keeps an armed build: its Soldier or, with no enemy in
+    // Under the cap the same city keeps an armed build: its Spearman or, with no enemy in
     // sight, a Horseman (riders stand above the melee line since 2026-10-31).
     let mut v = byzantium(3, 4);
     v.cities[0].detail.as_mut().unwrap().producing = Some(soldier);
@@ -114,8 +114,8 @@ fn it_disbands_a_weak_unit_for_a_clearly_better_one_only_in_quiet_peace() {
         let mut v = ViewBuilder::new(24, 16)
             .faction(Faction::Byzantium)
             .city_with_detail(1, ME, off(4, 6), 3)
-            .unit(1, ME, UnitKind::Soldier, off(4, 6))
-            .unit(2, ME, UnitKind::Soldier, off(5, 6))
+            .unit(1, ME, UnitKind::Spearman, off(4, 6))
+            .unit(2, ME, UnitKind::Spearman, off(5, 6))
             .build();
         v.players.iter_mut().find(|p| p.id == ME).unwrap().levy =
             Some(LevyView { units: 2, cap: 2 });
@@ -123,11 +123,11 @@ fn it_disbands_a_weak_unit_for_a_clearly_better_one_only_in_quiet_peace() {
             u.upgrade_cost = upgrade;
         }
         move_units_to_unavailable(&mut v);
-        // Only the Soldier, or a Trooper (strength 32 against 20: clearly better), is waiting.
+        // Only the Spearman, or a Pikeman (strength 32 against 20: clearly better), is waiting.
         v.cities[0].detail.as_mut().unwrap().unavailable = vec![waiting(if better {
-            UnitKind::Trooper
+            UnitKind::Pikeman
         } else {
-            UnitKind::Soldier
+            UnitKind::Spearman
         })];
         let state = if war {
             legatum_core::diplomacy::RelationState::War
@@ -184,7 +184,7 @@ fn a_rival_counts_the_units_it_has_beyond_a_byzantines_public_cap() {
     for i in 0..6 {
         v = {
             let mut b = ViewBuilder { view: v };
-            b = b.unit(10 + i, ME, UnitKind::Soldier, off(5 + i as i32, 8));
+            b = b.unit(10 + i, ME, UnitKind::Spearman, off(5 + i as i32, 8));
             b.build()
         };
     }

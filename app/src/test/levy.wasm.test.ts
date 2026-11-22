@@ -34,8 +34,8 @@ function world(byzantium = true) {
   for (const p of s.players) p.gold = 600;
   meetAll(s);
   const army = (owner: number, kinds: UnitKind[]) => kinds.forEach((kind, i) => spawnUnit(s, owner, kind, fromOffset(8 + i, 5 + owner), false));
-  army(1, ['Soldier', 'Soldier', 'Soldier']);
-  army(2, ['Soldier', 'Soldier', 'Ranger']);
+  army(1, ['Spearman', 'Spearman', 'Spearman']);
+  army(2, ['Spearman', 'Spearman', 'Archer']);
   return s;
 }
 
@@ -81,7 +81,7 @@ describe.skipIf(!available)('thin levies: core behavior', () => {
     for (const relation of s.diplomacy!.relations) relation.state = 'Peace';
     s.units = s.units.filter((u) => u.owner !== 0);
     spawnUnit(s, 0, 'Scout', fromOffset(5, 5), false);
-    spawnUnit(s, 0, 'Soldier', fromOffset(4, 3), false);
+    spawnUnit(s, 0, 'Spearman', fromOffset(4, 3), false);
     s.players[0].techs = ['BronzeWorking', 'Masonry', 'Feudalism'];
     let p = pair(s);
     expect(levyOf(p.core)).toEqual({ units: 1, cap: 2 });
@@ -89,7 +89,7 @@ describe.skipIf(!available)('thin levies: core behavior', () => {
     (expect(unavailable(p.fixtureClient)).toMatchSnapshot(), void (unavailable(p.core)));
     expect(unavailable(p.core).some(([, reason]) => /Levies full/.test(reason))).toBe(false);
     // At the cap: every armed unit is greyed "Levies full: 2 of 2", and buying one is refused.
-    spawnUnit(s, 0, 'Ranger', fromOffset(2, 3), false);
+    spawnUnit(s, 0, 'Archer', fromOffset(2, 3), false);
     p = pair(s);
     expect(levyOf(p.core)).toEqual({ units: 2, cap: 2 });
     expect(levyOf(p.fixtureClient)).toEqual({ units: 2, cap: 2 });
@@ -98,10 +98,10 @@ describe.skipIf(!available)('thin levies: core behavior', () => {
     expect(full.length).toBeGreaterThan(0);
     expect(full.every(([item]) => !item.includes('Scout') && !item.includes('Settler'))).toBe(true);
     const city = p.core.view(0).cities.find((c) => c.owner === 0)!;
-    const buy: Order[] = [{ type: 'BuyItem', city: city.id, item: { kind: 'Unit', unit: 'Soldier' } }];
+    const buy: Order[] = [{ type: 'BuyItem', city: city.id, item: { kind: 'Unit', unit: 'Spearman' } }];
     (expect(p.fixtureClient.validate(0, buy)).toMatchSnapshot(), void (p.core.validate(0, buy)));
     expect(p.core.validate(0, buy)).toHaveLength(1);
-    const produce: Order[] = [{ type: 'SetProduction', city: city.id, item: { kind: 'Unit', unit: 'Soldier' } }];
+    const produce: Order[] = [{ type: 'SetProduction', city: city.id, item: { kind: 'Unit', unit: 'Spearman' } }];
     (expect(p.fixtureClient.validate(0, produce)).toMatchSnapshot(), void (p.core.validate(0, produce)));
     // Other factions are uncapped.
     expect(levyOf(p.core, 1)).toBeUndefined();
@@ -115,7 +115,7 @@ describe.skipIf(!available)('thin levies: core behavior', () => {
     // A second city, three Soldiers: 3 of 3. Then the second city is gone: 3 of 2.
     s.cities.push({ id: 9, owner: 0, founder: 0, name: 'Second', pos: fromOffset(3, 12), population: 2, food: 0, prod: 0, producing: null, bought: null, buildings: [], hp: 200, grownTiles: [], tilesClaimed: 0, isCapital: false, foundedTurn: 1, resistance: 0 });
     s.nextCityId = 9;
-    for (let i = 0; i < 3; i++) spawnUnit(s, 0, 'Soldier', fromOffset(4 + i, 6), false);
+    for (let i = 0; i < 3; i++) spawnUnit(s, 0, 'Spearman', fromOffset(4 + i, 6), false);
     let p = pair(s);
     expect(levyOf(p.core)).toEqual({ units: 3, cap: 3 });
     s.cities = s.cities.filter((c) => c.id !== 9);
@@ -138,9 +138,9 @@ describe.skipIf(!available)('thin levies: core behavior', () => {
     s.units = s.units.filter((u) => u.owner !== 0);
     s.players[0].techs = ['BronzeWorking', 'Masonry'];
     const c = s.cities.find((x) => x.owner === 0)!;
-    c.producing = { kind: 'Unit', unit: 'Soldier' }; c.prod = 10;
-    spawnUnit(s, 0, 'Soldier', fromOffset(4, 3), false);
-    spawnUnit(s, 0, 'Soldier', fromOffset(2, 3), false);
+    c.producing = { kind: 'Unit', unit: 'Spearman' }; c.prod = 10;
+    spawnUnit(s, 0, 'Spearman', fromOffset(4, 3), false);
+    spawnUnit(s, 0, 'Spearman', fromOffset(2, 3), false);
     const p = pair(s);
     const { expected } = step(p, {}, [0]);
     const failed = expected.events.filter((e): e is Extract<Event, { type: 'OrderFailed' }> => e.type === 'OrderFailed' && /Levies full/.test(e.reason));

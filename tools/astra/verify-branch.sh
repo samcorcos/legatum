@@ -28,7 +28,7 @@ everything except the app build, server and Playwright.
 Independent steps run concurrently in lanes (release-checked build, tests, repin and smoke; clippy and the server
 build; the master baseline; the WASM, tsc, vitest and Playwright chain), sized from the core count. Steps the branch
 cannot affect are skipped, and the summary says which and why: docs and skills only, nothing but syntax checks;
-app only, no cargo steps; crates only, no Playwright unless crates/core/src, crates/wasm, crates/server, app or the
+app only, no cargo steps; crates only, no Playwright unless crates/core/src, crates/wasm, app or the
 scenarios changed. Unclassified paths, a branch that is master, and --full run everything. Changing app/ turns the
 app lane on even without --app. The master side comes from tools/sim/cached-baseline.sh, keyed by the sim code.
 Overrides: LEGATUM_VERIFY_JOBS (cargo jobs), _TEST_THREADS, _SIM_THREADS, _PW_WORKERS, _VITEST_WORKERS, _SERIAL=1.
@@ -140,7 +140,7 @@ classify() {
       '') ;;
       docs/sim-results/*.json) c_rust=1 ;;
       docs/*|.claude/*|.progress/*|.reviews/*|plans/*|infra/*|*.md|.gitignore) c_docs=1 ;;
-      crates/wasm/*|crates/server/*|crates/core/src/*) c_rust=1; c_pw=1 ;;
+      crates/wasm/*|crates/core/src/*) c_rust=1; c_pw=1 ;;
       crates/*|tools/sim/*|rust-toolchain*|.cargo/*|.config/*) c_rust=1 ;;
       Cargo.toml|Cargo.lock) c_rust=1; c_pw=1 ;;
       scenarios/*) c_rust=1; c_pw=1 ;;

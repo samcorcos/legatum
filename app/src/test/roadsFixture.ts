@@ -61,7 +61,7 @@ export function roadsFixture(opts: { players?: number; width?: number; height?: 
   mine.owner = 0; mine.name = 'Crossroads';
   for (let i = 0; i < f.owner.length; i++) if (f.tileCity[i] === mine.id) f.owner[i] = 0;
   if (hall) {
-    mine.buildings = ['CourierHall'];
+    mine.buildings = ['YamRelayStation'];
     f.players[0].hallCity = mine.id;
     f.players[0].goalHolder = 0; f.players[0].factionGoalDone = true; f.players[0].factionGoalReachedBefore = true;
   }

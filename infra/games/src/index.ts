@@ -98,10 +98,23 @@ function answerOk(x: unknown): boolean {
   return o.evidence === undefined || JSON.stringify(o.evidence).length <= 32_000;
 }
 
+const MAX_REWINDS = 1000;
+const REWIND_KEYS = new Set(["at", "from_turn", "to_turn"]);
+const turnOk = (t: unknown) => Number.isInteger(t) && (t as number) >= 0 && (t as number) <= 10_000;
+
+/** One rewind: known keys only, an ISO time, and a later turn left for an earlier one. */
+function rewindOk(x: unknown): boolean {
+  if (!x || typeof x !== "object" || Array.isArray(x)) return false;
+  const o = x as Record<string, unknown>;
+  if (!Object.keys(o).every((k) => REWIND_KEYS.has(k))) return false;
+  if (typeof o.at !== "string" || !CREATED_AT_RE.test(o.at) || Number.isNaN(Date.parse(o.at))) return false;
+  return turnOk(o.from_turn) && turnOk(o.to_turn) && (o.to_turn as number) < (o.from_turn as number);
+}
+
 /** The record's shape, and the rule that matters most: no seat carries a name a player typed. */
 export function checkRecord(id: string, record: unknown): Metadata | string {
   if (!record || typeof record !== "object") return "not a game record";
-  const r = record as { metadata?: Metadata; tape?: unknown; coach_answers?: unknown };
+  const r = record as { metadata?: Metadata; tape?: unknown; coach_answers?: unknown; rewinds?: unknown };
   const m = r.metadata;
   if (!m || typeof m !== "object" || !r.tape || typeof r.tape !== "object") return "not a game record";
   if (m.schema_version !== 1) return "unknown schema version";
@@ -120,6 +133,11 @@ export function checkRecord(id: string, record: unknown): Metadata | string {
   if (r.coach_answers !== undefined) {
     const a = r.coach_answers;
     if (!Array.isArray(a) || a.length > 2000 || !a.every(answerOk)) return "bad coach answers";
+  }
+  // The times the player went back to an earlier turn (app/src/store.ts Rewind): the tape holds only the line kept.
+  if (r.rewinds !== undefined) {
+    const w = r.rewinds;
+    if (!Array.isArray(w) || w.length > MAX_REWINDS || !w.every(rewindOk)) return "bad rewinds";
   }
   return m;
 }

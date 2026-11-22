@@ -117,7 +117,7 @@ for (const size of SIZES) test.describe(`score ledger ${size.name}`, () => {
     await loadFixture(page, coreFixture(progressFixture().fixture), 2);
     const base = await page.evaluate(() => { const s = (window as unknown as GameWindow).legatum.getState(); return structuredClone(s.views![s.seat]); });
     const v = withV2(base, { era: 4, scored: [2, 3, 4] });
-    v.great_works = (v.great_works ?? []).map((work) => work.player === v.me ? { ...work, completed: 'RelayUplink' } : work);
+    v.great_works = (v.great_works ?? []).map((work) => work.player === v.me ? { ...work, completed: 'GreatLibrary' } : work);
     v.players = v.players.map((p) => {
       if (p.id !== v.me) return p;
       const vp_sources: typeof p.vp_sources = [

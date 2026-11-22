@@ -51,27 +51,27 @@ function pair(s: MState) {
 }
 
 describe.skipIf(!available)('Hoplite phalanx: core agree', () => {
-  function board(withPartner: boolean, partnerKind: 'Soldier' | 'Phalangite' = 'Soldier') {
+  function board(withPartner: boolean, partnerKind: 'Spearman' | 'Phalangite' = 'Spearman') {
     const s = fixture('Sparta', 'Athens', true);
     city(s, 0, 2, 5); city(s, 1, 17, 5);
-    const hoplite = spawnUnit(s, 0, 'Soldier', fromOffset(9, 5), false);
-    const enemy = spawnUnit(s, 1, 'Soldier', neighbors(hoplite.pos).filter((h) => h.q > hoplite.pos.q)[0], false);
+    const hoplite = spawnUnit(s, 0, 'Spearman', fromOffset(9, 5), false);
+    const enemy = spawnUnit(s, 1, 'Spearman', neighbors(hoplite.pos).filter((h) => h.q > hoplite.pos.q)[0], false);
     if (withPartner) spawnUnit(s, 0, partnerKind, neighbors(hoplite.pos).filter((h) => h.q < hoplite.pos.q)[0], false);
     return { s, hoplite, enemy };
   }
   const line = [PHALANX_LABEL, HOPLITE_PHALANX_STRENGTH] as [string, number];
 
   it('the forecast carries the same phalanx line on both sides of the attack', () => {
-    for (const [partner, kind] of [[false, 'Soldier'], [true, 'Soldier'], [true, 'Phalangite']] as const) {
+    for (const [partner, kind] of [[false, 'Spearman'], [true, 'Spearman'], [true, 'Phalangite']] as const) {
       const { s, hoplite, enemy } = board(partner, kind);
       const { fixtureClient, core } = pair(s);
       const attack = core.forecast(0, hoplite.id, enemy.pos, 'Melee')!;
       (expect(fixtureClient.forecast(0, hoplite.id, enemy.pos, 'Melee'), `${partner} ${kind}`).toMatchSnapshot(), void (attack));
-      expect(attack.attacker_strength.parts.some(([l, n]) => l === line[0] && n === line[1])).toBe(partner && kind === 'Soldier');
+      expect(attack.attacker_strength.parts.some(([l, n]) => l === line[0] && n === line[1])).toBe(partner && kind === 'Spearman');
       // Defending: the rival's forecast against the Hoplite.
       const defence = core.forecast(1, enemy.id, hoplite.pos, 'Melee')!;
       (expect(fixtureClient.forecast(1, enemy.id, hoplite.pos, 'Melee'), `defence ${partner} ${kind}`).toMatchSnapshot(), void (defence));
-      expect(defence.defender_strength.parts.some(([l, n]) => l === line[0] && n === line[1])).toBe(partner && kind === 'Soldier');
+      expect(defence.defender_strength.parts.some(([l, n]) => l === line[0] && n === line[1])).toBe(partner && kind === 'Spearman');
     }
   });
 

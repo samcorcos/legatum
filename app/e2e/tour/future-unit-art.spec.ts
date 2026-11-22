@@ -17,7 +17,7 @@ import { SIZES, frameHall, loadFixture, shot, type GameWindow } from './helpers'
 test.describe.configure({ mode: 'parallel' });
 
 const FUTURE_TECHS: TechId[] = ['Robotics', 'StealthTechnology'];
-const KINDS: UnitKind[] = ['Infantry', 'Rifleman', 'HunterKiller', 'AutonomousArmour', 'Tank', 'Drone', 'Cavalry', 'Artillery'];
+const KINDS: UnitKind[] = ['Infantry', 'Rifleman', 'HunterKiller', 'AutonomousArmour', 'Tank', 'CombatDrone', 'Cavalry', 'Artillery'];
 
 for (const size of SIZES) test.describe(`future unit art ${size.name}`, () => {
   test.use({ viewport: { width: size.width, height: size.height } });

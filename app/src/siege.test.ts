@@ -76,7 +76,7 @@ describe('cities under attack', () => {
     expect(open.forecast.turns).toBe(2);
     expect(open.forecast).toMatchObject({ level: 'soon', text: 'Holds about 2 turns unless reinforced' });
     const ownCity = view.cities.find((c) => c.id === own)!;
-    const garrisoned = { ...view, units: [...view.units, { ...view.units.find((u) => u.owner === view.me)!, id: 800, kind: 'Soldier' as const, military: true, strength: 9, ranged: 0, range: 0, hp: 100, fortify: 2, pos: ownCity.pos }] };
+    const garrisoned = { ...view, units: [...view.units, { ...view.units.find((u) => u.owner === view.me)!, id: 800, kind: 'Spearman' as const, military: true, strength: 9, ranged: 0, range: 0, hp: 100, fortify: 2, pos: ownCity.pos }] };
     const guard = captureForecast(garrisoned, own, garrisoned.units.filter((u) => attackers.includes(u.id)));
     expect(guard.forecast.turns!).toBeGreaterThan(open.forecast.turns!);
     expect(guard.forecast.detail).toContain('must fall before it is taken');
@@ -84,26 +84,26 @@ describe('cities under attack', () => {
 
   it('says ranged units cannot take a city, and when it drops to 0 HP', () => {
     const { view, own } = setup();
-    const rangers = variant(view, { keep: 0, hp: 30, add: [{ kind: 'Ranger', at: [5, 5] }, { kind: 'Ranger', at: [4, 4] }] });
+    const rangers = variant(view, { keep: 0, hp: 30, add: [{ kind: 'Archer', at: [5, 5] }, { kind: 'Archer', at: [4, 4] }] });
     const alarm = citiesUnderAttack(rangers, null)[0];
     expect(alarm.attackers).toHaveLength(2);
     expect(alarm.forecast.turns).toBeNull();
     expect(alarm.forecast.text).toMatch(/Drops to 0 HP next turn; no melee unit to take it yet/);
     expect(alarm.cityId).toBe(own);
-    const atZero = citiesUnderAttack(variant(view, { keep: 0, hp: 0, add: [{ kind: 'Ranger', at: [5, 5] }, { kind: 'Ranger', at: [4, 4] }] }), null)[0];
+    const atZero = citiesUnderAttack(variant(view, { keep: 0, hp: 0, add: [{ kind: 'Archer', at: [5, 5] }, { kind: 'Archer', at: [4, 4] }] }), null)[0];
     expect(atZero.forecast).toMatchObject({ short: 'at 0 HP', text: 'At 0 HP; no melee unit to take it yet' });
   });
 
   it('warns when an army of two or more closes within three tiles, but not for a lone unit', () => {
     const { view } = setup();
-    const near = variant(view, { keep: 0, attackedLastTurn: false, add: [{ kind: 'Soldier', at: [6, 5] }, { kind: 'Soldier', at: [6, 6] }] });
+    const near = variant(view, { keep: 0, attackedLastTurn: false, add: [{ kind: 'Spearman', at: [6, 5] }, { kind: 'Spearman', at: [6, 6] }] });
     const [alarm] = citiesUnderAttack(near, null);
     expect(alarm).toMatchObject({ kind: 'approach', force: '2 Spearmen' });
     expect(alarm.forecast.text).toContain('Reaches it');
     expect(alarmedCities([alarm]).size).toBe(0);
-    const lone = variant(view, { keep: 0, attackedLastTurn: false, add: [{ kind: 'Soldier', at: [6, 5] }] });
+    const lone = variant(view, { keep: 0, attackedLastTurn: false, add: [{ kind: 'Spearman', at: [6, 5] }] });
     expect(citiesUnderAttack(lone, null)).toEqual([]);
-    const far = variant(view, { keep: 0, attackedLastTurn: false, add: [{ kind: 'Soldier', at: [8, 5] }, { kind: 'Soldier', at: [8, 6] }] });
+    const far = variant(view, { keep: 0, attackedLastTurn: false, add: [{ kind: 'Spearman', at: [8, 5] }, { kind: 'Spearman', at: [8, 6] }] });
     expect(citiesUnderAttack(far, null)).toEqual([]);
   });
 
@@ -145,8 +145,8 @@ describe('cities under attack', () => {
   });
 
   it('writes the unit force in words', () => {
-    expect(forceText([{ kind: 'Soldier' }, { kind: 'Soldier' }, { kind: 'Soldier' }])).toBe('3 Spearmen');
-    expect(forceText([{ kind: 'Soldier' }, { kind: 'Ranger' }])).toBe('a Spearman and an Archer');
+    expect(forceText([{ kind: 'Spearman' }, { kind: 'Spearman' }, { kind: 'Spearman' }])).toBe('3 Spearmen');
+    expect(forceText([{ kind: 'Spearman' }, { kind: 'Archer' }])).toBe('a Spearman and an Archer');
     expect(forceText([{ kind: null }])).toBe('an unseen unit');
   });
 });
@@ -165,7 +165,7 @@ describe('the turn report line', () => {
     const [a, b, c] = attackers;
     // One stage's attacks share a snapshot, so each reports the same HP left.
     const events: Event[] = [battle(a, 27, 120), battle(b, 27, 120), battle(c, 26, 120),
-      { type: 'UnitDestroyed', unit: 99, owner: 1, unit_kind: 'Soldier', at: fromOffset(1, 1) }];
+      { type: 'UnitDestroyed', unit: 99, owner: 1, unit_kind: 'Spearman', at: fromOffset(1, 1) }];
     const ctx = contextFromViews(variant(client.view(0), { hp: 200 }), view);
     const lines = formatEvents(events, ctx);
     expect(lines[0]).toMatchObject({ category: 'attack', tone: 'bad', weight: 2, icon: 'ui-siege' });
@@ -173,9 +173,9 @@ describe('the turn report line', () => {
     expect(lines[0].hp).toEqual([{ text: '200 → 120 HP', tone: 'bad' }]);
     expect(lines[0].at).toEqual(view.cities.find((x) => x.name === 'Waypost Seven')!.pos);
     expect(groupLines(lines)[0].category).toBe('attack');
-    expect(cityHits(events, (o) => o === 0, () => 'Soldier', () => 200)[0]).toMatchObject({ before: 200, after: 120, lost: 80 });
+    expect(cityHits(events, (o) => o === 0, () => 'Spearman', () => 200)[0]).toMatchObject({ before: 200, after: 120, lost: 80 });
     // Without the earlier view, the start is what is left plus every hit; only an overshoot makes that more than it really had.
-    expect(cityHits(events, (o) => o === 0, () => 'Soldier')[0]).toMatchObject({ before: 200, after: 120, lost: 80 });
+    expect(cityHits(events, (o) => o === 0, () => 'Spearman')[0]).toMatchObject({ before: 200, after: 120, lost: 80 });
   });
 
   it('says a city that reached 0 HP, ignores attacks on other empires\' cities and the city\'s own shots', () => {

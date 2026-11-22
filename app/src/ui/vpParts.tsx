@@ -51,7 +51,7 @@ export function SourceMedal({ model, s, size = 32 }: { model: Pick<VpModel, 'emp
   </span>;
 }
 
-export const FAMILY_ICON: Record<ObjectiveFamily, string> = { Build: 'building-workshop', Expand: 'city', Fight: 'unit-soldier' };
+export const FAMILY_ICON: Record<ObjectiveFamily, string> = { Build: 'building-workshop', Expand: 'city', Fight: 'unit-spearman' };
 const COUNT_UNIT: Record<string, string> = { Cities: 'cities', Population: 'population', Territory: 'tiles', Buildings: 'buildings' };
 
 /** An Age's card: its family, the rule, your own progress, and who has scored the Age with it. */

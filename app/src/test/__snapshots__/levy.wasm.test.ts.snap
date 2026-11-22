@@ -10,7 +10,7 @@ exports[`thin levies: core behavior > caps armed units at one per city plus one,
 exports[`thin levies: core behavior > caps armed units at one per city plus one, with Scouts free, and greys armed units with the same reason 2`] = `
 [
   [
-    "{"kind":"Building","building":"Hydroponics"}",
+    "{"kind":"Building","building":"Mill"}",
     "Requires Granary",
   ],
 ]
@@ -19,15 +19,15 @@ exports[`thin levies: core behavior > caps armed units at one per city plus one,
 exports[`thin levies: core behavior > caps armed units at one per city plus one, with Scouts free, and greys armed units with the same reason 3`] = `
 [
   [
-    "{"kind":"Unit","unit":"Soldier"}",
+    "{"kind":"Unit","unit":"Spearman"}",
     "Levies full: 2 of 2",
   ],
   [
-    "{"kind":"Unit","unit":"Ranger"}",
+    "{"kind":"Unit","unit":"Archer"}",
     "Levies full: 2 of 2",
   ],
   [
-    "{"kind":"Unit","unit":"Trooper"}",
+    "{"kind":"Unit","unit":"Pikeman"}",
     "Levies full: 2 of 2",
   ],
   [
@@ -35,7 +35,7 @@ exports[`thin levies: core behavior > caps armed units at one per city plus one,
     "Levies full: 2 of 2",
   ],
   [
-    "{"kind":"Building","building":"Hydroponics"}",
+    "{"kind":"Building","building":"Mill"}",
     "Requires Granary",
   ],
 ]
@@ -576,11 +576,11 @@ exports[`thin levies: core behavior > losing a city never disbands units; it onl
 exports[`thin levies: core behavior > losing a city never disbands units; it only blocks new ones (same turn results) 15`] = `
 [
   [
-    "{"kind":"Unit","unit":"Soldier"}",
+    "{"kind":"Unit","unit":"Spearman"}",
     "Levies full: 3 of 2",
   ],
   [
-    "{"kind":"Unit","unit":"Ranger"}",
+    "{"kind":"Unit","unit":"Archer"}",
     "Levies full: 3 of 2",
   ],
   [

@@ -1,4 +1,4 @@
-//! Opt-in Sparta playtest 8.4 proxy: five early Soldiers, an early war,
+//! Opt-in Sparta playtest 8.4 proxy: five early Spearmen, an early war,
 //! then serial captures and veteran fighting.
 //! Forked from frozen v7. All decisions and memory derive exclusively from PlayerView;
 //! no engine state, observer feedback, seed inspection or random choices.
@@ -24,22 +24,22 @@ mod tactics;
 
 pub const PROXY_V8_SPARTA_VERSION: u32 = 8;
 
-/// Soldiers wanted: a first wave, then more for every city the army holds.
+/// Spearmen wanted: a first wave, then more for every city the army holds.
 const GOAL_BASE: usize = 7;
 const GOAL_PER_CITY: usize = 2;
 const GOAL_MAX: usize = 16;
-/// Rangers kept per Soldier-goal divisor, and their ceiling; more while the target has Walls.
+/// Archers kept per Soldier-goal divisor, and their ceiling; more while the target has Walls.
 const RANGED_DIV: usize = 2;
 const RANGED_MAX: usize = 4;
 const WALL_RANGED: usize = 4;
-/// A Settler wave starts once this many Soldiers exist, up to this many cities.
+/// A Settler wave starts once this many Spearmen exist, up to this many cities.
 const SETTLE_AFTER_SOLDIERS: usize = 2;
 const SETTLE_CITIES: usize = 1;
 const SETTLE_PRIORITY: i32 = 780;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 enum Phase {
-    /// Soldiers are still being trained; the army gathers at home.
+    /// Spearmen are still being trained; the army gathers at home.
     #[default]
     Muster,
     /// The army marches on the nearest or weakest rival city, forever.
@@ -427,8 +427,8 @@ impl Plan<'_> {
         }
     }
 
-    /// The playbook is Soldiers. Sparta refill their ranks by killing, so they keep one Ranger;
-    /// every other faction needs a firing line (a Ranger per two Soldiers) to trade fairly.
+    /// The playbook is Spearmen. Sparta refill their ranks by killing, so they keep one Archer;
+    /// every other faction needs a firing line (an Archer per two Spearmen) to trade fairly.
     fn ranged_goal(&self) -> usize {
         let base = if self.fights_wounded() {
             if self.ctx.view.turn < 40 { 0 } else { 1 }
@@ -448,7 +448,7 @@ impl Plan<'_> {
             .is_some_and(|id| self.ctx.view.cities.iter().any(|c| c.id == id && c.walls))
     }
 
-    /// Soldiers grow with the empire: captured cities train them too.
+    /// Spearmen grow with the empire: captured cities train them too.
     fn infantry_goal(&self) -> usize {
         if self.ctx.view.turn < 40 {
             5
@@ -634,7 +634,7 @@ impl Plan<'_> {
             if saving_wins || !self.can_support_unit() {
                 continue;
             }
-            // Gold is spent on Soldiers as fast as the army is short of them.
+            // Gold is spent on Spearmen as fast as the army is short of them.
             let want_ranged = melee >= 2 && ranged < self.ranged_goal();
             if emergency.is_none() && !want_ranged && melee >= self.infantry_goal() {
                 continue;
@@ -724,8 +724,8 @@ impl Plan<'_> {
         use UnitKind::*;
         let count = |u| counts.get(&u).copied().unwrap_or(0);
         let cities = self.ctx.own_cities.len();
-        let ranged = count(Ranger) + count(Marksman);
-        let melee = count(Soldier) + count(Trooper) + count(AssaultTrooper);
+        let ranged = count(Archer) + count(Crossbowman);
+        let melee = count(Spearman) + count(Pikeman) + count(Musketman);
         let threatened = self
             .ctx
             .enemy_units
@@ -748,7 +748,7 @@ impl Plan<'_> {
                     -200
                 }
             }
-            // A scout finds rivals and unescorted Settlers while the Soldiers train.
+            // A scout finds rivals and unescorted Settlers while the Spearmen train.
             ProductionItem::Unit { unit: Scout } => {
                 if count(Scout) == 0 && self.rival_unknown() && melee >= 2 {
                     650
@@ -768,9 +768,9 @@ impl Plan<'_> {
                 }
                 let base = if ranged_unit { 720 } else { 1000 };
                 base + match unit {
-                    Trooper => 10,
-                    AssaultTrooper => 15,
-                    Marksman => 15,
+                    Pikeman => 10,
+                    Musketman => 15,
+                    Crossbowman => 15,
                     _ => 0,
                 }
             }
@@ -784,7 +784,7 @@ impl Plan<'_> {
                         }
                     }
                     Workshop => 660,
-                    Laboratory => 710,
+                    Library => 710,
                     Granary => {
                         if self.goal_pending(Faction::Celts)
                             || c.is_capital && self.goal_pending(Faction::Germany)
@@ -794,11 +794,11 @@ impl Plan<'_> {
                             400
                         }
                     }
-                    College => 530,
-                    MachineShop => 450,
-                    Hydroponics | Supermarket => 420,
-                    Clearinghouse | StockExchange => 430,
-                    BroodHall => {
+                    University => 530,
+                    Forge => 450,
+                    Mill | Supermarket => 420,
+                    Bank | StockExchange => 430,
+                    RiceStorehouse => {
                         if c.is_capital && self.goal_pending(Faction::Germany) {
                             705
                         } else {
@@ -821,12 +821,12 @@ impl Plan<'_> {
                             50
                         }
                     }
-                    StarFort | RelayUplink | Pyramids | HagiaSophia | EiffelTower | IterReactor
-                    | PlanetaryFoundry | WorldExchange | CourierHall | ImperialDiwan
-                    | Roadworks | AirDefence => -200,
-                    InferenceCore => 520,
-                    Autoworks => 440,
-                    WarShrine => {
+                    StarFort | GreatLibrary | Pyramids | HagiaSophia | EiffelTower
+                    | IterFusionReactor | RoyalArsenal | GrandBazaar | YamRelayStation
+                    | ImperialDiwan | Roadworks | AirDefence => -200,
+                    ResearchLab => 520,
+                    Factory => 440,
+                    Agoge => {
                         if !c.is_capital && cities >= 3 && melee >= 5 {
                             1100
                         } else {

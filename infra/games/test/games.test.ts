@@ -49,6 +49,17 @@ describe("game uploads", () => {
     expect((await put({ ...record(), coach_answers: Array.from({ length: 2001 }, () => ({})) })).status).toBe(422);
   });
 
+  it("accepts rewinds as a short list of earlier-turn jumps and refuses anything else", async () => {
+    const rewind = { at: "2026-11-22T19:10:00.000Z", from_turn: 42, to_turn: 39 };
+    expect((await put({ ...record(), rewinds: [rewind] })).status).toBe(200);
+    expect((await put({ ...record(), rewinds: "42" })).status).toBe(422);
+    expect((await put({ ...record(), rewinds: [{ ...rewind, to_turn: 42 }] })).status).toBe(422);
+    expect((await put({ ...record(), rewinds: [{ ...rewind, from_turn: 1.5 }] })).status).toBe(422);
+    expect((await put({ ...record(), rewinds: [{ ...rewind, at: "yesterday" }] })).status).toBe(422);
+    expect((await put({ ...record(), rewinds: [{ ...rewind, note: "misclick" }] })).status).toBe(422);
+    expect((await put({ ...record(), rewinds: Array.from({ length: 1001 }, () => rewind) })).status).toBe(422);
+  });
+
   it("refuses typed names, other sites, bad ids and non-gzip bodies", async () => {
     const typed = record();
     typed.metadata.seats[0]!.name = "Dana";

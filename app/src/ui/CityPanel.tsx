@@ -32,6 +32,7 @@ import { capitalLine, capitalMark, replacementKickerLine } from '../capitalMark'
 import { hallCardText, hallStands } from './goalText';
 import { isPermanentlyUnavailable, nestBuildingUpgrades, progressText, unavailableText, unitLines, withUnavailable, type BuildingLineNode } from './productionChoices';
 import { feel } from '../feel';
+import { answerDecision } from '../notice';
 import { RESOURCE_INFO, isStrategic, needText, nileYields, supplyPerMine, supplyRuleText, withArticle } from '../resources';
 import { CostChip } from './CostChip';
 import { Amount, Amounts, Quantity } from './Amounts';
@@ -411,8 +412,8 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
   );
   const faction = owner?.faction;
   // The Mongols's Courier Hall in its own city: a greyed card too, so the Hall reads as built where it is bought.
-  const hallHere = city.owner === view.me && faction === 'Mongols' && d.buildings.includes('CourierHall');
-  const unavailable: UnavailableOption[] = [...(d.unavailable ?? []), ...(hallHere && !(d.unavailable ?? []).some((u) => sameItem(u.item, { kind: 'Building', building: 'CourierHall' })) ? [{ item: { kind: 'Building' as const, building: 'CourierHall' as const }, cost: 0, reason: `The Yam Relay Station already stands in ${city.name}`, production_banked: 0 }] : [])];
+  const hallHere = city.owner === view.me && faction === 'Mongols' && d.buildings.includes('YamRelayStation');
+  const unavailable: UnavailableOption[] = [...(d.unavailable ?? []), ...(hallHere && !(d.unavailable ?? []).some((u) => sameItem(u.item, { kind: 'Building', building: 'YamRelayStation' })) ? [{ item: { kind: 'Building' as const, building: 'YamRelayStation' as const }, cost: 0, reason: `The Yam Relay Station already stands in ${city.name}`, production_banked: 0 }] : [])];
   const listOptions = d.options;
   const listUnavailable = unavailable;
   const permanentLine = (items: UnavailableOption[], options: ProductionOption[] = []) => {
@@ -439,11 +440,22 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     clearTimeout(flashTimer.current);
     flashTimer.current = setTimeout(() => setFlash(null), 1500);
   };
-  const buildNow = (item: ProductionItem, from?: Element | null) => {
+  /** True when it replaced the current build: that shows the G17 notice, which must not be hidden by the next decision. */
+  const buildNow = (item: ProductionItem, from?: Element | null): boolean => {
     setNotice(null);
     keepInPlace(from);
-    changeQueue(queueAfterBuild(queue, producing, item));
+    const next = queueAfterBuild(queue, producing, item);
+    // Misclick guard: replacing the current build names both, with Undo (G17).
+    if (producing && !sameItem(producing, item)) {
+      answerDecision(`${city.name} now builds ${itemName(item, faction)} instead of ${itemName(producing, faction)}.`, (o) => setProductionQueue(o, city.id, next), undefined, 'queue');
+      return true;
+    }
+    changeQueue(next);
+    return false;
   };
+  /** Buying names the city, with Undo (G17): a buy in the wrong city is easy to miss before End Turn. */
+  const buy = (item: ProductionItem, price: number | null) => answerDecision(
+    `Buying ${itemName(item, faction)} in ${city.name}${price === null ? '' : ` for ${price} Gold`}.`, (ord) => toggleBuy(ord, city.id, item), undefined, 'purchase');
   /** A greyed-out item never adds an order; clicking it says why, on the card (never a silent bounce). */
   const refuse = (u: UnavailableOption) => {
     const why = whyUnavailable(u);
@@ -486,7 +498,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
   const siteCard = (building: BuildingKind) => { const all = siteOptions(building); return all.find(siteChosen) ?? all[0]; };
   /** "Plains, Wheat, 3 tiles SW": the chosen tile, as the card names it. */
   const sitePlace = (tile: CityView['pos']) => { const t = view.tiles[tileIndex(tile, view.width, view.height)]; return [t?.terrain ? TERRAIN_NAME[t.terrain] : null, t?.resource ? RESOURCE_INFO[t.resource].name : null, wonderWhere(tile)].filter(Boolean).join(', '); };
-  const yamCard = listOptions.some((o) => o.item.kind === 'Wonder' && o.item.building === 'CourierHall') ? siteCard('CourierHall') : undefined;
+  const yamCard = listOptions.some((o) => o.item.kind === 'Wonder' && o.item.building === 'YamRelayStation') ? siteCard('YamRelayStation') : undefined;
   const placing = (building: BuildingKind) => place?.city === city.id && place.building === building;
   const startPlace = (building: BuildingKind, intent: 'build' | 'queue' | 'buy') => {
     setImproveHover(null);
@@ -512,7 +524,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     useGame.getState().set({ place: null });
     if (!o) return;
     if (place.intent === 'queue') append(o.item);
-    else if (place.intent === 'buy') editOrders((ord) => toggleBuy(ord, city.id, o.item), 'purchase');
+    else if (place.intent === 'buy') buy(o.item, null);
     else buildNow(o.item);
   };
   // Short of a strategic resource, the newest buildings that need it yield nothing: say so beside the building list.
@@ -538,7 +550,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
       <button className="btn primary" data-primary-action disabled={view.finished || !choice || choiceBlocked}
         aria-label={choice ? `Build ${itemName(choice.item, owner?.faction)}` : 'Build'}
         aria-description={choiceBlocked ? choice!.resource_blocker! : undefined}
-        onClick={() => { if (choice) { buildNow(choice.item); advanceAfterBuild(); } }}><span>{choice?.item.kind === 'Project' ? 'Run project' : 'Build'}</span></button>
+        onClick={() => { if (choice && !buildNow(choice.item)) advanceAfterBuild(); }}><span>{choice?.item.kind === 'Project' ? 'Run project' : 'Build'}</span></button>
       {choiceBlocked && <small className="phone-action-why prod-blocked" role="note"><ResourceReason text={choice!.resource_blocker!} resource={choice!.supply_need!} /></small>}
     </div>;
   }
@@ -614,7 +626,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     const description = itemDescription(o.item, owner?.faction);
     const cardText = itemCardText(o.item, owner?.faction);
     const fullCopy = cardText === description ? description : `${cardText} ${description}`;
-    const hallDetail = o.item.kind === 'Building' && o.item.building === 'CourierHall' ? hallCardText() : null;
+    const hallDetail = o.item.kind === 'Building' && o.item.building === 'YamRelayStation' ? hallCardText() : null;
     const detail = [fullCopy, effect, hallDetail, site && isGreatWork(site.building) ? `Only one empire can complete it. ${rivalBuilders.length ? `Known builders: ${rivalBuilders.join(', ')}.` : 'No known rival builder.'}` : null].filter(Boolean).join(' ');
     const cardLineBase = site && isGreatWork(site.building) ? `${itemSummary(o.item, owner?.faction).replace(/^World wonder: /, '').replace(/^whoever holds its tile scores (\+\d+ VP)$/, '$1 to its tile holder')} · one in the world${rivalBuilders.length ? `, also building: ${rivalBuilders.join(', ')}` : ''}` : [keeps, gains || itemSummary(o.item, owner?.faction)].filter(Boolean).join(' · ');
     const cardLine = industryFood(o.item) ? `${cardLineBase} · −1 Food` : cardLineBase;
@@ -623,7 +635,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
         aria-disabled={resourceBlocked || undefined}
         aria-description={resourceBlocked ? `${o.resource_blocker}${o.supply_need ? ` Open ${o.supply_need} supply.` : ''}` : undefined}
         title={imp || site ? detail : undefined}
-        disabled={view.finished} onClick={(event) => { if (unplaced) { startPlace(site!.building, event.shiftKey ? 'queue' : 'build'); return; } if (resourceBlocked) { if (headOnly) { if (o.supply_need) openResourceChip(o.supply_need); return; } if (!duplicate && queue.length < 50) append(o.item, event.currentTarget); return; } if (event.shiftKey) { if (!duplicate && queue.length < 50) append(o.item, event.currentTarget); } else { buildNow(o.item, event.currentTarget); advanceAfterBuild(); } }}>
+        disabled={view.finished} onClick={(event) => { if (unplaced) { startPlace(site!.building, event.shiftKey ? 'queue' : 'build'); return; } if (resourceBlocked) { if (headOnly) { if (o.supply_need) openResourceChip(o.supply_need); return; } if (!duplicate && queue.length < 50) append(o.item, event.currentTarget); return; } if (event.shiftKey) { if (!duplicate && queue.length < 50) append(o.item, event.currentTarget); } else if (!buildNow(o.item, event.currentTarget)) advanceAfterBuild(); }}>
         <span className="prod-icons"><ItemArt item={o.item} faction={owner?.faction} size={20} />{imp && preview && <Icon name={`resource-${preview.resource.toLowerCase()}`} size={18} label={RESOURCE_INFO[preview.resource].name} />}</span>
         <span className="prod-name">{imp ? <><span className="prod-what">{improvementName(imp.improvement, preview?.resource)}</span><span className="prod-where">{improvementWhere(imp, city.pos)}</span></> : site ? <><span className="prod-what">{baseItemName(site, owner?.faction)}</span>{unplaced && !isGreatWork(site.building) && <span className="prod-where place-where">{placingHere ? 'Click a lit tile on the map' : 'Choose its tile on the map'}</span>}{!unplaced && <><span className="prod-where">{sitePlace(site.tile)}</span>{o.wonder && <span className="prod-where site-cost"><Amounts text={`gives up ${yieldsText(o.wonder.lost)}`} /></span>}</>}</> : name} {positions.length > 1
           ? <span className="queue-badge queue-count" title={`In the queue ${positions.length} times (positions ${positions.join(', ')})`}>×{positions.length}</span>
@@ -647,7 +659,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
           <button className={`btn-buy ${selectedBuy ? 'active' : ''}`} aria-pressed={selectedBuy}
             aria-label={`Buy ${name}${price === null ? '' : ` for ${price} Gold`}`}
             aria-describedby={`purchase-status-${city.id}`}
-            disabled={view.finished || (!selectedBuy && !!reason)} onClick={() => unplaced && !selectedBuy ? startPlace(site!.building, 'buy') : editOrders((ord) => toggleBuy(ord, city.id, o.item), selectedBuy ? undefined : 'purchase')}>
+            disabled={view.finished || (!selectedBuy && !!reason)} onClick={() => unplaced && !selectedBuy ? startPlace(site!.building, 'buy') : selectedBuy ? editOrders((ord) => toggleBuy(ord, city.id, o.item)) : buy(o.item, price)}>
             {/* G16: the price is a spend chip; a chosen buy keeps it, with ✓ (clicking again cancels). */}
             {selectedBuy ? <Icon name="ui-check" size={13} className="ui-mark" label="Buying" /> : 'Buy'} {price === null ? '—' : resourceBlocked && !selectedBuy ? null : <CostChip spends={[selectedBuy ? { unit: 'Gold', amount: price, from: purchase.gold, to: purchase.gold - price } : { unit: 'Gold', amount: price }]} />}
           </button>
@@ -748,7 +760,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
   // The same check as the map's faded medallions and the tile card: owned, known and unimproved.
   const dormant = d.territory.filter((h) => { const t = view.tiles[tileIndex(h, view.width, view.height)]; return !!t && isDormant(t, view.me, owner?.faction); }).length;
   const improvements = (city.owner === view.me && improvementOptions.length > 0) ? <section aria-label="Improvements" data-testid="improvements-group">
-    <Tip as="div" className="cp-sub" content={`A resource yields its bonus only once its tile is improved. A strategic deposit supplies its resource as soon as it is inside your borders. Its improvement (${['Mine', 'SaltpeterWorks', 'OilWell', 'QuartzMine'].map((k) => withArticle(IMPROVEMENT_INFO[k as ImprovementKind].name)).join(', ')}) adds its tile's yield and 1 more supply. Pick a tile here or click it on the map. Improvements upgrade by themselves with technology; a released tile keeps its improvement, and a captured city's land keeps it.`}>
+    <Tip as="div" className="cp-sub" content={`A resource yields its bonus only once its tile is improved. A strategic deposit supplies its resource as soon as it is inside your borders. Its improvement (${['Mine', 'SaltpetreWorks', 'OilWell', 'QuartzMine'].map((k) => withArticle(IMPROVEMENT_INFO[k as ImprovementKind].name)).join(', ')}) adds its tile's yield and 1 more supply. Pick a tile here or click it on the map. Improvements upgrade by themselves with technology; a released tile keeps its improvement, and a captured city's land keeps it.`}>
       Improvements <span className="cp-sub-note">· {dormant} resource tile{dormant === 1 ? '' : 's'} unimproved</span>
     </Tip>
     <div className={`prod-list ${producing ? '' : 'choosing'}`}>{improvementOptions.map((o) => renderOption(o))}</div>
@@ -1008,7 +1020,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
       {owner?.faction === 'Mongols' && <section aria-label="Yam Relay Station"><div className="cp-sub">Yam Relay Station · one per empire</div>{yamCard && <div className="prod-list">{renderOption(yamCard)}</div>}{!yamCard && <p className="hint">{(() => {
         const hall = view.courier_halls?.find((h) => h.of === city.owner);
         if (hall) return hall.holder === city.owner ? `The Yam Relay Station already stands in ${view.cities.find((c) => c.id === hall.city)?.name ?? 'your city'}.` : `The Yam Relay Station stands in ${view.cities.find((c) => c.id === hall.city)?.name ?? 'a rival city'}; retake the city instead.`;
-        const building = view.cities.find((c) => c.owner === city.owner && c.id !== city.id && c.detail && [c.detail.producing, ...(c.detail.production_queue ?? [])].some((item) => item?.kind === 'Wonder' && item.building === 'CourierHall'));
+        const building = view.cities.find((c) => c.owner === city.owner && c.id !== city.id && c.detail && [c.detail.producing, ...(c.detail.production_queue ?? [])].some((item) => item?.kind === 'Wonder' && item.building === 'YamRelayStation'));
         return building ? `The Yam Relay Station is already being built in ${building.name}.` : 'No eligible tile is available for the Yam Relay Station here.';
       })()}</p>}</section>}
       <section className="cp-great-works" aria-label="World wonders">

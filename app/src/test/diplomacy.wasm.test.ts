@@ -60,7 +60,7 @@ describe.skipIf(!available)('WASM diplomacy behavior', () => {
     const target = fromOffset(16, 6);
     let ranger = 0;
     const p = fixture(true, (s) => {
-      ranger = spawnUnit(s, 0, 'Ranger', fromOffset(14, 6), false).id;
+      ranger = spawnUnit(s, 0, 'Archer', fromOffset(14, 6), false).id;
       refreshVision(s);
     });
     const shot: Order = { type: 'RangedAttack', unit: ranger, target };
@@ -126,11 +126,11 @@ describe.skipIf(!available)('WASM diplomacy behavior', () => {
   it('clears stranded fortification at the same boundary that peace closes borders', () => {
     const p = fixture(true, (s) => {
       s.diplomacy!.relations.find((r) => r.a === 0 && r.b === 1)!.state = 'War';
-      Object.assign(s.units.find((u) => u.owner === 0 && u.kind === 'Soldier')!, { pos: { ...s.cities[1].pos }, hp: 100, fortify: 6 });
+      Object.assign(s.units.find((u) => u.owner === 0 && u.kind === 'Spearman')!, { pos: { ...s.cities[1].pos }, hp: 100, fortify: 6 });
     });
     step(p, { 0: [{ type: 'ProposeTreaty', to: 1, kind: 'Peace' }] });
     step(p, { 1: [accept(1)] });
-    for (const client of [p.fixtureClient, p.core]) expect(client.view(0).units.find((u) => u.owner === 0 && u.kind === 'Soldier')?.fortify).toBe(0);
+    for (const client of [p.fixtureClient, p.core]) expect(client.view(0).units.find((u) => u.owner === 0 && u.kind === 'Spearman')?.fortify).toBe(0);
   });
   it('rejects auto-explore across Peace borders in validation and resolution', () => {
     const to = fromOffset(5, 5);
@@ -144,7 +144,7 @@ describe.skipIf(!available)('WASM diplomacy behavior', () => {
     step(p, { 0: [order] });
     for (const client of [p.fixtureClient, p.core]) expect(client.view(0).units.find((u) => u.id === scout.id)?.pos).toEqual(scout.pos);
   });
-  it.each(['Settler', 'Soldier'] as const)('auto-explore avoids a peaceful foreign %s without treating it as a threat', (kind) => {
+  it.each(['Settler', 'Spearman'] as const)('auto-explore avoids a peaceful foreign %s without treating it as a threat', (kind) => {
     const blocked = fromOffset(5, 5);
     const p = fixture(false, (s) => {
       Object.assign(s.units.find((u) => u.owner === 0 && u.kind === 'Scout')!, { pos: fromOffset(4, 5) });
@@ -162,10 +162,10 @@ describe.skipIf(!available)('WASM diplomacy behavior', () => {
   });
   it('closed territory prevents healing and fortification while asleep', () => {
     const p = fixture(true, (s) => {
-      const unit = s.units.find((u) => u.owner === 0 && u.kind === 'Soldier')!;
+      const unit = s.units.find((u) => u.owner === 0 && u.kind === 'Spearman')!;
       Object.assign(unit, { pos: { ...s.cities[1].pos }, hp: 50, fortify: 6 });
     });
-    const unit = (client: WasmClient | FixtureClient) => client.view(0).units.find((u) => u.owner === 0 && u.kind === 'Soldier')!;
+    const unit = (client: WasmClient | FixtureClient) => client.view(0).units.find((u) => u.owner === 0 && u.kind === 'Spearman')!;
     for (const client of [p.fixtureClient, p.core]) {
       expect(unit(client).resting_heal).toEqual({ total: 0, parts: [['Closed foreign territory', 0]] });
     }
@@ -177,9 +177,9 @@ describe.skipIf(!available)('WASM diplomacy behavior', () => {
     const p = fixture(true, (s) => {
       const r = s.diplomacy!.relations.find((r) => r.a === 0 && r.b === 1)!;
       r.state = 'Alliance'; r.security = { id: 1, started_turn: 1, protected_until: 11 }; s.diplomacy!.next_treaty_id = 1;
-      Object.assign(s.units.find((u) => u.owner === 0 && u.kind === 'Soldier')!, { pos: fromOffset(15, 6), hp: 50 });
+      Object.assign(s.units.find((u) => u.owner === 0 && u.kind === 'Spearman')!, { pos: fromOffset(15, 6), hp: 50 });
     });
-    const unit = (client: WasmClient | FixtureClient) => client.view(0).units.find((u) => u.owner === 0 && u.kind === 'Soldier')!;
+    const unit = (client: WasmClient | FixtureClient) => client.view(0).units.find((u) => u.owner === 0 && u.kind === 'Spearman')!;
     for (const client of [p.fixtureClient, p.core]) expect(unit(client).resting_heal?.parts).not.toContainEqual(['Closed foreign territory', 0]);
     (expect(unit(p.fixtureClient).resting_heal).toMatchSnapshot(), void (unit(p.core).resting_heal));
     const move: Order = { type: 'MoveUnit', unit: unit(p.core).id, to: fromOffset(16, 7) };
@@ -193,8 +193,8 @@ describe.skipIf(!available)('WASM diplomacy behavior', () => {
       let ranger = 0;
       const p = fixture(false, (s) => {
         s.units = s.units.filter((u) => u.kind === 'Settler');
-        ranger = spawnUnit(s, 0, 'Ranger', origin, false).id;
-        spawnUnit(s, 2, 'Soldier', target, false);
+        ranger = spawnUnit(s, 0, 'Archer', origin, false).id;
+        spawnUnit(s, 2, 'Spearman', target, false);
         s.owner[idxOf(s, origin)] = owner ?? -1;
         s.owner[idxOf(s, target)] = -1;
         s.diplomacy!.relations.find((r) => r.a === 0 && r.b === 2)!.state = 'War';

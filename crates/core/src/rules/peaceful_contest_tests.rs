@@ -35,7 +35,7 @@ fn the_stronger_unit_takes_a_contested_ruin_and_the_weaker_stays_put() {
     let ruin = hex(5, 5);
     s.map.get_mut(ruin).unwrap().ruin = true;
     let scout = unit(&mut s, 0, UnitKind::Scout, ruin.neighbor(0));
-    let spear = unit(&mut s, 1, UnitKind::Soldier, ruin.neighbor(3));
+    let spear = unit(&mut s, 1, UnitKind::Spearman, ruin.neighbor(3));
     goto(&mut s, scout, ruin);
     goto(&mut s, spear, ruin);
     let (next, events) = resolve_units(&s, &no_orders());
@@ -53,7 +53,7 @@ fn the_stronger_unit_takes_a_contested_ruin_and_the_weaker_stays_put() {
     );
     // Seat order does not matter: the same holds with the roles swapped.
     let mut s = at_peace(&[0, 1]);
-    let spear = unit(&mut s, 0, UnitKind::Soldier, ruin.neighbor(0));
+    let spear = unit(&mut s, 0, UnitKind::Spearman, ruin.neighbor(0));
     let scout = unit(&mut s, 1, UnitKind::Scout, ruin.neighbor(3));
     goto(&mut s, scout, ruin);
     goto(&mut s, spear, ruin);
@@ -66,9 +66,9 @@ fn the_stronger_unit_takes_a_contested_ruin_and_the_weaker_stays_put() {
 fn damage_counts_and_a_civilian_never_wins_against_a_military_unit() {
     let mut s = at_peace(&[0, 1]);
     let tile = hex(5, 5);
-    let hurt = unit(&mut s, 0, UnitKind::Soldier, tile.neighbor(0));
+    let hurt = unit(&mut s, 0, UnitKind::Spearman, tile.neighbor(0));
     s.units.get_mut(&hurt).unwrap().hp = 40;
-    let fresh = unit(&mut s, 1, UnitKind::Soldier, tile.neighbor(3));
+    let fresh = unit(&mut s, 1, UnitKind::Spearman, tile.neighbor(3));
     goto(&mut s, hurt, tile);
     goto(&mut s, fresh, tile);
     let (next, events) = resolve_units(&s, &no_orders());
@@ -98,8 +98,8 @@ fn equal_strength_is_drawn_by_seed_and_the_same_on_every_replay() {
     for seed in 0..16 {
         let mut s = at_peace(&[0, 1]);
         s.setup.seed = seed;
-        let a = unit(&mut s, 0, UnitKind::Soldier, tile.neighbor(0));
-        let b = unit(&mut s, 1, UnitKind::Soldier, tile.neighbor(3));
+        let a = unit(&mut s, 0, UnitKind::Spearman, tile.neighbor(0));
+        let b = unit(&mut s, 1, UnitKind::Spearman, tile.neighbor(3));
         goto(&mut s, a, tile);
         goto(&mut s, b, tile);
         let (next, events) = resolve_units(&s, &no_orders());
@@ -132,7 +132,7 @@ fn co_op_partners_are_one_side_against_a_stronger_unit() {
     let tile = hex(5, 5);
     let settler = unit(&mut s, 0, UnitKind::Settler, tile.neighbor(0));
     let scout = unit(&mut s, 1, UnitKind::Scout, tile.neighbor(1));
-    let spear = unit(&mut s, 2, UnitKind::Soldier, tile.neighbor(3));
+    let spear = unit(&mut s, 2, UnitKind::Spearman, tile.neighbor(3));
     for u in [settler, scout, spear] {
         goto(&mut s, u, tile);
     }
@@ -146,7 +146,7 @@ fn co_op_partners_are_one_side_against_a_stronger_unit() {
     // Spearman and Settler share the tile, as one team's units may.
     let mut s = at_peace(&[0, 0, 1]);
     let settler = unit(&mut s, 0, UnitKind::Settler, tile.neighbor(0));
-    let spear = unit(&mut s, 1, UnitKind::Soldier, tile.neighbor(1));
+    let spear = unit(&mut s, 1, UnitKind::Spearman, tile.neighbor(1));
     let scout = unit(&mut s, 2, UnitKind::Scout, tile.neighbor(3));
     for u in [settler, spear, scout] {
         goto(&mut s, u, tile);
@@ -162,7 +162,7 @@ fn co_op_partners_are_one_side_against_a_stronger_unit() {
 fn at_war_the_two_units_still_fight_a_meeting_engagement() {
     let mut s = game(&[0, 1]);
     let tile = hex(5, 5);
-    let a = unit(&mut s, 0, UnitKind::Soldier, tile.neighbor(0));
+    let a = unit(&mut s, 0, UnitKind::Spearman, tile.neighbor(0));
     let b = unit(&mut s, 1, UnitKind::Scout, tile.neighbor(3));
     goto(&mut s, a, tile);
     goto(&mut s, b, tile);
@@ -177,15 +177,15 @@ fn several_units_of_one_side_add_up_against_a_single_stronger_unit() {
     // Scout together outweigh one fresh Spearman that beats either alone.
     let mut s = at_peace(&[0, 1]);
     let tile = hex(5, 5);
-    let hurt = unit(&mut s, 0, UnitKind::Soldier, tile.neighbor(0));
+    let hurt = unit(&mut s, 0, UnitKind::Spearman, tile.neighbor(0));
     s.units.get_mut(&hurt).unwrap().hp = 60;
     let scout = unit(&mut s, 0, UnitKind::Scout, tile.neighbor(1));
-    let fresh = unit(&mut s, 1, UnitKind::Soldier, tile.neighbor(3));
+    let fresh = unit(&mut s, 1, UnitKind::Spearman, tile.neighbor(3));
     let strength = |kind, hp| combat::unit_meeting_strength(kind, hp).total;
     let (a, b, c) = (
-        strength(UnitKind::Soldier, 60),
+        strength(UnitKind::Spearman, 60),
         strength(UnitKind::Scout, 100),
-        strength(UnitKind::Soldier, 100),
+        strength(UnitKind::Spearman, 100),
     );
     assert!(a < c && b < c && a + b > c, "{a} + {b} against {c}");
     for u in [hurt, scout, fresh] {

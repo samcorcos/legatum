@@ -20,15 +20,15 @@ const thumbs = bySlug(thumbUrls);
 const cards = bySlug(cardUrls);
 const roundels = bySlug(roundelSources);
 
-/** The art of each unit kind. Soldier is the Spearman, Trooper the Pikeman, AssaultTrooper the Musketman (the identifiers keep their pre-overhaul spelling). */
+/** The art of each unit kind, by art slug (the file stem under `assets/units`). */
 const UNIT_ART: Record<UnitKind, string> = {
-  Scout: 'scout', Settler: 'settler', Heir: 'byzantine-heir',
+  Scout: 'scout', Settler: 'settler', HeirToTheThrone: 'byzantine-heir',
   Phalangite: 'phalangite', CompositeArcher: 'composite-archer', Cataphract: 'cataphract', Arquebusier: 'arquebusier', Cuirassier: 'cuirassier',
-  Soldier: 'spearman', Trooper: 'pikeman', AssaultTrooper: 'musketman', Rifleman: 'rifleman', Infantry: 'infantry', HunterKiller: 'hunter-killer',
-  Ranger: 'archer', Marksman: 'crossbowman', FieldCannon: 'field-cannon', Artillery: 'artillery', Drone: 'drone-swarm',
+  Spearman: 'spearman', Pikeman: 'pikeman', Musketman: 'musketman', Rifleman: 'rifleman', Infantry: 'infantry', HunterKiller: 'hunter-killer',
+  Archer: 'archer', Crossbowman: 'crossbowman', FieldCannon: 'field-cannon', Artillery: 'artillery', CombatDrone: 'drone-swarm',
   Horseman: 'horseman', Knight: 'knight', Cavalry: 'cavalry', Tank: 'tank', AutonomousArmour: 'autonomous-armour',
   Fighter: 'fighter', Bomber: 'bomber', StealthFighter: 'stealth-fighter', StealthBomber: 'stealth-bomber',
-  TrenchInfantry: 'trench-infantry', Howitzer: 'howitzer', Landship: 'landship', Biplane: 'biplane',
+  TrenchInfantry: 'trench-infantry', Howitzer: 'howitzer', EarlyTank: 'landship', Biplane: 'biplane',
   // The Modern era's placeholder art (increment 2 paints its own): copies of the World War unit of each line, except the
   // Main Battle Tank, which is the present-day tank painting that the Tank's WWII repaint replaced.
   MechanisedInfantry: 'mechanised-infantry', MainBattleTank: 'main-battle-tank', RocketArtillery: 'rocket-artillery', JetFighter: 'jet-fighter', JetBomber: 'jet-bomber',
@@ -36,16 +36,16 @@ const UNIT_ART: Record<UnitKind, string> = {
 
 /** Faction pieces with their own painted figure: every faction's special unit (a piece without a painting yet shows the plain unit's). */
 const FACTION_ART: Partial<Record<Faction, Partial<Record<UnitKind, string>>>> = {
-  Sparta: { Soldier: 'spartan-hoplite' },
+  Sparta: { Spearman: 'spartan-hoplite' },
   Mongols: { Cataphract: 'keshig' },
-  Byzantium: { Trooper: 'tagmatic-soldier' },
+  Byzantium: { Pikeman: 'tagmatic-soldier' },
   Rome: { Phalangite: 'legionary' },
-  Aztecs: { Soldier: 'eagle-warrior' },
-  Egypt: { Soldier: 'medjay' },
+  Aztecs: { Spearman: 'eagle-warrior' },
+  Egypt: { Spearman: 'medjay' },
   Celts: { Phalangite: 'gaesatae' },
   Athens: { CompositeArcher: 'peltast' },
   India: { Knight: 'war-elephant' },
-  Switzerland: { Trooper: 'reislaufer' },
+  Switzerland: { Pikeman: 'reislaufer' },
   Germany: { Tank: 'panzer' },
 };
 

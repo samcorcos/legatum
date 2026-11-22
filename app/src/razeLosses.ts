@@ -17,7 +17,7 @@ export interface RazeLosses {
 }
 
 /** The faction whose goal a capturable goal building scores. */
-const GOAL_BUILDING_FACTION: Partial<Record<BuildingKind, Faction>> = { CourierHall: 'Mongols', ImperialDiwan: 'India' };
+const GOAL_BUILDING_FACTION: Partial<Record<BuildingKind, Faction>> = { YamRelayStation: 'Mongols', ImperialDiwan: 'India' };
 
 const named = (name: string) => (/^Hagia /.test(name) ? name : `the ${name}`);
 

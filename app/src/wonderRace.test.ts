@@ -24,7 +24,7 @@ beforeEach(async () => {
 });
 
 describe('a lost wonder race', () => {
-  const mill = { kind: 'Building', building: 'Hydroponics' } as const;
+  const mill = { kind: 'Building', building: 'Mill' } as const;
   const stop = () => {
     city.detail!.producing = null;
     city.detail!.production_queue = [mill];

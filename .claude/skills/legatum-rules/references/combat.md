@@ -66,7 +66,7 @@ function decides what an attack on a hostile city's tile damages:
   attacker advances and captures. With no garrison, a melee unit entering captures as before;
   ranged fire at an empty fallen city is held for whoever comes in (next bullet).
 - **Held shots at a fallen city** (Sam, 2026-11-21, RULES_VERSION 47, from his turn-67 Geneva
-  siege: five Keshig volleys hit the empty 0-HP city and did nothing, then a Swiss Soldier
+  siege: five Keshig volleys hit the empty 0-HP city and did nothing, then a Swiss Spearman
   slipped in as garrison and only met the charge; his rule: "1) slip into garrison (with
   support) 2) ranged attack 3) melee attack"; `rules/battle.rs::HeldShot`, `held_city`,
   `release_held_shots`, `rules/movement.rs::movement_round`, `reserves`). A ground unit's shot
@@ -84,7 +84,7 @@ function decides what an attack on a hostile city's tile damages:
   empty city after movement exactly as before (a `Battle` on the city, no damage); a city
   captured or no longer hostile by then takes nothing. A city razed during movement (a Celtic capture) leaves its held shots with no city: they besiege nothing (`movement.rs::reserves` reads the city with `cities.get`, `held_shot_tests::a_held_shot_whose_city_was_razed_does_not_stop_a_later_relief`) and are dropped. A held shooter counts toward its side's
   force in a rival assault. Aircraft never hold (they return to their hangars after the ranged
-  phase). Replaying his tape at rules 47, the five volleys kill the Soldier (29 + 32 + 27 + 27
+  phase). Replaying his tape at rules 47, the five volleys kill the Spearman (29 + 32 + 27 + 27
   + 28) and his Keshig takes Geneva. The forecast card does not describe the held shot yet.
   Tests: `rules/held_shot_tests.rs`.
 - **Overflow on a city tile is per hit** (user decision 2026-10-04, made per hit by the designer
@@ -296,8 +296,8 @@ them), scores shots at a shielded tile as capture progress against the city's re
 MeleeOnly / None) makes a garrison of a city that cannot be broken this turn safe in
 `can_defend_at`, `garrison_doomed` and `unit_exposure_key`; when it can be broken, only melee
 reaches the garrison. `purchase_defense.rs::city_risk_with` applies hits to the city first and
-models a ranged garrison's own shot; `production.rs::buy_emergency_defender` can buy Rangers
-or Marksmen and prefers a shooter while the city has over half its HP, a melee garrison below.
+models a ranged garrison's own shot; `production.rs::buy_emergency_defender` can buy Archers
+or Crossbowmen and prefers a shooter while the city has over half its HP, a melee garrison below.
 Threatened cities with over half HP prefer a ranged garrison (`military.rs::prefers_ranged_garrison`, used by `defend_cities` and `garrison_cities`). Rush sieges bombard
 garrisoned cities and send the capturer only when the volley exposes the garrison and the melee
 forecast beats it. `targets()` keeps its force heuristic (garrison + city/4). Proxies v2-v5 are

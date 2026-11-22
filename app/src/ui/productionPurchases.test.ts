@@ -15,9 +15,9 @@ import type { Order, OrderError, PlayerView, ProductionItem, UnitKind } from '..
 import { WasmClient } from '../wasmClient';
 import { pendingSpend, purchasePreviews, tilePurchasePreview } from './productionPurchases';
 
-const soldier: ProductionItem = { kind: 'Unit', unit: 'Soldier' };
+const soldier: ProductionItem = { kind: 'Unit', unit: 'Spearman' };
 const settler: ProductionItem = { kind: 'Unit', unit: 'Settler' };
-const relay: ProductionItem = { kind: 'Wonder', building: 'RelayUplink', tile: fromOffset(5, 4) };
+const relay: ProductionItem = { kind: 'Wonder', building: 'GreatLibrary', tile: fromOffset(5, 4) };
 const spawnBlocker = 'No free spawn tile in or beside the city; move a blocking unit first';
 const remote = () => new RemoteClient(0, 'P0', 'ws://unused/ws');
 
@@ -56,7 +56,7 @@ function fixture() {
   const s = client.debugState();
   const city = s.cities[0];
   for (const h of neighbors(city.pos)) s.terrain[idxOf(s, h)] = 'Mountains';
-  const unit = spawnUnit(s, 0, 'Soldier', city.pos, false);
+  const unit = spawnUnit(s, 0, 'Spearman', city.pos, false);
   const disband: Order = { type: 'DisbandUnit', unit: unit.id };
   const buy: Order = { type: 'BuyItem', city: city.id, item: soldier };
   return { client, s, city, unit, disband, buy };
@@ -69,7 +69,7 @@ function foreignSpawnFixture(relation: 'Peace' | 'War') {
   f.s.terrain[tile] = 'Grassland';
   f.s.owner[tile] = 2;
   f.s.diplomacy!.relations.find((r) => r.a === 0 && r.b === 1)!.state = relation;
-  spawnUnit(f.s, 0, 'Soldier', f.city.pos, false);
+  spawnUnit(f.s, 0, 'Spearman', f.city.pos, false);
   return f;
 }
 
@@ -114,11 +114,11 @@ describe('purchase previews', () => {
     view.units.find((u) => u.id === unit.id)!.siege_offer = { price: { total: 70, parts: [['Siege', 70]] }, blocker: null };
     view.units.push({ ...view.units[0], id: 99, upgrade_cost: 120, upgrade_breakdown: { total: 120, parts: [['Upgrade', 120]] }, upgrade_need: 'Iron' });
     view.aircraft = [{ id: 900, owner: 0, kind: 'Fighter', city: 1, hp: 100, upgrade_cost: 200, upgrade_options: [{ via: 'StealthFighter', to: 'StealthFighter', cost: 200 }] }];
-    view.company_offers = [{ seller: 2, unit: 'Soldier', price: 80 }];
+    view.company_offers = [{ seller: 2, unit: 'Spearman', price: 80 }];
     const buyCost = view.cities[1].detail!.options.find((o) => sameItem(o.item, soldier))!.buy_cost!;
     const orders: Order[] = [
       { type: 'UpgradeAircraft', plane: 900 },
-      { type: 'HireCompany', city: 1, seller: 2, unit: 'Soldier' },
+      { type: 'HireCompany', city: 1, seller: 2, unit: 'Spearman' },
       { type: 'BuyItem', city: 2, item: soldier },
       { type: 'UpgradeSiege', unit: unit.id },
       { type: 'UpgradeUnit', unit: 99 },
@@ -212,11 +212,11 @@ describe('purchase previews', () => {
   });
 
   it.each([
-    ['Soldier', 'Scout', 0, true],
+    ['Spearman', 'Scout', 0, true],
     ['Settler', 'Settler', 0, true],
-    ['Soldier', 'Settler', 0, false],
+    ['Spearman', 'Settler', 0, false],
     ['Settler', 'Scout', 1, false],
-    ['Soldier', 'Settler', 2, true],
+    ['Spearman', 'Settler', 2, true],
     ['Settler', 'Scout', 2, true],
   ] as const)('checks remaining occupancy when buying %s beside %s owned by %i', (kind, remaining, owner, blocked) => {
     const { client, s, city, unit, disband } = fixture();
@@ -232,7 +232,7 @@ describe('purchase previews', () => {
     const { client, s, city, unit, disband, buy } = fixture();
     unit.pos = neighbors(city.pos)[0];
     s.terrain[idxOf(s, unit.pos)] = 'Grassland';
-    spawnUnit(s, 0, 'Soldier', city.pos, false);
+    spawnUnit(s, 0, 'Spearman', city.pos, false);
     expect(client.validate(0, [buy])).toHaveLength(1);
     expect(client.validate(0, [disband, buy])).toEqual([]);
     expect(previews(remote(), client.view(0), [disband]).get(itemKey(soldier))?.reason).toBeNull();
@@ -251,7 +251,7 @@ describe('purchase previews', () => {
     s.terrain[idxOf(s, unit.pos)] = 'Grassland';
     s.cities[1].pos = unit.pos;
     s.cities[1].owner = 2;
-    spawnUnit(s, 0, 'Soldier', city.pos, false);
+    spawnUnit(s, 0, 'Spearman', city.pos, false);
     expect(client.validate(0, [disband, buy])).toEqual([{ index: 1, message: spawnBlocker }]);
     expect(previews(remote(), client.view(0), [disband]).get(itemKey(soldier))?.reason).toBe(spawnBlocker);
   });
@@ -264,7 +264,7 @@ describe('purchase previews', () => {
     view.tiles[idxOf(s, city.pos)].visible = true;
     view.tiles[idxOf(s, city.pos)].terrain = null;
     expect(previews(remote(), view, [disband]).get(itemKey(soldier))?.reason).toBe(spawnBlocker);
-    const other = spawnUnit(s, 0, 'Soldier', s.cities[1].pos, false);
+    const other = spawnUnit(s, 0, 'Spearman', s.cities[1].pos, false);
     expect(previews(remote(), client.view(0), [{ type: 'DisbandUnit', unit: other.id }]).get(itemKey(soldier))?.reason).toBe(spawnBlocker);
   });
 
@@ -293,7 +293,7 @@ describe('purchase previews', () => {
   it('keeps prerequisites in the offered options', () => {
     const { client, s, disband } = fixture();
     s.players[0].techs = [];
-    const trooper: ProductionItem = { kind: 'Unit', unit: 'Trooper' };
+    const trooper: ProductionItem = { kind: 'Unit', unit: 'Pikeman' };
     expect(previews(remote(), client.view(0), [disband]).has(itemKey(trooper))).toBe(false);
     expect(client.validate(0, [disband, { type: 'BuyItem', city: 1, item: trooper }])).toHaveLength(1);
     s.players[0].techs = [...TECHS];
@@ -301,7 +301,7 @@ describe('purchase previews', () => {
 
   it('does not make Great Works purchasable', () => {
     const { client, s, city, disband } = fixture();
-    city.buildings = ['Laboratory'];
+    city.buildings = ['Library'];
     const site = idxOf(s, relay.kind === 'Wonder' ? relay.tile : city.pos);
     s.terrain[site] = 'Grassland'; s.owner[site] = city.owner; s.tileCity[site] = city.id;
     if (s.wonder) s.wonder[site] = null;
@@ -400,7 +400,7 @@ describe.skipIf(!wasmAvailable)('purchase preview contract with the authoritativ
     }
   });
 
-  it.each(['Soldier', 'Settler'] as UnitKind[])('validates and resolves disband plus %s purchase in either order', (kind) => {
+  it.each(['Spearman', 'Settler'] as UnitKind[])('validates and resolves disband plus %s purchase in either order', (kind) => {
     for (const disbandFirst of [true, false]) {
       const { client, s, unit, disband } = fixture();
       unit.kind = kind;

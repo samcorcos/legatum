@@ -48,10 +48,10 @@ function fixture(attackerXp: number) {
   for (const p of s.players) p.explored.fill(1);
   s.players[1].isHuman = true; s.setup.players[1].is_human = true;
   s.units[0].pos = fromOffset(1, 1); s.units[1].pos = fromOffset(0, 0); s.units[2].pos = fromOffset(19, 9);
-  const soldier = spawnUnit(s, 0, 'Soldier', fromOffset(6, 4), false);
+  const soldier = spawnUnit(s, 0, 'Spearman', fromOffset(6, 4), false);
   soldier.xp = attackerXp;
-  const ranger = spawnUnit(s, 0, 'Ranger', fromOffset(5, 3), false);
-  const enemy = spawnUnit(s, 1, 'Soldier', fromOffset(7, 4), false);
+  const ranger = spawnUnit(s, 0, 'Archer', fromOffset(5, 3), false);
+  const enemy = spawnUnit(s, 1, 'Spearman', fromOffset(7, 4), false);
   for (const r of s.diplomacy!.relations) r.state = 'War';
   return { s, soldier: soldier.id, ranger: ranger.id, enemy: enemy.id };
 }
@@ -88,7 +88,7 @@ describe('WASM promotion behavior', () => {
     const { soldier, ranger, enemy } = r.ids;
     expect(r.forecastBefore!.attacker_strength.parts.some(([l]) => l.startsWith('Promotion'))).toBe(false);
     expect(r.melee.filter((e) => e.type === 'UnitPromoted')).toEqual([
-      { type: 'UnitPromoted', unit: soldier, owner: 0, unit_kind: 'Soldier', level: 1, at: fromOffset(6, 4) },
+      { type: 'UnitPromoted', unit: soldier, owner: 0, unit_kind: 'Spearman', level: 1, at: fromOffset(6, 4) },
     ]);
     expect(r.lines).toContain('Your Spearman was promoted to level 1 (+10% strength)');
     expect(r.forecastAfter!.attacker_strength.parts[1]).toEqual(['Level 1: +10%', 2]);

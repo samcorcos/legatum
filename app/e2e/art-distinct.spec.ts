@@ -34,8 +34,8 @@ const test = base.extend<{}, { devURL: string }>({
 const RESOURCES: Resource[] = ['Iron', 'Coal', 'Copper', 'Wheat', 'Cattle', 'Stone'];
 const ROWS: UnitKind[][] = [
   ['Horseman', 'Cataphract', 'Cuirassier', 'Knight', 'Cavalry'],
-  ['Ranger', 'CompositeArcher', 'Marksman', 'Arquebusier'],
-  ['Soldier', 'Phalangite', 'Trooper', 'AssaultTrooper', 'Rifleman'],
+  ['Archer', 'CompositeArcher', 'Crossbowman', 'Arquebusier'],
+  ['Spearman', 'Phalangite', 'Pikeman', 'Musketman', 'Rifleman'],
 ];
 
 /** The art-map fixture plus a staged strip: the six resources in a row, three rows of units, all explored and known. */

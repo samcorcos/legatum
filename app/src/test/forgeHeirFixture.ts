@@ -36,21 +36,21 @@ export function forgeHeirFixture(viewer: 'Germany' | 'Byzantium', heir: HeirStat
   const own = f.cities.filter((c) => c.owner === 0);
   const capital = own.find((c) => c.isCapital)!;
   for (const c of own) { c.buildings = []; c.producing = null; c.prod = 0; c.productionQueue = []; c.productionBanked = []; }
-  if (viewer === 'Germany') for (const c of own.filter((x) => x !== capital)) c.buildings = ['MachineShop'];
+  if (viewer === 'Germany') for (const c of own.filter((x) => x !== capital)) c.buildings = ['Forge'];
   f.players[0].techs = viewer === 'Germany'
     ? TECHS.slice(0, TECHS.indexOf('Industrialization') + 1)
     : ['Irrigation', 'BronzeWorking'];
   if (viewer === 'Byzantium' && heir !== 'none') {
     // The Heir stands beside the capital; "captured" puts him in the Mongols rival's hands, in view.
     const at = { q: capital.pos.q + 1, r: capital.pos.r };
-    const unit = spawnUnit(f, heir === 'own' ? 0 : 1, 'Heir', at, false);
+    const unit = spawnUnit(f, heir === 'own' ? 0 : 1, 'HeirToTheThrone', at, false);
     unit.heir_of = 0;
     // Your Soldier stands beside him, so the tile can offer the capture.
     if (heir === 'captured') for (const r of f.diplomacy!.relations) if (r.a + r.b === 1) r.state = 'War';
-    if (heir === 'captured') { spawnUnit(f, 0, 'Soldier', { q: capital.pos.q, r: capital.pos.r + 1 }, false); }
+    if (heir === 'captured') { spawnUnit(f, 0, 'Spearman', { q: capital.pos.q, r: capital.pos.r + 1 }, false); }
   }
   refreshVision(f);
-  const soldier = f.units.find((u) => u.owner === 0 && u.kind === 'Soldier')?.id ?? null;
-  const heirUnit = f.units.find((u) => u.kind === 'Heir')?.id ?? null;
+  const soldier = f.units.find((u) => u.owner === 0 && u.kind === 'Spearman')?.id ?? null;
+  const heirUnit = f.units.find((u) => u.kind === 'HeirToTheThrone')?.id ?? null;
   return { fixture: f, capital: capital.id, soldier, heirUnit, forged: own.filter((x) => x !== capital).map((c) => c.id), heirHex: viewer === 'Byzantium' ? { q: capital.pos.q + 1, r: capital.pos.r } : null };
 }

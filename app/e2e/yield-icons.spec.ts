@@ -60,7 +60,7 @@ for (const size of SIZES) test.describe(`yield icons ${size.width}x${size.height
       s.select({ kind: 'city', id: city.id }, true);
     });
     const panel = page.locator('.city-panel');
-    const card = panel.locator('.production-choice[data-item="b:Laboratory"]');
+    const card = panel.locator('.production-choice[data-item="b:Library"]');
     await expect(card).toBeVisible();
     await card.scrollIntoViewIfNeeded();
     if (!before) {

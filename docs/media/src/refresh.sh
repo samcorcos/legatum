@@ -18,9 +18,9 @@ cd "$root"
 [ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
 
 if [ "$capture" = 1 ]; then
-  [ -f app/src/wasm-pkg/legatum_bg.wasm ] || LEGATUM_PLAYTEST_PROFILE=1 scripts/build-wasm.sh
   [ -d app/node_modules ] || (cd app && npm ci)
-  (cd app && npm run build)
+  # The recorder's fixtures refuse a build that was not made for the e2e relay, and a stale engine would film old rules.
+  LEGATUM_PLAYTEST_PROFILE=1 LEGATUM_RELAY_URL=http://127.0.0.1:8787 scripts/build-web.sh
   (cd app && MEDIA_OUT="$masters" npx playwright test -c playwright.media.config.ts launch.media.ts --trace off)
 fi
 

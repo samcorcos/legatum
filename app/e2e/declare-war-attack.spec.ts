@@ -42,7 +42,7 @@ test('G20 ranged attack can target a city after the Soldier declares surprise Wa
   const city = { q: 19, r: 8 }; // fromOffset(23, 8)
   const ranger = await page.evaluate(() => {
     const s = (window as unknown as GameWindow).legatum.getState(), v = s.views![s.seat];
-    const u = v.units.find((u) => u.owner === v.me && u.kind === 'Ranger')!;
+    const u = v.units.find((u) => u.owner === v.me && u.kind === 'Archer')!;
     s.select({ kind: 'unit', id: u.id }); s.jumpTo(u.pos);
     return u.id;
   });

@@ -1,0 +1,1 @@
+Lanczos 256 px derivative of building-grandbazaar-stage2.png. See building-grandbazaar-stage2.prompt.txt for the image edit prompt.

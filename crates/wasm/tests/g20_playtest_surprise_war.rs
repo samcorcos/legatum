@@ -1,7 +1,7 @@
 //! Playtest G20, from the user's own game (playtest 3, engine 29a5b2a): on turn 102 they
-//! declared War on AI 5 (team 4, plain Peace, no treaty) and ordered their Soldier (#54) onto
-//! AI 5's Settler (#83). The declaration took effect on turn 103, so the Soldier held while the
-//! Settler walked away, which read as a bounce; the Soldier caught it on turn 103. The fixture
+//! declared War on AI 5 (team 4, plain Peace, no treaty) and ordered their Spearman (#54) onto
+//! AI 5's Settler (#83). The declaration took effect on turn 103, so the Spearman held while the
+//! Settler walked away, which read as a bounce; the Spearman caught it on turn 103. The fixture
 //! is the recorded state at the start of turn 102 (replayed from the save's tape with the
 //! playtest-3 engine) and the recorded orders of turns 102 and 103.
 use legatum_core::events::PursuitOutcome;

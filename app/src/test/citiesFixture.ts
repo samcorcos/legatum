@@ -32,17 +32,17 @@ export function citiesFixture(faction: Faction = 'Switzerland') {
   for (const r of f.diplomacy!.relations) r.state = 'Peace';
   const mine = f.cities.filter((c) => c.owner === 0).sort((a, b) => a.id - b.id);
   const spec: { name: string; population: number; buildings: BuildingKind[]; producing: ProductionItem | null; prod: number; banked?: number }[] = [
-    { name: 'Bern', population: 6, buildings: ['Laboratory', 'Workshop'], producing: item('Market'), prod: 40 },
-    { name: 'Zurich', population: 4, buildings: ['Laboratory'], producing: item('Granary'), prod: 10, banked: 200 },
+    { name: 'Bern', population: 6, buildings: ['Library', 'Workshop'], producing: item('Market'), prod: 40 },
+    { name: 'Zurich', population: 4, buildings: ['Library'], producing: item('Granary'), prod: 10, banked: 200 },
     { name: 'Basel', population: 7, buildings: ['Workshop'], producing: item('Granary'), prod: 20 },
     { name: 'Geneva', population: 2, buildings: [], producing: null, prod: 0 },
-    { name: 'Lugano', population: 3, buildings: [], producing: { kind: 'Unit', unit: 'Soldier' }, prod: 12 },
+    { name: 'Lugano', population: 3, buildings: [], producing: { kind: 'Unit', unit: 'Spearman' }, prod: 12 },
   ];
   mine.forEach((c, i) => {
     const sp = spec[i];
     c.name = sp.name; c.population = sp.population; c.buildings = sp.buildings; c.producing = sp.producing; c.prod = sp.prod;
     c.isCapital = i === 0;
-    if (sp.banked) c.productionBanked = [{ item: { kind: 'Wonder', building: 'RelayUplink', tile: neighbors(c.pos)[0] }, progress: sp.banked }];
+    if (sp.banked) c.productionBanked = [{ item: { kind: 'Wonder', building: 'GreatLibrary', tile: neighbors(c.pos)[0] }, progress: sp.banked }];
   });
   const known: TechId[] = ['Irrigation', 'BronzeWorking', 'Masonry', 'Currency', 'Writing', 'Philosophy', 'Electricity'];
   f.players[0].techs = [...known];

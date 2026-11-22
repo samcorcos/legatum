@@ -35,8 +35,8 @@ async function soldier({ tech, owned, gold, spare = 3 }: { tech: boolean; owned:
   const client = new FixtureClient();
   await client.newGame(await client.standardSetup('42', 'India', 'Byzantium', 'Ada', 'Bo'));
   const view: PlayerView = structuredClone(client.view(0));
-  const unit: UnitView = view.units.find((u) => u.owner === view.me && u.kind === 'Soldier')!;
-  unit.kind = 'Soldier';
+  const unit: UnitView = view.units.find((u) => u.owner === view.me && u.kind === 'Spearman')!;
+  unit.kind = 'Spearman';
   unit.upgrade_need = 'Iron';
   view.research.known = tech ? [...view.research.known, 'Mathematics'] : view.research.known.filter((t) => t !== 'Mathematics');
   view.tiles[tileIndex(unit.pos, view.width, view.height)].owner = owned ? view.me : null;
@@ -71,12 +71,12 @@ it.each([
 it('offers the newest researched upgrade for the summed step price', async () => {
   const { view, unit } = await soldier({ tech: true, owned: true, gold: 200 });
   view.research.known.push('Feudalism');
-  unit.upgrade_to = 'Trooper';
-  unit.upgrade_steps = ['Phalangite', 'Trooper'];
+  unit.upgrade_to = 'Pikeman';
+  unit.upgrade_steps = ['Phalangite', 'Pikeman'];
   unit.upgrade_breakdown = { total: 144, parts: [['Base upgrade Gold', 144]] };
   unit.upgrade_cost = 144;
   const check = upgradeCheck(unit, view, 200)!;
-  expect(check.to).toBe('Trooper');
+  expect(check.to).toBe('Pikeman');
   expect(check.cost).toBe(144);
 });
 
@@ -207,19 +207,19 @@ it('an unsupplied unit with no loss from the core shows its strength unchanged',
 });
 
 it('prices an upgrade one line per step, each with its own faction part', () => {
-  const b = upgradeStepBreakdown({ total: 164, parts: [['Base upgrade Gold', 60], ['Faction', 20], ['Base upgrade Gold', 84]] }, 'Soldier', ['Phalangite', 'Trooper'], 'Byzantium');
+  const b = upgradeStepBreakdown({ total: 164, parts: [['Base upgrade Gold', 60], ['Faction', 20], ['Base upgrade Gold', 84]] }, 'Spearman', ['Phalangite', 'Pikeman'], 'Byzantium');
   expect(b.parts.map(([, v]) => v)).toEqual([80, 84]);
   expect(b.parts[0][0]).toMatch(/^Spearman → /);
   expect(b.total).toBe(164);
 });
 
 it('prices the whole path as one line when a free step leaves no part to split on', () => {
-  const b = upgradeStepBreakdown({ total: 84, parts: [['Base upgrade Gold', 84]] }, 'Soldier', ['Phalangite', 'Trooper'], 'India');
+  const b = upgradeStepBreakdown({ total: 84, parts: [['Base upgrade Gold', 84]] }, 'Spearman', ['Phalangite', 'Pikeman'], 'India');
   expect(b.parts).toHaveLength(1);
   expect(b.parts[0][1]).toBe(84);
 });
 
-it.each(['Soldier', 'Trooper', 'AssaultTrooper', 'Ranger'] as const)(
+it.each(['Spearman', 'Pikeman', 'Musketman', 'Archer'] as const)(
   'describes Sparta %s health from the core wound-immunity data', async (kind) => {
     const { view, unit, client } = await soldier({ tech: true, owned: true, gold: 100 });
     view.players.find((p) => p.id === unit.owner)!.faction = 'Sparta';
@@ -230,7 +230,7 @@ it.each(['Soldier', 'Trooper', 'AssaultTrooper', 'Ranger'] as const)(
     const health = container.querySelector<HTMLElement>('.up-stat')!;
     act(() => health.click());
     const tip = document.getElementById(health.getAttribute('aria-describedby')!)!;
-    expect(tip.textContent).toContain(kind === 'Ranger'
+    expect(tip.textContent).toContain(kind === 'Archer'
       ? 'Strength drops by 1 per 10 HP lost'
       : 'Sparta infantry ignore wound strength penalties');
   },
@@ -343,7 +343,7 @@ it('Heal is offered only to a damaged unit, and where nothing heals it is off wi
 
 it('offers the auto-fire toggle to a ranged city garrison and queues its setting', async () => {
   const { view, unit, client } = await soldier({ tech: false, owned: true, gold: 100 });
-  unit.kind = 'Ranger'; unit.ranged = 12; unit.range = 2;
+  unit.kind = 'Archer'; unit.ranged = 12; unit.range = 2;
   view.cities.push({ id: 99, owner: view.me, pos: unit.pos, name: 'Home', detail: null } as PlayerView['cities'][number]);
   useGame.setState({ client, views: [view], humans: [0], orders: [[]], errors: [[]], ready: [false], seat: 0, selection: { kind: 'unit', id: unit.id } });
   act(() => root.render(<UnitPanel unit={unit} view={view} />));
@@ -431,7 +431,7 @@ async function settlerNearCapital(offset: { q: number; r: number }) {
   await client.endTurn({});
   const view: PlayerView = structuredClone(client.view(0));
   const capital = view.cities.find((c) => c.owner === view.me)!;
-  const unit: UnitView = { ...view.units.find((u) => u.owner === view.me && u.kind === 'Soldier')!, kind: 'Settler', military: false,
+  const unit: UnitView = { ...view.units.find((u) => u.owner === view.me && u.kind === 'Spearman')!, kind: 'Settler', military: false,
     pos: { q: capital.pos.q + offset.q, r: capital.pos.r + offset.r } };
   view.units = view.units.map((u) => (u.id === unit.id ? unit : u));
   useGame.setState({ client, views: [view], humans: [0], orders: [[]], errors: [[]], ready: [false], seat: 0, selection: { kind: 'unit', id: unit.id } });
@@ -485,7 +485,7 @@ it('lets a full-health Roman veteran found with no Gold and explains the unit co
   const { view, unit } = await settlerNearCapital({ q: 4, r: 0 });
   view.players.find((p) => p.id === view.me)!.faction = 'Rome';
   view.economy.gold = 0;
-  unit.kind = 'Soldier'; unit.military = true; unit.level = 1; unit.hp = 100;
+  unit.kind = 'Spearman'; unit.military = true; unit.level = 1; unit.hp = 100;
   const i = tileIndex(unit.pos, view.width, view.height);
   view.tiles[i] = { ...view.tiles[i], owner: null, terrain: 'Plains', explored: true };
   act(() => root.render(<UnitPanel unit={unit} view={view} />));

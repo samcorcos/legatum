@@ -122,7 +122,7 @@ fn move_order(unit: UnitId, to: Hex) -> BTreeMap<PlayerId, Vec<Order>> {
 fn mongols_soldiers_scouts_and_settlers_cannot_cross_at_peace() {
     let mut s = world(Faction::Mongols);
     for (kind, row) in [
-        (UnitKind::Soldier, 2),
+        (UnitKind::Spearman, 2),
         (UnitKind::Scout, 4),
         (UnitKind::Settler, 6),
     ] {
@@ -147,7 +147,7 @@ fn mongols_soldiers_scouts_and_settlers_cannot_cross_at_peace() {
 #[test]
 fn a_soldier_ordered_across_the_border_by_a_stale_client_never_enters() {
     let mut s = world(Faction::Mongols);
-    let soldier = spawn_unit(&mut s, ME, UnitKind::Soldier, h(3, 2));
+    let soldier = spawn_unit(&mut s, ME, UnitKind::Spearman, h(3, 2));
     let (next, _) = resolve_turn(&s, &move_order(soldier, h(5, 2)));
     let at = next.units[&soldier].pos;
     assert_ne!(
@@ -161,7 +161,7 @@ fn a_soldier_ordered_across_the_border_by_a_stale_client_never_enters() {
 fn the_same_soldier_crosses_once_at_war() {
     let mut s = world(Faction::Mongols);
     set_relation(&mut s, RelationState::War);
-    let soldier = spawn_unit(&mut s, ME, UnitKind::Soldier, h(3, 2));
+    let soldier = spawn_unit(&mut s, ME, UnitKind::Spearman, h(3, 2));
     assert!(
         rules::validate_orders(
             &s,
@@ -177,8 +177,8 @@ fn the_same_soldier_crosses_once_at_war() {
 
 #[test]
 fn mongols_keeps_its_extra_move() {
-    let plain = data::unit_stats_for(Faction::Celts, UnitKind::Trooper).moves;
-    let glass = data::unit_stats_for(Faction::Mongols, UnitKind::Trooper).moves;
+    let plain = data::unit_stats_for(Faction::Celts, UnitKind::Pikeman).moves;
+    let glass = data::unit_stats_for(Faction::Mongols, UnitKind::Pikeman).moves;
     assert_eq!(glass, plain + 1);
 }
 
@@ -200,7 +200,7 @@ fn hall_world() -> (GameState, CityId) {
 #[test]
 fn the_courier_hall_opens_its_holders_land_to_a_soldier_at_peace_and_closes_when_it_falls() {
     let (mut s, city) = hall_world();
-    let soldier = spawn_unit(&mut s, ME, UnitKind::Soldier, h(3, 2));
+    let soldier = spawn_unit(&mut s, ME, UnitKind::Spearman, h(3, 2));
     let go = |s: &GameState| {
         rules::validate_orders(
             s,
@@ -216,7 +216,7 @@ fn the_courier_hall_opens_its_holders_land_to_a_soldier_at_peace_and_closes_when
         .get_mut(&city)
         .unwrap()
         .buildings
-        .insert(BuildingKind::CourierHall);
+        .insert(BuildingKind::YamRelayStation);
     s.player_mut(THEM).hall_city = Some(city);
     assert!(go(&s).is_empty(), "{:?}", go(&s));
     // Resolution agrees: the army walks into the holder's land, then stands there at Peace.
@@ -237,6 +237,6 @@ fn the_courier_hall_opens_its_holders_land_to_a_soldier_at_peace_and_closes_when
     }
     // The city falls (razed): the road is gone and the soldier, stranded inside, is closed out again.
     s.cities.remove(&city);
-    assert!(!s.passage_allowed(ME, UnitKind::Soldier, Some(THEM)));
+    assert!(!s.passage_allowed(ME, UnitKind::Spearman, Some(THEM)));
     assert!(!go(&s).is_empty());
 }

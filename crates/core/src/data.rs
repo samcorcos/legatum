@@ -50,7 +50,7 @@ const fn melee_line() -> [i32; CURVE_ERAS] {
 /// those relations and puts them on the new curve, so same-era balance is unchanged and only the
 /// gap between eras grows. The Machine Age, inserted later, takes 49: between its neighbours, and
 /// the one value that puts its units on the proposal's numbers (Trench Infantry 74, Howitzer
-/// 62/80, Landship 86, Biplane 60). The Modern era takes 50 like the World War era before it, so
+/// 62/80, EarlyTank 86, Biplane 60). The Modern era takes 50 like the World War era before it, so
 /// each Modern unit keeps its World War line's design number and stands one 20% step above it.
 pub const DESIGN_MELEE_LINE: [i32; CURVE_ERAS] = [20, 26, 32, 38, 44, 49, 50, 50, 56];
 
@@ -176,7 +176,7 @@ pub const SCIENCE_HISTORY_TURNS: usize = 10;
 pub const HEIR_COST: i32 = 800;
 /// The Courier Hall's Production cost (provisional, to calibrate): pricey, one per Mongols
 /// empire, and it opens the holder's whole land to every empire.
-pub const COURIER_HALL_COST: i32 = 600;
+pub const YAM_RELAY_STATION_COST: i32 = 600;
 /// Roadworks: Production cost, and the range in hexes of the cities its city is linked to.
 pub const ROADWORKS_COST: i32 = 140;
 /// Siege (user decision 2026-10-22): a Gold upgrade that makes
@@ -266,13 +266,10 @@ pub fn design_stats(kind: UnitKind) -> UnitStats {
         UnitKind::Scout => (60, 3, 5, 0, 0, true, None, None),
         // Settler cost here is the base; see economy::production_cost for the rising cost.
         UnitKind::Settler => (SETTLER_BASE_COST, 2, 0, 0, 0, false, None, None),
-        UnitKind::Heir => (HEIR_COST, 2, 0, 0, 0, false, None, None),
+        UnitKind::HeirToTheThrone => (HEIR_COST, 2, 0, 0, 0, false, None, None),
         // One unit per class in every era (user, 2026-10-10). The melee line (the spear line):
-        // Spearman, Phalangite, Pikeman, Musketman, Rifleman, Infantry, Hunter-Killer. The
-        // identifiers keep their pre-overhaul spelling (Soldier is the Spearman, Trooper the
-        // Pikeman, AssaultTrooper the Musketman) so saves and orders stay stable; `unit_name`
-        // gives the historical names.
-        UnitKind::Soldier => (80, 2, 20, 0, 0, true, None, Some(UnitKind::Phalangite)),
+        // Spearman, Phalangite, Pikeman, Musketman, Rifleman, Infantry, Hunter-Killer.
+        UnitKind::Spearman => (80, 2, 20, 0, 0, true, None, Some(UnitKind::Phalangite)),
         UnitKind::Phalangite => (
             110,
             2,
@@ -281,9 +278,9 @@ pub fn design_stats(kind: UnitKind) -> UnitStats {
             0,
             true,
             Some(TechId::Mathematics),
-            Some(UnitKind::Trooper),
+            Some(UnitKind::Pikeman),
         ),
-        UnitKind::Trooper => (
+        UnitKind::Pikeman => (
             152,
             2,
             32,
@@ -291,9 +288,9 @@ pub fn design_stats(kind: UnitKind) -> UnitStats {
             0,
             true,
             Some(TechId::Feudalism),
-            Some(UnitKind::AssaultTrooper),
+            Some(UnitKind::Musketman),
         ),
-        UnitKind::AssaultTrooper => (
+        UnitKind::Musketman => (
             210,
             2,
             38,
@@ -348,7 +345,7 @@ pub fn design_stats(kind: UnitKind) -> UnitStats {
         UnitKind::HunterKiller => (552, 2, 56, 0, 0, true, Some(TechId::Robotics), None),
         // The ranged line: Archer, Composite Archer, Crossbowman, Arquebusier, Field Cannon,
         // Artillery, Combat Drone.
-        UnitKind::Ranger => (
+        UnitKind::Archer => (
             132,
             2,
             8,
@@ -366,9 +363,9 @@ pub fn design_stats(kind: UnitKind) -> UnitStats {
             2,
             true,
             Some(TechId::Engineering),
-            Some(UnitKind::Marksman),
+            Some(UnitKind::Crossbowman),
         ),
-        UnitKind::Marksman => (
+        UnitKind::Crossbowman => (
             214,
             2,
             22,
@@ -428,9 +425,9 @@ pub fn design_stats(kind: UnitKind) -> UnitStats {
             ROCKET_ARTILLERY_RANGE,
             true,
             Some(TechId::GuidedMissiles),
-            Some(UnitKind::Drone),
+            Some(UnitKind::CombatDrone),
         ),
-        UnitKind::Drone => (
+        UnitKind::CombatDrone => (
             560,
             3,
             50,
@@ -491,13 +488,13 @@ pub fn design_stats(kind: UnitKind) -> UnitStats {
             0,
             true,
             Some(TechId::MilitaryScience),
-            Some(UnitKind::Landship),
+            Some(UnitKind::EarlyTank),
         ),
-        // The Landship: the first armour, slow (`LANDSHIP_MOVES`) and below the 130% rider rule,
+        // The EarlyTank: the first armour, slow (`EARLY_TANK_MOVES`) and below the 130% rider rule,
         // since it is a machine, not a horse.
-        UnitKind::Landship => (
+        UnitKind::EarlyTank => (
             440,
-            LANDSHIP_MOVES,
+            EARLY_TANK_MOVES,
             57,
             0,
             0,
@@ -630,16 +627,16 @@ pub fn design_stats(kind: UnitKind) -> UnitStats {
 pub fn unit_class(kind: UnitKind) -> Option<UnitClass> {
     use UnitKind::*;
     match kind {
-        Soldier | Phalangite | Trooper | AssaultTrooper | Rifleman | TrenchInfantry | Infantry
+        Spearman | Phalangite | Pikeman | Musketman | Rifleman | TrenchInfantry | Infantry
         | MechanisedInfantry | HunterKiller => Some(UnitClass::Melee),
-        Ranger | CompositeArcher | Marksman | Arquebusier | FieldCannon | Howitzer | Artillery
-        | RocketArtillery | Drone => Some(UnitClass::Ranged),
-        Horseman | Cataphract | Knight | Cuirassier | Cavalry | Landship | Tank
+        Archer | CompositeArcher | Crossbowman | Arquebusier | FieldCannon | Howitzer
+        | Artillery | RocketArtillery | CombatDrone => Some(UnitClass::Ranged),
+        Horseman | Cataphract | Knight | Cuirassier | Cavalry | EarlyTank | Tank
         | MainBattleTank | AutonomousArmour => Some(UnitClass::Mounted),
         Biplane | Fighter | Bomber | JetFighter | JetBomber | StealthFighter | StealthBomber => {
             Some(UnitClass::Air)
         }
-        Scout | Settler | Heir => None,
+        Scout | Settler | HeirToTheThrone => None,
     }
 }
 
@@ -735,8 +732,8 @@ pub const MOUNTED_MOVES: i32 = 4;
 /// The Tank outruns the rest of the mounted class (user, 2026-10-19: Tanks get 5 moves), and the
 /// Autonomous Armour that replaces it outruns the Tank (6; the coordinator's correction of the same day).
 pub const TANK_MOVES: i32 = 5;
-/// The Landship, the Machine Age's first armour, is slow (proposal 2026-11-14: "armour is slow").
-pub const LANDSHIP_MOVES: i32 = 3;
+/// The EarlyTank, the Machine Age's first armour, is slow (proposal 2026-11-14: "armour is slow").
+pub const EARLY_TANK_MOVES: i32 = 3;
 pub const AUTONOMOUS_ARMOUR_MOVES: i32 = 6;
 
 /// The Keshig, the Mongol horse archer (`unit_stats_for`): the Mongols' Classical mounted unit
@@ -789,29 +786,29 @@ pub fn building_stats(kind: BuildingKind) -> BuildingStats {
     use BuildingKind::*;
     let (cost, yields, city_strength, requires) = match kind {
         // The former Japan building is reserved for its future redesign.
-        BroodHall => (50, Yields::new(2, 0, 0, 0), 0, None),
+        RiceStorehouse => (50, Yields::new(2, 0, 0, 0), 0, None),
         // Buildable from turn 1 (Irrigation does not unlock it).
         Granary => (50, Yields::new(2, 0, 0, 0), 0, None),
         Workshop => (60, Yields::new(0, 2, 0, 0), 0, Some(TechId::BronzeWorking)),
         Market => (60, Yields::new(0, 0, 3, 0), 0, Some(TechId::Currency)),
         // Library
-        Laboratory => (80, Yields::new(0, 0, 0, 3), 0, Some(TechId::Writing)),
+        Library => (80, Yields::new(0, 0, 0, 3), 0, Some(TechId::Writing)),
         Walls => (100, Yields::ZERO, 10, Some(TechId::Masonry)),
         // Mill
-        Hydroponics => (200, Yields::new(3, 0, 0, 0), 0, Some(TechId::Feudalism)),
+        Mill => (200, Yields::new(3, 0, 0, 0), 0, Some(TechId::Feudalism)),
         // Forge
-        MachineShop => (
+        Forge => (
             // A production ladder must leave time to punish its construction window.
             320,
             Yields::new(0, 3, 0, 0),
             0,
             Some(TechId::IronWorking),
         ),
-        WarShrine => (160, Yields::ZERO, 0, Some(TechId::Chivalry)),
+        Agoge => (160, Yields::ZERO, 0, Some(TechId::Chivalry)),
         // University
-        College => (240, Yields::new(0, 0, 0, 4), 0, Some(TechId::Education)),
+        University => (240, Yields::new(0, 0, 0, 4), 0, Some(TechId::Education)),
         // Research Lab
-        InferenceCore => (360, Yields::new(0, 0, 0, 6), 0, Some(TechId::Electronics)),
+        ResearchLab => (360, Yields::new(0, 0, 0, 6), 0, Some(TechId::Electronics)),
         // Stock Exchange: the Gold line's third tier (Market, Bank), priced like the Research Lab.
         StockExchange => (360, Yields::new(0, 0, 6, 0), 0, Some(TechId::Electricity)),
         // Supermarket: the Food line's third tier (Granary, Mill), priced like the Stock Exchange.
@@ -829,9 +826,9 @@ pub fn building_stats(kind: BuildingKind) -> BuildingStats {
             Some(TechId::GuidedMissiles),
         ),
         // Bank
-        Clearinghouse => (200, Yields::new(0, 0, 4, 0), 0, Some(TechId::Banking)),
+        Bank => (200, Yields::new(0, 0, 4, 0), 0, Some(TechId::Banking)),
         // Factory
-        Autoworks => (
+        Factory => (
             440,
             Yields::new(0, 5, 0, 0),
             0,
@@ -847,16 +844,16 @@ pub fn building_stats(kind: BuildingKind) -> BuildingStats {
         // a first pass the owner may veto: Pyramids 240 -> 360 and Great Library 600 -> 400 were
         // the two outliers more than 25% off it; the rest are within it).
         // Great Library
-        RelayUplink => (400, Yields::ZERO, 0, Some(TechId::Philosophy)),
+        GreatLibrary => (400, Yields::ZERO, 0, Some(TechId::Philosophy)),
         Pyramids => (360, Yields::new(0, 1, 0, 0), 0, Some(TechId::Masonry)),
         HagiaSophia => (400, Yields::new(0, 0, 0, 2), 0, Some(TechId::Machinery)),
         EiffelTower => (720, Yields::new(0, 0, 3, 0), 0, Some(TechId::Steel)),
-        IterReactor => (900, Yields::new(0, 0, 0, 4), 0, Some(TechId::FusionPower)),
+        IterFusionReactor => (900, Yields::new(0, 0, 0, 4), 0, Some(TechId::FusionPower)),
         // Royal Arsenal
-        PlanetaryFoundry => (600, Yields::ZERO, 0, Some(TechId::Cannonry)),
+        RoyalArsenal => (600, Yields::ZERO, 0, Some(TechId::Cannonry)),
         // Grand Bazaar
-        WorldExchange => (600, Yields::ZERO, 0, Some(TechId::Banking)),
-        CourierHall => (COURIER_HALL_COST, Yields::ZERO, 0, None),
+        GrandBazaar => (600, Yields::ZERO, 0, Some(TechId::Banking)),
+        YamRelayStation => (YAM_RELAY_STATION_COST, Yields::ZERO, 0, None),
         ImperialDiwan => (IMPERIAL_DIWAN_COST, Yields::ZERO, 0, Some(TechId::Currency)),
         Roadworks => (
             ROADWORKS_COST,
@@ -870,7 +867,7 @@ pub fn building_stats(kind: BuildingKind) -> BuildingStats {
         yields,
         city_strength,
         requires,
-        war_building: matches!(kind, Walls | Castle | StarFort | WarShrine),
+        war_building: matches!(kind, Walls | Castle | StarFort | Agoge),
     }
 }
 
@@ -1207,7 +1204,10 @@ pub fn indirect_fire(kind: UnitKind, knows_steel: bool) -> bool {
     knows_steel
         && matches!(
             kind,
-            UnitKind::Howitzer | UnitKind::Artillery | UnitKind::RocketArtillery | UnitKind::Drone
+            UnitKind::Howitzer
+                | UnitKind::Artillery
+                | UnitKind::RocketArtillery
+                | UnitKind::CombatDrone
         )
 }
 
@@ -1246,7 +1246,7 @@ pub fn siege_gold(kind: UnitKind) -> i32 {
 /// The Spartan Hoplite's phalanx (user, 2026-10-17: a unique piece must differ from what it
 /// replaces): strength a Hoplite gains, attacking or defending, while another Hoplite of its empire
 /// stands on an adjacent tile at the fight's stage. One neighbour is enough (a line does not
-/// stack). Only the Soldier kind is a Hoplite: an upgraded unit is a Phalangite and loses it.
+/// stack). Only the Spearman kind is a Hoplite: an upgraded unit is a Phalangite and loses it.
 pub const HOPLITE_PHALANX_STRENGTH: i32 = 5;
 
 /// Whether this faction's unit of this kind is a Spartan Hoplite.
@@ -1255,10 +1255,10 @@ pub fn is_hoplite(faction: Faction, kind: UnitKind) -> bool {
 }
 
 /// `is_hoplite` with the faction rules in `off` switched off: without the phalanx rule the Spartan
-/// Soldier is an ordinary Spearman (ablation).
+/// Spearman is an ordinary Spearman (ablation).
 pub fn is_hoplite_rules(off: FactionRuleSet, faction: Faction, kind: UnitKind) -> bool {
     faction == Faction::Sparta
-        && kind == UnitKind::Soldier
+        && kind == UnitKind::Spearman
         && !off.contains(FactionRule::SpartaPhalanx)
 }
 
@@ -1290,15 +1290,15 @@ pub const PANZER_MOVES: i32 = 1;
 /// exactly one (user, 2026-11-14). Mercenary Companies sell nothing else (`company`).
 pub fn special_unit(faction: Faction) -> UnitKind {
     match faction {
-        Faction::Switzerland => UnitKind::Trooper,
+        Faction::Switzerland => UnitKind::Pikeman,
         Faction::Mongols => KESHIG_KIND,
-        Faction::Sparta | Faction::Aztecs => UnitKind::Soldier,
+        Faction::Sparta | Faction::Aztecs => UnitKind::Spearman,
         Faction::Germany => UnitKind::Tank,
         Faction::India => UnitKind::Knight,
-        Faction::Byzantium => UnitKind::Trooper,
+        Faction::Byzantium => UnitKind::Pikeman,
         Faction::Celts => UnitKind::Phalangite,
         Faction::Athens => UnitKind::CompositeArcher,
-        Faction::Egypt => UnitKind::Soldier,
+        Faction::Egypt => UnitKind::Spearman,
         Faction::Rome => UnitKind::Phalangite,
     }
 }
@@ -1306,7 +1306,7 @@ pub fn special_unit(faction: Faction) -> UnitKind {
 /// Whether this faction's unit of this kind is an Aztec Eagle Warrior.
 pub fn is_eagle_warrior_rules(off: FactionRuleSet, faction: Faction, kind: UnitKind) -> bool {
     faction == Faction::Aztecs
-        && kind == UnitKind::Soldier
+        && kind == UnitKind::Spearman
         && !off.contains(FactionRule::AztecsEagleWarrior)
 }
 
@@ -1327,7 +1327,7 @@ pub fn is_peltast_rules(off: FactionRuleSet, faction: Faction, kind: UnitKind) -
 /// The Medjay replaces Egypt's Spearman; its sight is applied at the shared sight source.
 pub fn is_medjay_rules(off: FactionRuleSet, faction: Faction, kind: UnitKind) -> bool {
     faction == Faction::Egypt
-        && kind == UnitKind::Soldier
+        && kind == UnitKind::Spearman
         && !off.contains(FactionRule::EgyptMedjay)
 }
 
@@ -1341,7 +1341,7 @@ pub fn is_war_elephant_rules(off: FactionRuleSet, faction: Faction, kind: UnitKi
 /// Whether this faction's unit of this kind is a Swiss Reisläufer.
 pub fn is_reislaufer_rules(off: FactionRuleSet, faction: Faction, kind: UnitKind) -> bool {
     faction == Faction::Switzerland
-        && kind == UnitKind::Trooper
+        && kind == UnitKind::Pikeman
         && !off.contains(FactionRule::SwissReislaufer)
 }
 
@@ -1356,11 +1356,9 @@ pub fn is_panzer_rules(off: FactionRuleSet, faction: Faction, kind: UnitKind) ->
 /// The Sparta alone can build the War Shrine.
 pub fn faction_excluded_building(faction: Faction, building: BuildingKind) -> Option<&'static str> {
     match (faction, building) {
-        (f, BuildingKind::WarShrine) if f != Faction::Sparta => {
-            Some("Only Sparta can build an Agoge")
-        }
-        (_, BuildingKind::BroodHall) => Some("No people can build the Rice Storehouse yet"),
-        (f, BuildingKind::CourierHall) if f != Faction::Mongols => {
+        (f, BuildingKind::Agoge) if f != Faction::Sparta => Some("Only Sparta can build an Agoge"),
+        (_, BuildingKind::RiceStorehouse) => Some("No people can build the Rice Storehouse yet"),
+        (f, BuildingKind::YamRelayStation) if f != Faction::Mongols => {
             Some("Only Mongols can build the Yam Relay Station")
         }
         (f, BuildingKind::ImperialDiwan) if f != Faction::India => {
@@ -1423,7 +1421,7 @@ pub fn available_to_faction_rules(
             faction == Faction::Germany && !off.contains(FactionRule::GermanyIndustryProjects)
         }
         ProductionItem::Unit {
-            unit: UnitKind::Heir,
+            unit: UnitKind::HeirToTheThrone,
         } => faction == Faction::Byzantium,
         ProductionItem::Unit { unit } => {
             (faction != Faction::Rome
@@ -1447,8 +1445,8 @@ pub fn available_to_faction_rules(
                 return false;
             }
             is_great_work(building)
-                || building == BuildingKind::WarShrine
-                || building == BuildingKind::CourierHall
+                || building == BuildingKind::Agoge
+                || building == BuildingKind::YamRelayStation
                 || building == BuildingKind::ImperialDiwan
                 || building == BuildingKind::AirDefence
                 || building_stats_for_rules(off, faction, building).city_strength > 0
@@ -1508,12 +1506,12 @@ pub fn unit_name(kind: UnitKind) -> &'static str {
     match kind {
         UnitKind::Scout => "Scout",
         UnitKind::Settler => "Settler",
-        UnitKind::Soldier => "Spearman",
-        UnitKind::Ranger => "Archer",
-        UnitKind::Trooper => "Pikeman",
-        UnitKind::Marksman => "Crossbowman",
-        UnitKind::AssaultTrooper => "Musketman",
-        UnitKind::Heir => "Heir to the Throne",
+        UnitKind::Spearman => "Spearman",
+        UnitKind::Archer => "Archer",
+        UnitKind::Pikeman => "Pikeman",
+        UnitKind::Crossbowman => "Crossbowman",
+        UnitKind::Musketman => "Musketman",
+        UnitKind::HeirToTheThrone => "Heir to the Throne",
         UnitKind::Horseman => "Horseman",
         UnitKind::Knight => "Knight",
         UnitKind::Cavalry => "Cavalry",
@@ -1524,7 +1522,7 @@ pub fn unit_name(kind: UnitKind) -> &'static str {
         UnitKind::HunterKiller => "Hunter-Killer",
         UnitKind::FieldCannon => "Field Cannon",
         UnitKind::Artillery => "Artillery",
-        UnitKind::Drone => "Combat Drone",
+        UnitKind::CombatDrone => "Combat Drone",
         UnitKind::Fighter => "Fighter",
         UnitKind::Bomber => "Bomber",
         UnitKind::StealthFighter => "Stealth Fighter",
@@ -1536,7 +1534,7 @@ pub fn unit_name(kind: UnitKind) -> &'static str {
         UnitKind::Cuirassier => "Cuirassier",
         UnitKind::TrenchInfantry => "Trench Infantry",
         UnitKind::Howitzer => "Howitzer",
-        UnitKind::Landship => "Early Tank",
+        UnitKind::EarlyTank => "Early Tank",
         UnitKind::Biplane => "Biplane",
         UnitKind::MechanisedInfantry => "Mechanised Infantry",
         UnitKind::MainBattleTank => "Main Battle Tank",
@@ -1546,38 +1544,34 @@ pub fn unit_name(kind: UnitKind) -> &'static str {
     }
 }
 
-/// Display names. The identifiers keep their old (sci-fi era) spelling so saves, orders and the
-/// wire format stay stable; the names are historical: Laboratory is the Library, College the
-/// University, Clearinghouse the Bank, Hydroponics the Mill, MachineShop
-/// the Forge, Autoworks the Factory, InferenceCore the Research Lab,
-/// Castle and StarFort are Walls tiers 2 and 3. The three existing world wonders retain their
-/// saved identifiers: Great Library (RelayUplink), Royal Arsenal (PlanetaryFoundry), and
-/// Grand Bazaar (WorldExchange).
+/// Display names. Each identifier is the PascalCase of its display name; names used before the
+/// 2026-11-22 rename (`Laboratory`, `RelayUplink`, ...) still load through the serde aliases in `types.rs`.
+/// Castle and StarFort are Walls tiers 2 and 3.
 pub fn building_name(kind: BuildingKind) -> &'static str {
     match kind {
-        BuildingKind::BroodHall => "Rice Storehouse",
+        BuildingKind::RiceStorehouse => "Rice Storehouse",
         BuildingKind::Granary => "Granary",
         BuildingKind::Workshop => "Workshop",
         BuildingKind::Market => "Market",
-        BuildingKind::Laboratory => "Library",
+        BuildingKind::Library => "Library",
         BuildingKind::Walls => "Walls",
-        BuildingKind::RelayUplink => "Great Library",
+        BuildingKind::GreatLibrary => "Great Library",
         BuildingKind::Pyramids => "Pyramids",
         BuildingKind::HagiaSophia => "Hagia Sophia",
         BuildingKind::EiffelTower => "Eiffel Tower",
-        BuildingKind::IterReactor => "ITER Fusion Reactor",
-        BuildingKind::PlanetaryFoundry => "Royal Arsenal",
-        BuildingKind::WorldExchange => "Grand Bazaar",
-        BuildingKind::Hydroponics => "Mill",
-        BuildingKind::MachineShop => "Forge",
-        BuildingKind::WarShrine => "Agoge",
-        BuildingKind::College => "University",
-        BuildingKind::InferenceCore => "Research Lab",
-        BuildingKind::Clearinghouse => "Bank",
-        BuildingKind::Autoworks => "Factory",
+        BuildingKind::IterFusionReactor => "ITER Fusion Reactor",
+        BuildingKind::RoyalArsenal => "Royal Arsenal",
+        BuildingKind::GrandBazaar => "Grand Bazaar",
+        BuildingKind::Mill => "Mill",
+        BuildingKind::Forge => "Forge",
+        BuildingKind::Agoge => "Agoge",
+        BuildingKind::University => "University",
+        BuildingKind::ResearchLab => "Research Lab",
+        BuildingKind::Bank => "Bank",
+        BuildingKind::Factory => "Factory",
         BuildingKind::Castle => "Castle",
         BuildingKind::StarFort => "Star Fort",
-        BuildingKind::CourierHall => "Yam Relay Station",
+        BuildingKind::YamRelayStation => "Yam Relay Station",
         BuildingKind::ImperialDiwan => "Imperial Diwan",
         BuildingKind::Roadworks => "Roadworks",
         BuildingKind::StockExchange => "Stock Exchange",
@@ -1679,14 +1673,14 @@ pub fn building_stats_for_rules(
             s.cost += 20;
             s.city_strength = 15;
         }
-        (Faction::Germany, BuildingKind::MachineShop) => {
+        (Faction::Germany, BuildingKind::Forge) => {
             if !off.contains(FactionRule::GermanyRuhrProduction) {
                 s.yields.production = 6;
             }
         }
-        (Faction::Athens, BuildingKind::Laboratory) if !off.contains(FactionRule::AthensLyceum) => {
+        (Faction::Athens, BuildingKind::Library) if !off.contains(FactionRule::AthensLyceum) => {
             s.cost = 70;
-            // Keep the science lead in the base family: a population-gated College
+            // Keep the science lead in the base family: a population-gated University
             // should not be the prerequisite for a scientist's useful research window.
             s.yields.science = 6;
         }
@@ -1700,7 +1694,7 @@ pub fn building_stats_for_rules(
         {
             s.yields.gold = 1;
         }
-        (Faction::India, BuildingKind::BroodHall) => {
+        (Faction::India, BuildingKind::RiceStorehouse) => {
             // Retired Japan building in an old save: its Food bonus does not follow India.
             s.yields = Yields::ZERO;
         }
@@ -1794,17 +1788,17 @@ pub fn paid_military_upkeep_rules(off: FactionRuleSet, faction: Faction, paid: i
 
 pub fn unit_name_for(faction: Faction, kind: UnitKind) -> &'static str {
     match (faction, kind) {
-        (Faction::Byzantium, UnitKind::Trooper) => "Tagmatic Soldier",
+        (Faction::Byzantium, UnitKind::Pikeman) => "Tagmatic Soldier",
         (Faction::Mongols, KESHIG_KIND) => "Keshig",
-        (Faction::Sparta, UnitKind::Soldier) => "Spartan Hoplite",
-        (Faction::Aztecs, UnitKind::Soldier) => "Eagle Warrior",
+        (Faction::Sparta, UnitKind::Spearman) => "Spartan Hoplite",
+        (Faction::Aztecs, UnitKind::Spearman) => "Eagle Warrior",
         (Faction::Celts, UnitKind::Phalangite) => "Gaesatae",
         (Faction::Athens, UnitKind::CompositeArcher) => "Peltast",
         (Faction::Rome, UnitKind::Phalangite) => "Legionary",
         (Faction::India, UnitKind::Knight) => "War Elephant",
-        (Faction::Switzerland, UnitKind::Trooper) => "Reisläufer",
+        (Faction::Switzerland, UnitKind::Pikeman) => "Reisläufer",
         (Faction::Germany, UnitKind::Tank) => "Panzer",
-        (Faction::Egypt, UnitKind::Soldier) => "Medjay",
+        (Faction::Egypt, UnitKind::Spearman) => "Medjay",
         _ => unit_name(kind),
     }
 }
@@ -1889,20 +1883,20 @@ pub fn faction_unavailable_reason(item: ProductionItem, faction: Faction) -> Opt
         }
         ProductionItem::Project { .. } => "Only German cities can run industry projects".into(),
         ProductionItem::Building {
-            building: BuildingKind::BroodHall,
+            building: BuildingKind::RiceStorehouse,
         } => "No people can build the Rice Storehouse yet".into(),
         ProductionItem::Building {
             building: BuildingKind::ImperialDiwan,
         } => "Only India can build the Imperial Diwan".into(),
         ProductionItem::Building {
-            building: BuildingKind::CourierHall,
+            building: BuildingKind::YamRelayStation,
         }
         | ProductionItem::Wonder {
-            building: BuildingKind::CourierHall,
+            building: BuildingKind::YamRelayStation,
             ..
         } => "Only Mongols can build the Yam Relay Station".into(),
         ProductionItem::Unit {
-            unit: UnitKind::Heir,
+            unit: UnitKind::HeirToTheThrone,
         } => "Only Byzantium can train a Heir to the Throne".into(),
         _ => format!("Does nothing for {}", faction_name(faction)),
     })
@@ -1942,8 +1936,8 @@ pub fn player_unavailable_reason_rules(
 pub fn building_name_for(faction: Faction, kind: BuildingKind) -> &'static str {
     match (faction, kind) {
         (Faction::Switzerland, BuildingKind::Walls) => "Alpine Redoubt",
-        (Faction::Germany, BuildingKind::MachineShop) => "Ruhr Foundry",
-        (Faction::Athens, BuildingKind::Laboratory) => "Lyceum",
+        (Faction::Germany, BuildingKind::Forge) => "Ruhr Foundry",
+        (Faction::Athens, BuildingKind::Library) => "Lyceum",
         (Faction::India, BuildingKind::Market) => "Revenue Office",
         (Faction::Egypt, BuildingKind::Granary) => "Royal Granary",
         (Faction::Rome, BuildingKind::Walls) => "Castrum",
@@ -1953,14 +1947,14 @@ pub fn building_name_for(faction: Faction, kind: BuildingKind) -> &'static str {
 
 pub fn building_predecessor(kind: BuildingKind) -> Option<BuildingKind> {
     match kind {
-        BuildingKind::Hydroponics => Some(BuildingKind::Granary),
-        BuildingKind::MachineShop => Some(BuildingKind::Workshop),
-        BuildingKind::College => Some(BuildingKind::Laboratory),
-        BuildingKind::InferenceCore => Some(BuildingKind::College),
-        BuildingKind::Clearinghouse => Some(BuildingKind::Market),
-        BuildingKind::StockExchange => Some(BuildingKind::Clearinghouse),
-        BuildingKind::Supermarket => Some(BuildingKind::Hydroponics),
-        BuildingKind::Autoworks => Some(BuildingKind::MachineShop),
+        BuildingKind::Mill => Some(BuildingKind::Granary),
+        BuildingKind::Forge => Some(BuildingKind::Workshop),
+        BuildingKind::University => Some(BuildingKind::Library),
+        BuildingKind::ResearchLab => Some(BuildingKind::University),
+        BuildingKind::Bank => Some(BuildingKind::Market),
+        BuildingKind::StockExchange => Some(BuildingKind::Bank),
+        BuildingKind::Supermarket => Some(BuildingKind::Mill),
+        BuildingKind::Factory => Some(BuildingKind::Forge),
         BuildingKind::Castle => Some(BuildingKind::Walls),
         BuildingKind::StarFort => Some(BuildingKind::Castle),
         _ => None,
@@ -1969,12 +1963,12 @@ pub fn building_predecessor(kind: BuildingKind) -> Option<BuildingKind> {
 
 pub fn building_min_population(kind: BuildingKind) -> i32 {
     match kind {
-        BuildingKind::MachineShop => 4,
-        BuildingKind::College => 5,
-        BuildingKind::InferenceCore => 8,
+        BuildingKind::Forge => 4,
+        BuildingKind::University => 5,
+        BuildingKind::ResearchLab => 8,
         BuildingKind::StockExchange => 8,
-        BuildingKind::Clearinghouse => 5,
-        BuildingKind::Autoworks => 6,
+        BuildingKind::Bank => 5,
+        BuildingKind::Factory => 6,
         _ => 0,
     }
 }
@@ -2082,12 +2076,12 @@ pub fn siege_city_bonus(kind: UnitKind) -> i32 {
 /// have none); each empire may complete at most one.
 pub const GREAT_WORKS: [BuildingKind; 7] = [
     BuildingKind::Pyramids,
-    BuildingKind::RelayUplink,
+    BuildingKind::GreatLibrary,
     BuildingKind::HagiaSophia,
-    BuildingKind::WorldExchange,
-    BuildingKind::PlanetaryFoundry,
+    BuildingKind::GrandBazaar,
+    BuildingKind::RoyalArsenal,
     BuildingKind::EiffelTower,
-    BuildingKind::IterReactor,
+    BuildingKind::IterFusionReactor,
 ];
 
 /// Shared construction slots. These limits are per empire, never per team or world.
@@ -2118,9 +2112,9 @@ pub fn is_great_work_item(item: ProductionItem) -> bool {
 }
 pub fn great_work_requirement(building: BuildingKind) -> Option<(BuildingKind, usize)> {
     match building {
-        BuildingKind::PlanetaryFoundry => Some((BuildingKind::Autoworks, 1)),
-        BuildingKind::WorldExchange => Some((BuildingKind::Clearinghouse, 2)),
-        BuildingKind::RelayUplink => Some((BuildingKind::Laboratory, 1)),
+        BuildingKind::RoyalArsenal => Some((BuildingKind::Factory, 1)),
+        BuildingKind::GrandBazaar => Some((BuildingKind::Bank, 2)),
+        BuildingKind::GreatLibrary => Some((BuildingKind::Library, 1)),
         _ => None,
     }
 }
@@ -2135,5 +2129,5 @@ pub fn sparta_home_guard(kind: UnitKind) -> bool {
 
 /// Faction goals count the full veteran infantry line.
 pub fn is_veteran_infantry(kind: UnitKind) -> bool {
-    is_infantry(kind) && kind != UnitKind::Soldier
+    is_infantry(kind) && kind != UnitKind::Spearman
 }

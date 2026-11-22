@@ -151,7 +151,7 @@ describe.skipIf(!available)('Sakoku core behavior', () => {
     for (const r of s.diplomacy?.relations ?? []) r.state = 'War';
     // A tile beside India's first city, in its sight and its land.
     const inside = within(s.cities[0].pos, 1).find((h) => h.q !== s.cities[0].pos.q || h.r !== s.cities[0].pos.r)!;
-    spawnUnit(s, 1, 'Soldier', inside, false);
+    spawnUnit(s, 1, 'Spearman', inside, false);
     const { fixtureClient, core } = pair(s);
     const x = fixtureClient.endTurn({}), y = core.endTurn({});
     expect(goalEvents(x.events)).toEqual(goalEvents(y.events));

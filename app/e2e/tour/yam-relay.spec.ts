@@ -176,7 +176,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     f.fixture.players[0].gold = 2000;
     await loadFixture(page, coreFixture(f.fixture), 12);
     await selectThing(page, 'city', f.a);
-    const card = page.locator('.city-panel .production-choice[data-item^="w:CourierHall:"]').first();
+    const card = page.locator('.city-panel .production-choice[data-item^="w:YamRelayStation:"]').first();
     await card.scrollIntoViewIfNeeded();
     await expect(card.locator('.prod-cost')).toContainText(/\d{3}/);
     await expect(card).toContainText('every empire may cross all of the holder\'s land at Peace');
@@ -217,7 +217,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await page.mouse.click(spot.x, spot.y);
     // Build moves on to the next decision, so come back to the city: the card now names its tile and cost.
     await selectThing(page, 'city', f.a);
-    await expect(yam.locator('.production-choice')).toHaveAttribute('data-item', `w:CourierHall:${pick.q},${pick.r}`);
+    await expect(yam.locator('.production-choice')).toHaveAttribute('data-item', `w:YamRelayStation:${pick.q},${pick.r}`);
     await expect(yam.locator('.prod-where.site-cost')).toContainText('gives up');
     // The placed tile stays marked on the map.
     expect(await page.evaluate((hex) => (window as unknown as { legatumMap: { improve?: { sites: { q: number; r: number }[] } | null } }).legatumMap.improve?.sites.some((h) => h.q === hex.q && h.r === hex.r), pick)).toBe(true);
@@ -240,7 +240,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     expect(label.over).toBeLessThanOrEqual(0);
     await shot(page, size, '95t5-hall-placed-panel-top');
     await stageHallReport(page, [
-      { type: 'ProductionCompleted', city: f.b, owner: 0, item: { kind: 'Wonder', building: 'CourierHall', tile: { q: f.hallPos.q + 1, r: f.hallPos.r } } },
+      { type: 'ProductionCompleted', city: f.b, owner: 0, item: { kind: 'Wonder', building: 'YamRelayStation', tile: { q: f.hallPos.q + 1, r: f.hallPos.r } } },
       { type: 'FactionGoalCompleted', player: 0, faction: 'Mongols', vp: 2 },
     ]);
     await expect(page.locator('.moment-card').first()).toContainText('The Yam Network');

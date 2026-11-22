@@ -727,8 +727,8 @@ fn ranger_forecasts_use_the_requested_attack_mode() {
         tile.ruin = false;
     }
     let target = Hex::new(6, 5);
-    let ranger = spawn_unit(&mut state, PlayerId(0), UnitKind::Ranger, Hex::new(5, 5));
-    spawn_unit(&mut state, PlayerId(2), UnitKind::Soldier, target);
+    let ranger = spawn_unit(&mut state, PlayerId(0), UnitKind::Archer, Hex::new(5, 5));
+    spawn_unit(&mut state, PlayerId(2), UnitKind::Spearman, target);
     state.units.get_mut(&ranger).unwrap().hp = 20;
     legatum_core::visibility::update_explored(&mut state);
     assert_eq!(server.load(&game_json::state_to_json(&state)).status(), 200);

@@ -28,7 +28,7 @@ async function shot(page: Page, size: string, name: string) {
 async function load(page: Page, { busy = false, gold }: { busy?: boolean; gold?: number } = {}) {
   const s = diplomacyState(12, { met: true });
   s.cities[0].buildings = ['Granary'];
-  if (busy) Object.assign(s.cities[0], { producing: { kind: 'Unit', unit: 'Soldier' }, prod: 12 });
+  if (busy) Object.assign(s.cities[0], { producing: { kind: 'Unit', unit: 'Spearman' }, prod: 12 });
   if (gold !== undefined) {
     s.players[0].gold = gold;
     s.players[0].explored.fill(1);
@@ -172,7 +172,7 @@ for (const size of SIZES) {
       await selectCity(page);
       await page.evaluate(() => {
         const s = (window as unknown as GameWindow).legatum.getState(), v = s.views![s.seat];
-        s.editOrders((o) => [...o, { type: 'BuyItem', city: v.cities.find((c) => c.owner === v.me)!.id, item: { kind: 'Unit', unit: 'Soldier' } }], 'purchase');
+        s.editOrders((o) => [...o, { type: 'BuyItem', city: v.cities.find((c) => c.owner === v.me)!.id, item: { kind: 'Unit', unit: 'Spearman' } }], 'purchase');
       });
       const panel = page.locator('.city-panel');
       const button = panel.getByTestId('city-buy-tile');

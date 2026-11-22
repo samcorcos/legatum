@@ -371,10 +371,10 @@ mod tests {
         let v = ViewBuilder::new(24, 16)
             .city(1, ME, home, 3)
             .city(2, ENEMY, theirs, 1)
-            .unit(1, ME, UnitKind::Soldier, home)
-            .unit(2, ME, UnitKind::Soldier, Hex::new(9, 6))
-            .unit(3, ME, UnitKind::Soldier, Hex::new(9, 7))
-            .unit(4, ME, UnitKind::Soldier, Hex::new(11, 6))
+            .unit(1, ME, UnitKind::Spearman, home)
+            .unit(2, ME, UnitKind::Spearman, Hex::new(9, 6))
+            .unit(3, ME, UnitKind::Spearman, Hex::new(9, 7))
+            .unit(4, ME, UnitKind::Spearman, Hex::new(11, 6))
             .build();
         let pinned = |gene: i32| {
             let mut p = crate::fixture::planner(&v, 1);

@@ -124,7 +124,7 @@ pub fn retire_blocker(state: &GameState, p: PlayerId, unit: UnitId) -> Option<St
     let Some(city) = state.city_at(u.pos).filter(|c| c.owner == p) else {
         return Some("A veteran retires in one of your cities with an Agoge".into());
     };
-    if !data::has_building(&city.buildings, BuildingKind::WarShrine) {
+    if !data::has_building(&city.buildings, BuildingKind::Agoge) {
         return Some(format!(
             "{} has no Agoge: build one to retire veterans here",
             city.name
@@ -630,7 +630,7 @@ pub fn view(state: &GameState, me: PlayerId) -> ActionsView {
             level: goals::SPARTA_RETIRE_LEVEL,
             shrines: state
                 .cities_of(me)
-                .filter(|c| data::has_building(&c.buildings, BuildingKind::WarShrine))
+                .filter(|c| data::has_building(&c.buildings, BuildingKind::Agoge))
                 .map(|c| c.id)
                 .collect(),
             veterans: state

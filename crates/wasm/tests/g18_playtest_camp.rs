@@ -1,6 +1,6 @@
 //! Playtest G18, from the user's own game (playtest 3, engine 29a5b2a): on turn 17 their
-//! Soldier (#3) attacked the barbarian camp guard (#27) on the adjacent camp tile. The attack
-//! order kept its goto on the guard's tile, so with no new orders the Soldier attacked again on
+//! Spearman (#3) attacked the barbarian camp guard (#27) on the adjacent camp tile. The attack
+//! order kept its goto on the guard's tile, so with no new orders the Spearman attacked again on
 //! turns 18 and 19 and died. The fixture is the recorded state at the start of turn 17
 //! (replayed from the save's tape with the playtest-3 engine) and the recorded orders of
 //! turns 17 to 19.

@@ -105,7 +105,7 @@ it('stops Ready for an automated city with no build and accepts a manual order w
   client.load(coreFixture(setup.fixture));
   const before = client.view(0);
   const blocked = { ...before, cities: before.cities.map((c) => c.id === city.id
-    ? { ...c, detail: { ...c.detail!, options: c.detail!.options.filter((o) => o.item.kind === 'Unit' && o.item.unit === 'Soldier') } } : c) };
+    ? { ...c, detail: { ...c.detail!, options: c.detail!.options.filter((o) => o.item.kind === 'Unit' && o.item.unit === 'Spearman') } } : c) };
   useGame.setState({ client, screen: 'game', humans: [0], views: [blocked],
     orders: [[{ type: 'SetCityAutomation', city: city.id, focus: 'Science' }]], errors: [[]], ready: [false] });
   await useGame.getState().toggleReady();
@@ -115,7 +115,7 @@ it('stops Ready for an automated city with no build and accepts a manual order w
   expect(s.selection).toEqual({ kind: 'city', id: city.id });
   expect(pendingDecisions(blocked, s.orders[0], s.errors[0], s).find((d) => d.kind === 'city' && d.id === city.id)?.label).toContain('Nothing here fits its automation focus');
   expect(s.orders[0]).toContainEqual({ type: 'SetCityAutomation', city: city.id, focus: 'Science' });
-  s.editOrders((orders) => [...orders, { type: 'SetProduction', city: city.id, item: { kind: 'Unit', unit: 'Soldier' } }]);
+  s.editOrders((orders) => [...orders, { type: 'SetProduction', city: city.id, item: { kind: 'Unit', unit: 'Spearman' } }]);
   await useGame.getState().toggleReady();
   await vi.waitFor(() => expect(useGame.getState().views![0].turn).toBe(before.turn + 1));
   s = useGame.getState();

@@ -15,7 +15,7 @@ import { cityFireStatus } from '../format';
 import { usePlacedCard, type CardAnchor } from './usePlacedCard';
 import { BARBARIAN_INK, campAt, CAMP_CLEAR_GOLD, isBarbarian } from '../barbarians';
 import { useGame } from '../store';
-import { buildingIconName, factionGoalVp, wonderTileText } from '../data';
+import { buildingIconName, factionGoalVp, sameItem, wonderTileText } from '../data';
 import { heirLines } from './HeirNote';
 import { contractLine, isCompany } from '../company';
 import { heirHoverLine, heirTag, isHeir } from '../heir';
@@ -23,7 +23,7 @@ import { atWar } from '../diplomacy';
 import { WONDER_INFO, cityWonders, holdingCity, wonderArt, wonderBonusParts, wonderDiscoveryLine, wonderYieldWord } from '../wonders';
 import { FactionSeal } from '../brand/ornaments';
 import { RankMark } from './RankMark';
-import { sleepOrderText } from '../orders';
+import { pendingProduction, sleepOrderText } from '../orders';
 import { capitalMark, replacementTileLine } from '../capitalMark';
 import { CapitalNote, ReplacementNote } from './CapitalStar';
 
@@ -72,7 +72,7 @@ export function TileCard({ view, hex, anchor, routeWarning, blockedReason, reinf
   // A barbarian camp or unit on an owned tile: it yields nothing to its owner (Civ 6).
   const barbarianHeld = !!owner && !city && (!!camp || units.some((u) => isBarbarian(u.owner)));
   // A rival-held Heir under your selected military unit: moving onto his tile captures him.
-  const heir = units.find((u) => u.kind === 'Heir');
+  const heir = units.find((u) => u.kind === 'HeirToTheThrone');
   const mover = selection?.kind === 'unit' ? view.units.find((u) => u.id === selection.id && u.owner === view.me && u.military) : undefined;
   const team = (id: number) => view.players.find((p) => p.id === id)?.team === view.team;
   const capturable = !!heir && !!mover && !team(heir.owner) && !isBarbarian(heir.owner) && atWar(view, heir.owner);
@@ -187,7 +187,11 @@ export function TileCard({ view, hex, anchor, routeWarning, blockedReason, reinf
         const p = productionProgress(city);
         if (!p) return null;
         const name = p.item ? itemName(p.item, faction) : null;
-        const text = cityOccupiedLine(view, city) ?? (p.state === 'idle' ? 'No production chosen'
+        // A choice made this turn shows at once, as it does on the banner beside this card.
+        const chosen = pendingProduction(orders, city.id);
+        const option = chosen && !sameItem(chosen, city.detail?.producing ?? null) ? city.detail?.options.find((o) => sameItem(o.item, chosen)) : undefined;
+        const chosenText = chosen && option ? `Chosen this turn: ${itemName(chosen, faction)}${option.turns > 0 ? ` · ${option.turns} turn${option.turns === 1 ? '' : 's'}` : ''}` : null;
+        const text = cityOccupiedLine(view, city) ?? chosenText ?? (p.state === 'idle' ? 'No production chosen'
           : p.state === 'stalled' ? p.stallText
           : p.state === 'waiting' ? `Queued: ${name} · ${p.stored}/${p.needed} stored`
           : `Producing ${name}: ${p.stored}/${p.needed}${p.turns !== null ? `, ${p.turns} turn${p.turns === 1 ? '' : 's'}` : ''}`);

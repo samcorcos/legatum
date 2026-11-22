@@ -13,15 +13,15 @@ const view = (units: { id: number; owner: number; kind: string; pos: Hex }[], ci
 }) as unknown as PlayerView;
 
 const battle = (over: Partial<Extract<Event, { type: 'Battle' }>>) => ({
-  type: 'Battle', attacker: 7, attacker_owner: 0, defender: { kind: 'Unit', unit: 9, owner: 2, unit_kind: 'Soldier' }, at: { q: 5, r: 3 },
+  type: 'Battle', attacker: 7, attacker_owner: 0, defender: { kind: 'Unit', unit: 9, owner: 2, unit_kind: 'Spearman' }, at: { q: 5, r: 3 },
   attacker_at: { q: 3, r: 3 }, damage_to_attacker: 0, damage_to_defender: 30, ranged: true, meeting: false, ...over,
 }) as Event;
 const moved = (unit: number, from: Hex, to: Hex, owner = 0) => ({ type: 'UnitMoved', unit, owner, from, to }) as Event;
 
 const before = view([
-  { id: 7, owner: 0, kind: 'Ranger', pos: { q: 3, r: 3 } },
-  { id: 8, owner: 0, kind: 'Soldier', pos: { q: 3, r: 4 } },
-  { id: 9, owner: 2, kind: 'Soldier', pos: { q: 5, r: 3 } },
+  { id: 7, owner: 0, kind: 'Archer', pos: { q: 3, r: 3 } },
+  { id: 8, owner: 0, kind: 'Spearman', pos: { q: 3, r: 4 } },
+  { id: 9, owner: 2, kind: 'Spearman', pos: { q: 5, r: 3 } },
 ], [{ id: 1, owner: 2, pos: { q: 6, r: 4 } }]);
 
 describe('combat plan', () => {
@@ -32,7 +32,7 @@ describe('combat plan', () => {
   it('fires the ranged phase first, then moves the units round by round', () => {
     const events = [
       battle({}),
-      battle({ attacker: { city: 1 }, attacker_owner: 2, attacker_at: { q: 6, r: 4 }, defender: { kind: 'Unit', unit: 8, owner: 0, unit_kind: 'Soldier' }, at: { q: 3, r: 4 }, damage_to_defender: 12 }),
+      battle({ attacker: { city: 1 }, attacker_owner: 2, attacker_at: { q: 6, r: 4 }, defender: { kind: 'Unit', unit: 8, owner: 0, unit_kind: 'Spearman' }, at: { q: 3, r: 4 }, damage_to_defender: 12 }),
       moved(8, { q: 3, r: 4 }, { q: 4, r: 4 }),
       moved(8, { q: 4, r: 4 }, { q: 5, r: 4 }),
     ];
@@ -74,7 +74,7 @@ describe('combat plan', () => {
   it('a killer that steps into the tile charges with its own step, no lunge', () => {
     const events = [
       battle({ attacker: 8, ranged: false, attacker_at: { q: 4, r: 3 } }),
-      { type: 'UnitDestroyed', unit: 9, owner: 2, unit_kind: 'Soldier', at: { q: 5, r: 3 } } as Event,
+      { type: 'UnitDestroyed', unit: 9, owner: 2, unit_kind: 'Spearman', at: { q: 5, r: 3 } } as Event,
       moved(8, { q: 4, r: 3 }, { q: 5, r: 3 }),
     ];
     const plan = buildCombatPlan(events, before, before)!;
@@ -143,17 +143,17 @@ describe('an air strike', () => {
 
 describe('what flies', () => {
   it('scales by the shooter and its era', () => {
-    expect(shotKindFor('Ranger', 0, null, false)).toBe('arrows');
-    expect(shotKindFor('Marksman', 2, null, false)).toBe('bolts');
+    expect(shotKindFor('Archer', 0, null, false)).toBe('arrows');
+    expect(shotKindFor('Crossbowman', 2, null, false)).toBe('bolts');
     expect(shotKindFor('Arquebusier', 3, null, false)).toBe('shot');
     expect(shotKindFor('FieldCannon', 4, null, false)).toBe('ball');
     expect(shotKindFor('Artillery', 5, null, false)).toBe('shell');
     expect(shotKindFor('Bomber', 5, null, false)).toBe('bombs');
     // A siege crew throws stones at a city, or shot from a bombard.
-    expect(shotKindFor('Ranger', 0, 'catapult', true)).toBe('stone');
-    expect(shotKindFor('Marksman', 2, 'trebuchet', true)).toBe('stone');
+    expect(shotKindFor('Archer', 0, 'catapult', true)).toBe('stone');
+    expect(shotKindFor('Crossbowman', 2, 'trebuchet', true)).toBe('stone');
     expect(shotKindFor('Arquebusier', 3, 'bombard', true)).toBe('ball');
-    expect(shotKindFor('Ranger', 0, 'catapult', false)).toBe('arrows');
+    expect(shotKindFor('Archer', 0, 'catapult', false)).toBe('arrows');
   });
 
   it("a city's walls answer by its owner's era", () => {

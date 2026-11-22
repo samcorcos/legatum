@@ -40,8 +40,8 @@ fn siege(city_hp: i32) -> Siege {
     let mut s = game(&[0, 1]);
     let c = city(&mut s, 1, hex(5, 4), 3);
     s.cities.get_mut(&c).unwrap().hp = city_hp;
-    let attacker = unit(&mut s, 0, UnitKind::Soldier, hex(4, 4));
-    let defender = unit(&mut s, 1, UnitKind::Soldier, hex(6, 4));
+    let attacker = unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
+    let defender = unit(&mut s, 1, UnitKind::Spearman, hex(6, 4));
     goto(&mut s, attacker, hex(5, 4));
     goto(&mut s, defender, hex(5, 4));
     Siege {
@@ -149,8 +149,8 @@ fn allies_get_no_priority() {
     let mut s = game(&[0, 0, 1]);
     let c = city(&mut s, 0, hex(5, 4), 3);
     s.cities.get_mut(&c).unwrap().hp = 0;
-    let attacker = unit(&mut s, 2, UnitKind::Soldier, hex(4, 4));
-    let ally = unit(&mut s, 1, UnitKind::Soldier, hex(6, 4));
+    let attacker = unit(&mut s, 2, UnitKind::Spearman, hex(4, 4));
+    let ally = unit(&mut s, 1, UnitKind::Spearman, hex(6, 4));
     goto(&mut s, attacker, hex(5, 4));
     goto(&mut s, ally, hex(5, 4));
     let (_, events) = resolve_units(&s, &no_orders());
@@ -181,7 +181,7 @@ fn no_siege_no_priority_and_ranged_units_do_not_reinforce() {
     let Siege {
         mut s, defender, ..
     } = siege(0);
-    s.units.get_mut(&defender).unwrap().kind = UnitKind::Ranger;
+    s.units.get_mut(&defender).unwrap().kind = UnitKind::Archer;
     let (_, events) = resolve_units(&s, &no_orders());
     assert!(reinforced(&events).is_empty(), "{events:#?}");
 }
@@ -192,9 +192,9 @@ fn two_reinforcers_resolve_most_soak_then_lowest_id_first_in_any_order() {
     let c = city(&mut s, 1, hex(5, 4), 3);
     s.cities.get_mut(&c).unwrap().hp = 0;
     city(&mut s, 0, hex(1, 1), 3);
-    let attacker = unit(&mut s, 0, UnitKind::Soldier, hex(4, 4));
-    let r1 = unit(&mut s, 1, UnitKind::Soldier, hex(6, 4));
-    let r2 = unit(&mut s, 1, UnitKind::Soldier, hex(6, 3));
+    let attacker = unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
+    let r1 = unit(&mut s, 1, UnitKind::Spearman, hex(6, 4));
+    let r2 = unit(&mut s, 1, UnitKind::Spearman, hex(6, 3));
     let mv = |unit, to| Order::MoveUnit { unit, to };
     let enemy = vec![mv(attacker, hex(5, 4))];
     let mut results = Vec::new();
@@ -234,17 +234,17 @@ fn two_reinforcers_resolve_most_soak_then_lowest_id_first_in_any_order() {
 
 #[test]
 fn the_turn_107_shape_a_trooper_beats_two_attackers_to_its_ruined_city() {
-    // The user's save (turn 107): a wounded Trooper ordered into its own 0 HP city with no
-    // garrison, two enemy Soldiers ordered in from the other side; the city fell and the
-    // Trooper was bounced. The save comes from an older engine (Pacts and Influence) that
+    // The user's save (turn 107): a wounded Pikeman ordered into its own 0 HP city with no
+    // garrison, two enemy Spearmen ordered in from the other side; the city fell and the
+    // Pikeman was bounced. The save comes from an older engine (Pacts and Influence) that
     // current code cannot load, so this rebuilds its shape.
     let mut s = game(&[0, 1]);
     let c = city(&mut s, 1, hex(5, 4), 2);
     s.cities.get_mut(&c).unwrap().hp = 0;
-    let a1 = unit(&mut s, 0, UnitKind::Soldier, hex(4, 4));
-    let a2 = unit(&mut s, 0, UnitKind::Soldier, hex(4, 5));
+    let a1 = unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
+    let a2 = unit(&mut s, 0, UnitKind::Spearman, hex(4, 5));
     s.units.get_mut(&a2).unwrap().hp = 46;
-    let trooper = unit(&mut s, 1, UnitKind::Trooper, hex(6, 4));
+    let trooper = unit(&mut s, 1, UnitKind::Pikeman, hex(6, 4));
     s.units.get_mut(&trooper).unwrap().hp = 76;
     for u in [a1, a2, trooper] {
         goto(&mut s, u, hex(5, 4));
@@ -265,7 +265,7 @@ fn the_turn_107_shape_a_trooper_beats_two_attackers_to_its_ruined_city() {
         })
         .collect();
     assert_eq!(fought.len(), 2, "both attackers fight the garrison");
-    // Whoever wins, the Trooper was there first: it holds the city unless it fell in the fight.
+    // Whoever wins, the Pikeman was there first: it holds the city unless it fell in the fight.
     let holds = next.units.contains_key(&trooper);
     assert_eq!(
         next.cities[&c].owner,
@@ -426,8 +426,8 @@ fn a_relief_unit_weak_to_the_attackers_class_dies_and_the_assault_captures() {
     assert_eq!(next.cities[&city].owner, PlayerId(0), "captured that step");
 }
 
-/// A fallen city at (5,4) with a Soldier garrison on `garrison_hp`, P1's Soldiers beside it on
-/// `supporter_hps` ordered in, and P0's Soldiers west of it ordered in.
+/// A fallen city at (5,4) with a Spearman garrison on `garrison_hp`, P1's Spearmen beside it on
+/// `supporter_hps` ordered in, and P0's Spearmen west of it ordered in.
 struct Supported {
     s: GameState,
     city: CityId,
@@ -441,13 +441,13 @@ fn supported(garrison_hp: i32, supporter_hps: &[i32], attackers: usize) -> Suppo
     let at = hex(5, 4);
     let c = city(&mut s, 1, at, 3);
     s.cities.get_mut(&c).unwrap().hp = 0;
-    let garrison = unit(&mut s, 1, UnitKind::Soldier, at);
+    let garrison = unit(&mut s, 1, UnitKind::Spearman, at);
     s.units.get_mut(&garrison).unwrap().hp = garrison_hp;
     let supporters = supporter_hps
         .iter()
         .enumerate()
         .map(|(d, hp)| {
-            let u = unit(&mut s, 1, UnitKind::Soldier, at.neighbor(d));
+            let u = unit(&mut s, 1, UnitKind::Spearman, at.neighbor(d));
             s.units.get_mut(&u).unwrap().hp = *hp;
             goto(&mut s, u, at);
             u
@@ -456,7 +456,7 @@ fn supported(garrison_hp: i32, supporter_hps: &[i32], attackers: usize) -> Suppo
     let attackers = [3, 4, 5][..attackers]
         .iter()
         .map(|d| {
-            let u = unit(&mut s, 0, UnitKind::Soldier, at.neighbor(*d));
+            let u = unit(&mut s, 0, UnitKind::Spearman, at.neighbor(*d));
             goto(&mut s, u, at);
             u
         })
@@ -472,7 +472,7 @@ fn supported(garrison_hp: i32, supporter_hps: &[i32], attackers: usize) -> Suppo
 
 #[test]
 fn supporters_share_the_hits_with_the_garrison_and_stay_on_their_tiles() {
-    // Alone, the 40-HP garrison falls to two Soldiers; shared with two supporters it holds.
+    // Alone, the 40-HP garrison falls to two Spearmen; shared with two supporters it holds.
     let alone = supported(40, &[], 2);
     let (next, _) = resolve_units(&alone.s, &no_orders());
     assert!(!next.units.contains_key(&alone.garrison), "alone it falls");
@@ -510,9 +510,9 @@ fn supporters_share_the_hits_with_the_garrison_and_stay_on_their_tiles() {
 
 #[test]
 fn shared_damage_splits_each_hit_evenly_with_the_remainder_to_the_garrison() {
-    // One Soldier hit on the garrison of a fallen city, shared by three Soldiers of equal HP
+    // One Spearman hit on the garrison of a fallen city, shared by three Spearmen of equal HP
     // and the same terrain: the garrison (fortified) takes the remainder, each supporter
-    // `floor(direct × (B / 3) / B)` of what that Soldier deals to it unfortified.
+    // `floor(direct × (B / 3) / B)` of what that Spearman deals to it unfortified.
     let Supported {
         s,
         city,
@@ -652,7 +652,7 @@ fn every_supporter_adds_its_own_counterattack_to_the_pooled_reply() {
         ..
     } = supported(100, &[100, 100], 1);
     s.units.get_mut(&attackers[0]).unwrap().goto = None;
-    let archer = unit(&mut s, 0, UnitKind::Ranger, hex(3, 4));
+    let archer = unit(&mut s, 0, UnitKind::Archer, hex(3, 4));
     let shot = BTreeMap::from([(
         PlayerId(0),
         vec![Order::RangedAttack {
@@ -684,7 +684,7 @@ fn the_backfill_is_the_supporter_that_soaks_most_not_the_one_with_most_hp() {
     s.cities.get_mut(&c).unwrap().hp = 0;
     let garrison = unit(&mut s, 1, UnitKind::Rifleman, at);
     s.units.get_mut(&garrison).unwrap().hp = 3;
-    let spearman = unit(&mut s, 1, UnitKind::Soldier, at.neighbor(0));
+    let spearman = unit(&mut s, 1, UnitKind::Spearman, at.neighbor(0));
     let rifleman = unit(&mut s, 1, UnitKind::Rifleman, at.neighbor(1));
     s.units.get_mut(&rifleman).unwrap().hp = 45;
     let attackers: Vec<UnitId> = [3]
@@ -723,7 +723,7 @@ fn a_supporter_attacked_where_it_stands_gives_no_support() {
     let cutter = unit(
         &mut s,
         0,
-        UnitKind::Soldier,
+        UnitKind::Spearman,
         hex(5, 4).neighbor(0).neighbor(0),
     );
     let sup_at = s.units[&supporters[0]].pos;

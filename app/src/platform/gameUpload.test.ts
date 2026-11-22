@@ -82,15 +82,33 @@ it('historyToRecord adds coach_answers only for uploads and only when there are 
   expect(local.historyToRecord(client, answers)).toBe(recording());
 });
 
-it('exporting a retained history strips coach_answers (the engine refuses unknown keys)', async () => {
+it('historyToRecord adds rewinds beside coach_answers, only for uploads and only when there are some', async () => {
   const { historyToRecord } = await import('./gameUpload');
-  const json = historyToRecord({ archive: () => recording() }, [{ type: 'answer' }]);
+  const client = { archive: () => recording(), publicArchive: () => recording() };
+  const rewinds = [{ at: '2026-11-22T19:10:00.000Z', from_turn: 42, to_turn: 39 }];
+  const both = JSON.parse(historyToRecord(client, [{ type: 'answer' }], rewinds));
+  expect(both.rewinds).toEqual(rewinds);
+  expect(both.coach_answers).toEqual([{ type: 'answer' }]);
+  const only = JSON.parse(historyToRecord(client, [], rewinds));
+  expect(only.rewinds).toEqual(rewinds);
+  expect(only).not.toHaveProperty('coach_answers');
+  vi.stubEnv('VITE_LEGATUM_GAMES_URL', '');
+  vi.resetModules();
+  expect((await import('./gameUpload')).historyToRecord(client, [], rewinds)).toBe(recording());
+});
+
+it('exporting a retained history strips coach_answers and rewinds (the engine refuses unknown keys)', async () => {
+  const { historyToRecord } = await import('./gameUpload');
+  const json = historyToRecord({ archive: () => recording() }, [{ type: 'answer' }], [{ at: '2026-11-22T19:10:00.000Z', from_turn: 4, to_turn: 2 }]);
   expect(json).toContain('coach_answers');
+  expect(json).toContain('rewinds');
   let blob: Blob | null = null;
   vi.stubGlobal('CompressionStream', undefined);
   vi.spyOn(URL, 'createObjectURL').mockImplementation((b) => { blob = b as Blob; return 'blob:x'; });
   vi.stubGlobal('document', { createElement: () => ({ click: () => {} }) });
   const archive = await import('./archive');
   await archive.exportGameHistory(json);
-  expect(JSON.parse(await (blob as unknown as Blob).text())).not.toHaveProperty('coach_answers');
+  const exported = JSON.parse(await (blob as unknown as Blob).text());
+  expect(exported).not.toHaveProperty('coach_answers');
+  expect(exported).not.toHaveProperty('rewinds');
 });

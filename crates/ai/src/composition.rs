@@ -16,22 +16,22 @@ pub const MELEE_LADDER: [UnitKind; 9] = [
     UnitKind::Infantry,
     UnitKind::TrenchInfantry,
     UnitKind::Rifleman,
-    UnitKind::AssaultTrooper,
-    UnitKind::Trooper,
+    UnitKind::Musketman,
+    UnitKind::Pikeman,
     UnitKind::Phalangite,
-    UnitKind::Soldier,
+    UnitKind::Spearman,
 ];
 /// Ranged line, best first.
 pub const RANGED_LADDER: [UnitKind; 9] = [
-    UnitKind::Drone,
+    UnitKind::CombatDrone,
     UnitKind::RocketArtillery,
     UnitKind::Artillery,
     UnitKind::Howitzer,
     UnitKind::FieldCannon,
     UnitKind::Arquebusier,
-    UnitKind::Marksman,
+    UnitKind::Crossbowman,
     UnitKind::CompositeArcher,
-    UnitKind::Ranger,
+    UnitKind::Archer,
 ];
 
 /// Mounted line, best first.
@@ -39,7 +39,7 @@ pub const MOUNTED_LADDER: [UnitKind; 9] = [
     UnitKind::AutonomousArmour,
     UnitKind::MainBattleTank,
     UnitKind::Tank,
-    UnitKind::Landship,
+    UnitKind::EarlyTank,
     UnitKind::Cavalry,
     UnitKind::Cuirassier,
     UnitKind::Knight,
@@ -112,7 +112,7 @@ pub fn ranged_first() -> Vec<UnitKind> {
 pub fn ranged_then_soldier() -> Vec<UnitKind> {
     RANGED_LADDER
         .into_iter()
-        .chain([UnitKind::Soldier])
+        .chain([UnitKind::Spearman])
         .collect()
 }
 

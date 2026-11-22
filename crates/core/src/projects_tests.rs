@@ -179,7 +179,7 @@ fn a_lost_wonder_race_stops_the_city_for_a_choice_in_either_resolution_order() {
         let winner_work = wonder(&s, winner_city, BuildingKind::Pyramids);
         let rival_work = wonder(&s, rival_city, BuildingKind::Pyramids);
         // His Mill (200), so the resumed build does not complete within the test.
-        let next = item(BuildingKind::Hydroponics);
+        let next = item(BuildingKind::Mill);
         s.cities.get_mut(&winner_city).unwrap().producing = Some(winner_work);
         {
             let c = s.cities.get_mut(&rival_city).unwrap();
@@ -263,8 +263,8 @@ fn a_production_order_clears_a_lost_wonder_race() {
 
 #[test]
 fn public_progress_does_not_reveal_hidden_city_details_and_another_empire_can_build_same_route() {
-    let (mut s, a, _) = setup(BuildingKind::WorldExchange);
-    let work = wonder(&s, a, BuildingKind::WorldExchange);
+    let (mut s, a, _) = setup(BuildingKind::GrandBazaar);
+    let work = wonder(&s, a, BuildingKind::GrandBazaar);
     s.cities.get_mut(&a).unwrap().producing = Some(work);
     s.cities.get_mut(&a).unwrap().production_stored = 123;
     let rival = player_view(&s, PlayerId(1));
@@ -272,7 +272,7 @@ fn public_progress_does_not_reveal_hidden_city_details_and_another_empire_can_bu
     assert_eq!(rival.great_works[0].progress, 123);
     assert_eq!(
         rival.great_works[0].building,
-        Some(BuildingKind::WorldExchange)
+        Some(BuildingKind::GrandBazaar)
     );
     assert_eq!(rival.great_works[0].turns, None);
     assert_eq!(rival.great_works[0].blocker, None);
@@ -281,39 +281,35 @@ fn public_progress_does_not_reveal_hidden_city_details_and_another_empire_can_bu
             .get_mut(&id)
             .unwrap()
             .buildings
-            .insert(BuildingKind::Clearinghouse);
+            .insert(BuildingKind::Bank);
         assert!(
             economy::can_produce(
                 &s,
                 &s.cities[&id],
-                wonder(&s, id, BuildingKind::WorldExchange)
+                wonder(&s, id, BuildingKind::GrandBazaar)
             ) == (s
                 .cities_of(PlayerId(2))
-                .filter(|c| c.buildings.contains(&BuildingKind::Clearinghouse))
+                .filter(|c| c.buildings.contains(&BuildingKind::Bank))
                 .count()
                 == 2)
         );
     }
     let c = s.cities_of(PlayerId(2)).next().unwrap().id;
     assert!(
-        economy::can_produce(
-            &s,
-            &s.cities[&c],
-            wonder(&s, c, BuildingKind::WorldExchange)
-        ),
+        economy::can_produce(&s, &s.cities[&c], wonder(&s, c, BuildingKind::GrandBazaar)),
         "same-team empires have separate slots"
     );
 }
 #[test]
 fn loss_of_support_cancels_before_more_production_and_banks_earned_progress() {
-    let (mut s, a, b) = setup(BuildingKind::WorldExchange);
-    let work_a = wonder(&s, a, BuildingKind::WorldExchange);
-    let work_b = wonder(&s, b, BuildingKind::WorldExchange);
+    let (mut s, a, b) = setup(BuildingKind::GrandBazaar);
+    let work_a = wonder(&s, a, BuildingKind::GrandBazaar);
+    let work_b = wonder(&s, b, BuildingKind::GrandBazaar);
     s.cities.get_mut(&a).unwrap().producing = Some(work_a);
     s.cities.get_mut(&a).unwrap().production_stored = 100;
     s.cities.get_mut(&b).unwrap().owner = PlayerId(1);
     assert!(
-        economy::building_blocker(&s, &s.cities[&a], BuildingKind::WorldExchange, false)
+        economy::building_blocker(&s, &s.cities[&a], BuildingKind::GrandBazaar, false)
             .unwrap()
             .contains("2 owned")
     );
@@ -336,7 +332,7 @@ fn loss_of_support_cancels_before_more_production_and_banks_earned_progress() {
             Order::SetProduction {
                 city: a,
                 item: ProductionItem::Unit {
-                    unit: UnitKind::Soldier,
+                    unit: UnitKind::Spearman,
                 },
             },
             Order::SetProduction {
@@ -346,7 +342,7 @@ fn loss_of_support_cancels_before_more_production_and_banks_earned_progress() {
         ],
         &mut events,
     );
-    // Resuming the Great Work took its bank and the idle 10; switching to a Soldier
+    // Resuming the Great Work took its bank and the idle 10; switching to a Spearman
     // banked all 110 with the Great Work again.
     assert_eq!(s.cities[&a].production_stored, 0);
     assert_eq!(
@@ -378,11 +374,11 @@ fn tall_growth_setup() -> (GameState, CityId, CityId) {
         }
     }
     let c = s.cities.get_mut(&a).unwrap();
-    c.buildings.insert(BuildingKind::Hydroponics);
+    c.buildings.insert(BuildingKind::Mill);
     c.resistance = 1;
     c.food_stored = 0;
     let c = s.cities.get_mut(&b).unwrap();
-    c.buildings.insert(BuildingKind::Hydroponics);
+    c.buildings.insert(BuildingKind::Mill);
     c.food_stored = data::growth_threshold(7) - 4 * B_SURPLUS;
     (s, a, b)
 }
@@ -451,7 +447,7 @@ fn tall_forecast_includes_the_horizon_and_an_existing_pair_but_not_other_owners(
         s.map.get_mut(h).unwrap().terrain = Terrain::Grassland;
     }
     let c = s.cities.get_mut(&a).unwrap();
-    c.buildings = [BuildingKind::Hydroponics].into();
+    c.buildings = [BuildingKind::Mill].into();
     c.resistance = 0;
     let horizon = crate::data::EXPECTED_GAME_TURNS as i32;
     let c = s.cities.get_mut(&b).unwrap();
@@ -493,7 +489,7 @@ fn growth_forecast_reassigns_population_and_respects_resistance_and_food_limits(
         .get_mut(&id)
         .unwrap()
         .buildings
-        .insert(BuildingKind::Hydroponics);
+        .insert(BuildingKind::Mill);
     s.cities.get_mut(&id).unwrap().resistance = 3;
     let eta = projects::turns_to_population(&s, &s.cities[&id], 8).unwrap();
     s.cities.get_mut(&id).unwrap().resistance = 0;
@@ -526,7 +522,7 @@ fn food_quotes_for_the_mill_match_actual_growth_after_it_is_built() {
     let unlocks = research::tech_unlocks(&s, P);
     let mill = unlocks
         .iter()
-        .find(|u| u.item == item(BuildingKind::Hydroponics))
+        .find(|u| u.item == item(BuildingKind::Mill))
         .unwrap();
     let quote = &mill.cities[0];
     assert_eq!(quote.blocker, None, "the Granary is in place");
@@ -547,7 +543,7 @@ fn food_quotes_for_the_mill_match_actual_growth_after_it_is_built() {
 
     // Check the quotes against actual growth with the Mill installed, keeping territory
     // and builds fixed as promised.
-    economy::install_building(s.cities.get_mut(&id).unwrap(), BuildingKind::Hydroponics);
+    economy::install_building(s.cities.get_mut(&id).unwrap(), BuildingKind::Mill);
     for turn in 1..=eight {
         let food = economy::city_yields(&s, &s.cities[&id]).total.food;
         cities::grow(&mut s, id, food, &mut Vec::new());
@@ -559,15 +555,15 @@ fn food_quotes_for_the_mill_match_actual_growth_after_it_is_built() {
 
 #[test]
 fn foundry_is_a_single_industrial_host_and_exchange_keeps_its_network_requirement() {
-    for building in [BuildingKind::PlanetaryFoundry, BuildingKind::WorldExchange] {
+    for building in [BuildingKind::RoyalArsenal, BuildingKind::GrandBazaar] {
         let (mut s, a, b) = setup(building);
         let work = wonder(&s, a, building);
         s.cities.get_mut(&b).unwrap().owner = PlayerId(1);
         assert_eq!(
             economy::can_produce(&s, &s.cities[&a], work),
-            building == BuildingKind::PlanetaryFoundry
+            building == BuildingKind::RoyalArsenal
         );
-        if building == BuildingKind::PlanetaryFoundry {
+        if building == BuildingKind::RoyalArsenal {
             s.cities.get_mut(&a).unwrap().producing = Some(work);
             s.cities.get_mut(&a).unwrap().production_stored = 77;
             s.cities.get_mut(&a).unwrap().buildings.clear();
@@ -580,7 +576,7 @@ fn foundry_is_a_single_industrial_host_and_exchange_keeps_its_network_requiremen
 
 #[test]
 fn switzerland_cannot_buy_a_great_work() {
-    let building = BuildingKind::WorldExchange;
+    let building = BuildingKind::GrandBazaar;
     let (mut state, city, _) = setup(building);
     state.player_mut(P).faction = Faction::Switzerland;
     state.player_mut(P).gold = 2_000;

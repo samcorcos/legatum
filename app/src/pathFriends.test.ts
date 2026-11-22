@@ -155,7 +155,7 @@ describe('previewRoute: the screenshot case and its warnings', () => {
   it.each([0, 1, 2, 3, 4, 5])('an attack never routes through a friend attacking the same city (rotation %s)', (d) => {
     const { m, f, r } = bridge(d);
     const s = fixture(); addCity(s, 1, c);
-    const friend = spawnUnit(s, 0, 'Soldier', m, false), right = spawnUnit(s, 0, 'Soldier', r, false);
+    const friend = spawnUnit(s, 0, 'Spearman', m, false), right = spawnUnit(s, 0, 'Spearman', r, false);
     refreshVision(s);
     const view = viewFromFixture(s, 0);
     const orders: Order[] = [{ type: 'MoveUnit', unit: friend.id, to: c }];
@@ -167,7 +167,7 @@ describe('previewRoute: the screenshot case and its warnings', () => {
   it.each([0, 1, 2, 3, 4, 5])('a friend moving out is a tie-break: the free tile wins (rotation %s)', (d) => {
     const { m, f, r } = bridge(d);
     const s = fixture(); addCity(s, 1, c);
-    const friend = spawnUnit(s, 0, 'Soldier', m, false), right = spawnUnit(s, 0, 'Soldier', r, false);
+    const friend = spawnUnit(s, 0, 'Spearman', m, false), right = spawnUnit(s, 0, 'Spearman', r, false);
     refreshVision(s);
     const orders: Order[] = [{ type: 'MoveUnit', unit: friend.id, to: neighbors(m)[d] }];
     expect(previewRoute(viewFromFixture(s, 0), r, c, orders, right.id)).toEqual({ path: [f, c], risk: null });
@@ -176,8 +176,8 @@ describe('previewRoute: the screenshot case and its warnings', () => {
   it('passes through a friend that stays, and warns when it cannot', () => {
     const s = fixture();
     for (let col = 0; col < 20; col++) for (let row = 0; row < 12; row++) if (row !== 4) s.terrain[idxOf(s, fromOffset(col, row))] = 'Mountains';
-    const a = spawnUnit(s, 0, 'Soldier', fromOffset(2, 4), false);
-    const friend = spawnUnit(s, 0, 'Soldier', fromOffset(3, 4), false);
+    const a = spawnUnit(s, 0, 'Spearman', fromOffset(2, 4), false);
+    const friend = spawnUnit(s, 0, 'Spearman', fromOffset(3, 4), false);
     refreshVision(s);
     const view = viewFromFixture(s, 0), goal = fromOffset(6, 4);
     // Civ 6: the unit walks through its own, stationary friend and lands beyond it. No warning.
@@ -194,7 +194,7 @@ describe('previewRoute: the screenshot case and its warnings', () => {
     expect(onto.risk).toMatchObject({ hex: fromOffset(3, 4), stays: true, destination: true });
     expect(routeRiskText(view, onto.risk!)).toBe("Your Spearman stays on that tile: this unit can't end its move on it and stops beside it.");
     // Two friends in a row cost more to cross than a Soldier has moves: it waits behind them.
-    spawnUnit(s, 0, 'Soldier', fromOffset(4, 4), false);
+    spawnUnit(s, 0, 'Spearman', fromOffset(4, 4), false);
     refreshVision(s);
     const jam = previewRoute(viewFromFixture(s, 0), a.pos, goal, [], a.id);
     expect(jam.risk).toMatchObject({ hex: fromOffset(3, 4), stays: true });
@@ -207,8 +207,8 @@ describe('previewRoute: the screenshot case and its warnings', () => {
     for (let col = 1; col <= 10; col++) for (const row of [4, 8]) s.terrain[idxOf(s, fromOffset(col, row))] = 'Grassland';
     for (let row = 5; row <= 7; row++) for (const col of [1, 10]) s.terrain[idxOf(s, fromOffset(col, row))] = 'Grassland';
     s.terrain[idxOf(s, fromOffset(4, 3))] = 'Grassland';
-    const lead = spawnUnit(s, 0, 'Soldier', fromOffset(4, 3), false);
-    const follower = spawnUnit(s, 0, 'Soldier', fromOffset(4, 4), false);
+    const lead = spawnUnit(s, 0, 'Spearman', fromOffset(4, 3), false);
+    const follower = spawnUnit(s, 0, 'Spearman', fromOffset(4, 4), false);
     refreshVision(s);
     const view = viewFromFixture(s, 0);
     const pass = fromOffset(5, 4);
@@ -224,7 +224,7 @@ describe('previewRoute: the screenshot case and its warnings', () => {
   it('shows the risk of an already confirmed route through a friend', () => {
     const { m, r } = bridge(0);
     const s = fixture(); addCity(s, 1, c);
-    const friend = spawnUnit(s, 0, 'Soldier', m, false), right = spawnUnit(s, 0, 'Soldier', r, false);
+    const friend = spawnUnit(s, 0, 'Spearman', m, false), right = spawnUnit(s, 0, 'Spearman', r, false);
     refreshVision(s);
     const orders: Order[] = [{ type: 'MoveUnit', unit: friend.id, to: c }, { type: 'MoveUnitPath', unit: right.id, to: c, path: [m, c] }];
     expect(previewRoute(viewFromFixture(s, 0), r, c, orders, right.id).risk).toMatchObject({ hex: m, stays: true });

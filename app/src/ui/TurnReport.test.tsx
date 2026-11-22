@@ -32,14 +32,14 @@ beforeEach(async () => {
   setup.players[1].is_human = false;
   await client.newGame(setup);
   view = client.view(0);
-  const mine = view.units.find((u) => u.owner === 0 && u.kind === 'Soldier')!;
+  const mine = view.units.find((u) => u.owner === 0 && u.kind === 'Spearman')!;
   const target = { q: mine.pos.q + 1, r: mine.pos.r };
   const from = { q: mine.pos.q + 3, r: mine.pos.r };
   const enemy = view.players.find((p) => p.team !== view.team)!.id;
   // Turn 1: quiet. Turn 2: a Byzantium Ranger shot our Soldier from two tiles away.
   const quiet = report(1, [{ type: 'TechResearched', player: 0, tech: 'BronzeWorking' }]);
   const shot = report(2, [{
-    type: 'Battle', attacker: 900, attacker_owner: enemy, defender: { kind: 'Unit', unit: mine.id, owner: 0, unit_kind: 'Soldier' }, at: target,
+    type: 'Battle', attacker: 900, attacker_owner: enemy, defender: { kind: 'Unit', unit: mine.id, owner: 0, unit_kind: 'Spearman' }, at: target,
     attacker_at: from, attacker_strength: { total: 15, parts: [] }, defender_strength: { total: 10, parts: [] }, damage_to_attacker: 0,
     damage_to_defender: 35, attacker_roll: 100, defender_roll: 0, attacker_hp_after: 100, defender_hp_after: 65, ranged: true, meeting: false,
   }]);
@@ -71,8 +71,8 @@ it('Last turn in This Turn shows how the turn went and reopens the report', () =
 });
 
 it('shows the shared insignia on a promotion report line', () => {
-  const mine = view.units.find((u) => u.owner === 0 && u.kind === 'Soldier')!;
-  const promoted = report(3, [{ type: 'UnitPromoted', unit: mine.id, owner: 0, unit_kind: 'Soldier', level: 4, at: mine.pos }]);
+  const mine = view.units.find((u) => u.owner === 0 && u.kind === 'Spearman')!;
+  const promoted = report(3, [{ type: 'UnitPromoted', unit: mine.id, owner: 0, unit_kind: 'Spearman', level: 4, at: mine.pos }]);
   useGame.setState({ report: promoted, reportHistory: pushReport([], promoted), reportOpen: true });
   render();
   const mark = $('.report .rline-main .rank-insignia');

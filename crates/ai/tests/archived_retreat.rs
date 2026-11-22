@@ -17,7 +17,7 @@ fn t243_response_survives_traffic_id_permutations_and_save_load() {
         serde_json::from_str(include_str!("fixtures/retreat-t243-state.json")).unwrap();
     let mut original: GameState = serde_json::from_value(saved).unwrap();
     // The archive predates strategic resources (G11): give every seat Iron and Coal deposits
-    // inside its borders so the recorded Trooper orders of the other seats stay supplied.
+    // inside its borders so the recorded Pikeman orders of the other seats stay supplied.
     let ids: Vec<_> = original.players.iter().map(|p| p.id).collect();
     for p in ids {
         let spots: Vec<usize> = (0..original.map.tiles.len())
@@ -35,7 +35,7 @@ fn t243_response_survives_traffic_id_permutations_and_save_load() {
             });
         }
     }
-    // This pre-LOS archive saw Ranger 68 through (0, 16). Keep that threat visible
+    // This pre-LOS archive saw Archer 68 through (0, 16). Keep that threat visible
     // under terrain sight so the traffic regression still includes its volley.
     original.map.get_mut(Hex::new(0, 16)).unwrap().terrain = Terrain::Plains;
     for ids in [
@@ -97,7 +97,7 @@ fn t243_response_survives_traffic_id_permutations_and_save_load() {
                 .retain(|o| o["type"] != "RangedAttack" || o["unit"] != 42);
             let mut simultaneous: BTreeMap<PlayerId, Vec<Order>> =
                 serde_json::from_value(recorded).unwrap();
-            // Include Soldier 6's movement and Soldier 148's competing first step.
+            // Include Spearman 6's movement and Spearman 148's competing first step.
             // Either routine mover may yield to an escape during coordination.
             for (unit, to) in [(6, Hex::new(-2, 17)), (148, Hex::new(-1, 16))] {
                 assert!(simultaneous[&ME].contains(&Order::MoveUnit {

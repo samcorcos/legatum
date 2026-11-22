@@ -25,7 +25,7 @@ describe('the Keshig piece', () => {
     // The Ancient Mongol Horseman is ordinary.
     expect(unitStatsFor('Mongols', 'Horseman').ranged).toBe(0);
     expect(itemName({ kind: 'Unit', unit: 'Horseman' }, 'Mongols')).toBe('Horseman');
-    expect(attacksInMelee('Ranger')).toBe(false);
+    expect(attacksInMelee('Archer')).toBe(false);
     expect(FACTION_PIECES.Mongols).toEqual({ item: keshigItem, name: 'Keshig' });
     expect(itemName(keshigItem, 'Mongols')).toBe('Keshig');
     expect(itemName(keshigItem, 'India')).toBe('Cataphract');

@@ -61,7 +61,7 @@ describe.skipIf(!available)('Mercenary Companies in the real engine', () => {
     const b = makeCore(); b.load(coreFixture(met.s));
     const shop = shopRows(b.view(0));
     expect(shop.map((x) => x.offer.seller)).toEqual([1]);
-    expect(shop.map((x) => [x.offer.unit, x.offer.price > 0])).toEqual([['Soldier', true]]);
+    expect(shop.map((x) => [x.offer.unit, x.offer.price > 0])).toEqual([['Spearman', true]]);
     expect(b.view(1).company_offers ?? []).toEqual([]);
   });
 
@@ -69,7 +69,7 @@ describe.skipIf(!available)('Mercenary Companies in the real engine', () => {
     const { s, home } = fixture(true);
     const core = makeCore(); core.load(coreFixture(s));
     const before = core.view(0), sellerBefore = core.view(1);
-    const offer = before.company_offers!.find((o) => o.seller === 1 && o.unit === 'Soldier')!;
+    const offer = before.company_offers!.find((o) => o.seller === 1 && o.unit === 'Spearman')!;
     const order = hireOrder(home.id, offer);
     expect(describeOrder(order, before)).toBe(`C0: hire a Spartan Hoplite Company from Sparta for ${offer.price} Gold (${RULES.company.turns} turns)`);
     expect(core.validate(0, [order])).toEqual([]);
@@ -84,15 +84,15 @@ describe.skipIf(!available)('Mercenary Companies in the real engine', () => {
     expect(after.players.find((p) => p.id === 0)!.companies).toBe(1);
     expect(contractLine(hired, after)).toBe(`Hired from Sparta: ${RULES.company.turns - 1} turns of contract left, upkeep ${RULES.company.upkeep} Gold a turn`);
     const buyer = formatEvents(result.events, contextFromViews(before, after)).map((l) => l.text);
-    expect(buyer).toContain(`Hired a ${companyName('Sparta', 'Soldier')} Company from Sparta for ${offer.price} Gold, for ${RULES.company.turns} turns`);
+    expect(buyer).toContain(`Hired a ${companyName('Sparta', 'Spearman')} Company from Sparta for ${offer.price} Gold, for ${RULES.company.turns} turns`);
     const seller = formatEvents(result.events, contextFromViews(sellerBefore, sellerAfter)).map((l) => l.text);
-    expect(seller).toContain(`+${offer.price} Gold: Byzantium hired a ${companyName('Sparta', 'Soldier')} Company from you`);
+    expect(seller).toContain(`+${offer.price} Gold: Byzantium hired a ${companyName('Sparta', 'Spearman')} Company from you`);
   });
 
   it('goes home after its last turn, and says so', () => {
     const { s, home } = fixture(true);
     const core = makeCore(); core.load(coreFixture(s));
-    const offer = core.view(0).company_offers!.find((o) => o.seller === 1 && o.unit === 'Soldier')!;
+    const offer = core.view(0).company_offers!.find((o) => o.seller === 1 && o.unit === 'Spearman')!;
     core.endTurn({ 0: [hireOrder(home.id, offer)] });
     let last = false, departed = false;
     for (let i = 0; i < RULES.company.turns + 1 && !departed; i++) {

@@ -411,14 +411,14 @@ mod tests {
             .city(2, ME, Hex::from_offset(12, 5), 8)
             .build();
         for city in &mut v.cities {
-            city.detail.as_mut().unwrap().buildings = vec![BuildingKind::Clearinghouse];
+            city.detail.as_mut().unwrap().buildings = vec![BuildingKind::Bank];
         }
         v.cities[0].detail.as_mut().unwrap().producing = Some(ProductionItem::Building {
-            building: BuildingKind::WorldExchange,
+            building: BuildingKind::GrandBazaar,
         });
         v.cities[1].detail.as_mut().unwrap().resistance = 3;
         let plan = work_plan(&Ctx::new(&v)).unwrap();
-        assert_eq!(plan.building, BuildingKind::WorldExchange);
+        assert_eq!(plan.building, BuildingKind::GrandBazaar);
         assert_eq!(plan.host, CityId(1));
         assert!(plan.steps.is_empty());
     }
@@ -436,7 +436,7 @@ mod tests {
             .city(1, ME, Hex::from_offset(5, 5), 6)
             .build();
         let d = v.cities[0].detail.as_mut().unwrap();
-        d.buildings = vec![BuildingKind::MachineShop];
+        d.buildings = vec![BuildingKind::Forge];
         for o in &mut d.options {
             o.yields.total.production = 12;
         }
@@ -445,12 +445,12 @@ mod tests {
         // prerequisite of the Industrial era), commit to the Royal Arsenal route: the Forge
         // already built leaves the Factory, Industrialization and Ballistics (Cannonry).
         d.producing = Some(ProductionItem::Building {
-            building: BuildingKind::PlanetaryFoundry,
+            building: BuildingKind::RoyalArsenal,
         });
         v.economy.science_per_turn.total = 12;
         let plan = work_plan(&Ctx::new(&v)).unwrap();
-        assert_eq!(plan.building, BuildingKind::PlanetaryFoundry);
-        assert_eq!(plan.steps, vec![(CityId(1), BuildingKind::Autoworks)]);
+        assert_eq!(plan.building, BuildingKind::RoyalArsenal);
+        assert_eq!(plan.steps, vec![(CityId(1), BuildingKind::Factory)]);
         assert_eq!(
             plan.research,
             BTreeSet::from([TechId::Cannonry, TechId::Industrialization])

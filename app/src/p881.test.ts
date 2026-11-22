@@ -46,10 +46,10 @@ describe('turn 29: the Horseman against the fortified Archer', () => {
     // Put the Horseman back where it started its charge, at full strength, with the Archer on the target tile.
     horse.pos = { q: 19, r: 11 };
     horse.hp = 100;
-    view.units.push({ ...view.units.find((u) => u.id === 24)!, id: ARCHER, kind: 'Ranger', pos: archerTile, fortify: 6, ranged: 15, range: 2, hp: 100 });
+    view.units.push({ ...view.units.find((u) => u.id === 24)!, id: ARCHER, kind: 'Archer', pos: archerTile, fortify: 6, ranged: 15, range: 2, hp: 100 });
     const m = forecastModel(forecastT29, false, view, horse, archerTile, []);
     expect(m.aftermath!.sources.map((s) => `${s.count} ${s.label}`)).toEqual(["1 Nara's walls", '2 Spearmen']);
-    expect(m.aftermath!.sources[1].bonus).toBe(`+${classBonusStrength(unitStatsFor('India', 'Soldier').strength)} vs mounted`);
+    expect(m.aftermath!.sources[1].bonus).toBe(`+${classBonusStrength(unitStatsFor('India', 'Spearman').strength)} vs mounted`);
     expect(m.aftermath!.unseen).toEqual([]);
     expect(m.aftermath!.risk).toBe('Exposed');
     expect(m.aftermath!.severe).toBe(true);

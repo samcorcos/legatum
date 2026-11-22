@@ -19,12 +19,12 @@ for (const size of SIZES) test.describe(`city yields ${size.width}x${size.height
       const city = fixture.cities.find((c) => c.owner === 0 && c.name === (population === 1 ? 'Geneva' : 'Basel'))!;
       if (population === 1) {
         city.population = 1;
-        city.producing = { kind: 'Unit', unit: 'Soldier' };
+        city.producing = { kind: 'Unit', unit: 'Spearman' };
       } else {
         // Keep the large city growing so the shot reviews ordinary yields, not starvation.
         city.population = 6;
         city.buildings.push('Granary');
-        city.producing = { kind: 'Unit', unit: 'Soldier' };
+        city.producing = { kind: 'Unit', unit: 'Spearman' };
       }
       const game = coreFixture(fixture);
       await page.addInitScript((game) => {

@@ -257,7 +257,7 @@ describe('the victory race model', () => {
       const { view, byzantium, rival, heirGoal } = await setup();
       rival.vp_sources.push([{ kind: 'FactionGoal', of: byzantium.id }, 2]);
       expect(heirGoal(buildVpModel(view)).heldAt).toBeUndefined();
-      view.units.push({ ...view.units[0], id: 9999, owner: rival.id, kind: 'Heir', heir_of: byzantium.id, pos: { q: 4, r: 5 } });
+      view.units.push({ ...view.units[0], id: 9999, owner: rival.id, kind: 'HeirToTheThrone', heir_of: byzantium.id, pos: { q: 4, r: 5 } });
       expect(heirGoal(buildVpModel(view)).heldAt).toEqual({ q: 4, r: 5 });
     });
 
@@ -294,7 +294,7 @@ describe('the victory race model', () => {
 
     it('places him wherever he is (his position is public), says whether he is in sight, and who has him when barbarians do', async () => {
       const { view, byzantium, heirGoal } = await setup();
-      view.units.push({ ...view.units[0], id: 9999, kind: 'Heir', owner: 255, heir_of: byzantium.id, pos: { q: 3, r: 4 }, military: false });
+      view.units.push({ ...view.units[0], id: 9999, kind: 'HeirToTheThrone', owner: 255, heir_of: byzantium.id, pos: { q: 3, r: 4 }, military: false });
       const tile = view.tiles[4 * view.width + 3];
       tile.visible = true;
       const g = heirGoal(buildVpModel(view));

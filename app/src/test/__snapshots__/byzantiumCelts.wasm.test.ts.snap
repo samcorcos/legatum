@@ -474,7 +474,7 @@ exports[`Byzantium and Celts core behavior > keeps a foreign unit at full streng
       "kind": "Unit",
       "owner": 1,
       "unit": 2,
-      "unit_kind": "Soldier",
+      "unit_kind": "Spearman",
     },
     "defender_hp_after": 79,
     "defender_roll": 0,

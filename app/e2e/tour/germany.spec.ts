@@ -24,9 +24,9 @@ function germanCity(opts: { foundry?: boolean; factory?: boolean; techs?: TechId
   const s = improvementCity({ techs: ['IronWorking', 'Mathematics', 'Engineering', 'Feudalism', ...(opts.techs ?? [])] });
   s.players[0].faction = 'Germany';
   const c = s.cities[0];
-  c.buildings.push(opts.factory ? 'Autoworks' : opts.foundry ? 'MachineShop' : 'Workshop');
+  c.buildings.push(opts.factory ? 'Factory' : opts.foundry ? 'Forge' : 'Workshop');
   const spots = ring(c.pos, 1);
-  const units = [spots[1], spots[2]].map((at) => spawnUnit(s, 0, 'Trooper', at, false));
+  const units = [spots[1], spots[2]].map((at) => spawnUnit(s, 0, 'Pikeman', at, false));
   const after = resolveFixture(s);
   for (const p of s.players) p.supply = after.players[p.id].supply;
   const iron = ring(c.pos, 3)[2];
@@ -51,7 +51,7 @@ for (const size of SIZES) test.describe(`germany ${size.name}`, () => {
     await page.keyboard.press('Escape');
     // The city's build list with the Ruhr Foundry card.
     await selectThing(page, 'city', g.city.id);
-    const card = page.locator('.city-panel .production-choice[data-item="b:MachineShop"]').first();
+    const card = page.locator('.city-panel .production-choice[data-item="b:Forge"]').first();
     await card.scrollIntoViewIfNeeded();
     await expect(card.locator('.prod-effect')).toContainText('−1');
     await park(page);
@@ -94,7 +94,7 @@ for (const size of SIZES) test.describe(`germany ${size.name}`, () => {
     await page.locator('[data-testid="city-yields"] .cp-yield').nth(1).hover();
     await page.waitForTimeout(600);
     await shot(page, size, 'g10-city-production-hover');
-    const factory = page.locator('.city-panel .production-choice[data-item="b:Autoworks"]').first();
+    const factory = page.locator('.city-panel .production-choice[data-item="b:Factory"]').first();
     if (await factory.count()) {
       await expect(factory.locator('.prod-effect')).toContainText('−1');
       await factory.scrollIntoViewIfNeeded();

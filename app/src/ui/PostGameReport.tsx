@@ -149,11 +149,11 @@ const COLS: { key: keyof Omit<StatRow, 'empire'>; label: string; icon: string; t
   { key: 'population', label: 'Population', icon: 'title-most-populous', title: 'Population at the end' },
   { key: 'science', label: 'Science', icon: 'yield-science', title: 'Science produced over the whole game' },
   { key: 'techs', label: 'Techs', icon: 'emblem-tech', title: 'Technologies known at the end' },
-  { key: 'peakArmy', label: 'Army', icon: 'unit-soldier', title: `Army: ${POSTGAME_ARMY_TEXT}` },
+  { key: 'peakArmy', label: 'Army', icon: 'unit-spearman', title: `Army: ${POSTGAME_ARMY_TEXT}` },
   { key: 'founded', label: 'Founded', icon: 'emblem-founded', title: 'Cities founded' },
   { key: 'captured', label: 'Taken', icon: 'emblem-captured', title: 'Cities captured or razed' },
   { key: 'lost', label: 'Lost', icon: 'ui-alert', title: 'Cities lost to capture or razing' },
-  { key: 'wars', label: 'Wars', icon: 'unit-soldier', title: 'Wars fought' },
+  { key: 'wars', label: 'Wars', icon: 'unit-spearman', title: 'Wars fought' },
 ];
 
 function StatsTab({ pg, playTime }: { pg: PostGame; playTime: ReturnType<typeof playTimeSummary> }) {

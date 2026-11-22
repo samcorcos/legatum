@@ -2316,7 +2316,7 @@ impl Planner<'_> {
                         enemy.kind,
                         matches!(
                             enemy.kind,
-                            UnitKind::Artillery | UnitKind::RocketArtillery | UnitKind::Drone
+                            UnitKind::Artillery | UnitKind::RocketArtillery | UnitKind::CombatDrone
                         ),
                         v.cities
                             .iter()
@@ -3173,7 +3173,7 @@ mod timeout_tests {
             assert_eq!(p.orders, vec![Order::FoundCity { unit: UnitId(1) }]);
         }
         view = ViewBuilder { view }
-            .unit(2, ENEMY, UnitKind::Soldier, off(9, 8))
+            .unit(2, ENEMY, UnitKind::Spearman, off(9, 8))
             .build();
         let mut p = Planner::new(
             &view,
@@ -3336,7 +3336,7 @@ mod found_here_tests {
             .any(|o| matches!(o, Order::FoundCity { unit } if *unit == UnitId(1)))
     }
 
-    /// A Settler on a legal site with enemy Soldiers (2 moves) at `distance` from it.
+    /// A Settler on a legal site with enemy Spearmen (2 moves) at `distance` from it.
     fn settler_with_soldiers(distance: i32, soldiers: usize) -> PlayerView {
         let settler = off(9, 8);
         let mut b = ViewBuilder::new(20, 16).city(1, ME, off(3, 8), 3).unit(
@@ -3351,14 +3351,14 @@ mod found_here_tests {
             .take(soldiers)
             .enumerate()
         {
-            b = b.unit(2 + i as u32, ENEMY, UnitKind::Soldier, h);
+            b = b.unit(2 + i as u32, ENEMY, UnitKind::Spearman, h);
         }
         b.build()
     }
 
     #[test]
     fn a_settler_founds_beside_an_army_that_cannot_reach_it_this_turn() {
-        // Within the threat radius (3), beyond a Soldier's two moves.
+        // Within the threat radius (3), beyond a Spearman's two moves.
         let view = settler_with_soldiers(3, 1);
         let mut off_planner = planner(&view, 0);
         off_planner.plan_settlers();
@@ -3378,7 +3378,7 @@ mod found_here_tests {
 
     #[test]
     fn a_settler_an_enemy_can_reach_this_turn_does_not_found_there() {
-        // Founding resolves after movement: the Soldier would capture it first.
+        // Founding resolves after movement: the Spearman would capture it first.
         let view = settler_with_soldiers(1, 1);
         let mut p = planner(&view, 1);
         let ((), notes) = trace_settler(UnitId(1), None, || p.plan_settlers());
@@ -3433,12 +3433,12 @@ mod settler_shelter_tests {
 
     #[test]
     fn a_settler_in_a_city_one_soldier_cannot_break_stays_inside() {
-        // A Soldier two hexes away reaches the city this turn but cannot take a full city.
+        // A Spearman two hexes away reaches the city this turn but cannot take a full city.
         let city = off(6, 8);
         let view = ViewBuilder::new(20, 16)
             .city(1, ME, city, 3)
             .unit(1, ME, UnitKind::Settler, city)
-            .unit(2, ENEMY, UnitKind::Soldier, off(8, 8))
+            .unit(2, ENEMY, UnitKind::Spearman, off(8, 8))
             .build();
         let notes = |gene| {
             let mut p = Planner::new(
@@ -3587,14 +3587,14 @@ mod fallback_risk_tests {
 
     #[test]
     fn a_far_fallback_no_safer_than_the_near_site_loses_to_it() {
-        // At war: an enemy Soldier four rows south of the Settler (out of reach this turn)
+        // At war: an enemy Spearman four rows south of the Settler (out of reach this turn)
         // puts every site's trip at risk, near and far alike; the far sites (beyond the
         // preferred distance) are the fallback the search never charged for it.
         let city = off(3, 8);
         let view = ViewBuilder::new(30, 18)
             .city(1, ME, city, 3)
             .unit(1, ME, UnitKind::Settler, off(5, 8))
-            .unit(2, ENEMY, UnitKind::Soldier, off(5, 12))
+            .unit(2, ENEMY, UnitKind::Spearman, off(5, 12))
             .build();
         let notes = |gene: i32| {
             let mut p = crate::fixture::planner(&view, 7);
@@ -3729,10 +3729,10 @@ mod found_now_tests {
 
     #[test]
     fn a_camp_guard_does_not_stop_it_but_a_raider_does() {
-        let guard = settler_and_barbarian(UnitKind::Soldier, 2, true);
+        let guard = settler_and_barbarian(UnitKind::Spearman, 2, true);
         let (found, notes) = founds(&mut hard(&guard, 10));
         assert!(found, "the guard holds its camp: {notes:?}");
-        let raider = settler_and_barbarian(UnitKind::Soldier, 2, false);
+        let raider = settler_and_barbarian(UnitKind::Spearman, 2, false);
         let (found, notes) = founds(&mut hard(&raider, 10));
         assert!(!found, "a raider takes a lone civilian within its moves");
         assert!(
@@ -3748,7 +3748,7 @@ mod found_now_tests {
             .city(1, ME, off(3, 8), 3)
             .city(2, ENEMY, off(20, 8), 3)
             .unit(1, ME, UnitKind::Settler, settler)
-            .unit(2, ENEMY, UnitKind::Ranger, settler.ring(1)[0])
+            .unit(2, ENEMY, UnitKind::Archer, settler.ring(1)[0])
             .build();
         v.diplomacy.legacy = false;
         let enemy_team = v.team_of(ENEMY);

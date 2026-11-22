@@ -16,8 +16,8 @@ export function reinforcementFixture() {
   const own = f.cities.find((c) => c.id === setup.own)!;
   own.hp = 0;
   own.buildings = [];
-  const rival = spawnUnit(f, 1, 'Soldier', fromOffset(2, 5), false);
-  const reinforcer = spawnUnit(f, 0, 'Soldier', fromOffset(4, 5), false);
+  const rival = spawnUnit(f, 1, 'Spearman', fromOffset(2, 5), false);
+  const reinforcer = spawnUnit(f, 0, 'Spearman', fromOffset(4, 5), false);
   refreshVision(f);
   return { ...setup, rival: rival.id, reinforcer: reinforcer.id };
 }

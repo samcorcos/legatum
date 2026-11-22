@@ -29,11 +29,11 @@ fn scenario() -> GameState {
         rules::cities::found_city(&mut s, settler, &mut Vec::new()).unwrap();
     }
     for (kind, h) in [
-        (UnitKind::Soldier, at(9, 8)),
-        (UnitKind::Trooper, at(9, 10)),
-        (UnitKind::Ranger, at(9, 7)),
-        (UnitKind::Ranger, at(9, 9)),
-        (UnitKind::Ranger, at(8, 8)),
+        (UnitKind::Spearman, at(9, 8)),
+        (UnitKind::Pikeman, at(9, 10)),
+        (UnitKind::Archer, at(9, 7)),
+        (UnitKind::Archer, at(9, 9)),
+        (UnitKind::Archer, at(8, 8)),
         (UnitKind::Scout, at(10, 8)),
     ] {
         spawn_unit(&mut s, ME, kind, h);
@@ -95,14 +95,14 @@ fn wounded_city_falls_after_a_volley_with_city_fire_enabled() {
     let soldier = s
         .units
         .values()
-        .find(|u| u.owner == ME && u.kind == UnitKind::Soldier)
+        .find(|u| u.owner == ME && u.kind == UnitKind::Spearman)
         .unwrap()
         .id;
     s.units.get_mut(&soldier).unwrap().pos = at(11, 8);
     let ranger = s
         .units
         .values()
-        .find(|u| u.owner == ME && u.kind == UnitKind::Ranger)
+        .find(|u| u.owner == ME && u.kind == UnitKind::Archer)
         .unwrap()
         .id;
     s.units.get_mut(&ranger).unwrap().pos = at(10, 7);
@@ -123,7 +123,7 @@ fn wounded_city_falls_after_a_volley_with_city_fire_enabled() {
 #[test]
 fn unseen_enemy_positions_cannot_change_the_plan() {
     let mut a = scenario();
-    let hidden = spawn_unit(&mut a, ENEMY, UnitKind::Soldier, at(27, 20));
+    let hidden = spawn_unit(&mut a, ENEMY, UnitKind::Spearman, at(27, 20));
     visibility::update_explored(&mut a);
     let mut b = a.clone();
     b.units.get_mut(&hidden).unwrap().pos = at(26, 21);
@@ -145,7 +145,7 @@ fn a_settler_raid_keeps_the_capturer_in_position_for_war_activation() {
     let raider = s
         .units
         .values()
-        .find(|u| u.owner == ME && u.kind == UnitKind::Trooper)
+        .find(|u| u.owner == ME && u.kind == UnitKind::Pikeman)
         .unwrap()
         .id;
     let orders = HumanPlaybookBrain::default().orders(&player_view(&s, ME));
@@ -172,7 +172,7 @@ fn withdraws_before_next_turns_unavoidable_city_shot_becomes_lethal() {
     let ranger = s
         .units
         .values()
-        .find(|u| u.owner == ME && u.kind == UnitKind::Ranger)
+        .find(|u| u.owner == ME && u.kind == UnitKind::Archer)
         .unwrap()
         .id;
     s.units.get_mut(&ranger).unwrap().pos = at(10, 8);

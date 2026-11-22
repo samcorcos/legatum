@@ -72,8 +72,8 @@ fn the_keshig_is_a_mounted_unit_with_a_bow() {
     assert!(!crate::composition::shooter_only(k.kind, k.ranged));
     // Every other unit is one or the other, as before.
     for kind in [
-        UnitKind::Ranger,
-        UnitKind::Soldier,
+        UnitKind::Archer,
+        UnitKind::Spearman,
         UnitKind::Horseman,
         UnitKind::Cataphract,
     ] {
@@ -86,7 +86,7 @@ fn the_keshig_is_a_mounted_unit_with_a_bow() {
 #[test]
 fn an_own_keshig_charges_an_exposed_archer() {
     let archer = Hex::new(10, 8);
-    let view = mongol(|b| b.unit(50, ENEMY, UnitKind::Ranger, archer));
+    let view = mongol(|b| b.unit(50, ENEMY, UnitKind::Archer, archer));
     // Within its bow's range too, but the charge (mounted against ranged) is worth more.
     assert_eq!(
         keshig_order(&choose(&view, true)),
@@ -108,7 +108,7 @@ fn an_own_keshig_charges_an_exposed_archer() {
 #[test]
 fn an_own_keshig_shoots_a_fortified_spearman_instead_of_charging_it() {
     let spear = Hex::new(10, 8);
-    let mut view = mongol(|b| b.unit(50, ENEMY, UnitKind::Soldier, spear));
+    let mut view = mongol(|b| b.unit(50, ENEMY, UnitKind::Spearman, spear));
     view.units
         .iter_mut()
         .find(|u| u.id == UnitId(50))
@@ -129,7 +129,7 @@ fn an_own_keshig_rides_into_a_fallen_city_rather_than_shoot() {
     let archer = Hex::new(6, 8);
     let mut view = mongol(|b| {
         b.city(9, ENEMY, city, 2)
-            .unit(50, ENEMY, UnitKind::Ranger, archer)
+            .unit(50, ENEMY, UnitKind::Archer, archer)
     });
     view.cities.iter_mut().find(|c| c.pos == city).unwrap().hp = 0;
     assert_eq!(
@@ -191,7 +191,7 @@ fn a_rival_counts_an_adjacent_keshig_as_a_melee_threat_to_its_city() {
 #[test]
 fn a_rival_reads_a_keshig_shot_without_the_spear_bonus() {
     let view = rival(|b| {
-        b.unit(1, ME, UnitKind::Soldier, Hex::new(8, 8)).unit(
+        b.unit(1, ME, UnitKind::Spearman, Hex::new(8, 8)).unit(
             50,
             ENEMY,
             data::KESHIG_KIND,
@@ -200,21 +200,21 @@ fn a_rival_reads_a_keshig_shot_without_the_spear_bonus() {
     });
     // Arrows fight as the ranged class: a spear line gets no bonus against them.
     assert_eq!(
-        crate::tactics::fight_bonuses(data::KESHIG_KIND, UnitKind::Soldier, true),
+        crate::tactics::fight_bonuses(data::KESHIG_KIND, UnitKind::Spearman, true),
         (0, 0)
     );
     assert_eq!(
-        crate::tactics::fight_bonuses(data::KESHIG_KIND, UnitKind::Soldier, false),
+        crate::tactics::fight_bonuses(data::KESHIG_KIND, UnitKind::Spearman, false),
         (
             0,
-            combat::class_bonus_strength(data::unit_stats(UnitKind::Soldier).strength)
+            combat::class_bonus_strength(data::unit_stats(UnitKind::Spearman).strength)
         )
     );
     let shot = crate::tactics::expected_damage(
         combat::unit_ranged_total(Faction::Mongols, data::KESHIG_KIND, 100, 0),
         combat::unit_defense_total(
             Faction::Switzerland,
-            UnitKind::Soldier,
+            UnitKind::Spearman,
             100,
             Terrain::Plains,
             0,
@@ -229,12 +229,12 @@ fn a_rival_reads_a_keshig_shot_without_the_spear_bonus() {
         combat::unit_attack_total(Faction::Mongols, data::KESHIG_KIND, 100, 0),
         combat::unit_defense_total(
             Faction::Switzerland,
-            UnitKind::Soldier,
+            UnitKind::Spearman,
             100,
             Terrain::Plains,
             0,
             0,
-        ) + combat::class_bonus_strength(data::unit_stats(UnitKind::Soldier).strength),
+        ) + combat::class_bonus_strength(data::unit_stats(UnitKind::Spearman).strength),
         100,
     );
     assert_eq!(threat_of(&view, UnitId(50)), shot.max(charge));

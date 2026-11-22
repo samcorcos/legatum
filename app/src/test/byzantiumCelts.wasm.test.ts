@@ -52,10 +52,10 @@ describe.skipIf(!available)('Byzantium and Celts core behavior', () => {
   it('researches normally and keeps the core economy in sync', () => {
     const s = fixture('Byzantium', 'Mongols');
     const home = city(s, 0, 4, 4);
-    home.buildings = ['College'];
+    home.buildings = ['University'];
     home.population = 5;
     const owned = city(s, 1, 10, 10);
-    spawnUnit(s, 0, 'Soldier', fromOffset(11, 10), false);
+    spawnUnit(s, 0, 'Spearman', fromOffset(11, 10), false);
     spawnUnit(s, 0, 'Scout', fromOffset(10, 11), false);
     s.players[0].techs = ['Writing', 'Education'];
     s.players[1].techs = ['BronzeWorking', 'Writing', 'Currency'];
@@ -65,13 +65,13 @@ describe.skipIf(!available)('Byzantium and Celts core behavior', () => {
     (expect(fixtureClient.view(1).cities.find((c) => c.id === owned.id)?.detail?.yields).toMatchSnapshot(), void (core.view(1).cities.find((c) => c.id === owned.id)?.detail?.yields));
     expect(mockView.cities.find((c) => c.id === home.id)?.detail?.yields).toMatchSnapshot();
     const card = (v: typeof coreView, b: string) => v.research.unlocks.find((u) => u.item.kind === 'Building' && u.item.building === b);
-    for (const b of ['Laboratory', 'College', 'InferenceCore']) {
+    for (const b of ['Library', 'University', 'ResearchLab']) {
       const [m, c] = [card(mockView, b), card(coreView, b)];
       expect(c, `${b} card`).toBeDefined();
       expect([m?.name, m?.yields], b).toMatchSnapshot();
     }
-    expect(card(coreView, 'Laboratory')!.name).toBe('Library');
-    expect(card(coreView, 'Laboratory')!.yields.science).toBeGreaterThan(0);
+    expect(card(coreView, 'Library')!.name).toBe('Library');
+    expect(card(coreView, 'Library')!.yields.science).toBeGreaterThan(0);
     const a = fixtureClient.endTurn({}), b = core.endTurn({});
     (expect(a.events).toMatchSnapshot(), void (b.events));
     (expect(fixtureClient.view(0).research.progress).toMatchSnapshot(), void (core.view(0).research.progress));
@@ -82,7 +82,7 @@ describe.skipIf(!available)('Byzantium and Celts core behavior', () => {
     const s = fixture('Celts', 'Mongols');
     city(s, 0, 4, 4); city(s, 1, 16, 16);
     const intruderTile = fromOffset(5, 4);
-    const intruder = spawnUnit(s, 1, 'Soldier', intruderTile, false); intruder.hp = 50;
+    const intruder = spawnUnit(s, 1, 'Spearman', intruderTile, false); intruder.hp = 50;
     const { fixtureClient, core } = pair(s);
     const a = fixtureClient.endTurn({}), b = core.endTurn({});
     (expect(a.events).toMatchSnapshot(), void (b.events));
@@ -93,8 +93,8 @@ describe.skipIf(!available)('Byzantium and Celts core behavior', () => {
     const fight = fixture('Celts', 'Mongols');
     city(fight, 0, 4, 4); city(fight, 1, 16, 16);
     for (const relation of fight.diplomacy?.relations ?? []) relation.state = 'War';
-    const ranger = spawnUnit(fight, 0, 'Ranger', fromOffset(10, 10), false);
-    const target = spawnUnit(fight, 1, 'Soldier', fromOffset(11, 10), false);
+    const ranger = spawnUnit(fight, 0, 'Archer', fromOffset(10, 10), false);
+    const target = spawnUnit(fight, 1, 'Spearman', fromOffset(11, 10), false);
     const clients = pair(fight);
     for (const client of [clients.fixtureClient, clients.core])
       expect(client.view(1).units.some((u) => u.id === ranger.id)).toBe(true);
@@ -108,7 +108,7 @@ describe.skipIf(!available)('Byzantium and Celts core behavior', () => {
     city(s, 0, 4, 4);
     const captured = city(s, 1, 10, 10); captured.hp = 0;
     for (const relation of s.diplomacy?.relations ?? []) relation.state = 'War';
-    const soldier = spawnUnit(s, 0, 'Soldier', fromOffset(9, 10), false);
+    const soldier = spawnUnit(s, 0, 'Spearman', fromOffset(9, 10), false);
     const { fixtureClient, core } = pair(s);
     const order: Order = { type: 'MoveUnit', unit: soldier.id, to: captured.pos };
     (expect(fixtureClient.validate(0, [order])).toMatchSnapshot(), void (core.validate(0, [order])));
@@ -128,7 +128,7 @@ describe.skipIf(!available)('Byzantium and Celts core behavior', () => {
       if (home) city(s, 0, 4, 4);
       const captured = city(s, 1, 10, 10); captured.hp = 0;
       for (const relation of s.diplomacy?.relations ?? []) relation.state = 'War';
-      const soldier = spawnUnit(s, 0, 'Soldier', fromOffset(9, 10), false);
+      const soldier = spawnUnit(s, 0, 'Spearman', fromOffset(9, 10), false);
       const { fixtureClient, core } = pair(s);
       const orders: Record<number, Order[]> = { 0: [{ type: 'MoveUnit', unit: soldier.id, to: captured.pos }] };
       const a = fixtureClient.endTurn(orders), b = core.endTurn(orders);

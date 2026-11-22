@@ -27,7 +27,7 @@ const ctx: ReportContext = {
   me: 0,
   team: [0, 1],
   playerName: (id) => (id === null ? 'nobody' : ['Ana', 'Ben', 'Hollow Crown', 'Saint Veyra'][id] ?? `E${id}`),
-  unitKind: (id) => (id === 7 ? 'Soldier' : id === 9 ? 'Scout' : null),
+  unitKind: (id) => (id === 7 ? 'Spearman' : id === 9 ? 'Scout' : null),
   cityName: (id) => (id === 1 ? 'Tithe Station' : 'Somewhere'),
   cityPos: (id) => (id === 1 ? { q: 2, r: 2 } : null),
 };
@@ -57,13 +57,13 @@ it('reports the Gold actually seized from a Swiss capture', () => {
 });
 
 it.each([
-  ['Athens', { kind: 'Building', building: 'Laboratory' }, 'Lyceum'],
-  ['Germany', { kind: 'Building', building: 'MachineShop' }, 'Ruhr Foundry'],
+  ['Athens', { kind: 'Building', building: 'Library' }, 'Lyceum'],
+  ['Germany', { kind: 'Building', building: 'Forge' }, 'Ruhr Foundry'],
   ['India', { kind: 'Building', building: 'Market' }, 'Revenue Office'],
   ['Mongols', { kind: 'Unit', unit: 'Cataphract' }, 'Keshig'],
   ['Mongols', { kind: 'Unit', unit: 'Horseman' }, 'Horseman'],
-  ['Sparta', { kind: 'Unit', unit: 'Soldier' }, 'Spartan Hoplite'],
-  ['Byzantium', { kind: 'Unit', unit: 'Trooper' }, 'Tagmatic Soldier'],
+  ['Sparta', { kind: 'Unit', unit: 'Spearman' }, 'Spartan Hoplite'],
+  ['Byzantium', { kind: 'Unit', unit: 'Pikeman' }, 'Tagmatic Soldier'],
 ] as [Faction, ProductionItem, string][])(
   'names %s production, purchases and losses for the event owner', (faction, item, name) => {
     const context = { ...ctx, playerFaction: (id: number): Faction => id === 2 ? faction : 'Switzerland' };
@@ -183,16 +183,16 @@ describe('Alliance reports', () => {
 describe('split counterattack reports', () => {
   const at = { q: 2, r: 2 };
   const context: ReportContext = { ...ctx, place: () => 'Tessitura',
-    unitKind: (id: number) => ([7, 8, 10].includes(id) ? 'Soldier' : id === 11 ? 'Trooper' : id === 9 ? 'Soldier' : null),
+    unitKind: (id: number) => ([7, 8, 10].includes(id) ? 'Spearman' : id === 11 ? 'Pikeman' : id === 9 ? 'Spearman' : null),
     playerFaction: (id: number) => (id === 0 ? 'Sparta' : 'India') };
   const assault = (attackers: number[], taken: number[], hpAfter: number, defender: Extract<Event, { type: 'Battle' }>['defender']) =>
     attackers.map((attacker, i): Event => ({ ...battle, attacker, at, defender,
       damage_to_attacker: taken[i], damage_to_defender: 15, defender_hp_after: hpAfter, attacker_hp_after: 100 - taken[i] }));
-  const soldier = { kind: 'Unit', unit: 9, owner: 2, unit_kind: 'Soldier' } as const;
+  const soldier = { kind: 'Unit', unit: 9, owner: 2, unit_kind: 'Spearman' } as const;
 
   it('names the defender once, by place, and only that line says destroyed', () => {
     const events = [...assault([7, 8, 10], [7, 7, 7], 0, soldier),
-      { type: 'UnitDestroyed', unit: 9, owner: 2, unit_kind: 'Soldier', at } as Event];
+      { type: 'UnitDestroyed', unit: 9, owner: 2, unit_kind: 'Spearman', at } as Event];
     const lines = formatEvents(events, context);
     expect(lines.map((l) => l.text)).toEqual([
       "Hollow Crown's Spearman was destroyed at Tessitura in a combined assault by your 3 Spartan Hoplites; its counterattack was split, −7 each",
@@ -211,7 +211,7 @@ describe('split counterattack reports', () => {
   it('reports a city that fell with its garrison in one combined line', () => {
     const city = { kind: 'City', city: 1, owner: 2 } as const;
     const events: Event[] = [...assault([7, 8, 10], [5, 5, 5], 0, city),
-      { type: 'UnitDestroyed', unit: 9, owner: 2, unit_kind: 'Soldier', at },
+      { type: 'UnitDestroyed', unit: 9, owner: 2, unit_kind: 'Spearman', at },
       { type: 'CityCaptured', city: 1, from: 2, to: 0 }];
     const lines = formatEvents(events, context);
     expect(lines.map((l) => l.text)).toEqual([
@@ -245,7 +245,7 @@ describe('event formatting', () => {
     }
   });
   it('reports a promotion with its level and strength bonus, on the map', () => {
-    const line = formatEvent({ type: 'UnitPromoted', unit: 7, owner: 0, unit_kind: 'AssaultTrooper', level: 3, at: { q: 4, r: 2 } }, { ...ctx, playerFaction: () => 'Sparta' });
+    const line = formatEvent({ type: 'UnitPromoted', unit: 7, owner: 0, unit_kind: 'Musketman', level: 3, at: { q: 4, r: 2 } }, { ...ctx, playerFaction: () => 'Sparta' });
     expect(line.text).toBe('Your Musketman was promoted to level 3 (+30% strength)');
     expect(line).toMatchObject({ category: 'combat', tone: 'good', at: { q: 4, r: 2 }, promotion: { level: 3, faction: 'Sparta' } });
   });
@@ -361,7 +361,7 @@ describe('event formatting', () => {
     expect(mine.details[0]).toBe('Strength 16 (City 10, Population +6) vs 8 (Scout 5, Hills terrain +5, Wounded −2)');
     expect(mine.details.join(' ')).toContain('weakest (lowest-HP) visible enemy military unit within 2 tiles');
     expect(mine.tone).toBe('good');
-    const theirs = formatEvent({ ...shot, attacker_owner: 2, defender: { kind: 'Unit', unit: 7, owner: 0, unit_kind: 'Soldier' } } as Event, ctx);
+    const theirs = formatEvent({ ...shot, attacker_owner: 2, defender: { kind: 'Unit', unit: 7, owner: 0, unit_kind: 'Spearman' } } as Event, ctx);
     expect(theirs.text).toBe("Hollow Crown's city Tithe Station fired on your Spearman: −14 HP (66 left)");
     expect(theirs.tone).toBe('bad');
     expect(formatEvent({ ...shot, defender_hp_after: 0 } as Event, ctx).text).toBe("Tithe Station fired on Hollow Crown's Scout: −14 HP, destroyed");
@@ -372,25 +372,25 @@ describe('event formatting', () => {
 
   it('G18: an attack whose defender survives says what happened and that the attacker needs orders', () => {
     const camp = { ...ctx, campAt: (h: { q: number; r: number }) => h.q === 3 && h.r === 1, place: () => '2 tiles NE of Levy Reach' };
-    const barbarian: Event = { ...battle, defender: { kind: 'Unit', unit: 9, owner: 255, unit_kind: 'Soldier' },
+    const barbarian: Event = { ...battle, defender: { kind: 'Unit', unit: 9, owner: 255, unit_kind: 'Spearman' },
       damage_to_defender: 20, damage_to_attacker: 32, attacker_hp_after: 68, defender_hp_after: 80 };
     expect(formatEvent(barbarian, camp)).toMatchObject({ category: 'combat', weight: 2,
       text: 'Your Spearman attacked the Barbarian Spearman at the camp 2 tiles NE of Levy Reach: defender −20 HP, attacker −32 HP (68 HP left). Needs orders.' });
     // The defender's side reads as before; a kill or a loss needs no "Needs orders".
-    expect(formatEvent({ ...barbarian, attacker_owner: 3, defender: { kind: 'Unit', unit: 9, owner: 0, unit_kind: 'Soldier' } }, ctx).text)
+    expect(formatEvent({ ...barbarian, attacker_owner: 3, defender: { kind: 'Unit', unit: 9, owner: 0, unit_kind: 'Spearman' } }, ctx).text)
       .not.toContain('Needs orders');
     expect(formatEvent(battle, ctx).text).toContain('The defender was destroyed.');
   });
 
   it('G21: a unit hit while pulling back says where it got to, for both sides', () => {
-    const leaving: Event = { ...battle, attacker: 9, attacker_owner: 2, defender: { kind: 'Unit', unit: 7, owner: 0, unit_kind: 'Ranger' },
+    const leaving: Event = { ...battle, attacker: 9, attacker_owner: 2, defender: { kind: 'Unit', unit: 7, owner: 0, unit_kind: 'Archer' },
       damage_to_defender: 38, defender_hp_after: 20, attacker_hp_after: 80, defender_leaving: true };
     const moved: Event = { type: 'UnitMoved', unit: 7, owner: 0, from: { q: 3, r: 1 }, to: { q: 3, r: 0 } };
     const lines = formatEvents([leaving, moved], { ...ctx, place: () => 'Brasslock' });
     expect(lines[0]).toMatchObject({ text: "Your Archer was hit by Hollow Crown's Scout from out of sight while pulling back (−38 HP) and reached Brasslock",
       at: { q: 3, r: 0 }, tone: 'bad', hp: [{ text: '−38 HP', tone: 'bad' }] });
     expect(lines[0].details.join(' ')).toContain('no fortification');
-    const theirs = formatEvents([{ ...leaving, attacker: 7, attacker_owner: 0, defender: { kind: 'Unit', unit: 9, owner: 2, unit_kind: 'Ranger' } },
+    const theirs = formatEvents([{ ...leaving, attacker: 7, attacker_owner: 0, defender: { kind: 'Unit', unit: 9, owner: 2, unit_kind: 'Archer' } },
       { ...moved, unit: 9, owner: 2 }], ctx);
     expect(theirs[0].text).toBe('Your Spearman hit the retreating Archer (−38 HP); it got away with 20 HP. Needs orders.');
     expect(theirs[0].tone).toBe('good');
@@ -431,11 +431,11 @@ describe('event formatting', () => {
   });
 
   it('reports a unit that reached its own city first, and how the fight there ended', () => {
-    const own = { type: 'CityReinforced', unit: 7, owner: 0, unit_kind: 'Soldier', city: 1, at: { q: 2, r: 2 } } as Event;
+    const own = { type: 'CityReinforced', unit: 7, owner: 0, unit_kind: 'Spearman', city: 1, at: { q: 2, r: 2 } } as Event;
     const held = formatEvents([own], ctx).find((l) => l.text.includes('first'))!;
     expect(held.text).toBe('Your Spearman reached Tithe Station first and held it');
     expect([held.category, held.tone, held.weight]).toEqual(['combat', 'good', 2]);
-    const lost = formatEvents([own, { type: 'UnitDestroyed', unit: 7, owner: 0, unit_kind: 'Soldier', at: { q: 2, r: 2 } } as Event], ctx)[0];
+    const lost = formatEvents([own, { type: 'UnitDestroyed', unit: 7, owner: 0, unit_kind: 'Spearman', at: { q: 2, r: 2 } } as Event], ctx)[0];
     expect(lost.text).toBe('Your Spearman reached Tithe Station first and fought as its garrison until it was destroyed');
     expect(lost.tone).toBe('bad');
     const fell = formatEvents([own, { type: 'CityCaptured', city: 1, from: 0, to: 2 } as Event], ctx)[0];
@@ -604,18 +604,18 @@ it('names players as the rest of the UI does: You, or the empire, never a raw se
   // Two teams play Celts, so the player's name tells them apart.
   expect(formatEvent({ type: 'CityFounded', owner: 2, city: 4, name: 'Cairnhold', at: { q: 1, r: 1 } } as Event, ctx).text).toBe('Celts · AI 3 founded Cairnhold');
   expect(formatEvent({ type: 'CityFounded', owner: 0, city: 5, name: 'Brasslock', at: { q: 1, r: 1 } } as Event, ctx).text).toBe('You founded Brasslock');
-  expect(formatEvent({ type: 'MoveBlocked', unit: 7, owner: 0, at: { q: 2, r: 1 }, toward: { q: 3, r: 1 }, reason: `${PEACE_BLOCK_PREFIX}Swiss envoy's Scout` } as Event, { ...ctx, unitKind: () => 'Soldier' }).text)
+  expect(formatEvent({ type: 'MoveBlocked', unit: 7, owner: 0, at: { q: 2, r: 1 }, toward: { q: 3, r: 1 }, reason: `${PEACE_BLOCK_PREFIX}Swiss envoy's Scout` } as Event, { ...ctx, unitKind: () => 'Spearman' }).text)
     .toBe("Your Spearman couldn't enter this tile: Switzerland's Scout is there and you're at Peace");
   expect(ctx.renamePlayers!("blocked by Player 1's Spearman and AI 4's Scout")).toBe("blocked by your Spearman and Celts · AI 4's Scout");
   // A fallen city's force contest names the winning side by its empire, never its seat label.
   const cityTie = (reason: string) => formatEvent({ type: 'MoveBlocked', unit: 7, owner: 0, at: { q: 2, r: 1 }, toward: { q: 3, r: 1 }, reason } as Event,
-    { ...ctx, unitKind: () => 'Soldier' }).details?.[0];
+    { ...ctx, unitKind: () => 'Spearman' }).details?.[0];
   expect(cityTie('AI 4 brought equal force (30 each) and won the draw for the city')).toContain('Celts · AI 4 brought equal force (30 each)');
   expect(cityTie('AI 4 took the city with force 40 against your 30')).toContain('Celts · AI 4 took the city');
   expect(cityTie('Player 1 brought equal force (30 each) and won the draw for the city')).toBe('You brought equal force (30 each) and won the draw for the city');
   // The reason is written for the losing unit's owner: a rival's loss names that rival, never "your".
   const rivalLoss = (reason: string) => formatEvent({ type: 'MoveBlocked', unit: 9, owner: 1, at: { q: 2, r: 1 }, toward: { q: 3, r: 1 }, reason } as Event,
-    { ...ctx, unitKind: () => 'Soldier' }).details?.[0];
+    { ...ctx, unitKind: () => 'Spearman' }).details?.[0];
   expect(rivalLoss('Player 1 took the city with force 40 against your 30')).toBe("You took the city with force 40 against Switzerland's 30");
 });
 
@@ -724,7 +724,7 @@ it('explains a Settler whose destination can no longer hold a city, from what th
   const dest = { q: capital.pos.q + 5, r: capital.pos.r };
   const di = tileIndex(dest, before.width, before.height);
   before.tiles[di] = { ...before.tiles[di], terrain: 'Plains', explored: true, owner: null };
-  const soldier = before.units.find((u) => u.owner === before.me && u.kind === 'Soldier')!;
+  const soldier = before.units.find((u) => u.owner === before.me && u.kind === 'Spearman')!;
   const settler = { ...soldier, kind: 'Settler' as const, military: false, pos: { q: capital.pos.q + 1, r: capital.pos.r }, goto: dest };
   before.units = before.units.map((u) => (u.id === settler.id ? settler : u));
   // A rival founds Brasslock two tiles past the destination.
@@ -822,7 +822,7 @@ describe('the Mongols’ Yam Relay Station in the report', () => {
   const lost = (player: number): Event => ({ type: 'FactionGoalLost', player, faction: 'Mongols', vp: 2 });
   const got = (player: number, again?: boolean): Event => ({ type: 'FactionGoalCompleted', player, faction: 'Mongols', vp: 2, ...(again ? { again } : {}) });
   const taken = (from: number, to: number): Event => ({ type: 'CityCaptured', city: 1, from, to });
-  const built = (owner: number): Event => ({ type: 'ProductionCompleted', city: 1, owner, item: { kind: 'Building', building: 'CourierHall' } });
+  const built = (owner: number): Event => ({ type: 'ProductionCompleted', city: 1, owner, item: { kind: 'Building', building: 'YamRelayStation' } });
   const goal = (events: Event[], context = c) => formatEvents(events, context).filter((l) => l.category === 'victory').map((l) => [l.text, l.tone]);
 
   it('words the moment the Hall is built, from the viewer’s side', () => {
@@ -878,7 +878,7 @@ describe('objectiveCloseLines', () => {
     const lines = objectiveCloseLines(before, after);
     expect(lines).toHaveLength(1);
     expect(lines[0]).toMatchObject({ category: 'victory', tone: 'good', weight: 2, players: [after.me] });
-    expect(lines[0].text).toBe('Close to the Classical Age’s VP: Gain 4 cities (3 of 4, 1 to go)');
+    expect(lines[0].text).toBe('Close to the Classical Age’s VP: Dominion, gain 4 cities (3 of 4, 1 to go)');
     expect(lines[0].details[0]).toContain('Meet the Classical Age’s card to score its 1 VP');
     // The next turn it is still one away: the line does not repeat.
     expect(objectiveCloseLines(after, after)).toEqual([]);

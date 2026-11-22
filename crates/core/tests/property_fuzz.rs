@@ -241,7 +241,7 @@ fn invariant_checker_rejects_corrupted_states() {
     let name = "invariant_checker_rejects_corrupted_states";
     let mut valid = arena(101, &[0, 0, 1]);
     let pos = Hex::new(3, 3);
-    let military = spawn_unit(&mut valid, PlayerId(0), UnitKind::Soldier, pos);
+    let military = spawn_unit(&mut valid, PlayerId(0), UnitKind::Spearman, pos);
     let civilian = spawn_unit(&mut valid, PlayerId(1), UnitKind::Settler, pos);
     let city = add_city(&mut valid, PlayerId(0), Hex::new(7, 3));
     let orders = Orders::new();
@@ -262,7 +262,7 @@ fn invariant_checker_rejects_corrupted_states() {
         corruptions.push(("city HP", bad));
     }
     for (kind, expected) in [
-        (UnitKind::Ranger, "military stacking"),
+        (UnitKind::Archer, "military stacking"),
         (UnitKind::Scout, "military stacking"),
         (UnitKind::Settler, "civilian stacking"),
     ] {
@@ -346,19 +346,19 @@ fn boundary_missing_foreign_and_duplicate_orders() {
                 Order::BuyItem {
                     city: CityId(0),
                     item: ProductionItem::Unit {
-                        unit: UnitKind::Soldier,
+                        unit: UnitKind::Spearman,
                     },
                 },
                 Order::SetProduction {
                     city: CityId(u32::MAX),
                     item: ProductionItem::Unit {
-                        unit: UnitKind::Soldier,
+                        unit: UnitKind::Spearman,
                     },
                 },
                 Order::BuyItem {
                     city: own_city,
                     item: ProductionItem::Unit {
-                        unit: UnitKind::Soldier,
+                        unit: UnitKind::Spearman,
                     },
                 }, // idle city
                 Order::SetResearch {
@@ -510,7 +510,7 @@ fn boundary_extreme_move_coordinates_are_nonfatal() {
     let state = fresh(0);
     let unit = state
         .units_of(PlayerId(0))
-        .find(|u| u.kind == UnitKind::Soldier)
+        .find(|u| u.kind == UnitKind::Spearman)
         .unwrap()
         .id;
     reject_coordinates(
@@ -524,7 +524,7 @@ fn boundary_extreme_move_coordinates_are_nonfatal() {
 #[test]
 fn boundary_extreme_ranged_coordinates_are_nonfatal() {
     let mut state = arena(103, &[0, 1]);
-    let unit = spawn_unit(&mut state, PlayerId(0), UnitKind::Ranger, Hex::new(3, 3));
+    let unit = spawn_unit(&mut state, PlayerId(0), UnitKind::Archer, Hex::new(3, 3));
     reject_coordinates(
         "boundary_extreme_ranged_coordinates_are_nonfatal",
         &state,
@@ -549,7 +549,7 @@ fn boundary_simultaneous_contests() {
                 let mut orders = Orders::new();
                 for i in 0..3 {
                     let kind = if civilian_mask & (1 << i) == 0 {
-                        UnitKind::Soldier
+                        UnitKind::Spearman
                     } else {
                         UnitKind::Settler
                     };
@@ -643,7 +643,7 @@ fn boundary_unaffordable_buys_and_upgrades() {
     let mut base = arena(105, &[0, 1]);
     let city = add_city(&mut base, p, Hex::new(3, 3));
     let city_pos = base.cities[&city].pos;
-    let soldier = spawn_unit(&mut base, p, UnitKind::Soldier, city_pos);
+    let soldier = spawn_unit(&mut base, p, UnitKind::Spearman, city_pos);
     base.player_mut(p).techs.extend([
         TechId::BronzeWorking,
         TechId::IronWorking,
@@ -656,13 +656,13 @@ fn boundary_unaffordable_buys_and_upgrades() {
     tile.resource = Some(legatum_core::Resource::Iron);
     tile.owner = Some(p);
     let upgrade_cost =
-        legatum_core::rules::units::upgrade_cost_for(base.player(p).faction, UnitKind::Soldier)
+        legatum_core::rules::units::upgrade_cost_for(base.player(p).faction, UnitKind::Spearman)
             .unwrap();
     let buy_cost = economy::buy_cost_for(
         &base,
         &base.cities[&city],
         ProductionItem::Unit {
-            unit: UnitKind::Soldier,
+            unit: UnitKind::Spearman,
         },
     )
     .unwrap();
@@ -681,14 +681,14 @@ fn boundary_unaffordable_buys_and_upgrades() {
                 Order::BuyItem {
                     city,
                     item: ProductionItem::Unit {
-                        unit: UnitKind::Soldier,
+                        unit: UnitKind::Spearman,
                     },
                 }, // appears first, but unit upgrades are charged first
                 Order::UpgradeUnit { unit: soldier },
                 Order::BuyItem {
                     city,
                     item: ProductionItem::Unit {
-                        unit: UnitKind::Soldier,
+                        unit: UnitKind::Spearman,
                     },
                 },
             ],
@@ -713,7 +713,7 @@ fn boundary_unaffordable_buys_and_upgrades() {
                 == if gold >= upgrade_cost {
                     UnitKind::Phalangite
                 } else {
-                    UnitKind::Soldier
+                    UnitKind::Spearman
                 },
             "only affordable upgrades change kind",
         );
@@ -729,10 +729,10 @@ fn boundary_production_and_upkeep() {
     // The Byzantium's levy cap would keep production blocked after the upkeep thins the army.
     state.player_mut(p).faction = legatum_core::Faction::Switzerland;
     state.cities.get_mut(&city).unwrap().production_stored =
-        data::unit_stats_for(state.player(p).faction, UnitKind::Soldier).cost;
+        data::unit_stats_for(state.player(p).faction, UnitKind::Spearman).cost;
     // Occupy all seven spawn tiles, making production wait until upkeep creates space.
     for pos in state.cities[&city].pos.within(1) {
-        spawn_unit(&mut state, p, UnitKind::Soldier, pos);
+        spawn_unit(&mut state, p, UnitKind::Spearman, pos);
     }
     let mut coverage = Coverage::default();
     for _ in 0..12 {
@@ -741,7 +741,7 @@ fn boundary_production_and_upkeep() {
             vec![Order::SetProduction {
                 city,
                 item: ProductionItem::Unit {
-                    unit: UnitKind::Soldier,
+                    unit: UnitKind::Spearman,
                 },
             }],
         )]);
@@ -777,7 +777,7 @@ fn boundary_zero_hp_city_is_valid_until_capture() {
     let pos = Hex::new(4, 4);
     let city = add_city(&mut state, PlayerId(1), pos);
     state.cities.get_mut(&city).unwrap().hp = 1;
-    let ranger = spawn_unit(&mut state, PlayerId(0), UnitKind::Ranger, pos.neighbor(0));
+    let ranger = spawn_unit(&mut state, PlayerId(0), UnitKind::Archer, pos.neighbor(0));
     let orders = Orders::from([(
         PlayerId(0),
         vec![Order::RangedAttack {

@@ -28,8 +28,8 @@ export function diplomacyState(turn = 1, { met = false, strangers = false } = {}
     const i = idxOf(s, h); s.owner[i] = c.owner; s.tileCity[i] = c.id;
   }
   for (const p of s.players) p.gold = 1000;
-  for (const pos of [fromOffset(5, 8), fromOffset(4, 8), fromOffset(5, 9)]) spawnUnit(s, 0, 'Soldier', pos, false);
-  spawnUnit(s, 1, 'Soldier', s.cities[1].pos, false);
+  for (const pos of [fromOffset(5, 8), fromOffset(4, 8), fromOffset(5, 9)]) spawnUnit(s, 0, 'Spearman', pos, false);
+  spawnUnit(s, 1, 'Spearman', s.cities[1].pos, false);
   if (met) { spawnUnit(s, 0, 'Scout', fromOffset(19, 8), false); spawnUnit(s, 1, 'Scout', fromOffset(7, 7), false); }
   refreshVision(s);
   if (strangers) s.diplomacy!.contacts = []; else meetAll(s);

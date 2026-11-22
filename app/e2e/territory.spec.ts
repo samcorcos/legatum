@@ -28,7 +28,7 @@ function grownCity(population = 36, ring4 = 5) {
   const s = diplomacyState(12, { met: true });
   const c = s.cities[0];
   c.population = population;
-  c.producing = { kind: 'Unit', unit: 'Soldier' };
+  c.producing = { kind: 'Unit', unit: 'Spearman' };
   // Scouted well past the border, so the tiles beyond three hexes are known ground.
   for (const h of within(c.pos, 6)) s.players[0].explored[idxOf(s, h)] = 1;
   for (const r of [2, 3, 4]) {
@@ -47,7 +47,7 @@ function youngCity() {
   const s = diplomacyState(12, { met: true });
   const c = s.cities[0];
   c.population = 4;
-  c.producing = { kind: 'Unit', unit: 'Soldier' };
+  c.producing = { kind: 'Unit', unit: 'Spearman' };
   for (const h of ring(c.pos, 2).slice(0, 3)) {
     const i = idxOf(s, h);
     s.owner[i] = c.owner; s.tileCity[i] = c.id;
@@ -116,7 +116,7 @@ for (const size of SIZES) {
     test('the territory bar label stays one line with "unlocks Settler", and the tile totals are labelled', async ({ page }) => {
       const s = diplomacyState(12, { met: true });
       s.cities[0].population = 1;
-      s.cities[0].producing = { kind: 'Unit', unit: 'Soldier' };
+      s.cities[0].producing = { kind: 'Unit', unit: 'Spearman' };
       await open(page, s);
       const panel = page.locator('.city-panel');
       const label = panel.getByTestId('city-growth').locator('.pbar-label');

@@ -727,15 +727,15 @@ fn yields_base<const FULL: bool>(
         y.add("Machinery: Workshop", Yields::new(0, 1, 0, 0));
     }
     if knows(TechId::ReplaceableParts)
-        && data::has_building(&city.buildings, BuildingKind::Autoworks)
-        && crate::resources::idle_tier(owner, city.id, BuildingKind::Autoworks).is_none()
+        && data::has_building(&city.buildings, BuildingKind::Factory)
+        && crate::resources::idle_tier(owner, city.id, BuildingKind::Factory).is_none()
     {
         y.add("Replaceable Parts: Factory", Yields::new(0, 2, 0, 0));
     }
     if knows(TechId::PrintingPress) && data::has_building(&city.buildings, BuildingKind::Market) {
         y.add("Printing Press: Market", Yields::new(0, 0, 1, 0));
     }
-    if data::has_building(&city.buildings, BuildingKind::Laboratory) {
+    if data::has_building(&city.buildings, BuildingKind::Library) {
         // Printing Press adds Science to the Library family.
         if knows(TechId::PrintingPress) {
             y.add("Printing Press", Yields::new(0, 0, 0, 1));
@@ -1285,7 +1285,7 @@ pub fn buy_percent(state: &GameState, owner: PlayerId) -> i32 {
 /// Items that can never be bought, only produced: the Heir, every Walls tier and world wonders.
 pub fn is_unbuyable(item: ProductionItem) -> bool {
     item == (ProductionItem::Unit {
-        unit: UnitKind::Heir,
+        unit: UnitKind::HeirToTheThrone,
     }) || matches!(item, ProductionItem::Building { building } if data::building_family(building) == BuildingKind::Walls)
         || data::is_great_work_item(item)
 }
@@ -1726,7 +1726,7 @@ fn building_check_at_era<R: Reason>(
             )
         }));
     }
-    if building == BuildingKind::CourierHall
+    if building == BuildingKind::YamRelayStation
         && let Some(reason) = courier_hall_blocker(state, city)
     {
         return Some(R::word(|| reason));
@@ -1780,7 +1780,7 @@ fn imperial_diwan_blocker(state: &GameState, city: &City) -> Option<String> {
 /// instead. An active or queued build in another city counts too.
 fn courier_hall_blocker(state: &GameState, city: &City) -> Option<String> {
     if let Some((tile, holder)) =
-        crate::landmarks::site(state, city.owner, BuildingKind::CourierHall)
+        crate::landmarks::site(state, city.owner, BuildingKind::YamRelayStation)
         && holder.is_none()
     {
         return Some(format!(
@@ -1802,9 +1802,9 @@ fn courier_hall_blocker(state: &GameState, city: &City) -> Option<String> {
         matches!(
             item,
             ProductionItem::Building {
-                building: BuildingKind::CourierHall
+                building: BuildingKind::YamRelayStation
             } | ProductionItem::Wonder {
-                building: BuildingKind::CourierHall,
+                building: BuildingKind::YamRelayStation,
                 ..
             }
         )
@@ -1922,7 +1922,7 @@ pub(crate) fn production_check_at_era<R: Reason>(
             )
         })),
         ProductionItem::Unit {
-            unit: UnitKind::Heir,
+            unit: UnitKind::HeirToTheThrone,
         } => heir_check(state, city),
         ProductionItem::Improvement { improvement, tile } => {
             crate::improvements::check(state, city, improvement, tile)
@@ -1988,7 +1988,7 @@ fn heir_check<R: Reason>(state: &GameState, city: &City) -> Option<R> {
         }));
     }
     let heir = ProductionItem::Unit {
-        unit: UnitKind::Heir,
+        unit: UnitKind::HeirToTheThrone,
     };
     let elsewhere = state.cities_of(city.owner).find(|other| {
         other.id != city.id
@@ -2138,7 +2138,7 @@ mod tests {
         let mut s = blank_game(&GameSetup::all_ai(1), Map::new(12, 12, Terrain::Grassland));
         let (id, tile) = owned_city(&mut s);
         let before = city_totals(&s, &s.cities[&id]);
-        crate::game::spawn_unit(&mut s, PlayerId::BARBARIAN, UnitKind::Soldier, tile);
+        crate::game::spawn_unit(&mut s, PlayerId::BARBARIAN, UnitKind::Spearman, tile);
         assert!(!worked_tiles(&s, &s.cities[&id]).contains(&tile));
         let after = city_totals(&s, &s.cities[&id]);
         assert!(after.food < before.food || after.production < before.production);

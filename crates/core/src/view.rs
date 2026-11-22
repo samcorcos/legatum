@@ -1776,7 +1776,7 @@ pub enum ViewDetail {
     ///   and tech unlocks (totals, worked tiles and focus are kept);
     /// - `UnlockCity`'s growth forecasts (`turns_to_six_after`, `turns_to_eight_after`,
     ///   `turns_to_eight_at_gate`), and its `yields_after` (`CityYields::empty`) and
-    ///   `food_surplus_after` (0) except for the Machine Shop and Autoworks, whose Production
+    ///   `food_surplus_after` (0) except for the Machine Shop and Factory, whose Production
     ///   gain the AI prices;
     /// - `TechOption::income_change` and `TechEffects::growth`;
     /// - build options' `buy_quote` and `upkeep` previews, and `CityDetail::population_unlocks`;
@@ -1905,7 +1905,7 @@ pub fn player_view_cached(
                 || is_visible(u.pos)
                 || visibility::attack_revealed_to(state, team, u)
                 // The Heir's position is public to every empire, in fog too (user, 2026-10-22).
-                || u.kind == UnitKind::Heir
+                || u.kind == UnitKind::HeirToTheThrone
         })
         .map(|u| unit_view(state, me, u))
         .collect();
@@ -2818,8 +2818,8 @@ pub(crate) mod tests {
     #[test]
     fn fog_hides_enemy_units_outside_sight() {
         let mut s = test_state(24, 16);
-        let mine = spawn_unit(&mut s, P0, UnitKind::Soldier, at(2, 2));
-        let near = spawn_unit(&mut s, P2, UnitKind::Soldier, at(4, 2));
+        let mine = spawn_unit(&mut s, P0, UnitKind::Spearman, at(2, 2));
+        let near = spawn_unit(&mut s, P2, UnitKind::Spearman, at(4, 2));
         let far = spawn_unit(&mut s, P2, UnitKind::Scout, at(18, 10));
         s.units.get_mut(&near).unwrap().goto = Some(at(0, 0));
         s.units.get_mut(&mine).unwrap().goto = Some(at(5, 5));
@@ -2843,10 +2843,10 @@ pub(crate) mod tests {
     #[test]
     fn teammates_share_vision_and_see_each_others_units() {
         let mut s = test_state(24, 16);
-        let a = spawn_unit(&mut s, P0, UnitKind::Soldier, at(2, 2));
+        let a = spawn_unit(&mut s, P0, UnitKind::Spearman, at(2, 2));
         let b = spawn_unit(&mut s, P1, UnitKind::Scout, at(18, 10));
         s.units.get_mut(&b).unwrap().goto = Some(at(20, 10));
-        let enemy = spawn_unit(&mut s, P2, UnitKind::Soldier, at(19, 10));
+        let enemy = spawn_unit(&mut s, P2, UnitKind::Spearman, at(19, 10));
         visibility::update_explored(&mut s);
 
         let v = player_view(&s, P0);
@@ -2995,7 +2995,7 @@ pub(crate) mod tests {
         let remembered = city(&player_view(&s, P0), id).unwrap().clone();
         s.units.get_mut(&scout).unwrap().pos = at(20, 12);
         crate::rules::battle::capture_city(&mut s, id, P3, &mut Vec::new());
-        let hidden_guard = spawn_unit(&mut s, P3, UnitKind::Soldier, site);
+        let hidden_guard = spawn_unit(&mut s, P3, UnitKind::Spearman, site);
         let c = s.cities.get_mut(&id).unwrap();
         c.name = "Changed unseen".into();
         c.hp = 17;
@@ -3126,7 +3126,7 @@ pub(crate) mod tests {
         let hidden = add_city(&mut s, P3, at(20, 12), 3);
         for id in [rival, hidden] {
             let buildings = &mut s.cities.get_mut(&id).unwrap().buildings;
-            buildings.insert(BuildingKind::RelayUplink);
+            buildings.insert(BuildingKind::GreatLibrary);
             buildings.insert(BuildingKind::Granary);
         }
         let scout = spawn_unit(&mut s, P0, UnitKind::Scout, at(4, 5));
@@ -3135,7 +3135,7 @@ pub(crate) mod tests {
         let v = player_view(&s, P0);
         let seen = city(&v, rival).unwrap();
         assert!(seen.visible);
-        assert_eq!(seen.great_works, vec![BuildingKind::RelayUplink]);
+        assert_eq!(seen.great_works, vec![BuildingKind::GreatLibrary]);
         assert!(seen.detail.is_none(), "rival buildings stay private");
         assert!(city(&v, hidden).is_none(), "unexplored city stays hidden");
 
@@ -3144,14 +3144,14 @@ pub(crate) mod tests {
             .get_mut(&rival)
             .unwrap()
             .buildings
-            .insert(BuildingKind::WorldExchange);
+            .insert(BuildingKind::GrandBazaar);
         visibility::update_explored(&mut s);
         let v = player_view(&s, P0);
         let fogged = city(&v, rival).unwrap();
         assert!(!fogged.visible);
         assert_eq!(
             fogged.great_works,
-            vec![BuildingKind::RelayUplink, BuildingKind::WorldExchange]
+            vec![BuildingKind::GreatLibrary, BuildingKind::GrandBazaar]
         );
         assert!(fogged.detail.is_none());
     }
@@ -3216,7 +3216,7 @@ pub(crate) mod tests {
         let site = at(6, 5);
         let c = s.cities.get_mut(&rival).unwrap();
         c.producing = Some(ProductionItem::Wonder {
-            building: BuildingKind::RelayUplink,
+            building: BuildingKind::GreatLibrary,
             tile: site,
         });
         c.production_stored = 240;
@@ -3226,7 +3226,7 @@ pub(crate) mod tests {
         let progress = city(&first, rival).unwrap().construction.unwrap();
         assert_eq!(
             (progress.building, progress.tile),
-            (BuildingKind::RelayUplink, site)
+            (BuildingKind::GreatLibrary, site)
         );
         assert!(progress.progress > 0);
         s.units.get_mut(&scout).unwrap().pos = at(20, 12);
@@ -3240,7 +3240,7 @@ pub(crate) mod tests {
     #[test]
     fn production_option_turns_include_only_unassigned_or_own_banked_production() {
         let soldier = ProductionItem::Unit {
-            unit: UnitKind::Soldier,
+            unit: UnitKind::Spearman,
         };
         let granary = ProductionItem::Building {
             building: BuildingKind::Granary,
@@ -3252,14 +3252,14 @@ pub(crate) mod tests {
             c.production_stored = 30;
             c.producing = producing;
             if producing.is_some() {
-                // The Monument owns its 30; give the Soldier its own banked 30 instead.
+                // The Monument owns its 30; give the Spearman its own banked 30 instead.
                 c.production_stored = 0;
                 c.bank(soldier, 30);
             }
             let v = player_view(&s, P0);
             let detail = city(&v, id).unwrap().detail.as_ref().unwrap();
             let option = detail.options.iter().find(|o| o.item == soldier).unwrap();
-            // Soldier 80, 30 stored, 5 a turn.
+            // Spearman 80, 30 stored, 5 a turn.
             assert_eq!(option.turns, 10);
             assert_eq!(option.production_stored, 30);
             assert_eq!(
@@ -3336,7 +3336,7 @@ pub(crate) mod tests {
     #[test]
     fn production_option_quotes_match_switch_validation_and_actual_spending() {
         let soldier = ProductionItem::Unit {
-            unit: UnitKind::Soldier,
+            unit: UnitKind::Spearman,
         };
         let granary = ProductionItem::Building {
             building: BuildingKind::Granary,
@@ -3360,7 +3360,7 @@ pub(crate) mod tests {
                         .iter()
                         .find(|o| o.item == soldier)
                         .unwrap();
-                    // Unassigned Production joins the Soldier; a Monument's stays its own.
+                    // Unassigned Production joins the Spearman; a Monument's stays its own.
                     assert_eq!(
                         option.production_stored,
                         if producing.is_none() { stored } else { 0 }
@@ -3418,7 +3418,7 @@ pub(crate) mod tests {
         let mut s = test_state(24, 16);
         let id = add_city(&mut s, P0, at(5, 5), 1);
         let soldier = ProductionItem::Unit {
-            unit: UnitKind::Soldier,
+            unit: UnitKind::Spearman,
         };
         let granary = ProductionItem::Building {
             building: BuildingKind::Granary,
@@ -3451,7 +3451,7 @@ pub(crate) mod tests {
                 .contains("already bought")
         );
         let switched = detail.options.iter().find(|o| o.item == granary).unwrap();
-        // The 10 unassigned joined the Soldier when it started; a Monument starts from 0.
+        // The 10 unassigned joined the Spearman when it started; a Monument starts from 0.
         assert_eq!(switched.production_stored, 0);
         let quote = switched.buy_cost;
         assert_eq!(quote, Some(switched.cost * 175 / 100));
@@ -3629,7 +3629,7 @@ pub(crate) mod tests {
             building: BuildingKind::Granary,
         };
         let soldier = ProductionItem::Unit {
-            unit: UnitKind::Soldier,
+            unit: UnitKind::Spearman,
         };
         let market = ProductionItem::Building {
             building: BuildingKind::Market,
@@ -3643,7 +3643,7 @@ pub(crate) mod tests {
         assert_eq!(turns_for(market), None, "needs Exchange");
         assert!(
             turns_for(ProductionItem::Unit {
-                unit: UnitKind::Trooper
+                unit: UnitKind::Pikeman
             })
             .is_none()
         );
@@ -3680,7 +3680,12 @@ pub(crate) mod tests {
         let mut s = test_state(24, 16);
         s.players[1].faction_goal_done = true;
         // The Remnant's goal is held by whoever holds its Heir: here the Remnant itself.
-        let heir = crate::game::spawn_unit(&mut s, P1, UnitKind::Heir, Hex::from_offset(3, 3));
+        let heir = crate::game::spawn_unit(
+            &mut s,
+            P1,
+            UnitKind::HeirToTheThrone,
+            Hex::from_offset(3, 3),
+        );
         s.units.get_mut(&heir).unwrap().heir_of = Some(P1);
         s.turn = 42;
         let v = player_view(&s, P0);
@@ -3727,7 +3732,7 @@ pub(crate) mod tests {
     fn economy_and_research() {
         let mut s = test_state(24, 16);
         add_city(&mut s, P0, at(3, 3), 2);
-        for kind in [UnitKind::Soldier, UnitKind::Soldier, UnitKind::Ranger] {
+        for kind in [UnitKind::Spearman, UnitKind::Spearman, UnitKind::Archer] {
             spawn_unit(&mut s, P0, kind, at(3, 3));
         }
         s.players[0].gold = 33;
@@ -3801,7 +3806,7 @@ pub(crate) mod tests {
         let mut s = test_state(24, 16);
         add_city(&mut s, P0, at(3, 3), 2);
         add_city(&mut s, P2, at(7, 4), 2);
-        spawn_unit(&mut s, P2, UnitKind::Soldier, at(6, 3));
+        spawn_unit(&mut s, P2, UnitKind::Spearman, at(6, 3));
         visibility::update_explored(&mut s);
         let a = serde_json::to_string(&player_view(&s, P0)).unwrap();
         let b = serde_json::to_string(&player_view(&s.clone(), P0)).unwrap();

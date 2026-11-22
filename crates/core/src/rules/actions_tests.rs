@@ -474,7 +474,7 @@ fn sparta_game() -> (GameState, CityId, CityId) {
         .get_mut(&shrine)
         .unwrap()
         .buildings
-        .insert(BuildingKind::WarShrine);
+        .insert(BuildingKind::Agoge);
     let plain = city(&mut s, 0, hex(8, 2), 3);
     city(&mut s, 1, hex(10, 8), 3);
     (s, shrine, plain)
@@ -482,7 +482,7 @@ fn sparta_game() -> (GameState, CityId, CityId) {
 
 /// A soldier of the given promotion level (Sparta ladder) standing at `at`.
 fn veteran(s: &mut GameState, at: Hex, level: u8) -> UnitId {
-    let id = unit(s, 0, UnitKind::Soldier, at);
+    let id = unit(s, 0, UnitKind::Spearman, at);
     let xp = if level == 0 {
         0
     } else {
@@ -525,7 +525,7 @@ fn retiring_needs_a_veteran_of_the_retire_level_standing_in_a_war_shrine_city() 
     );
     assert!(retire_blocker(&s, A, scout).is_some());
     // Another empire's unit, another faction.
-    let rival = unit(&mut s, 1, UnitKind::Soldier, hex(10, 8));
+    let rival = unit(&mut s, 1, UnitKind::Spearman, hex(10, 8));
     assert!(retire_blocker(&s, A, rival).unwrap().contains("not yours"));
     let mut other = s.clone();
     other.player_mut(A).faction = Faction::Celts;
@@ -824,7 +824,7 @@ fn the_celts_hold_two_vp_while_every_city_has_a_camp_and_lose_them_when_one_is_c
     s = called;
     let camp = s.barbarians.as_ref().unwrap().camps[0].clone();
     let gold = s.player(B).gold;
-    let clearer = unit(&mut s, 1, UnitKind::Soldier, camp.pos);
+    let clearer = unit(&mut s, 1, UnitKind::Spearman, camp.pos);
     s.units.get_mut(&camp.guard.unwrap()).unwrap().hp = 0;
     s.units.remove(&camp.guard.unwrap());
     let _ = clearer;
@@ -863,7 +863,7 @@ fn the_celts_get_no_gold_for_clearing_their_own_rite_camp() {
     let camp = s.barbarians.as_ref().unwrap().camps[0].clone();
     s.units.remove(&camp.guard.unwrap());
     let gold = s.player(A).gold;
-    unit(&mut s, 0, UnitKind::Soldier, camp.pos);
+    unit(&mut s, 0, UnitKind::Spearman, camp.pos);
     let mut events = Vec::new();
     crate::rules::barbarians::clear_camps(&mut s, &mut events);
     assert_eq!(s.player(A).gold, gold, "no reward from the rite's own camp");

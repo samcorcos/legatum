@@ -32,7 +32,7 @@ fn give_hall(s: &mut GameState, city: CityId) {
         .get_mut(&city)
         .unwrap()
         .buildings
-        .insert(BuildingKind::CourierHall);
+        .insert(BuildingKind::YamRelayStation);
     s.player_mut(P0).hall_city = Some(city);
 }
 
@@ -94,7 +94,7 @@ fn cities_founded_later_join_and_roads_outlive_the_hall() {
     }
 }
 
-/// Soldier (2 moves) at the west end of a row of Hills, bound for the east end.
+/// Spearman (2 moves) at the west end of a row of Hills, bound for the east end.
 fn hills_row(road: bool, from_road: bool) -> (GameState, UnitId, Hex) {
     let mut s = test_game(&[(Faction::Switzerland, 0), (Faction::India, 1)]);
     let (a, b) = (at(2, 5), at(5, 5));
@@ -112,7 +112,7 @@ fn hills_row(road: bool, from_road: bool) -> (GameState, UnitId, Hex) {
             t.road = roads::NODE;
         }
     }
-    let u = spawn_unit(&mut s, P0, UnitKind::Soldier, a);
+    let u = spawn_unit(&mut s, P0, UnitKind::Spearman, a);
     spawn_unit(&mut s, P1, UnitKind::Settler, at(18, 18));
     spawn_unit(&mut s, P0, UnitKind::Settler, at(1, 18));
     (s, u, b)
@@ -126,7 +126,7 @@ fn walk(s: &GameState, u: UnitId, to: Hex) -> Hex {
 
 #[test]
 fn road_tiles_cost_one_and_a_unit_starting_on_a_road_has_one_more_move() {
-    // Off road, Hills cost 2: a 2-move Soldier takes one step.
+    // Off road, Hills cost 2: a 2-move Spearman takes one step.
     let (s, u, to) = hills_row(false, false);
     assert_eq!(walk(&s, u, to), at(3, 5));
     // On road tiles it starts on, +1 move and 1 per tile: three steps arrive.
@@ -150,10 +150,10 @@ fn roads_do_not_open_a_foreign_border() {
         }
     }
     s.map.roaded = true;
-    let u = spawn_unit(&mut s, P0, UnitKind::Soldier, at(2, 5));
+    let u = spawn_unit(&mut s, P0, UnitKind::Spearman, at(2, 5));
     spawn_unit(&mut s, P1, UnitKind::Settler, at(18, 18));
     spawn_unit(&mut s, P0, UnitKind::Settler, at(1, 18));
-    assert!(!s.passage_allowed(P0, UnitKind::Soldier, Some(P1)));
+    assert!(!s.passage_allowed(P0, UnitKind::Spearman, Some(P1)));
     let end = walk(&s, u, at(10, 5));
     assert!(end.to_offset().0 <= 5, "stopped at the border, got {end:?}");
 }

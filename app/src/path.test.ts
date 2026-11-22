@@ -102,8 +102,8 @@ describe('pathfinding (mirrors path.rs)', () => {
   it('crosses an allied unit but does not end on it', () => {
     const width = 5, height = 1;
     const tiles: TileView[] = Array.from({ length: width }, () => ({ explored: true, visible: true, terrain: 'Plains', ruin: false, owner: null }));
-    const mover = { id: 1, owner: 0, kind: 'Soldier', military: true, pos: fromOffset(0, 0), max_moves: 2 };
-    const ally = { id: 2, owner: 1, kind: 'Soldier', military: true, pos: fromOffset(1, 0), max_moves: 2 };
+    const mover = { id: 1, owner: 0, kind: 'Spearman', military: true, pos: fromOffset(0, 0), max_moves: 2 };
+    const ally = { id: 2, owner: 1, kind: 'Spearman', military: true, pos: fromOffset(1, 0), max_moves: 2 };
     const view = { width, height, tiles, me: 0, team: 0, units: [mover, ally], cities: [],
       players: [{ id: 0, team: 0 }, { id: 1, team: 1 }],
       diplomacy: { relations: [{ a: 0, b: 1, state: 'Alliance' }] },
@@ -129,7 +129,7 @@ describe('pathfinding (mirrors path.rs)', () => {
 describe('F8 pending movement reservations', () => {
   function scenario() {
     const middle = { q: 4, r: 4 };
-    const unit = (id: number, pos: { q: number; r: number }) => ({ id, owner: 0, kind: 'Ranger', pos, military: true, max_moves: 2, goto: null });
+    const unit = (id: number, pos: { q: number; r: number }) => ({ id, owner: 0, kind: 'Archer', pos, military: true, max_moves: 2, goto: null });
     const a = unit(1, { q: 5, r: 4 });
     const b = unit(2, { q: 4, r: 5 });
     const goals = [{ q: 4, r: 3 }, { q: 5, r: 3 }];
@@ -159,7 +159,7 @@ describe('F8 pending movement reservations', () => {
     const pending = [{ type: 'MoveUnit' as const, unit: a.id, to: goals[0] }];
     view.units[0].kind = 'Scout';
     expect(previewPath(view, b.pos, goals[1], [{ type: 'SetAutomation', unit: a.id, automation: 'Explore', path: route }], b.id)).toContainEqual(middle);
-    view.units[0].kind = 'Ranger';
+    view.units[0].kind = 'Archer';
     expect(previewPath(view, b.pos, goals[1], pending, b.id)).toContainEqual(middle);
     Object.assign(view.units[0], { goto: goals[0], path: route });
     expect(previewPath(view, b.pos, goals[1], [], b.id)).toContainEqual(middle);

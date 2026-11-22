@@ -22,15 +22,15 @@ describe('era cues', () => {
     expect(fills).not.toContain(ATLAS.tone.bad);
   });
   it('words the era gap', () => {
-    expect(eraDeltaWords('Phalangite', 'Soldier')).toBe('one era newer');
-    expect(eraDeltaWords('Soldier', 'AssaultTrooper')).toBe('three eras older');
-    expect(eraDeltaWords('Horseman', 'Soldier')).toBe('same era');
-    expect(forecastEraHeadline('Phalangite', 'Athens', 'Soldier', 26, 22)).toBe('Phalangite, one era newer: 26 vs your 22. It outclasses you.');
+    expect(eraDeltaWords('Phalangite', 'Spearman')).toBe('one era newer');
+    expect(eraDeltaWords('Spearman', 'Musketman')).toBe('three eras older');
+    expect(eraDeltaWords('Horseman', 'Spearman')).toBe('same era');
+    expect(forecastEraHeadline('Phalangite', 'Athens', 'Spearman', 26, 22)).toBe('Phalangite, one era newer: 26 vs your 22. It outclasses you.');
     // Outclassed only by a newer unit that is stronger by its own kit, not by promotion or wounds.
-    expect(outclasses('Phalangite', 'Athens', 'Soldier', 'Sparta', 26, 22)).toBe(true);
-    expect(outclasses('Horseman', 'Athens', 'Soldier', 'Sparta', 20, 40)).toBe(false);
-    expect(outclasses('Soldier', 'Athens', 'Phalangite', 'Sparta', 30, 26)).toBe(false);
-    expect(outclasses('Phalangite', 'Athens', 'Soldier', 'Sparta', 18, 22)).toBe(false);
+    expect(outclasses('Phalangite', 'Athens', 'Spearman', 'Sparta', 26, 22)).toBe(true);
+    expect(outclasses('Horseman', 'Athens', 'Spearman', 'Sparta', 20, 40)).toBe(false);
+    expect(outclasses('Spearman', 'Athens', 'Phalangite', 'Sparta', 30, 26)).toBe(false);
+    expect(outclasses('Phalangite', 'Athens', 'Spearman', 'Sparta', 18, 22)).toBe(false);
   });
 
   it('marks only enemies the selected unit could attack this turn', () => {
@@ -46,21 +46,21 @@ describe('era cues', () => {
     const far = view.units.filter((u) => u.owner !== view.me && u.military && distance(u.pos, hoplite.pos) > 2);
     expect(far.length).toBeGreaterThan(0);
     // A ranged unit marks enemies within its range of where it stands.
-    const archer = view.units.find((u) => u.owner === view.me && u.kind === 'Ranger')!;
+    const archer = view.units.find((u) => u.owner === view.me && u.kind === 'Archer')!;
     expect(attackableEnemies(view, archer).every((u) => distance(u.pos, archer.pos) <= archer.range)).toBe(true);
   });
 
   it('marks what a Keshig can shoot and what it can reach, and counts the spear line bonus only against its charge', async () => {
     const v = await arenaView('Mongols');
     const keshig = addUnit(v, 0, 'Cataphract', { q: 8, r: 5 });
-    const near = addUnit(v, 2, 'Soldier', { q: 9, r: 5 });
-    const far = addUnit(v, 2, 'Soldier', { q: 11, r: 5 });
+    const near = addUnit(v, 2, 'Spearman', { q: 9, r: 5 });
+    const far = addUnit(v, 2, 'Spearman', { q: 11, r: 5 });
     expect(shoots(keshig, near)).toBe(true);
     expect(shoots(keshig, far)).toBe(false);
     // An Archer shoots everything within its range and nothing else; a Cataphract never shoots.
     expect(attackableEnemies(v, keshig).map((u) => u.id).sort()).toEqual([near.id, far.id].sort());
-    const base = unitDefenseStrength('Soldier', 100, 'Grassland', 0, 'Byzantium', 0).total;
+    const base = unitDefenseStrength('Spearman', 100, 'Grassland', 0, 'Byzantium', 0).total;
     expect(matchupStrength(near, 'Byzantium', keshig, false)).toBe(base);
-    expect(matchupStrength(far, 'Byzantium', keshig, false)).toBe(base + classBonusStrength(unitStatsFor('Byzantium', 'Soldier').strength));
+    expect(matchupStrength(far, 'Byzantium', keshig, false)).toBe(base + classBonusStrength(unitStatsFor('Byzantium', 'Spearman').strength));
   });
 });

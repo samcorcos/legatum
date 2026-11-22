@@ -67,7 +67,7 @@ describe.skipIf(!available)('production controls on the Rust engine', () => {
   it('buys a separate Spearman and preserves the chosen building and earned progress', async () => {
     const { client, city } = await renderCity(10, 1_000, 'India', 0, 'Market');
     act(() => button('Buy Spearman for 160 Gold').click());
-    const soldier = { kind: 'Unit', unit: 'Soldier' } as const;
+    const soldier = { kind: 'Unit', unit: 'Spearman' } as const;
     const orders = useGame.getState().orders[0];
     expect(orders).toEqual([{ type: 'BuyItem', city: city.id, item: soldier }]);
     expect(container.textContent).toContain('160 Gold');
@@ -132,7 +132,7 @@ describe.skipIf(!available)('production controls on the Rust engine', () => {
 
   it('keeps the current stall visible when only the tail of a queue changes', async () => {
     const { city, view } = await renderCity();
-    city.detail!.producing = { kind: 'Unit', unit: 'Soldier' };
+    city.detail!.producing = { kind: 'Unit', unit: 'Spearman' };
     city.detail!.production_stall = { kind: 'SpawnBlocked' };
     city.detail!.turns_to_complete = null;
     act(() => root.render(<CityPanel city={city} view={view} />));

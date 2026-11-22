@@ -393,7 +393,7 @@ mod tests {
         let mut v = india(140, 8, 10);
         for i in 0..40u32 {
             v = ViewBuilder { view: v }
-                .unit(100 + i, ENEMY, UnitKind::Soldier, off(5, 5))
+                .unit(100 + i, ENEMY, UnitKind::Spearman, off(5, 5))
                 .build();
         }
         assert!(sakoku_costs(&v).danger >= 40 * NEAR_ENEMY);
@@ -466,7 +466,7 @@ mod tests {
         v.actions.sakoku = Some(sakoku(true, 5));
         for i in 0..80u32 {
             v = ViewBuilder { view: v }
-                .unit(100 + i, ENEMY, UnitKind::Soldier, off(5, 5))
+                .unit(100 + i, ENEMY, UnitKind::Spearman, off(5, 5))
                 .build();
         }
         assert_eq!(vows(&v), (false, true));

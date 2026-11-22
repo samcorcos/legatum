@@ -12,11 +12,11 @@ const core = (query: Record<string, unknown>): unknown => JSON.parse(Game.combat
 
 it('reads faction and baseline piece stats, terrain yields, and spacing from core projections', () => {
   for (const faction of ['India', 'Germany', 'Mongols', 'Celts', 'Athens', 'Switzerland'] as Faction[]) {
-    for (const kind of ['Settler', 'Soldier', 'Cataphract', 'Ranger'] as UnitKind[]) {
+    for (const kind of ['Settler', 'Spearman', 'Cataphract', 'Archer'] as UnitKind[]) {
       expect(unitStatsFor(faction, kind)).toMatchObject(core({ op: 'unitStats', faction, kind }) as object);
       expect(standardUnitStatsFor(faction, kind)).toMatchObject(core({ op: 'standardUnitStats', faction, kind }) as object);
     }
-    for (const kind of ['Walls', 'Workshop', 'Laboratory'] as const) {
+    for (const kind of ['Walls', 'Workshop', 'Library'] as const) {
       expect(buildingStatsFor(faction, kind)).toMatchObject(core({ op: 'buildingStats', faction, kind }) as object);
       expect(standardBuildingStatsFor(faction, kind)).toMatchObject(core({ op: 'standardBuildingStats', faction, kind }) as object);
     }
@@ -37,11 +37,11 @@ it('gives a mounted unit no bonus under fire, and keeps it charging and meeting'
   expect(bonus('Cavalry', 'FieldCannon', false, true)).toBe(0);
   expect(bonus('Cavalry', 'FieldCannon', true, false)).toBeGreaterThan(0);
   expect(bonus('Cavalry', 'FieldCannon', false, false)).toBeGreaterThan(0);
-  expect(bonus('Soldier', 'Cavalry', true, false)).toBeGreaterThan(0);
+  expect(bonus('Spearman', 'Cavalry', true, false)).toBeGreaterThan(0);
 });
 
 it('uses core combat projections for class, shot, wound, city, and exact-roll what-ifs', () => {
-  for (const [own, other] of [['Soldier', 'Cataphract'], ['Cataphract', 'Ranger'], ['Tank', 'Ranger'], ['Cataphract', 'Soldier']] as [UnitKind, UnitKind][]) {
+  for (const [own, other] of [['Spearman', 'Cataphract'], ['Cataphract', 'Archer'], ['Tank', 'Archer'], ['Cataphract', 'Spearman']] as [UnitKind, UnitKind][]) {
     expect(classBonus(own, other)).toEqual(core({ op: 'classBonus', own, other }));
     expect(classBonus(own, other, 'Mongols')).toEqual(core({ op: 'classBonus', own, other, faction: 'Mongols' }));
     for (const attacker_side of [false, true]) for (const shot of [false, true]) {
@@ -62,8 +62,8 @@ it('uses core combat projections for class, shot, wound, city, and exact-roll wh
     expect(exactOdds(own, other, 72, 100, false, 50)).toEqual(core({ op: 'exactOdds', atk: own, def: other, atk_hp: 72, def_hp: 100, ranged: false, city_percent: 50 }));
     expect(splitCounterattackLoss(other, own, 20, 2)).toBe(core({ op: 'splitCounterattackLoss', defender: other, attacker: own, attacker_hp: 20, attackers: 2 }));
   }
-  expect(unitDefenseStrength('Soldier', 65, 'Forest', 6, 'Sparta', 2))
-    .toEqual(core({ op: 'unitDefense', kind: 'Soldier', hp: 65, terrain: 'Forest', fortify: 6, faction: 'Sparta', level: 2 }));
+  expect(unitDefenseStrength('Spearman', 65, 'Forest', 6, 'Sparta', 2))
+    .toEqual(core({ op: 'unitDefense', kind: 'Spearman', hp: 65, terrain: 'Forest', fortify: 6, faction: 'Sparta', level: 2 }));
   expect(cityDefenseCovered(4, 3, 1, 143, 'Switzerland', 2))
     .toEqual(core({ op: 'cityDefense', population: 4, tier: 3, covered: 1, hp: 143, faction: 'Switzerland', era: 2 }));
 });

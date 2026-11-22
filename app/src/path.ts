@@ -314,7 +314,7 @@ export function previewRoute(view: PlayerView, from: Hex, to: Hex, orders: Order
   const terrain = viewCost(view);
   const units = view.units ?? [];
   const mover = units.find((u) => u.owner === view.me && (unitId === undefined ? hexEq(u.pos, from) : u.id === unitId));
-  const kind = mover?.kind ?? 'Soldier';
+  const kind = mover?.kind ?? 'Spearman';
   const destinationCity = (view.cities ?? []).find((city) => hexEq(city.pos, to));
   if (mover && destinationCity && !canEnter(view, kind, destinationCity.owner, true)) return { path: null, risk: null };
   if (mover && units.some((other) => other.id !== mover.id && other.military === mover.military && hexEq(other.pos, to)

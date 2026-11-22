@@ -26,7 +26,7 @@ async function start(page: Page) {
   await expect(page.getByTestId('turn-number')).toHaveText('1');
   return page.evaluate((city) => {
     const s = (window as unknown as GameWindow).legatum.getState(), v = s.views![s.seat];
-    const u = v.units.find((u) => u.owner === v.me && u.kind === 'Ranger')!;
+    const u = v.units.find((u) => u.owner === v.me && u.kind === 'Archer')!;
     s.set({ techOpen: false });
     s.select({ kind: 'unit', id: u.id }); s.jumpTo(city);
     return u.id;

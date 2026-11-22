@@ -45,7 +45,7 @@ fn events(result: &str) -> Vec<Value> {
     v["events_by_player"]["0"].as_array().unwrap().clone()
 }
 
-/// The declaration and two Soldiers sent at Neuchâtel (29,22) and its defender beside it.
+/// The declaration and two Spearmen sent at Neuchâtel (29,22) and its defender beside it.
 fn war_and_attacks() -> Value {
     json!([
         { "type": "DeclareWar", "against": SWITZERLAND, "breach": false },
@@ -87,7 +87,7 @@ fn declaring_war_on_the_sender_withdraws_its_offer_and_the_attacks_resolve() {
             && e["relation"]["b"] == SWITZERLAND),
         "a surprise war starts this turn: {events:#?}"
     );
-    // The Soldier next to Neuchâtel strikes this turn; the one two tiles out closes in (its
+    // The Spearman next to Neuchâtel strikes this turn; the one two tiles out closes in (its
     // target stays out of reach this turn), and neither waits for a war that never came.
     assert!(
         events

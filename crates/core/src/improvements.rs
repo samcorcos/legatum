@@ -29,7 +29,7 @@ impl ImprovementKind {
         ImprovementKind::Pasture,
         ImprovementKind::Quarry,
         ImprovementKind::Mine,
-        ImprovementKind::SaltpeterWorks,
+        ImprovementKind::SaltpetreWorks,
         ImprovementKind::OilWell,
         ImprovementKind::QuartzMine,
     ];
@@ -42,7 +42,7 @@ pub fn kind_for(resource: Resource) -> ImprovementKind {
         Resource::Cattle => ImprovementKind::Pasture,
         Resource::Stone => ImprovementKind::Quarry,
         Resource::Copper | Resource::Iron | Resource::Coal => ImprovementKind::Mine,
-        Resource::Niter => ImprovementKind::SaltpeterWorks,
+        Resource::Niter => ImprovementKind::SaltpetreWorks,
         Resource::Oil => ImprovementKind::OilWell,
         Resource::Silicon => ImprovementKind::QuartzMine,
     }
@@ -60,7 +60,7 @@ pub fn name(kind: ImprovementKind, upgraded: bool) -> &'static str {
         (ImprovementKind::Mine, false) => "Mine",
         (ImprovementKind::Mine, true) => "Deep Mine",
         // The later eras' improvements come after Iron Working, so their upgrade is built in.
-        (ImprovementKind::SaltpeterWorks, _) => "Saltpetre Works",
+        (ImprovementKind::SaltpetreWorks, _) => "Saltpetre Works",
         (ImprovementKind::OilWell, _) => "Oil Well",
         (ImprovementKind::QuartzMine, _) => "Quartz Mine",
     }
@@ -71,7 +71,7 @@ pub fn base_cost(kind: ImprovementKind) -> i32 {
     match kind {
         ImprovementKind::Farm | ImprovementKind::Pasture | ImprovementKind::Quarry => 30,
         ImprovementKind::Mine
-        | ImprovementKind::SaltpeterWorks
+        | ImprovementKind::SaltpetreWorks
         | ImprovementKind::OilWell
         | ImprovementKind::QuartzMine => 40,
     }
@@ -83,7 +83,7 @@ pub fn upgrade_tech(kind: ImprovementKind) -> TechId {
         ImprovementKind::Farm | ImprovementKind::Pasture => TechId::CropRotation,
         ImprovementKind::Quarry => TechId::Masonry,
         ImprovementKind::OilWell => TechId::Combustion,
-        ImprovementKind::Mine | ImprovementKind::SaltpeterWorks | ImprovementKind::QuartzMine => {
+        ImprovementKind::Mine | ImprovementKind::SaltpetreWorks | ImprovementKind::QuartzMine => {
             TechId::IronWorking
         }
     }

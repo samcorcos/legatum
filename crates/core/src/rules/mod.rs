@@ -735,8 +735,8 @@ mod tests {
     #[test]
     fn tactical_turn_matches_full_turn_unit_phases() {
         let mut s = game(&[0, 1]);
-        let attacker = unit(&mut s, 0, UnitKind::Soldier, hex(4, 4));
-        let _defender = unit(&mut s, 1, UnitKind::Soldier, hex(5, 4));
+        let attacker = unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
+        let _defender = unit(&mut s, 1, UnitKind::Spearman, hex(5, 4));
         // Keep both empires alive in the full resolver, which also processes elimination.
         unit(&mut s, 0, UnitKind::Settler, hex(1, 1));
         unit(&mut s, 1, UnitKind::Settler, hex(10, 8));
@@ -763,9 +763,9 @@ mod tests {
     fn tactical_turn_matches_full_turn_city_assault() {
         let mut s = game(&[0, 1]);
         let city = walled_city(&mut s, 1, hex(5, 5), 3);
-        unit(&mut s, 1, UnitKind::Soldier, hex(5, 5));
-        let soldier = unit(&mut s, 0, UnitKind::Soldier, hex(4, 5));
-        let siege = unit(&mut s, 0, UnitKind::Ranger, hex(3, 5));
+        unit(&mut s, 1, UnitKind::Spearman, hex(5, 5));
+        let soldier = unit(&mut s, 0, UnitKind::Spearman, hex(4, 5));
+        let siege = unit(&mut s, 0, UnitKind::Archer, hex(3, 5));
         unit(&mut s, 0, UnitKind::Settler, hex(1, 1));
         let os = orders(
             0,
@@ -803,7 +803,7 @@ mod tests {
     #[test]
     fn validate_accepts_good_unit_orders() {
         let mut s = game(&[0, 1]);
-        let soldier = unit(&mut s, 0, UnitKind::Soldier, hex(2, 2));
+        let soldier = unit(&mut s, 0, UnitKind::Spearman, hex(2, 2));
         let settler = unit(&mut s, 0, UnitKind::Settler, hex(3, 3));
         let scout = unit(&mut s, 0, UnitKind::Scout, hex(6, 6));
         let os = vec![
@@ -820,7 +820,7 @@ mod tests {
     #[test]
     fn move_validation_does_not_reveal_unknown_terrain_or_connectivity() {
         let mut s = game(&[0, 1]);
-        let soldier = unit(&mut s, 0, UnitKind::Soldier, hex(1, 4));
+        let soldier = unit(&mut s, 0, UnitKind::Spearman, hex(1, 4));
         let target = hex(9, 4);
         let order = Order::MoveUnit {
             unit: soldier,
@@ -875,9 +875,9 @@ mod tests {
     #[test]
     fn validate_rejects_bad_unit_orders() {
         let mut s = game(&[0, 1]);
-        let soldier = unit(&mut s, 0, UnitKind::Soldier, hex(2, 2));
-        let enemy = unit(&mut s, 1, UnitKind::Soldier, hex(9, 8));
-        let ranger = unit(&mut s, 0, UnitKind::Ranger, hex(5, 5));
+        let soldier = unit(&mut s, 0, UnitKind::Spearman, hex(2, 2));
+        let enemy = unit(&mut s, 1, UnitKind::Spearman, hex(9, 8));
+        let ranger = unit(&mut s, 0, UnitKind::Archer, hex(5, 5));
         set_terrain(&mut s, hex(10, 2), Terrain::Mountains);
         // Wall off the corner (11, 0) with mountains.
         for h in hex(11, 0).neighbors() {
@@ -910,7 +910,7 @@ mod tests {
 
         let s2 = s.clone();
         let mut s3 = s.clone();
-        let other = unit(&mut s3, 0, UnitKind::Soldier, hex(3, 3));
+        let other = unit(&mut s3, 0, UnitKind::Spearman, hex(3, 3));
         // Terrain/connectivity errors are available only for known tiles.
         for index in 0..s3.map.len() {
             s3.player_mut(PlayerId(0)).explored.set(index);
@@ -950,7 +950,7 @@ mod tests {
         );
         assert_eq!(e.len(), 2);
         let mut s4 = s2.clone();
-        let _friend = unit(&mut s4, 0, UnitKind::Soldier, hex(6, 5));
+        let _friend = unit(&mut s4, 0, UnitKind::Spearman, hex(6, 5));
         let e = errors(
             &s4,
             0,
@@ -960,7 +960,7 @@ mod tests {
             }],
         );
         assert_eq!(e.len(), 1, "cannot shoot a friendly tile");
-        let _foe = unit(&mut s4, 1, UnitKind::Soldier, hex(7, 5));
+        let _foe = unit(&mut s4, 1, UnitKind::Spearman, hex(7, 5));
         assert!(
             errors(
                 &s4,
@@ -1036,13 +1036,13 @@ mod tests {
         set_terrain(&mut s, hex(6, 4), Terrain::Forest);
         s.map.get_mut(hex(7, 7)).unwrap().ruin = true;
         city(&mut s, 2, hex(9, 2), 3);
-        let a = unit(&mut s, 0, UnitKind::Soldier, hex(2, 5));
-        let b = unit(&mut s, 1, UnitKind::Soldier, hex(8, 5));
-        let c = unit(&mut s, 2, UnitKind::Soldier, hex(5, 8));
-        let r = unit(&mut s, 0, UnitKind::Ranger, hex(3, 4));
+        let a = unit(&mut s, 0, UnitKind::Spearman, hex(2, 5));
+        let b = unit(&mut s, 1, UnitKind::Spearman, hex(8, 5));
+        let c = unit(&mut s, 2, UnitKind::Spearman, hex(5, 8));
+        let r = unit(&mut s, 0, UnitKind::Archer, hex(3, 4));
         let st = unit(&mut s, 1, UnitKind::Settler, hex(7, 6));
         let sc = unit(&mut s, 2, UnitKind::Scout, hex(9, 7));
-        let _g = unit(&mut s, 2, UnitKind::Soldier, hex(9, 2));
+        let _g = unit(&mut s, 2, UnitKind::Spearman, hex(9, 2));
         for (u, to) in [
             (b, hex(2, 5)),
             (c, hex(5, 2)),
@@ -1143,7 +1143,7 @@ mod tests {
                 os.push(Order::SetProduction {
                     city: c.id,
                     item: ProductionItem::Unit {
-                        unit: UnitKind::Soldier,
+                        unit: UnitKind::Spearman,
                     },
                 });
             }

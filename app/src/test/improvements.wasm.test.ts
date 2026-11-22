@@ -19,7 +19,7 @@ let makeCore: () => WasmClient;
 type Turn = Record<number, Order[]>;
 const farm = (col: number, row: number): ProductionItem => ({ kind: 'Improvement', improvement: 'Farm', tile: fromOffset(col, row) });
 const mine = (col: number, row: number): ProductionItem => ({ kind: 'Improvement', improvement: 'Mine', tile: fromOffset(col, row) });
-const SOLDIER: ProductionItem = { kind: 'Unit', unit: 'Soldier' };
+const SOLDIER: ProductionItem = { kind: 'Unit', unit: 'Spearman' };
 
 /** Two empires on grassland; A (P0, Byzantium: no terrain bonuses) owns radius 3 around (4,4) with Wheat, Copper and a hidden Iron. */
 function fixture() {

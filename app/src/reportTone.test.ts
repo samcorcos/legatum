@@ -15,7 +15,7 @@ const ctx: ReportContext = {
   teamName: (t) => (t === 0 ? 'you' : `Team ${t}`),
   empireName: (t) => `Team ${t}`,
   playerName: (id) => (id === null ? 'nobody' : `P${id}`),
-  unitKind: (id) => (id === 7 ? 'Ranger' : id === 9 ? 'Soldier' : null),
+  unitKind: (id) => (id === 7 ? 'Archer' : id === 9 ? 'Spearman' : null),
   cityName: (id) => (id === 1 ? 'Beacon' : 'Elsewhere'),
   cityPos: (id) => (id === 1 ? { q: 2, r: 2 } : null),
   place: () => 'Beacon',
@@ -25,12 +25,12 @@ const ev = (e: Record<string, unknown>) => e as unknown as Event;
 const relation = (over: Record<string, unknown> = {}) => ({ a: 0, b: 2, state: 'War', effective_turn: 13, guarantee_until: 0, version: 1, security: null, war_id: 1, declarers: [2], ...over });
 const proposal = { id: 4, from: 2, to: 0, proposer: 2, created_turn: 11, respond_by: 14, relation_version: 1, kind: 'Peace' };
 const battle = (over: Record<string, unknown>) => ev({
-  type: 'Battle', attacker: 7, attacker_owner: 0, defender: { kind: 'Unit', unit: 9, owner: 2, unit_kind: 'Soldier' }, at,
+  type: 'Battle', attacker: 7, attacker_owner: 0, defender: { kind: 'Unit', unit: 9, owner: 2, unit_kind: 'Spearman' }, at,
   attacker_at: { q: 5, r: 1 }, attacker_strength: { total: 15, parts: [] }, defender_strength: { total: 10, parts: [] },
   damage_to_attacker: 0, damage_to_defender: 35, attacker_roll: 100, defender_roll: 100, attacker_hp_after: 100,
   defender_hp_after: 65, ranged: true, meeting: false, ...over,
 });
-const enemyShot = battle({ attacker: 9, attacker_owner: 2, defender: { kind: 'Unit', unit: 7, owner: 0, unit_kind: 'Ranger' } });
+const enemyShot = battle({ attacker: 9, attacker_owner: 2, defender: { kind: 'Unit', unit: 7, owner: 0, unit_kind: 'Archer' } });
 
 /** One or more events per event type, each with the tone the viewer should see. TS enforces every type is here. */
 const CASES: Record<Event['type'], [string, Event, Tone][]> = {
@@ -62,13 +62,13 @@ const CASES: Record<Event['type'], [string, Event, Tone][]> = {
     ['a rival\'s Heir', ev({ type: 'HeirBorn', city: 1, owner: 2, city_name: 'Pella', at: { q: 3, r: 3 } }), 'neutral'],
   ],
   CompanyHired: [
-    ['you hired', ev({ type: 'CompanyHired', city: 1, owner: 0, seller: 2, unit: 'Soldier', gold: 80, until: 41 }), 'neutral'],
-    ['you sold', ev({ type: 'CompanyHired', city: 1, owner: 2, seller: 0, unit: 'Soldier', gold: 80, until: 41 }), 'good'],
+    ['you hired', ev({ type: 'CompanyHired', city: 1, owner: 0, seller: 2, unit: 'Spearman', gold: 80, until: 41 }), 'neutral'],
+    ['you sold', ev({ type: 'CompanyHired', city: 1, owner: 2, seller: 0, unit: 'Spearman', gold: 80, until: 41 }), 'good'],
   ],
-  CompanyDeparted: [['a contract ended', ev({ type: 'CompanyDeparted', unit: 'Soldier', owner: 0, origin: 'Sparta', pos: { q: 3, r: 3 } }), 'neutral']],
+  CompanyDeparted: [['a contract ended', ev({ type: 'CompanyDeparted', unit: 'Spearman', owner: 0, origin: 'Sparta', pos: { q: 3, r: 3 } }), 'neutral']],
   CompanyTurned: [
-    ['yours turned', ev({ type: 'CompanyTurned', unit: 'Soldier', owner: 0, origin: 'Sparta', pos: { q: 3, r: 3 } }), 'bad'],
-    ['a rival\'s turned', ev({ type: 'CompanyTurned', unit: 'Soldier', owner: 2, origin: 'Sparta', pos: { q: 3, r: 3 } }), 'neutral'],
+    ['yours turned', ev({ type: 'CompanyTurned', unit: 'Spearman', owner: 0, origin: 'Sparta', pos: { q: 3, r: 3 } }), 'bad'],
+    ['a rival\'s turned', ev({ type: 'CompanyTurned', unit: 'Spearman', owner: 2, origin: 'Sparta', pos: { q: 3, r: 3 } }), 'neutral'],
   ],
   TreatyActivated: [['alliance', ev({ type: 'TreatyActivated', relation: relation({ state: 'Alliance', guarantee_until: 0, security: { id: 3, started_turn: 12, protected_until: 22 } }) }), 'neutral']],
   TreatyEnded: [
@@ -98,8 +98,8 @@ const CASES: Record<Event['type'], [string, Event, Tone][]> = {
   ProposalExpired: [['offer', ev({ type: 'ProposalExpired', proposal, effective_turn: 12 }), 'neutral']],
   ProposalInvalidated: [['offer', ev({ type: 'ProposalInvalidated', proposal, effective_turn: 12, reason: 'war' }), 'neutral']],
   OrderSuperseded: [['superseded', ev({ type: 'OrderSuperseded', decision: { team: 0, player: 1, order: { type: 'DeclareWar', against: 2 }, winner: 0, winner_order: { type: 'DeclareWar', against: 2 }, reported_turn: 12 } }), 'neutral']],
-  UnitAwakened: [['yours', ev({ type: 'UnitAwakened', unit: 7, owner: 0, unit_kind: 'Ranger', at }), 'neutral']],
-  UnitHealed: [['yours', ev({ type: 'UnitHealed', unit: 7, owner: 0, unit_kind: 'Ranger', at }), 'good']],
+  UnitAwakened: [['yours', ev({ type: 'UnitAwakened', unit: 7, owner: 0, unit_kind: 'Archer', at }), 'neutral']],
+  UnitHealed: [['yours', ev({ type: 'UnitHealed', unit: 7, owner: 0, unit_kind: 'Archer', at }), 'good']],
   AutomationStopped: [['yours', ev({ type: 'AutomationStopped', unit: 7, owner: 0, at, reason: 'EnemySighted' }), 'neutral']],
   UnitMoved: [['moved', ev({ type: 'UnitMoved', unit: 9, owner: 2, from: at, to: { q: 4, r: 1 } }), 'neutral']],
   MoveBlocked: [
@@ -107,29 +107,29 @@ const CASES: Record<Event['type'], [string, Event, Tone][]> = {
     ['ordinary block', ev({ type: 'MoveBlocked', unit: 7, owner: 0, at, toward: at, reason: 'occupied' }), 'neutral'],
   ],
   CityReinforced: [
-    ['your unit reached its city first', ev({ type: 'CityReinforced', unit: 9, owner: 0, unit_kind: 'Soldier', city: 1, at }), 'good'],
-    ['their unit reached its city first', ev({ type: 'CityReinforced', unit: 9, owner: 2, unit_kind: 'Soldier', city: 5, at }), 'neutral'],
+    ['your unit reached its city first', ev({ type: 'CityReinforced', unit: 9, owner: 0, unit_kind: 'Spearman', city: 1, at }), 'good'],
+    ['their unit reached its city first', ev({ type: 'CityReinforced', unit: 9, owner: 2, unit_kind: 'Spearman', city: 5, at }), 'neutral'],
   ],
   Bounce: [['bounce', ev({ type: 'Bounce', units: [7, 8], tile: at }), 'neutral']],
   AttackPursuit: [
-    ['your target slipped away', ev({ type: 'AttackPursuit', unit: 7, owner: 0, at, target: 9, target_owner: 2, target_kind: 'Soldier', target_at: at, outcome: 'Followed' }), 'bad'],
-    ['awaiting war', ev({ type: 'AttackPursuit', unit: 7, owner: 0, at, target: 9, target_owner: 2, target_kind: 'Soldier', target_at: at, outcome: 'AwaitingWar' }), 'neutral'],
+    ['your target slipped away', ev({ type: 'AttackPursuit', unit: 7, owner: 0, at, target: 9, target_owner: 2, target_kind: 'Spearman', target_at: at, outcome: 'Followed' }), 'bad'],
+    ['awaiting war', ev({ type: 'AttackPursuit', unit: 7, owner: 0, at, target: 9, target_owner: 2, target_kind: 'Spearman', target_at: at, outcome: 'AwaitingWar' }), 'neutral'],
   ],
   Battle: [
     ['your Ranger bombarded them', battle({}), 'good'],
     ['their shot hit your Ranger', enemyShot, 'bad'],
     ['your city fired on them', battle({ attacker: { city: 1 }, attacker_at: { q: 2, r: 2 } }), 'good'],
-    ['their city fired on you', battle({ attacker: { city: 5 }, attacker_owner: 2, defender: { kind: 'Unit', unit: 7, owner: 0, unit_kind: 'Ranger' } }), 'bad'],
-    ['barbarians attacked you', battle({ attacker: 9, attacker_owner: 255, ranged: false, damage_to_attacker: 20, attacker_hp_after: 80, defender: { kind: 'Unit', unit: 7, owner: 0, unit_kind: 'Ranger' } }), 'bad'],
-    ['their attacker died on your defender', battle({ attacker: 9, attacker_owner: 2, ranged: false, damage_to_attacker: 100, attacker_hp_after: 0, defender: { kind: 'Unit', unit: 7, owner: 0, unit_kind: 'Ranger' } }), 'good'],
+    ['their city fired on you', battle({ attacker: { city: 5 }, attacker_owner: 2, defender: { kind: 'Unit', unit: 7, owner: 0, unit_kind: 'Archer' } }), 'bad'],
+    ['barbarians attacked you', battle({ attacker: 9, attacker_owner: 255, ranged: false, damage_to_attacker: 20, attacker_hp_after: 80, defender: { kind: 'Unit', unit: 7, owner: 0, unit_kind: 'Archer' } }), 'bad'],
+    ['their attacker died on your defender', battle({ attacker: 9, attacker_owner: 2, ranged: false, damage_to_attacker: 100, attacker_hp_after: 0, defender: { kind: 'Unit', unit: 7, owner: 0, unit_kind: 'Archer' } }), 'good'],
     ['your attacker died', battle({ ranged: false, damage_to_attacker: 100, attacker_hp_after: 0 }), 'bad'],
     ['your city was hit', battle({ attacker: 9, attacker_owner: 2, defender: { kind: 'City', city: 1, owner: 0 } }), 'bad'],
     ['a meeting you lost more in', battle({ ranged: false, meeting: true, damage_to_attacker: 40, attacker_hp_after: 60, damage_to_defender: 20, defender_hp_after: 80 }), 'bad'],
-    ['others fighting', battle({ attacker_owner: 3, defender: { kind: 'Unit', unit: 9, owner: 2, unit_kind: 'Soldier' } }), 'neutral'],
+    ['others fighting', battle({ attacker_owner: 3, defender: { kind: 'Unit', unit: 9, owner: 2, unit_kind: 'Spearman' } }), 'neutral'],
   ],
   UnitDestroyed: [
-    ['yours', ev({ type: 'UnitDestroyed', unit: 7, owner: 0, unit_kind: 'Ranger', at }), 'bad'],
-    ['theirs, no battle of yours', ev({ type: 'UnitDestroyed', unit: 9, owner: 2, unit_kind: 'Soldier', at }), 'neutral'],
+    ['yours', ev({ type: 'UnitDestroyed', unit: 7, owner: 0, unit_kind: 'Archer', at }), 'bad'],
+    ['theirs, no battle of yours', ev({ type: 'UnitDestroyed', unit: 9, owner: 2, unit_kind: 'Spearman', at }), 'neutral'],
   ],
   UnitDisbanded: [['yours', ev({ type: 'UnitDisbanded', unit: 7, owner: 0, reason: 'upkeep' }), 'bad']],
   SettlerCaptured: [
@@ -168,15 +168,15 @@ const CASES: Record<Event['type'], [string, Event, Tone][]> = {
     ['rival held point lost', ev({ type: 'CapitalLost', player: 2, capital: 5, name: 'Rome' }), 'neutral'],
   ],
   SpartaConquest: [['your regiments healed', ev({ type: 'SpartaConquest', city: 1, player: 0, units_healed: 2 }), 'good']],
-  SpartaKillHeal: [['your regiments healed by a kill', ev({ type: 'SpartaKillHeal', player: 0, unit: 9, victim_owner: 2, unit_kind: 'Ranger', hp_healed: 100 }), 'good']],
+  SpartaKillHeal: [['your regiments healed by a kill', ev({ type: 'SpartaKillHeal', player: 0, unit: 9, victim_owner: 2, unit_kind: 'Archer', hp_healed: 100 }), 'good']],
   CityRazed: [
     ['yours sacked', ev({ type: 'CityRazed', city: 1, from: 0, by: 2, at }), 'bad'],
     ['you sacked', ev({ type: 'CityRazed', city: 1, from: 2, by: 0, at }), 'good'],
   ],
   BuildingDismantled: [['yours', ev({ type: 'BuildingDismantled', city: 1, owner: 0, building: 'Workshop', reason: 'experimental capture plunder' }), 'bad']],
-  ItemBought: [['routine', ev({ type: 'ItemBought', city: 1, owner: 0, item: { kind: 'Unit', unit: 'Soldier' }, gold: 60 }), 'neutral']],
-  ProductionCompleted: [['yours', ev({ type: 'ProductionCompleted', city: 1, owner: 0, item: { kind: 'Unit', unit: 'Soldier' } }), 'good']],
-  MegaprojectStarted: [['theirs', ev({ type: 'MegaprojectStarted', city: 5, owner: 2, building: 'RelayUplink' }), 'neutral']],
+  ItemBought: [['routine', ev({ type: 'ItemBought', city: 1, owner: 0, item: { kind: 'Unit', unit: 'Spearman' }, gold: 60 }), 'neutral']],
+  ProductionCompleted: [['yours', ev({ type: 'ProductionCompleted', city: 1, owner: 0, item: { kind: 'Unit', unit: 'Spearman' } }), 'good']],
+  MegaprojectStarted: [['theirs', ev({ type: 'MegaprojectStarted', city: 5, owner: 2, building: 'GreatLibrary' }), 'neutral']],
   WonderRaceLost: [['your refund', ev({ type: 'WonderRaceLost', city: 1, owner: 0, winner: 2, building: 'Pyramids', production: 140, gold: 70 }), 'bad']],
   EraEntered: [
     ['yours', ev({ type: 'EraEntered', player: 0, era: 2, first: true }), 'good'],
@@ -209,8 +209,8 @@ const CASES: Record<Event['type'], [string, Event, Tone][]> = {
   ],
   RuinExplored: [['yours', ev({ type: 'RuinExplored', unit: 7, owner: 0, at, reward: { kind: 'Science', amount: 25, research: null } }), 'good']],
   WonderDiscovered: [['yours', ev({ type: 'WonderDiscovered', owner: 0, at, wonder: 'VictoriaFalls', gold: 40, science: 0 }), 'good']],
-  GreatWorkCompleted: [['you hold it', ev({ type: 'GreatWorkCompleted', player: 0, of: 2, building: 'RelayUplink', vp: 2, again: false }), 'good']],
-  GreatWorkLost: [['you lost it', ev({ type: 'GreatWorkLost', player: 0, of: 0, building: 'RelayUplink', vp: 2 }), 'bad']],
+  GreatWorkCompleted: [['you hold it', ev({ type: 'GreatWorkCompleted', player: 0, of: 2, building: 'GreatLibrary', vp: 2, again: false }), 'good']],
+  GreatWorkLost: [['you lost it', ev({ type: 'GreatWorkLost', player: 0, of: 0, building: 'GreatLibrary', vp: 2 }), 'bad']],
   AgeBegan: [
     ['yours', ev({ type: 'AgeBegan', era: 2, first: 0 }), 'good'],
     ['theirs', ev({ type: 'AgeBegan', era: 2, first: 2 }), 'neutral'],
@@ -230,7 +230,7 @@ const CASES: Record<Event['type'], [string, Event, Tone][]> = {
     ['a camp of yours fell', ev({ type: 'FactionGoalLost', player: 0, faction: 'Celts', vp: 2 }), 'bad'],
     ['the Celts lost it', ev({ type: 'FactionGoalLost', player: 2, faction: 'Celts', vp: 2 }), 'good'],
   ],
-  VeteranRetired: [['yours', ev({ type: 'VeteranRetired', player: 0, unit: 7, kind: 'Soldier', city: 1, retired: 2, of: 3 }), 'good']],
+  VeteranRetired: [['yours', ev({ type: 'VeteranRetired', player: 0, unit: 7, kind: 'Spearman', city: 1, retired: 2, of: 3 }), 'good']],
   WildCalled: [
     ['yours', ev({ type: 'WildCalled', player: 0, camps: 3 }), 'good'],
     ['theirs', ev({ type: 'WildCalled', player: 2, camps: 3 }), 'neutral'],
@@ -258,7 +258,7 @@ const CASES: Record<Event['type'], [string, Event, Tone][]> = {
   ],
   FreeTechsChosen: [['yours', ev({ type: 'FreeTechsChosen', player: 0, from: 2, techs: ['BronzeWorking', 'Currency'] }), 'good']],
   SiegeBought: [['yours', ev({ type: 'SiegeBought', unit: 7, owner: 0, gold: 160 }), 'neutral']],
-  UnitUpgraded: [['routine', ev({ type: 'UnitUpgraded', unit: 7, owner: 0, to: 'Marksman', gold: 80 }), 'neutral']],
+  UnitUpgraded: [['routine', ev({ type: 'UnitUpgraded', unit: 7, owner: 0, to: 'Crossbowman', gold: 80 }), 'neutral']],
   BarbarianCampSpawned: [['camp', ev({ type: 'BarbarianCampSpawned', camp: 1, at }), 'neutral']],
   BarbarianCampDiscovered: [['camp', ev({ type: 'BarbarianCampDiscovered', camp: 1, team: 0, at }), 'neutral']],
   BarbarianScoutSpotted: [['your city spotted', ev({ type: 'BarbarianScoutSpotted', unit: 9, city: 1, owner: 0, at }), 'bad']],
@@ -270,7 +270,7 @@ const CASES: Record<Event['type'], [string, Event, Tone][]> = {
     ['restored, yours', ev({ type: 'SupplyShortage', player: 0, resource: 'Iron', idle: 0, supplied: 8, used: 8 }), 'good'],
     ['a rival’s', ev({ type: 'SupplyShortage', player: 2, resource: 'Iron', idle: 2, supplied: 6, used: 8 }), 'neutral'],
   ],
-  UnitPromoted: [['yours', ev({ type: 'UnitPromoted', unit: 7, owner: 0, unit_kind: 'Ranger', level: 2, at }), 'good']],
+  UnitPromoted: [['yours', ev({ type: 'UnitPromoted', unit: 7, owner: 0, unit_kind: 'Archer', level: 2, at }), 'good']],
   OrderFailed: [['yours', ev({ type: 'OrderFailed', player: 0, reason: 'no' }), 'bad']],
   PlayerEliminated: [
     ['you', ev({ type: 'PlayerEliminated', player: 0 }), 'bad'],
@@ -302,10 +302,10 @@ describe('turn report tone, from the viewer\'s side', () => {
 
   it('the destroyed line of a unit you killed is good, and names who did it and from where', () => {
     const kill = battle({ defender_hp_after: 0, damage_to_defender: 100 });
-    const lines = formatEvents([kill, ev({ type: 'UnitDestroyed', unit: 9, owner: 2, unit_kind: 'Soldier', at })], ctx);
+    const lines = formatEvents([kill, ev({ type: 'UnitDestroyed', unit: 9, owner: 2, unit_kind: 'Spearman', at })], ctx);
     expect(lines[1]).toMatchObject({ tone: 'good', from: { q: 5, r: 1 } });
     const lost = formatEvents([enemyShot, ev({ ...enemyShot, defender_hp_after: 0 } as Record<string, unknown>),
-      ev({ type: 'UnitDestroyed', unit: 7, owner: 0, unit_kind: 'Ranger', at })], ctx);
+      ev({ type: 'UnitDestroyed', unit: 7, owner: 0, unit_kind: 'Archer', at })], ctx);
     expect(lost[2].tone).toBe('bad');
     expect(lost[2].text).toBe("Your Archer was destroyed at Beacon by P2's Spearman from 2 tiles E");
   });
@@ -322,14 +322,14 @@ describe('"from where?" on combat lines', () => {
   });
 
   it('respects fog: an attacker whose tile the viewer never saw is "out of sight", with no arrow origin', () => {
-    const [hidden] = formatEvents([battle({ attacker: 9, attacker_owner: 2, attacker_at: undefined, defender: { kind: 'Unit', unit: 7, owner: 0, unit_kind: 'Ranger' } })], ctx);
+    const [hidden] = formatEvents([battle({ attacker: 9, attacker_owner: 2, attacker_at: undefined, defender: { kind: 'Unit', unit: 7, owner: 0, unit_kind: 'Archer' } })], ctx);
     expect(hidden.text).toContain('from out of sight');
     expect(hidden.from).toBeNull();
     expect(hidden.at).toEqual(at);
   });
 
   it('names a striking city, and its arrow starts at the city', () => {
-    const [shot] = formatEvents([battle({ attacker: { city: 5 }, attacker_owner: 2, attacker_at: { q: 1, r: 1 }, defender: { kind: 'Unit', unit: 7, owner: 0, unit_kind: 'Ranger' } })], ctx);
+    const [shot] = formatEvents([battle({ attacker: { city: 5 }, attacker_owner: 2, attacker_at: { q: 1, r: 1 }, defender: { kind: 'Unit', unit: 7, owner: 0, unit_kind: 'Archer' } })], ctx);
     expect(shot.text).toBe("P2's city Elsewhere fired on your Archer at Beacon: −35 HP (65 left)");
     expect(shot).toMatchObject({ from: { q: 1, r: 1 }, at, tone: 'bad' });
   });

@@ -21,7 +21,7 @@ export async function stageHoldings(page: Page, { oneCardPerAge = false }: { one
     v.objective_progress = v.objective_progress.filter((p) => kept.has(`${p.era}:${p.slot}`));
   }
   const rival = v.players.find((p) => p.team !== v.team && p.alive)!;
-  v.great_works = (v.great_works ?? []).map((w) => w.player === v.me ? { ...w, completed: 'RelayUplink' } : w);
+  v.great_works = (v.great_works ?? []).map((w) => w.player === v.me ? { ...w, completed: 'GreatLibrary' } : w);
   v.players = v.players.map((p) => p.id === v.me ? { ...p, vp: p.vp + 2, vp_sources: [...p.vp_sources, [{ kind: 'GreatWork' as const, of: v.me }, 2] as [{ kind: 'GreatWork'; of: number }, number]] } : p.id === rival.id ? { ...p, faction_goal_done: true } : p);
   v.standings = v.standings.map((row) => row.members.includes(v.me) ? { ...row, vp: row.vp + 2 } : row);
   await page.evaluate((view) => {

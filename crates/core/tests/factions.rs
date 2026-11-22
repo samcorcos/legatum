@@ -44,7 +44,7 @@ fn egypt_food_construction_and_switches_keep_the_two_banks_separate() {
     let mut s = classic_egypt();
     let id = city(&mut s, at(4, 4));
     let granary = building(BuildingKind::Granary);
-    let soldier = unit(UnitKind::Soldier);
+    let soldier = unit(UnitKind::Spearman);
     let food = economy::city_totals(&s, &s.cities[&id]).food;
     let surplus = (food - 2).max(0);
     assert!(surplus > 0);
@@ -124,13 +124,13 @@ fn egypt_completion_drops_food_overflow_and_population_gate_pauses() {
         .get_mut(&id)
         .unwrap()
         .production_queue
-        .push(unit(UnitKind::Soldier));
+        .push(unit(UnitKind::Spearman));
     rules::cities::process_cities(&mut s, &mut vec![]);
     assert!(s.cities[&id].buildings.contains(&BuildingKind::Granary));
-    assert_eq!(s.cities[&id].producing, Some(unit(UnitKind::Soldier)));
+    assert_eq!(s.cities[&id].producing, Some(unit(UnitKind::Spearman)));
     assert_eq!(s.cities[&id].production_stored, 0);
 
-    let factory = building(BuildingKind::MachineShop);
+    let factory = building(BuildingKind::Forge);
     s.player_mut(P).techs.insert(TechId::IronWorking);
     let c = s.cities.get_mut(&id).unwrap();
     c.population = 4;
@@ -162,7 +162,7 @@ fn grow() -> ProductionItem {
 fn nile_surplus_food_builds_everything_and_a_building_city_does_not_grow() {
     let mut s = state(Faction::Egypt);
     let id = city(&mut s, at(4, 4));
-    let soldier = unit(UnitKind::Soldier);
+    let soldier = unit(UnitKind::Spearman);
     let base = {
         let mut classic = s.clone();
         classic
@@ -201,7 +201,7 @@ fn nile_surplus_food_builds_everything_and_a_building_city_does_not_grow() {
     assert_eq!(s.cities[&id].production_stored, progress);
     assert_eq!(s.cities[&id].population, 1);
     assert_eq!(s.cities[&id].food_stored, data::FIRST_GROWTH - 1);
-    // Grow: the same surplus grows the city, and the Soldier keeps its progress.
+    // Grow: the same surplus grows the city, and the Spearman keeps its progress.
     s.cities
         .get_mut(&id)
         .unwrap()
@@ -235,8 +235,8 @@ fn nile_grow_is_egypts_and_the_workshop_line_is_not() {
     }
     for b in [
         BuildingKind::Workshop,
-        BuildingKind::MachineShop,
-        BuildingKind::Autoworks,
+        BuildingKind::Forge,
+        BuildingKind::Factory,
     ] {
         assert!(!data::available_to_faction(Faction::Egypt, building(b)));
         assert!(data::available_to_faction(
@@ -259,7 +259,7 @@ fn nile_grow_is_egypts_and_the_workshop_line_is_not() {
 #[test]
 fn medjay_sight_uses_visibility_and_unit_view() {
     let mut s = state(Faction::Egypt);
-    let medjay = game::spawn_unit(&mut s, P, UnitKind::Soldier, at(10, 10));
+    let medjay = game::spawn_unit(&mut s, P, UnitKind::Spearman, at(10, 10));
     let v = player_view(&s, P);
     assert_eq!(
         v.units.iter().find(|u| u.id == medjay).unwrap().sight,
@@ -292,7 +292,7 @@ fn egypt_food_rule_applies_only_to_ordinary_buildings() {
     let id = city(&mut s, at(4, 4));
     let c = &s.cities[&id];
     for item in [
-        unit(UnitKind::Soldier),
+        unit(UnitKind::Spearman),
         unit(UnitKind::Settler),
         ProductionItem::Improvement {
             improvement: ImprovementKind::Farm,
@@ -358,7 +358,7 @@ fn replacements_use_base_ids_with_faction_costs_names_and_unlocks() {
             "Alpine Redoubt",
         ),
         (Faction::India, BuildingKind::Market, 60, "Revenue Office"),
-        (Faction::Athens, BuildingKind::Laboratory, 70, "Lyceum"),
+        (Faction::Athens, BuildingKind::Library, 70, "Lyceum"),
     ] {
         let mut s = state(f);
         let c = city(&mut s, at(4, 4));
@@ -375,7 +375,7 @@ fn replacements_use_base_ids_with_faction_costs_names_and_unlocks() {
     for (f, u, cost, moves, melee, ranged, name) in [
         (
             Faction::Byzantium,
-            UnitKind::Trooper,
+            UnitKind::Pikeman,
             162,
             2,
             36,
@@ -394,7 +394,7 @@ fn replacements_use_base_ids_with_faction_costs_names_and_unlocks() {
         (Faction::Mongols, UnitKind::Scout, 60, 4, 5, 0, "Scout"),
         (
             Faction::Sparta,
-            UnitKind::Soldier,
+            UnitKind::Spearman,
             80,
             2,
             20,
@@ -421,8 +421,8 @@ fn ruhr_foundry_replaces_the_forge_and_factory_is_ordinary() {
         data::building_name_for(Faction::Germany, BuildingKind::Workshop),
         "Workshop"
     );
-    let factory = data::building_stats_for(Faction::Germany, BuildingKind::MachineShop);
-    let ordinary = data::building_stats_for(Faction::India, BuildingKind::MachineShop);
+    let factory = data::building_stats_for(Faction::Germany, BuildingKind::Forge);
+    let ordinary = data::building_stats_for(Faction::India, BuildingKind::Forge);
     assert_eq!(
         (factory.cost, factory.yields.production),
         (ordinary.cost, 6)
@@ -431,30 +431,30 @@ fn ruhr_foundry_replaces_the_forge_and_factory_is_ordinary() {
     assert_eq!(factory.yields.food, 0);
     assert_eq!(factory.requires, Some(TechId::IronWorking));
     assert_eq!(
-        data::building_stats_for(Faction::Germany, BuildingKind::Autoworks)
+        data::building_stats_for(Faction::Germany, BuildingKind::Factory)
             .yields
             .production,
         5
     );
     assert_eq!(
-        legatum_core::resources::building_need(BuildingKind::MachineShop),
+        legatum_core::resources::building_need(BuildingKind::Forge),
         Some(Resource::Iron)
     );
     assert_eq!(
-        legatum_core::resources::building_need(BuildingKind::Autoworks),
+        legatum_core::resources::building_need(BuildingKind::Factory),
         Some(Resource::Coal)
     );
     assert_eq!(
-        data::building_name_for(Faction::Germany, BuildingKind::MachineShop),
+        data::building_name_for(Faction::Germany, BuildingKind::Forge),
         "Ruhr Foundry"
     );
     assert!(data::building_satisfies(
-        BuildingKind::Autoworks,
+        BuildingKind::Factory,
         BuildingKind::Workshop
     ));
     assert_eq!(
-        data::building_predecessor(BuildingKind::Autoworks),
-        Some(BuildingKind::MachineShop)
+        data::building_predecessor(BuildingKind::Factory),
+        Some(BuildingKind::Forge)
     );
 }
 
@@ -471,7 +471,7 @@ fn building_prices_purchases_and_settler_sequence_apply_once() {
             city.production_stored = 7;
             assert_eq!(
                 economy::buy_cost(&s, &s.cities[&c]),
-                (b != BuildingKind::RelayUplink
+                (b != BuildingKind::GreatLibrary
                     && data::building_family(b) != BuildingKind::Walls
                     && data::available_to_faction(f, building(b)))
                 .then_some(cost * 2)
@@ -510,12 +510,12 @@ fn swiss_rounding_upkeep_and_bastion_strength() {
     let c = city(&mut s, at(4, 4));
     let city = s.cities.get_mut(&c).unwrap();
     city.population = 5;
-    city.producing = Some(unit(UnitKind::Soldier));
+    city.producing = Some(unit(UnitKind::Spearman));
     city.production_stored = 1;
     assert_eq!(economy::buy_cost(&s, &s.cities[&c]), Some(140)); // Full 80 * 1.75, regardless of stored production.
     assert_eq!(economy::city_yields(&s, &s.cities[&c]).total.gold, 3);
     for i in 0..4 {
-        game::spawn_unit(&mut s, P, UnitKind::Soldier, at(4 + i, 4));
+        game::spawn_unit(&mut s, P, UnitKind::Spearman, at(4 + i, 4));
     }
     assert_eq!(economy::upkeep(&s, P), 6);
     assert_eq!(
@@ -532,7 +532,7 @@ fn replacement_yields_and_india_food_penalty_precede_consumption() {
     let capital = city(&mut india, at(4, 4));
     assert!(!data::available_to_faction(
         Faction::India,
-        building(BuildingKind::BroodHall)
+        building(BuildingKind::RiceStorehouse)
     ));
     let sources = economy::city_yields(&india, &india.cities[&capital]).sources;
     assert!(
@@ -548,7 +548,7 @@ fn replacement_yields_and_india_food_penalty_precede_consumption() {
         ),
         (
             Faction::Athens,
-            BuildingKind::Laboratory,
+            BuildingKind::Library,
             Yields::new(16, 5, 1, 8),
         ),
         (
@@ -704,10 +704,10 @@ fn mongols_military_moves_only_and_sparta_regiments_rest_heal_normally() {
 fn faction_combat_matches_forecast_and_keeps_garrison_priority() {
     for f in Faction::ALL {
         let mut s = state(f);
-        let a = game::spawn_unit(&mut s, P, UnitKind::Soldier, at(4, 4));
+        let a = game::spawn_unit(&mut s, P, UnitKind::Spearman, at(4, 4));
         s.units.get_mut(&a).unwrap().hp = 50;
         s.player_mut(PlayerId(1)).faction = Faction::Mongols;
-        let d = game::spawn_unit(&mut s, PlayerId(1), UnitKind::Trooper, at(5, 4));
+        let d = game::spawn_unit(&mut s, PlayerId(1), UnitKind::Pikeman, at(5, 4));
         s.map.get_mut(at(5, 4)).unwrap().terrain = Terrain::Hills;
         s.units.get_mut(&d).unwrap().fortify = 6;
         visibility::update_explored(&mut s);
@@ -740,15 +740,15 @@ fn faction_combat_matches_forecast_and_keeps_garrison_priority() {
         }
     }
     assert_eq!(
-        combat::unit_meeting_strength_for(Faction::Sparta, UnitKind::Trooper, 10, 0).total,
+        combat::unit_meeting_strength_for(Faction::Sparta, UnitKind::Pikeman, 10, 0).total,
         32
     );
     assert_eq!(
-        combat::unit_attack_strength_for(Faction::Byzantium, UnitKind::Trooper, 50, 0).total,
+        combat::unit_attack_strength_for(Faction::Byzantium, UnitKind::Pikeman, 50, 0).total,
         31
     );
     assert_eq!(
-        combat::unit_ranged_strength_for(Faction::Celts, UnitKind::Ranger, 50, 0).total,
+        combat::unit_ranged_strength_for(Faction::Celts, UnitKind::Archer, 50, 0).total,
         10
     );
     assert_eq!(
@@ -757,15 +757,15 @@ fn faction_combat_matches_forecast_and_keeps_garrison_priority() {
     );
 }
 
-/// The attacker's strength breakdown for P's Soldier at (4,4) hitting a rival Soldier at (5,4),
+/// The attacker's strength breakdown for P's Spearman at (4,4) hitting a rival Spearman at (5,4),
 /// with `friend` (owner, kind) standing on a neighbouring tile of the attacker.
 fn hoplite_attack(
     faction: Faction,
     friend: Option<(PlayerId, UnitKind)>,
 ) -> (GameState, UnitId, Breakdown) {
     let mut s = state(faction);
-    let a = game::spawn_unit(&mut s, P, UnitKind::Soldier, at(4, 4));
-    game::spawn_unit(&mut s, PlayerId(1), UnitKind::Soldier, at(5, 4));
+    let a = game::spawn_unit(&mut s, P, UnitKind::Spearman, at(4, 4));
+    game::spawn_unit(&mut s, PlayerId(1), UnitKind::Spearman, at(5, 4));
     if let Some((owner, kind)) = friend {
         let tile = at(4, 4)
             .neighbors()
@@ -788,8 +788,8 @@ fn a_hoplite_next_to_another_hoplite_fights_with_the_phalanx_bonus() {
     let (_, _, alone) = hoplite_attack(Faction::Sparta, None);
     assert!(!alone.parts.contains(&line));
 
-    // One Spartan Soldier next to it adds the bonus, and a second neighbour adds nothing more.
-    let (s, a, paired) = hoplite_attack(Faction::Sparta, Some((P, UnitKind::Soldier)));
+    // One Spartan Spearman next to it adds the bonus, and a second neighbour adds nothing more.
+    let (s, a, paired) = hoplite_attack(Faction::Sparta, Some((P, UnitKind::Spearman)));
     assert!(paired.parts.contains(&line));
     assert_eq!(paired.total, alone.total + data::HOPLITE_PHALANX_STRENGTH);
     let mut crowd = s.clone();
@@ -799,16 +799,16 @@ fn a_hoplite_next_to_another_hoplite_fights_with_the_phalanx_bonus() {
         .filter(|h| h.distance(at(5, 4)) == 2)
         .nth(1)
         .unwrap();
-    game::spawn_unit(&mut crowd, P, UnitKind::Soldier, tile);
+    game::spawn_unit(&mut crowd, P, UnitKind::Spearman, tile);
     let line_of_three = forecast_attack(&player_view(&crowd, P), a, at(5, 4)).unwrap();
     assert_eq!(line_of_three.attacker_strength.total, paired.total);
 
     // Not next to it, not a Hoplite, not its own empire, not a Spartan: no bonus.
     for (faction, friend) in [
-        (Faction::Sparta, Some((P, UnitKind::Trooper))),
+        (Faction::Sparta, Some((P, UnitKind::Pikeman))),
         (Faction::Sparta, Some((P, UnitKind::Phalangite))),
-        (Faction::Sparta, Some((PlayerId(1), UnitKind::Soldier))),
-        (Faction::India, Some((P, UnitKind::Soldier))),
+        (Faction::Sparta, Some((PlayerId(1), UnitKind::Spearman))),
+        (Faction::India, Some((P, UnitKind::Spearman))),
     ] {
         let (_, _, b) = hoplite_attack(faction, friend);
         assert!(!b.parts.contains(&line), "{faction:?} {friend:?}");
@@ -839,14 +839,14 @@ fn the_phalanx_bonus_applies_in_defence_and_resolution_matches_the_forecast() {
         data::HOPLITE_PHALANX_STRENGTH,
     );
     let mut s = state(Faction::Sparta);
-    let hoplite = game::spawn_unit(&mut s, P, UnitKind::Soldier, at(4, 4));
+    let hoplite = game::spawn_unit(&mut s, P, UnitKind::Spearman, at(4, 4));
     let friend_tile = at(4, 4)
         .neighbors()
         .into_iter()
         .find(|h| h.distance(at(5, 4)) == 2)
         .unwrap();
-    let friend = game::spawn_unit(&mut s, P, UnitKind::Soldier, friend_tile);
-    let raider = game::spawn_unit(&mut s, PlayerId(1), UnitKind::Soldier, at(5, 4));
+    let friend = game::spawn_unit(&mut s, P, UnitKind::Spearman, friend_tile);
+    let raider = game::spawn_unit(&mut s, PlayerId(1), UnitKind::Spearman, at(5, 4));
     visibility::update_explored(&mut s);
 
     // Defending: the rival's forecast against the Hoplite names the phalanx.
@@ -898,7 +898,7 @@ fn upgrades_follow_replacement_cost_difference_and_preserve_hp() {
         let tile = s.map.get_mut(at(5, 4)).unwrap();
         tile.resource = Some(legatum_core::Resource::Iron);
         tile.owner = Some(P);
-        let u = game::spawn_unit(&mut s, P, UnitKind::Soldier, at(4, 4));
+        let u = game::spawn_unit(&mut s, P, UnitKind::Spearman, at(4, 4));
         s.units.get_mut(&u).unwrap().hp = 55;
         assert_eq!(
             rules::units::check_upgrade(&s, P, u, 300),
@@ -968,7 +968,7 @@ fn fulfill_goal(s: &mut GameState) {
         }
         Faction::Byzantium => {
             let h = at(4, 4);
-            let u = game::spawn_unit(s, P, UnitKind::Heir, h);
+            let u = game::spawn_unit(s, P, UnitKind::HeirToTheThrone, h);
             s.units.get_mut(&u).unwrap().heir_of = Some(P);
         }
         Faction::Mongols => {
@@ -977,7 +977,7 @@ fn fulfill_goal(s: &mut GameState) {
                 .get_mut(&c)
                 .unwrap()
                 .buildings
-                .insert(BuildingKind::CourierHall);
+                .insert(BuildingKind::YamRelayStation);
             s.player_mut(P).hall_city = Some(c);
         }
         // The Diwan is held by the owner of its city.
@@ -1003,7 +1003,7 @@ fn fulfill_goal(s: &mut GameState) {
                 city.population = 8;
                 city.buildings = BuildingKind::ALL
                     .into_iter()
-                    .filter(|b| *b != BuildingKind::RelayUplink)
+                    .filter(|b| *b != BuildingKind::GreatLibrary)
                     .collect();
                 let h = city.pos;
                 for t in h.within(1).iter().take(2) {
@@ -1089,7 +1089,7 @@ fn every_goal_requires_own_state_out_of_resistance_and_awards_its_vp_once() {
                 .get_mut(&c)
                 .unwrap()
                 .buildings
-                .insert(BuildingKind::CourierHall);
+                .insert(BuildingKind::YamRelayStation);
             s.player_mut(P).hall_city = Some(c);
         }
         if f == Faction::India {
@@ -1168,7 +1168,7 @@ fn original_serde_names_and_base_piece_ids_still_load() {
         );
         let mut s = state(f);
         city(&mut s, at(4, 4));
-        game::spawn_unit(&mut s, P, UnitKind::Trooper, at(4, 4));
+        game::spawn_unit(&mut s, P, UnitKind::Pikeman, at(4, 4));
         let saved = serde_json::to_string(&s).unwrap();
         let loaded: GameState = serde_json::from_str(&saved).unwrap();
         assert_eq!(s, loaded);
@@ -1378,9 +1378,9 @@ fn research_cards_show_only_what_helps_the_faction() {
     let unlocks = legatum_core::research::tech_unlocks(&s, P);
     let lab = unlocks
         .iter()
-        .find(|u| u.item == building(BuildingKind::Laboratory))
+        .find(|u| u.item == building(BuildingKind::Library))
         .unwrap();
-    // The Byzantium researches like everyone else: an ordinary Laboratory with its Science.
+    // The Byzantium researches like everyone else: an ordinary Library with its Science.
     assert_eq!(lab.name.as_str(), "Library");
     assert_eq!(lab.yields.science, 3);
 
@@ -1405,14 +1405,14 @@ fn research_cards_show_only_what_helps_the_faction() {
 #[test]
 fn the_byzantium_builds_a_library_and_its_relay_uplink_needs_one_like_everyone() {
     let relay = |tile| ProductionItem::Wonder {
-        building: BuildingKind::RelayUplink,
+        building: BuildingKind::GreatLibrary,
         tile,
     };
-    let library = building(BuildingKind::Laboratory);
+    let library = building(BuildingKind::Library);
     assert!(data::available_to_faction(Faction::Byzantium, library));
     assert_eq!(
-        data::great_work_requirement(BuildingKind::RelayUplink),
-        Some((BuildingKind::Laboratory, 1))
+        data::great_work_requirement(BuildingKind::GreatLibrary),
+        Some((BuildingKind::Library, 1))
     );
     for faction in [Faction::Byzantium, Faction::India] {
         let mut s = state(faction);
