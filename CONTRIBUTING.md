@@ -1,8 +1,8 @@
 # Contributing to Legatum
 
 Thanks for looking. Legatum is a historical 4X on a hex map: a deterministic Rust engine, scripted AI,
-a headless simulation runner, and a React/TypeScript UI that runs the same engine as WASM (browser,
-Tauri desktop shell, or a LAN host).
+a headless simulation runner, and a React/TypeScript UI that runs the same engine as WASM (browser or
+the Tauri desktop shell).
 
 Anyone may open an issue or a pull request. The maintainer, Sam Corcos, decides what merges. The project
 is pre-release and changes quickly, so for anything larger than a fix, open an issue first and say what you
@@ -44,7 +44,6 @@ Other entry points:
 
 ```sh
 cargo run --release -p legatum-sim -- --help    # headless simulation runner
-./scripts/lan-host.sh                           # serve the app and the authoritative game on your LAN
 scripts/build-mac-app.sh                        # macOS app bundle, unsigned (see app/README.md)
 scripts/build-web.sh                            # the hosted web build, as deployed (static files in app/dist)
 ```

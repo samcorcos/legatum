@@ -10,6 +10,7 @@ Newest first. One entry per non-obvious finding: what we learned, the evidence, 
 - **An engine that is in the build but fails to download used to boot the app anyway** (`main.tsx` swallowed the rejection), and the failure only surfaced on New Game. Now it shows the crash card's engine form with Reload. A build without the engine keeps its own "missing from this build" screen.
 - **happy-dom's `navigator.webdriver` is always true, and Playwright's is too.** The narrow-window plate skips automation so the phone-layout e2e specs keep testing the layout behind it; its unit test mocks the getter to false.
 - **This container has no `wasm-pack`, so the WASM package could not be built here.** The new e2e checks ran against a hosted build made with a stub engine package (a 5 KB valid `.wasm` fetched like the real loader); the full hosted play-through was not run.
+
 ## 2026-11-22: Online co-op runs in the host's browser tab; what moving the server into WASM taught (`claude/browser-host`)
 
 - **The old server's host logic needed no transport to work.** `host.rs`, staging, protocol, events and admission moved into `crates/wasm/src/host` almost unchanged once the async outbox became a synchronous queue drained by the caller (`NetHost::drain`). The 29 server protocol tests still pass, driven synchronously in `crates/wasm/tests/net_host.rs`. `crates/server` (axum/tokio, CLI, LAN, embedded relay client) is deleted.
