@@ -341,6 +341,7 @@ His words, after seeing the Modern era sheet: "you still have some placeholders.
 - **Key small or thin subjects with the edge key, after enlarging.** The stock key's 9 px erosion erased pavilion columns and a trebuchet's sling ropes, leaving roof kiosks and the pouch floating (`tools/art/unlock-art.py` crops, scales to about 1000 px, then uses `unit-art.py`'s edge key).
 - **Faces converge across a set.** Five European men drifted to one bearded face; a portrait prompt names the man's age, face shape, hair and beard so each people's man is a distinct person (the Celtic man wears the drooping moustache; the Spartan man has braided hair and a full beard. The prompt asked for a shaved upper lip, the Spartan custom, and the generator kept the moustache: check each named feature in a crop and repaint if it matters).
 - **Unlock pieces lose loose fragments.** `unlock-art.py` clears opaque islands under 2% of the largest (a shrub crown, a sling pouch cut from its ropes), so nothing floats at card size.
+- **Thin supports must survive every size (2026-11-22).** Resize the smaller sizes from the 256 with premultiplied alpha, then check every size for islands (`tools/art/art-review.py impact`). A 1 px support (pillar, mast, leg) can vanish at 128 and leave its roof floating, as the Imperial Diwan's corner chhatri did; bridge it or thicken it in the prompt.
 - **Check what the generator hands back.** One of 28 variants came back as an unrelated photograph from the generator's image folder; look at every file before keying it.
 
 ## Launch reviews (2026-11-21)
