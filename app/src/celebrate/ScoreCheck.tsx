@@ -33,7 +33,7 @@ export function ScoreCheck({ moment, dismiss }: { moment: Moment; dismiss(): voi
     <div className="sc-body">
       <header className="sc-head">
         <div>
-          <div className="sc-kicker">The {card.name} Age begins · Turn {card.turn}</div>
+          <div className="sc-kicker">{card.replay ? `The ${card.name} Age · the score now · Turn ${card.turn}` : `The ${card.name} Age begins · Turn ${card.turn}`}</div>
           <h2 className="sc-title">Score check</h2>
         </div>
         <p className="sc-rule">{card.opener}<br />First to hold <b>{card.target} VP</b> for <b>10 turns</b> wins.</p>

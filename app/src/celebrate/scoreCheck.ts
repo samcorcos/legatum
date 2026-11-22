@@ -51,6 +51,8 @@ export interface ScoreCheckCard {
   /** A team holding its target, and how soon it wins. */
   hold: string | null;
   lines: SheetLine[];
+  /** Shown again from the report: the sheet is the score now, so the header says so rather than "begins". */
+  replay?: boolean;
 }
 
 const ord = (n: number) => `${n}${n % 10 === 1 && n % 100 !== 11 ? 'st' : n % 10 === 2 && n % 100 !== 12 ? 'nd' : n % 10 === 3 && n % 100 !== 13 ? 'rd' : 'th'}`;
@@ -104,6 +106,8 @@ function sheetLines(view: PlayerView, era: number): SheetLine[] {
 function ageLine(view: PlayerView, era: number): SheetLine {
   const boxes: Box[] = [];
   const open: { era: number; name: string; card: string; current: number; target: number }[] = [];
+  // The newest Age begun is the new card: on a replay from an older report, that is the Age begun since.
+  const newest = Math.max(era, ...(view.eras ?? []).map((x) => x.era));
   for (let e = 2; e <= ERA_COUNT; e++) {
     const ev = view.eras?.find((x) => x.era === e);
     const o = ev ? eraObjectivesFor(view, e) : null;
@@ -112,17 +116,17 @@ function ageLine(view: PlayerView, era: number): SheetLine {
     if (o.state === 'scored') { boxes.push({ state: 'kept', mark: roman(e), title: `${ev.name}: scored, yours for good` }); continue; }
     // The name and its plain ask, "Breach, capture a walled city"; a card with no name is its ask, "Gain 4 cities".
     const card = line ? (line.text.includes(':') ? `${cardName(line.text)}, ${line.text.slice(line.text.indexOf(':') + 1).trim()}` : line.text) : 'its card';
-    boxes.push({ state: e === era ? 'new' : 'open', mark: roman(e), title: `${ev.name}: ${card}, still open` });
+    boxes.push({ state: e === newest ? 'new' : 'open', mark: roman(e), title: `${ev.name}: ${card}, still open` });
     open.push({ era: e, name: ev.name, card, current: line?.current ?? 0, target: line?.target ?? 0 });
   }
-  const fresh = open.find((a) => a.era === era);
-  const older = open.filter((a) => a.era !== era);
+  const fresh = open.find((a) => a.era === newest);
+  const older = open.filter((a) => a.era !== newest);
   const progress = (a: (typeof open)[number]) => a.target > 1 ? ` · you ${Math.min(a.current, a.target)} of ${a.target}` : '';
   const how = fresh ? `New card: ${fresh.card}${progress(fresh)}` : older[0] ? `${older[0].name} card: ${older[0].card}${progress(older[0])}` : 'Every Age so far is scored';
   const rest = fresh ? older : older.slice(1);
   const detail = rest.length
     ? `Also still open: ${and(rest.map((a) => `${a.name} (${a.card})`))}.`
-    : 'Cards never expire: you can still score an older one.';
+    : fresh ? 'Cards never expire: this one stays open until you score it.' : 'Cards never expire.';
   return { key: 'ages', name: 'Age cards', terms: '1 VP each · kept', boxes, how, detail, open: open.length, fresh: !!fresh };
 }
 

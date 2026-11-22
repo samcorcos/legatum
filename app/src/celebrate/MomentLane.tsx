@@ -77,7 +77,8 @@ export function CelebrationProvider({ children }: { children: ReactNode }) {
       const events: GameEvent[] = age != null
         ? [...(first ? [{ type: 'EraEntered' as const, player: view.me, era, first: true }] : []), { type: 'AgeBegan' as const, era, first: age }]
         : [{ type: 'EraEntered', player: view.me, era, first }];
-      return planMoments(momentsForTurn(events, view.me, null, view));
+      // The view is today's, so a replayed score check shows the score now and says so (UI review, 2026-11-22).
+      return planMoments(momentsForTurn(events, view.me, null, view).map((m) => m.scoreCheck ? { ...m, scoreCheck: { ...m.scoreCheck, replay: true } } : m));
     }
     if (reopened && view && !view.finished) {
       const [again] = momentsForTurn([{ type: 'TechResearched', player: view.me, tech: reopened }], view.me, null, view);

@@ -89,6 +89,27 @@ describe('when it plays', () => {
   });
 });
 
+describe('shown again from the report', () => {
+  it('marks the newest Age begun as new and says the sheet is the score now', () => {
+    const view = withScoreCheck(base);
+    // Replaying the Classical Age (II) on turn 92, after the Medieval Age (III) has begun.
+    const card = { ...scoreCheckFor(view, 2, view.me), replay: true };
+    const ages = card.lines.find((l) => l.key === 'ages')!;
+    expect(ages.boxes.slice(0, 3).map((b) => b.state)).toEqual(['kept', 'new', 'later']);
+    expect(ages.how).toBe('New card: Breach, capture a city that has Walls');
+    const m = { ...momentsForTurn([{ type: 'AgeBegan', era: 2, first: view.me }], view.me, base, view)[0] };
+    m.scoreCheck = card;
+    act(() => root.render(<ScoreCheck moment={m} dismiss={vi.fn()} />));
+    expect(host.querySelector('.sc-kicker')?.textContent).toBe('The Classical Age · the score now · Turn 92');
+  });
+
+  it('never says an older card is open when none is', () => {
+    const card = scoreCheckFor(withScoreCheck(base), 3, 0);
+    const ages = card.lines.find((l) => l.key === 'ages')!;
+    expect(ages.detail).toBe('Cards never expire: this one stays open until you score it.');
+  });
+});
+
 describe('the takeover', () => {
   it('shows the track, your sheet and one primary that closes it', () => {
     const view = withScoreCheck(base);
