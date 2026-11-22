@@ -98,7 +98,9 @@ p {
   background: var(--field);
   border: 1px solid var(--rule-2);
   vertical-align: 1px;
+  text-transform: none;
 }
+:is(.btn, .act, .cta, .prod, .link) kbd { text-transform: none; }
 .yield-icon,
 .icon {
   vertical-align: -3px;
@@ -107,6 +109,7 @@ p {
 .ui-mark {
   vertical-align: -2px;
 }
+.not-met-mark { display: inline-block; box-sizing: border-box; vertical-align: -1px; border: 1.5px solid currentColor; border-radius: 50%; color: var(--ink-2); }
 .mask-icon,
 .faction-mark,
 .wordmark {
@@ -1802,6 +1805,8 @@ dialog.settings-modal::backdrop {
 }
 .foreign-city .empire-relation {
   margin-right: 4px;
+  border: 0;
+  padding: 0;
   font: 600 10px/1 var(--sans);
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -2116,9 +2121,9 @@ dialog.settings-modal::backdrop {
 }
 /* The chosen (or pending) build: accent frame, a tinted fill and a check in place of the chevron. */
 .prod.active {
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 10%, var(--field));
-  box-shadow: inset 3px 0 0 var(--accent);
+  border-color: var(--ink);
+  background: color-mix(in srgb, var(--ink) 8%, var(--field));
+  box-shadow: inset 3px 0 0 var(--ink);
 }
 /* Picked this turn but not yet resolved: say so on the row itself. */
 .prod.pending /* G11: an item waiting for its strategic resource says why and when (pillar 5). */

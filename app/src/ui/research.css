@@ -113,7 +113,7 @@
   border: 1px solid var(--rule-2);
   background: var(--panel);
 }
-.research-queue li.first { border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
+.research-queue li.first { border-color: var(--ink); box-shadow: inset 3px 0 0 var(--ink); }
 .rq-ghost { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 4px 8px; border: 1px dashed var(--rule-2); overflow: hidden; color: var(--muted); font: 400 12px/1.25 var(--sans); }
 .rq-ghost .rq-number { border-color: var(--rule-2); color: var(--muted); }
 .rq-ghost.hint { border-color: var(--accent); color: var(--ink); font-weight: 600; }
@@ -175,12 +175,12 @@
 .era-card:is(.available, .queued, .researching) { cursor: pointer; }
 .era-card:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 55%, transparent); outline-offset: 2px; }
 @media (hover: hover) { .era-card:is(.available, .queued):hover { background: color-mix(in srgb, var(--accent) 7%, var(--field)); border-color: var(--accent); } }
-.era-card.queued { border-color: var(--accent); }
+.era-card.queued { border-color: var(--ink); }
 .era-card.researching {
   padding: 7px 8px 6px;
-  border: 2px solid var(--accent);
+  border: 2px solid var(--ink);
   border-left-width: 4px;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent), 0 6px 16px -6px color-mix(in srgb, var(--accent) 70%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 18%, transparent), 0 6px 16px -6px color-mix(in srgb, var(--ink) 60%, transparent);
 }
 .era-card.known { border: 3px double var(--rule-2); background: var(--panel-2); box-shadow: none; padding: 6px 8px 5px; }
 .era-card.chosen { outline: 2px solid var(--ink); outline-offset: 2px; }
@@ -198,7 +198,7 @@
   box-shadow: inset 0 0 0 2px var(--field), inset 0 0 0 3px currentColor;
 }
 .era-card.known .era-seal { background: var(--good); border-color: var(--good); color: var(--panel); box-shadow: none; }
-.era-card.researching .era-seal { background: var(--accent); color: var(--panel); }
+.era-card.researching .era-seal { background: var(--ink); color: var(--panel); }
 .era-card-name { flex: 1 1 auto; min-width: 0; margin: 0; font: var(--display-weight) 17px/1.1 var(--display); overflow-wrap: normal; word-break: normal; hyphens: none; }
 /* A name with a very long word (Industrialization) steps down a size so it wraps between words, never inside one. */
 /* The state tag is pinned to the card's top-right corner, out of the layout flow: it takes no room from the card. */
@@ -210,8 +210,8 @@
   align-items: center;
   height: 24px;
   padding-left: 8px;
-  background: var(--accent);
-  color: var(--panel);
+  background: var(--primary-bg);
+  color: var(--primary-ink);
   box-shadow: 1px 1px 0 var(--rule-2);
 }
 .era-queue-tag b { font: 700 11px/1 var(--sans); letter-spacing: .06em; text-transform: uppercase; }
@@ -223,7 +223,7 @@
 .era-cost-main { display: inline-flex; align-items: baseline; gap: 6px; font: 700 15px/1.2 var(--sans); font-variant-numeric: tabular-nums; }
 .era-cost-base { color: var(--ink-2); font-weight: 400; font-size: 12px; text-decoration-thickness: 1px; }
 .era-when { min-width: 0; overflow: hidden; color: var(--ink-2); font: 600 11.5px/1.2 var(--sans); font-variant-numeric: tabular-nums; text-overflow: ellipsis; white-space: nowrap; }
-.era-card.researching .era-when, .era-card.queued .era-when { color: var(--accent); }
+.era-card.researching .era-when, .era-card.queued .era-when { color: var(--ink); }
 .era-cost-note { color: var(--good); font: 600 11.5px/1.25 var(--sans); }
 /* No discount is not good news: neutral ink, not the green of a real discount. */
 .era-cost-note.none { color: var(--muted); font-weight: 500; }

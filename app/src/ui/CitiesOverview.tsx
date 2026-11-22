@@ -119,7 +119,7 @@ export function CitiesOverview() {
         </div>
         <p className="co-count" data-testid="cities-count"><b>{rows.length}</b> {rows.length === 1 ? 'city' : 'cities'}{idle > 0 && <> · <b className="co-idle-count">{idle} idle</b></>}</p>
         <p className="co-help">Click a heading to sort. Click a city to go to it.</p>
-        <button ref={closeButton} className={`btn co-close${chosen.length ? '' : ' primary'}`} onClick={close} aria-label="Close cities">Close <kbd className="kbd">Esc</kbd></button>
+        <button ref={closeButton} className="btn quiet co-close" onClick={close} aria-label="Close cities">Close <kbd className="kbd">Esc</kbd></button>
       </header>
       <div className="co-automation" aria-label="Automate selected cities">
         <span>{chosen.length ? `${chosen.length} selected` : 'Select cities to automate'}</span>
