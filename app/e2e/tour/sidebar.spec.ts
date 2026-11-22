@@ -32,7 +32,7 @@ for (const size of SIZES) test(`delegated city cannot choose after Ready ${size.
   await page.getByRole('button', { name: /^Continue/ }).click();
   await expect(page.getByTestId('turn-number')).toHaveText(String(fixture.turn));
   await page.evaluate((id) => (window as unknown as GameWindow).legatum.getState().select({ kind: 'city', id }, true), own);
-  await page.getByRole('combobox', { name: /Build automatically in/ }).selectOption('Science');
+  await page.getByRole('combobox', { name: /^Automate / }).selectOption('Science');
   await page.evaluate((id) => {
     const store = (window as unknown as GameWindow).legatum;
     const s = store.getState();

@@ -5,10 +5,6 @@ import { useGame } from '../store';
 import type { Order, PlayerView, TechId } from '../types';
 import { Icon } from './bits';
 import { arrivalText, cheapestFirst, moveInQueue, queueSchedule } from './eraResearch';
-import { markQueueHintSeen, useQueueHintSeen } from './queueHint';
-
-/** Shown in the first free slot until the player has queued once. */
-const QUEUE_HINT = 'Shift+click a technology to queue it next.';
 
 /** Replace the research queue with `techs` (the one place the panel edits it). */
 export function editQueue(view: PlayerView, techs: TechId[]) {
@@ -34,11 +30,8 @@ export function ResearchQueue({ view, orders, slotCount, landed }: { view: Playe
   const order = cheapestFirst(r);
   const unqueued = order.filter((t) => !queue.includes(t));
   const disabled = view.finished;
-  const hintSeen = useQueueHintSeen();
   const total = Math.max(queue.length, slotCount);
-  const hintAt = Math.max(1, queue.length);
-  const showHint = !hintSeen && queue.length < 2;
-  const queueAll = (techs: TechId[]) => { markQueueHintSeen(); editQueue(view, techs); };
+  const queueAll = (techs: TechId[]) => editQueue(view, techs);
 
   if (idle && !open.length) return <div className="research-queue empty" aria-label="Research queue"><span className="research-queue-title">Research queue</span><span className="muted">Nothing left to research.</span></div>;
 
@@ -69,14 +62,11 @@ export function ResearchQueue({ view, orders, slotCount, landed }: { view: Playe
         <button className="icon-btn" title="Research later" disabled={disabled || i === queue.length - 1} aria-label={`Move ${TECH_NAME[slot.tech]} later`} onClick={() => editQueue(view, moveInQueue(queue, i, 1))}><span aria-hidden="true">▶</span></button>
       </span>
     </li>)}</ol>
-    {Array.from({ length: total - queue.length }, (_, k) => {
-      const at = queue.length + k;
-      const hint = showHint && at === hintAt;
-      return <div key={`empty-${at}`} className={`rq-ghost${hint ? ' hint' : ''}`} data-testid={hint ? 'queue-hint' : 'queue-empty'} aria-hidden={hint ? undefined : true}>
-        <span className="rq-number">{at + 1}</span>
-        <span className="rq-ghost-text">{hint ? QUEUE_HINT : idle && at === 0 ? 'Click a technology below to research it now.' : 'Empty'}</span>
-      </div>;
-    })}
+    {/* Every card has its own Research now and + Queue buttons, so an empty slot only says so. */}
+    {Array.from({ length: total - queue.length }, (_, k) => <div key={`empty-${queue.length + k}`} className="rq-ghost" data-testid="queue-empty" aria-hidden="true">
+      <span className="rq-number">{queue.length + k + 1}</span>
+      <span className="rq-ghost-text">Empty</span>
+    </div>)}
     </div>
   </div>;
 }

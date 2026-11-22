@@ -1,7 +1,7 @@
 import { useId } from 'react';
 import type { ReactNode } from 'react';
 import type { Breakdown, Faction, PlayerView, Resource, UnitKind, UnitView } from '../types';
-import { builtInSiege, FACTION_INFO, MONGOL_SIEGE_REASON, itemName, SIEGE_RULE, SIEGE_USES_IRON, TECH_NAME, UNIT_STATS, unitClass, unitStatsFor } from '../data';
+import { builtInSiege, MONGOL_SIEGE_REASON, itemName, SIEGE_RULE, SIEGE_USES_IRON, TECH_NAME, UNIT_STATS, unitClass, unitStatsFor } from '../data';
 import { siegeTier } from '../combat';
 import { aWorks, fixClause, supplyPerMine, withArticle } from '../resources';
 import { strengthBonus } from '../promotion';
@@ -78,12 +78,9 @@ export function UnitImprovements({ unit, view, check, primary, pending, gold, si
       tip={<>
         <p>{unitStatsFor(faction, check.to).moves} moves · {unitStatsFor(faction, check.to).strength} strength before promotions{unitStatsFor(faction, check.to).ranged > 0 && ` · ${unitStatsFor(faction, check.to).ranged} ranged · range ${unitStatsFor(faction, check.to).range}`}.</p>
         <p>{castrumHeal ? `Castrum restores ${castrumHeal} HP, to ${unit.hp + castrumHeal}/100, once for this upgrade order.` : 'Keeps its HP and promotions.'} Can act again next turn.</p>
-        {!!unit.upgrade_steps?.length && <p>Upgrade path: {unit.upgrade_steps.map((step) => itemName({ kind: 'Unit', unit: step }, faction)).join(' → ')}. Each step’s Gold price is included.</p>}
         {unit.siege && builtInSiege(check.to) && <p>Its Siege is built in from then on, so the Iron the bought Siege used is freed.</p>}
-        <p>Inside your territory. {check.need && `Uses 1 ${check.need} supply while it exists.`}</p>
         <p>Treasury: <Amounts text={`${gold} Gold → ${gold - (check.cost ?? 0)} Gold`} />.</p>
-        {check.needs.some((n) => !n.met) && <ul>{check.needs.filter((n) => !n.met).map((n) => <li key={n.label}>{n.label.includes(' supply: ') ? '' : 'Needs '}<Amounts text={n.label} /></li>)}</ul>}
-        {unit.upgrade_breakdown && <BreakdownTable b={plainUpgradeBreakdown(unit.upgrade_breakdown, faction)} title="Upgrade cost" unit="Gold" />}
+        {unit.upgrade_breakdown && <BreakdownTable b={upgradeStepBreakdown(unit.upgrade_breakdown, unit.kind as UnitKind, unit.upgrade_steps?.length ? unit.upgrade_steps : [check.to], faction)} title="Upgrade cost" unit="Gold" plain />}
       </>} />}
     {offer && <ImproveRow label="Siege" effect={`Ignores ${['Walls', 'Walls', 'Walls and Castles', 'Walls, Castles and Star Forts'][siegeTier(view.research.known)]}`}
       icon="ui-siege" cost={offer.price.total} resource={SIEGE_USES_IRON ? 'Iron' : null}
@@ -176,11 +173,20 @@ export function upgradeCheck(unit: UnitView, view: PlayerView, gold: number, res
   return { to, cost, needs, blocker, need };
 }
 
-/** The engine's upgrade breakdown with plain labels. */
-export function plainUpgradeBreakdown(b: Breakdown, faction?: Faction): Breakdown {
-  const label = (l: string) =>
-    l === 'Base upgrade Gold' ? 'Twice the Production difference'
-    : l === 'Faction' ? `${faction ? FACTION_INFO[faction].name : 'Faction'} price`
-    : l;
-  return { ...b, parts: b.parts.map(([l, v]) => [label(l), v] as [string, number]) };
+/**
+ * The engine's upgrade price as one line per step ("Spearman → Phalangite 80"), each step's faction
+ * and Military Engineering parts folded into it. Every step opens with its base part (core
+ * `rules::units::step_price`); a step whose base is 0 has none, so then the whole path is one line.
+ */
+export function upgradeStepBreakdown(b: Breakdown, from: UnitKind, steps: UnitKind[], faction?: Faction): Breakdown {
+  const name = (kind: UnitKind) => itemName({ kind: 'Unit', unit: kind }, faction);
+  const groups: number[] = [];
+  b.parts.forEach(([label, value], i) => {
+    if (label === 'Base upgrade Gold' || i === 0) groups.push(value);
+    else groups[groups.length - 1] += value;
+  });
+  if (!steps.length || groups.length !== steps.length || b.parts[0]?.[0] !== 'Base upgrade Gold') {
+    return { total: b.total, parts: [[`${name(from)} → ${name(steps.at(-1) ?? from)}`, b.total]] };
+  }
+  return { total: b.total, parts: steps.map((to, i) => [`${name(i ? steps[i - 1] : from)} → ${name(to)}`, groups[i]] as [string, number]) };
 }

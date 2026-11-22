@@ -29,9 +29,9 @@ for (const size of SIZES) test.describe(`train-1031 ${size.name}`, () => {
     await loadFixture(page, coreFixture(f), 2);
     await selectThing(page, 'city', mine[3].id); // Geneva, idle
     await park(page);
-    await expect(page.getByRole('combobox', { name: /Build automatically in/ })).toBeVisible();
+    await expect(page.getByRole('combobox', { name: /^Automate / })).toBeVisible();
     await shot(page, size, '01-city-panel-automation-off');
-    await page.getByRole('combobox', { name: /Build automatically in/ }).selectOption('Science');
+    await page.getByRole('combobox', { name: /^Automate / }).selectOption('Science');
     await park(page);
     await shot(page, size, '02-city-panel-automation-science');
     await selectThing(page, 'city', mine[0].id); // Bern, building a Market

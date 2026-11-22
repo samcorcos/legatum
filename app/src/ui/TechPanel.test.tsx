@@ -7,7 +7,6 @@ import { TopBar } from './TopBar';
 import { useGame } from '../store';
 import { FixtureClient } from '../test/fixtureEngine';
 import type { PlayerView } from '../types';
-import { markQueueHintSeen, queueHintSeen, resetQueueHint } from './queueHint';
 
 let container: HTMLDivElement;
 let root: Root;
@@ -17,7 +16,6 @@ beforeEach(() => {
   container = document.body.appendChild(document.createElement('div'));
   root = createRoot(container);
   useGame.setState(useGame.getInitialState(), true);
-  resetQueueHint();
 });
 afterEach(() => {
   act(() => root.unmount());
@@ -277,31 +275,12 @@ it('the queue strip keeps the same slots, so queueing never changes its height',
   expect(slotCount()).toBe(slots);
 });
 
-it('the first-time hint shows in the next free slot until the player has queued once, and is remembered', async () => {
-  const { a, b } = await emptyQueue();
-  const hint = () => container.querySelector('[data-testid="queue-hint"]');
-  expect(hint()?.textContent).toContain('Shift+click a technology to queue it next.');
-  clickCard(card(a)); // researching alone is not queueing
-  expect(hint()).not.toBeNull();
-  clickCard(card(b), { shiftKey: true });
-  expect(hint()).toBeNull();
-  expect(queueHintSeen()).toBe(true);
-  expect(localStorage.getItem('legatum.research-queue-hint.v1')).toBe('1');
-});
-
-it('the hint is hidden once it has been seen, and still works with storage blocked', async () => {
-  markQueueHintSeen();
-  const { a, b } = await emptyQueue();
-  expect(container.querySelector('[data-testid="queue-hint"]')).toBeNull();
-  resetQueueHint();
-  vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => { throw new Error('blocked'); });
-  vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('blocked'); });
-  expect(queueHintSeen()).toBe(false);
-  act(() => root.render(createElement(TechPanel)));
-  clickCard(card(a));
-  clickCard(card(b), { shiftKey: true });
-  expect(queueHintSeen()).toBe(true); // remembered for the session even without storage
-  expect(container.querySelector('[data-testid="queue-hint"]')).toBeNull();
+it('empty queue slots say only Empty: the cards carry their own Research now and + Queue buttons', async () => {
+  await emptyQueue();
+  const ghosts = [...container.querySelectorAll('.research-queue-slots .rq-ghost')];
+  expect(ghosts.length).toBeGreaterThan(0);
+  expect(ghosts.every((g) => g.querySelector('.rq-ghost-text')?.textContent === 'Empty')).toBe(true);
+  expect(container.querySelector('.research-queue')?.textContent).not.toMatch(/click/i);
 });
 
 it('picking a card glows it and runs the fly-to-queue chip, then clears both', async () => {
