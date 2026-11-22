@@ -2,6 +2,14 @@
 
 Newest first. One entry per non-obvious finding: what we learned, the evidence, and what we changed. Correct or delete entries that turn out to be wrong.
 
+## 2026-11-22: Security review of the online surface (`claude/project-thread-xw5vhs`)
+
+- **Per-address limits were per IPv6 address, so they limited nothing.** `CF-Connecting-IP` for an IPv6 client is one of the 2^64 addresses its line owns, and a script can use a new one per request. The relay's 2 rooms, 6 creations per 10 minutes and 4 guest sockets per address were each counted per full address, so one home line could fill all 64 lobby slots. `addressKey` in `infra/relay/src/shared.ts` now cuts an IPv6 address to its /64 before hashing. Any future per-address limit (the games Worker included) must go through the same cut.
+- **The build label was a second free-text field in the lobby.** Room names were cleaned, but `build` only refused control characters, and the Join screen prints it ("This game is on version X"). It now accepts only what a real label is made of (letters, digits, spaces and `. · ( ) _ + -`).
+- **`/api/status` served whatever the host stored, up to 1 MiB per room.** The Room now drops a `status` frame over 64 KiB (a real one is a few KiB) and every relay answer says `X-Content-Type-Options: nosniff`.
+- **Everything pushed becomes public with the repository:** all 37 branches and every `refs/pull/*/head` were scanned blob by blob for keys, tokens, bearer strings, home paths and addresses before launch. Nothing was found beyond the two commits carrying the maintainer's own email, which he accepted.
+- **The free Workers plan fails closed, which is the right default.** About 100,000 requests in a day (one small script) use up the account's daily allowance and take the relay and the upload Worker offline until 00:00 UTC, but nothing is billed. The only open-ended bill is R2 storage. A Worker cannot rate-limit its way out of this, since a refused request still counts; the fix is a custom domain with a Cloudflare rate-limiting rule in front.
+
 ## 2026-11-22: Uploaded games are analysed on the Mac (`tools/games`)
 
 - **A site deploy can strand a game in progress.** Deploying PR #33 also shipped rules 50 (#31), and the app refuses a rules-49 autosave (`json.rs`: only the sim upgrades 49 saves). Telling the player to reload to pick up a fix was wrong: a tab started on older rules must finish where it is. Before advising a reload, compare `RULES_VERSION` between the build the player is on and the one being deployed. The analysis job is unaffected: it replays each game at its own engine commit.
