@@ -209,7 +209,7 @@ already). The host's own in-tab connection never sees chunks.
   in the row with an alert mark; neither can be joined. Empty state: "No games are being hosted right now."
 - Joining sets the server base to `RELAY/rooms/<id>`: status from `<base>/api/status`, socket at `<base>/ws`
   through `relaySocket.ts`. Everything after that is the existing staging room and game.
-- A build without a relay offers hot seat only.
+- A build without a relay disables Multiplayer and explains that online play is unavailable.
 
 ## Tests
 

@@ -1,6 +1,6 @@
 # Legatum
 
-A historical 4X on a hex map (real peoples such as Switzerland, the Mongols and Sparta; grounded in real history, no sci-fi or fantasy, user 2026-10-10), built to feel familiar to Civ 6 players. The design target is two humans on a permanent team plus 6 AI empires; solo against AI empires, hot seat and online games also exist. Simultaneous turns, 3–6 hour games.
+A historical 4X on a hex map (real peoples such as Switzerland, the Mongols and Sparta; grounded in real history, no sci-fi or fantasy, user 2026-10-10), built to feel familiar to Civ 6 players. The design target is two humans on a permanent team plus 6 AI empires; solo against AI empires and online games also exist. Simultaneous turns, 3–6 hour games.
 
 ## Sources of truth
 

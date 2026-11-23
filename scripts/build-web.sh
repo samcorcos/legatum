@@ -17,7 +17,7 @@
 # (tools/release/keep-builds.mjs), so a game always finishes on the version it started on. LEGATUM_BUILD_ID
 # overrides the id (default: the commit).
 # LEGATUM_RELAY_URL overrides the relay (default: the live one below); set it to "none" for a build without
-# online play (the menu then offers hot seat only).
+# online play (Multiplayer is disabled when there is no relay).
 # Needs: Rust (cargo + wasm-pack), Node/npm. Check the result with: cd app && npm run e2e:hosted
 set -euo pipefail
 cd "$(dirname "$0")/.."

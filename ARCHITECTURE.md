@@ -102,7 +102,7 @@ The UI depends on one interface, `GameClient` in `app/src/client.ts`. Local game
 
 | Client | File | Used for |
 | --- | --- | --- |
-| WASM | `app/src/wasmClient.ts` | Single player and hot seat. The engine runs in the page, loaded from `app/src/wasm-pkg` (built by `scripts/build-wasm.sh`). Views, validation, forecasts, saves and turn resolution are JSON strings across the WASM boundary. |
+| WASM | `app/src/wasmClient.ts` | Single player. The engine runs in the page, loaded from `app/src/wasm-pkg` (built by `scripts/build-wasm.sh`). Views, validation, forecasts, saves and turn resolution are JSON strings across the WASM boundary. |
 | Remote | `app/src/remote.ts` | Online play. The client is bound to one human seat and talks to the host's tab through the relay's room URL (`setServerBase`); `app/src/relaySocket.ts` reassembles `chunk` messages. The host's own seat uses an in-tab socket instead. |
 
 The game state lives in a Zustand store (`app/src/store.ts`); the map is drawn on a 2D canvas (`app/src/map/`, entry points `MapCanvas.tsx` and `render.ts`). Test fixtures in `app/src/test/` start from Rust-generated saves and resolve turns through WASM.

@@ -43,6 +43,8 @@ Current principles and decisions, one line each with date and who. The user's fu
 
 ## Current decisions worth knowing before proposing
 
+- Hot seat removed (user, 2026-11-23): multiplayer is online lobby only.
+
 - Victory: hold the VP target for 10 turns, or take every capital (user, 2026-10-06, 2026-11-15). Every faction goal is worth exactly 2 VP. Crowns and decadence are deleted (user, 2026-11-11).
 - Game length (Sam, 2026-11-23): his games end T141 to T168 by conquest, in the World War era; the tech pace is steady. Offered every tech 20% cheaper plus a VP target of 12 (`docs/sim-results/game-length/README.md`); he chose no change yet: fix the Hard AI and Walls levels first, then re-measure his games. A 10th era was not added (he sees no historical gap, and his games never reach the end of the tree).
 - Era scoring is World Ages only (owner, 2026-11-22, rules 50): the three-objective era arm and its switch are deleted; iterate on World Ages itself (cards, counts, pacing). Each Age's pool has three peaceful cards every faction can reach; one card is drawn per Age.

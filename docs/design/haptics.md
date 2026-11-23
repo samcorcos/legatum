@@ -1,6 +1,6 @@
 # Game event → haptic map
 
-This is the single source of truth for Legatum haptics. Add a row before adding a haptic anywhere. The semantic names are the `feel.*` functions in `app/src/feel/haptics.ts`. "Viewer" means the local player whose screen is shown (in hot seat, the active seat).
+This is the single source of truth for Legatum haptics. Add a row before adding a haptic anywhere. The semantic names are the `feel.*` functions in `app/src/feel/haptics.ts`. "Viewer" means the local player whose screen is shown.
 
 ## Direct interactions (fire at the moment of user intent)
 

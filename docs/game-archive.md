@@ -60,7 +60,7 @@ Metadata fields:
 | --- | --- |
 | `schema_version`, `game_id` | Envelope version and collision-resistant, path-safe identity |
 | `created_at`, `finished_at` | RFC3339 UTC timestamps; finish is null while in progress |
-| `source` | `human-local`, `human-hotseat`, `lan`, or `sim`; online Host games use `lan` (`history::Source::Lan`, a historical name) |
+| `source` | `human-local`, legacy `human-hotseat` (2026-11-23, read only), `lan`, or `sim`; online Host games use `lan` (`history::Source::Lan`, a historical name). The legacy value remains readable in old archives |
 | `speed`, `map`, `seed` | Economic speed, generator plus width/height, decimal-string u64 seed |
 | `seats` | Player id, entered name, faction, team, difficulty, human flag, final/current VP and held titles |
 | `winner`, `outcome` | Winning **team id**, or null; `vp`, `elimination`, `turn-limit`, `draw`, `stalled`, `panic`, `abandoned`, or `in-progress` |

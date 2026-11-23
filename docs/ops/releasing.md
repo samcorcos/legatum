@@ -38,7 +38,7 @@ a notice and deploys nothing, so forks stay green.
 Static files only; there is no game server: the engine runs in the player's browser as WebAssembly. Online play
 runs in the host player's tab and goes through the relay (`infra/relay`, `plans/online-play.md`):
 `scripts/build-web.sh` bakes the relay's address in (`LEGATUM_RELAY_URL`, default the live relay, `none` for a build
-without online play) and writes it into the page's `connect-src`. Single player, hot seat, online co-op,
+without online play) and writes it into the page's `connect-src`. Single player, online co-op,
 autosave (browser storage) and Save to file / Load Game (download and upload) work.
 `app/hosted/_headers` sets the security headers and long caching for the hashed files; `app/hosted/404.html`
 answers unknown addresses. The title screen shows `Version <app version> · web <commit>`, and a production build adds ` · Last updated <date time>` on the same line: the build's UTC time (`__BUILD_TIME__` in `app/vite.config.ts`, `LEGATUM_BUILD_TIME` overrides it), shown in the player's own time zone (`app/src/buildTime.ts`). Each kept build (`tools/release/keep-builds.mjs`) carries its own time. Dev builds leave it off.

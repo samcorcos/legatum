@@ -1,6 +1,6 @@
 # Online play: the game protocol
 
-The messages between a player's UI and the authoritative game, for **two or more humans on one team plus AI, each entering their own orders**. (Single player and one-screen hot seat run locally in WASM.) The file keeps its old name; since 2026-11-22 there is no LAN server and no native program. `plans/online-play.md` is the contract for where the game runs and how guests reach it; this file is the protocol on top.
+The messages between a player's UI and the authoritative game, for **two or more humans on one team plus AI, each entering their own orders**. (Single player runs locally in WASM.) The file keeps its old name; since 2026-11-22 there is no LAN server and no native program. `plans/online-play.md` is the contract for where the game runs and how guests reach it; this file is the protocol on top.
 
 ## Shape
 
@@ -94,7 +94,7 @@ Events filtering uses the union of pre- and post-turn visible tiles. Team events
   - Reconnect automatically on disconnect (exponential backoff) and re-join the same seat (remember its credential and seat in per-tab sessionStorage), unless the socket received `error` with `code: "seat_taken"`. Reload auto-rejoins a reserved seat with that tab's credential even if status still sees its previous socket connected; credential authentication permits replacing the stale socket. A new browser context has no credential. Ready stays disabled until welcome orders and the corresponding view are restored. Leaving a running game keeps its credential with `autoJoin: false`, so a later reload stays at the title and an explicit rejoin can still reclaim the reservation.
   - A join rejected with `invalid_seat_credential` offers **Reclaim my seat** only to the loopback host (`status.is_local`), on the Join screen or in the running game's connection banner. This deliberate action sends one `game_take`, then saves the returned `seat_token` before joining with it. It lets a remembered host tab recover after a restart rotates credentials. Ordinary Join and automatic reconnect keep using the saved credential; reconnect never sends `game_take`, even if a claim's acknowledgment was lost. An interrupted claim without any credential requires another explicit Join. A guest must ask the host to open the seat. The server still enforces loopback reassignment.
   - Starting or loading a local game, leaving, or going Back to title from a finished online game disconnects the online session; a stale socket's messages are ignored.
-- If `/api/status` fails, the UI runs locally via WASM as today (hot-seat or solo).
+- If `/api/status` fails, Single Player stays available through local WASM; Multiplayer is disabled until a relay is configured.
 
 ---
 

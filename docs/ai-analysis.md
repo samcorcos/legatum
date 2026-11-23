@@ -227,7 +227,7 @@ tools/astra/watch-games.sh --once --no-daily
 
 The watcher polls every 30 seconds (`--interval`), catches up finished human games from
 `index.jsonl`, and only reads final immutable archive files. This covers native local,
-hot-seat, and online-hosted human seats through the existing archive writer; checkpoints are never
+online-hosted human seats through the existing archive writer; checkpoints are never
 reviewed. It respects `--archive-dir` / `LEGATUM_ARCHIVE` / `~/LegatumData/archive`, follows
 the writer's file lock, and retries a torn last index line on the next pass. No server turn
 waits for a model. Browser-only games enter this flow after delivery to the native archive.

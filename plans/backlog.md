@@ -21,7 +21,7 @@ Owner hints: **astra** = gpt-6-astra via `tools/astra/runner.sh` (write tasks ge
 
 | ID | Item | Owner | Status |
 | --- | --- | --- | --- |
-| B22 | Standard game flow: main menu with Single Player and Multiplayer (Host / Join on LAN / Hot Seat), then a Civ-style lobby: seats (Human/AI/Closed, faction, team, AI difficulty), map size, seed, game length, generic presets. No bespoke 'partner' wording anywhere | claude | done (network staging room server side = B23) |
+| B22 | Standard game flow: main menu with Single Player and Multiplayer (Host / Join online), then a Civ-style lobby: seats (Human/AI/Closed, faction, team, AI difficulty), map size, seed, game length, generic presets. No bespoke 'partner' wording anywhere | claude | done (network staging room server side = B23) |
 | B23 | LAN staging room on the server (host configures, players join seats, ready, start) per plans/lan-protocol.md; accept 1-8 humans | astra | implemented on astra/lan-staging-server; awaiting review (browser verification blocked by sandbox) |
 | B4 | Tauri desktop app: `.app` bundle, app icon from the logo, embeds nothing yet (browser mode) | claude | done |
 | B5 | Property/fuzz tests: random valid and invalid orders through `resolve_turn` never panic and keep invariants (≤1 military + ≤1 civilian per tile, no two teams on a tile, HP bounds, gold ≥ 0 after upkeep, determinism) | astra | doing (astra property-fuzz) |

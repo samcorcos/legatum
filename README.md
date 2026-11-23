@@ -103,13 +103,13 @@ These clips are recorded from the running game.
 - **Diplomacy with Peace, Alliance and War.** An Alliance fights as one side, a call to arms is one decision card, and a public warning shows when rivals line up against a leader.
 - **Asymmetric peoples.** Each has its own rules, units or buildings, and a drawback that pays for them.
 - **A public victory race.** A team wins by holding its VP target for ten turns: 10 VP for one empire, 20 for a team of two. VP come from World Age cards (one random card per Age, 1 VP each, kept for good), rival original capitals while you hold them, world wonders and faction goals. A team also wins when it is the only one still holding an original capital of its own.
-- **Solo or together.** Single Player is you against one to seven AI empires (five by default). Multiplayer is hot seat on one computer or an online game: Host Game lists your game for others and Join Game shows the games that are open (all games are public for now). The co-op setup puts two humans on one team against six AI empires.
+- **Solo or together.** Single Player is you against one to seven AI empires (five by default). Multiplayer is online: Host Game lists your game for others and Join Game shows the games that are open (all games are public for now). The co-op setup puts two humans on one team against six AI empires.
 - **Art and sound.** All of the art is AI-generated (see [How it was made](#how-it-was-made)). The music and sound effects are CC0 recordings by Kenney and others, credited in the game.
 - **A post-game report.** The victory race over time, empires over time, an event timeline and a statistics table.
 
 ## Play it
 
-**[Play in your browser](https://playlegatum.com).** Nothing to install. Single player against the AI, hot seat on one computer and online games all work there. It is built for a laptop or desktop (tablets work; phones are not a target yet) and is tested most in Chrome. The first load is about 7 MB. Your game is autosaved in that browser, and Menu → Save to file gives you a copy to keep. The game's record is also uploaded to the project, without player names; see [Privacy](#privacy).
+**[Play in your browser](https://playlegatum.com).** Nothing to install. Single player against the AI and online games work there. It is built for a laptop or desktop (tablets work; phones are not a target yet) and is tested most in Chrome. The first load is about 7 MB. Your game is autosaved in that browser, and Menu → Save to file gives you a copy to keep. The game's record is also uploaded to the project, without player names; see [Privacy](#privacy).
 
 ### Build it from source
 
