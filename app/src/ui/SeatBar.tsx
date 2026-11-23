@@ -35,7 +35,6 @@ import { Amounts } from './Amounts';
 import { SiegeAlerts } from './SiegeAlerts';
 import { useCityAlarms } from './useCityAlarms';
 
-/** The next seat after `seat` (cyclically) that still has to plan, or null. */
 class OrderListBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
   state = { failed: false };
   static getDerivedStateFromError() { return { failed: true }; }
@@ -70,34 +69,23 @@ function PendingOrderList({ orders, errors, automated, view, busy, eliminated, e
   </>;
 }
 
-function nextPlanningSeat(seat: Seat, ready: boolean[], views: PlayerView[]): Seat | null {
-  for (let k = 1; k < ready.length; k++) {
-    const s = (seat + k) % ready.length;
-    if (!ready[s] && !isEliminated(views[s])) return s;
-  }
-  return null;
-}
-
-/**
- * Mark the seat Ready and hand the screen to the next seat that still has to plan. With a single
- * human seat this resolves the turn right away.
- */
+/** Mark this browser's seat Ready. */
 export function readyAndPass() {
-  requestReady(useGame.getState().seat, true);
+  requestReady(useGame.getState().seat);
 }
 
 /** Every user-facing Ready/End Turn entry point must pass through this review gate. */
-export function requestReady(seat: Seat, pass = false) {
+export function requestReady(seat: Seat) {
   const s = useGame.getState();
   const view = s.views?.[seat];
   if (!view || view.finished || s.busy || s.resolvingToEnd) return;
   if (s.client?.kind === 'remote' && s.net?.conn !== 'open') return;
   if (!s.ready[seat] && pendingDecisions(view, s.orders[seat], s.errors[seat], s).length) {
-    s.set({ endTurnConfirmation: { seat, view, orders: s.orders[seat], pass } });
+    s.set({ endTurnConfirmation: { seat, view, orders: s.orders[seat] } });
     feel.select();
     return;
   }
-  commitReady(seat, pass);
+  commitReady(seat);
 }
 
 export function confirmEndTurn() {
@@ -106,33 +94,22 @@ export function confirmEndTurn() {
   s.set({ endTurnConfirmation: null });
   // A seat change, new turn, or edited plan needs its own review.
   if (!review || s.views?.[review.seat] !== review.view || s.orders[review.seat] !== review.orders) return;
-  commitReady(review.seat, review.pass);
+  commitReady(review.seat);
 }
 
-function commitReady(seat: Seat, passSeat: boolean) {
+function commitReady(seat: Seat) {
   const s = useGame.getState();
   const view = s.views?.[seat];
   if (!view || view.finished || s.busy || s.resolvingToEnd) return;
   if (s.client?.kind === 'remote' && s.net?.conn !== 'open') return;
   if (isEliminated(view) && !canResolveToEnd(view, s.client?.kind === 'remote' ? s.net : null)) {
-    const next = nextPlanningSeat(seat, s.ready, s.views!);
-    if (s.client?.kind !== 'remote' && next !== null) s.setSeat(next);
     return;
   }
   if (s.client?.kind === 'remote') {
     readySelected();
     return;
   }
-  const wasReady = s.ready[seat];
-  const result = readySelected(seat);
-  const pass = () => {
-    const after = useGame.getState();
-    if (after.client !== s.client || after.views !== s.views || !after.ready[seat]) return;
-    const next = nextPlanningSeat(seat, after.ready, after.views!);
-    if (passSeat && !wasReady && next !== null && !after.busy) { after.setSeat(next); after.set({ handoff: next }); }
-  };
-  if (useGame.getState().busy === 'Planning automation…') void result.then(pass);
-  else pass();
+  void readySelected(seat);
 }
 
 export function SeatBar({ phoneDetails = false, onOpenDetails, race }: { phoneDetails?: boolean; onOpenDetails?: () => void; race?: ReactNode }) {
@@ -142,7 +119,6 @@ export function SeatBar({ phoneDetails = false, onOpenDetails, race }: { phoneDe
   const ready = useGame((s) => s.ready);
   const orders = useGame((s) => s.orders);
   const errors = useGame((s) => s.errors);
-  const setSeat = useGame((s) => s.setSeat);
   const toggleReady = requestReady;
   const nextDecision = useGame((s) => s.nextDecision);
   const selection = useGame((s) => s.selection);
@@ -182,11 +158,7 @@ export function SeatBar({ phoneDetails = false, onOpenDetails, race }: { phoneDe
   const eliminated = isEliminated(view);
   const observerCanAdvance = canResolveToEnd(view, remote ? net : null);
   const controller = remote && net && canResolveToEnd(view) ? observerController(net) : null;
-  const nameOf = (id: number) => view.players.find((p) => p.id === id)?.name ?? `Player ${id + 1}`;
-  // Who we're waiting on: living online seats that aren't Ready, or local seats still planning.
-  const waitingOn = remote
-    ? (net?.seats ?? []).filter((x) => x.seat !== net?.mySeat && !x.ready && view.players.find((p) => p.id === x.player)?.alive !== false).map((x) => x.name)
-    : humans.filter((_, i) => i !== seat && !ready[i] && !isEliminated(views[i])).map(nameOf);
+  const waitingOn = (net?.seats ?? []).filter((x) => x.seat !== net?.mySeat && !x.ready && view.players.find((p) => p.id === x.player)?.alive !== false).map((x) => x.name);
   const automated = automatedUnits(view, orders[seat]).filter((u) => !orders[seat].some((o) => orderUnit(o) === u.id));
   const decisions = pendingDecisions(view, orders[seat], errors[seat], { humans, orders, errors, siegeSeen, airHeld, seat, report, goalDecisionSeen, selection });
   const needing = decisions.filter((d) => d.kind === 'unit' || d.kind === 'air');
@@ -208,7 +180,6 @@ export function SeatBar({ phoneDetails = false, onOpenDetails, race }: { phoneDe
   } else if (view.finished) {
     cta = { label: 'Game finished', sub: 'View the final map', onClick: () => {}, kind: 'waiting', disabled: true };
   } else if (eliminated) {
-    const next = nextPlanningSeat(seat, ready, views);
     cta = observerCanAdvance ? {
       label: ready[seat] ? 'Waiting for the next turn…' : 'End turn',
       sub: 'Observe with no orders',
@@ -216,12 +187,12 @@ export function SeatBar({ phoneDetails = false, onOpenDetails, race }: { phoneDe
       kind: 'ready',
       disabled: ready[seat] || resolvingToEnd,
     } : {
-      label: !remote && next !== null ? 'Pass to next player' : 'Observing',
+      label: 'Observing',
       sub: controller ? `${controller.name} controls the remaining turns`
         : waitingOn.length ? `Waiting for ${waitingOn.join(', ')}` : 'The remaining players control the turns',
       onClick: readyAndPass,
       kind: 'waiting',
-      disabled: remote || next === null,
+      disabled: true,
     };
   } else if (ready[seat]) {
     cta = {
@@ -273,7 +244,7 @@ export function SeatBar({ phoneDetails = false, onOpenDetails, race }: { phoneDe
   const quiet = !!race && !phoneDetails && !report && !remote && humans.length <= 1 && !bankruptcy && !wounded.length && orders[seat].length + automated.length === 0;
   const details = <div id="turn-details" className={`turn-details${quiet ? ' quiet' : ''}`}>
       {/* Once a turn has resolved, the subtitle line becomes the way back to its report. */}
-      <PanelHead title="This Turn" sub={report ? <LastTurnButton /> : race ? undefined : humans.length > 1 || remote ? 'Every seat plans at once' : 'Plan, then end the turn'} />
+      <PanelHead title="This Turn" sub={report ? <LastTurnButton /> : race ? undefined : remote ? 'Every seat plans at once' : 'Plan, then end the turn'} />
       {/* Everything that grows (seats, cities, orders, reviews) scrolls in this body on desktop, so
           the turn's primary action below stays pinned in view (styles.css, "Seats, orders"). */}
       <div ref={body} className={`turn-body${bodyScrolls ? ' scrolls' : ''}`}>
@@ -282,42 +253,7 @@ export function SeatBar({ phoneDetails = false, onOpenDetails, race }: { phoneDe
       {!race && <><GoalActionRow /><FactionGoalProgressLine view={view} /></>}
       <details className="sidebar-turn-more" open={!race || hostCanOpenSeat || undefined}><summary hidden={!race}>Turn details · {counted(orders[seat].length + automated.length, 'order')}</summary>
       <AirWatch view={view} />
-      {remote && net ? (
-        <OnlineSeats />
-      ) : humans.length > 1 ? (
-      <div className="seats">
-        {humans.map((id, s) => {
-          const p = views[s].players.find((x) => x.id === id)!;
-          return (
-            <div
-              key={s}
-              className={`seat local-seat ${seat === s ? 'on' : ''} ${ready[s] ? 'ready' : ''}`}
-              style={{ ['--pc' as string]: playerInk(id) }}
-            >
-              <button className="seat-select" aria-pressed={seat === s} onClick={() => setSeat(s)}>
-                <CrestMedallion faction={p.faction} color={playerColor(id)} size={36} />
-                <span className="seat-name">{p.name}</span>
-                <span className="seat-meta">
-                  {p.alive ? `${orders[s].length} order${orders[s].length === 1 ? '' : 's'}` : 'Observing'}
-                </span>
-              </button>
-              <Tip className="seat-readiness" content={!p.alive ? 'Eliminated: this seat observes' : ready[s] ? 'Ready: click to un-ready' : 'Planning: click to mark Ready'}>
-                <button
-                  className={`seat-ready ${ready[s] ? 'on' : ''}`}
-                  aria-label={`${p.name}: ready`}
-                  aria-pressed={ready[s]}
-                  disabled={!!busy || view.finished || !p.alive}
-                  onClick={() => toggleReady(s)}
-                >
-                  {!p.alive ? 'Eliminated' : ready[s] ? <><Icon name="ui-check" size={12} className="ui-mark" /> Ready</> : 'Planning'}
-                </button>
-              </Tip>
-              {s < 9 && <Kbd>{s + 1}</Kbd>}
-            </div>
-          );
-        })}
-      </div>
-      ) : null}
+      {remote && net && <OnlineSeats />}
       <CityList view={view} />
       <div className="orders-box">
         <button className="orders-toggle" aria-expanded={showOrders} aria-controls="pending-orders" onClick={() => setShowOrders(!showOrders)}>

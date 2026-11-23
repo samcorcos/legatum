@@ -46,7 +46,7 @@ const GALLERY = `
   <div class="title-menu" style="animation:none"><div class="title-actions">
     <button class="btn big primary">Single Player<span class="btn-sub">1 to 7 AI empires</span></button>
     <button class="btn big primary" disabled>Single Player<span class="btn-sub">1 to 7 AI empires</span></button>
-    <button class="btn big">Multiplayer<span class="btn-sub">Hot seat or network</span></button>
+    <button class="btn big">Multiplayer<span class="btn-sub">Host or join online</span></button>
     <button class="btn big" disabled>Continue<span class="btn-sub">No autosave yet</span></button>
     <button class="btn big quiet">Load Game…</button>
     <button class="btn big quiet" disabled>Quit</button>

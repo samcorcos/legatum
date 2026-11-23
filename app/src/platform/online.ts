@@ -14,7 +14,7 @@ export const RULES_VERSION: number = __RULES_VERSION__;
 export const RELAY_URL: string | null = (import.meta.env.VITE_LEGATUM_RELAY_URL as string | undefined)?.trim().replace(/\/+$/, '') || null;
 
 export interface OnlineInfo {
-  /** The relay's base URL; null when this build has none (the menu then offers hot seat only). */
+  /** The relay's base URL; null when this build has no multiplayer. */
   relay: string | null;
   build: string;
   rules_version: number;

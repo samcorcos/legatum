@@ -37,7 +37,7 @@ export function cancelCelebrationFeedback(): void {
   celebrationGeneration++;
 }
 
-/** A hot-seat handoff cancels the old turn's story, but keeps the Ready tap that caused it. */
+/** Cancel the prior turn's feedback when the viewed game changes. */
 export function cancelTurnFeedback(): void {
   turnGeneration++;
   if (lastWasTurn) blockedUntil = -Infinity;

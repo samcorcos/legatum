@@ -18,7 +18,7 @@ type GameWindow = Window & {
 /** The game-upload Worker the build under test was built with, if any (scripts/build-web.sh). */
 const gamesOrigin = process.env.LEGATUM_GAMES_URL ? new URL(process.env.LEGATUM_GAMES_URL).origin : null;
 
-/** scripts/build-web.sh bakes in the live relay unless LEGATUM_RELAY_URL=none; then the title offers hot seat only. */
+/** scripts/build-web.sh bakes in the live relay unless LEGATUM_RELAY_URL=none; then Multiplayer is disabled. */
 const relayBuilt = process.env.LEGATUM_RELAY_URL !== 'none';
 
 const version = (JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as { version: string }).version;
@@ -220,16 +220,14 @@ test('a visitor plays: title, a people, turns, a second city, save and load, wit
   await expect(page).toHaveTitle(/^Legatum/);
   await expect(page.getByRole('heading', { name: 'Legatum', exact: true })).toBeVisible();
   await expect(page.locator('.title-foot')).toContainText(`Version ${version}`);
-  await page.getByRole('button', { name: /^Multiplayer/ }).click();
   if (relayBuilt) {
+    await page.getByRole('button', { name: /^Multiplayer/ }).click();
     await expect(page.getByRole('button', { name: /^Host Game/ })).toBeEnabled();
     await expect(page.getByRole('button', { name: /^Join Game/ })).toBeEnabled();
   } else {
-    await expect(page.getByRole('button', { name: /^Host Game/ })).toHaveCount(0);
-    await expect(page.getByRole('button', { name: /^Join Game/ })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /^Multiplayer/ })).toBeDisabled();
   }
-  await expect(page.getByRole('button', { name: /^Hot Seat/ })).toBeEnabled();
-  await page.getByRole('button', { name: /Back/ }).click();
+  if (relayBuilt) await page.getByRole('button', { name: /Back/ }).click();
 
   // The licence notices open inside the Credits.
   await page.getByRole('button', { name: /^How to Play/ }).click();

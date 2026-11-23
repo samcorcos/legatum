@@ -107,7 +107,7 @@ describe('lobby', () => {
     expect(levelOf(lobby)).toBe('Hard');
     expect(lobby.slots.slice(1).every((seat) => levelOf(seat) === 'Hard')).toBe(true);
     expect(buildSetup(lobby).players.slice(1).every((player) => player.difficulty === 'Hard')).toBe(true);
-    const converted = setSlot(newLobby('hotseat', '42'), 1, { kind: 'ai' });
+    const converted = setSlot(newLobby('host', '42'), 1, { kind: 'ai' });
     expect(converted.slots[1].difficulty).toBe('Hard');
   });
 
@@ -126,8 +126,8 @@ describe('lobby', () => {
   it('does not restore a solo seat override when another lobby mode opens', () => {
     profile();
     rememberDifficulty(setSlot(newLobby('solo', '1'), 1, levelFields('Normal')));
-    newLobby('hotseat', '2');
-    expect(levelOf(newLobby('solo', '3').slots[1])).toBe('Hard');
+    newLobby('host', '2');
+    expect(levelOf(newLobby('solo', '3').slots[1])).toBe('Normal');
   });
 
   it('reports when a chosen difficulty cannot be persisted', () => {
@@ -164,8 +164,8 @@ describe('lobby', () => {
     expect(problems(l)).toEqual([]);
   });
 
-  it('hot seat defaults to co-op vs AI: the humans share a team with a two-empire target', () => {
-    const l = newLobby('hotseat', '42');
+  it('online hosting defaults to co-op vs AI: the humans share a team with a two-empire target', () => {
+    const l = newLobby('host', '42');
     expect(l.preset).toBe('coop');
     const t = teams(l);
     expect(t[0].slots).toEqual([0, 1]);
@@ -184,7 +184,7 @@ describe('lobby', () => {
   });
 
   it('puts humans first in player order and gives each seat its faction\'s colour', () => {
-    let l = newLobby('hotseat', '9');
+    let l = newLobby('host', '9');
     l = setSlot(l, 1, { kind: 'ai' });
     l = setSlot(l, 5, { kind: 'human' });
     expect(l.slots[5].name).toBe('Player 6');
@@ -346,7 +346,7 @@ describe('lobby', () => {
       expect(ffa('Large').slots).toHaveLength(8);
       expect(applyPreset(newLobby('solo', '1'), 'teams').slots).toHaveLength(8);
       expect(applyPreset(newLobby('solo', '1'), 'coop').slots).toHaveLength(8);
-      const coop = newLobby('hotseat', '1');
+      const coop = newLobby('host', '1');
       expect(coop.slots.map((s) => s.kind)).toEqual(['you', 'human', 'ai', 'ai', 'ai', 'ai', 'ai', 'ai']);
     });
 
@@ -376,7 +376,7 @@ describe('lobby', () => {
     });
 
     it('never removes a human seat', () => {
-      let l = newLobby('hotseat', '1');
+      let l = newLobby('host', '1');
       l = setSlot(l, 7, { kind: 'human' });
       l = setSlot(l, 6, { kind: 'human' });
       const s = setMapSize(l, 'Small');
@@ -386,7 +386,7 @@ describe('lobby', () => {
     });
 
     it('co-op keeps the humans on one team against at least one other team', () => {
-      const s = setMapSize(newLobby('hotseat', '1'), 'Small');
+      const s = setMapSize(newLobby('host', '1'), 'Small');
       expect(count(s)).toBe(4);
       expect(teams(s)[0].slots).toEqual([0, 1]);
       expect(problems(s)).toEqual([]);

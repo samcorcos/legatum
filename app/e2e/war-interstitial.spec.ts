@@ -10,12 +10,12 @@ import { warDeclaredCoreSave } from '../src/test/warDeclaredFixture';
 
 type GameWindow = Window & { legatum: typeof useGame; legatumMap: { toScreen(hex: Hex): { x: number; y: number } } };
 
-async function load(page: Page, teammate = false) {
+async function load(page: Page) {
   await page.addInitScript(({ game, names }) => {
     if (!location.protocol.startsWith('http')) return;
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 1, names, savedAt: new Date().toISOString(), game }));
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
-  }, { game: warDeclaredCoreSave({ teammate }), names: teammate ? ['Ada', 'Bo'] : ['Ada'] });
+  }, { game: warDeclaredCoreSave(), names: ['Ada'] });
   await page.goto('/?client=wasm');
   await page.getByRole('button', { name: /^Continue/ }).click();
   await expect(page.getByTestId('turn-number')).toHaveText('1');
@@ -103,40 +103,4 @@ test('War declared on you: Esc closes it where it is; Open diplomacy opens Spart
   await expect(other.getByTestId('alarm-screen')).toHaveCount(0);
   await expect(other.getByRole('complementary', { name: 'Diplomacy', exact: true })).toBeVisible();
   await other.close();
-});
-
-test('War declared on your team: the hot-seat teammate sees it too, once, after the hand-off', async ({ page }) => {
-  await page.setViewportSize({ width: 1440, height: 900 });
-  await load(page, true);
-  await endPlanning(page);
-  const pass = page.getByRole('dialog', { name: 'Pass to Bo' });
-  await expect(pass).toBeVisible();
-  await page.keyboard.press('Enter');
-  await expect(pass).toHaveCount(0);
-  await endPlanning(page);
-  await expect(page.getByTestId('turn-number')).toHaveText('2');
-  const seen = new Set<number>();
-  for (let i = 0; i < 2; i++) {
-    const handoff = page.locator('.handoff-screen');
-    if (await handoff.isVisible()) await handoff.getByRole('button').click();
-    await expect(alarm(page)).toBeVisible();
-    await expect(page.getByTestId('alarm-screen')).toHaveAttribute('data-armed', '');
-    seen.add(await page.evaluate(() => (window as unknown as GameWindow).legatum.getState().seat));
-    await page.keyboard.press('Enter');
-    await expect(page.getByTestId('alarm-screen')).toHaveCount(0);
-    if (i === 0) {
-      // Switch to the other local seat, as a player would from the turn dock.
-      await page.evaluate(() => {
-        const s = (window as unknown as GameWindow).legatum.getState();
-        s.setSeat(s.seat === 0 ? 1 : 0);
-      });
-    }
-  }
-  expect([...seen].sort()).toEqual([0, 1]);
-  // Back on the first seat: already seen, so it does not return.
-  await page.evaluate(() => {
-    const s = (window as unknown as GameWindow).legatum.getState();
-    s.setSeat(s.seat === 0 ? 1 : 0);
-  });
-  await expect(page.getByTestId('alarm-screen')).toHaveCount(0);
 });

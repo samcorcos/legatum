@@ -39,18 +39,6 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-it('passes among three humans without handing planning to the eliminated middle seat', () => {
-  act(() => { readyAndPass(); confirmEndTurn(); });
-  expect(useGame.getState().seat).toBe(2);
-  expect(useGame.getState().ready).toEqual([true, false, false]);
-  act(() => useGame.getState().setSeat(0));
-  expect(host.querySelector('.cta-label')?.textContent).toBe('Waiting for Cy…');
-  expect(host.querySelector('.cta-label')?.textContent).not.toContain('Bo');
-  act(() => { useGame.getState().setSeat(2); readyAndPass(); confirmEndTurn(); });
-  expect(useGame.getState().busy).toBe('Resolving turn…');
-  expect(useGame.getState().seat).toBe(2);
-});
-
 it('renders an unknown queued order without blanking the page', () => {
   act(() => useGame.setState({ orders: [[{ type: 'FutureOrder', unit: 3 } as never], [], []] }));
   expect(host.querySelector('.orders-list')?.textContent).toContain('Unknown order (FutureOrder)');
@@ -185,25 +173,6 @@ it('Space skip returns next turn while a sleeping unit stays out of the cycle', 
   expect(useGame.getState().selection).toEqual({ kind: 'unit', id: 0 });
   act(() => useGame.getState().nextDecision());
   expect(useGame.getState().selection?.kind).toBe('city');
-});
-
-it('wraps around eliminated seats and never lists them as waiting', () => {
-  act(() => useGame.getState().setSeat(2));
-  act(() => { readyAndPass(); confirmEndTurn(); });
-  expect(useGame.getState().seat).toBe(0);
-  act(() => useGame.getState().setSeat(2));
-  expect(host.querySelector('.cta-label')?.textContent).toBe('Waiting for Ada…');
-});
-
-it('shows an eliminated seat as observing and offers a pass instead of research or production', () => {
-  act(() => useGame.getState().setSeat(1));
-  expect(host.querySelector('.cta-label')?.textContent).toBe('Pass to next player');
-  expect(host.textContent).not.toContain('Choose research');
-  expect(host.textContent).not.toContain('Choose production');
-  expect(host.querySelector<HTMLButtonElement>('[aria-label="Bo: ready"]')?.disabled).toBe(true);
-  expect(host.textContent).not.toContain('Resolve to the end');
-  act(() => host.querySelector<HTMLButtonElement>('.cta')!.click());
-  expect(useGame.getState().seat).toBe(2);
 });
 
 it('offers empty observer turns and a working Stop control when all humans are dead', () => {

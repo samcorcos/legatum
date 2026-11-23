@@ -1,5 +1,5 @@
 /* The alarm screen: a war declared on you (red ink, full drama) and lighter big moments.
-   Above every game panel and the hot-seat hand-off; below dialogs in the top layer (game over). */
+   Above every game panel; below dialogs in the top layer (game over). */
 .alarm-screen {
   --alarm-ink: var(--bad);
   position: absolute; inset: 0; z-index: 70;

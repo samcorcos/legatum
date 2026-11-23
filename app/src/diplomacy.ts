@@ -30,7 +30,7 @@ export function diplomaticCost(view: PlayerView, order: Order): number | null {
     (a.order as unknown as Record<string, unknown>)[key] === value))?.cost ?? null;
 }
 
-/** Team IDs and player IDs differ in hotseat/team games. Public does not mean personal. */
+/** Team IDs and player IDs differ in team games. Public does not mean personal. */
 export function diplomaticTeams(event: Event): TeamId[] {
   if ('relation' in event) return [event.relation.a, event.relation.b];
   if ('proposal' in event) return event.proposal.required_teams?.length
@@ -184,7 +184,7 @@ export function borderSteps(view: PlayerView, kind: UnitKind, from: Hex): (a: He
   return (a, b) => open(b) || (!open(a) && index(a) >= 0 && index(b) >= 0 && dist[index(b)] < dist[index(a)]);
 }
 
-/** Merge only local human teammates' diplomatic plans into the same contract online publishes. */
+/** Merge this browser's queued diplomatic plans into the same contract online publishes. */
 export function withLocalDiplomacy(view: PlayerView, humans: number[], orders: Order[][]): PlayerView {
   const local = new Set(humans);
   const queued = [...view.diplomacy.queued.filter((q) => !local.has(q.player)), ...orders.flatMap((os, seat) => view.players.some((p) => p.id === humans[seat] && p.team === view.team) ? os.filter((o) => otherTeam(view, o) !== null).map((order) => ({ player: humans[seat], order })) : [])];

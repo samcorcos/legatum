@@ -49,13 +49,6 @@ it('offers one primary, Save and report, and a secondary that clears the orders'
   expect(endWithout).toHaveBeenCalledTimes(1);
 });
 
-it('says every player loses their orders when the game has more than one human seat', () => {
-  useGame.setState({ turnFailure: { cleared: false }, ready: [false, false] });
-  act(() => root.render(<TurnFailureDialog />));
-  expect(host.textContent).toContain('drops what every player planned this turn');
-  expect(buttons().some((b) => b.textContent === 'End the turn with all orders cleared')).toBe(true);
-});
-
 it('Save and report downloads the save and the history', async () => {
   const client = new FixtureClient();
   await client.newGame(await client.standardSetup('42', 'India', 'Byzantium', 'Ada', 'Bo'));

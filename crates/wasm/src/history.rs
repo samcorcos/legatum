@@ -56,7 +56,7 @@ pub fn game_id() -> String {
 #[serde(rename_all = "kebab-case")]
 pub enum Source {
     HumanLocal,
-    HumanHotseat,
+    HumanHotseat, // Historical archive source (2026-11-23); keep old recordings readable.
     Lan,
     Sim,
 }
@@ -294,7 +294,7 @@ impl Recording {
                 source: match humans {
                     0 => Source::Sim,
                     1 => Source::HumanLocal,
-                    _ => Source::HumanHotseat,
+                    _ => Source::Lan,
                 },
                 speed: None,
                 map: Map {

@@ -86,13 +86,15 @@ it('Join Game opens the lobby list', async () => {
   expect(useGame.getState().screen).toBe('online');
 });
 
-it('a build with no relay offers hot seat only, and says so', async () => {
+it('a build with no relay disables multiplayer and explains why', async () => {
+  await act(async () => must(/Back/).click());
   act(() => useGame.setState({ online: null }));
   expect(host.querySelector('.host-name')).toBeNull();
   expect(button(/^Host Game/)).toBeUndefined();
   expect(button(/^Join Game/)).toBeUndefined();
-  expect(must(/^Hot Seat/)).toBeTruthy();
-  expect(host.textContent).toContain('This version has no online play.');
+  expect(must(/^Multiplayer/).disabled).toBe(true);
+  expect(must(/^Multiplayer/).textContent).toContain('Online play is unavailable');
+  expect(must(/^Single Player/).classList.contains('primary')).toBe(true);
 });
 
 it('with a game open, Resume stays the only primary button when hosting fails', async () => {

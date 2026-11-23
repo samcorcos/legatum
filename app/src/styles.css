@@ -2589,19 +2589,10 @@ dialog.settings-modal::backdrop {
   .game .seatbar .ph { padding-block: 8px 6px; }
   .game .seatbar .ph-sub:not(:has(.last-turn)) { display: none; }
   .game .seatbar .seat { min-height: 40px; padding: 4px 12px; column-gap: 8px; grid-template-columns: 24px minmax(0, 1fr) auto auto; }
-  .game .seatbar .seat > .medallion,
-  .game .seatbar .seat-select > .medallion { width: 24px !important; height: 24px !important; }
+  .game .seatbar .seat > .medallion { width: 24px !important; height: 24px !important; }
   .game .seatbar .seat .medallion > .faction-mark { width: 16px !important; height: 16px !important; }
   .game .seatbar .seat-name { font-size: 17px; }
   .game .seatbar .seat-meta { margin-top: 1px; }
-  /* A local (hot-seat) row is one line: crest, name, order count, Ready toggle, key. */
-  .game .seatbar .local-seat { grid-template-rows: auto; }
-  .game .seatbar .seat-select { grid-row: 1; grid-template-columns: 24px minmax(0, max-content) auto; justify-content: start; align-items: center; }
-  .game .seatbar .seat-select > .medallion { grid-row: 1; }
-  .game .seatbar .seat-select > .seat-name { align-self: center; }
-  .game .seatbar .seat-select > .seat-meta { grid-column: 3; grid-row: 1; align-self: center; margin: 1px 0 0; white-space: nowrap; }
-  .game .seatbar .seat-select > .seat-name { min-width: 0; }
-  .game .seatbar .local-seat > .seat-readiness, .game .seatbar .local-seat > .kbd { grid-row: 1; }
   .game .seatbar .cta { height: 56px; margin: 10px 16px 2px; gap: 4px; }
   .game .seatbar .cta-production { height: auto; min-height: 56px; padding: 8px 12px; }
   .game .seatbar .cta-long { height: auto; min-height: 56px; padding: 8px 12px; }
@@ -4083,25 +4074,6 @@ dialog.gameover::backdrop {
   right: -8px;
   bottom: -3px;
 }
-.local-seat {
-  column-gap: 8px;
-  padding: 8px 12px;
-}
-.seat-select {
-  grid-column: 1 / 3;
-  grid-row: 1 / 3;
-  display: grid;
-  grid-template-columns: 36px minmax(0, 1fr);
-  column-gap: 8px;
-  text-align: left;
-}
-.seat-select > .medallion {
-  grid-row: 1 / 3;
-}
-.seat-readiness {
-  grid-column: 3;
-  grid-row: 1 / 3;
-}
 .city-list {
   border-bottom: 1px solid var(--rule);
   font-size: 12px;
@@ -4407,11 +4379,6 @@ dialog.gameover::backdrop {
   color: var(--muted);
 }
 
-/* Hot seat hand-off: an opaque cover so the next player does not see the previous player's empire. */
-.handoff-screen { position: absolute; inset: 0; z-index: 60; display: grid; place-items: center; background: var(--bg, #1a1712); }
-.handoff-card { display: grid; justify-items: center; gap: 12px; padding: 32px 40px; background: var(--panel); border: 6px solid transparent; border-image: var(--frame-image); text-align: center; color: var(--ink); }
-.handoff-card h2 { font: var(--display-weight) 32px/1.1 var(--display); margin: 0; }
-.handoff-card p { margin: 0; color: var(--ink-2); }
 
 /* At 14px the one-line build effects clipped their key facts ("costs 1 pop"): wrap instead. */
 

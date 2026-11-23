@@ -36,7 +36,9 @@ it('is not shown in a solo game', async () => {
 it('with a teammate: Ping starts ping mode, and a teammate\'s live ping gets a way to it', async () => {
   const setup = coopVsAiSetup('42', [{ name: 'Ada', faction: 'India' }, { name: 'Bo', faction: 'Byzantium' }]);
   setup.players = setup.players.slice(0, 4);
-  await useGame.getState().startGame(setup);
+  const client = new FixtureClient();
+  await client.newGame(setup);
+  useGame.setState({ client, humans: [0, 1], views: [client.view(0), client.view(1)], canPing: () => true });
   act(() => root.render(<PingControl />));
   const button = host.querySelector<HTMLButtonElement>('[data-testid=ping-button]')!;
   // Idle: "Ping" with its P key chip, like the neighbouring controls.

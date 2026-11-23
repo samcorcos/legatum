@@ -51,7 +51,7 @@ export function gameplayKeyAllowed(e: KeyboardEvent): boolean {
 /**
  * Surfaces that cover the map without asking for a decision, topmost first (G15). Each carries
  * `data-dismissible="<name>"` while it is shown. Decisions (the end-turn review, Declare War, game
- * over, the hot-seat hand-off) and the game menu have no such mark and keep their own keys.
+ * over) and the game menu have no such mark and keep their own keys.
  */
 const DISMISSIBLE: readonly [name: string, close: () => void][] = [
   ['guide', () => useGuide.getState().close()],

@@ -126,7 +126,7 @@ function SeatRow({
   const kindLabel = (k: SlotKind) => (mode === 'host' && k === 'human' ? 'Online player' : KIND_LABEL[k]);
   const readOnly = !onChange;
   const networkSeat = !!room && (slot.kind === 'human' || slot.kind === 'you');
-  const youLabel = room?.guest ? 'Host' : mode === 'host' ? 'You · host' : mode === 'hotseat' ? 'Human' : 'You';
+  const youLabel = room?.guest ? 'Host' : mode === 'host' ? 'You · host' : 'You';
   const mine = room?.guest && room.mySeat === index;
 
   let nameCell: ReactNode = null;

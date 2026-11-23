@@ -18,9 +18,8 @@ vi.mock('../commands', () => ({
 }));
 
 const nextDecision = vi.fn();
-const setSeat = vi.fn();
 const select = vi.fn();
-const commands = [toggleAutoExploreSelected, nextDecision, setSeat, select, readyAndPass, cancelSelected, disbandSelected, foundCitySelected, sleepSelected, healSelected, skipSelected, toggleRangedMode, upgradeSelected];
+const commands = [toggleAutoExploreSelected, nextDecision, select, readyAndPass, cancelSelected, disbandSelected, foundCitySelected, sleepSelected, healSelected, skipSelected, toggleRangedMode, upgradeSelected];
 let map: HTMLCanvasElement;
 
 beforeEach(() => {
@@ -29,7 +28,7 @@ beforeEach(() => {
   map = document.querySelector('canvas')!;
   useGame.setState(useGame.getInitialState(), true);
   const client = new FixtureClient(); client.load(JSON.stringify(turnFlowFixture()));
-  useGame.setState({ client, views: [client.view(0)], humans: [0], orders: [[]], errors: [[]], ready: [false], nextDecision, setSeat, select });
+  useGame.setState({ client, views: [client.view(0)], humans: [0], orders: [[]], errors: [[]], ready: [false], nextDecision, select });
   useGuide.getState().close();
   window.addEventListener('keydown', handleAircraftKey, true);
   window.addEventListener('keydown', handleGameKey);
@@ -374,10 +373,9 @@ describe('GameScreen keyboard scope', () => {
   });
 
   it('keeps map commands, including shifted disband and research', () => {
-    for (const key of ['f', 'b', 'r', 'u', '1', 'Delete']) press(map, key);
+    for (const key of ['f', 'b', 'r', 'u', 'Delete']) press(map, key);
     for (const command of [sleepSelected, foundCitySelected, toggleRangedMode, upgradeSelected, cancelSelected]) expect(command).toHaveBeenCalledOnce();
-    expect(setSeat).toHaveBeenCalledWith(0);
-    press(map, 'x');
+        press(map, 'x');
     expect(disbandSelected).not.toHaveBeenCalled();
     press(map, 'X', { shiftKey: true });
     expect(disbandSelected).toHaveBeenCalledOnce();

@@ -31,7 +31,7 @@ export interface HumanSeat {
 
 /**
  * Humans first (one shared team, ids 0..h-1), then AIs up to `total` players, each AI on its own
- * team. One human = a solo game against the AIs; several humans = a hot-seat or online co-op team.
+ * team. One human plays solo; several humans join through the online lobby.
  */
 export function coopVsAiSetup(seed: string, humans: HumanSeat[], total = MAX_PLAYERS): GameSetup {
   if (humans.length < 1) throw new Error('at least one human seat');

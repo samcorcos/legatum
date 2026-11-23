@@ -35,7 +35,7 @@ import { rememberPlayerName, savedPlayerName } from '../platform/online';
 import { HOST_AWAY } from '../platform/relayLobby';
 import '../lobby.css';
 
-const TITLES: Record<LobbyMode, string> = { solo: 'Single Player', hotseat: 'Hot Seat', host: 'Host Game' };
+const TITLES: Record<LobbyMode, string> = { solo: 'Single Player', host: 'Host Game' };
 function forgetHostRoom(roomId: string | undefined) {
   const saved = rememberedSeat();
   if (roomId && saved?.seat === 0 && saved.roomId === roomId) rememberSeat(null);

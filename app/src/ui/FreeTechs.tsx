@@ -43,13 +43,12 @@ export function FreeTechsPrompt() {
   const prompted = useGame((s) => s.freeTechsPrompted[s.views?.[s.seat]?.me ?? -1]);
   const open = useGame((s) => s.freeTechsOpen);
   const alarms = useGame(pendingAlarms);
-  const handoff = useGame((s) => s.handoff);
   const set = useGame((s) => s.set);
   const touch = useCoarsePointer();
   const primary = useRef<HTMLButtonElement>(null);
   const [armed, setArmed] = useState(false);
   const title = useId();
-  const up = !!view && !!free && !ordered && !open && !view.finished && prompted !== view.turn && alarms.length === 0 && handoff === null;
+  const up = !!view && !!free && !ordered && !open && !view.finished && prompted !== view.turn && alarms.length === 0;
   const dismiss = () => { if (view) set({ freeTechsPrompted: { ...useGame.getState().freeTechsPrompted, [view.me]: view.turn } }); };
   const choose = () => { dismiss(); set({ freeTechsOpen: true }); };
   useEffect(() => {

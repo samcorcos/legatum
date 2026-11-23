@@ -134,8 +134,6 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
   const setTerritoryOpen = (open: boolean) => setTerritory({ open, claimHover: territory.claimHover });
   const setClaimHover = (claimHover: boolean) => setTerritory({ claimHover });
   useEffect(() => () => { const s = useGame.getState(); if (s.territory.open || s.territory.claimHover) s.set({ territory: { open: false, claimHover: false } }); }, []);
-  const setSeat = useGame((s) => s.setSeat);
-  const ownerSeat = useGame((s) => (s.client?.kind === 'remote' ? -1 : s.humans.indexOf(city.owner)));
   const owner = view.players.find((p) => p.id === city.owner);
   const fire = city.visible ? cityFireStatus(view, city) : null;
   const heal = city.visible ? cityHealStatus(city) : null;
@@ -287,11 +285,6 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
           {teammate ? (
             <>
               Managed by {owner?.name}.{' '}
-              {ownerSeat >= 0 && (
-                <button className="link" onClick={() => setSeat(ownerSeat)}>
-                  Switch seat
-                </button>
-              )}
             </>
           ) : (
             'City and owner are current; other details are out of sight.'

@@ -46,7 +46,7 @@
   border: var(--slip-border);
   border-left: 3px solid var(--y-gold);
 }
-/* A build with no online play: says so under Hot Seat. */
+/* A build with no online play: show the reason on the title screen. */
 .title-hosted-note {
   box-sizing: border-box;
   width: 360px;

@@ -6,6 +6,7 @@ import { GameOver, winReason } from './GameOver';
 import type { TeamTrack } from '../vp';
 import { saveFile, useGame } from '../store';
 import { FixtureClient } from '../test/fixtureEngine';
+import { coopVsAiSetup } from '../gameSetup';
 import { FakeSocket } from '../test/fakeSocket';
 import { useCombatFx } from '../feel';
 import type { SaveFile } from '../store';
@@ -26,10 +27,10 @@ beforeEach(async () => {
   root = createRoot(host);
   useGame.setState(useGame.getInitialState(), true);
   const client = new FixtureClient();
-  await client.newGame(await client.standardSetup('42', 'India', 'Byzantium', 'Ada', 'Bo'));
-  unfinishedSave = saveFile(client, [client.view(0), client.view(1)]);
+  await client.newGame(coopVsAiSetup('42', [{ name: 'Ada', faction: 'India' }]));
+  unfinishedSave = saveFile(client, [client.view(0)]);
   Object.assign(client.debugState(), { finished: true, winner: 0 });
-  finishedSave = saveFile(client, [client.view(0), client.view(1)]);
+  finishedSave = saveFile(client, [client.view(0)]);
   await useGame.getState().loadSave(finishedSave);
   act(() => root.render(<StrictMode><GameOver /></StrictMode>));
 });
@@ -72,10 +73,10 @@ it('opens a labelled native modal, contains keyboard focus and shortcuts, and re
 
 it('leads with the winning team\'s leader portraits and a ribbon, and lists every empire with a portrait thumbnail', () => {
   const dialog = host.querySelector('dialog')!;
-  // The standard setup puts both humans (India and Byzantium) on the winning team.
-  expect(dialog.querySelectorAll('.go-hero .pf')).toHaveLength(2);
+  // The solo setup puts India on the winning team.
+  expect(dialog.querySelectorAll('.go-hero .pf')).toHaveLength(1);
   expect(dialog.querySelector('.go-hero .pf')!.classList.contains('fallen')).toBe(false);
-  expect(dialog.querySelector('.go-hero .rb')?.textContent).toBe('India & Byzantium');
+  expect(dialog.querySelector('.go-hero .rb')?.textContent).toBe('India');
   const rows = dialog.querySelectorAll('.go-row');
   expect(rows.length).toBeGreaterThan(1);
   expect([...rows].every((r) => r.querySelector('.pf-roundel'))).toBe(true);
@@ -155,27 +156,15 @@ it('shows an unfinished eliminated empire a labelled Defeat modal with turn, cau
   // Your own leader, drained of colour, under a red ribbon.
   expect(dialog.querySelector('.go-hero .pf')!.classList.contains('fallen')).toBe(true);
   expect(dialog.querySelector('.go-hero .rb')?.textContent).toBe('Fallen');
-  expect([...dialog.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Watch the rest of the game', 'Return to title']);
+  expect([...dialog.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Watch the rest of the game', 'Resolve to the end', 'Return to title']);
   dismiss();
   expect(host.querySelector('dialog')).toBeNull();
   expect(useGame.getState().outcomeDismissed).toBe(false);
   expect(useGame.getState().defeatDismissed).toEqual([0]);
 });
 
-it('keeps defeat dismissal per player and still shows the eventual team outcome', async () => {
-  await showDefeat([0, 1]);
-  dismiss();
-  act(() => useGame.getState().setSeat(1));
-  expect(host.querySelector('dialog')?.textContent).toContain('Eliminated on turn 8');
-  dismiss();
-  act(() => useGame.getState().setSeat(0));
-  expect(host.querySelector('dialog')).toBeNull();
-  act(() => useGame.setState({ views: useGame.getState().views!.map((v) => ({ ...v, finished: true, winner: v.team })) }));
-  expect(host.querySelector('h1')?.textContent).toBe('Victory');
-});
-
 it('offers automatic resolution only once all human empires are dead', async () => {
-  await showDefeat([0, 1]);
+  await showDefeat([0]);
   const resolve = vi.fn();
   act(() => useGame.setState({ resolveToEnd: resolve }));
   const button = [...host.querySelectorAll('button')].find((b) => b.textContent === 'Resolve to the end')!;
@@ -192,7 +181,7 @@ it('returns to title from Defeat and resets dismissal when an eliminated save is
   const client = new FixtureClient();
   client.load(unfinishedSave.game);
   client.debugState().players[0].alive = false;
-  const defeatedSave = saveFile(client, [client.view(0), client.view(1)]);
+  const defeatedSave = saveFile(client, [client.view(0)]);
   dismiss();
   await act(async () => { await useGame.getState().loadSave(defeatedSave); });
   expect(host.querySelector('dialog')!.open).toBe(true);

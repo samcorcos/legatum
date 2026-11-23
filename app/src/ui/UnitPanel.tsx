@@ -70,8 +70,6 @@ export function UnitPanel({ unit, view, peek = false }: { unit: UnitView; view: 
   const leads = useUnitCardLeads();
   const errors = useGame((s) => s.errors[s.seat]);
   const mode = useGame((s) => s.mode);
-  const setSeat = useGame((s) => s.setSeat);
-  const ownerSeat = useGame((s) => (s.client?.kind === 'remote' ? -1 : s.humans.indexOf(unit.owner)));
   const mine = unit.owner === view.me;
   // The game is decided: the map stays open to look around, but no unit awaits orders and none can be given.
   const over = view.finished || view.winner !== null;
@@ -306,11 +304,6 @@ export function UnitPanel({ unit, view, peek = false }: { unit: UnitView; view: 
         {teammate && (
           <div className="hint">
             Commanded by {owner?.name}.{' '}
-            {ownerSeat >= 0 && (
-              <button className="link" onClick={() => setSeat(ownerSeat)}>
-                Switch seat
-              </button>
-            )}
           </div>
         )}
         {!mine && !teammate && <div className="hint">{stats.blurb}</div>}

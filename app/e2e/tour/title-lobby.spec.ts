@@ -1,4 +1,4 @@
-// Screen tour, title, lobby and hot seat. One of the domain slices of the old e2e/screen-tour.spec.ts; run it alone with
+// Screen tour, title and lobby. One of the domain slices of the old e2e/screen-tour.spec.ts; run it alone with
 // `npx playwright test e2e/tour/title-lobby`. Shots land in test-results/screen-tour/<size>/title-lobby/.
 import { test, expect } from '../fixtures';
 import { SIZES, shot } from './helpers';
@@ -80,23 +80,6 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await page.locator('.seat-row:not(.head)').last().scrollIntoViewIfNeeded();
     await page.mouse.move(5, size.height / 2);
     await shot(page, size, '03g-lobby-large-eight-seats');
-  });
-
-  test('hot seat: two humans on turn one', async ({ page }) => {
-    await page.addInitScript(() => {
-      if (location.protocol.startsWith('http')) localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
-    });
-    await page.goto('/?client=wasm');
-    await page.getByRole('button', { name: /^Multiplayer/ }).click();
-    await page.getByRole('button', { name: /^Hot Seat/ }).click();
-    await expect(page.getByRole('heading', { name: 'Hot Seat', exact: true })).toBeVisible();
-    await page.getByRole('radiogroup', { name: 'Map size', exact: true }).getByRole('radio', { name: /^Small/ }).click();
-    await page.getByLabel('Map seed', { exact: true }).fill('9001');
-    await expect(page.getByLabel('Seat 2 type', { exact: true })).toHaveValue('human');
-    await page.getByRole('button', { name: /^Start game/ }).click();
-    await expect(page.getByTestId('turn-number')).toHaveText('1', { timeout: 60_000 });
-    await expect(page.locator('.loading-screen')).toHaveCount(0);
-    await shot(page, size, '05b-hotseat-first-turn');
   });
 
   test('six empires: the default single-player race on turn one', async ({ page }) => {

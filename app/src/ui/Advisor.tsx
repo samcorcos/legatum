@@ -94,7 +94,7 @@ export function Advisor() {
   const techOpen = useGame((s) => s.techOpen);
   const client = useGame((s) => s.client);
   const animationsOn = useCombatFx((s) => s.enabled);
-  const paused = useGame((s) => !!s.busy || s.handoff !== null || !!s.endTurnConfirmation || s.reportOpen || s.diplomacyOpen || !!s.ready[s.seat] || !!s.place ||
+  const paused = useGame((s) => !!s.busy || !!s.endTurnConfirmation || s.reportOpen || s.diplomacyOpen || !!s.ready[s.seat] || !!s.place ||
     (s.client?.kind === 'remote' && s.net?.conn !== 'open'));
   const [blockingOverlay, setBlockingOverlay] = useState(false);
   useEffect(() => {

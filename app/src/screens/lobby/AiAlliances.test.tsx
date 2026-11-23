@@ -19,16 +19,16 @@ const radio = (name: string, label: string) =>
   [...host.querySelectorAll<HTMLElement>(`[role=radiogroup][aria-label="${name}"] [role=radio]`)].find((b) => b.textContent?.startsWith(label))!;
 
 it('only the Co-op preset turns AI alliances on', () => {
-  expect(newLobby('hotseat', '42').aiAlliances).toBe(true);
+  expect(newLobby('host', '42').aiAlliances).toBe(true);
   expect(newLobby('host', '42').aiAlliances).toBe(true);
   expect(newLobby('solo', '42').aiAlliances).toBe(false);
   expect(applyPreset(newLobby('solo', '42'), 'teams').aiAlliances).toBe(false);
-  expect(applyPreset(newLobby('hotseat', '42'), 'ffa').aiAlliances).toBe(false);
+  expect(applyPreset(newLobby('host', '42'), 'ffa').aiAlliances).toBe(false);
   expect(applyPreset(newLobby('solo', '42'), 'coop').aiAlliances).toBe(true);
 });
 
 it('the setup asks for AI alliances only when it is on and two AI teams exist', () => {
-  const coop = newLobby('hotseat', '42');
+  const coop = newLobby('host', '42');
   expect(aiOnlyTeams(coop)).toBe(6);
   expect(buildSetup(coop).ai_alliances).toBe(true);
   expect('ai_alliances' in buildSetup({ ...coop, aiAlliances: false })).toBe(false);
@@ -48,7 +48,7 @@ it('a room config carries the switch, and an old room without it reads as off', 
 });
 
 it('the lobby shows the setting and the host can turn it off', () => {
-  let lobby = newLobby('hotseat', '42');
+  let lobby = newLobby('host', '42');
   const render = () => act(() => root.render(<Settings lobby={lobby} onChange={(l) => { lobby = l; render(); }} />));
   render();
   expect(radio('AI alliances', 'On').getAttribute('aria-checked')).toBe('true');
@@ -59,13 +59,13 @@ it('the lobby shows the setting and the host can turn it off', () => {
 });
 
 it('a read-only view shows the setting without a way to change it', () => {
-  act(() => root.render(<Settings lobby={newLobby('hotseat', '42')} />));
+  act(() => root.render(<Settings lobby={newLobby('host', '42')} />));
   expect(radio('AI alliances', 'On').getAttribute('aria-checked')).toBe('true');
   expect(radio('AI alliances', 'Off').hasAttribute('disabled')).toBe(true);
 });
 
 it('the Start button line and the setup agree on when AI alliances are on', () => {
-  const coop = newLobby('hotseat', '42');
+  const coop = newLobby('host', '42');
   expect(aiAlliancesOn(coop)).toBe(true);
   expect(aiAlliancesOn({ ...coop, aiAlliances: false })).toBe(false);
   expect(aiAlliancesOn(newLobby('solo', '42'))).toBe(false);

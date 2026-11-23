@@ -5,8 +5,8 @@ import { MAX_PLAYERS, factionChoiceIndex, teamTarget } from './gameSetup';
 import { colorFactions } from './theme';
 import type { AiDifficulty, Faction, GameSetup, PlayerSetup } from './types';
 
-/** solo: you + AIs · hotseat: several humans on this computer · host: humans join over the network. */
-export type LobbyMode = 'solo' | 'hotseat' | 'host';
+/** Solo: you and AI empires. Host: other humans join online. */
+export type LobbyMode = 'solo' | 'host';
 /** `you` is always the first seat: the person at this computer (the host in network games). */
 export type SlotKind = 'you' | 'human' | 'ai' | 'closed';
 export type FactionChoice = Faction | 'Random';
@@ -398,7 +398,6 @@ export function problems(l: Lobby): string[] {
   if (teams(l).length < 2) p.push('Everyone is on one team: put at least one empire on another team.');
   if (active.some((s) => humanKind(s.kind) && !s.name.trim())) p.push('Every human seat needs a name.');
   if (!/^\d{1,20}$/.test(l.seed) || BigInt(l.seed) >= 2n ** 64n) p.push('The map seed must be a whole number.');
-  if (l.mode === 'hotseat' && active.filter((s) => humanKind(s.kind)).length < 2) p.push('Hot seat needs at least two human seats.');
   return p;
 }
 

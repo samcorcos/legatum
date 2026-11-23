@@ -60,7 +60,7 @@ working run the files your change touches, for example
 `npx playwright test e2e/game.spec.ts`. `e2e/game.spec.ts` holds the core flows:
 Single Player (Small map, Hard AI, production, more turns, and the VP track),
 autosave/reload/Continue with an exact game-state comparison,
-two-human Hot Seat, and online host/join in separate browser contexts. Every spec
+online host/join in separate browser contexts. Every spec
 fails on any browser console error or uncaught exception, including errors from
 a second online context.
 

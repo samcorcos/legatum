@@ -47,9 +47,8 @@ export function AlarmScreen() {
   const seat = useGame((s) => s.seat);
   const alarmSeen = useGame((s) => s.alarmSeen);
   const alarmStep = useGame((s) => s.alarmStep);
-  const handoff = useGame((s) => s.handoff);
   const views = useGame((s) => s.views);
-  const pending = useMemo(() => pendingAlarms({ report, seat, alarmSeen, alarmStep, handoff, views }), [report, seat, alarmSeen, alarmStep, handoff, views]);
+  const pending = useMemo(() => pendingAlarms({ report, seat, alarmSeen, alarmStep, views }), [report, seat, alarmSeen, alarmStep, views]);
   const view = useGame((s) => s.views?.[s.seat]);
   // A victory-hold card reopened from its report line stands in when nothing is pending.
   const reopen = useGame((s) => s.holdReopen);

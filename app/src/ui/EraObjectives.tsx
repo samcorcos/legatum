@@ -81,7 +81,7 @@ export function EraObjectivesResearch({ view }: { view: PlayerView }) {
   const hud = eraHud(view);
   const { focus } = hud;
   const still = motionStill(useReducedMotion(), useCombatFx((st) => st.enabled));
-  // Keyed by seat, so each hot-seat player sees their own stamp.
+  // Keyed by seat so each online player sees their own stamp.
   const sealKey = `${view.me}:${focus.era}:${focus.state}`;
   const metSlots = focus.lines.filter((l) => l.met).map((l) => l.slot);
   const metKey = (slot: number) => `${view.me}:${focus.era}:${slot}:met`;

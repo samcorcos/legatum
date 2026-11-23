@@ -196,12 +196,5 @@ for (const size of SIZES) test.describe(`celts barbarian peace ${size.name}`, ()
     await shot(page, size, 'lb-09-added-back');
   });
 
-  test('lobby: hot seat default', async ({ page }) => {
-    await page.goto('/?client=wasm');
-    await page.getByRole('button', { name: /^Multiplayer/ }).click();
-    await page.getByRole('button', { name: /^Hot Seat/ }).click();
-    await expect(page.getByRole('heading', { name: 'Hot Seat', exact: true })).toBeVisible();
-    await page.mouse.move(5, size.height / 2);
-    await shot(page, size, 'lb-10-hotseat');
-  });
+
 });

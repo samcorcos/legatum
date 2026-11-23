@@ -77,14 +77,14 @@ function isMissingWasmError(message: string): boolean {
 
 type OrderFeedback = 'commit' | 'commitAttack' | 'queue' | 'purchase';
 
-/** Index into the local human seats (`humans`); not a player id. */
+/** Index into this browser's human views (`humans`); not a player id. */
 export type Seat = number;
 type Selection = { kind: 'unit' | 'air'; id: number } | { kind: 'city'; id: number } | null;
 type Screen = 'title' | 'setup' | 'join' | 'staging' | 'game' | 'online';
-/** What the setup screen is for: a single-player game, several humans on this screen, or hosting an online game. */
-type SetupMode = 'solo' | 'hotseat' | 'host';
+/** What the setup screen is for: a solo game or hosting an online game. */
+type SetupMode = 'solo' | 'host';
 
-/** Online play state (plans/game-protocol.md), hosting or joined. Null when playing locally (WASM hot-seat). */
+/** Online play state, hosting or joined. Null in a solo game. */
 export interface NetState {
   status: ServerStatus;
   /** Set once this browser has joined a seat. */
@@ -153,6 +153,14 @@ export interface SaveFile {
   rewinds?: Rewind[];
 }
 
+/** Old local saves with several human empires must be resumed through an online room. */
+export function needsOnlineHost(save: Pick<SaveFile, 'game'>): boolean {
+  try {
+    const game = JSON.parse(save.game) as { players?: { is_human?: boolean }[] };
+    return (game.players?.filter((player) => player.is_human).length ?? 0) > 1;
+  } catch { return false; } // The normal save parser reports malformed files.
+}
+
 /**
  * One "Load an earlier turn": the player left turn `from_turn` and played on from the start of `to_turn`. The uploaded
  * record carries the list as the top-level `rewinds` key (gameUpload.ts), so analysis knows the turns in between
@@ -172,7 +180,7 @@ interface State {
   screen: Screen;
   setupMode: SetupMode;
   client: GameClient | null;
-  /** Player ids of the human seats played in this browser (one in solo and online, 2+ in hot-seat). */
+  /** Player ids known to the engine. This browser controls one seat. */
   humans: number[];
   /** Per seat (index into `humans`). */
   views: PlayerView[] | null;
@@ -180,7 +188,7 @@ interface State {
   orders: Order[][];
   errors: OrderError[][];
   ready: boolean[];
-  endTurnConfirmation: { seat: Seat; view: PlayerView; orders: Order[]; pass: boolean } | null;
+  endTurnConfirmation: { seat: Seat; view: PlayerView; orders: Order[] } | null;
   /** The turn failed to resolve twice in a row from the same state: the recovery dialog. `cleared` is true once the try without the player's orders failed too. */
   turnFailure: { cleared: boolean } | null;
   /**
@@ -295,8 +303,6 @@ interface State {
   /** Bring the coach's card back: the waiting question, or the last one he skipped if none is waiting. */
   showWhy(): void;
   error: string | null;
-  /** Hot seat: the local seat whose player must take the device before its view is shown. */
-  handoff: Seat | null;
   lastHash: string | null;
   /** The online game this tab hosts or has joined. */
   net: NetState | null;
@@ -363,7 +369,6 @@ interface State {
    * dropped once the earlier turn is saved again.
    */
   rewindTo(campaign: string, save: SaveFile): Promise<void>;
-  setSeat(seat: Seat): void;
   /** Whether pings can go to a teammate in this game: a human teammate, and (online) a host that relays them. */
   canPing(): boolean;
   setPingMode(on: boolean): void;
@@ -673,7 +678,6 @@ export const useGame = create<State>((set, get) => {
       views,
       goalDecisionSeen: {},
       outcomeDismissed: false, outcomeStage: 'reveal',
-      handoff: null,
       defeatDismissed: [],
       eliminationTurns: {},
       screen: 'game',
@@ -1237,7 +1241,6 @@ export const useGame = create<State>((set, get) => {
       set({ whyQuestion: recent.question, whyHidden: false, reportOpen: false, whyRecent: null, why: { ...get().why, skipped: skips } });
     },
     error: null,
-    handoff: null,
     lastHash: null,
     net: null,
     online: null,
@@ -1531,6 +1534,10 @@ export const useGame = create<State>((set, get) => {
 
     startGame: async (setup, options) => {
       stopResolving();
+      if (setup.players.filter((player) => player.is_human).length !== 1) {
+        set({ error: 'Play with other people through Multiplayer > Host Game.' });
+        return;
+      }
       set({ busy: 'Surveying the map…', error: null });
       try {
         const client = await createClient();
@@ -1565,6 +1572,7 @@ export const useGame = create<State>((set, get) => {
           }
           throw new Error(olderRulesMessage(save.playtest));
         }
+        if (needsOnlineHost(save)) throw new Error('This save has multiple human players. Use Multiplayer > Host from a save; guests can rejoin their seats.');
         if (save.client !== 'wasm') throw new Error('This save used the retired TypeScript engine and cannot be loaded by the Rust engine.');
         const client = await createClient(save.client);
         measureTurn('loadClient', () => client.load(save.game));
@@ -1609,7 +1617,7 @@ export const useGame = create<State>((set, get) => {
 
     canPing: () => {
       const { client, views, seat } = get();
-      return pingAvailable(views?.[seat], client instanceof RemoteClient ? client.canPing() : client !== null);
+      return pingAvailable(views?.[seat], client instanceof RemoteClient && client.canPing());
     },
 
     setPingMode: (on) => set({ pingMode: on && get().canPing() }),
@@ -1622,25 +1630,9 @@ export const useGame = create<State>((set, get) => {
       if (now - lastPingAt < PING_MIN_GAP_MS) return false;
       lastPingAt = now;
       if (client instanceof RemoteClient) client.sendPing(hex);
-      // You see your own ping at once; a teammate's arrives over the host (online) or when they take the device (hot seat).
+      // Show your own ping at once; teammates receive it through the host.
       set({ pings: withPing(pings, { from: view.me, team: view.team, hex, turn: view.turn, seq: ++pingSeq }), pingMode: false });
       return true;
-    },
-
-    setSeat: (seat) => {
-      if (get().client?.kind === 'remote') return; // one seat per browser in online play
-      const views = get().views;
-      if (!views || seat < 0 || seat >= views.length) return;
-      // An armed Ping never survives a hand-over: the next player must not ping by accident.
-      set({ seat, selection: null, mode: 'normal', anim: null, endTurnConfirmation: null, warPrompt: null, attacker: null, notice: null, pingMode: false });
-      if (views) {
-        const first = nextUnitNeedingOrders(views[seat], get().orders[seat], null);
-        if (first) get().select({ kind: first.kind, id: first.id }, true);
-        else {
-          const h = capitalOrUnit(views[seat]);
-          if (h) get().jumpTo(h);
-        }
-      }
     },
 
     select: (sel, jump = false) => {
@@ -1875,10 +1867,10 @@ export function toggleLastTurnReport(): void {
 
 const NO_ALARMS: Alarm[] = [];
 const ALARM_TAILS = new WeakMap<Alarm[], Map<number, Alarm[]>>();
-/** The alarm screen this seat has yet to see: only for the latest turn, after any hot-seat hand-off. */
-export const pendingAlarms = (s: Pick<State, 'report' | 'seat' | 'alarmSeen' | 'alarmStep' | 'handoff' | 'views'>): Alarm[] => {
+/** The alarm screen this seat has yet to see for the latest turn. */
+export const pendingAlarms = (s: Pick<State, 'report' | 'seat' | 'alarmSeen' | 'alarmStep' | 'views'>): Alarm[] => {
   const alarms = s.report?.alarms?.[s.seat];
-  if (!alarms?.length || s.alarmSeen.includes(s.seat) || s.handoff !== null || s.views?.[s.seat]?.finished) return NO_ALARMS;
+  if (!alarms?.length || s.alarmSeen.includes(s.seat) || s.views?.[s.seat]?.finished) return NO_ALARMS;
   const step = s.alarmStep[s.seat] ?? 0;
   if (!step) return alarms;
   let tails = ALARM_TAILS.get(alarms);

@@ -128,56 +128,6 @@ test('Autosave: reload and Continue restore the same turn and exact game state',
   expect(await autosave(page)).toMatchObject({ client: 'wasm', turn: 4 });
 });
 
-test('Hot Seat: both humans plan before the shared turn resolves', async ({ page }) => {
-  await page.goto('/?client=wasm');
-  await page.getByRole('button', { name: /^Multiplayer/ }).click();
-  await page.getByRole('button', { name: /^Hot Seat/ }).click();
-  await expect(page.getByRole('heading', { name: 'Hot Seat', exact: true })).toBeVisible();
-  await configureLobby(page, '9001');
-  await expect(page.getByLabel('Seat 2 type', { exact: true })).toHaveValue('human');
-  await page.getByRole('button', { name: /^Start game/ }).click();
-  await expectTurn(page, 1);
-
-  // Each local seat has a selection button (faction crest text, the player's name, then the
-  // order count) and a separate Ready toggle named "<player>: ready".
-  await revealSidebar(page, 'turn-more');
-  const firstSeat = page.getByRole('button', { name: /\bPlayer 1 \d+ orders?$/ });
-  const secondSeat = page.getByRole('button', { name: /\bPlayer 2 \d+ orders?$/ });
-  const firstReady = page.getByRole('button', { name: 'Player 1: ready', exact: true });
-  const secondReady = page.getByRole('button', { name: 'Player 2: ready', exact: true });
-  await expect(firstSeat).toHaveAttribute('aria-pressed', 'true');
-  await expect(secondSeat).toHaveAttribute('aria-pressed', 'false');
-  await chooseCapitalProduction(page);
-  await endPlanning(page);
-  // Hot seat privacy: Player 2's empire stays covered until Player 2 takes the device.
-  const pass = page.getByRole('dialog', { name: 'Pass to Player 2' });
-  await expect(pass).toBeVisible();
-  await expect(pass.getByRole('button', { name: "I'm Player 2: start planning" })).toBeFocused();
-  await page.keyboard.press('Enter');
-  await expect(pass).toHaveCount(0);
-  await expect(secondSeat).toHaveAttribute('aria-pressed', 'true');
-  await expect(firstSeat).toHaveAttribute('aria-pressed', 'false');
-  await expect(firstSeat).toContainText('1 order');
-  await expect(firstReady).toHaveAttribute('aria-pressed', 'true');
-  await expect(firstReady).toHaveText('Ready');
-  await expect(secondReady).toHaveAttribute('aria-pressed', 'false');
-  await expectTurn(page, 1);
-
-  await chooseCapitalProduction(page);
-  await expect(secondSeat).toContainText('1 order');
-  await endTurn(page, 2);
-  await skipCelebrations(page);
-  // Both capital production orders resolved in the same shared turn.
-  expect(await page.evaluate(() => {
-    const s = (window as unknown as { legatum: typeof import('../src/store').useGame }).legatum.getState();
-    return s.views?.slice(0, 2).map((v) => v.cities.find((c) => c.owner === v.me)?.detail?.producing ?? null);
-  })).toEqual([expect.any(Object), expect.any(Object)]);
-  for (const ready of [firstReady, secondReady]) {
-    await expect(ready).toHaveAttribute('aria-pressed', 'false');
-    await expect(ready).toHaveText('Planning');
-  }
-});
-
 // Online co-op end to end: the host's tab runs the game (the WASM host) and reaches the guest's browser
 // through the real relay under wrangler dev. No game server anywhere.
 test('Online: host in one browser, a guest joins from the game list, both Ready reach turn 2', async ({ page: host, guestPage: guest, relay }) => {
@@ -218,6 +168,28 @@ test('Online: host in one browser, a guest joins from the game list, both Ready 
   await expect(host.getByTestId('online-seat-1')).toContainText('Alice');
   await expect(host.getByTestId('online-seat-1')).toContainText('online');
   await expect(guest.getByTestId('online-seat-0')).toContainText('online');
+  expect(await host.evaluate(() => {
+    const s = (window as unknown as { legatum: typeof import('../src/store').useGame }).legatum.getState();
+    return s.views?.[s.seat]?.ai_alliances;
+  })).toBe(true);
+  expect(await guest.evaluate(() => {
+    const s = (window as unknown as { legatum: typeof import('../src/store').useGame }).legatum.getState();
+    return s.views?.[s.seat]?.ai_alliances;
+  })).toBe(true);
+
+  // Team pings travel through the host to the other browser.
+  expect(await host.evaluate(() => {
+    const s = (window as unknown as { legatum: typeof import('../src/store').useGame }).legatum.getState();
+    const v = s.views![s.seat];
+    return s.sendPing(v.cities.find((city) => city.owner === v.me)!.pos);
+  })).toBe(true);
+  await expect(guest.getByTestId('ping-go')).toContainText('Ada pinged');
+  expect(await guest.evaluate(() => {
+    const s = (window as unknown as { legatum: typeof import('../src/store').useGame }).legatum.getState();
+    const v = s.views![s.seat];
+    return s.sendPing(v.cities.find((city) => city.owner === v.me)!.pos);
+  })).toBe(true);
+  await expect(host.getByTestId('ping-go')).toContainText('Alice pinged');
 
   await chooseCapitalProduction(host);
   await chooseCapitalProduction(guest);

@@ -25,7 +25,6 @@ import { SaveNotice } from '../ui/SaveNotice';
 import { TurnFailureDialog } from '../ui/TurnFailureDialog';
 import { EraNotice } from '../ui/EraNotice';
 import { TurnReport } from '../ui/TurnReport';
-import { HandoffScreen } from '../ui/HandoffScreen';
 import { GameOver } from '../ui/GameOver';
 import { plainOrderError } from '../format';
 import { handleAircraftKey, handleGameKey } from './gameKeyHandler';
@@ -112,7 +111,6 @@ export function GameScreen() {
       <TechPanel />
       <CitiesOverview />
       <GameOver />
-      <HandoffScreen />
       <AlarmScreen />
       <FreeTechsPrompt />
       <Advisor />

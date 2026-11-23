@@ -8,7 +8,7 @@ import type { PlayerView } from './types';
 vi.mock('./net/hosting', async () => (await import('./test/fakeHosting')).fakeHostingModule());
 
 const info = { relay: 'https://relay.test', build: 'test', rules_version: 1, protocol: 1 };
-const game = JSON.stringify({ save_version: RULES.saveVersion, turn: 7, marker: 'engine-save' });
+const game = JSON.stringify({ save_version: RULES.saveVersion, turn: 7, marker: 'engine-save', players: [{ is_human: true }, { is_human: false }, { is_human: true }] });
 const view = { turn: 7, players: [{ is_human: true, name: 'Ada' }, { is_human: false, name: 'Rome' }, { is_human: true, name: 'Bo' }] } as unknown as PlayerView;
 
 beforeEach(() => {

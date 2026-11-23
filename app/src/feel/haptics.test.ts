@@ -103,7 +103,7 @@ it('drops a queued pulse when the toggle turns off', async () => {
   expect(vibrate).toHaveBeenCalledTimes(1);
 });
 
-it('keeps the Ready acknowledgement when a hot-seat handoff cancels turn feedback', async () => {
+it('keeps the Ready acknowledgement when a turn feedback sequence is cancelled', async () => {
   haptics.feel.ready();
   haptics.playTurnFeedback(['turnResolved', 'cityFounded']);
   haptics.cancelTurnFeedback();

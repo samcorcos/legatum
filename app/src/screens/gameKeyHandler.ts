@@ -112,15 +112,6 @@ export function handleGameKey(e: KeyboardEvent) {
       break;
     }
     case '1':
-    case '2':
-    case '3':
-    case '4':
-    case '5':
-    case '6':
-    case '7':
-    case '8':
-      s.setSeat(Number(e.key) - 1);
-      break;
     case 'e':
     case 'E':
       toggleAutoExploreSelected();

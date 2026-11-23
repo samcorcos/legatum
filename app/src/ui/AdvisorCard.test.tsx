@@ -51,7 +51,7 @@ it('finds Build on the chosen item in a mounted city panel', () => {
   expect(control('build', itemKey(item))?.getAttribute('aria-label')).toMatch(/^Build /);
 });
 
-it('turns off, moves on, and pauses for busy, ready, handoff and blocking overlays', async () => {
+it('turns off, moves on, and pauses for busy, ready and blocking overlays', async () => {
   render(<div className="game"><Advisor /></div>);
   expect(screen.getByTestId('advisor').dataset.advisorId).toBe('welcome');
   act(() => useAdvisor.getState().markSeen('welcome'));
@@ -59,12 +59,12 @@ it('turns off, moves on, and pauses for busy, ready, handoff and blocking overla
   fireEvent.click(screen.getByRole('button', { name: 'Not now' }));
   expect(screen.queryByTestId('advisor')?.getAttribute('data-advisor-id')).not.toBe(first);
   const pauses: Record<string, object> = {
-    busy: { busy: 'working' }, ready: { ready: [true] }, handoff: { handoff: 0 },
+    busy: { busy: 'working' }, ready: { ready: [true] },
   };
   for (const patch of Object.values(pauses)) {
     act(() => useGame.setState(patch));
     expect(screen.queryByTestId('advisor')).toBeNull();
-    act(() => useGame.setState({ busy: null, ready: [false], handoff: null }));
+    act(() => useGame.setState({ busy: null, ready: [false] }));
     expect(screen.queryByTestId('advisor')).not.toBeNull();
   }
   const overlay = document.body.appendChild(document.createElement('div'));

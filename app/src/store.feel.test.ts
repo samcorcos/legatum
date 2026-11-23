@@ -6,7 +6,7 @@ import { FakeSocket } from './test/fakeSocket';
 import { feel, playTurnFeedback } from './feel';
 import { disbandSelected, foundCitySelected, moveSelected, readySelected, toggleMoveSelected } from './commands';
 import { setProduction, toggleBuy } from './orders';
-import type { Event, PlayerView } from './types';
+import type { PlayerView } from './types';
 import { hexAt } from './hex';
 import { knownLegalSite } from './settlement';
 
@@ -33,7 +33,7 @@ afterEach(() => {
 });
 
 async function localGame() {
-  await useGame.getState().startGame(coopVsAiSetup('42', [{ name: 'Ada', faction: 'India' }, { name: 'Bo', faction: 'Byzantium' }]));
+  await useGame.getState().startGame(coopVsAiSetup('42', [{ name: 'Ada', faction: 'India' }]));
   return useGame.getState().client as FixtureClient;
 }
 
@@ -44,26 +44,10 @@ function selectFutureSettler(client: FixtureClient) {
   const site = view.tiles.map((_, i) => hexAt(i, view.width)).find((hex) => knownLegalSite(view, hex))!;
   settler.kind = 'Settler'; settler.military = false; settler.pos = site;
   vi.spyOn(client, 'validate').mockReturnValue([]);
-  useGame.setState({ views: [view, client.view(1)] });
+  useGame.setState({ views: [view] });
   useGame.getState().select({ kind: 'unit', id: settler.id });
   return { view, settler };
 }
-
-it('uses only the active hot-seat report, never the local engine event log', async () => {
-  const client = await localGame();
-  const raw: Event[] = [{ type: 'TechResearched', player: 0, tech: 'BronzeWorking' }];
-  const visible: Event[] = [{ type: 'CityFounded', owner: 0, city: 1, name: 'Home', at: { q: 1, r: 1 } }];
-  vi.spyOn(client, 'endTurn').mockReturnValue({ turn: 1, events: raw, events_by_player: { 0: visible, 1: [] },
-    hash: '1', finished: false, winner: null });
-  useGame.getState().toggleReady(0);
-  useGame.getState().toggleReady(1);
-  await vi.advanceTimersByTimeAsync(30);
-  expect(playTurnFeedback).toHaveBeenCalledWith(['turnResolved', 'cityFounded'], expect.any(Function), { cityFounded: 'sting.notable' });
-  const stillCurrent = vi.mocked(playTurnFeedback).mock.calls[0][1]!;
-  expect(stillCurrent()).toBe(true);
-  useGame.getState().setSeat(1);
-  expect(stillCurrent()).toBe(false);
-});
 
 it('acknowledges found and Ready intent once, without a selection tick for automatic advance', async () => {
   selectFutureSettler(await localGame());
@@ -74,8 +58,6 @@ it('acknowledges found and Ready intent once, without a selection tick for autom
   expect(feel.select).not.toHaveBeenCalled();
   readySelected();
   expect(feel.ready).toHaveBeenCalledWith(true);
-  readySelected();
-  expect(feel.ready).toHaveBeenLastCalledWith(false);
 });
 
 it('advances past a stacked escort after Found City, never selecting a unit on the new city\'s tile', async () => {
@@ -83,7 +65,7 @@ it('advances past a stacked escort after Found City, never selecting a unit on t
   const { view, settler } = selectFutureSettler(client);
   const escort = view.units.find((u) => u.owner === 0 && u.id !== settler.id)!;
   escort.pos = { ...settler.pos };
-  useGame.setState({ views: [view, client.view(1)] });
+  useGame.setState({ views: [view] });
   useGame.getState().select({ kind: 'unit', id: settler.id });
 
   foundCitySelected();
@@ -111,7 +93,7 @@ it('refuses a locked unit\'s move or disband at the click, with the reason, and 
   const view = structuredClone(client.view(0));
   const unit = view.units.find((u) => u.owner === 0 && u.military)!;
   unit.occupation_lock = 1;
-  useGame.setState({ views: [view, client.view(1)] });
+  useGame.setState({ views: [view] });
   useGame.getState().select({ kind: 'unit', id: unit.id });
   moveSelected({ q: unit.pos.q + 1, r: unit.pos.r });
   expect(useGame.getState().orders[0] ?? []).toEqual([]);
@@ -130,7 +112,7 @@ it('uses purchase only after local Buy validation, and never when cancelling or 
   client.debugState().players[0].gold = 10000;
   const view = client.view(0);
   const city = view.cities.find((c) => c.owner === 0)!;
-  useGame.setState({ views: [view, client.view(1)] });
+  useGame.setState({ views: [view] });
   useGame.getState().editOrders((o) => setProduction(o, city.id, { kind: 'Building', building: 'Granary' }, null));
   useGame.getState().editOrders((o) => toggleBuy(o, city.id, { kind: 'Unit', unit: 'Spearman' }), 'purchase');
   expect(feel.purchase).toHaveBeenCalledTimes(1);

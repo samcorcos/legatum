@@ -1,7 +1,6 @@
 // Team map pings: a teammate marks a tile and everyone on that team sees a ring there until the turn ends.
 // A ping is team talk, not a rule: it is never an order and never part of the game state or a save. Online it
-// travels over the host's message channel (host `MapPing`); in hot seat it lives only in the store, and a
-// teammate sees it when they take the device.
+// travels over the host's message channel (host `MapPing`).
 import type { Hex, PlayerPublic, PlayerView } from './types';
 
 export interface TeamPing {

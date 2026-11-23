@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { FixtureClient } from './test/fixtureEngine';
 import { coopVsAiSetup } from './gameSetup';
-import { allReady, saveFile, useGame } from './store';
+import { saveFile, useGame } from './store';
 import { FakeSocket } from './test/fakeSocket';
 
 vi.mock('./client', async (orig) => ({
@@ -38,7 +38,8 @@ async function game(humans = 1, dead = [0]) {
   state.players.forEach((p) => { if (dead.includes(p.id)) p.alive = false; });
   state.units = state.units.filter((u) => !dead.includes(u.owner));
   const save = saveFile(client, Array.from({ length: humans }, (_, i) => client.view(i)));
-  await useGame.getState().loadSave(save);
+  if (humans === 1) await useGame.getState().loadSave(save);
+  else useGame.setState({ client, humans: Array.from({ length: humans }, (_, i) => i), views: Array.from({ length: humans }, (_, i) => client.view(i)), orders: Array.from({ length: humans }, () => []), errors: Array.from({ length: humans }, () => []), ready: Array.from({ length: humans }, () => false), screen: 'game' });
   return { client: useGame.getState().client as FixtureClient, save };
 }
 
@@ -56,7 +57,7 @@ it('an eliminated observer ends one turn with no orders and cannot edit orders',
   expect(useGame.getState().orders).toEqual([[]]);
 });
 
-it.each([1, 3])('resolves to the actual game end after all %i humans are eliminated', async (humans) => {
+it.each([1])('resolves to the actual game end after all %i humans are eliminated', async (humans) => {
   const { client } = await game(humans, Array.from({ length: humans }, (_, i) => i));
   const resolve = vi.spyOn(client, 'endTurn');
   useGame.getState().resolveToEnd();
@@ -81,21 +82,6 @@ it.each([false, true])('Stop cancels subsequent turns, including during resoluti
   expect(resolve).toHaveBeenCalledOnce();
   expect(useGame.getState().resolvingToEnd).toBe(false);
   expect(useGame.getState().busy).toBeNull();
-});
-
-it('does not take over a living human, and eliminated seats do not hold up local resolution', async () => {
-  const { client } = await game(3, [0, 1]);
-  const resolve = vi.spyOn(client, 'endTurn');
-  const views = useGame.getState().views!;
-  expect(allReady(views, [false, false, true])).toBe(true);
-  useGame.getState().resolveToEnd();
-  useGame.getState().toggleReady(0);
-  await vi.advanceTimersByTimeAsync(1000);
-  expect(resolve).not.toHaveBeenCalled();
-  expect(useGame.getState().resolvingToEnd).toBe(false);
-  useGame.getState().toggleReady(2);
-  await vi.advanceTimersByTimeAsync(30);
-  expect(resolve).toHaveBeenCalledOnce();
 });
 
 it('stops on a resolution error instead of retrying indefinitely', async () => {

@@ -1,4 +1,4 @@
-// Store integration: solo and hot-seat games through the real Rust core.
+// Store integration: solo games through the real Rust core.
 import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -64,6 +64,14 @@ describe.each(clients)('store on the %s client', (_name, available, load) => {
     if (available) makeClient = await load();
   });
 
+  it('does not start several human seats in one browser', async () => {
+    await useGame.getState().startGame(coopVsAiSetup('775', [
+      { name: 'Ann', faction: 'India' }, { name: 'Bo', faction: 'Byzantium' },
+    ]));
+    expect(useGame.getState().client).toBeNull();
+    expect(useGame.getState().error).toContain('Multiplayer > Host Game');
+  });
+
   it('explains why a save from the retired TypeScript engine cannot load', async () => {
     await useGame.getState().startGame(coopVsAiSetup('776', [{ name: 'Ann', faction: 'India' }]));
     const current = useGame.getState();
@@ -72,22 +80,19 @@ describe.each(clients)('store on the %s client', (_name, available, load) => {
     expect(useGame.getState().error).toContain('retired TypeScript engine');
   });
 
-  it('reads each human view once when starting and loading', async () => {
+  it('refuses a several-human save on the solo load path before changing the game', async () => {
     const client = new FixtureClient();
-    const view = vi.spyOn(client, 'view');
-    makeClient = async () => client;
-    const setup = coopVsAiSetup('776', [
-      { name: 'Ann', faction: 'India' },
-      { name: 'Bo', faction: 'Byzantium' },
-    ]);
-    await useGame.getState().startGame(setup);
-    expect(useGame.getState().humans).toEqual([0, 1]);
-    expect(view.mock.calls).toEqual([[0], [1]]);
-
-    const save = saveFile(client, useGame.getState().views!);
-    view.mockClear();
-    await useGame.getState().loadSave(save);
-    expect(view.mock.calls).toEqual([[0], [1]]);
+    await client.newGame(coopVsAiSetup('776', [
+      { name: 'Ann', faction: 'India' }, { name: 'Bo', faction: 'Byzantium' },
+    ]));
+    const oldSave = saveFile(client, [client.view(0), client.view(1)]);
+    makeClient = async () => new FixtureClient();
+    await useGame.getState().startGame(coopVsAiSetup('777', [{ name: 'Ann', faction: 'India' }]));
+    const previous = useGame.getState().client;
+    await useGame.getState().loadSave(oldSave);
+    expect(useGame.getState().client).toBe(previous);
+    expect(useGame.getState().error).toContain('Multiplayer > Host from a save');
+    expect(useGame.getState().error).toContain('rejoin their seats');
   });
 
   it.skipIf(!available)('only auto-opens the report for diplomacy involving the viewer team', async () => {
@@ -204,49 +209,6 @@ describe.each(clients)('store on the %s client', (_name, available, load) => {
     await playSoloTurns(10);
   });
 
-  it.skipIf(!available)('hot seat: the turn waits for every human seat', async () => {
-    await useGame.getState().startGame(
-      coopVsAiSetup('777', [
-        { name: 'Ann', faction: 'India' },
-        { name: 'Bo', faction: 'Byzantium' },
-      ]),
-    );
-    const s = useGame.getState();
-    expect(s.humans).toEqual([0, 1]);
-    expect(s.views!.map((v) => v.me)).toEqual([0, 1]);
-    const turn = s.views![0].turn;
-    s.toggleReady(0);
-    await new Promise((r) => setTimeout(r, 60));
-    expect(useGame.getState().views![0].turn).toBe(turn);
-    expect(useGame.getState().ready).toEqual([true, false]);
-    useGame.getState().setSeat(1);
-    useGame.getState().toggleReady();
-    await until(() => !useGame.getState().busy);
-    expect(useGame.getState().views![0].turn).toBe(turn + 1);
-    expect(useGame.getState().ready).toEqual([false, false]);
-  });
-
-  it.skipIf(!available)('hot seat: passing the device covers the next player until they take it', async () => {
-    const { readyAndPass, confirmEndTurn } = await import('./ui/SeatBar');
-    await useGame.getState().startGame(coopVsAiSetup('778', [{ name: 'Ann', faction: 'India' }, { name: 'Bo', faction: 'Byzantium' }]));
-    expect(useGame.getState().handoff).toBeNull();
-    const endPlanning = () => { readyAndPass(); if (useGame.getState().endTurnConfirmation) confirmEndTurn(); };
-    endPlanning();
-    expect(useGame.getState()).toMatchObject({ seat: 1, handoff: 1 });
-    useGame.getState().set({ handoff: null }); // Bo takes the device
-    endPlanning();
-    await until(() => !useGame.getState().busy);
-    // The turn resolves with Bo still at the device: no cover until Bo passes it on.
-    expect(useGame.getState()).toMatchObject({ seat: 1, handoff: null });
-    endPlanning();
-    expect(useGame.getState()).toMatchObject({ seat: 0, handoff: 0 });
-    // Solo play never shows it.
-    await useGame.getState().startGame(coopVsAiSetup('779', [{ name: 'Ann', faction: 'India' }]));
-    endPlanning();
-    await until(() => !useGame.getState().busy);
-    expect(useGame.getState().handoff).toBeNull();
-  }, 15_000);
-
   it.skipIf(!available)('an eliminated solo human can resolve the remaining AI game to its end', async () => {
     const fixture = new FixtureClient();
     makeClient = async () => fixture;
@@ -272,44 +234,19 @@ describe.each(clients)('store on the %s client', (_name, available, load) => {
     expect(useGame.getState().orders).toEqual([[]]);
   });
 
-  it.skipIf(!available).each([1, 2])('starts without a capital founding report and filters animation paths for each of %i local seats', async (count) => {
-    const setup = coopVsAiSetup('12345', [
-      { name: 'Ann', faction: 'India' }, { name: 'Bo', faction: 'Byzantium' },
-    ].slice(0, count) as Parameters<typeof coopVsAiSetup>[1]);
-    setup.players.forEach((p, i) => { p.team = i; });
-    await useGame.getState().startGame(setup);
+  it.skipIf(!available)('starts without a capital founding report', async () => {
+    await useGame.getState().startGame(coopVsAiSetup('12345', [{ name: 'Ann', faction: 'India' }]));
     const client = useGame.getState().client!;
-    const resolve = vi.spyOn(client, 'endTurn');
-    const before = useGame.getState().views!;
-    for (let seat = 0; seat < count; seat++) {
-      useGame.getState().setSeat(seat);
-      const v = before[seat];
-      const scout = v.units.find((u) => u.owner === v.me && u.kind === 'Scout')!;
-      const to = neighbors(scout.pos).find((h) => !client.validate(v.me, [{ type: 'MoveUnit', unit: scout.id, to: h }]).length)!;
-      useGame.getState().editOrders(() => [{ type: 'MoveUnit', unit: scout.id, to }]);
-      useGame.getState().toggleReady();
-    }
+    const before = useGame.getState().views![0];
+    const scout = before.units.find((u) => u.owner === before.me && u.kind === 'Scout')!;
+    const to = neighbors(scout.pos).find((h) => !client.validate(before.me, [{ type: 'MoveUnit', unit: scout.id, to: h }]).length)!;
+    useGame.getState().editOrders(() => [{ type: 'MoveUnit', unit: scout.id, to }]);
+    useGame.getState().toggleReady();
     await until(() => !useGame.getState().busy);
-    expect(useGame.getState().error).toBeNull();
-    const raw = resolve.mock.results[0].value.events as import('./types').Event[];
-    expect(raw.some((event) => event.type === 'CityFounded')).toBe(false);
     const state = useGame.getState();
-    for (let seat = 0; seat < count; seat++) {
-      const v = state.views![seat];
-      expect(state.report!.events[seat].some((event) => event.type === 'CityFounded')).toBe(false);
-      expect(filterLines(state.report!.lines[seat], 'all', contextFromViews(before[seat], v)).some((line) =>
-        line.category === 'cities' && line.text.includes('founded'))).toBe(false);
-    }
-    const active = state.views![state.seat];
-    expect(state.anim?.paths.size).toBeGreaterThan(0);
-    for (const id of state.anim!.paths.keys()) {
-      expect(active.units.find((u) => u.id === id)?.owner).toBe(active.me);
-    }
-    if (count > 1) {
-      useGame.getState().setSeat(0);
-      expect(useGame.getState().anim).toBeNull(); // Do not carry the other seat's animation across.
-      expect(useGame.getState().report!.lines[0]).toEqual(state.report!.lines[0]);
-    }
-    resolve.mockRestore();
+    expect(state.error).toBeNull();
+    expect(state.report!.events[0].some((event) => event.type === 'CityFounded')).toBe(false);
+    expect(filterLines(state.report!.lines[0], 'all', contextFromViews(before, state.views![0])).some((line) =>
+      line.category === 'cities' && line.text.includes('founded'))).toBe(false);
   });
 });
