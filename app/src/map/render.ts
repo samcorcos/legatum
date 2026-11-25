@@ -1,3 +1,4 @@
+import { drawTombs, tombPieces } from './tombLandmark';
 import { celebrationFrame, type MapCelebration } from '../celebrate/mapEffect';
 // Map renderer. The painterly terrain (terrain.ts) is cached in chunks per zoom level; this file
 // draws it and then the per-frame layers: movement reach, hover, lettering, routes, selection,
@@ -294,7 +295,7 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   // What labels, badges and medallions keep clear of: the banners as drawn this frame (screen px).
   const bannerCovers = banners.map((b) => b.cover);
   const toScreen = (p: { x: number; y: number }) => worldToScreen(cam, w, h, p.x, p.y);
-  const landmarkSites = [...landmarksOf(view), ...sitesOf(view).filter((s) => !s.walls), ...(moments?.plan.builds.filter((b) => b.wonder).map((b) => ({ tile: b.tile, hex: b.at })) ?? [])];
+  const landmarkSites = [...landmarksOf(view), ...sitesOf(view).filter((s) => !s.walls), ...tombPieces(view), ...(moments?.plan.builds.filter((b) => b.wonder).map((b) => ({ tile: b.tile, hex: b.at })) ?? [])];
   // Landmarks use a fixed footprint chosen from every banner at one reference zoom (never these screen covers, never moving units).
   const fixedLandmarkBoxes = landmarkBoxes(landmarkSites, toScreen, hexPx, referenceBannerCovers(bannerView, look, siege));
   // The ink-and-wash landmark sits in the land, under everything else the map draws (full colour belongs to its cards).
@@ -328,6 +329,8 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
     k: b.from, stage: constructionStage(b.from), seed: b.seed, walls: b.walls,
   })) ?? [];
   drawConstructionSites(ctx, view, toScreen, hexPx, w, h, dpr, moments?.hold.sites, fixedLandmarkBoxes, oldSites, new Set(activeSites.map((b) => b.city)));
+  // Egypt's Royal Tomb, staged while the work is on, then standing beside its capital (tombLandmark.ts).
+  drawTombs(ctx, view, toScreen, hexPx, w, h, dpr, fixedLandmarkBoxes);
   // A town being founded or growing, walls going up, land changing hands: drawn into the land, under everything else.
   if (moments && momentView) drawMomentGround(ctx, moments.plan, moments.t, momentView);
   if (idleView) idleLive += drawChimneySmoke(ctx, view, idleT, idleView, moments ? (tile) => moments.hold.towns.has(tile) : undefined);

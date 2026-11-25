@@ -1,0 +1,3 @@
+# Royal Tomb stands beside its capital, not on it (2026-11-25)
+
+Egypt's Royal Tomb belongs to a capital, but painting it on the city tile covers the town and its banner. It is drawn like a world wonder instead: on the first neighbouring tile (fixed direction order) that is the holder's own dry, flat land with no city, landmark, wonder or construction site. `tombPieces` feeds those tiles into `landmarkSites`, so the landmark footprint picker and the town-clearance gate treat the tomb like any other landmark. While the work is on, the site shows construction stages 1 to 3 by turns/target (capped below finished); a standing tomb uses the finished painting. If no neighbour qualifies, nothing is painted and the banner's tomb seal still marks the city.
