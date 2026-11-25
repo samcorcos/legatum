@@ -8,6 +8,11 @@ Anyone may open an issue or a pull request. The maintainer, Sam Corcos, decides 
 is pre-release and changes quickly, so for anything larger than a fix, open an issue first and say what you
 have in mind.
 
+Issues and pull requests are for the game. Ones that are clearly about something else (politics, the
+maintainer's job, spam, joke edits) are closed with an `off-topic` label, some of them automatically by
+[a check](.github/workflows/moderate.yml) when they are opened. If yours was closed by mistake, say so in
+a comment and it will be reopened. See the [Code of Conduct](CODE_OF_CONDUCT.md).
+
 ## Where to start reading
 
 - [README.md](README.md): what the game is and how to run it.
