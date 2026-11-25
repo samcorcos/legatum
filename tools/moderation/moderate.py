@@ -29,7 +29,8 @@ import urllib.error
 import urllib.request
 
 API = "https://api.github.com"
-MODELS_URL = "https://models.github.ai/inference/chat/completions"
+# The GitHub Models endpoint, then its older address as a fallback (both take the workflow token).
+MODELS_URLS = ("https://models.github.ai/inference/chat/completions", "https://models.inference.ai.azure.com/chat/completions")
 MODEL = os.environ.get("MODERATION_MODEL", "openai/gpt-4.1-mini")
 TRUSTED_ASSOCIATIONS = {"OWNER", "MEMBER", "COLLABORATOR", "CONTRIBUTOR"}
 MIN_CONFIDENCE = 0.9
@@ -122,12 +123,15 @@ def should_close(verdict):
     return bool(verdict) and verdict["verdict"] == "off_topic" and verdict["confidence"] >= MIN_CONFIDENCE
 
 
-def request(method, url, token, payload=None):
+def request(method, url, token, payload=None, github_api=True):
     data = json.dumps(payload).encode() if payload is not None else None
     req = urllib.request.Request(url, data=data, method=method)
     req.add_header("Authorization", f"Bearer {token}")
-    req.add_header("Accept", "application/vnd.github+json")
-    req.add_header("X-GitHub-Api-Version", "2022-11-28")
+    if github_api:
+        req.add_header("Accept", "application/vnd.github+json")
+        req.add_header("X-GitHub-Api-Version", "2022-11-28")
+    else:
+        req.add_header("Accept", "application/json")
     if data is not None:
         req.add_header("Content-Type", "application/json")
     with urllib.request.urlopen(req, timeout=60) as resp:
@@ -157,8 +161,16 @@ def judge(prompt, token):
         "temperature": 0,
         "messages": [{"role": "system", "content": POLICY}, {"role": "user", "content": prompt}],
     }
-    answer = request("POST", MODELS_URL, token, payload)
-    return parse_verdict(answer["choices"][0]["message"]["content"])
+    errors = []
+    for url in MODELS_URLS:
+        try:
+            answer = request("POST", url, token, payload, github_api=False)
+            return parse_verdict(answer["choices"][0]["message"]["content"])
+        except urllib.error.HTTPError as err:
+            errors.append(f"{url}: HTTP {err.code} {err.read()[:200]!r}")
+        except (urllib.error.URLError, KeyError, IndexError, TypeError, ValueError) as err:
+            errors.append(f"{url}: {err.__class__.__name__}: {err}")
+    raise ValueError("; ".join(errors))
 
 
 def summary(line):
