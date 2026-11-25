@@ -36,7 +36,7 @@ describe('situational tips', () => {
     v.cities.push({ ...city, id: 7001, owner: r.id, name: 'Rival town', pos: neighbors(neighbors(city.pos)[0])[0] });
     const tip = strategyTip(v, {});
     expect(tip).toMatchObject({ id: 'tip:army', title: 'Build up your army', acknowledge: true, tip: true });
-    expect(tip!.why).toMatch(/ (has|have) 40 army points; you have 12\./);
+    expect(tip!.why).toMatch(/^Army points: .+ 40, you 12\./);
     expect(tip!.why).not.toContain('AI ');
   });
 

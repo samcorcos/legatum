@@ -38,10 +38,10 @@ function armyTip(v: PlayerView): Tip | null {
   const rival = v.players.filter((p) => p.alive && rivalTeam(v, p.id) && (p.army ?? 0) >= Math.max(mine * 1.5, mine + 10) && close(p.id))
     .sort((a, b) => (b.army ?? 0) - (a.army ?? 0))[0];
   if (!rival) return null;
-  const name = empireOfPlayer(v, rival.id), plural = name.endsWith('s');
+  const name = empireOfPlayer(v, rival.id);
   // One key for every rival: the warning is about your army, not about who is ahead this time.
   return { key: 'army', kind: 'army', title: 'Build up your army',
-    why: `${plural ? `The ${name} have` : `${name} has`} ${rival.army} army points; you have ${mine}. They are close to you, and a weak army invites an attack.`,
+    why: `Army points: ${name} ${rival.army}, you ${mine}. They are close to you, and a weak army invites an attack.`,
     steps: [{ instruction: 'Build military units, or Walls in your border cities.', target: null }] };
 }
 
