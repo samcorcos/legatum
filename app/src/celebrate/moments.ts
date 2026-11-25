@@ -69,7 +69,7 @@ export interface Moment {
 /** The painted building a faction goal's generic completion card shows (the faction's own version: Ruhr Foundry, Lyceum). */
 const GOAL_BUILDING: Partial<Record<Faction, BuildingKind>> = { Germany: 'Forge', Athens: 'Library' };
 /** The painted scene a goal with no building shows: Switzerland's Reserve, the Celts' Warbands, the Aztecs' New Fire. */
-const GOAL_ART: Partial<Record<Faction, string>> = { Switzerland: 'goal-reserve', Celts: 'goal-warbands', Aztecs: 'goal-newfire' };
+const GOAL_ART: Partial<Record<Faction, string>> = { Switzerland: 'goal-reserve', Celts: 'goal-warbands', Aztecs: 'goal-newfire', Egypt: 'goal-royaltomb' };
 
 export function ruinText(reward: RuinReward, cityName: (id: number) => string, faction?: Faction): { title: string; effect: string; lore: string; details: string[]; tier: Tier; deltas: Moment['deltas']; gains: Gain[]; emblem: Emblem } {
   const text: ReturnType<typeof ruinText> = (() => { switch (reward.kind) {
@@ -351,7 +351,7 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
                 details: ['Every empire sees where it stands. A rival that captures it takes the points.', 'If it is razed, found another.'],
                 deltas: [{ counter: 'vp', amount: e.vp }], seal: e.vp });
             } else {
-              push(i, e.player, { goalMark: GOAL_CITY_ICON[goalKind], tier: 'legendary', at, title: 'The Royal Tomb', kicker: name ? `It stands in ${name}` : 'The tomb stands',
+              push(i, e.player, { goalMark: GOAL_CITY_ICON[goalKind], tier: 'legendary', at, title: 'The Royal Tomb', kicker: name ? `It stands in ${name}` : 'The tomb stands', artSlug: GOAL_ART.Egypt,
                 effect: `+${e.vp} VP while you hold it · your cities build and grow again`, lore: 'Cut into the cliff, sealed for eternity.',
                 details: ['Every empire sees where it stands. A rival that captures its city takes the points.'],
                 deltas: [{ counter: 'vp', amount: e.vp }], seal: e.vp });

@@ -35,7 +35,7 @@ const CALENDAR_LABELS = RULES.calendarLabels as readonly string[];
 /** The display year of a turn, "1040 AD" (core `calendar::calendar_label`, exported with the rules; display only, never a rule). */
 export const calendarLabel = (turn: number): string => CALENDAR_LABELS[Math.min(Math.max(0, Math.floor(turn)), CALENDAR_LABELS.length - 1)];
 /** The one plain line that explains the year wherever it is shown. */
-export const CALENDAR_NOTE = 'The year follows the turn number and changes nothing in the game. A game is expected to end between turn 250 and 300.';
+export const CALENDAR_NOTE = 'The year follows the turn number and changes nothing in the game.';
 export const CAPTURE_RESISTANCE_TURNS: number = RULES.captureResistanceTurns;
 export const ignoresWounds = (faction: Faction | undefined, kind: UnitKind): boolean =>
   !!faction && (RULES.woundImmunity[faction] as readonly string[]).includes(kind);
@@ -624,7 +624,7 @@ export const FACTION_GOAL: Record<Faction, FactionGoal> = {
     name: 'The Royal Tomb', live: goalLive('Egypt'), held: goalHeld('Egypt'), heldItem: 'its city', icon: 'goal-royal-tomb', action: 'Build the Royal Tomb',
     rule: () => `Build the Royal Tomb: ${RULES.tombTurns} turns in which no city builds or grows. Whoever holds its city scores ${goalVp('Egypt')} VP`,
     ask: () => `Build the Royal Tomb: ${RULES.tombTurns} turns in which no city builds or grows`,
-    detail: () => `While you build it, none of your cities builds or grows. After ${RULES.tombTurns} turns of work it stands in your capital. Whoever holds that city scores ${goalVp('Egypt')} VP`,
+    detail: () => `While you build it, none of your cities builds or grows. After ${RULES.tombTurns} turns of work it stands at your capital. Whoever holds that city scores ${goalVp('Egypt')} VP`,
   },
   Aztecs: SWARM_GOAL,
   Switzerland: {

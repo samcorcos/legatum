@@ -14,7 +14,8 @@ import { iconLoaded } from '../icons';
 export interface TombPiece { city: number; owner: number; tile: number; hex: Hex; k: number }
 
 const STEM = 'goal-royaltomb';
-const finishedUrls = import.meta.glob<string>('../assets/unlocks/goal-royaltomb-256.png', { eager: true, query: '?url', import: 'default' });
+// The map's graded copy (tools/art/goal-landmark-grade.py); the goal card keeps the ungraded unlocks/ copy.
+const finishedUrls = import.meta.glob<string>('../assets/landmarks/goal-royaltomb-256.png', { eager: true, query: '?url', import: 'default' });
 const FINISHED_URL = Object.values(finishedUrls)[0] ?? null;
 let finished: HTMLImageElement | null = null;
 

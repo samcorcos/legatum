@@ -585,6 +585,13 @@ describe('goal city moments', () => {
     expect(card.effect).toMatch(/is building its Royal Tomb in Thebes: 2 VP to whoever holds the city\. 9 turns of work left\.$/);
   });
 
+  it('Egypt’s own tomb-stands card shows the tomb painting', () => {
+    const after = structuredClone(view);
+    after.players[0].faction = 'Egypt';
+    const [card] = momentsForTurn([{ type: 'FactionGoalCompleted', player: 0, faction: 'Egypt', vp: 2 }], 0, view, after);
+    expect(card).toMatchObject({ tier: 'legendary', title: 'The Royal Tomb', goalMark: 'goal-royal-tomb', artSlug: 'goal-royaltomb' });
+  });
+
   it('the owner’s own Colonia Victrix card wears the laurel', () => {
     const after = structuredClone(view);
     after.players[0].faction = 'Rome';
