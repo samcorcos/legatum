@@ -33,6 +33,8 @@ export interface AdvisorContext {
   /** Supplying a plan makes the decision logic pure and easy to test. Undefined reads the loaded WASM. */
   plan?: Order[] | null;
   turnLabel?: string;
+  /** The city whose Buy a tile placement is open, if any: the advisor guides the last click there. */
+  placingTile?: number | null;
 }
 const RESEARCH_FALLBACK = 'Research gives your empire new choices.';
 const ownCities = (v: PlayerView) => v.cities.filter((c) => c.owner === v.me);
@@ -203,7 +205,7 @@ export function advisorSuggestion(ctx: AdvisorContext, seen: readonly string[], 
   }
   // Situational advice comes before the routine decisions, but never interrupts a unit or panel already in hand.
   if (seen.includes('welcome') && !ctx.techOpen) {
-    const tip = strategyTip(v, tips, ctx.touch, ctx.selection, validOrders(ctx));
+    const tip = strategyTip(v, tips, ctx.touch, ctx.selection, validOrders(ctx), ctx.placingTile ?? null);
     if (tip && !skipped.includes(tip.id) && (!ctx.selection || tip.current > 0)) return tip;
   }
   // Follow the screen: the open Research panel or the selected city or unit is the decision in hand.

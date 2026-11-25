@@ -97,13 +97,14 @@ it('counts routine steps the player does, once per turn', () => {
   expect(useAdvisor.getState().practice.endTurn).toBe(1);
 });
 
-it('logs a tip when it shows, and Got it puts it away for the turn', () => {
+it('logs a tip when it shows, and Not now puts it away for the turn', () => {
   useAdvisor.setState({ seen: ['welcome', 'report', 'race'], tips: {} });
   act(() => useGame.setState({ views: [{ ...view, turn: 30, economy: { ...view.economy, gold: 400 }, supply: [] }] }));
   render(<Advisor />);
   expect(screen.getByTestId('advisor').dataset.advisorId).toBe('tip:gold');
   expect(useAdvisor.getState().tips.gold).toBe(30);
-  fireEvent.click(screen.getByRole('button', { name: 'Got it' }));
+  // A tip with a ring is dismissed by a quiet Not now; the ring is the call to action.
+  fireEvent.click(screen.getByRole('button', { name: 'Not now' }));
   expect(screen.queryByTestId('advisor')?.dataset.advisorId).not.toBe('tip:gold');
 });
 
@@ -118,4 +119,12 @@ it('a new game starts the tip log over and counts each kind', () => {
 it('rings the city panel\'s Buy a tile button', () => {
   render(<div className="city-panel"><button>Build</button><button>Buy a tile · from 50 Gold</button></div>);
   expect(targetElement({ kind: 'control', name: 'buyTile' })?.textContent).toBe('Buy a tile · from 50 Gold');
+});
+
+it('while a tile is being placed, shows only the tip that asked for it', () => {
+  useAdvisor.setState({ seen: ['welcome', 'report', 'race'], tips: {} });
+  const city = view.cities.find((c) => c.owner === view.me)!;
+  act(() => useGame.setState({ views: [{ ...view, turn: 30, economy: { ...view.economy, gold: 400 }, supply: [] }], place: { city: city.id, building: null, intent: 'tile', pick: null } }));
+  render(<Advisor />);
+  expect(screen.queryByTestId('advisor')).toBeNull();
 });

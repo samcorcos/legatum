@@ -7,3 +7,5 @@ A first-time playtester asked for advice like "build up your army or you might g
 - "Gold in the treasury does nothing" is false for Switzerland, whose Gold earns interest: the Gold tip skips the Swiss.
 
 With these rules a game shows 5 to 10 tips in 120 turns, never the same kind twice within its cooldown.
+
+Follow-up after the UI review (same day): the threat tip was dropped, because This Turn already shows "Army closing on {city}" with Go to city for the same situation, and two warnings with three calls to action is worse than one. A tip that starts a mode (Buy a tile placement) must keep guiding inside it; the advisor used to pause during any placement, so it went silent at the one click that mattered.
