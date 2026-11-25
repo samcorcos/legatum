@@ -725,6 +725,6 @@ function RelationsView({ view }: { view: PlayerView }) {
         </tr>)}</tbody>
       </table>
     </div>
-    <p className="muted relations-note">Wars and Alliances are public. Unknown empires are hidden until you meet them.{model.empires.length > 4 && ' Scroll sideways to see every empire.'}{view.ai_alliances && ' In this game the AI empires started allied in pairs.'}</p>
+    <p className="muted relations-note">{view.ai_alliances && 'In this game the AI empires started allied in pairs. '}Wars and Alliances are public. Unknown empires are hidden until you meet them.{model.empires.length > 4 && ' Scroll sideways to see every empire.'}</p>
   </section>;
 }

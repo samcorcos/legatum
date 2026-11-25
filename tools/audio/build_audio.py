@@ -108,6 +108,9 @@ SFX = [
      'A short pizzicato phrase marks the group becoming ready together.'),
     (['seatTaken'], 'multiplayer/seat-taken.m4a', 'x/kenney_impact-sounds/Audio/impactWood_medium_001.ogg',
      'A muted wooden knock marks a seat moving to another device.'),
+    (['teamPing'], 'multiplayer/team-ping.m4a', 'chimes.mp3',
+     'The first 0.6 s of a bright chime run, faded out: a teammate wants your eyes on a tile. Distinct from every wooden and leather UI sound.',
+     0.6),
 ]
 
 # (look, output file, source under SRC, title, author, page, download URL, SPDX licence,
@@ -223,11 +226,16 @@ def seam_check(path, sr, expected):
 
 
 def build_sfx(entry):
-    events, out, rel, rationale = entry
+    events, out, rel, rationale, *clip = entry  # clip: keep only the first N seconds, faded out over the second half
     with tempfile.TemporaryDirectory() as tmp:
         rels = rel if isinstance(rel, list) else [rel]
         sources = [os.path.join(SRC, item) for item in rels]
         src = sources[0]
+        if clip:
+            cut = os.path.join(tmp, 'clip.wav')
+            run(['ffmpeg', '-y', '-v', 'error', '-i', src, '-af', f'atrim=0:{clip[0]},afade=t=out:st={clip[0] / 2}:d={clip[0] / 2}',
+                 '-c:a', 'pcm_f32le', cut])
+            src = cut
         if len(sources) > 1:
             src = os.path.join(tmp, 'composed.wav')
             args = ['ffmpeg', '-y', '-v', 'error']
@@ -247,6 +255,11 @@ def build_sfx(entry):
                     source='https://freesound.org/people/Breviceps/sounds/444491/',
                     retrieved='https://raw.githubusercontent.com/yairm210/Unciv/master/android/assets/sounds/japan.mp3',
                     attribution='"Short Choir" by Breviceps (freesound.org/s/444491), CC0')
+    elif rel == 'chimes.mp3':
+        meta = dict(title='Level up', author='Bastianhallo',
+                    source='https://freesound.org/people/Bastianhallo/sounds/682633/',
+                    retrieved='https://raw.githubusercontent.com/yairm210/Unciv/master/android/assets/sounds/chimes.mp3',
+                    attribution='"Level up" by Bastianhallo (freesound.org/s/682633), CC0')
     else:
         pack = rels[0].split('/')[1]
         name, url = KENNEY[pack]

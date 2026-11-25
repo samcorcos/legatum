@@ -5,6 +5,7 @@ import { FixtureClient } from './test/fixtureEngine';
 import { coopVsAiSetup } from './gameSetup';
 import { useGame } from './store';
 import { FakeSocket } from './test/fakeSocket';
+import { feel } from './feel';
 import { pingAvailable, pingsFor, teammates, withPing, type TeamPing } from './teamPing';
 
 vi.mock('./client', async (orig) => ({
@@ -83,12 +84,15 @@ async function online(relays: boolean) {
 
 it('online: a ping is sent to the host, shown to you at once, and a teammate\'s ping arrives over the host', async () => {
   const { socket, view } = await online(true);
+  const chime = vi.spyOn(feel, 'teamPing');
   const s = () => useGame.getState();
   expect(s().canPing()).toBe(true);
   expect(s().sendPing(HEX)).toBe(true);
   expect(socket.sent.at(-1)).toEqual({ type: 'map_ping', hex: HEX });
   expect(pingsFor(view, s().pings).map((p) => p.from)).toEqual([view.me]);
+  expect(chime).not.toHaveBeenCalled(); // Your own ping is silent.
   socket.push({ type: 'map_ping', from: 1, hex: { q: 6, r: 2 }, turn: view.turn });
+  expect(chime).toHaveBeenCalledOnce(); // A teammate's ping chimes.
   expect(pingsFor(view, s().pings).map((p) => [p.from, p.hex])).toEqual([[view.me, HEX], [1, { q: 6, r: 2 }]]);
   // A ping for another turn, or from a player on another team, is ignored.
   socket.push({ type: 'map_ping', from: 1, hex: { q: 1, r: 1 }, turn: view.turn + 5 });

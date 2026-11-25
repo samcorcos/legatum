@@ -470,6 +470,20 @@
     "rationale": "A muted wooden knock marks a seat moving to another device."
   },
   {
+    "file": "multiplayer/team-ping.m4a",
+    "events": [
+      "teamPing"
+    ],
+    "title": "Level up",
+    "author": "Bastianhallo",
+    "source": "https://freesound.org/people/Bastianhallo/sounds/682633/",
+    "retrieved": "https://raw.githubusercontent.com/yairm210/Unciv/master/android/assets/sounds/chimes.mp3",
+    "attribution": "\"Level up\" by Bastianhallo (freesound.org/s/682633), CC0",
+    "license": "CC0-1.0",
+    "modified": "kept the first 0.6 s, faded out over the last 0.3 s, loudness-normalised to -20 LUFS (peak -9.8 dBFS), transcoded to AAC 96k",
+    "rationale": "The first 0.6 s of a bright chime run, faded out: a teammate wants your eyes on a tile. Distinct from every wooden and leather UI sound."
+  },
+  {
     "file": "music/atlas.m4a",
     "events": [
       "music:atlas"

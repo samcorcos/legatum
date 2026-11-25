@@ -953,6 +953,7 @@ export const useGame = create<State>((set, get) => {
         // The host is another player's browser: a ping whose tile is not two whole numbers is dropped, not drawn.
         if (!Number.isSafeInteger(hex?.q) || !Number.isSafeInteger(hex?.r)) return;
         set({ pings: withPing(get().pings, { from, team: view.team, hex, turn, seq: ++pingSeq }) });
+        if (from !== view.me) feel.teamPing(); // Your own ping is silent: you just clicked it.
       },
       validation: (errs, validatedOrders) => {
         if (!active()) return;
