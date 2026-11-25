@@ -131,8 +131,14 @@ def request(method, url, token, payload=None):
     if data is not None:
         req.add_header("Content-Type", "application/json")
     with urllib.request.urlopen(req, timeout=60) as resp:
-        raw = resp.read()
-    return json.loads(raw) if raw else None
+        raw, status, ctype = resp.read(), resp.status, resp.headers.get("Content-Type", "")
+    if not raw:
+        return None
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError:
+        # Say what came back (status, type, the start of the body) so a failed run can be diagnosed.
+        raise ValueError(f"{method} {url.split('?')[0]}: HTTP {status}, {ctype}, not JSON: {raw[:200]!r}") from None
 
 
 def pr_diff(repo, number, token):
@@ -195,8 +201,12 @@ def main():
     diff = pr_diff(repo, number, token) if kind == "pull request" else ""
     try:
         verdict = judge(build_prompt(kind, item.get("title"), item.get("body"), diff), token)
-    except (urllib.error.URLError, KeyError, IndexError, ValueError) as err:
-        summary(f"#{number}: model unavailable ({err.__class__.__name__}); left open for the hourly sweep.")
+    except urllib.error.HTTPError as err:
+        detail = err.read()[:300]
+        summary(f"#{number}: model call failed (HTTP {err.code}: {detail!r}); left open for the hourly sweep.")
+        return 0
+    except (urllib.error.URLError, KeyError, IndexError, TypeError, ValueError) as err:
+        summary(f"#{number}: model unavailable ({err.__class__.__name__}: {err}); left open for the hourly sweep.")
         return 0
     summary(f"#{number} ({kind}): {verdict}")
     if not should_close(verdict) or dry:
