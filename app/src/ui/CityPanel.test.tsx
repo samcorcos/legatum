@@ -143,7 +143,7 @@ it('previews Sparta shared kill healing against military targets', async () => {
     win_chance: 100, loss_chance: 0, expected_damage_to_attacker: 0, expected_damage_to_defender: 20,
     attacker_hp: 40, defender_hp: 20, ranged: false };
   act(() => root.render(<ForecastCard forecast={forecast} ranged={false} view={view} unit={unit} target={enemy.pos} />));
-  expect(container.textContent).toContain('A kill heals your surviving attackers +100 HP, shared');
+  expect(container.textContent).toContain('A kill heals your surviving attackers +100 health, shared');
 });
 
 it('previews build-derived yields and explains the Settler population gate', async () => {

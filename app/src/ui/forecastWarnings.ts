@@ -96,7 +96,7 @@ export function cityStrikeWarning(f: BattleForecast, cityName: string, unitName:
   if (!cs) return null;
   const deadly = damage(cs.city_strength.total, cs.attacker_defense.total, 120) >= f.attacker_hp;
   return {
-    text: `${cityName} will fire back: about −${fire ?? Math.min(cs.damage, f.attacker_hp)} HP to your ${unitName}${deadly ? ', and it could destroy it' : ''}. It fires at the weakest unit in range.`,
+    text: `${cityName} will fire back: about −${fire ?? Math.min(cs.damage, f.attacker_hp)} health to your ${unitName}${deadly ? ', and it could destroy it' : ''}. It fires at the weakest unit in range.`,
     details: `City ${formatBreakdown(cs.city_strength)} vs your defence ${formatBreakdown(cs.attacker_defense)}; rolls 80–120%, before movement, separate from the attack above.`,
     deadly,
   };
@@ -154,12 +154,12 @@ export function garrisonHeadline(f: BattleForecast, view: PlayerView, cityName: 
   if (!g) return null;
   const name = itemName({ kind: 'Unit', unit: g.kind }, view.players.find((p) => p.id === g.owner)?.faction);
   if (g.shielded) {
-    return `${cityName} absorbs damage first. The hit that empties its HP carries on to the ${name} garrison with the part of its damage the city did not absorb; later hits strike the garrison in full.`
+    return `${cityName} absorbs damage first. The hit that empties its health carries on to the ${name} garrison with the part of its damage the city did not absorb; later hits strike the garrison in full.`
       + (ranged ? ' Ranged fire cannot capture.' : ' A melee attacker captures if the garrison falls.');
   }
   return ranged
-    ? `${cityName} has fallen: this shot hits its ${name} garrison (${g.hp} HP). Only a melee attack can capture the city.`
-    : `${cityName} has fallen: you fight its ${name} garrison (${g.hp} HP), and destroying it captures the city.`;
+    ? `${cityName} has fallen: this shot hits its ${name} garrison (${g.hp} health). Only a melee attack can capture the city.`
+    : `${cityName} has fallen: you fight its ${name} garrison (${g.hp} health), and destroying it captures the city.`;
 }
 
 /** One line of the combined card: a thing that takes damage, its HP before and after (all numbers come from core's `CityAssaultForecast`). */
@@ -178,8 +178,8 @@ export function assaultSummary(a: CityAssaultForecast, cityName: string, garriso
     rows.push({ key: 'garrison', label: `${garrisonName ?? 'Garrison'} garrison`, hp: g.hp, after: g.hp_after, ...(g.destroyed_chance > 0 ? { note: g.destroyed_chance >= 100 ? 'destroyed' : `${g.destroyed_chance}% destroyed` } : {}) });
   }
   const left = g && g.hp_after > 0
-    ? `its ${garrisonName ?? 'garrison'} survives with about ${g.hp_after} HP`
-    : a.city_hp_after > 0 ? `${cityName} keeps about ${a.city_hp_after} HP` : '';
+    ? `its ${garrisonName ?? 'garrison'} survives with about ${g.hp_after} health`
+    : a.city_hp_after > 0 ? `${cityName} keeps about ${a.city_hp_after} health` : '';
   let capture: string;
   let captureTone: 'good' | 'bad' | 'plain';
   if (!a.can_capture) {
@@ -220,7 +220,7 @@ export function wallsLine(f: BattleForecast, cityName: string, _unitLabel: strin
   if (w.covered > 0) return { text: `Walls ${level}: ${w.built_in ? 'built-in ' : ''}${cover}, so ${damage} to ${cityName}.${next}`, tone: w.percent >= 100 ? 'good' : 'plain' };
   const withSiege = w.percent > 0 && w.percent < 100 && dealt > 0 ? Math.round((dealt * 100) / w.percent) : 0;
   return {
-    text: `Walls ${level} halve this attack on ${cityName}${siegeTier > 0 && withSiege > 0 ? `: ${dealt} HP, or ${withSiege} with Siege` : ''}.`,
+    text: `Walls ${level} halve this attack on ${cityName}${siegeTier > 0 && withSiege > 0 ? `: ${dealt} health, or ${withSiege} with Siege` : ''}.`,
     tone: 'plain',
   };
 }
@@ -229,7 +229,7 @@ export function wallsLine(f: BattleForecast, cityName: string, _unitLabel: strin
 export function forecastWinLabel(f: BattleForecast, city: boolean, ranged: boolean, attackerRanged: boolean): string {
   const captures = !ranged && !attackerRanged;
   if (f.garrison && !f.garrison.shielded) return captures ? 'kill the garrison, capture' : 'destroy the garrison';
-  if (city) return captures && !f.garrison ? 'capture it' : 'drop it to 0 HP';
+  if (city) return captures && !f.garrison ? 'capture it' : 'drop it to 0 health';
   return 'destroy it';
 }
 

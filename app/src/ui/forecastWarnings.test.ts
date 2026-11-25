@@ -197,12 +197,12 @@ describe('city strike forecast', () => {
     attacker_defense: { total: 16, parts: [['Spearman', 20], ['Wounded', -4]] } } } as unknown as BattleForecast;
   it('says the city fires back, how hard, and at whom, with both breakdowns', () => {
     const w = cityStrikeWarning(f, 'Redoubt', 'Spearman')!;
-    expect(w.text).toBe('Redoubt will fire back: about −21 HP to your Spearman. It fires at the weakest unit in range.');
+    expect(w.text).toBe('Redoubt will fire back: about −21 health to your Spearman. It fires at the weakest unit in range.');
     expect(w.details).toContain('City 16 (City 10, Population +6) vs your defence 16 (Spearman 20, Wounded −4)');
     expect(w.deadly).toBe(false);
   });
   it('warns when the shot could destroy the attacker, and is silent without a shot', () => {
-    expect(cityStrikeWarning({ ...f, attacker_hp: 20 }, 'Redoubt', 'Spearman')).toMatchObject({ deadly: true, text: expect.stringContaining('about −20 HP to your Spearman, and it could destroy it') });
+    expect(cityStrikeWarning({ ...f, attacker_hp: 20 }, 'Redoubt', 'Spearman')).toMatchObject({ deadly: true, text: expect.stringContaining('about −20 health to your Spearman, and it could destroy it') });
     expect(cityStrikeWarning({ ...f, city_strike: undefined }, 'Redoubt', 'Spearman')).toBeNull();
   });
 });
@@ -252,7 +252,7 @@ describe('walled city fire folded into the forecast (playtest-6 H1)', () => {
     const out = cityFireOutcome(walled, 'India', 'Archer')!;
     expect(out.dealt).toBe(exactOdds(20, 26, 100, 200, false, 50).expToDef);
     expect(wallsLine(walled, 'Athens', 'Archer', 1, out.dealt)?.text)
-      .toBe(`Walls I halve this attack on Athens: ${out.dealt} HP, or ${out.dealt * 2} with Siege.`);
+      .toBe(`Walls I halve this attack on Athens: ${out.dealt} health, or ${out.dealt * 2} with Siege.`);
     const attacker = view.units.find((u) => u.owner === view.me && u.military)!;
     const target = neighbors(attacker.pos)[0];
     view.units = [attacker];
@@ -288,15 +288,15 @@ describe('garrisoned city forecasts (core combat::city_tile_defender)', () => {
   it('says city damage can overflow into the garrison', () => {
     const f = { ...base, garrison: { unit: 9, owner: 1, kind: 'Archer' as const, hp: 100, shielded: true } };
     expect(garrisonHeadline(f, view, 'Epoch', false)).toBe(
-      'Epoch absorbs damage first. The hit that empties its HP carries on to the Archer garrison with the part of its damage the city did not absorb; later hits strike the garrison in full. A melee attacker captures if the garrison falls.');
-    expect(garrisonHeadline({ ...f, ranged: true }, view, 'Epoch', true)).toBe('Epoch absorbs damage first. The hit that empties its HP carries on to the Archer garrison with the part of its damage the city did not absorb; later hits strike the garrison in full. Ranged fire cannot capture.');
-    expect(forecastWinLabel(f, true, false, false)).toBe('drop it to 0 HP');
+      'Epoch absorbs damage first. The hit that empties its health carries on to the Archer garrison with the part of its damage the city did not absorb; later hits strike the garrison in full. A melee attacker captures if the garrison falls.');
+    expect(garrisonHeadline({ ...f, ranged: true }, view, 'Epoch', true)).toBe('Epoch absorbs damage first. The hit that empties its health carries on to the Archer garrison with the part of its damage the city did not absorb; later hits strike the garrison in full. Ranged fire cannot capture.');
+    expect(forecastWinLabel(f, true, false, false)).toBe('drop it to 0 health');
   });
 
   it('names the exposed garrison of a fallen city and what destroying it does', () => {
     const f = { ...base, defender_hp: 60, garrison: { unit: 9, owner: 1, kind: 'Spearman' as const, hp: 60, shielded: false } };
-    expect(garrisonHeadline(f, view, 'Epoch', false)).toBe('Epoch has fallen: you fight its Spearman garrison (60 HP), and destroying it captures the city.');
-    expect(garrisonHeadline(f, view, 'Epoch', true)).toBe('Epoch has fallen: this shot hits its Spearman garrison (60 HP). Only a melee attack can capture the city.');
+    expect(garrisonHeadline(f, view, 'Epoch', false)).toBe('Epoch has fallen: you fight its Spearman garrison (60 health), and destroying it captures the city.');
+    expect(garrisonHeadline(f, view, 'Epoch', true)).toBe('Epoch has fallen: this shot hits its Spearman garrison (60 health). Only a melee attack can capture the city.');
     expect(forecastWinLabel(f, true, false, false)).toBe('kill the garrison, capture');
     expect(forecastWinLabel(f, true, true, true)).toBe('destroy the garrison');
   });
@@ -304,7 +304,7 @@ describe('garrisoned city forecasts (core combat::city_tile_defender)', () => {
   it('keeps ungarrisoned and field targets unchanged', () => {
     expect(garrisonHeadline(base, view, 'Epoch', false)).toBeNull();
     expect(forecastWinLabel(base, true, false, false)).toBe('capture it');
-    expect(forecastWinLabel(base, true, true, true)).toBe('drop it to 0 HP');
+    expect(forecastWinLabel(base, true, true, true)).toBe('drop it to 0 health');
     expect(forecastWinLabel(base, false, false, false)).toBe('destroy it');
   });
 });
@@ -360,15 +360,15 @@ it('words the whole fight at a city from core numbers: city, garrison, capture, 
   const s = assaultSummary(a, 'Lugano', 'Spearman');
   expect(s.title).toBe('The whole fight at Lugano: 2 attacks this turn');
   expect(s.rows.map((r) => [r.key, r.hp, r.after])).toEqual([['city', 40, 0], ['garrison', 100, 61]]);
-  expect(s.capture).toBe('Lugano is not captured this turn: its Spearman survives with about 61 HP.');
+  expect(s.capture).toBe('Lugano is not captured this turn: its Spearman survives with about 61 health.');
   expect(s.captureTone).toBe('bad');
   const falls = assaultSummary({ ...a, capture_chance: 100, garrison: { ...a.garrison, hp_after: 0, destroyed_chance: 100 } }, 'Lugano', 'Spearman');
   expect(falls.capture).toBe('Lugano is captured this turn.');
   expect(falls.rows[1].note).toBe('destroyed');
   const maybe = assaultSummary({ ...a, capture_chance: 55 }, 'Lugano', 'Spearman');
-  expect(maybe.capture).toBe('Lugano is captured this turn in 55% of outcomes; otherwise its Spearman survives with about 61 HP.');
+  expect(maybe.capture).toBe('Lugano is captured this turn in 55% of outcomes; otherwise its Spearman survives with about 61 health.');
   const shot = assaultSummary({ ...a, can_capture: false, attacks: 1, garrison: null, city_hp_after: 12 }, 'Lugano', null);
-  expect(shot.capture).toBe('A shot cannot capture a city. After this turn Lugano keeps about 12 HP.');
+  expect(shot.capture).toBe('A shot cannot capture a city. After this turn Lugano keeps about 12 health.');
   expect(shot.rows.map((r) => r.key)).toEqual(['city']);
 });
 
@@ -413,7 +413,7 @@ describe('reinforcement note', () => {
 describe('wallsLine', () => {
   const f = (walls: { tier: number; covered: number; percent: number }) => ({ walls }) as unknown as BattleForecast;
   it('shows both numbers when Siege would help, and names the missing tech when it only half helps', () => {
-    expect(wallsLine(f({ tier: 1, covered: 0, percent: 50 }), 'Athens', 'Spearman', 1, 18)).toEqual({ text: 'Walls I halve this attack on Athens: 18 HP, or 36 with Siege.', tone: 'plain' });
+    expect(wallsLine(f({ tier: 1, covered: 0, percent: 50 }), 'Athens', 'Spearman', 1, 18)).toEqual({ text: 'Walls I halve this attack on Athens: 18 health, or 36 with Siege.', tone: 'plain' });
     expect(wallsLine(f({ tier: 1, covered: 0, percent: 50 }), 'Athens', 'Spearman', 0, 18)!.text).toBe('Walls I halve this attack on Athens.');
     expect(wallsLine(f({ tier: 2, covered: 1, percent: 75 }), 'Athens', 'Spearman', 1, 27)).toEqual({ text: 'Walls II: Siege covers level I, so 75% damage to Athens. Machinery covers level II.', tone: 'plain' });
     expect(wallsLine(f({ tier: 1, covered: 1, percent: 100 }), 'Athens', 'Spearman', 1, 36)!.tone).toBe('good');

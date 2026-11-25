@@ -159,7 +159,8 @@ Every word a player reads (sheets, cards, the Guide, tooltips, breakdowns, repor
 | tile | one map cell; distances are in tiles ("within 5 tiles") | hex, hexes (code and docs may say hex) |
 | population | a city's size | pop, citizens |
 | Food, Production, Gold, Science | the four yields, always capitalised | food, hammers, gold |
-| city HP | a city's own health bar (200 at full) | city health, "the walls" |
+| health | a unit's or city's life, shown as a bar; at 0 a unit is destroyed. The battle forecast says "health" (user, 2026-11-25: a new player did not know "HP"); other screens still say HP until they are swept | HP on the forecast |
+| city HP | a city's own health bar (200 at full); "health" on the forecast | "the walls" |
 | city strength | the city's combat strength; Walls add to it | city defence strength |
 | Walls | the level-I building and its numbered upgrades; "walled city" is fine | walls (lowercase) for city HP |
 | military unit | any unit that fights; say "except Scouts" when a rule leaves them out | armed unit, regiment, troops |

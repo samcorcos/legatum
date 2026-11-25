@@ -42,7 +42,7 @@ function Option({ kind, f, m, view, unit }: { kind: 'shot' | 'charge'; f: Battle
       <p className={`dual-outcome ${m.tone}`} data-testid={`forecast-${kind}-headline`}><b>{m.headline.title}.</b> <span className={`forecast-outcome ${m.headline.tradeTone}`}>{tradeMark(m.headline.tradeTone)}{m.headline.detail}</span></p>
       {!shot && m.aftermath?.severe && <AftermathLine m={m} />}
       <p className="dual-line" data-testid={`forecast-${kind}-numbers`}>
-        You <RankMark level={unit.level ?? 0} faction={view.players.find((p) => p.id === unit.owner)?.faction} compact /> <b>{f.attacker_strength.total}</b> vs {m.defName} <RankMark level={m.defUnit?.level ?? 0} faction={view.players.find((p) => p.id === m.defOwner)?.faction} compact /> <b>{f.defender_strength.total}</b> strength · you <b>{f.attacker_hp} → {m.hpAfter}</b> HP · {m.defName} <b>{f.defender_hp} → {defHpAfter}</b>
+        You <RankMark level={unit.level ?? 0} faction={view.players.find((p) => p.id === unit.owner)?.faction} compact /> <b>{f.attacker_strength.total}</b> vs {m.defName} <RankMark level={m.defUnit?.level ?? 0} faction={view.players.find((p) => p.id === m.defOwner)?.faction} compact /> <b>{f.defender_strength.total}</b> strength · your health <b>{f.attacker_hp} → {m.headline.kind === 'loss' ? 'lost' : m.hpAfter}</b> · {m.defName} <b>{f.defender_hp} → {defHpAfter}</b>
       </p>
       {(m.win > 0 || m.loss > 0) && <p className="dual-odds">
         <b className="good">{m.win}%</b> chance to {winAction(forecastWinLabel(f, !!m.city, shot, false), m.defName, m.city?.name ?? null)}
@@ -51,7 +51,7 @@ function Option({ kind, f, m, view, unit }: { kind: 'shot' | 'charge'; f: Battle
       <p className="dual-class" data-testid={`forecast-${kind}-class`}>
         {classes.length ? classes.join('; ') : 'No class bonus for either side.'}
       </p>
-      {m.fire && m.city && <p className="dual-bad" role="alert">City fire: {m.city.name} {f.walls && f.walls.covered > 0 ? 'still ' : ''}fires first, about −{m.fire.fire} HP to your {m.unitLabel}. Included in your unit’s HP loss above.</p>}
+      {m.fire && m.city && <p className="dual-bad" role="alert">City fire: {m.city.name} {f.walls && f.walls.covered > 0 ? 'still ' : ''}fires first, about −{m.fire.fire} health to your {m.unitLabel}. Included in your unit’s HP loss above.</p>}
       {!shot && m.risk && <p className="dual-bad" role="alert">{m.risk}</p>}
       {m.city && f.garrison && <p className="dual-line">{garrisonHeadline(f, view, m.city.name, shot)}</p>}
       {m.city && <p className={shot ? 'dual-line' : 'dual-line forecast-note'}>{cityEntryWarning(unit, shot)}</p>}
