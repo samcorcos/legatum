@@ -16,7 +16,7 @@ Three historical candidates were painted: A (the Old World at dusk), B (the grea
 
 ## Historical people portraits (2026-10-10)
 
-Paired, unnamed adult portraits, one for each of the eleven peoples: nine finished factions plus Egypt and Rome, which are early designs (playable, with portraits, heraldry and unique pieces, but no faction goal yet). Every faction has one, with no single-leader fallback (user, 2026-11-01: "every portrait is supposed to be a representative man and woman"); the app uses each faction's 360 px derivative through `leaderPortraitUrl` in `src/brand/ornaments.tsx`, and `src/portraits.test.ts` fails if a playable faction lacks one.
+Paired, unnamed adult portraits, one for each of the eleven peoples: nine finished factions plus Egypt and Rome (no faction carries the "Early design" tag now; Egypt's came off 2026-11-24). Every faction has one, with no single-leader fallback (user, 2026-11-01: "every portrait is supposed to be a representative man and woman"); the app uses each faction's 360 px derivative through `leaderPortraitUrl` in `src/brand/ornaments.tsx`, and `src/portraits.test.ts` fails if a playable faction lacks one.
 
 | Existing faction ID | Historical people | Portrait era |
 | --- | --- | --- |
@@ -29,8 +29,8 @@ Paired, unnamed adult portraits, one for each of the eleven peoples: nine finish
 | Celts | Celts, Boudica-era Britons | 1st century CE |
 | Athens | Athens | 5th century BCE |
 | Aztecs | Mexica, Tenochtitlan | c. 1500 |
-| Egypt | Egypt (early design) | see `people-egypt.prompt.txt` |
-| Rome | Rome (early design) | see `people-rome.prompt.txt` |
+| Egypt | Egypt | see `people-egypt.prompt.txt` |
+| Rome | Rome | see `people-rome.prompt.txt` |
 
 For the paired portraits, `people-<faction>.png` (archived outside git, not in the tree) is 1024 × 1024, `people-<faction>-512.png` is 512 × 512, and `people-<faction>-360.jpg` is 360 × 360 JPEG quality 88. The `.prompt.txt` file beside each original records its prompt and any final image edit. Japan is not a playable people: its portrait was removed on 2026-11-21 (git history has it), and the older review sheets in `docs/design/historical-factions/` and `docs/design/art-pass-2/` still show it.
 
