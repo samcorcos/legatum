@@ -158,9 +158,9 @@ describe('city production warnings', () => {
 it('explains city entry for ranged units even when using a move attack', async () => {
   const { cityEntryWarning } = await import('./forecastWarnings');
   expect(cityEntryWarning({ kind: 'Archer' })).toBe("Ranged units can't capture cities; move a melee unit in to take it.");
-  expect(cityEntryWarning({ kind: 'Spearman' })).toContain('most HP');
+  expect(cityEntryWarning({ kind: 'Spearman' })).toContain('most health');
   // A Keshig charges and captures; only its shot cannot.
-  expect(cityEntryWarning({ kind: 'Cataphract' })).toContain('most HP');
+  expect(cityEntryWarning({ kind: 'Cataphract' })).toContain('most health');
   expect(cityEntryWarning({ kind: 'Cataphract' }, true)).toBe("A shot can't take a city. Charge it to capture it.");
 });
 

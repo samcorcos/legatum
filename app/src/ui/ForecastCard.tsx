@@ -353,7 +353,7 @@ export function ForecastCard({
       {m.counterText && <div className="forecast-foot forecast-counter" data-testid="forecast-counter-split">{m.counterText}</div>}
       {/* The city's shot changes the outcome, so it is a red risk row up top, never a footnote. */}
       {fire && city && strike && <div className="forecast-risk bad forecast-city-fire" data-testid="forecast-city-fire" role="alert">
-        City fire: {city.name} {f.walls && f.walls.covered > 0 ? 'still ' : ''}fires first, about −{fire.fire} health to your {m.unitLabel}{strike.deadly ? ', and it could destroy it' : ''}. <span className="forecast-included">Included in your unit’s HP loss above.</span>
+        City fire: {city.name} {f.walls && f.walls.covered > 0 ? 'still ' : ''}fires first, about −{fire.fire} health to your {m.unitLabel}{strike.deadly ? ', and it could destroy it' : ''}. <span className="forecast-included">Included in your unit’s health loss above.</span>
       </div>}
       {routeWarning && <div className={isCalmRouteNote(routeWarning) ? 'forecast-shield route-note' : 'forecast-risk bad'} role={isCalmRouteNote(routeWarning) ? undefined : 'alert'} data-testid="route-warning">{routeWarning}</div>}
       {bowNote && <div className="forecast-shield forecast-bow-note" data-testid="forecast-shot-why">{bowNote}</div>}
@@ -399,7 +399,7 @@ export function ForecastSummary({ forecast: f, ranged, view, unit, target, assau
       <div className="forecast-summary-line">
         <b className={`forecast-summary-verdict ${m.tone}`}>{m.headline.title}</b>
         <span>Your <RankMark level={unit.level ?? 0} faction={view.players.find((p) => p.id === unit.owner)?.faction} compact /> {m.unitLabel}: health <b>{f.attacker_hp} → {m.headline.kind === 'loss' ? 'lost' : m.hpAfter}</b></span>
-        <span>{m.defName} <RankMark level={m.defUnit?.level ?? 0} faction={view.players.find((p) => p.id === m.defOwner)?.faction} compact />: health <b>{f.defender_hp} → {m.defAfter}</b></span>
+        <span><RankMark level={m.defUnit?.level ?? 0} faction={view.players.find((p) => p.id === m.defOwner)?.faction} compact />{m.defName}: health <b>{f.defender_hp} → {m.defAfter}</b></span>
       </div>
       <div className={`forecast-summary-line forecast-outcome ${m.headline.tradeTone}`}>{tradeMark(m.headline.tradeTone)}{m.headline.detail}</div>
       {(m.win > 0 || m.loss > 0) && <div className="forecast-summary-line muted">

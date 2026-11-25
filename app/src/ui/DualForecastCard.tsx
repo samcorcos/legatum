@@ -51,7 +51,7 @@ function Option({ kind, f, m, view, unit }: { kind: 'shot' | 'charge'; f: Battle
       <p className="dual-class" data-testid={`forecast-${kind}-class`}>
         {classes.length ? classes.join('; ') : 'No class bonus for either side.'}
       </p>
-      {m.fire && m.city && <p className="dual-bad" role="alert">City fire: {m.city.name} {f.walls && f.walls.covered > 0 ? 'still ' : ''}fires first, about −{m.fire.fire} health to your {m.unitLabel}. Included in your unit’s HP loss above.</p>}
+      {m.fire && m.city && <p className="dual-bad" role="alert">City fire: {m.city.name} {f.walls && f.walls.covered > 0 ? 'still ' : ''}fires first, about −{m.fire.fire} health to your {m.unitLabel}. Included in your unit’s health loss above.</p>}
       {!shot && m.risk && <p className="dual-bad" role="alert">{m.risk}</p>}
       {m.city && f.garrison && <p className="dual-line">{garrisonHeadline(f, view, m.city.name, shot)}</p>}
       {m.city && <p className={shot ? 'dual-line' : 'dual-line forecast-note'}>{cityEntryWarning(unit, shot)}</p>}

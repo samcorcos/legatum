@@ -372,5 +372,5 @@ export function reinforcementNote(view: PlayerView, unit: Pick<UnitView, 'owner'
 export function cityEntryWarning(unit: Pick<UnitView, 'kind'>, shot = false): string {
   if (shot && attacksInMelee(unit.kind)) return "A shot can't take a city. Charge it to capture it.";
   return !attacksInMelee(unit.kind) ? "Ranged units can't capture cities; move a melee unit in to take it."
-    : 'Capture requires surviving and clearing enemy units. If teammates enter together, the survivor with the most HP captures; ties use a seeded coin toss. If a combined assault kills the garrison through overflow, its strongest attacker captures.';
+    : 'Capture requires surviving and clearing enemy units. If teammates enter together, the survivor with the most health captures; ties use a seeded coin toss. If a combined assault kills the garrison through overflow, its strongest attacker captures.';
 }
