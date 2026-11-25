@@ -3,7 +3,8 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { useGame } from '../store';
-import { rememberSeat, rememberedSeat, type SeatStatus } from '../remote';
+import { keptSeat, rememberSeat, rememberedSeat, setServerBase, type SeatStatus } from '../remote';
+import { awayLine, awayPlayers, namesList } from '../awayPlayers';
 import { configFromLobby, lobbyFromStaging, type StagingState } from '../staging';
 import { newLobby } from '../lobby';
 import { FakeSocket } from '../test/fakeSocket';
@@ -132,15 +133,16 @@ function connectStaging() {
   return state;
 }
 
-it('shows a guest’s chosen faction as text in the seat row', async () => {
+it('shows another player’s chosen faction in their own seat row, not as a picker this guest can open', async () => {
   const state = connectStaging();
   state.occupants[1] = { ...state.occupants[1]!, faction: 'Byzantium' };
   sockets[0].push({ type: 'staging', state });
   await act(async () => root.render(<StagingSeats guest />));
   const row = container.querySelectorAll('.seat-row')[2];
   expect(row.textContent).toContain('Byzantium');
-  expect(row.querySelector('[aria-label="Seat 2 faction"]')?.tagName).toBe('SPAN');
-  expect(row.querySelector('button[aria-label="Seat 2 faction"]')).toBeNull();
+  const shown = row.querySelector<HTMLButtonElement>('button[aria-label^="Seat 2 faction"]');
+  expect(shown?.getAttribute('aria-label')).toBe('Seat 2 faction: Byzantium');
+  expect(shown?.disabled).toBe(true);
 });
 
 it('releases a staging reservation in one confirmed action without changing seat type or host credential', async () => {
@@ -196,4 +198,49 @@ it('tells a fresh guest to ask the host, then offers Rejoin as the empire when o
   await act(async () => alice().click());
   sockets[0].open();
   expect(sockets[0].sent).toEqual([{ type: 'game_take', seat: 1 }]);
+});
+
+it('a guest picks their own faction in their own seat row', async () => {
+  const state = connectStaging();
+  const onMyFaction = vi.fn();
+  await act(async () => root.render(<SeatsTable lobby={lobbyFromStaging(state)} room={{ state, guest: true, mySeat: 1, onMyFaction }} />));
+  const row = container.querySelectorAll('.seat-row')[2];
+  const mine = row.querySelector<HTMLButtonElement>('button[aria-label^="Your faction"]')!;
+  expect(mine.disabled).toBe(false);
+  expect(row.textContent).toContain('You');
+  // Nobody else's picker can be opened from this browser.
+  expect([...container.querySelectorAll<HTMLButtonElement>('button[aria-label^="Seat "][aria-label*="faction"]')].every((b) => b.disabled)).toBe(true);
+});
+
+it('after a restart, the game list offers this device its kept seat back without the host opening it', async () => {
+  setServerBase('https://relay.example/rooms/r1');
+  try {
+    rememberSeat({ seat: 1, name: 'Alice', gameId: 'g1', token: 'alice-token' });
+    sessionStorage.clear(); // The restart: the tab's own copy is gone, the device's kept copy is not.
+    expect(keptSeat('https://relay.example/rooms/r1')).toMatchObject({ seat: 1, token: 'alice-token' });
+    expect(keptSeat('https://relay.example/rooms/other')).toBeNull();
+    const net = useGame.getState().net!;
+    useGame.setState({ net: { ...net, status: { ...net.status, is_local: false } } });
+    await act(async () => root.render(<JoinScreen />));
+    const alice = [...container.querySelectorAll<HTMLButtonElement>('button.join-seat')][1];
+    expect(alice.disabled).toBe(false);
+    expect(alice.textContent).toContain('Rejoin as Alice');
+    await act(async () => alice.click());
+    expect(rememberedSeat()).toMatchObject({ seat: 1, token: 'alice-token' });
+    sockets[0].open();
+    expect(sockets[0].sent[0]).toMatchObject({ type: 'join', seat: 1, token: 'alice-token' });
+  } finally {
+    setServerBase('');
+    localStorage.clear();
+  }
+});
+
+it('names the players who are away, so the turn never ends without them unannounced', () => {
+  connectGame();
+  sockets[0].push({ type: 'seats', seats });
+  expect(awayPlayers(useGame.getState()).map((a) => a.name)).toEqual(['Alice', 'Open empire']);
+  expect(awayLine(awayPlayers(useGame.getState()).slice(0, 1), 'until')).toBe('Alice is not connected. Byzantium gets no orders until Alice rejoins.');
+  expect(namesList(['Alice', 'Bo', 'Cy'])).toBe('Alice, Bo and Cy');
+  sockets[0].push({ type: 'seats', seats: seats.map((s) => ({ ...s, connected: true })) });
+  expect(awayPlayers(useGame.getState())).toEqual([]);
 });

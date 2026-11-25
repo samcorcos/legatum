@@ -68,7 +68,7 @@ export function GuideContent({ section }: { section: GuideSection }) {
       <div className="guide-modes">
         <section><h4>Single Player</h4><p>You against AI empires. The default is a free-for-all against five AI rivals on a Standard map; change seats and teams in the lobby.</p></section>
         <section><h4>Multiplayer · Host Game</h4><p>Your browser tab runs the game and lists it so other players can find it. Anyone with the same version can join. Keep that tab open while you play: closing it ends the game for everyone. Give your game a join code to lock it: players type it once to take a seat. Remove takes a player out of a seat and keeps it closed until you open it.</p></section>
-        <section><h4>Multiplayer · Join Game</h4><p>See the games that are open now. Choose one, press Join and take an open human seat. A game marked Locked needs the join code from its host.</p></section>
+        <section><h4>Multiplayer · Join Game</h4><p>See the games that are open now. Choose one and take an open seat. Choose your faction in your own row, then press Ready. A game marked Locked needs the join code from its host. If another player is not connected, the game tells you: their empire gets no orders, and the turn can end without them. If your computer restarts mid-game, join the same game again and choose Rejoin on your seat.</p></section>
 
       </div>
       <h3>Make the lobby yours</h3>

@@ -144,7 +144,7 @@ it('the name note replaces the label, so it adds no height', async () => {
     });
   };
   const label = () => host.querySelector('.host-name:not(.host-code) > span')!;
-  expect(label().textContent).toBe('Your name in the game list');
+  expect(label().textContent).toBe('Your name');
   await type('Ada \u{1F600}');
   expect(label().textContent).toBe('Shown in the game list as “Ada”.');
   await type('\u{1F600}\u{1F600}');

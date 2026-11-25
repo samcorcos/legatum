@@ -5,12 +5,14 @@ import {
   LOBBY_POLL_MS,
   fetchLobby,
   phaseText,
+  roomBase,
   seatsText,
   versionProblem,
   type RoomInfo,
 } from '../platform/relayLobby';
 import { buildForRoom, buildUrl, navigate } from '../platform/versions';
 import { useSiteBuilds } from '../ui/useSiteBuilds';
+import { keptSeat, rememberSeat } from '../remote';
 
 type Load = { kind: 'loading' } | { kind: 'ready'; rooms: RoomInfo[] } | { kind: 'failed' };
 
@@ -48,7 +50,17 @@ export function OnlineLobbyScreen() {
       setJoinError(null);
       const problem = await joinOnline(relay, room.room, room.locked);
       setJoining(null);
-      if (problem) setJoinError({ room: room.room, text: problem });
+      if (problem) {
+        setJoinError({ room: room.room, text: problem });
+        return;
+      }
+      // This device's own seat in a game under way: take it straight back, as a reload does.
+      const kept = room.phase === 'playing' ? keptSeat(roomBase(relay, room.room)) : null;
+      const g = useGame.getState();
+      if (kept && g.screen === 'join') {
+        rememberSeat({ seat: kept.seat, name: kept.name, gameId: null, token: kept.token });
+        g.joinSeat(kept.seat, kept.name);
+      }
     },
     [relay, joining, joinOnline],
   );
@@ -101,7 +113,9 @@ export function OnlineLobbyScreen() {
               // A game on another version the site still serves is joined there: Join opens that version.
               const other = versionProblem(room, online) ? buildForRoom(builds, room) : null;
               const mismatch = other ? null : versionProblem(room, online);
-              const full = room.open_seats <= 0;
+              // A seat this device held (before a restart) can be taken back even when the game shows as full.
+              const yours = !!keptSeat(roomBase(relay, room.room));
+              const full = room.open_seats <= 0 && !yours;
               const note = mismatch ?? (joinError?.room === room.room ? joinError.text : other ? 'This game is on another version. Joining opens that version.' : null);
               return (
                 <li key={room.room} className={`online-room ${mismatch ? 'blocked' : ''}`}>
@@ -117,6 +131,7 @@ export function OnlineLobbyScreen() {
                     <div className="online-room-name">{room.name || 'Unnamed game'}</div>
                     <div className="online-room-meta">
                       <span>{seatsText(room)}</span>
+                      {yours && <span className="online-room-yours">Your seat is here</span>}
                       <span className="online-room-phase">{phaseText(room)}</span>
                       {room.locked && (
                         <span className="online-room-lock">
@@ -133,9 +148,9 @@ export function OnlineLobbyScreen() {
                     className="btn primary online-join"
                     disabled={!!mismatch || full || !!joining}
                     onClick={() => (other ? navigate(buildUrl(other.id, { join: room.room })) : join(room))}
-                    aria-label={joining === room.room ? undefined : `Join ${room.name || 'this game'}`}
+                    aria-label={joining === room.room ? undefined : `${yours && room.phase === 'playing' ? 'Rejoin' : 'Join'} ${room.name || 'this game'}`}
                   >
-                    {joining === room.room ? 'Joining…' : 'Join'}
+                    {joining === room.room ? 'Joining…' : yours && room.phase === 'playing' ? 'Rejoin' : 'Join'}
                   </button>
                 </li>
               );

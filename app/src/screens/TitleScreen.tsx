@@ -263,7 +263,9 @@ function MultiplayerMenu({ hostSave, onBack }: { hostSave: SaveFile | null; onBa
   const hostPrimary = hosting === 'failed' && !views && !hostCannotRetry;
   // A save brought from the main menu makes hosting it the next action.
   const savePrimary = !views && (!!hostSave || resuming === 'failed') && !hostPrimary;
-  const joinPrimary = !views && !busy && !savePrimary && !hostPrimary;
+  // The doors are equal until the game knows which one this player needs: after a refusal Host Game cannot fix,
+  // Join is the way on.
+  const joinPrimary = !views && !busy && !savePrimary && hostCannotRetry;
   const hostOnline = async () => {
     if (codeNote) return;
     const who = name.trim().slice(0, MAX_PLAYER_NAME) || DEFAULT_PLAYER_NAME;
@@ -304,58 +306,66 @@ function MultiplayerMenu({ hostSave, onBack }: { hostSave: SaveFile | null; onBa
         <ResumeButton />
         {online?.relay ? (
           <>
-            <div className="host-fields">
-              <label className="host-name">
-                {/* The note replaces the label while it shows, so it adds no height to a menu that is already tight. */}
-                {listedAs === null ? <span>Your name in the game list</span> : <span className="host-name-note">{listedAs}</span>}
-                <input
-                  className="lobby-input"
-                  aria-label="Your name in the game list"
-                  value={name}
-                  maxLength={MAX_PLAYER_NAME}
-                  disabled={busy}
-                  onChange={(e) => setName(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter' && !busy) void hostOnline(); }}
-                />
-              </label>
-              <label className="host-name host-code">
-                <span>Join code</span>
-                <input
-                  className="lobby-input"
-                  aria-label="Join code (optional)"
-                  placeholder="Optional"
-                  value={code}
-                  maxLength={JOIN_CODE_MAX}
-                  autoComplete="off"
-                  autoCapitalize="off"
-                  spellCheck={false}
-                  disabled={busy}
-                  onChange={(e) => setCode(typedJoinCode(e.target.value))}
-                  onKeyDown={(e) => { if (e.key === 'Enter' && !busy) void hostOnline(); }}
-                />
-              </label>
+            <label className="host-name mp-name">
+              {/* The note replaces the label while it shows, so it adds no height to a menu that is already tight. */}
+              {listedAs === null ? <span>Your name</span> : <span className="host-name-note">{listedAs}</span>}
+              <input
+                className="lobby-input"
+                aria-label="Your name"
+                value={name}
+                maxLength={MAX_PLAYER_NAME}
+                disabled={busy}
+                onChange={(e) => { setName(e.target.value); rememberPlayerName(e.target.value); }}
+              />
+            </label>
+            {/* Two doors, side by side: one player hosts, the others join. */}
+            <div className="mp-doors">
+              <section className="mp-door" aria-labelledby="mp-host-head">
+                <h3 id="mp-host-head" className="mp-door-head">Host</h3>
+                <p className="mp-door-lede">Set up the game. Others join you.</p>
+                <label className="host-name host-code">
+                  <span>Lock with a code</span>
+                  <input
+                    className="lobby-input"
+                    aria-label="Join code (optional)"
+                    placeholder="Optional"
+                    value={code}
+                    maxLength={JOIN_CODE_MAX}
+                    autoComplete="off"
+                    autoCapitalize="off"
+                    spellCheck={false}
+                    disabled={busy}
+                    onChange={(e) => setCode(typedJoinCode(e.target.value))}
+                    onKeyDown={(e) => { if (e.key === 'Enter' && !busy) void hostOnline(); }}
+                  />
+                </label>
+                <button className={`btn big mp-door-main ${hostPrimary ? 'primary' : ''}`} disabled={busy || !!codeNote} onClick={hostOnline}>
+                  Host Game
+                  <span className="btn-sub">
+                    {hosting === 'starting' ? <><span className="spinner" /> Opening your game…</>
+                      : codeNote ? codeNote
+                      : hosting === 'failed' ? (refusal ? retryLine(refusal.kind, refusal.retryAfterS) : 'Try again') : 'Start a new game'}
+                  </span>
+                </button>
+                <button className={`btn big ${savePrimary ? 'primary' : ''}`} disabled={busy || !!codeNote} onClick={hostFromSave}>
+                  {hostSave ? 'Host this save' : 'Host from a save…'}
+                  <span className="btn-sub">
+                    {resuming === 'starting' ? <><span className="spinner" /> Opening your game…</>
+                      : codeNote ? codeNote
+                      : resuming === 'failed' ? 'Try again'
+                      : hostSave ? `${peoplesLabel(undefined, hostSave.names)} · Turn ${hostSave.turn}` : 'Carry on a saved game'}
+                  </span>
+                </button>
+              </section>
+              <section className="mp-door" aria-labelledby="mp-join-head">
+                <h3 id="mp-join-head" className="mp-door-head">Join</h3>
+                <p className="mp-door-lede">Take a seat in a game someone is hosting.</p>
+                <button className={`btn big mp-door-main ${joinPrimary ? 'primary' : ''}`} disabled={busy} onClick={() => goto('online')}>
+                  Join Game
+                  <span className="btn-sub">See the open games</span>
+                </button>
+              </section>
             </div>
-            <button className={`btn big ${hostPrimary ? 'primary' : ''}`} disabled={busy || !!codeNote} onClick={hostOnline}>
-              Host Game
-              <span className="btn-sub">
-                {hosting === 'starting' ? <><span className="spinner" /> Opening your game…</>
-                  : codeNote ? codeNote
-                  : hosting === 'failed' ? (refusal ? retryLine(refusal.kind, refusal.retryAfterS) : 'Try again') : 'Open a game that others can find and join'}
-              </span>
-            </button>
-            <button className={`btn big ${savePrimary ? 'primary' : ''}`} disabled={busy || !!codeNote} onClick={hostFromSave}>
-              {hostSave ? 'Host this save' : 'Host from a save…'}
-              <span className="btn-sub">
-                {resuming === 'starting' ? <><span className="spinner" /> Opening your game…</>
-                  : codeNote ? codeNote
-                  : resuming === 'failed' ? 'Try again'
-                  : hostSave ? `${peoplesLabel(undefined, hostSave.names)} · Turn ${hostSave.turn} · the others rejoin online` : 'Carry on a game with other players from its save file'}
-              </span>
-            </button>
-            <button className={`btn big ${joinPrimary ? 'primary' : ''}`} disabled={busy} onClick={() => goto('online')}>
-              Join Game
-              <span className="btn-sub">See the games that are open now</span>
-            </button>
           </>
         ) : (
           <p className="title-hosted-note">Online play is unavailable in this version.</p>

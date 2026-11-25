@@ -28,11 +28,11 @@ async function snap(page: Page, name: string, show?: Locator) {
 async function hostLocked(host: Page, code: string) {
   await host.goto('/');
   await host.getByRole('button', { name: /^Multiplayer/ }).click();
-  await host.getByLabel('Your name in the game list').fill('Ada');
+  await host.getByLabel('Your name', { exact: true }).fill('Ada');
   await host.getByLabel('Join code (optional)').fill(code);
   await snap(host, 'host-game-join-code');
   await host.getByRole('button', { name: /^Host Game/ }).click();
-  await expect(host.getByRole('heading', { name: 'Host Game', exact: true })).toBeVisible();
+  await expect(host.getByRole('heading', { name: 'Game room', exact: true })).toBeVisible();
   const small = host.getByRole('radiogroup', { name: 'Map size', exact: true }).getByRole('radio', { name: /^Small/ });
   await small.click();
   await host.getByLabel('Map seed', { exact: true }).fill('20240926');
@@ -50,7 +50,7 @@ test('Online: a locked game asks the guest for its code, and the host can remove
   await expect(row).toContainText('Locked');
   await snap(guest, 'lobby-locked');
   await row.getByRole('button', { name: /^Join/ }).click();
-  await expect(guest.getByRole('heading', { name: 'Join Game', exact: true })).toBeVisible();
+  await expect(guest.getByRole('heading', { name: 'Game room', exact: true })).toBeVisible();
 
   // The seat button waits for the code; a wrong one is refused in plain words.
   const take = guest.getByRole('row').nth(2).getByRole('button', { name: 'Take seat', exact: true });

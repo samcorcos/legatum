@@ -176,7 +176,7 @@ export function saveRewinds(save: Pick<SaveFile, 'rewinds'>): Rewind[] {
   return list.filter((r) => !!r && typeof r.at === 'string' && Number.isInteger(r.from_turn) && Number.isInteger(r.to_turn)).slice(-MAX_REWINDS);
 }
 
-interface State {
+export interface State {
   screen: Screen;
   setupMode: SetupMode;
   client: GameClient | null;
