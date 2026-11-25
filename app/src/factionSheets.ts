@@ -99,7 +99,6 @@ export function sheetCards(faction: Faction): SheetCard[] {
 export const FACTION_SHEETS: Record<Faction, FactionSheet> = {
   Egypt: {
     identity: 'The river builds everything',
-    early: true,
     lore: 'The Nile flood fed the builders of Egypt. In play, each city chooses between building with its Food and growing with it.',
     ratings: { aggression: 2, economy: 5, complexity: 3 },
     pairs: [

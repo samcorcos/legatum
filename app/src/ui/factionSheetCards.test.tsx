@@ -48,9 +48,9 @@ describe('faction sheet cards', () => {
         expect(host.querySelector('[data-testid="fs-early"]')?.textContent, f).toBe('Early design');
         continue;
       }
-      // Egypt keeps the tag beside its goal until it has been through a playtest; Rome's came off (user, 2026-11-22).
-      expect(FACTION_SHEETS[f].early, f).toBe(f === 'Egypt' ? true : undefined);
-      expect(host.querySelector('[data-testid="fs-early"]') !== null, f).toBe(f === 'Egypt');
+      // A faction with a goal carries no Early design tag: Rome's came off 2026-11-22, Egypt's after its playtest (user, 2026-11-24).
+      expect(FACTION_SHEETS[f].early, f).toBeUndefined();
+      expect(host.querySelector('[data-testid="fs-early"]'), f).toBeNull();
       expect(host.querySelectorAll('.fs-goal'), f).toHaveLength(1);
       expect(host.querySelector('.fs-goal-head b')!.textContent).toBe(FACTION_GOAL[f].name);
       // The sheet prints the goal's short sheet line when it has one (`FactionGoal.sheet`), else its detail.

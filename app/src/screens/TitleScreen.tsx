@@ -1,6 +1,6 @@
 import { CALENDAR_NOTE, calendarLabel, FACTION_INFO, factionName } from '../data';
 import type { Faction } from '../types';
-import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { currentCampaign, needsOnlineHost, parseAutosave, useGame, type SaveFile } from '../store';
 import { listAutosaves, type AutosaveRecord } from '../platform/autosaveStore';
 import { ReplaceGameDialog } from '../ui/ReplaceGameDialog';
@@ -73,7 +73,7 @@ function peoplesLabel(faction: string | undefined, names: string[]): string {
   return shortList(peoples.length ? peoples.map(factionName) : names);
 }
 
-/** At most two names, then "+N", so an eight-seat hot seat still fits the menu on one line. */
+/** At most two names, then "+N", so an eight-seat game still fits the menu on one line. */
 function shortList(names: string[]): string {
   return names.length > 2 ? `${names.slice(0, 2).join(', ')} +${names.length - 2}` : names.join(' & ');
 }

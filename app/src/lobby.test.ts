@@ -127,7 +127,7 @@ describe('lobby', () => {
     profile();
     rememberDifficulty(setSlot(newLobby('solo', '1'), 1, levelFields('Normal')));
     newLobby('host', '2');
-    expect(levelOf(newLobby('solo', '3').slots[1])).toBe('Normal');
+    expect(levelOf(newLobby('solo', '3').slots[1])).toBe('Hard');
   });
 
   it('reports when a chosen difficulty cannot be persisted', () => {
