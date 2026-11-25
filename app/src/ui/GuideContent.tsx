@@ -73,7 +73,7 @@ export function GuideContent({ section }: { section: GuideSection }) {
       </div>
       <h3>Make the lobby yours</h3>
       <p>Set names, factions, human or AI seats, and team numbers; close unwanted seats. The same team means shared vision, shared victory and no friendly attacks. Other teams start at Peace, with closed borders. Open Diplomacy from the Victory race to negotiate or declare War.</p>
-      <p>Pick a map size, AI level and a map seed. Every empire’s first city gets the same Food and Production from its start tile and the tiles next to it: 8 of each. What lies farther out differs, so scout for your next resources. Most games end between turn 150 and 220, when an empire reaches the VP target. Movement, combat and yields follow the rules described below.</p>
+      <p>Pick a map size, AI level and a map seed. Every empire’s first city gets the same Food and Production from its start tile and the tiles next to it: 8 of each. What lies farther out differs, so scout for your next resources. Most games end between turn 140 and 220, when an empire reaches the VP target. Movement, combat and yields follow the rules described below.</p>
       <p>A game has no turn limit unless you turn one on. With a turn limit, the game ends after that many turns and the team with the most VP wins. The lobby shows each team’s victory target. Hard AI makes better decisions, but it never gets extra resources.</p>
       <div className="guide-note">If you join a waiting room, take a seat, choose your name and faction, then press Ready. The host starts once everyone is ready. If the host has already started, choose a seat in the running game.</div>
     </>;

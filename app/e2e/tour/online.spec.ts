@@ -352,6 +352,14 @@ for (const size of SIZES) testWithFailingRequests.describe(`online co-op ${size.
     const host2Context = await browser.newContext({ baseURL, viewport: { width: size.width, height: size.height } });
     const host2 = await host2Context.newPage();
     await noHints(host2);
+    // A save with several human players opened with Load Game: Multiplayer opens with Host this save as the primary.
+    await host2.goto('/');
+    let loadChooser = host2.waitForEvent('filechooser');
+    await host2.getByRole('button', { name: /^Load Game/ }).click();
+    await (await loadChooser).setFiles(savePath);
+    await host2.waitForTimeout(1500);
+    await host2.mouse.move(5, 5);
+    await shot(host2, size, '59-load-multi-human-save');
     await multiplayer(host2);
     await host2.getByLabel('Your name in the game list').fill(hostName);
     // A file that is not a save first: the refusal.

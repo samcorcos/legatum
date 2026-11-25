@@ -11,6 +11,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
 
 
   test('title, settings, lobby, faction picker and guide', async ({ page }) => {
+    test.setTimeout(120_000); // A long tour: it timed out at 45 s with 4 workers (UI review, 2026-11-25).
     await page.goto('/?client=wasm');
     await expect(page.getByRole('heading', { name: 'Legatum', exact: true })).toBeVisible();
     await shot(page, size, '01-title');

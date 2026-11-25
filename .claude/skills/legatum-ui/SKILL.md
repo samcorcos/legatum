@@ -48,6 +48,7 @@ This file holds the current rules, one line each. The user's words, dates, as-bu
 - Online: an action that ends a shared game says so and asks first, with the label branching on host or guest; status text is written from the viewer's role; durability text matches the storage behind it (no "saved" for a tab-lifetime copy) (co-op review, 2026-11-22).
 - Big moments get a full interstitial: war declared on you, entering an era, the end of the game; a rival closing on victory and a city under attack are never a surprise (user, 2026-10-08, 2026-11-11).
 - A menu action that can fail shows its busy and failed state on the control the player pressed, never on a neighbour. A flow that resumes a shared game says who still has to come back, and how.
+- A notice never sends the player down another path by hand: when the way forward is elsewhere ("host it online"), the game takes them there with what they already chose, and that path is the primary action. Nobody picks a file twice. A button that cannot act for this save is disabled, with its reason, before it is pressed. Disabled title items are dimmed by their ink, because the menu's rise animation overrides opacity. Removing a mode includes a migration check: a save made in that mode lands on one clear next action from every entry point (Load Game, Continue, links), with a tour shot of each (hot-seat removal UI review, 2026-11-25).
 
 ## No hidden math (pillar 5)
 

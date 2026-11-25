@@ -34,21 +34,40 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-it('offers the autosave as the primary Continue and loads that exact save', async () => {
+async function twoHumanAutosave() {
   const client = new FixtureClient();
   await client.newGame(await client.standardSetup('42', 'India', 'Byzantium', 'Ada', 'Bo'));
   const save = saveFile(client, [client.view(0), client.view(1)]);
   localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(save));
+  return save;
+}
+
+it('a game with other players continues as an online host: Continue opens Multiplayer with that save ready', async () => {
+  const save = await twoHumanAutosave();
+  useGame.setState({ online: { relay: 'http://relay.test', build: 'test', rules_version: 0, protocol: 0 } });
   await show(<StrictMode><TitleScreen /></StrictMode>);
-  const button = [...host.querySelectorAll('button')].find((b) => b.textContent?.startsWith('Continue'))!;
+  const button = continueButton();
   expect(button.disabled).toBe(false);
-  expect(host.querySelectorAll('.title-actions .primary')).toHaveLength(1);
   expect(button.classList.contains('primary')).toBe(true);
   expect(button.textContent).toContain('Ada & Bo');
+  expect(button.textContent).toContain('host it online');
   await press(button);
   expect(useGame.getState().screen).toBe('title');
-  expect(useGame.getState().error).toContain('Multiplayer, then Host from a save');
-  expect(continueButton().disabled).toBe(false);
+  expect(useGame.getState().error).toBeNull();
+  // The save is carried over: hosting it is the one primary action, with no file to pick again.
+  const primary = host.querySelectorAll('.title-actions .primary');
+  expect(primary).toHaveLength(1);
+  expect(primary[0].textContent).toMatch(/^Host this save/);
+  expect(primary[0].textContent).toContain(`Turn ${save.turn}`);
+});
+
+it('a game with other players cannot Continue in a build with no online play, and says why before it is pressed', async () => {
+  await twoHumanAutosave();
+  await show(<StrictMode><TitleScreen /></StrictMode>);
+  const button = continueButton();
+  expect(button.disabled).toBe(true);
+  expect(button.textContent).toContain('Online play is unavailable in this version');
+  expect(host.querySelector('.title-actions .primary')?.textContent).toMatch(/^Single Player/);
 });
 
 it('keeps Single Player primary when there is no autosave', async () => {
