@@ -71,10 +71,10 @@ Contributor Covenant 2.1 (CC BY 4.0), as it says.
 
 ## Audio
 
-All shipped music and sound effects (`app/public/audio/`, 38 files) are released under CC0 1.0 (no attribution
+All shipped music and sound effects (`app/public/audio/`, 39 files) are released under CC0 1.0 (no attribution
 required; courtesy credit is given). The per-file source, author and processing are in `app/public/audio/CREDITS.md`
 and `app/public/audio/manifest.json`: Kenney (kenney.nl: Music Jingles, RPG Audio, Impact Sounds; 34 files),
-Breviceps ("Short Choir", freesound.org; 2 files) and vitalezzz ("Eclipse Legion", opengameart.org; both music
+Breviceps ("Short Choir", freesound.org; 2 files), Bastianhallo ("Level up", freesound.org; 1 file) and vitalezzz ("Eclipse Legion", opengameart.org; both music
 tracks are edits of that one work). The licence text is in `app/public/audio/licenses/CC0-1.0.txt`. The same credits
 appear in the game under How to Play → Credits.
 

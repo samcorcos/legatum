@@ -29,7 +29,7 @@ The date range is the range of dates the repository's own records give (prompt h
 | Icons | `app/src/assets/icons/*.svg` | Code: hand-written SVG on a 24 px grid | Not applicable | 2026-10 to 2026-11-22 |
 | Reward emblems | `app/src/assets/rewards/*.svg` | Code: `rewards/src/build-rewards.mjs` | Not applicable | Not recorded |
 | App icon and favicons | `app/public/favicon*`, `app/public/apple-touch-icon.png` | Composed by `tools/design/app-icon/build.mjs` from a code-drawn seal (`seal.svg`) over a parchment texture (`parchment.jpg`), which that script records as generated with Codex image generation | No prompt for the parchment texture | Not recorded |
-| Music and sound effects | `app/public/audio/` | Third-party recordings released under CC0 1.0 (Kenney, Breviceps, vitalezzz), trimmed and encoded by `tools/audio/build_audio.py` | Not applicable. Sources, authors and licences: `app/public/audio/CREDITS.md`, `manifest.json`, `licenses/` | See `CREDITS.md` |
+| Music and sound effects | `app/public/audio/` | Third-party recordings released under CC0 1.0 (Kenney, Breviceps, Bastianhallo, vitalezzz), trimmed and encoded by `tools/audio/build_audio.py` | Not applicable. Sources, authors and licences: `app/public/audio/CREDITS.md`, `manifest.json`, `licenses/` | See `CREDITS.md` |
 
 ## Gaps
 

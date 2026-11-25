@@ -30,6 +30,7 @@ The user's bar: Legatum should feel like a premium native application, "refined 
   - never throw into gameplay: all calls are fire-and-forget with caught errors.
 - **Emit haptics from the UI layer at the moment of user intent**, or when the turn result is applied (from the event list in the turn report), never from the deterministic core. The core stays pure; haptics are presentation.
 - **Sound** (later increment): same semantic API (`feel.*` plays both), short and restrained sounds, off when the device is silent, and a separate volume.
+  - **A new sound** gets its `manifest.json` entry and its row in `docs/design/haptics.md`; regenerate `app/public/audio/CREDITS.md` with `node app/scripts/audio-credits.mjs`. A new author also goes, by hand, into the file count and author list in `THIRD_PARTY_NOTICES.md` and the audio row of `app/src/assets/PROVENANCE.md` (art review, 2026-11-25). Cloud sessions cannot reach kenney.nl, Freesound or OpenGameArt; CC0 files mirrored in Unciv are reachable on raw.githubusercontent.com.
 - Motion and touch patterns (press states, springs, bottom sheets, gestures, long-press) are in `references/motion-and-touch.md`.
 
 ## Verification
