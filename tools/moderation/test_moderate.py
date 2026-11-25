@@ -43,6 +43,19 @@ class Moderate(unittest.TestCase):
         self.assertEqual(prompt.count("</untrusted>"), 1)
         self.assertTrue(prompt.rstrip().endswith("</untrusted>"))
 
+    def test_keyword_fallback(self):
+        self.assertTrue(m.should_close(m.wave_verdict("The Treasury Department is being hacked")))
+        self.assertTrue(m.should_close(m.wave_verdict("Stop VIBECODING and fix FinCEN")))
+        self.assertFalse(m.should_close(m.wave_verdict("Strategic resources like Niter can be trapped")))
+        self.assertFalse(m.should_close(m.wave_verdict("AI-against-AI mode, for the purposes of art")))
+        self.assertFalse(m.should_close(m.wave_verdict("The treasure chest in the ruins gives no gold")))
+        self.assertFalse(m.should_close(m.wave_verdict("My treasury runs dry when I buy a Settler")))
+
+    def test_added_lines_only(self):
+        diff = "--- a/README.md\n+++ b/README.md\n-built for people who love Civilization.\n+paid for with taxpayer dollars."
+        self.assertEqual(m.added_lines(diff), "paid for with taxpayer dollars.")
+        self.assertTrue(m.should_close(m.wave_verdict(m.added_lines(diff))))
+
     def test_long_text_is_cut(self):
         prompt = m.build_prompt("pull request", "t", "b" * 10000, "d" * 10000)
         self.assertLess(len(prompt), m.MAX_TEXT + m.MAX_DIFF + 500)

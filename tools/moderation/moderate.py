@@ -24,6 +24,7 @@ changes nothing: the way to check the model and the rules on a known case.
 import datetime
 import json
 import os
+import re
 import sys
 import urllib.error
 import urllib.request
@@ -46,6 +47,12 @@ PR_COMMENT = (
     f"[Code of Conduct]({COC}) (\"keep discussion on the project\")." + FOOTER
 )
 MAX_TEXT = 4000
+
+# Fallback when the model can't be reached (the Models endpoint answered "OK" as plain text on 2026-11-25): words
+# that mark the 2026-11-25 wave (posts about the maintainer's government job). No game text uses them. A match in
+# the title or body, or in lines a pull request adds, closes it. Matching is case-insensitive on word starts.
+WAVE_WORDS = ("treasury department", "u.s. treasury", "us treasury", "treasury cio", "fincen", "vibecod", "vibe-cod", "vibe cod", "bessent", "taxpayer", "doge ",
+              "government job", "chief information officer", "bsa e-filing", "bsaefiling")
 MAX_DIFF = 6000
 
 POLICY = """You moderate the public GitHub repository of Legatum, an open-source historical 4X strategy game on a
@@ -117,6 +124,19 @@ def parse_verdict(text):
     except (TypeError, ValueError):
         confidence = 0.0
     return {"verdict": verdict, "confidence": confidence, "reason": str(data.get("reason", ""))[:200]}
+
+
+def wave_verdict(text):
+    """The keyword fallback: off_topic when the text carries a wave word, else unsure."""
+    lowered = (text or "").lower()
+    hits = [w.strip() for w in WAVE_WORDS if re.search(r"(?<![a-z])" + re.escape(w), lowered)]
+    if hits:
+        return {"verdict": "off_topic", "confidence": 0.95, "reason": "keyword fallback: " + ", ".join(hits[:3])}
+    return {"verdict": "unsure", "confidence": 0.0, "reason": "keyword fallback: no match"}
+
+
+def added_lines(diff):
+    return "\n".join(line[1:] for line in diff.splitlines() if line.startswith("+") and not line.startswith("+++"))
 
 
 def should_close(verdict):
@@ -213,13 +233,9 @@ def main():
     diff = pr_diff(repo, number, token) if kind == "pull request" else ""
     try:
         verdict = judge(build_prompt(kind, item.get("title"), item.get("body"), diff), token)
-    except urllib.error.HTTPError as err:
-        detail = err.read()[:300]
-        summary(f"#{number}: model call failed (HTTP {err.code}: {detail!r}); left open for the hourly sweep.")
-        return 0
     except (urllib.error.URLError, KeyError, IndexError, TypeError, ValueError) as err:
-        summary(f"#{number}: model unavailable ({err.__class__.__name__}: {err}); left open for the hourly sweep.")
-        return 0
+        summary(f"#{number}: model unavailable ({err.__class__.__name__}: {str(err)[:300]}); using the keyword fallback.")
+        verdict = wave_verdict("\n".join([item.get("title") or "", item.get("body") or "", added_lines(diff)]))
     summary(f"#{number} ({kind}): {verdict}")
     if not should_close(verdict) or dry:
         return 0
