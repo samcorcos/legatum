@@ -10,7 +10,7 @@ repository.workspace = true
 [dependencies]
 legatum-wasm = { path = "../wasm" }
 serde_json.workspace = true
-zstd = "0.13"
+zstd = "0.14"
 flate2 = "1"
 fs2 = "0.4"
 

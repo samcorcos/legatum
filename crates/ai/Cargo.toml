@@ -12,7 +12,7 @@ legatum-core.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 flate2 = "1"
-base64 = "0.22"
+base64 = "0.23"
 rayon = { workspace = true, optional = true }
 
 [features]
@@ -21,7 +21,7 @@ parallel-search = ["dep:rayon"]
 
 [dev-dependencies]
 flate2 = "1"
-zstd = "0.13"
+zstd = "0.14"
 
 [[example]]
 name = "perf_profile"

@@ -1,0 +1,3 @@
+# sha2 0.11 drops LowerHex on digests; the rules fingerprint is hex-encoded by hand (2026-11-25)
+
+Dependabot's cargo group (#60: sha2 0.10 to 0.11, base64 0.23, zstd 0.14, getrandom 0.4) broke `crates/wasm/build.rs`. `format!("{:x}", hash.finalize())` no longer compiles, because a sha2 0.11 digest is a hybrid-array `Array` with no `LowerHex`. The build script now writes each byte as `{:02x}`, which is the same lowercase hex. `LEGATUM_RULES_FINGERPRINT` came out byte-identical before and after on the same sources (`ac7b8b5a…d016`, checked with a temporary `cargo:warning`). Saves and online hosts compare this fingerprint, so a change in its format would have made every live game look like it had different rules.

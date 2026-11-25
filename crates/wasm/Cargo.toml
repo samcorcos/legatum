@@ -18,7 +18,7 @@ serde_json.workspace = true
 wasm-bindgen.workspace = true
 time = { version = "0.3", features = ["formatting", "parsing"] }
 flate2 = "1"
-base64 = "0.22"
+base64 = "0.23"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 js-sys = "0.3"
@@ -27,14 +27,14 @@ js-sys = "0.3"
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 rayon.workspace = true
 # Online seat credentials outside the browser (tests); in WASM they come from crypto.getRandomValues.
-getrandom = "0.3"
+getrandom = "0.4"
 
 [features]
 # Measurement builds: time each AI seat's planning in `Session::ai_orders` (docs/sim-results/perf).
 seat-timing = []
 
 [build-dependencies]
-sha2 = "0.10"
+sha2 = "0.11"
 
 # wasm-pack's custom-profile default is -O; the replayed turn benchmark favors -O3.
 [package.metadata.wasm-pack.profile.custom]

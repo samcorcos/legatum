@@ -32,10 +32,9 @@ fn main() {
         hash.update([0]);
         hash.update(fs::read(path).expect("read engine source"));
     }
-    println!(
-        "cargo:rustc-env=LEGATUM_RULES_FINGERPRINT={:x}",
-        hash.finalize()
-    );
+    // sha2 0.11 digests no longer implement LowerHex; the same lowercase hex, byte by byte.
+    let fp: String = hash.finalize().iter().map(|b| format!("{b:02x}")).collect();
+    println!("cargo:rustc-env=LEGATUM_RULES_FINGERPRINT={fp}");
     let git = |args: &[&str]| {
         Command::new("git")
             .args(args)
