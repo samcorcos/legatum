@@ -11,3 +11,10 @@ Gotchas: under `pull_request_target`, never check out or run the PR (check out t
 text through the API); give the token `issues`/`pull-requests: write` but not `contents: write`, so a manipulated
 verdict can at worst close something (reversible), never merge. Strip `<untrusted>` tags a stranger writes so they
 cannot end the quoted block early. `author_association` CONTRIBUTOR and above are never judged.
+
+Live result (same day): from Actions, `POST https://models.github.ai/inference/chat/completions` with the workflow
+token answered HTTP 200 `text/plain` "OK" instead of a completion, and the old `models.inference.ai.azure.com`
+address no longer resolves. So the check falls back to a short keyword list for the wave (Treasury Department,
+FinCEN, vibecoding, taxpayer...; not plain "treasury", which game text uses). Dry runs: #165 and the README PR #160
+close, the real bug #196 and feature PR #191 stay open. Test any change with a manual run on the branch
+(`workflow_dispatch` checks out the ref it was started on) before merging.
