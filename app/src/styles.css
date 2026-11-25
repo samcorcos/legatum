@@ -585,9 +585,9 @@ p {
   color: var(--ink-2);
 }
 /* The menu's rise animation holds opacity at 1, so `.btn:disabled`'s fade never shows here: a disabled
-   item is dimmed by its ink instead, clearly fainter than the quiet items around it. */
-.title-actions .btn.big:not(.primary):disabled,
-.title-actions .btn.big:not(.primary):disabled .btn-sub {
+   item's label is dimmed by its ink instead, clearly fainter than the quiet items around it. The sub-line stays
+   at --muted: it is small text, and it carries the reason the item is disabled, so it keeps AA contrast. */
+.title-actions .btn.big:not(.primary):disabled {
   color: color-mix(in srgb, var(--muted) 60%, transparent);
 }
 .title-actions .btn.quiet:not(.big) {
