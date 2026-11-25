@@ -8,7 +8,7 @@ import { isThreat } from '../diplomacy';
 import { distance, hexAt, hexEq } from '../hex';
 import { itemName } from '../data';
 import { empireOfPlayer } from '../empires';
-import type { CityView, Hex, PlayerView, Resource } from '../types';
+import type { CityView, Hex, Order, PlayerView, Resource } from '../types';
 import type { AdvisorStep, Suggestion } from './advisorModel';
 
 /**
@@ -41,7 +41,7 @@ function threatTip(v: PlayerView, touch: boolean, selection: { kind: string; id:
   if (!worst) return null;
   const { city, enemies, guards } = worst;
   return { key: `threat:${city.id}`, kind: 'threat', title: `Defend ${city.name}`,
-    why: `${enemies} enemy ${enemies === 1 ? 'unit is' : 'units are'} within 3 tiles of ${city.name}, and ${guards === 0 ? 'none of yours guard it' : `${guards} of yours ${guards === 1 ? 'guards' : 'guard'} it`}. Build or buy a military unit there, or bring units back.`,
+    why: `${enemies} enemy ${enemies === 1 ? 'unit is' : 'units are'} within 3 tiles of ${city.name}, and ${guards === 0 ? 'none of yours guard it' : `${guards} of yours ${guards === 1 ? 'guards' : 'guard'} it`}. Build or buy a military unit there.`,
     current: selection?.kind === 'city' && selection.id === city.id ? 1 : 0,
     steps: [{ instruction: `${click(touch)} ${city.name}.`, target: tile(city.pos) }, { instruction: 'Build or buy a military unit.', target: null }] };
 }
@@ -58,11 +58,11 @@ function armyTip(v: PlayerView): Tip | null {
   const name = empireOfPlayer(v, rival.id);
   // One key for every rival: the warning is about your army, not about who is ahead this time.
   return { key: 'army', kind: 'army', title: 'Build up your army',
-    why: `${possessive(name)} army strength is ${rival.army}; yours is ${mine}. Their cities are close to yours, and a weak army invites an attack.`,
+    why: `${possessive(name)} army strength is ${rival.army}; yours is ${mine}. They are close to you, and a weak army invites an attack.`,
     steps: [{ instruction: 'Build military units, or Walls in your border cities.', target: null }] };
 }
 
-function resourceTip(v: PlayerView, touch: boolean, selection: { kind: string; id: number } | null): Tip | null {
+function resourceTip(v: PlayerView, touch: boolean, selection: { kind: string; id: number } | null, orders: readonly Order[]): Tip | null {
   const cities = ownCities(v);
   if (!cities.length) return null;
   for (const s of v.supply ?? []) {
@@ -74,13 +74,17 @@ function resourceTip(v: PlayerView, touch: boolean, selection: { kind: string; i
     const reason = short ? `You are short of ${r}: ${s.idle![0]} needs it.` : `You have no ${r}, and some units and buildings need it.`;
     const free = v.tiles.map((t, i) => ({ t, pos: hexAt(i, v.width) })).filter(({ t }) => t.explored && t.resource === r && t.owner === null);
     // Buying a tile beside a city is the quickest way; the cheapest offer wins.
-    const offers = cities.flatMap((city) => (city.detail?.buyable_tiles ?? []).filter((b) => free.some((f) => hexEq(f.pos, b.tile))).map((b) => ({ city, ...b })))
+    // Only a purchase the city can make now: Gold in hand, no blocker, no tile already ordered there.
+    const tileBought = orders.some((o) => o.type === 'BuyTile' && free.some((f) => hexEq(f.pos, o.tile)));
+    if (tileBought) continue;
+    const canBuy = (city: CityView) => !city.detail?.buy_tile_blocker && !orders.some((o) => (o.type === 'BuyTile' || o.type === 'BuyItem' || o.type === 'HireCompany') && o.city === city.id);
+    const offers = cities.filter(canBuy).flatMap((city) => (city.detail?.buyable_tiles ?? []).filter((b) => b.price <= v.economy.gold).filter((b) => free.some((f) => hexEq(f.pos, b.tile))).map((b) => ({ city, ...b })))
       .sort((a, b) => a.price - b.price);
     if (offers[0]) {
       const { city, price } = offers[0];
       const inCity = selection?.kind === 'city' && selection.id === city.id;
       return { key: `resource:${r}`, kind: 'resource', title: `Buy the ${r} tile near ${city.name}`,
-        why: `${reason} ${city.name} can buy it for ${price} Gold; then build a Mine on it.`, current: inCity ? 1 : 0,
+        why: `${reason} ${city.name} can buy it for ${price} Gold; then improve it.`, current: inCity ? 1 : 0,
         steps: [{ instruction: `${click(touch)} ${city.name}.`, target: tile(city.pos) },
           { instruction: `${click(touch)} Buy a tile, then the ${r} tile.`, target: { kind: 'control', name: 'buyTile' } }] };
     }
@@ -90,7 +94,7 @@ function resourceTip(v: PlayerView, touch: boolean, selection: { kind: string; i
     const settler = v.units.find((u) => u.owner === v.me && u.kind === 'Settler');
     const settlerName = settler && itemName({ kind: 'Unit', unit: settler.kind }, v.players.find((p) => p.id === v.me)?.faction ?? 'Switzerland');
     return { key: `resource:${r}`, kind: 'resource', title: `Found a city near the ${r}`,
-      why: `${reason} There is unclaimed ${r} near ${site.city.name}. A city beside it can claim it and build a Mine on it.`,
+      why: `${reason} There is unclaimed ${r} near ${site.city.name}. A city beside it can claim it and improve it.`,
       steps: [settler
         ? { instruction: `Send your ${settlerName} to found a city next to the ${r}.`, target: tile(site.pos) }
         : { instruction: `Build a Settler, then found a city next to the ${r}.`, target: tile(site.pos) }] };
@@ -108,8 +112,10 @@ function goldTip(v: PlayerView): Tip | null {
 }
 
 /** The tip to show now, or null. A tip already shown this turn keeps showing until the player dismisses it. */
-export function strategyTip(view: PlayerView, log: TipLog, touch = false, selection: { kind: string; id: number } | null = null): Suggestion | null {
+export function strategyTip(view: PlayerView, saved: TipLog, touch = false, selection: { kind: string; id: number } | null = null, orders: readonly Order[] = []): Suggestion | null {
   if (view.turn < 3) return null;
+  // A log from a later turn than now belongs to another game: start clean (noteTip clears it when the next tip shows).
+  const log: TipLog = Object.entries(saved).some(([k, t]) => !k.startsWith('#') && t > view.turn) ? {} : saved;
   const shownThisTurn = (key: string) => log[key] === view.turn;
   const shown = Object.entries(log).filter(([k]) => !k.startsWith('#'));
   const lastOther = (key: string) => Math.max(-Infinity, ...shown.filter(([k]) => k !== key).map(([, t]) => t));
@@ -120,7 +126,7 @@ export function strategyTip(view: PlayerView, log: TipLog, touch = false, select
     if (view.turn - lastOfKind(tip.kind) < wait) return false;
     return tip.kind === 'threat' || view.turn - lastOther(tip.key) >= TIP_GAP;
   };
-  const tips = [threatTip(view, touch, selection), armyTip(view), resourceTip(view, touch, selection), goldTip(view)].filter((t): t is Tip => !!t);
+  const tips = [threatTip(view, touch, selection), armyTip(view), resourceTip(view, touch, selection, orders), goldTip(view)].filter((t): t is Tip => !!t);
   const tip = tips.find((t) => shownThisTurn(t.key)) ?? tips.find(ready);
   if (!tip) return null;
   return { id: `tip:${tip.key}`, title: tip.title, why: tip.why, steps: tip.steps, current: tip.current ?? 0, acknowledge: true, tip: true };

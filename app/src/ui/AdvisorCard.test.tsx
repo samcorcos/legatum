@@ -114,3 +114,8 @@ it('a new game starts the tip log over and counts each kind', () => {
   useAdvisor.getState().noteTip('gold', 20);
   expect(useAdvisor.getState().tips).toEqual({ army: 12, '#army': 1, gold: 20, '#gold': 1 });
 });
+
+it('rings the city panel\'s Buy a tile button', () => {
+  render(<div className="city-panel"><button>Build</button><button>Buy a tile · from 50 Gold</button></div>);
+  expect(targetElement({ kind: 'control', name: 'buyTile' })?.textContent).toBe('Buy a tile · from 50 Gold');
+});

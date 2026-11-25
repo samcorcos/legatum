@@ -53,13 +53,14 @@ describe('situational tips', () => {
     v.units.push({ ...enemy, id: 8002, pos: neighbors(city.pos)[2] });
     const tip = strategyTip(v, {});
     expect(tip).toMatchObject({ id: `tip:threat:${city.id}`, title: `Defend ${city.name}` });
-    expect(tip!.why).toBe(`2 enemy units are within 3 tiles of ${city.name}, and none of yours guard it. Build or buy a military unit there, or bring units back.`);
+    expect(tip!.why).toBe(`2 enemy units are within 3 tiles of ${city.name}, and none of yours guard it. Build or buy a military unit there.`);
     // A threat skips the gap between tips.
     expect(strategyTip(v, { gold: v.turn - 1 })?.id).toBe(`tip:threat:${city.id}`);
   });
 
   it('offers to buy a tile with the resource you lack, else to found a city by it', async () => {
     const v = await game();
+    v.economy.gold = 100;
     const city = mine(v);
     const spot = v.tiles.map((t, i) => ({ t, pos: hexAt(i, v.width) })).find(({ t, pos }) => t.explored && t.owner === null && distance(pos, city.pos) === 3)!;
     v.tiles[tileIndex(spot.pos, v.width, v.height)] = { ...spot.t, resource: 'Iron' };
@@ -67,8 +68,17 @@ describe('situational tips', () => {
     city.detail = { ...city.detail!, buyable_tiles: [{ tile: spot.pos, ring: 3, price: 75 }] };
     const buy = strategyTip(v, {});
     expect(buy).toMatchObject({ id: 'tip:resource:Iron', title: `Buy the Iron tile near ${city.name}`, steps: [{ target: { kind: 'tile' } }, { target: { kind: 'control', name: 'buyTile' } }] });
-    expect(buy!.why).toBe(`You have no Iron, and some units and buildings need it. ${city.name} can buy it for 75 Gold; then build a Mine on it.`);
+    expect(buy!.why).toBe(`You have no Iron, and some units and buildings need it. ${city.name} can buy it for 75 Gold; then improve it.`);
     expect(strategyTip(v, {}, false, { kind: 'city', id: city.id })?.current).toBe(1);
+    // Not when the treasury is short, the city can't buy, or the tile is already ordered: then settle instead.
+    v.economy.gold = 74;
+    expect(strategyTip(v, {})?.title).toBe('Found a city near the Iron');
+    v.economy.gold = 200;
+    expect(strategyTip(v, {}, false, null, [{ type: 'BuyTile', city: city.id, tile: spot.pos }])).toBeNull();
+    expect(strategyTip(v, {}, false, null, [{ type: 'BuyItem', city: city.id, item: { kind: 'Unit', unit: 'Spearman' } }])?.title).toBe('Found a city near the Iron');
+    city.detail = { ...city.detail!, buy_tile_blocker: 'Bought already this turn' };
+    expect(strategyTip(v, {})?.title).toBe('Found a city near the Iron');
+    city.detail = { ...city.detail!, buy_tile_blocker: null };
     city.detail = { ...city.detail!, buyable_tiles: [] };
     expect(strategyTip(v, {})).toMatchObject({ title: 'Found a city near the Iron', steps: [{ target: { kind: 'tile', hex: spot.pos } }] });
     v.supply = [iron({ deposits: [{ hex: spot.pos, city: city.id, mined: true, supply: 1 }], supplied: { total: 1, parts: [] } })];
@@ -89,6 +99,12 @@ describe('situational tips', () => {
     expect(strategyTip(v, { gold: 30, '#gold': 2 })).toBeNull();
     v.turn = 30 + 2 * TIP_COOLDOWN.gold;
     expect(strategyTip(v, { gold: 30, '#gold': 2 })?.id).toBe('tip:gold');
+  });
+
+  it('a log left by a longer earlier game does not silence the next one', async () => {
+    const v = await game(30);
+    v.economy.gold = 400;
+    expect(strategyTip(v, { gold: 100, '#gold': 3, army: 95 })?.id).toBe('tip:gold');
   });
 
   it('never tells the Swiss to spend Gold that earns them interest, and names a rival the plural way', async () => {

@@ -203,7 +203,7 @@ export function advisorSuggestion(ctx: AdvisorContext, seen: readonly string[], 
   }
   // Situational advice comes before the routine decisions, but never interrupts a unit or panel already in hand.
   if (seen.includes('welcome') && !ctx.techOpen) {
-    const tip = strategyTip(v, tips, ctx.touch, ctx.selection);
+    const tip = strategyTip(v, tips, ctx.touch, ctx.selection, validOrders(ctx));
     if (tip && !skipped.includes(tip.id) && (!ctx.selection || tip.current > 0)) return tip;
   }
   // Follow the screen: the open Research panel or the selected city or unit is the decision in hand.
