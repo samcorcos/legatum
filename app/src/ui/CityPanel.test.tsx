@@ -701,3 +701,22 @@ it('stops the active build in one click, starting the next queued item', async (
   const set = useGame.getState().orders[0].find((o) => o.type === 'SetProductionQueue');
   expect(set).toEqual({ type: 'SetProductionQueue', city: city.id, queue: [second] });
 });
+
+it('leads the unit list with the best unit the city can build, the one short of Iron beneath it', async () => {
+  const { city, view } = await renderCity();
+  const spear = city.detail!.options.find((o) => o.item.kind === 'Unit' && o.item.unit === 'Spearman')!;
+  const pike = { ...spear, item: { kind: 'Unit' as const, unit: 'Pikeman' as const }, cost: spear.cost * 2, resource_blocker: 'Needs 1 Iron: you have none yet.', supply_need: 'Iron' as const };
+  city.detail!.options.push(pike);
+  act(() => root.render(<CityPanel city={city} view={view} />));
+  const card = container.querySelector('.production-choice[data-item="u:Spearman"]')!;
+  expect(card.closest('details')).toBeNull();
+  const better = card.parentElement!.querySelector('.unit-better[data-better="u:Pikeman"]')!;
+  expect(better.textContent).toContain('Reisläufer needs Iron'); // the Swiss Pikeman
+  expect(container.querySelector('.production-choice[data-item="u:Pikeman"]')).toBeNull();
+  // Nothing queued: it can't be queued yet, so the button is off.
+  expect(better.querySelector<HTMLButtonElement>('[aria-label="Queue Reisläufer"]')!.disabled).toBe(true);
+  // Queued behind a build, its queue row says what it waits for instead of a turn count.
+  Object.assign(city.detail!, { producing: spear.item, production_queue: [pike.item] });
+  act(() => root.render(<CityPanel city={city} view={view} />));
+  expect(container.querySelector('[data-testid="production-queue"] li .queue-turns')!.textContent).toBe('needs Iron');
+});

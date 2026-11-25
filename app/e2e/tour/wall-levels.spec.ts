@@ -29,6 +29,8 @@ for (const size of SIZES) test.describe(`wall levels ${size.name}`, () => {
   test('banners show Walls levels I, II and III; a rival building Walls shows footings', async ({ page }) => {
     test.setTimeout(120_000);
     const setup = wallsFixture(), f = setup.fixture;
+    // One human seat: Continue on a save with several humans opens the online-host screen (#138).
+    for (const p of f.players.slice(1)) { p.isHuman = false; f.setup.players[p.id].is_human = false; }
     const city = (id: number) => f.cities.find((c) => c.id === id)!;
     // Own capital: Walls III beside its star seal. Rival capital Berea: Walls II. Rival town: building Walls.
     city(setup.own).buildings = ['Walls'] as BuildingKind[];

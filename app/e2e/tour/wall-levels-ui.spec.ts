@@ -14,6 +14,12 @@ import { SIZES, loadFixture, shot, type GameWindow } from './helpers';
 
 test.describe.configure({ mode: 'parallel' });
 
+// wallsFixture seats three humans; Continue would then open it as an online host. The tour plays seat 0 alone.
+function soloSeat<F extends ReturnType<typeof wallsFixture>['fixture']>(f: F): F {
+  for (const p of f.players.slice(1)) { p.isHuman = false; f.setup.players[p.id].is_human = false; }
+  return f;
+}
+
 const techsThrough = (era: number): TechId[] => Array.from({ length: era + 1 }, (_, e) => eraTechs(e)).flat();
 
 async function openCityList(page: Page, id: number) {
@@ -25,9 +31,11 @@ async function openCityList(page: Page, id: number) {
   }, id);
   // With no Walls, Upgrade Walls is not its own card: it nests under Walls as "Leads to: Upgrade Walls".
   const own = page.locator('.city-panel .production-choice[data-item="b:UpgradeWalls"]');
+  // At level IX neither is listed: the shot shows where the Walls line would be (the war buildings).
+  await page.locator('.city-panel .production-choice').first().waitFor();
   const item = await own.count() ? own : page.locator('.city-panel .production-choice[data-item="b:Walls"]');
-  await expect(item).toHaveCount(1);
-  await item.scrollIntoViewIfNeeded();
+  if (await item.count()) await item.scrollIntoViewIfNeeded();
+  else await page.locator('.city-panel .production-choice[data-item="b:Roadworks"]').scrollIntoViewIfNeeded();
   await page.mouse.move(2, 2);
   return item;
 }
@@ -59,7 +67,7 @@ for (const size of SIZES) test.describe(`wall levels UI ${size.name}`, () => {
     { name: 'build-swiss-redoubt', era: 2, level: 2, swiss: true },
   ];
   for (const c of cases) test(`city build list: ${c.name}`, async ({ page }) => {
-    const setup = wallsFixture(), f = setup.fixture;
+    const setup = wallsFixture(), f = soloSeat(setup.fixture);
     const own = f.cities.find((x) => x.id === setup.own)!;
     own.buildings = (c.level > 0 ? ['Walls'] : []) as BuildingKind[];
     own.wallsLevel = c.level;
@@ -82,7 +90,7 @@ for (const size of SIZES) test.describe(`wall levels UI ${size.name}`, () => {
   });
 
   for (const kind of ['built-in', 'partial'] as const) test(`attack forecast Walls line: ${kind}`, async ({ page }) => {
-    const setup = wallsFixture(), f = setup.fixture;
+    const setup = wallsFixture(), f = soloSeat(setup.fixture);
     const berea = f.cities.find((x) => x.id === setup.walled)!;
     berea.wallsLevel = kind === 'built-in' ? 4 : 3;
     f.units = f.units.filter((u) => u.id !== setup.nearWalled);
@@ -109,7 +117,7 @@ for (const size of SIZES) test.describe(`wall levels UI ${size.name}`, () => {
   });
 
   test('tech cards: Machinery and Metallurgy name the Walls level Siege covers', async ({ page }) => {
-    const setup = wallsFixture(), f = setup.fixture;
+    const setup = wallsFixture(), f = soloSeat(setup.fixture);
     f.players[0].techs = [...techsThrough(1), 'Machinery'];
     await loadFixture(page, coreFixture(f), 2);
     await page.locator('.topbar .research-chip').click();
@@ -135,7 +143,7 @@ for (const size of SIZES) test.describe(`wall levels UI ${size.name}`, () => {
     await p.evaluate((el) => el.scrollIntoView({ block: 'start' }));
     await page.mouse.move(5, size.height / 2);
     await shot(page, size, 'guide-walls-levels');
-    const s = guide.locator('.guide-page p', { hasText: 'Siege covers Walls up to a set level' });
+    const s = guide.locator('.guide-page p', { hasText: 'ignores enemy Walls up to a set level' });
     await s.evaluate((el) => el.scrollIntoView({ block: 'start' }));
     await shot(page, size, 'guide-siege-levels');
   });

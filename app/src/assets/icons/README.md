@@ -80,7 +80,6 @@ Every tier of a family has its own drawing that keeps one cue of the base buildi
 | `building-university.svg` | Library upgrade: a mortarboard with a tassel. |
 | `building-researchlab.svg` | Research Lab (University upgrade): a microscope. |
 | `building-walls.svg` | Crenellated wall with an arched gate. |
-| `building-citadel.svg` | Walls upgrade: a keep with a gate and flanking walls. |
 | `building-agoge.svg` | Sparta: a tapered standing stone with a sword cut into it, point down, guard swept toward the blade (no cross shape). |
 | `building-royalarsenal.svg` | Royal Arsenal: a cannon barrel over a pile of shot. |
 | `building-greatlibrary.svg` | Great Library: an open book under a pediment. |

@@ -29,8 +29,12 @@ export function targetElement(target: Exclude<NonNullable<AdvisorTarget>, { kind
     case 'skip': return action(/^Skip/i);
     case 'explore': return action(/^Auto-explore/i);
     case 'ranged': return action(/^Ranged attack/i);
-    case 'build': return [...document.querySelectorAll<HTMLElement>('.city-panel .production-choice')]
-      .find((e) => e.dataset.item === target.value)?.querySelector<HTMLElement>('button.prod') ?? null;
+    case 'build': {
+      const card = [...document.querySelectorAll<HTMLElement>('.city-panel .production-choice')].find((e) => e.dataset.item === target.value);
+      // An older unit folded under "Also: ..." is reached by opening that list first.
+      const folded = card?.closest<HTMLDetailsElement>('details.unit-line');
+      return folded && !folded.open ? folded.querySelector<HTMLElement>('summary') : card?.querySelector<HTMLElement>('button.prod') ?? null;
+    }
     case 'closeResearch': return first('dialog.tech-modal[open] button[aria-label="Close research"]');
     case 'tech': return [...document.querySelectorAll<HTMLElement>('dialog.tech-modal .era-card')]
       .find((e) => e.dataset.tech === target.value)?.querySelector<HTMLElement>('button[data-testid="research-now"]') ?? null;

@@ -1,0 +1,3 @@
+# Walls levels leave game length unchanged in all-AI games (2026-11-25)
+
+256 paired six-empire all-Hard games before (06901ab8) and after (fe6bddee) Walls levels I to IX: median length 215 vs 214, the climb from 5 VP to the win 44 vs 43 turns, captures in the last 30 turns 5.8 vs 5.9. Stronger walls did not slow the late conquest burst that ends games (why was not measured). The game-length question (Sam, 2026-11-23: wait for the AI and Walls levels) now rests on his own games on rules 58 and later. Table in `docs/sim-results/game-length/README.md`. The sim is fast on a 4-core container: 256 games in about 6 minutes.

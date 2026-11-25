@@ -4,6 +4,20 @@ Sam, 2026-11-22: the game builds slowly, then escalates and ends within a few tu
 
 **Decision (Sam, 2026-11-23): no rule change yet.** Wait for the Hard AI work (the hill climb) and Walls levels, then measure his games again. The levers below are ready if pacing still needs it.
 
+## Re-measured with Walls levels (2026-11-25)
+
+Same command and seeds (256 six-empire all-Hard games), on master just before Walls levels (06901ab8, rules 57) and with it (fe6bddee, rules 58):
+
+| | before Walls levels | with Walls levels |
+|---|---:|---:|
+| no winner % | 0.8 | 0.4 |
+| length p10/med/p90 | 178 / 215 / 261 | 179 / 214 / 254 |
+| winner era at end (dist %) | Mach:1 WW:13 Mod:39 Fut:48 | Mach:0 WW:15 Mod:37 Fut:48 |
+| winner: turns from 5 VP to the win (med) | 44 | 43 |
+| captures in last 30 turns / per 30 turns before (mean) | 5.8 / 2.1 | 5.9 / 2.1 |
+
+Walls levels do not change game length or the late capture burst in all-AI games. The median game (214) is a few turns longer than on 2026-11-23 (208), from the AI work since. All-AI sims do not reproduce a human steamroll, so the open check is Sam's own games on rules 58 and later (the uploaded-game analysis). The levers above are unchanged.
+
 ## His games
 
 Three web wins on the rules-53-era build (from the uploaded-game analysis): T141, T156, T168, all VP holds. He entered each era every 22 to 25 turns, like the sim leaders, and won in the World War era while his rivals were in Industrial or earlier. 10 to 15 cities fell in his last 40 turns; a rival capital with a world wonder is 3 VP to the taker, so he went from 1 to 5 VP at T100 to the target within about 40 turns.

@@ -211,8 +211,7 @@ export function wallsLine(f: BattleForecast, cityName: string, _unitLabel: strin
   const w = f.walls;
   if (!w) return null;
   const level = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'][w.tier] ?? String(w.tier);
-  const coveredLevel = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'][Math.min(w.covered, w.tier)] ?? String(w.covered);
-  const cover = `Siege covers level${Math.min(w.covered, w.tier) > 1 ? `s I–${coveredLevel}` : ' I'}`;
+  const cover = `Siege covers up to level ${['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'][w.covered] ?? String(w.covered)}`;
   const damage = w.percent >= 100 ? 'full damage' : `${w.percent}% damage`;
   // Bought Siege still short of these Walls: name the tech that covers the next level.
   const nextTech = !w.built_in && w.covered < w.tier ? NEXT_SIEGE_TECH[w.covered] : undefined;
