@@ -2,7 +2,7 @@ name: Moderate new issues and pull requests
 
 # Closes clearly off-topic issues and pull requests (politics, mockery, spam, README vandalism) seconds after they
 # are opened, during the wave that started 2026-11-25. tools/moderation/moderate.py holds the rules and the safety
-# notes. It stops on its own after MODERATION_UNTIL; delete this file then.
+# notes. A manual run judges one existing number without acting. It stops on its own after MODERATION_UNTIL; delete this file then.
 #
 # pull_request_target runs this repository's own copy of the workflow and script with a token, so it must NEVER
 # check out or run the pull request's code: the checkout below is the base branch, and the PR is only read through
@@ -13,6 +13,11 @@ on:
     types: [opened]
   pull_request_target:
     types: [opened]
+  workflow_dispatch:
+    inputs:
+      number:
+        description: Issue or pull request number to judge (dry run, changes nothing)
+        required: true
 
 permissions: {}
 

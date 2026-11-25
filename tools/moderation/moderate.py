@@ -17,6 +17,9 @@ Safety:
 
   python3 tools/moderation/moderate.py            # reads GITHUB_EVENT_PATH, acts
   MODERATION_DRY_RUN=1 python3 tools/moderation/moderate.py   # judge and print, change nothing
+
+A manual run of the workflow (workflow_dispatch, input `number`) judges an existing issue or pull request and
+changes nothing: the way to check the model and the rules on a known case.
 """
 import datetime
 import json
@@ -169,13 +172,21 @@ def main():
     repo = os.environ["GITHUB_REPOSITORY"]
     token = os.environ["GITHUB_TOKEN"]
     dry = os.environ.get("MODERATION_DRY_RUN") == "1"
+    if "inputs" in event:  # manual check: judge an existing item, never act
+        dry = True
+        number = int(event["inputs"]["number"])
+        issue = request("GET", f"{API}/repos/{repo}/issues/{number}", token)
+        if issue.get("pull_request"):
+            event = {"pull_request": request("GET", f"{API}/repos/{repo}/pulls/{number}", token)}
+        else:
+            event = {"issue": issue}
 
     if "pull_request" in event:
         item, kind = event["pull_request"], "pull request"
     else:
         item, kind = event["issue"], "issue"
     number = item["number"]
-    if item.get("state") != "open":
+    if item.get("state") != "open" and not dry:
         return 0
     if is_trusted(item.get("user"), item.get("author_association")):
         summary(f"#{number}: trusted author, not judged.")
