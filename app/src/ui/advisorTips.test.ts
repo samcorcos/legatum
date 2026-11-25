@@ -1,0 +1,110 @@
+import { describe, expect, it } from 'vitest';
+import { FixtureClient } from '../test/fixtureEngine';
+import { hexAt, neighbors, distance, tileIndex } from '../hex';
+import type { PlayerView, SupplyView } from '../types';
+import { advisorSuggestion } from './advisorModel';
+import { strategyTip, TIP_COOLDOWN, TIP_GAP } from './advisorTips';
+
+async function game(turn = 20): Promise<PlayerView> {
+  const client = new FixtureClient();
+  await client.newGame(await client.standardSetup('4545', 'Athens', 'India', 'Ada', 'Bo'));
+  const v = client.view(0);
+  v.turn = turn;
+  v.economy = { ...v.economy, gold: 50 };
+  v.supply = [];
+  return v;
+}
+const mine = (v: PlayerView) => v.cities.find((c) => c.owner === v.me)!;
+const rival = (v: PlayerView) => v.players.find((p) => p.id !== v.me && p.team !== v.team)!;
+const iron = (over: Partial<SupplyView> = {}): SupplyView => ({ resource: 'Iron', revealed_by: 'BronzeWorking' as SupplyView['revealed_by'], revealed: true,
+  supplied: { total: 0, parts: [] }, used: { total: 0, parts: [] }, spare: 0, ...over });
+
+describe('situational tips', () => {
+  it('stays quiet when nothing calls for advice, and in the first turns', async () => {
+    const v = await game();
+    expect(strategyTip(v, {})).toBeNull();
+    v.turn = 2;
+    v.economy.gold = 999;
+    expect(strategyTip(v, {})).toBeNull();
+  });
+
+  it('warns that a much stronger neighbour may attack, with the numbers', async () => {
+    const v = await game();
+    const r = rival(v);
+    v.players = v.players.map((p) => p.id === v.me ? { ...p, army: 12 } : p.id === r.id ? { ...p, army: 40 } : p);
+    const city = mine(v);
+    v.cities.push({ ...city, id: 7001, owner: r.id, name: 'Rival town', pos: neighbors(neighbors(city.pos)[0])[0] });
+    const tip = strategyTip(v, {});
+    expect(tip).toMatchObject({ id: 'tip:army', title: 'Build up your army', acknowledge: true, tip: true });
+    expect(tip!.why).toContain(`army strength is 40; yours is 12`);
+    expect(tip!.why).not.toContain('AI ');
+  });
+
+  it('asks to defend a city with more enemies near it than guards', async () => {
+    const v = await game();
+    const city = mine(v);
+    const r = rival(v);
+    v.diplomacy = { ...v.diplomacy, legacy: true } as PlayerView['diplomacy'];
+    v.units = v.units.filter((u) => u.owner !== v.me || !u.military);
+    const template = v.units[0];
+    const enemy = { ...template, id: 8001, owner: r.id, military: true, kind: 'Spearman' as const, pos: neighbors(neighbors(city.pos)[1])[1] };
+    v.units.push(enemy);
+    expect(strategyTip(v, {})).toBeNull(); // One stray unit is not a siege.
+    v.units.push({ ...enemy, id: 8002, pos: neighbors(city.pos)[2] });
+    const tip = strategyTip(v, {});
+    expect(tip).toMatchObject({ id: `tip:threat:${city.id}`, title: `Defend ${city.name}` });
+    expect(tip!.why).toBe(`2 enemy units are within 3 tiles of ${city.name}, and none of yours guard it. Build or buy a military unit there, or bring units back.`);
+    // A threat skips the gap between tips.
+    expect(strategyTip(v, { gold: v.turn - 1 })?.id).toBe(`tip:threat:${city.id}`);
+  });
+
+  it('offers to buy a tile with the resource you lack, else to found a city by it', async () => {
+    const v = await game();
+    const city = mine(v);
+    const spot = v.tiles.map((t, i) => ({ t, pos: hexAt(i, v.width) })).find(({ t, pos }) => t.explored && t.owner === null && distance(pos, city.pos) === 3)!;
+    v.tiles[tileIndex(spot.pos, v.width, v.height)] = { ...spot.t, resource: 'Iron' };
+    v.supply = [iron()];
+    city.detail = { ...city.detail!, buyable_tiles: [{ tile: spot.pos, ring: 3, price: 75 }] };
+    const buy = strategyTip(v, {});
+    expect(buy).toMatchObject({ id: 'tip:resource:Iron', title: `Buy the Iron tile near ${city.name}`, steps: [{ target: { kind: 'tile' } }, { target: { kind: 'control', name: 'buyTile' } }] });
+    expect(buy!.why).toBe(`You have no Iron, and some units and buildings need it. ${city.name} can buy it for 75 Gold; then build a Mine on it.`);
+    expect(strategyTip(v, {}, false, { kind: 'city', id: city.id })?.current).toBe(1);
+    city.detail = { ...city.detail!, buyable_tiles: [] };
+    expect(strategyTip(v, {})).toMatchObject({ title: 'Found a city near the Iron', steps: [{ target: { kind: 'tile', hex: spot.pos } }] });
+    v.supply = [iron({ deposits: [{ hex: spot.pos, city: city.id, mined: true, supply: 1 }], supplied: { total: 1, parts: [] } })];
+    expect(strategyTip(v, {})).toBeNull();
+  });
+
+  it('never repeats: cooldown per tip, a gap between tips, but holds for the rest of its own turn', async () => {
+    const v = await game(30);
+    v.economy.gold = 400;
+    expect(strategyTip(v, {})?.id).toBe('tip:gold');
+    expect(strategyTip(v, { gold: 30 })?.id).toBe('tip:gold');
+    v.turn = 31;
+    expect(strategyTip(v, { gold: 30 })).toBeNull();
+    v.turn = 30 + TIP_COOLDOWN.gold;
+    expect(strategyTip(v, { gold: 30 })?.id).toBe('tip:gold');
+    expect(strategyTip(v, { gold: 30, 'threat:1': v.turn - TIP_GAP + 1 })).toBeNull();
+    // Advice not taken fades: each repeat of a kind doubles its wait.
+    expect(strategyTip(v, { gold: 30, '#gold': 2 })).toBeNull();
+    v.turn = 30 + 2 * TIP_COOLDOWN.gold;
+    expect(strategyTip(v, { gold: 30, '#gold': 2 })?.id).toBe('tip:gold');
+  });
+
+  it('never tells the Swiss to spend Gold that earns them interest, and names a rival the plural way', async () => {
+    const v = await game(30);
+    v.economy.gold = 400;
+    v.players = v.players.map((p) => p.id === v.me ? { ...p, faction: 'Switzerland' } : p);
+    expect(strategyTip(v, {})).toBeNull();
+  });
+
+  it('comes before routine decisions, never over a unit in hand, and Got it dismisses it for the turn', async () => {
+    const v = await game(30);
+    v.economy.gold = 400;
+    const ctx = { view: v, orders: [], selection: null, humans: 1, touch: false, plan: [] };
+    expect(advisorSuggestion(ctx, ['welcome', 'report', 'race'], [])?.id).toBe('tip:gold');
+    const unit = v.units.find((u) => u.owner === v.me)!;
+    expect(advisorSuggestion({ ...ctx, selection: { kind: 'unit', id: unit.id } }, ['welcome', 'report', 'race'], [])?.id).not.toBe('tip:gold');
+    expect(advisorSuggestion(ctx, ['welcome', 'report', 'race'], ['tip:gold'])?.id).not.toBe('tip:gold');
+  });
+});

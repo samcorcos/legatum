@@ -88,3 +88,21 @@ it('counts routine steps the player does, once per turn', () => {
   act(() => useGame.setState({ views: [{ ...view, turn: view.turn + 1 }], orders: [[]] }));
   expect(useAdvisor.getState().practice.endTurn).toBe(1);
 });
+
+it('logs a tip when it shows, and Got it puts it away for the turn', () => {
+  useAdvisor.setState({ seen: ['welcome', 'report', 'race'], tips: {} });
+  act(() => useGame.setState({ views: [{ ...view, turn: 30, economy: { ...view.economy, gold: 400 }, supply: [] }] }));
+  render(<Advisor />);
+  expect(screen.getByTestId('advisor').dataset.advisorId).toBe('tip:gold');
+  expect(useAdvisor.getState().tips.gold).toBe(30);
+  fireEvent.click(screen.getByRole('button', { name: 'Got it' }));
+  expect(screen.queryByTestId('advisor')?.dataset.advisorId).not.toBe('tip:gold');
+});
+
+it('a new game starts the tip log over and counts each kind', () => {
+  useAdvisor.setState({ tips: { gold: 40, '#gold': 2 } });
+  useAdvisor.getState().noteTip('army', 12);
+  expect(useAdvisor.getState().tips).toEqual({ army: 12, '#army': 1 });
+  useAdvisor.getState().noteTip('gold', 20);
+  expect(useAdvisor.getState().tips).toEqual({ army: 12, '#army': 1, gold: 20, '#gold': 1 });
+});

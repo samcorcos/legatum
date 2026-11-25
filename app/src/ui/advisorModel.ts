@@ -9,13 +9,14 @@ import { pendingDecisions } from '../turnFlow';
 import { HOLD_TURNS } from '../victoryHold';
 import { techCardUnlocks } from './techCardUnlocks';
 import { YIELD_LABEL, type YieldKey } from './yieldKeys';
+import { strategyTip, tipKind, type TipLog } from './advisorTips';
 import type { BattleForecast, CityView, Hex, Order, OrderError, PlayerView, UnitView } from '../types';
 
 /** Keep the old key: disabling first-game hints also disables the advisor. */
 export const ADVISOR_KEY = 'legatum.first-game-hints.v2';
-export type AdvisorTarget = { kind: 'tile'; hex: Hex } | { kind: 'control'; name: 'research' | 'turn' | 'race' | 'found' | 'fortify' | 'explore' | 'skip' | 'ranged' | 'build' | 'tech' | 'closeResearch'; value?: string } | null;
+export type AdvisorTarget = { kind: 'tile'; hex: Hex } | { kind: 'control'; name: 'research' | 'turn' | 'race' | 'found' | 'fortify' | 'explore' | 'skip' | 'ranged' | 'build' | 'tech' | 'closeResearch' | 'buyTile'; value?: string } | null;
 export interface AdvisorStep { instruction: string; key?: string; target: AdvisorTarget }
-export interface Suggestion { id: string; title: string; why: string; steps: AdvisorStep[]; current: number; acknowledge?: boolean }
+export interface Suggestion { id: string; title: string; why: string; steps: AdvisorStep[]; current: number; acknowledge?: boolean; tip?: boolean }
 export interface AdvisorContext {
   view: PlayerView;
   orders: Order[];
@@ -175,7 +176,7 @@ function unitSuggestion(ctx: AdvisorContext, unit: UnitView, order?: Order): Sug
   return action ? { ...base, title: action.title, steps: [first, { instruction: action.instruction, key: ctx.touch ? undefined : action.key, target: action.target }] } : null;
 }
 
-export function advisorSuggestion(ctx: AdvisorContext, seen: readonly string[], skipped: readonly string[], practice: Practice = {}): Suggestion | null {
+export function advisorSuggestion(ctx: AdvisorContext, seen: readonly string[], skipped: readonly string[], practice: Practice = {}, tips: TipLog = {}): Suggestion | null {
   const v = ctx.view;
   if (v.finished || v.players.find((p) => p.id === v.me)?.alive === false) return null;
   if (v.turn === 1 && !seen.includes('welcome')) return { id: 'welcome', title: 'Your advisor will guide you', why: "I'll suggest what to do each turn and show you where to click.", steps: [], current: 0, acknowledge: true };
@@ -199,6 +200,11 @@ export function advisorSuggestion(ctx: AdvisorContext, seen: readonly string[], 
     const d = decisions[firstUnanswered], id = `answer:${d.kind}:${'id' in d ? d.id : ''}`;
     return { id, title: 'Answer this first', why: d.label, current: 0,
       steps: [{ instruction: `${ctx.touch ? 'Tap' : 'Click'} ${ctx.turnLabel ?? d.label}.`, target: control('turn') }] };
+  }
+  // Situational advice comes before the routine decisions, but never interrupts a unit or panel already in hand.
+  if (seen.includes('welcome') && !ctx.techOpen) {
+    const tip = strategyTip(v, tips, ctx.touch, ctx.selection);
+    if (tip && !skipped.includes(tip.id) && (!ctx.selection || tip.current > 0)) return tip;
   }
   // Follow the screen: the open Research panel or the selected city or unit is the decision in hand.
   const inHand = (d: (typeof decisions)[number]) => (d.kind === 'research' && ctx.techOpen)
@@ -231,16 +237,16 @@ export function advisorSuggestion(ctx: AdvisorContext, seen: readonly string[], 
     steps: [{ instruction: `${ctx.touch ? 'Tap' : 'Click'} ${solo ? 'End turn' : 'Ready'}.`, key: ctx.touch ? undefined : 'Return', target: control('turn', 'end') }], current: 0 };
 }
 
-interface AdvisorPreferences { enabled: boolean; seen: string[]; practice: Practice }
+interface AdvisorPreferences { enabled: boolean; seen: string[]; practice: Practice; tips: TipLog }
 export function readAdvisorPreferences(): AdvisorPreferences {
   try {
     const raw: unknown = JSON.parse(globalThis.localStorage?.getItem(ADVISOR_KEY) ?? 'null');
     if (raw && typeof raw === 'object') {
       const p = raw as { enabled?: unknown; seen?: unknown; tutorial?: unknown; practice?: unknown };
-      return { enabled: p.enabled !== false, practice: readPractice(p.practice), seen: Array.isArray(p.seen) ? p.seen.filter((x): x is string => typeof x === 'string') : Array.isArray(p.tutorial) ? p.tutorial.filter((x): x is string => typeof x === 'string') : [] };
+      return { enabled: p.enabled !== false, practice: readPractice(p.practice), tips: readTips((p as { tips?: unknown }).tips), seen: Array.isArray(p.seen) ? p.seen.filter((x): x is string => typeof x === 'string') : Array.isArray(p.tutorial) ? p.tutorial.filter((x): x is string => typeof x === 'string') : [] };
     }
   } catch { /* Storage may be unavailable. */ }
-  return { enabled: true, seen: [], practice: {} };
+  return { enabled: true, seen: [], practice: {}, tips: {} };
 }
 const PRACTICE_KINDS: readonly PracticeKind[] = ['move', 'fortify', 'skip', 'explore', 'endTurn', 'closeResearch'];
 function readPractice(raw: unknown): Practice {
@@ -252,8 +258,12 @@ function readPractice(raw: unknown): Practice {
   }
   return out;
 }
-function savePreferences({ enabled, seen, practice }: AdvisorPreferences) {
-  try { globalThis.localStorage?.setItem(ADVISOR_KEY, JSON.stringify({ enabled, seen, practice })); } catch { /* Session state still works. */ }
+function readTips(raw: unknown): TipLog {
+  if (!raw || typeof raw !== 'object') return {};
+  return Object.fromEntries(Object.entries(raw as Record<string, unknown>).filter((e): e is [string, number] => typeof e[1] === 'number' && Number.isFinite(e[1])));
+}
+function savePreferences({ enabled, seen, practice, tips }: AdvisorPreferences) {
+  try { globalThis.localStorage?.setItem(ADVISOR_KEY, JSON.stringify({ enabled, seen, practice, tips })); } catch { /* Session state still works. */ }
 }
 interface AdvisorState extends AdvisorPreferences {
   skippedTurn: number;
@@ -264,6 +274,8 @@ interface AdvisorState extends AdvisorPreferences {
   practised: PracticeKind[];
   practise(kinds: readonly PracticeKind[], turn: number): void;
   resetPractice(): void;
+  /** Record a tip as shown on this turn. An earlier turn than any logged means a new game: the log starts over. */
+  noteTip(key: string, turn: number): void;
   skip(id: string, turn: number): void;
   setEnabled(enabled: boolean): void;
 }
@@ -281,6 +293,14 @@ export const useAdvisor = create<AdvisorState>((set) => ({
   }),
   markSeen: (id) => set((s) => { if (s.seen.includes(id)) return s; const next = { ...s, seen: [...s.seen, id] }; savePreferences(next); return next; }),
   skip: (id, turn) => set((s) => ({ skippedTurn: turn, skipped: [...(s.skippedTurn === turn ? s.skipped : []), id] })),
+  noteTip: (key, turn) => set((s) => {
+    if (s.tips[key] === turn) return s;
+    const newGame = Object.entries(s.tips).some(([k, t]) => !k.startsWith('#') && t > turn);
+    const log = newGame ? {} : s.tips, count = `#${tipKind(key)}`;
+    const next = { ...s, tips: { ...log, [key]: turn, [count]: (log[count] ?? 0) + 1 } };
+    savePreferences(next);
+    return next;
+  }),
   resetPractice: () => set((s) => { const next = { ...s, practice: {}, practised: [] }; savePreferences(next); return next; }),
   setEnabled: (enabled) => set((s) => { const next = { ...s, enabled }; savePreferences(next); return next; }),
 }));
