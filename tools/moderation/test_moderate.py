@@ -51,6 +51,16 @@ class Moderate(unittest.TestCase):
         self.assertFalse(m.should_close(m.wave_verdict("The treasure chest in the ruins gives no gold")))
         self.assertFalse(m.should_close(m.wave_verdict("My treasury runs dry when I buy a Settler")))
 
+    def test_insults_and_bare_profanity(self):
+        template = "**What happened**\n\n**What you expected**\n\n**Where**\n\n- Build: commit or version shown on the title screen\n"
+        for title in ("eat shit", "fuck off", "fuck you", "do your fucking job",
+                      "Lead developer is a giant asshole was closed, issue hasn't been addressed"):
+            self.assertTrue(m.should_close(m.wave_verdict(title + "\n" + template, title=title, body=template)), title)
+        real = "Walls never finish when I queue them after a siege; the bar stays at 0 and the city can't build. Seed 42, turn 88."
+        self.assertFalse(m.should_close(m.wave_verdict("this fucking bug\n" + real, title="this fucking bug", body=real)))
+        self.assertFalse(m.should_close(m.wave_verdict("Shift-click doesn't queue", title="Shift-click doesn't queue", body="")))
+        self.assertFalse(m.should_close(m.wave_verdict("Shitake mushrooms as a luxury", title="Shitake mushrooms as a luxury", body="")))
+
     def test_added_lines_only(self):
         diff = "--- a/README.md\n+++ b/README.md\n-built for people who love Civilization.\n+paid for with taxpayer dollars."
         self.assertEqual(m.added_lines(diff), "paid for with taxpayer dollars.")

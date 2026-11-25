@@ -59,6 +59,19 @@ WAVE_WORDS = ("treasury department", "u.s. treasury", "us treasury", "treasury c
               "government job", "chief information officer", "bsa e-filing", "bsaefiling")
 MAX_DIFF = 6000
 
+# Insults and abuse aimed at people (added 2026-11-25 after a run of "fuck you" / "eat shit" titles): any of these
+# anywhere closes the item or hides the comment, game point or not.
+INSULTS = ("fuck you", "fuck off", "eat shit", "asshole", "do your job", "do your fucking job", "get back to work",
+           "piece of shit", "go to hell", "kill yourself", "dumbass", "idiot", "moron", "claudeslop", "ai slop")
+# Profanity: closes only when the author wrote almost nothing besides it (a bare title, the empty template), so a
+# frustrated player's real bug report ("this fucking bug ate my save") stays open.
+PROFANITY_RE = re.compile(r"(?<![a-z])(fuck[a-z]*|shit(?:s|ty|head)?|bitch(?:es|y)?|cunts?|bastards?|slop)(?![a-z])")
+OWN_TEXT_MIN = 40
+TEMPLATE_LINES = ("**", "- build:", "- how you ran it", "- os and browser", "steps, and the game seed",
+                  "most useful thing you can attach", "screenshots, or errors", "people, difficulty, map size",
+                  "feedback, a save file", "what it did to your choices", "number has no breakdown",
+                  "the project balances by", "people's signature strength")
+
 POLICY = """You moderate the public GitHub repository of Legatum, an open-source historical 4X strategy game on a
 hex map (like Civilization). Real contributors must stay welcome. Decide whether one new issue or pull request is
 clearly off-topic.
@@ -130,13 +143,31 @@ def parse_verdict(text):
     return {"verdict": verdict, "confidence": confidence, "reason": str(data.get("reason", ""))[:200]}
 
 
-def wave_verdict(text):
-    """The keyword fallback: off_topic when the text carries a wave word, else unsure."""
+def _hits(words, lowered):
+    return [w.strip() for w in words if re.search(r"(?<![a-z])" + re.escape(w), lowered)]
+
+
+def own_text(body):
+    """The body without the issue template's headings and hint lines: what the author actually wrote."""
+    kept = [line for line in (body or "").splitlines()
+            if line.strip() and not any(line.strip().lower().startswith(t) or t in line.lower() for t in TEMPLATE_LINES)]
+    return "\n".join(kept)
+
+
+def wave_verdict(text, title=None, body=None):
+    """The keyword rule: off_topic on a wave word or an insult anywhere, or on profanity when the author wrote
+    almost nothing else (pass title and body for that check), else unsure."""
     lowered = (text or "").lower()
-    hits = [w.strip() for w in WAVE_WORDS if re.search(r"(?<![a-z])" + re.escape(w), lowered)]
+    hits = _hits(WAVE_WORDS, lowered) + _hits(INSULTS, lowered)
+    if not hits and title is not None:
+        words = re.sub(r"[^a-z ]", " ", (title + " " + own_text(body)).lower())
+        found = PROFANITY_RE.findall(words)
+        rest = PROFANITY_RE.sub("", words)
+        if found and len(rest.replace(" ", "")) < OWN_TEXT_MIN:
+            hits = found
     if hits:
-        return {"verdict": "off_topic", "confidence": 0.95, "reason": "keyword fallback: " + ", ".join(hits[:3])}
-    return {"verdict": "unsure", "confidence": 0.0, "reason": "keyword fallback: no match"}
+        return {"verdict": "off_topic", "confidence": 0.95, "reason": "keyword rule: " + ", ".join(hits[:3])}
+    return {"verdict": "unsure", "confidence": 0.0, "reason": "keyword rule: no match"}
 
 
 def added_lines(diff):
@@ -212,7 +243,7 @@ def moderate_comment(comment, repo, token, dry):
     if is_trusted(comment.get("user"), comment.get("author_association")):
         summary(f"comment {where}: trusted author, not judged.")
         return 0
-    verdict = wave_verdict(comment.get("body"))
+    verdict = wave_verdict(comment.get("body"), title="", body=comment.get("body"))
     summary(f"comment {where}: {verdict}")
     if should_close(verdict) and not dry:
         hide_comment(comment["node_id"], token)
@@ -282,7 +313,8 @@ def main():
         verdict = judge(build_prompt(kind, item.get("title"), item.get("body"), diff), token)
     except (urllib.error.URLError, KeyError, IndexError, TypeError, ValueError) as err:
         summary(f"#{number}: model unavailable ({err.__class__.__name__}: {str(err)[:300]}); using the keyword fallback.")
-        verdict = wave_verdict("\n".join([item.get("title") or "", item.get("body") or "", added_lines(diff)]))
+        verdict = wave_verdict("\n".join([item.get("title") or "", item.get("body") or "", added_lines(diff)]),
+                               title=item.get("title") or "", body=item.get("body") or "")
     summary(f"#{number} ({kind}): {verdict}")
     if not should_close(verdict) or dry:
         return 0
