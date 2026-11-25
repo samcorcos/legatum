@@ -18,3 +18,8 @@ address no longer resolves. So the check falls back to a short keyword list for 
 FinCEN, vibecoding, taxpayer...; not plain "treasury", which game text uses). Dry runs: #165 and the README PR #160
 close, the real bug #196 and feature PR #191 stay open. Test any change with a manual run on the branch
 (`workflow_dispatch` checks out the ref it was started on) before merging.
+
+Comments (same day): vandals moved to comments on real issues (#198). GitHub has no comment-hiding call in the
+GitHub MCP tools, but the workflow token can `minimizeComment` (GraphQL, classifier OFF_TOPIC) with
+`issues: write`, so the workflow also runs on `issue_comment: created`, and a manual run with `hide_comments` lets
+the hourly sweep hide comments by dispatching it.

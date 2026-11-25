@@ -56,6 +56,20 @@ class Moderate(unittest.TestCase):
         self.assertEqual(m.added_lines(diff), "paid for with taxpayer dollars.")
         self.assertTrue(m.should_close(m.wave_verdict(m.added_lines(diff))))
 
+    def test_comment_rules(self):
+        calls = []
+        m.hide_comment = lambda node_id, token: calls.append(node_id)
+        stranger = {"login": "x", "type": "User"}
+        m.moderate_comment({"body": "One of the AIs should be the US Treasury Department", "node_id": "A",
+                            "user": stranger, "author_association": "NONE"}, "r", "t", False)
+        m.moderate_comment({"body": "+1, I'd love to watch AIs play", "node_id": "B",
+                            "user": stranger, "author_association": "NONE"}, "r", "t", False)
+        m.moderate_comment({"body": "the treasury department joke again", "node_id": "C",
+                            "user": {"login": "samcorcos", "type": "User"}, "author_association": "OWNER"}, "r", "t", False)
+        m.moderate_comment({"body": "Treasury Department", "node_id": "D",
+                            "user": stranger, "author_association": "NONE"}, "r", "t", True)
+        self.assertEqual(calls, ["A"])
+
     def test_long_text_is_cut(self):
         prompt = m.build_prompt("pull request", "t", "b" * 10000, "d" * 10000)
         self.assertLess(len(prompt), m.MAX_TEXT + m.MAX_DIFF + 500)

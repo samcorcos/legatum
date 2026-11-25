@@ -19,7 +19,11 @@ Safety:
   MODERATION_DRY_RUN=1 python3 tools/moderation/moderate.py   # judge and print, change nothing
 
 A manual run of the workflow (workflow_dispatch, input `number`) judges an existing issue or pull request and
-changes nothing: the way to check the model and the rules on a known case.
+changes nothing: the way to check the model and the rules on a known case. Input `hide_comments` (comment ids)
+hides those comments as off-topic: maintainers only, used by the hourly sweep, which cannot hide comments itself.
+
+New comments (issue_comment: created) are judged by the keyword rule alone and hidden ("minimized" as off-topic,
+reversible) when they match; the issue or pull request itself is left alone.
 """
 import datetime
 import json
@@ -193,6 +197,41 @@ def judge(prompt, token):
     raise ValueError("; ".join(errors))
 
 
+def hide_comment(node_id, token):
+    """Minimize (hide) a comment as off-topic. Reversible: a maintainer can unhide it on GitHub."""
+    query = ("mutation($id: ID!) { minimizeComment(input: {subjectId: $id, classifier: OFF_TOPIC}) "
+             "{ minimizedComment { isMinimized } } }")
+    answer = request("POST", f"{API}/graphql", token, {"query": query, "variables": {"id": node_id}})
+    if (answer or {}).get("errors"):
+        raise ValueError(f"minimizeComment failed: {answer['errors']}")
+
+
+def moderate_comment(comment, repo, token, dry):
+    """A new comment: hide it when it is clearly off-topic. Keyword rule only (comments are short jabs)."""
+    where = comment.get("html_url", "")
+    if is_trusted(comment.get("user"), comment.get("author_association")):
+        summary(f"comment {where}: trusted author, not judged.")
+        return 0
+    verdict = wave_verdict(comment.get("body"))
+    summary(f"comment {where}: {verdict}")
+    if should_close(verdict) and not dry:
+        hide_comment(comment["node_id"], token)
+        summary(f"comment {where}: hidden as off-topic.")
+    return 0
+
+
+def hide_listed(ids, repo, token):
+    """Manual run (maintainers only): hide the listed issue comments as off-topic, whatever their text."""
+    for raw in ids.replace(",", " ").split():
+        comment = request("GET", f"{API}/repos/{repo}/issues/comments/{int(raw)}", token)
+        if is_trusted(comment.get("user"), comment.get("author_association")):
+            summary(f"comment {raw}: trusted author, left alone.")
+            continue
+        hide_comment(comment["node_id"], token)
+        summary(f"comment {comment.get('html_url')}: hidden as off-topic (manual).")
+    return 0
+
+
 def summary(line):
     print(line)
     path = os.environ.get("GITHUB_STEP_SUMMARY")
@@ -210,9 +249,17 @@ def main():
     repo = os.environ["GITHUB_REPOSITORY"]
     token = os.environ["GITHUB_TOKEN"]
     dry = os.environ.get("MODERATION_DRY_RUN") == "1"
+    if "comment" in event:  # a new comment on an issue or pull request
+        return moderate_comment(event["comment"], repo, token, dry)
+    inputs = event.get("inputs") or {}
+    if (inputs.get("hide_comments") or "").strip():
+        return hide_listed(inputs["hide_comments"], repo, token)
     if "inputs" in event:  # manual check: judge an existing item, never act
+        if not (inputs.get("number") or "").strip():
+            summary("Manual run with nothing to do: give a number or comment ids.")
+            return 0
         dry = True
-        number = int(event["inputs"]["number"])
+        number = int(inputs["number"])
         issue = request("GET", f"{API}/repos/{repo}/issues/{number}", token)
         if issue.get("pull_request"):
             event = {"pull_request": request("GET", f"{API}/repos/{repo}/pulls/{number}", token)}
