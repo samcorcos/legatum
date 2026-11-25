@@ -73,3 +73,17 @@ it('labels progress by whose it is', () => {
   expect(progressText(38, 38, 75, false)).toBe('38/75 banked');
   expect(progressText(0, 0, 75, false)).toBeNull();
 });
+it('leads a unit line with the newest unit the city can start, the one short of Iron under it', () => {
+  const blocked = (unit: UnitKind) => ({ ...option(unit), resource_blocker: 'Needs 1 Iron: you have none yet.', supply_need: 'Iron' }) as ProductionOption;
+  const choices = [option('Spearman'), blocked('Phalangite'), blocked('Pikeman'), option('Archer'), blocked('CompositeArcher')];
+  const lines = unitLines(choices, 'India');
+  const spear = lines.find((l) => l.main.item.kind === 'Unit' && l.main.item.unit === 'Spearman')!;
+  expect(spear.better?.item).toEqual(option('Pikeman').item);
+  expect(spear.older.map((o) => o.item)).toEqual([option('Phalangite').item]);
+  expect(lines.find((l) => l.main.item.kind === 'Unit' && l.main.item.unit === 'Archer')!.better?.item).toEqual(option('CompositeArcher').item);
+  expect(lines.flatMap((l) => [l.main, ...(l.better ? [l.better] : []), ...l.older])).toHaveLength(choices.length);
+  // With nothing startable in the line, the newest unit still leads, with its reason on the card.
+  expect(unitLines([blocked('Phalangite')], 'India')[0]).toMatchObject({ main: { item: option('Phalangite').item }, better: undefined });
+  // A supplied line is unchanged.
+  expect(unitLines([option('Spearman'), option('Phalangite')], 'India')[0]).toMatchObject({ main: { item: option('Phalangite').item }, better: undefined });
+});

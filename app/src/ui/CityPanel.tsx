@@ -679,6 +679,23 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
       {flash?.key === key && flash.city === city.id && <span className="sr-only" role="status">{`${name}: ${flash.label} in the queue`}</span>}
     </div>;
   };
+  /** The newer unit of a line that its strategic resource holds back: one line under the unit the city can build now. */
+  const renderBetter = (o: ProductionOption) => {
+    const name = itemName(o.item, owner?.faction);
+    const key = itemKey(o.item);
+    const short = o.supply_need ? `${name} needs ${o.supply_need}` : `${name} can't start yet`;
+    const headOnly = queue.length === 0;
+    const flashed = flash?.key === key && flash.city === city.id;
+    return <div className="upgrade-line unit-better" key={key} data-better={key}>
+      <Tip as="span" className="upgrade-detail" placement="right" summary={o.resource_blocker!} content={<p><Amounts text={`${o.resource_blocker} ${itemDescription(o.item, owner?.faction)}`} /></p>}>
+        <ItemArt item={o.item} faction={owner?.faction} size={14} />
+        <span>{o.supply_need ? <ResourceReason text={short} resource={o.supply_need} /> : short}</span>
+      </Tip>
+      <button className="upgrade-queue" aria-label={`Queue ${name}`} disabled={view.finished || headOnly || queue.length >= 50}
+        title={headOnly ? 'Nothing to queue behind yet. Start another build first.' : `Add to the end of the queue. It starts when you have spare ${o.supply_need ?? 'supply'}.`}
+        onClick={(event) => append(o.item, event.currentTarget)}>{flashed ? <><Icon name="ui-check" size={11} className="ui-mark" /> {flash.label}</> : '+ Queue'}</button>
+    </div>;
+  };
   /** A researched item this city can't choose yet: greyed out in its section, with the reason. */
   const renderUnavailable = (u: UnavailableOption) => {
     const name = u.item.kind === 'Building' && u.item.building === 'UpgradeWalls' ? wallsUpgradeName(city.walls_level ?? Number(city.walls), itemName({ kind: 'Building', building: 'Walls' }, faction)) : itemName(u.item, faction);
@@ -971,14 +988,16 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
               {queue.map((item, i) => {
                 if (i === 0) return null;
                 const name = itemName(item, owner?.faction);
-                const turns = d.options.find((o) => sameItem(o.item, item))?.turns;
+                const queued = d.options.find((o) => sameItem(o.item, item));
+                const turns = queued?.turns;
+                const waitsFor = queued?.resource_blocker ? queued.supply_need : null;
                 const note = bankOf(item) > 0 ? `${bankOf(item)}/${costOf(item) ?? '?'} banked` : null;
                 return <li key={`${i}-${itemKey(item)}`}>
                   <span className="queue-badge">{i + 1}</span>
                   <ItemArt item={item} faction={owner?.faction} size={18} />
                   <span className="queue-text">
                     <span className="queue-name">{name}</span>
-                    <span className="queue-sub">{note && <><span className="queue-note">{note}</span><span aria-hidden="true"> · </span></>}<span className="queue-turns">{turns && turns > 0 ? `${turns} turn${turns === 1 ? '' : 's'}` : '—'}</span></span>
+                    <span className="queue-sub">{note && <><span className="queue-note">{note}</span><span aria-hidden="true"> · </span></>}<span className="queue-turns" title={waitsFor ? queued!.resource_blocker! : undefined}>{waitsFor ? <>needs <ResourceReason text={waitsFor} resource={waitsFor} /></> : turns && turns > 0 ? `${turns} turn${turns === 1 ? '' : 's'}` : '—'}</span></span>
                   </span>
                   <button className="queue-move" aria-label={`Move ${name} up`} title={`Move ${name} up in the queue`} disabled={view.finished} onClick={() => { const next = [...queue]; [next[i - 1], next[i]] = [next[i], next[i - 1]]; changeQueue(next); }}><Icon name="ui-chevron-up" size={14} /></button>
                   <button className="queue-move" aria-label={`Move ${name} down`} title={`Move ${name} down in the queue`} disabled={view.finished || i === queue.length - 1} onClick={() => { const next = [...queue]; [next[i], next[i + 1]] = [next[i + 1], next[i]]; changeQueue(next); }}><Icon name="ui-chevron-down" size={14} /></button>
@@ -1014,6 +1033,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
       <div className={`prod-list ${producing ? '' : 'choosing'}`}>
         {withUnavailable(unitLines(listOptions, owner?.faction ?? 'India'), (line) => line.main.item, listUnavailable.filter((u) => u.item.kind === 'Unit' && !isPermanentlyUnavailable(u, faction))).map((r) => r.row ? <div key={itemKey(r.row.main.item)}>
           {renderOption(r.row.main, r.row.keeps)}
+          {r.row.better && renderBetter(r.row.better)}
           {r.row.older.length > 0 && <details className="unit-line"><summary>Also: {r.row.older.map((o) => itemName(o.item, owner?.faction)).join(', ')}</summary>{r.row.older.map((o) => renderOption(o))}</details>}
         </div> : renderUnavailable(r.unavailable))}{permanentLine(listUnavailable.filter((u) => u.item.kind === 'Unit'), listOptions.filter((o) => o.item.kind === 'Unit')) && <p className="prod-faction-rule" role="note">{permanentLine(listUnavailable.filter((u) => u.item.kind === 'Unit'), listOptions.filter((o) => o.item.kind === 'Unit'))}</p>}
       </div>

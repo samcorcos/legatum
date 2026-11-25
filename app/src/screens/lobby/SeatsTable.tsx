@@ -6,7 +6,7 @@ import { OpenSeatButton } from '../../ui/OpenSeatButton';
 import { RemoveSeatButton } from '../../ui/RemoveSeatButton';
 import { Icon } from '../../ui/bits';
 import { MAX_PLAYERS } from '../../gameSetup';
-import { activeCount, addSlot, slotColorFactions, removeSlot, setSlot, slotKinds, type Lobby, type LobbyMode, type Slot, type SlotKind } from '../../lobby';
+import { activeCount, addSlot, slotColorFactions, removeSlot, setSlot, slotKinds, type FactionChoice, type Lobby, type LobbyMode, type Slot, type SlotKind } from '../../lobby';
 import type { StagingState } from '../../staging';
 
 const KIND_LABEL: Record<SlotKind, string> = { you: 'You', human: 'Human', ai: 'AI', closed: 'Closed' };
@@ -20,6 +20,8 @@ export interface RoomView {
   mySeat?: number | null;
   /** Guest: what to show in an open seat's name cell (a Take seat button, or your own controls). */
   renderOpen?: (seat: number) => ReactNode;
+  /** Guest: pick the faction of the seat this browser holds, in that seat's own row. */
+  onMyFaction?: (faction: FactionChoice) => void;
 }
 
 /** The seats table. Without `onChange` it's read-only. */
@@ -150,7 +152,9 @@ function SeatRow({
     <div className={`seat-row ${closed ? 'closed' : ''} ${mine ? 'mine' : ''}`} role="row" style={{ ['--pc' as string]: color }}>
       <span className="seat-swatch" aria-hidden />
       <span>
-        {slot.kind === 'you' ? (
+        {mine ? (
+          <span className="seat-you">You</span>
+        ) : slot.kind === 'you' ? (
           <span className="seat-you">{youLabel}</span>
         ) : readOnly ? (
           <span className="seat-text muted">{kindLabel(slot.kind)}</span>
@@ -171,7 +175,10 @@ function SeatRow({
       </span>
       <span>{nameCell}</span>
       <span>
-        {!closed && (room?.guest ? <span className="seat-text" aria-label={`Seat ${index + 1} faction`}>{slot.faction}</span> :
+        {/* Every player picks their faction in their own seat's row; everyone else sees it there. */}
+        {!closed && (mine && room?.onMyFaction ? (
+          <FactionPicker value={slot.faction} label="Your faction" onChange={room.onMyFaction} />
+        ) : (
           <FactionPicker
             value={slot.faction}
             label={`Seat ${index + 1} faction`}
@@ -179,7 +186,7 @@ function SeatRow({
             disabled={readOnly || (networkSeat && slot.kind === 'human')}
             onChange={(faction) => onChange?.({ faction })}
           />
-        )}
+        ))}
       </span>
       <span>
         {!closed &&

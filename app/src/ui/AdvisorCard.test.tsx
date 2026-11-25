@@ -51,6 +51,14 @@ it('finds Build on the chosen item in a mounted city panel', () => {
   expect(control('build', itemKey(item))?.getAttribute('aria-label')).toMatch(/^Build /);
 });
 
+it('points at the "Also" list when the build it recommends is folded inside it', () => {
+  document.body.innerHTML = '<div class="city-panel"><details class="unit-line"><summary>Also: Spearman</summary><div class="production-choice" data-item="u:Spearman"><button class="prod">Build</button></div></details></div>';
+  expect(control('build', 'u:Spearman')?.tagName).toBe('SUMMARY');
+  document.querySelector('details')!.open = true;
+  expect(control('build', 'u:Spearman')?.className).toBe('prod');
+  document.body.innerHTML = '';
+});
+
 it('turns off, moves on, and pauses for busy, ready and blocking overlays', async () => {
   render(<div className="game"><Advisor /></div>);
   expect(screen.getByTestId('advisor').dataset.advisorId).toBe('welcome');

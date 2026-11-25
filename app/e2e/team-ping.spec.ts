@@ -9,9 +9,9 @@ const SHOTS = process.env.LEGATUM_SHOTS;
 async function startOnline(host: Page, guest: Page) {
   await host.goto('/?client=wasm');
   await host.getByRole('button', { name: /^Multiplayer/ }).click();
-  await host.getByLabel('Your name in the game list').fill('Ada');
+  await host.getByLabel('Your name', { exact: true }).fill('Ada');
   await host.getByRole('button', { name: /^Host Game/ }).click();
-  await expect(host.getByRole('heading', { name: 'Host Game', exact: true })).toBeVisible();
+  await expect(host.getByRole('heading', { name: 'Game room', exact: true })).toBeVisible();
   const small = host.getByRole('radiogroup', { name: 'Map size', exact: true }).getByRole('radio', { name: /^Small/ });
   await small.click();
   await expect(small).toBeChecked();

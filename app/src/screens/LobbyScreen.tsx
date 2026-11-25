@@ -35,7 +35,7 @@ import { rememberPlayerName, savedPlayerName } from '../platform/online';
 import { HOST_AWAY } from '../platform/relayLobby';
 import '../lobby.css';
 
-const TITLES: Record<LobbyMode, string> = { solo: 'Single Player', host: 'Host Game' };
+const TITLES: Record<LobbyMode, string> = { solo: 'Single Player', host: 'Game room' };
 function forgetHostRoom(roomId: string | undefined) {
   const saved = rememberedSeat();
   if (roomId && saved?.seat === 0 && saved.roomId === roomId) rememberSeat(null);
@@ -174,7 +174,11 @@ export function LobbyScreen() {
   );
 
   return (
-    <LobbyFrame title={TITLES[mode]} onBack={back} backDisabled={!!busy} error={error} dock={dock}>
+    <LobbyFrame
+      title={TITLES[mode]}
+      subtitle={mode === 'host' ? 'You are the host. Players who join take the Online player seats and choose their own faction.' : undefined}
+      onBack={back} backDisabled={!!busy} error={error} dock={dock}
+    >
       <div className="lobby-body">
         <SeatsTable lobby={lobby} shown={shown} onChange={setLobby} room={staging ? { state: staging, guest: false } : undefined} />
         <aside className="lobby-side">
@@ -228,7 +232,7 @@ function useStagingHost(room: boolean, lobby: Lobby | null, writeSettings: boole
   };
 }
 
-export function LobbyFrame({ title, onBack, backDisabled = false, error, dock, children }: { title: string; onBack: () => void; backDisabled?: boolean; error: string | null; dock?: ReactNode; children: ReactNode }) {
+export function LobbyFrame({ title, subtitle, onBack, backDisabled = false, error, dock, children }: { title: string; subtitle?: string; onBack: () => void; backDisabled?: boolean; error: string | null; dock?: ReactNode; children: ReactNode }) {
   return (
     <div className="setup-screen lobby-screen">
       <HexBackdrop />
@@ -240,6 +244,7 @@ export function LobbyFrame({ title, onBack, backDisabled = false, error, dock, c
           <h2>{title}</h2>
           <div />
         </div>
+        {subtitle && <p className="setup-lede lobby-role">{subtitle}</p>}
         {error === HOST_AWAY ? (
           <div className="toast bad inline host-away" role="status">
             <div>{error}</div>

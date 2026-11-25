@@ -2,9 +2,14 @@ import { BUILDING_KINDS, UNIT_KINDS, UNIT_STATS, availableToPlayer, itemName, un
 import type { GrowthProgress } from '../cityProgress';
 import type { Faction, ProductionItem, ProductionOption, UnavailableOption, UnitKind } from '../types';
 
-/** Fold only real upgrade paths with no loss of combat or movement capability. */
+/**
+ * Fold only real upgrade paths with no loss of combat or movement capability. A line leads with the
+ * most advanced unit the city can start now: a newer one short of its strategic resource (Iron) is
+ * the line's `better`, shown under it with the reason, as the AI builds (`best_buildable_in_line`).
+ */
 export function unitLines(options: ProductionOption[], faction: Faction) {
   const units = options.filter((o) => o.item.kind === 'Unit');
+  const startable = units.filter((o) => !o.resource_blocker);
   const parent = (o: ProductionOption): ProductionOption => {
     if (o.item.kind !== 'Unit') return o;
     const stats = unitStatsFor(faction, o.item.unit);
@@ -25,13 +30,13 @@ export function unitLines(options: ProductionOption[], faction: Faction) {
     for (let kind: UnitKind | null = o.item.kind === 'Unit' ? o.item.unit : null; kind && !(main.item.kind === 'Unit' && kind === main.item.unit); kind = UNIT_STATS[kind].upgradesTo) hops++;
     return hops;
   };
-  // A unit with an available successor that did not fold it is better at something: its card says what ("3 moves; the Arquebusier has 2").
+  // A unit with a startable successor that did not fold it is better at something: its card says what ("3 moves; the Arquebusier has 2").
   const keeps = (o: ProductionOption): string | undefined => {
     if (o.item.kind !== 'Unit') return undefined;
     let later: UnitKind | null = null;
     for (let kind: UnitKind | null = UNIT_STATS[o.item.unit].upgradesTo; kind; kind = UNIT_STATS[kind].upgradesTo) {
       const k = kind;
-      if (units.some((u) => u.item.kind === 'Unit' && u.item.unit === k)) later = k;
+      if (startable.some((u) => u.item.kind === 'Unit' && u.item.unit === k)) later = k;
     }
     if (!later) return undefined;
     const mine = unitStatsFor(faction, o.item.unit), theirs = unitStatsFor(faction, later);
@@ -40,7 +45,13 @@ export function unitLines(options: ProductionOption[], faction: Faction) {
       .filter(([key]) => mine[key] > theirs[key]).map(([key, label]) => `${mine[key]} ${label}; the ${name} has ${theirs[key]}`);
     return parts.length ? parts.join(' · ') : undefined;
   };
-  return units.filter((o) => parent(o) === o).map((main) => ({ main, keeps: keeps(main), older: units.filter((o) => o !== main && parent(o) === main).sort((a, b) => hopsTo(b, main) - hopsTo(a, main)) }));
+  return units.filter((o) => parent(o) === o).map((top) => {
+    const line = units.filter((o) => o !== top && parent(o) === top).sort((a, b) => hopsTo(b, top) - hopsTo(a, top));
+    // Short of the resource for the newest unit: lead with the newest one that can start now.
+    const lead = top.resource_blocker ? [...line].reverse().find((o) => !o.resource_blocker) : undefined;
+    if (!lead) return { main: top, keeps: keeps(top), better: undefined, older: line };
+    return { main: lead, keeps: keeps(lead), better: top, older: line.filter((o) => o !== lead) };
+  });
 }
 
 /** Picker order, as core `all_items`: units, then buildings, then projects. */

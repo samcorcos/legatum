@@ -268,7 +268,7 @@ it.each([
   sockets[0].push({ type: 'staging_taken', room_id: publicRoom.room_id, seat: 0, token: 'host-secret' });
   if (arrival === 'before') sockets[0].push({ type: 'staging', state: privateRoom });
   await act(async () => root.render(createElement(HostFlow)));
-  expect(container.querySelector('h2')?.textContent).toBe('Host Game');
+  expect(container.querySelector('h2')?.textContent).toBe('Game room');
   expect(sockets).toHaveLength(1);
 
   if (arrival === 'after') {

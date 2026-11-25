@@ -236,6 +236,38 @@ export function rememberSeat(s: RememberedSeat | null) {
   } catch {
     // best effort
   }
+  // A game seat is also kept on this device, so a player whose computer restarted can take it back
+  // from the game list without the host opening it. It is only offered, never joined automatically.
+  if (s?.token && !s.roomId && serverBase()) keepSeat({ room: serverBase(), seat: s.seat, name: s.name, token: s.token });
+}
+
+const KEPT_KEY = 'legatum.online.kept-seat';
+
+/** The last online game seat this device held, kept across restarts (localStorage). */
+export interface KeptSeat {
+  room: string;
+  seat: number;
+  name: string;
+  token: string;
+}
+
+function keepSeat(k: KeptSeat) {
+  try {
+    globalThis.localStorage?.setItem(KEPT_KEY, JSON.stringify(k));
+  } catch {
+    // best effort: the host can still open the seat
+  }
+}
+
+/** This device's kept seat in the game at `room`, if any. */
+export function keptSeat(room: string): KeptSeat | null {
+  try {
+    const raw = globalThis.localStorage?.getItem(KEPT_KEY);
+    const k = raw ? (JSON.parse(raw) as KeptSeat) : null;
+    return k && room && k.room === room && typeof k.token === 'string' ? k : null;
+  } catch {
+    return null;
+  }
 }
 
 const ROOM_KEY = 'legatum.online.room';

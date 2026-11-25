@@ -19,6 +19,7 @@ import { CrestMedallion, PanelHead } from '../brand/ornaments';
 import { CityList } from './CityList';
 import { AirWatch } from './AirWatch';
 import { OpenSeatButton } from './OpenSeatButton';
+import { awayPlayers } from '../awayPlayers';
 import { RemoveSeatButton } from './RemoveSeatButton';
 import { BUILDING_NAME, itemName } from '../data';
 import { empireOfPlayer } from '../empires';
@@ -80,7 +81,9 @@ export function requestReady(seat: Seat) {
   const view = s.views?.[seat];
   if (!view || view.finished || s.busy || s.resolvingToEnd) return;
   if (s.client?.kind === 'remote' && s.net?.conn !== 'open') return;
-  if (!s.ready[seat] && pendingDecisions(view, s.orders[seat], s.errors[seat], s).length) {
+  // Ready asks first when the turn still needs decisions, or when another player is away (their seat no
+  // longer holds the turn, so it can end without them).
+  if (!s.ready[seat] && (pendingDecisions(view, s.orders[seat], s.errors[seat], s).length || awayPlayers(s).length)) {
     s.set({ endTurnConfirmation: { seat, view, orders: s.orders[seat] } });
     feel.select();
     return;
@@ -381,7 +384,7 @@ export function OnlineSeats() {
               {' · '}
               {count} order{count === 1 ? '' : 's'}
             </span>
-            <span className={`seat-ready ${isReady ? 'on' : ''}`}>{p?.alive === false ? 'Observing' : isReady ? <><Icon name="ui-check" size={12} className="ui-mark" /> Ready</> : 'Planning'}</span>
+            <span className={`seat-ready ${isReady ? 'on' : ''}${!me && !connected && p?.alive !== false ? ' away' : ''}`}>{p?.alive === false ? 'Observing' : !me && !connected ? 'Away' : isReady ? <><Icon name="ui-check" size={12} className="ui-mark" /> Ready</> : 'Planning'}</span>
             {net.status.is_local && !me && !connected && st.reserved !== false && (
               <OpenSeatButton name={st.name} disabled={conn !== 'open'} onOpen={() => releaseSeat(seat)} />
             )}

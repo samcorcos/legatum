@@ -1,0 +1,7 @@
+# Online lobby: own-row faction, Host/Join doors, and players who drop (2026-11-25)
+
+Sam's first real co-op game with a second person found three problems.
+
+1. **The guest's faction picker was in a side card**, not in the guest's seat row; at wide windows the card sat top right, away from the row it changed. Now every player picks in their own row (`SeatsTable` `room.onMyFaction`), every other player's faction is a disabled picker with no field box, and the guest's Ready sits in the dock like the host's Start.
+2. **The Multiplayer menu put the host-only fields above all three buttons**, and the default primary was Join Game at the bottom, so it read as "fill these in, then join". It is now one name field (used for hosting and for the seat you take), then two doors side by side: Host (join code, Host Game, Host from a save) and Join (Join Game). The doors are shorter than the old column, so the menu still fits at 1000x600.
+3. **A dropped player was silent.** The host already resolves turns without a disconnected seat (`disconnect` -> `resolve_if_ready`), and that empire gets no orders, but nothing said so; and the seat credential lived only in sessionStorage, so a restarted computer could not take its seat back until the host pressed Open seat. Now a banner names who is away, Ready asks first ("End the turn without Alice?"), and the last game seat is also kept in localStorage (`keptSeat`) and offered back on the seat screen. Decided not to pause the game outright: a player who never returns would freeze it; the host chooses.

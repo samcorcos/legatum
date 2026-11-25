@@ -1,3 +1,4 @@
+import { awayLine, awayPlayers } from '../awayPlayers';
 import { TrainingCard } from '../ui/Training';
 import { WhyCard } from '../ui/WhyCard';
 import { CelebrationProvider, MomentLane } from '../celebrate/MomentLane';
@@ -60,6 +61,7 @@ export function GameScreen() {
   const resolvingToEnd = useGame((s) => s.resolvingToEnd);
   const stopResolving = useGame((s) => s.stopResolving);
   const conn = useGame((s) => (s.client?.kind === 'remote' ? s.net?.conn : null));
+  const away = useGame((s) => awayLine(awayPlayers(s), 'until'));
   const credentialRejected = useGame((s) => s.client?.kind === 'remote' && s.net?.credentialRejected);
 
   useEffect(() => {
@@ -148,6 +150,10 @@ export function GameScreen() {
           <button className="btn quiet" onClick={() => useGame.getState().leaveOnline()}>
             Leave
           </button>
+        </div>
+      ) : conn === 'open' && away ? (
+        <div className="conn-banner away-banner" role="status" data-testid="away-banner">
+          <span className="conn-dot" aria-hidden /> {away}
         </div>
       ) : (
         conn &&

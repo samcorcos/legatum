@@ -136,9 +136,9 @@ test('Online: host in one browser, a guest joins from the game list, both Ready 
   host.on('websocket', (ws) => tunnel.push(ws.url()));
   await host.goto('/');
   await host.getByRole('button', { name: /^Multiplayer/ }).click();
-  await host.getByLabel('Your name in the game list').fill('Ada');
+  await host.getByLabel('Your name', { exact: true }).fill('Ada');
   await host.getByRole('button', { name: /^Host Game/ }).click();
-  await expect(host.getByRole('heading', { name: 'Host Game', exact: true })).toBeVisible();
+  await expect(host.getByRole('heading', { name: 'Game room', exact: true })).toBeVisible();
   // The host holds one tunnel to the relay, and plays its own seat inside the tab. The heading can show
   // before the socket opens (a cold relay under wrangler dev), so wait for it rather than read it once.
   await expect.poll(() => tunnel.filter((u) => u.startsWith(relay.replace(/^http/, 'ws'))))
@@ -155,7 +155,7 @@ test('Online: host in one browser, a guest joins from the game list, both Ready 
   const row = guest.locator('.online-room').filter({ hasText: 'Ada' });
   await expect(row).toHaveCount(1, { timeout: 20_000 });
   await row.getByRole('button', { name: /^Join/ }).click();
-  await expect(guest.getByRole('heading', { name: 'Join Game', exact: true })).toBeVisible();
+  await expect(guest.getByRole('heading', { name: 'Game room', exact: true })).toBeVisible();
 
   // The guest sees the host's settings: Seat 2 is the one open seat.
   await expect(guest.getByLabel('Map seed', { exact: true })).toHaveValue('Hidden');
