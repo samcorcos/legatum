@@ -47,7 +47,7 @@ it('offers the autosave as the primary Continue and loads that exact save', asyn
   expect(button.textContent).toContain('Ada & Bo');
   await press(button);
   expect(useGame.getState().screen).toBe('title');
-  expect(useGame.getState().error).toContain('Multiplayer > Host from a save');
+  expect(useGame.getState().error).toContain('Multiplayer, then Host from a save');
   expect(continueButton().disabled).toBe(false);
 });
 

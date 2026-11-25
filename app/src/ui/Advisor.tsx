@@ -119,7 +119,7 @@ export function Advisor() {
   const turnLabel = document.querySelector<HTMLElement>('.seatbar .cta-label')?.textContent?.trim()
     ?? document.querySelector<HTMLElement>('.phone-turn-dock button[aria-label^="Next decision"]')?.textContent?.trim() ?? undefined;
   const suggestion = view && enabled ? advisorSuggestion({ view, orders: orders[seat] ?? [], errors: errors[seat], selection,
-    humans: humans.length, touch, techOpen, mode, turnLabel, local: useGame.getState(),
+    humans: humans.length, remote: client?.kind === 'remote', touch, techOpen, mode, turnLabel, local: useGame.getState(),
     forecast: client ? (unit, at, mode) => client.forecast(view.me, unit, at, mode) : undefined }, seen,
     skippedTurn === view.turn ? skipped : []) : null;
   const [modal, setModal] = useState<HTMLDialogElement | null>(null);

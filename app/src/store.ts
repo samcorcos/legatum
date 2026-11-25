@@ -1535,7 +1535,7 @@ export const useGame = create<State>((set, get) => {
     startGame: async (setup, options) => {
       stopResolving();
       if (setup.players.filter((player) => player.is_human).length !== 1) {
-        set({ error: 'Play with other people through Multiplayer > Host Game.' });
+        set({ error: 'Play with other people through Multiplayer, then Host Game.' });
         return;
       }
       set({ busy: 'Surveying the map…', error: null });
@@ -1572,7 +1572,7 @@ export const useGame = create<State>((set, get) => {
           }
           throw new Error(olderRulesMessage(save.playtest));
         }
-        if (needsOnlineHost(save)) throw new Error('This save has multiple human players. Use Multiplayer > Host from a save; guests can rejoin their seats.');
+        if (needsOnlineHost(save)) throw new Error('This save has more than one human player. Resume it with Multiplayer, then Host from a save. Guests can rejoin their seats.');
         if (save.client !== 'wasm') throw new Error('This save used the retired TypeScript engine and cannot be loaded by the Rust engine.');
         const client = await createClient(save.client);
         measureTurn('loadClient', () => client.load(save.game));

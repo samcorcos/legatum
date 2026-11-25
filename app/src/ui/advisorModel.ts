@@ -22,6 +22,8 @@ export interface AdvisorContext {
   errors?: OrderError[];
   selection: { kind: string; id: number } | null;
   humans: number;
+  /** An online game: the turn button reads Ready even with one human in this browser. */
+  remote?: boolean;
   touch: boolean;
   techOpen?: boolean;
   mode?: string;
@@ -196,8 +198,9 @@ export function advisorSuggestion(ctx: AdvisorContext, seen: readonly string[], 
     }
   }
   if (decisions.length) return null;
-  return { id: 'endTurn', title: ctx.humans <= 1 ? 'End the turn' : 'Ready for the turn', why: 'Your orders are set. Every empire’s orders happen together.',
-    steps: [{ instruction: `${ctx.touch ? 'Tap' : 'Click'} ${ctx.humans <= 1 ? 'End turn' : 'Ready'}.`, key: ctx.touch ? undefined : 'Return', target: control('turn', 'end') }], current: 0 };
+  const solo = ctx.humans <= 1 && !ctx.remote; // Matches the turn button's label (SeatBar).
+  return { id: 'endTurn', title: solo ? 'End the turn' : 'Ready for the turn', why: 'Your orders are set. Every empire’s orders happen together.',
+    steps: [{ instruction: `${ctx.touch ? 'Tap' : 'Click'} ${solo ? 'End turn' : 'Ready'}.`, key: ctx.touch ? undefined : 'Return', target: control('turn', 'end') }], current: 0 };
 }
 
 interface AdvisorPreferences { enabled: boolean; seen: string[] }

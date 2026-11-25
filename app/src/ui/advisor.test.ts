@@ -120,6 +120,13 @@ describe('one decision at a time', () => {
     expect(advisorSuggestion(ctx(orders), ['welcome'], [])).toMatchObject({ id: 'endTurn', steps: [{ target: { kind: 'control', name: 'turn' } }] });
   });
 
+  it('online, it says Ready, as the turn button does', async () => {
+    const { view, plan, ctx } = await opening();
+    const orders: Order[] = [plan[0], plan[2], ...view.units.filter((u) => u.owner === view.me).map((u) => ({ type: 'SkipUnit' as const, unit: u.id }))];
+    expect(advisorSuggestion({ ...ctx(orders), remote: true }, ['welcome'], [])).toMatchObject({ id: 'endTurn', steps: [{ instruction: 'Click Ready.' }] });
+    expect(advisorSuggestion(ctx(orders), ['welcome'], [])).toMatchObject({ steps: [{ instruction: 'Click End turn.' }] });
+  });
+
   it('shows report once after turn one and the VP lesson around turn eight', async () => {
     const { view, ctx } = await opening();
     view.turn = 2;

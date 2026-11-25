@@ -69,7 +69,7 @@ describe.each(clients)('store on the %s client', (_name, available, load) => {
       { name: 'Ann', faction: 'India' }, { name: 'Bo', faction: 'Byzantium' },
     ]));
     expect(useGame.getState().client).toBeNull();
-    expect(useGame.getState().error).toContain('Multiplayer > Host Game');
+    expect(useGame.getState().error).toContain('Multiplayer, then Host Game');
   });
 
   it('explains why a save from the retired TypeScript engine cannot load', async () => {
@@ -91,7 +91,7 @@ describe.each(clients)('store on the %s client', (_name, available, load) => {
     const previous = useGame.getState().client;
     await useGame.getState().loadSave(oldSave);
     expect(useGame.getState().client).toBe(previous);
-    expect(useGame.getState().error).toContain('Multiplayer > Host from a save');
+    expect(useGame.getState().error).toContain('Multiplayer, then Host from a save');
     expect(useGame.getState().error).toContain('rejoin their seats');
   });
 

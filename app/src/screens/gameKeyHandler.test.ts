@@ -389,6 +389,11 @@ it('E toggles auto-explore when the map is focused', () => {
   expect(toggleAutoExploreSelected).toHaveBeenCalledTimes(1);
 });
 
+it('1 does nothing now that the seat keys are gone', () => {
+  map.focus(); press(map, '1');
+  for (const c of commands) expect(c).not.toHaveBeenCalled();
+});
+
 
 it('Return ends planning when all decisions are handled, but never unreadies a waiting seat', () => {
   const view = useGame.getState().views![0];

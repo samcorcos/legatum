@@ -111,7 +111,6 @@ export function handleGameKey(e: KeyboardEvent) {
       else s.select(null);
       break;
     }
-    case '1':
     case 'e':
     case 'E':
       toggleAutoExploreSelected();
