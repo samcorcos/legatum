@@ -196,7 +196,8 @@ function MainMenu({ onMultiplayer, onHostSave }: { onMultiplayer: () => void; on
       {olderAuto ? 'Saved game (older version)' : unreadableAuto ? 'Saved game (unreadable)' : 'Continue'}
       <span className="btn-sub">
         {olderAuto ? 'Cannot continue with these rules' : unreadableAuto ? "This save file is damaged"
-          : autoBlocked ? OTHER_PLAYERS_OFFLINE
+          // The reason (online play is unavailable) is said once, under Multiplayer.
+          : autoBlocked ? 'This game has other players'
           : auto && autoNeedsHost ? `${peoplesLabel(usable[0].record.faction, auto.names)} · Turn ${auto.turn} · host it online, the others rejoin`
           : auto && elsewhere ? `${peoplesLabel(usable[0].record.faction, auto.names)} · Turn ${auto.turn} · opens in the version it started on`
           : auto ? `${peoplesLabel(usable[0].record.faction, auto.names)} · Turn ${auto.turn} · ${calendarLabel(auto.turn)} · ${new Date(auto.savedAt).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}` : records === null ? 'Looking for your game…' : 'No autosave yet'}
@@ -348,7 +349,7 @@ function MultiplayerMenu({ hostSave, onBack }: { hostSave: SaveFile | null; onBa
                 {resuming === 'starting' ? <><span className="spinner" /> Opening your game…</>
                   : codeNote ? codeNote
                   : resuming === 'failed' ? 'Try again'
-                  : hostSave ? `Turn ${hostSave.turn} · the other players rejoin online` : 'Carry on a game with other players from its save file'}
+                  : hostSave ? `${peoplesLabel(undefined, hostSave.names)} · Turn ${hostSave.turn} · the others rejoin online` : 'Carry on a game with other players from its save file'}
               </span>
             </button>
             <button className={`btn big ${joinPrimary ? 'primary' : ''}`} disabled={busy} onClick={() => goto('online')}>

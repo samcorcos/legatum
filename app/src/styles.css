@@ -588,7 +588,7 @@ p {
    item's label is dimmed by its ink instead, clearly fainter than the quiet items around it. The sub-line stays
    at --muted: it is small text, and it carries the reason the item is disabled, so it keeps AA contrast. */
 .title-actions .btn.big:not(.primary):disabled {
-  color: color-mix(in srgb, var(--muted) 60%, transparent);
+  color: color-mix(in srgb, var(--muted) 45%, transparent);
 }
 .title-actions .btn.quiet:not(.big) {
   margin-top: 12px;

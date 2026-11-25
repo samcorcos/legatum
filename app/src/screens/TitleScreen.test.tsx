@@ -58,7 +58,7 @@ it('a game with other players continues as an online host: Continue opens Multip
   const primary = host.querySelectorAll('.title-actions .primary');
   expect(primary).toHaveLength(1);
   expect(primary[0].textContent).toMatch(/^Host this save/);
-  expect(primary[0].textContent).toContain(`Turn ${save.turn}`);
+  expect(primary[0].textContent).toContain(`Ada & Bo · Turn ${save.turn}`);
 });
 
 it('a game with other players cannot Continue in a build with no online play, and says why before it is pressed', async () => {
@@ -66,7 +66,10 @@ it('a game with other players cannot Continue in a build with no online play, an
   await show(<StrictMode><TitleScreen /></StrictMode>);
   const button = continueButton();
   expect(button.disabled).toBe(true);
-  expect(button.textContent).toContain('Online play is unavailable in this version');
+  expect(button.textContent).toContain('This game has other players');
+  // The reason is said once, under Multiplayer.
+  expect(button.textContent).not.toContain('Online play is unavailable');
+  expect([...host.querySelectorAll('button')].find((b) => b.textContent?.startsWith('Multiplayer'))!.textContent).toContain('Online play is unavailable');
   expect(host.querySelector('.title-actions .primary')?.textContent).toMatch(/^Single Player/);
 });
 

@@ -360,6 +360,26 @@ for (const size of SIZES) testWithFailingRequests.describe(`online co-op ${size.
     await host2.waitForTimeout(1500);
     await host2.mouse.move(5, 5);
     await shot(host2, size, '59-load-multi-human-save');
+    // The same save as the autosave: Continue on the title takes it to Host this save (UI review, 2026-11-25).
+    // The build without online play (Continue disabled with its reason) is covered by TitleScreen.test.tsx: the relay is baked into the build.
+    const saveJson = (await import('node:fs')).readFileSync(savePath, 'utf8');
+    {
+      const ctx = await browser.newContext({ baseURL, viewport: { width: size.width, height: size.height } });
+      const p = await ctx.newPage();
+      await noHints(p);
+      await p.goto('/');
+      await p.evaluate((s) => localStorage.setItem('legatum.autosave.v1', s), saveJson);
+      await p.reload();
+      await expect(p.getByRole('button', { name: /^Continue/ })).toBeVisible();
+      await p.waitForTimeout(1000);
+      await p.mouse.move(5, 5);
+      await shot(p, size, '59b-continue-multi-human-save');
+      await p.getByRole('button', { name: /^Continue/ }).click();
+      await expect(p.getByRole('button', { name: /^Host this save/ })).toBeVisible();
+      await p.mouse.move(5, 5);
+      await shot(p, size, '59c-continue-multi-human-to-host');
+      await ctx.close();
+    }
     await multiplayer(host2);
     await host2.getByLabel('Your name in the game list').fill(hostName);
     // A file that is not a save first: the refusal.
