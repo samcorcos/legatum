@@ -251,13 +251,12 @@ Used by `rules/battle.rs::ranged_target`, the melee step classification in
 (`forecast.rs::GarrisonForecast`, omitted when absent) reports the visible garrison and
 `shielded`; `forecast::city_attack_target(view, hex)` answers "what does an
 attack on this city tile damage" for AI scoring. Client display uses `app/src/combat.ts::cityTileDefender`; WASM behavior checks in `app/src/test/cityStrike.wasm.test.ts`. UI: the forecast headline says "The city absorbs
-damage first. The hit that empties its HP carries on to the garrison with the part of its damage the city did not absorb; later hits strike the garrison in full" (`app/src/ui/forecastWarnings.ts::garrisonHeadline`),
+damage first. The hit that empties its health carries on to the garrison with the part of its damage the city did not absorb; later hits strike the garrison in full" (`app/src/ui/forecastWarnings.ts::garrisonHeadline`),
 the win line says what a win does (`forecastWinLabel`), and the Guide's combat entry explains it.
 Split counterattack and overflow in the UI (`app/src/ui/ForecastCard.tsx::forecastModel`): with
 other friendly melee orders on the same defender this turn, the forecast says "2 others also
-attacking: you take about −7 instead of −21" and counts the share in HP, loss odds and risk; when
-this turn's friendly hits on a garrisoned city exceed its HP (100% rolls) it adds "This attack /
-Combined friendly attacks this turn bring the city to 0 HP and reach the garrison." The turn report
+attacking: you take about −7 instead of −21" and counts the share in HP, loss odds and risk; the
+city assault block shows the pooled hits and the part that carries to the garrison (`forecastWarnings.ts::assaultSummary`, "carries −M to the garrison"). The turn report
 (`app/src/format.ts::formatEvents`) gives one line per combined assault, named by place, and only
 that line says destroyed: "… was destroyed at Tessitura in a combined assault by your 3
 Oathbearers; its counterattack was split, −7 each"; a city taken with its garrison in that round
