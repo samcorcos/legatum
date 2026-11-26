@@ -8,6 +8,8 @@ export async function skipEraFilm(page: Page) {
   if (!(await film.isVisible())) return;
   await film.getByRole('button', { name: /^Skip/ }).click();
   await expect(film).toHaveCount(0);
+  // Esc and Return are held back for a moment after a film so a double press can't lose the card.
+  await expect(page.getByTestId('era-takeover')).not.toHaveAttribute('data-settling');
 }
 
 /** Escape closes the current turn's interstitial queue, as it does for a player. */

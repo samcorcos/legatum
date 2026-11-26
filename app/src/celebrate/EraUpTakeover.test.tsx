@@ -92,6 +92,11 @@ describe('the era-up takeover', () => {
     expect(film()).toBeNull();
     expect(dismiss).not.toHaveBeenCalled();
     expect(host.querySelector('[data-testid=era-takeover]')?.classList.contains('filming')).toBe(false);
+    // A second Esc straight after is held back, so a double press can't lose the card.
+    const second = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
+    act(() => { window.dispatchEvent(second); });
+    expect(second.defaultPrevented).toBe(true);
+    expect(host.querySelector('[data-testid=era-takeover]')?.hasAttribute('data-settling')).toBe(true);
     expect(document.activeElement).toBe(host.querySelector('[data-primary-action]'));
   });
 

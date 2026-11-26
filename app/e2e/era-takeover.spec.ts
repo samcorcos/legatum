@@ -196,8 +196,12 @@ for (const size of SIZES) test.describe(`era takeover ${size.width}x${size.heigh
     await expect.poll(() => film.locator('video').evaluate((v: HTMLVideoElement) => v.currentTime), { timeout: 5000 }).toBeGreaterThan(0.5);
     await shot(page, size, 'era-film-classical');
     const turn = await page.getByTestId('turn-number').innerText();
+    // A quick double Esc ends the film; the second press must not take the card with it.
+    await page.keyboard.press('Escape');
     await page.keyboard.press('Escape');
     await expect(film).toHaveCount(0);
+    await expect(takeover(page)).toBeVisible();
+    await expect(takeover(page)).not.toHaveAttribute('data-settling');
     await expect(takeover(page)).toBeVisible();
     await expect(page.getByTestId('turn-number')).toHaveText(turn);
   });
