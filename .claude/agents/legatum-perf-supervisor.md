@@ -19,12 +19,12 @@ the AI, the app, the build and CI, the code and the docs every session loads.
 Before speeding anything up, ask whether it should exist. Order: question, delete, simplify, then
 speed up. A deletion that keeps every test and result identical beats any optimisation.
 
-## Find it before the owner does (user, 2026-11-26)
-A slow first open of the tech tree was reported by hand: its thumbnails trickled in. That is this
-agent's job to find first. What a player sees in the first second of anything (a screen opening, a
+## Find it before a player does
+The tech tree's thumbnails trickled in the first time it opened, and no check had caught it. That is
+this agent's job to find first. What a player sees in the first second of anything (a screen opening, a
 picture appearing, a panel filling in) is performance, the same as frame time. So:
 - Every screen has a row in `tools/perf/first-open.cjs` (`SCREENS`). When a PR on master adds a
-  screen, a dialog or a new family of pictures, add its row the same week (surface sweep).
+  screen, a dialog or a new family of pictures, add its row the same week if the PR did not (surface sweep).
 - Rows marked **unwatched** in `docs/status/perf-surface.md` are a debt, not a note: take at least
   one each week, starting with what a player meets soonest.
 - When something a player could notice turns up, fix it and report it fixed; do not wait to be asked.

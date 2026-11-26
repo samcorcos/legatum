@@ -78,8 +78,8 @@ export const RANDOM_PORTRAIT_URL: string | null = Object.values(randomPortrait)[
 
 const smallPortraits = import.meta.glob<string>('../assets/art/people-*-112.jpg', { eager: true, query: '?url', import: 'default' });
 
-/** The paired historical people portrait for a faction: the 360 px JPEG, or the 112 px one for a
- * roundel (56 px and under on screen: a 22 px roundel must not fetch a 70 KB painting). */
+/** The paired historical people portrait for a faction: the 360 px JPEG, or the 112 px one, which a
+ * roundel offers beside it so the browser picks by device pixels (a 22 px roundel must not fetch a 70 KB painting). */
 export function leaderPortraitUrl(faction: string, small = false): string | null {
   return (small ? pick(smallPortraits, faction) : null) ?? pick(portraits, faction);
 }

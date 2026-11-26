@@ -16,7 +16,7 @@ Three historical candidates were painted: A (the Old World at dusk), B (the grea
 
 ## Historical people portraits (2026-10-10)
 
-Paired, unnamed adult portraits, one for each of the eleven peoples: nine finished factions plus Egypt and Rome (no faction carries the "Early design" tag now; Egypt's came off 2026-11-24). Every faction has one, with no single-leader fallback (user, 2026-11-01: "every portrait is supposed to be a representative man and woman"); the app uses each faction's 360 px derivative through `leaderPortraitUrl` in `src/brand/ornaments.tsx`, and `src/portraits.test.ts` fails if a playable faction lacks one.
+Paired, unnamed adult portraits, one for each of the eleven peoples: nine finished factions plus Egypt and Rome (no faction carries the "Early design" tag now; Egypt's came off 2026-11-24). Every faction has one, with no single-leader fallback (user, 2026-11-01: "every portrait is supposed to be a representative man and woman"); the app uses each faction's 360 px derivative, and the 112 px one in round portraits where the screen needs no more, through `leaderPortraitUrl` in `src/brand/ornaments.tsx`, and `src/portraits.test.ts` fails if a playable faction lacks one.
 
 | Existing faction ID | Historical people | Portrait era |
 | --- | --- | --- |
@@ -32,7 +32,7 @@ Paired, unnamed adult portraits, one for each of the eleven peoples: nine finish
 | Egypt | Egypt | see `people-egypt.prompt.txt` |
 | Rome | Rome | see `people-rome.prompt.txt` |
 
-For the paired portraits, `people-<faction>.png` (archived outside git, not in the tree) is 1024 × 1024, `people-<faction>-512.png` is 512 × 512, `people-<faction>-360.jpg` is 360 × 360 JPEG quality 88, and `people-<faction>-112.jpg` is 112 × 112 JPEG quality 88, resized from the 512 px file, for the round portraits of 56 px and under (`leaderPortraitUrl(faction, true)`). The `.prompt.txt` file beside each original records its prompt and any final image edit. Japan is not a playable people: its portrait was removed on 2026-11-21 (git history has it), and the older review sheets in `docs/design/historical-factions/` and `docs/design/art-pass-2/` still show it.
+For the paired portraits, `people-<faction>.png` (archived outside git, not in the tree) is 1024 × 1024, `people-<faction>-512.png` is 512 × 512, `people-<faction>-360.jpg` is 360 × 360 JPEG quality 88, and `people-<faction>-112.jpg` is 112 × 112 JPEG quality 88, resized from the 512 px file, for the round portraits (`PortraitRoundel` offers it beside the 360 px file and the browser picks by device pixels). The `.prompt.txt` file beside each original records its prompt and any final image edit. Japan is not a playable people: its portrait was removed on 2026-11-21 (git history has it), and the older review sheets in `docs/design/historical-factions/` and `docs/design/art-pass-2/` still show it.
 
 ## Random choice painting (2026-11-22)
 
@@ -55,8 +55,8 @@ For the paired portraits, `people-<faction>.png` (archived outside git, not in t
 sips -s format jpeg -s formatOptions 88 -Z 1600 title-keyart-c-road-at-dawn.png --out title-keyart-c-road-at-dawn-1600.jpg
 ```
 
-The paired portraits use the same derivative commands (`sips -Z 1024`, `sips -Z 512`, then the 360 px JPEG above) under their `people-<faction>` names.
+The paired portraits use the same derivative commands (`sips -Z 1024`, `sips -Z 512`, then the 360 px JPEG above) under their `people-<faction>` names. The 112 px JPEG is made with Pillow: `Image.open('people-<faction>-512.png').convert('RGB').resize((112, 112), Image.LANCZOS).save('people-<faction>-112.jpg', 'JPEG', quality=88, optimize=True)`.
 
 ## Where the masters live
 
-The full-size `people-<faction>.png` paintings and `title-keyart-c-road-at-dawn.png` are not in the repository. `tools/art/sources-manifest.json` lists each (path, byte size, sha256); `python3 tools/art/fetch-sources.py app/src/assets/art/people-athens.png` (or `--all`) downloads it from the archive named by `LEGATUM_ART_SOURCES_URL` and verifies the hash. The app bundles only the 512 px, 360 px and 1600 px derivatives, so a build and the tests never need a master. A new master is registered with `fetch-sources.py --add <path>` and uploaded to the archive; commit the manifest, not the file.
+The full-size `people-<faction>.png` paintings and `title-keyart-c-road-at-dawn.png` are not in the repository. `tools/art/sources-manifest.json` lists each (path, byte size, sha256); `python3 tools/art/fetch-sources.py app/src/assets/art/people-athens.png` (or `--all`) downloads it from the archive named by `LEGATUM_ART_SOURCES_URL` and verifies the hash. The app bundles only the 512 px, 360 px, 112 px and 1600 px derivatives, so a build and the tests never need a master. A new master is registered with `fetch-sources.py --add <path>` and uploaded to the archive; commit the manifest, not the file.
