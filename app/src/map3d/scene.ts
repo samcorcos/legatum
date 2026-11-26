@@ -491,6 +491,7 @@ export class MapScene {
     this.mixers = [];
     this.squads = [];
     this.unitGroups.clear();
+    this.settling.clear();
     const byTile = new Map<number, UnitView[]>();
     for (const u of view.units) {
       const i = tileIndexOf(u.pos, wd.w, wd.h);
@@ -817,10 +818,13 @@ export class MapScene {
 
   private anim: { start: number; duration: number; paths: Map<number, Hex[]>; plan: CombatPlan | null; ghosts: Map<number, THREE.Group>; fired: Set<string>; visualEnd: number; last?: number } | null = null;
   private shotPool: THREE.Mesh[] = [];
+  /** Units turning back to their resting facing after a move. */
+  private settling = new Set<THREE.Object3D>();
 
   /** Play the turn just resolved: the same plan and clock as the 2D map. Null (or a still map) shows units where they ended. */
   setAnim(a: { start: number; duration: number; paths: Map<number, Hex[]>; plan?: CombatPlan | null } | null) {
     this.endAnim();
+    if (a && !this.still) this.settling.clear(); // the new playback steers every facing itself
     if (!a || this.still || !this.world) return;
     const ghosts = new Map<number, THREE.Group>();
     for (const [id, u] of a.plan?.ghosts ?? []) {
@@ -852,7 +856,9 @@ export class MapScene {
     for (const g of this.unitGroups.values()) {
       const home = g.userData.home as THREE.Vector3 | undefined;
       if (home) g.position.copy(home);
-      g.rotation.set(0, 0, 0);
+      // Upright again, but the facing eases back to rest in frame() rather than snapping.
+      g.rotation.x = 0; g.rotation.z = 0;
+      if (Math.abs(g.rotation.y) > 1e-3) this.settling.add(g); else g.rotation.y = 0;
       this.setWalk(g, false);
       delete g.userData.prevBase; delete g.userData.walkUntil; delete g.userData.heading;
     }
@@ -905,7 +911,7 @@ export class MapScene {
       const dx = x - prev.x, dz = z - prev.z;
       if (Math.hypot(dx, dz) > 0.0004) { g.userData.walkUntil = t + 90; g.userData.heading = Math.atan2(dx, dz) - DISPLAY_YAW; }
     }
-    const on = t < ((g.userData.walkUntil as number | undefined) ?? -1);
+    const on = t < ((g.userData.walkUntil as number | undefined) ?? -Infinity);
     this.setWalk(g, on);
     const want = on ? ((g.userData.heading as number | undefined) ?? 0) : 0;
     let d = want - g.rotation.y;
@@ -1030,6 +1036,11 @@ export class MapScene {
     const dt = Math.min(0.05, this.clock.getDelta());
     this.uniforms.uTime.value += dt;
     this.stepAnim(performance.now());
+    for (const g of this.settling) {
+      g.rotation.y += -g.rotation.y * Math.min(1, dt * 12);
+      if (Math.abs(g.rotation.y) < 2e-3) { g.rotation.y = 0; this.settling.delete(g); }
+      this.animating = true;
+    }
     if (!this.still) for (const m of this.mixers) m.update(dt);
     this.renderer.render(this.scene, this.camera);
     const was = this.animating;
